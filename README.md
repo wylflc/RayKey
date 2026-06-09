@@ -585,6 +585,13 @@ The seventy-first A-share peer-group review output is other professional service
 
 This pass reviews the remaining companies in `休闲、生活及专业服务-专业服务-其他专业服务`. It separates comprehensive TIC platforms, national electrical and automotive testing institutes, irradiation sterilization, semiconductor production services, construction-science institutes, metallurgy and food-security engineering platforms, and selected scale operating networks from ordinary project consulting, design, HR, municipal outsourcing, exhibition, procurement, and low-barrier service businesses.
 
+The seventy-second A-share peer-group review output is cloud, IDC, and CDN:
+
+- `data/processed/a_share_cloud_idc_cdn_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-cloud-idc-cdn.md`
+
+This pass reviews all companies in `互联网-互联网技术-云服务(含IDC、CDN)`. It separates enterprise-cloud software and CDN/edge-network platforms from capital-intensive data-center operators, smaller cloud-network providers, game-to-cloud transition cases, and ST cloud/AI stories; IDC companies are retained only when customer relationships, core-city assets, energy efficiency, operating reliability, or cloud-network resources make the business harder to replicate than ordinary server capacity.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
