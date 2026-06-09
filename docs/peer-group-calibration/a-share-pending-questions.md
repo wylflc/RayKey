@@ -28,7 +28,9 @@ Resolved companies:
 
 The `信息技术-计算机软件-行业应用软件` group includes aerospace, military simulation, and electromagnetic/antenna software companies. These should not be forced into ordinary civilian application-software rules because military customer validation and program continuity are difficult to observe in normal disclosure.
 
-Pending companies:
+Resolution: this question was handled in `docs/peer-group-calibration/a-share-defense-aerospace-software-remaining.md` and `data/processed/a_share_defense_aerospace_software_remaining_peer_group_decisions.csv`. The table below is retained as the historical question log, not as a still-pending work queue.
+
+Resolved companies:
 
 | Security Code | Security Name | Pending Question |
 | --- | --- | --- |

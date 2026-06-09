@@ -802,6 +802,76 @@ The one hundred second A-share peer-group review output is paper and paper-based
 
 This pass reviews all companies in `轻工制造-造纸印刷-造纸`. It separates integrated pulp-paper leaders, specialty paper and paper-based functional material platforms, decorative base paper, aramid paper, tobacco paper, tissue brands, packaging board, recycled paper mills, bamboo pulp, and ST paper-cycle cases. Scale, cost curve, product breadth, process technology, and customer qualification are required; commodity paper capacity alone is rejected.
 
+The one hundred third A-share peer-group review output is other metal new materials:
+
+- `data/processed/a_share_other_metal_new_materials_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-metal-new-materials.md`
+
+This pass reviews the remaining companies in `有色金属-金属非金属新材料-其他金属新材料`. It separates metal fiber, powder metallurgy, magnesium/lightweighting, superconducting, titanium, superalloy, copper-alloy, master-alloy, and metal-composite cases from ordinary aluminum processing and mixed glass/material businesses. Strategic-material qualification, process know-how, institute origin, and high-validation customers can override low baseline scores.
+
+The one hundred fourth A-share peer-group review output is integrated power equipment:
+
+- `data/processed/a_share_integrated_power_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-integrated-power-equipment.md`
+
+This pass reviews all companies in `电气设备-电源设备-综合电力设备商`. It retains power-electronics, generation-equipment, and broad power/industrial-equipment platforms while rejecting power EPC or service-operation models without scarce product capability.
+
+The one hundred fifth A-share peer-group review output is passenger vehicles:
+
+- `data/processed/a_share_passenger_vehicles_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-passenger-vehicles.md`
+
+This pass reviews the remaining companies in `交运设备-汽车-乘用车`. It retains independent or strategically relevant vehicle platforms with brand, engineering, electrification, export, ecosystem, or complete-vehicle qualification advantages while rejecting weak legacy manufacturers, turnaround stories, and misclassified bus companies.
+
+The one hundred sixth A-share peer-group review output is basic software:
+
+- `data/processed/a_share_basic_software_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-basic-software.md`
+
+This pass reviews all companies in `信息技术-计算机软件-基础软件`. It separates office-software ecosystems, domestic foundational software, databases, data/AI infrastructure, font/IP software, and project-heavy management software. Product reuse, ecosystem lock-in, standard/interface control, data model depth, and IP assets are required.
+
+The one hundred seventh A-share peer-group review output is remaining defense and aerospace software:
+
+- `data/processed/a_share_defense_aerospace_software_remaining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-defense-aerospace-software-remaining.md`
+
+This pass resolves the previously deferred aerospace, military simulation, defense equipment digitalization, and electromagnetic/antenna software companies in `信息技术-计算机软件-行业应用软件`. These companies are judged by mission-critical product role, domain validation, and program relevance rather than ordinary civilian SaaS metrics.
+
+The one hundred eighth A-share peer-group review output is internet finance:
+
+- `data/processed/a_share_internet_finance_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-internet-finance.md`
+
+This pass reviews all companies in `互联网-互联网金融-其他互联网金融`. It retains platforms with investor traffic, data, account relationships, transaction loops, or trading-workflow lock-in while rejecting generic fintech solution vendors and weaker financial terminals.
+
+The one hundred ninth A-share peer-group review output is meat products:
+
+- `data/processed/a_share_meat_products_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-meat-products.md`
+
+This pass reviews all companies in `食品饮料-食品-肉制品`. It separates national processed-meat brands, traditional category brands, casual braised-food chains, poultry/pork processors, and regional meat platforms. Brand trust, channel density, food-safety credibility, and repeat consumption matter more than simple protein-processing capacity.
+
+The one hundred tenth A-share peer-group review output is rail transit equipment:
+
+- `data/processed/a_share_rail_transit_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-rail-transit-equipment.md`
+
+This pass reviews all companies in `交运设备-轨道交通设备-轨道交通设备`. It retains rail-control systems, traction/electrical systems, tunnel-boring and railway-construction equipment, rail doors, rail materials, inspection/monitoring, and selected rail-signal niches while rejecting supply-chain, interior, and ordinary component cases.
+
+The one hundred eleventh A-share peer-group review output is building equipment:
+
+- `data/processed/a_share_building_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-building-equipment.md`
+
+This pass reviews all companies in `机械设备-专用设备-楼宇设备`. It distinguishes national elevator platforms, elevator service/installed-base cases, safety components, fire-safety IoT systems, generic elevator manufacturing, and ST mixed-equipment cases.
+
+The one hundred twelfth A-share peer-group review output is apparel:
+
+- `data/processed/a_share_apparel_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-apparel.md`
+
+This pass reviews all companies in `纺织服装-服装家纺-服装`. Because ordinary apparel is structurally low-barrier, it retains only selected companies with unusually strong brand/category control, channel density, intimate-apparel trust, B2B workflow, C2M systems, cross-industry optionality, or global manufacturing qualification.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
