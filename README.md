@@ -571,6 +571,13 @@ The sixty-ninth A-share peer-group review output is remaining rare small metals:
 
 This pass completes the remaining undecided companies in `有色金属-稀有金属-其他稀有小金属`. It separates uranium, vanadium-titanium, precious-metal materials and recycling, tantalum-niobium, titanium, molybdenum, silver, nano-metal powder, zirconium, weak lithium/cobalt followers, and transformation-material stories. It corrects low baseline scores where resource scarcity, national-security relevance, aerospace/nuclear qualification, or hard material process technology matters more than current commodity-cycle profit.
 
+The seventieth A-share peer-group review output is remaining other chemical products:
+
+- `data/processed/a_share_other_chemical_products_remaining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-chemical-products-remaining.md`
+
+This pass completes the remaining undecided companies in `基础化工-化学制品-其他化学制品`. It separates platform material capabilities such as organic silicone, titanium/zirconium chemistry, electronic gases, membranes, adsorption resins, OLED and liquid-crystal materials, food ingredients, synthetic biology, chromatography media, fluorochemicals, and molecular sieves from ordinary commodity capacity, coatings, adhesives, water-treatment chemicals, fertilizers, fragrances, and ST transition cases.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
