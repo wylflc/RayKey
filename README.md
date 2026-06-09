@@ -578,6 +578,13 @@ The seventieth A-share peer-group review output is remaining other chemical prod
 
 This pass completes the remaining undecided companies in `基础化工-化学制品-其他化学制品`. It separates platform material capabilities such as organic silicone, titanium/zirconium chemistry, electronic gases, membranes, adsorption resins, OLED and liquid-crystal materials, food ingredients, synthetic biology, chromatography media, fluorochemicals, and molecular sieves from ordinary commodity capacity, coatings, adhesives, water-treatment chemicals, fertilizers, fragrances, and ST transition cases.
 
+The seventy-first A-share peer-group review output is other professional services:
+
+- `data/processed/a_share_other_professional_services_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-professional-services.md`
+
+This pass reviews the remaining companies in `休闲、生活及专业服务-专业服务-其他专业服务`. It separates comprehensive TIC platforms, national electrical and automotive testing institutes, irradiation sterilization, semiconductor production services, construction-science institutes, metallurgy and food-security engineering platforms, and selected scale operating networks from ordinary project consulting, design, HR, municipal outsourcing, exhibition, procurement, and low-barrier service businesses.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
