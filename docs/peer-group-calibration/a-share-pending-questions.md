@@ -6,7 +6,9 @@ This document records companies or industries that could not be finalized during
 
 The broad `电子设备-电子设备制造-电子设备制造` group contains defense-electronics, radar, underwater acoustic, and defense-computing companies. Their moat may be real, but the relevant evidence is structurally different from civilian electronics: classified customer validation, military procurement continuity, model-number opacity, and customer concentration can make normal margin and market-share comparisons misleading.
 
-Pending companies:
+Resolution: this question was handled in `docs/peer-group-calibration/a-share-defense-electronics-remaining.md` and `data/processed/a_share_defense_electronics_remaining_peer_group_decisions.csv`. The table below is retained as the historical question log, not as a still-pending work queue.
+
+Resolved companies:
 
 | Security Code | Security Name | Pending Question |
 | --- | --- | --- |

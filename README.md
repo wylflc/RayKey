@@ -662,6 +662,76 @@ The eighty-second A-share peer-group review output is other nonbank finance:
 
 This pass reviews all companies in `金融-非银行金融-其他非银行金融`. It separates financial holdings, leasing platforms, distressed-asset management, futures platforms, local financial-service companies, and payment or credit-service stories. It retains regulated licenses only when combined with scale, customer access, risk-control history, asset-origination capability, or scarce platform position.
 
+The eighty-third A-share peer-group review output is remaining defense electronics and defense computing:
+
+- `data/processed/a_share_defense_electronics_remaining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-defense-electronics-remaining.md`
+
+This pass resolves the previously deferred companies in `电子设备-电子设备制造-电子设备制造`. It separates national radar platforms, domestic defense-computing/GPU capability, millimeter-wave phased-array microsystems, air-defense radar, military control electronics, military network bus and display niches, optoelectronic guidance systems, underwater acoustic systems, and weaker opaque defense-electronics stories.
+
+The eighty-fourth A-share peer-group review output is construction machinery:
+
+- `data/processed/a_share_construction_machinery_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-construction-machinery.md`
+
+This pass reviews all companies in `机械设备-专用设备-工程机械`. It separates global construction-machinery leaders, forklift and industrial-vehicle platforms, logistics automation, micro-drive systems, hydraulic seals and attachments, tunnel/asphalt/port machinery, and ordinary cyclical equipment makers. Low baseline scores are overridden when global scale, product breadth, overseas channels, or hard component qualification clearly matter more than current-cycle profit.
+
+The eighty-fifth A-share peer-group review output is environmental equipment:
+
+- `data/processed/a_share_environmental_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-environmental-equipment.md`
+
+This pass reviews all companies in `机械设备-专用设备-环保设备`. It separates special-environment control, semiconductor cleanroom purification, thermal cracking, atmospheric governance, heavy-metal treatment, environmental monitoring, membrane/water-treatment platforms, ordinary flue-gas equipment, generic sanitation vehicles, low-barrier VOC/odor projects, and ST environmental-equipment cases.
+
+The eighty-sixth A-share peer-group review output is healthcare nutrition products:
+
+- `data/processed/a_share_healthcare_nutrition_products_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-healthcare-nutrition-products.md`
+
+This pass reviews all companies in `医药生物-保健护理-保健护理产品`. It separates global nutrition ingredient and bio-manufacturing platforms, nutrition product CDMO, health-food dosage-form manufacturers, disposable care products, and legacy health-food brands. It retains hard process, formulation, global manufacturing, and regulated product capability rather than OEM capacity alone.
+
+The eighty-seventh A-share peer-group review output is network media:
+
+- `data/processed/a_share_network_media_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-network-media.md`
+
+This pass reviews all companies in `互联网-互联网服务-网络媒体`. It separates long-video content platforms, elevator media networks, high-speed rail scene media, central official news portals, and digital culture/metaverse projects. It retains scarce traffic, content production, location-network, official media authority, and differentiated media access.
+
+The eighty-eighth A-share peer-group review output is soft drinks:
+
+- `data/processed/a_share_soft_drinks_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-soft-drinks.md`
+
+This pass reviews all companies in `食品饮料-饮料-软饮料`. It separates national energy-drink brands, plant-protein drink category leaders, scarce water-resource brands, concentrated juice suppliers, regional packaged beverage brands, and fad-like drink categories. It retains brand/channel/category leadership and resource scarcity while rejecting commodity processing and weak regional brands.
+
+The eighty-ninth A-share peer-group review output is railway and urban rail construction:
+
+- `data/processed/a_share_railway_urban_rail_construction_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-railway-urban-rail-construction.md`
+
+This pass reviews all companies in `建筑-基础建设-铁路城轨建设`. It separates global railway infrastructure contractors, urban-rail design institutes, railway electrification equipment, and smaller regional contractors. It retains qualification, execution scale, line-use history, and scarce design/equipment capability while rejecting ordinary project exposure.
+
+The ninetieth A-share peer-group review output is machine tools:
+
+- `data/processed/a_share_machine_tools_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-machine-tools.md`
+
+This pass reviews all companies in `机械设备-通用设备-机床设备`. It separates industrial mother-machine and CNC-control platforms, five-axis systems, high-speed spindles, high-end grinders, CNC machine-tool platforms, battery rolling equipment, and ordinary machine-tool assemblers. Strategic domestic-substitution capability can override low baseline scores when the company controls core CNC systems, five-axis integration, or precision functional components.
+
+The ninety-first A-share peer-group review output is lighting equipment:
+
+- `data/processed/a_share_lighting_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-lighting-equipment.md`
+
+This pass reviews all companies in `家电-照明设备-照明设备`. It separates professional industrial/special lighting, consumer and commercial lighting brands, stage and cultural-tourism lighting, commercial LED exporters, IoT lighting ODMs, mobile lighting, and lighting components. It retains only professional, brand/channel, or application-specific niches because ordinary LED manufacturing is low-barrier.
+
+The ninety-second A-share peer-group review output is feed and animal nutrition:
+
+- `data/processed/a_share_feed_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-feed.md`
+
+This pass reviews all companies in `农林牧渔-畜牧业-饲料`. It separates global animal nutrition and amino-acid platforms, feed leaders, pet food, biological feed additives, aquatic feed, seed/ag-biotech cross-industry cases, commodity feed, pig-cycle integrated operators, and regional feed companies. It retains scale, R&D, cost curve, fermentation/process capability, channel density, and differentiated animal-nutrition technology rather than low-margin feed capacity alone.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
