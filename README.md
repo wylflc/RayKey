@@ -732,6 +732,76 @@ The ninety-second A-share peer-group review output is feed and animal nutrition:
 
 This pass reviews all companies in `农林牧渔-畜牧业-饲料`. It separates global animal nutrition and amino-acid platforms, feed leaders, pet food, biological feed additives, aquatic feed, seed/ag-biotech cross-industry cases, commodity feed, pig-cycle integrated operators, and regional feed companies. It retains scale, R&D, cost curve, fermentation/process capability, channel density, and differentiated animal-nutrition technology rather than low-margin feed capacity alone.
 
+The ninety-third A-share peer-group review output is marketing services:
+
+- `data/processed/a_share_marketing_services_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-marketing-services.md`
+
+This pass reviews all companies in `文化传媒-营销服务-营销服务`. It treats ordinary advertising agency, media buying, livestream commerce, e-commerce operation, public-relations, and event execution as low-barrier service businesses, retaining only selected boundary marketing-technology or global advertising platforms with differentiated data, tooling, overseas media access, or scaled client workflows.
+
+The ninety-fourth A-share peer-group review output is electric motors:
+
+- `data/processed/a_share_electric_motors_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-electric-motors.md`
+
+This pass reviews all companies in `电气设备-电机-电机`. It separates national special-motor platforms, global industrial motor and drive systems, major strategic electrical-equipment companies, e-bike drive systems, motion-control motors, micro motors, wind-turbine companies, appliance motor components, EV-drive suppliers, and motor-core manufacturers. Misclassified strategic equipment companies are judged by company-level capability rather than the narrow electric-motor label.
+
+The ninety-fifth A-share peer-group review output is lead and zinc resources:
+
+- `data/processed/a_share_lead_zinc_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-lead-zinc.md`
+
+This pass reviews all companies in `有色金属-基本金属-铅锌`. It separates mine-owning lead-zinc and multi-metal resource platforms, overseas resource companies, silver-tin scarcity cases, germanium and by-product optionality, zinc/lead smelters, nonferrous engineering contractors, and zinc-powder manufacturers. Resource ownership, reserve quality, by-product scarcity, and cost position matter more than current commodity-cycle profit.
+
+The ninety-sixth A-share peer-group review output is refrigeration and air-conditioning equipment:
+
+- `data/processed/a_share_refrigeration_ac_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-refrigeration-ac-equipment.md`
+
+This pass reviews all companies in `机械设备-通用设备-制冷空调设备`. It separates screw compressors, HVAC valves and heat exchangers, petrochemical/power/nuclear air-cooling systems, industrial refrigeration, hydrogen and thermal-power equipment, data-center liquid cooling, high-reliability ventilation, scroll compressors, commercial cold-chain cabinets, HVAC parts, and air-filter components.
+
+The ninety-seventh A-share peer-group review output is satellite applications:
+
+- `data/processed/a_share_satellite_applications_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-satellite-applications.md`
+
+This pass reviews all companies in `信息技术-卫星应用-卫星应用`. It separates high-precision BeiDou/GNSS leaders, satellite navigation modules and correction networks, older satellite-navigation platforms, aerospace chips, micro/nano satellites, remote-sensing software, and ST satellite-application cases. Core algorithms, chips/modules, augmentation networks, and strategic aerospace electronics are the central tests.
+
+The ninety-eighth A-share peer-group review output is airports:
+
+- `data/processed/a_share_airports_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-airports.md`
+
+This pass reviews all companies in `交通运输-航空机场-机场`. It separates major international hub airports, regional gateway airports, and mixed airport/property/commercial platforms. It retains scarce gateway location, route network, passenger/cargo flow, and commercial concession economics while discounting tariff regulation, hub overlap, and diluted non-airport assets.
+
+The ninety-ninth A-share peer-group review output is industrial robots:
+
+- `data/processed/a_share_industrial_robots_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-industrial-robots.md`
+
+This pass reviews all companies in `机械设备-机器人-工业机器人`. It separates industrial automation control platforms, domestic robot bodies and motion-control systems, national robot platforms, embodied-intelligence equipment, power-grid robots, nuclear and defense robots, welding robots, automotive system integrators, and smaller automation-line suppliers. Current profit weakness is not enough to reject a company with core control, servo, robot-body, or strategic special-robot capability.
+
+The one hundredth A-share peer-group review output is commercial vehicles:
+
+- `data/processed/a_share_commercial_vehicles_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-commercial-vehicles.md`
+
+This pass reviews all companies in `交运设备-汽车-商用车`. It separates bus leaders, heavy-truck platforms, light-commercial vehicles, semi-trailer platforms, new-energy commercial vehicles, and weaker local commercial-vehicle manufacturers. It retains segment leadership, export/channel strength, electrification capability, powertrain depth, and scale advantages while rejecting weaker duplicate bus and truck exposure.
+
+The one hundred first A-share peer-group review output is public bus and local passenger transport:
+
+- `data/processed/a_share_public_bus_transport_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-public-bus-transport.md`
+
+This pass reviews all companies in `交通运输-公路铁路-公交`. It treats road passenger transport, taxi fleets, and local bus operators as structurally low-growth and labor/capital intensive, retaining only a scarce urban rail operating asset as a boundary case.
+
+The one hundred second A-share peer-group review output is paper and paper-based materials:
+
+- `data/processed/a_share_paper_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-paper.md`
+
+This pass reviews all companies in `轻工制造-造纸印刷-造纸`. It separates integrated pulp-paper leaders, specialty paper and paper-based functional material platforms, decorative base paper, aramid paper, tobacco paper, tissue brands, packaging board, recycled paper mills, bamboo pulp, and ST paper-cycle cases. Scale, cost curve, product breadth, process technology, and customer qualification are required; commodity paper capacity alone is rejected.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
