@@ -592,6 +592,76 @@ The seventy-second A-share peer-group review output is cloud, IDC, and CDN:
 
 This pass reviews all companies in `互联网-互联网技术-云服务(含IDC、CDN)`. It separates enterprise-cloud software and CDN/edge-network platforms from capital-intensive data-center operators, smaller cloud-network providers, game-to-cloud transition cases, and ST cloud/AI stories; IDC companies are retained only when customer relationships, core-city assets, energy efficiency, operating reliability, or cloud-network resources make the business harder to replicate than ordinary server capacity.
 
+The seventy-third A-share peer-group review output is mining and metallurgy machinery:
+
+- `data/processed/a_share_mining_metallurgy_machinery_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-mining-metallurgy-machinery.md`
+
+This pass reviews all companies in `机械设备-专用设备-矿山冶金机械`. It separates mining-intelligence, coal-mining equipment, heavy metallurgical equipment, oilfield tools, wear-resistant consumables, crushing/screening systems, nuclear/heavy-forging equipment, and ordinary cyclical equipment makers. It retains companies with installed-base service lock-in, process-critical qualification, scarce heavy-manufacturing capability, resource-industry customer validation, or consumable replacement economics.
+
+The seventy-fourth A-share peer-group review output is security brokerages:
+
+- `data/processed/a_share_security_brokerages_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-security-brokerages.md`
+
+This pass reviews all companies in `金融-非银行金融-证券`. It separates top-tier integrated securities platforms, investment-banking leaders, wealth-management and institutional-service platforms, regional brokerages, internet-brokerage stories, and smaller capital-market intermediaries. It retains scale, capital strength, institutional franchise, investment-banking capability, product platform, and cross-cycle risk-control advantages rather than brokerage-license scarcity alone.
+
+The seventy-fifth A-share peer-group review output is mechanical basic components:
+
+- `data/processed/a_share_mechanical_basic_components_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-mechanical-basic-components.md`
+
+This pass reviews all companies in `机械设备-通用设备-基础件`. It separates hydraulic components, industrial valves, precision bearings, nuclear/aerospace/special valves, seals, fasteners, tools, transmission components, catalog-style MRO platforms, and ordinary mechanical parts. It retains process-critical components with qualification, reliability, installed-base, high-end material/process, or customer-switching-cost evidence.
+
+The seventy-sixth A-share peer-group review output is cable TV:
+
+- `data/processed/a_share_cable_tv_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-cable-tv.md`
+
+This pass reviews all companies in `文化传媒-广播电视-有线电视`. It separates provincial cable-network operators, integrated media and digital-content platforms, smart-city or data-network transitions, and smaller regional cable operators. It retains only companies with scarce local network access, content/platform integration, or credible digital-service extension rather than mature cable access alone.
+
+The seventy-seventh A-share peer-group review output is electrical instruments:
+
+- `data/processed/a_share_electrical_instruments_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-electrical-instruments.md`
+
+This pass reviews all companies in `电气设备-输变电设备-电气仪表`. It separates smart-meter leaders, energy-management and distribution-monitoring platforms, State Grid/utility qualification niches, electricity information-collection systems, and ordinary meter/module suppliers. It retains companies with utility procurement qualification, installed-base data/service extension, product reliability, and power-IoT platform evidence.
+
+The seventy-eighth A-share peer-group review output is railway transport:
+
+- `data/processed/a_share_railway_transport_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-railway-transport.md`
+
+This pass reviews all companies in `交通运输-公路铁路-铁路运输`. It separates high-speed rail corridor assets, heavy-haul coal railways, national railway-adjacent logistics, special-cargo platforms, regional passenger railways, and mixed logistics portfolios. It retains scarce route/franchise assets, corridor economics, cargo specialization, or infrastructure-control advantages while discounting cyclicality and tariff constraints.
+
+The seventy-ninth A-share peer-group review output is dairy products:
+
+- `data/processed/a_share_dairy_products_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-dairy-products.md`
+
+This pass reviews all companies in `食品饮料-食品-乳制品`. It separates national dairy brands, regional fresh-milk brands, cheese categories, infant-formula and premium dairy exposure, and small regional dairy producers. It retains category leadership, brand trust, cold-chain/channel control, product mix, and scale advantages while rejecting weak regional players without durable differentiation.
+
+The eightieth A-share peer-group review output is beer:
+
+- `data/processed/a_share_beer_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-beer.md`
+
+This pass reviews all companies in `食品饮料-饮料-啤酒`. It separates national beer brands, regional strongholds, premiumization leaders, malt-supply platforms, and weaker local brewers. It retains brand, channel, regional density, premium mix, and cost/supply-chain advantages while rejecting subscale or weakly differentiated beer assets.
+
+The eighty-first A-share peer-group review output is furniture manufacturing:
+
+- `data/processed/a_share_furniture_manufacturing_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-furniture-manufacturing.md`
+
+This pass reviews all companies in `轻工制造-家具-家具制造`. It separates custom-home furnishing platforms, upholstered furniture brands, office/seating exporters, smart beds and ergonomic products, hardware/home-improvement niches, and ordinary furniture manufacturers. It retains brand/channel/installation networks, category leadership, overseas customer validation, manufacturing efficiency, or product-function differentiation rather than capacity alone.
+
+The eighty-second A-share peer-group review output is other nonbank finance:
+
+- `data/processed/a_share_other_nonbank_finance_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-nonbank-finance.md`
+
+This pass reviews all companies in `金融-非银行金融-其他非银行金融`. It separates financial holdings, leasing platforms, distressed-asset management, futures platforms, local financial-service companies, and payment or credit-service stories. It retains regulated licenses only when combined with scale, customer access, risk-control history, asset-origination capability, or scarce platform position.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
