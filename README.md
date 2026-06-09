@@ -872,6 +872,76 @@ The one hundred twelfth A-share peer-group review output is apparel:
 
 This pass reviews all companies in `纺织服装-服装家纺-服装`. Because ordinary apparel is structurally low-barrier, it retains only selected companies with unusually strong brand/category control, channel density, intimate-apparel trust, B2B workflow, C2M systems, cross-industry optionality, or global manufacturing qualification.
 
+The one hundred thirteenth A-share peer-group review output is logistics:
+
+- `data/processed/a_share_logistics_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-logistics.md`
+
+This pass reviews all companies in `交通运输-物流-物流`. It separates premium express and integrated supply-chain networks, global freight-forwarding platforms, chemical and dangerous-goods logistics, petrochemical storage infrastructure, manufacturing-embedded logistics, commodity supply-chain trading, regional transport, weak express followers, and ST logistics cases.
+
+The one hundred fourteenth A-share peer-group review output is insurance:
+
+- `data/processed/a_share_insurance_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-insurance.md`
+
+This pass reviews all companies in `金融-非银行金融-保险`. It retains insurance franchises with brand, capital, distribution, asset-management, customer ecosystem, and segment leadership while rejecting weaker insurance peers whose franchise is not clearly differentiated from retained leaders.
+
+The one hundred fifteenth A-share peer-group review output is planting agriculture:
+
+- `data/processed/a_share_planting_agriculture_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-planting-agriculture.md`
+
+This pass reviews all companies in `农林牧渔-农业-种植业`. It separates scarce farmland, modern large-scale farming systems, seed and agricultural-service integration, strategic natural-rubber assets, and weaker regional crop companies.
+
+The one hundred sixteenth A-share peer-group review output is other textiles:
+
+- `data/processed/a_share_other_textiles_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-textiles.md`
+
+This pass reviews all companies in `纺织服装-纺织-其他纺织`. It retains only selected technical material, automotive interior textile, high-grade down, protective textile, and luggage workflow cases because ordinary textile production, dyeing, fabric, home textile, and OEM capacity is structurally low-barrier.
+
+The one hundred seventeenth A-share peer-group review output is audio-visual equipment:
+
+- `data/processed/a_share_audio_visual_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-audio-visual-equipment.md`
+
+This pass reviews all companies in `家电-视听器材-视听器材`. It separates global display brands, TV/LED/ODM platforms, laser-display and optical technology, and ST digital-TV equipment cases.
+
+The one hundred eighteenth A-share peer-group review output is textile and apparel machinery:
+
+- `data/processed/a_share_textile_apparel_machinery_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-textile-apparel-machinery.md`
+
+This pass reviews all companies in `机械设备-专用设备-纺织服装机械`. It separates intelligent sewing equipment, global sewing and material-joining brands, spinning machinery, computerized knitting machinery, generic textile equipment, and ST textile-machinery cases.
+
+The one hundred nineteenth A-share peer-group review output is other chemical raw materials:
+
+- `data/processed/a_share_other_chemical_raw_materials_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-chemical-raw-materials.md`
+
+This pass reviews all companies in `基础化工-化学原料-其他化学原料`. It separates coal-to-new-materials platforms, electronic specialty gases, wet electronic chemicals and photoresist, chromatography microspheres, non-power nuclear materials, semiconductor gases, conductive carbon black, piperazine derivatives, light-hydrocarbon integration, molecular sieves, thermal-storage salts, green catalysis, electronic silane, and ordinary commodity chemicals.
+
+The one hundred twentieth A-share peer-group review output is online shopping:
+
+- `data/processed/a_share_online_shopping_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-online-shopping.md`
+
+This pass reviews all companies in `互联网-互联网商务-网上购物`. It retains only owned consumer-decision content, data, and workflow moats while rejecting platform-dependent brand-operation and cross-border e-commerce service models.
+
+The one hundred twenty-first A-share peer-group review output is gold:
+
+- `data/processed/a_share_gold_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-gold.md`
+
+This pass completes the still-undecided companies in `有色金属-贵金属-黄金`. It does not duplicate companies already decided in the strategic-resource calibration. Gold companies are retained only when they have strategic by-product metals, precious-metal recovery, silver/polymetallic resource exposure, or other company-specific advantages beyond gold-price beta.
+
+The one hundred twenty-second A-share peer-group review output is chemical new materials:
+
+- `data/processed/a_share_chemical_new_materials_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-chemical-new-materials.md`
+
+This pass reviews all companies in `基础化工-化学新材料-化学新材料`. It separates platform-level insulation, optical-film, biomass, high-end ceramic, special polymer, electromagnetic, thermal/EMI, synthetic-biology, functional-film, semiconductor-packaging, and fine-chemical monomer capabilities from commodity PET, nylon, oil-ink, LPG-processing, wood-plastic, ST, and mixed chemical cases.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
