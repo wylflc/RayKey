@@ -1457,6 +1457,31 @@ The one hundred ninety-third through two hundred second A-share peer-group revie
 
 This pass reviews 69 companies, retains 11, and rejects 58. It keeps only differentiated cross-industry resource, niche chemical, pipe-brand, energy-electronics, IoT-platform, and high-performance fiber cases while allowing whole-group rejection for low-barrier tourism, restaurant, event-service, special-vehicle, and discretionary recreation-goods groups.
 
+The two hundred third through two hundred twelfth A-share peer-group review outputs cover ten additional peer groups:
+
+- `data/processed/a_share_department_stores_peer_group_decisions.csv`
+- `data/processed/a_share_decoration_construction_peer_group_decisions.csv`
+- `data/processed/a_share_trade_peer_group_decisions.csv`
+- `data/processed/a_share_general_commercial_property_peer_group_decisions.csv`
+- `data/processed/a_share_chain_retail_peer_group_decisions.csv`
+- `data/processed/a_share_supermarkets_peer_group_decisions.csv`
+- `data/processed/a_share_architectural_design_peer_group_decisions.csv`
+- `data/processed/a_share_other_infrastructure_construction_peer_group_decisions.csv`
+- `data/processed/a_share_daily_chemicals_peer_group_decisions.csv`
+- `data/processed/a_share_glass_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-department-stores.md`
+- `docs/peer-group-calibration/a-share-decoration-construction.md`
+- `docs/peer-group-calibration/a-share-trade.md`
+- `docs/peer-group-calibration/a-share-general-commercial-property.md`
+- `docs/peer-group-calibration/a-share-chain-retail.md`
+- `docs/peer-group-calibration/a-share-supermarkets.md`
+- `docs/peer-group-calibration/a-share-architectural-design.md`
+- `docs/peer-group-calibration/a-share-other-infrastructure-construction.md`
+- `docs/peer-group-calibration/a-share-daily-chemicals.md`
+- `docs/peer-group-calibration/a-share-glass.md`
+
+This pass reviews 160 companies, retains 13, and rejects 147. It retains China duty-free scale, Yiwu market infrastructure, a national energy-engineering platform, selected domestic cosmetics/specialty-chemical brands, and selected high-end glass/material niches while rejecting ordinary department stores, decoration contractors, trade distributors, property operators, chain retail, supermarkets, and project-based design firms.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
