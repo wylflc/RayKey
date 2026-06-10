@@ -942,6 +942,76 @@ The one hundred twenty-second A-share peer-group review output is chemical new m
 
 This pass reviews all companies in `基础化工-化学新材料-化学新材料`. It separates platform-level insulation, optical-film, biomass, high-end ceramic, special polymer, electromagnetic, thermal/EMI, synthetic-biology, functional-film, semiconductor-packaging, and fine-chemical monomer capabilities from commodity PET, nylon, oil-ink, LPG-processing, wood-plastic, ST, and mixed chemical cases.
 
+The one hundred twenty-third A-share peer-group review output is tungsten remaining:
+
+- `data/processed/a_share_tungsten_remaining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-tungsten-remaining.md`
+
+This pass completes the still-undecided tungsten companies and retains only differentiated integrated tungsten resource/carbide capability beyond previously retained tungsten leaders.
+
+The one hundred twenty-fourth A-share peer-group review output is other transport equipment:
+
+- `data/processed/a_share_other_transport_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-transport-equipment.md`
+
+This pass separates global equipment platforms, rail signaling, personal mobility and powersports niches from ordinary bicycles, two-wheelers, components and narrow electric vehicle cases.
+
+The one hundred twenty-fifth A-share peer-group review output is huangjiu:
+
+- `data/processed/a_share_huangjiu_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-huangjiu.md`
+
+This pass keeps only a huangjiu category representative because the category has heritage but limited young-consumer growth and regional demand breadth.
+
+The one hundred twenty-sixth A-share peer-group review output is auto sales:
+
+- `data/processed/a_share_auto_sales_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-auto-sales.md`
+
+This pass rejects the whole auto-sales group because dealership, trading and distribution economics lack durable company-level control points.
+
+The one hundred twenty-seventh A-share peer-group review output is packaging printing:
+
+- `data/processed/a_share_packaging_printing_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-packaging-printing.md`
+
+This pass separates premium customer-workflow packaging, flexible packaging and aseptic packaging from ordinary paper, metal, bottle, cap, label and printing capacity.
+
+The one hundred twenty-eighth A-share peer-group review output is copper remaining:
+
+- `data/processed/a_share_copper_remaining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-copper-remaining.md`
+
+This pass completes remaining copper-group companies and retains only multi-metal resource exposure or high-performance copper-material capability beyond commodity copper scale.
+
+The one hundred twenty-ninth A-share peer-group review output is other light industry:
+
+- `data/processed/a_share_other_light_industry_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-light-industry.md`
+
+This pass separates global artificial-turf and optical-lens niches from ordinary hygiene, disposable, sanitary, household, decorative and housing-linked products.
+
+The one hundred thirtieth A-share peer-group review output is agricultural processing:
+
+- `data/processed/a_share_agricultural_processing_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-agricultural-processing.md`
+
+This pass separates plant-extraction and konjac specialty-ingredient capability from commodity grain, oil, sugar, mushroom and agricultural-processing businesses.
+
+The one hundred thirty-first A-share peer-group review output is wine:
+
+- `data/processed/a_share_wine_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-wine.md`
+
+This pass keeps only the domestic wine category representative and rejects weak regional, ST, or follower wine names.
+
+The one hundred thirty-second A-share peer-group review output is small appliances:
+
+- `data/processed/a_share_small_appliances_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-small-appliances.md`
+
+This pass separates durable kitchen/cleaning appliance brands and motor engineering from trend products, ordinary ODM and weak small-appliance followers.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
