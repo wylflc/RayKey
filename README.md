@@ -1432,6 +1432,31 @@ The one hundred ninety-second A-share peer-group review output is polyurethane:
 
 This pass retains the global MDI/polyurethane leader and a boundary battery-material solvent case while rejecting generic polyurethane and commodity chemical capacity.
 
+The one hundred ninety-third through two hundred second A-share peer-group review outputs cover ten additional peer groups:
+
+- `data/processed/a_share_iron_ore_peer_group_decisions.csv`
+- `data/processed/a_share_inorganic_salts_peer_group_decisions.csv`
+- `data/processed/a_share_pipe_materials_peer_group_decisions.csv`
+- `data/processed/a_share_tourism_services_peer_group_decisions.csv`
+- `data/processed/a_share_restaurants_peer_group_decisions.csv`
+- `data/processed/a_share_other_home_appliances_peer_group_decisions.csv`
+- `data/processed/a_share_special_vehicles_peer_group_decisions.csv`
+- `data/processed/a_share_other_leisure_services_peer_group_decisions.csv`
+- `data/processed/a_share_other_fibers_peer_group_decisions.csv`
+- `data/processed/a_share_other_cultural_recreation_goods_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-iron-ore.md`
+- `docs/peer-group-calibration/a-share-inorganic-salts.md`
+- `docs/peer-group-calibration/a-share-pipe-materials.md`
+- `docs/peer-group-calibration/a-share-tourism-services.md`
+- `docs/peer-group-calibration/a-share-restaurants.md`
+- `docs/peer-group-calibration/a-share-other-home-appliances.md`
+- `docs/peer-group-calibration/a-share-special-vehicles.md`
+- `docs/peer-group-calibration/a-share-other-leisure-services.md`
+- `docs/peer-group-calibration/a-share-other-fibers.md`
+- `docs/peer-group-calibration/a-share-other-cultural-recreation-goods.md`
+
+This pass reviews 69 companies, retains 11, and rejects 58. It keeps only differentiated cross-industry resource, niche chemical, pipe-brand, energy-electronics, IoT-platform, and high-performance fiber cases while allowing whole-group rejection for low-barrier tourism, restaurant, event-service, special-vehicle, and discretionary recreation-goods groups.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
