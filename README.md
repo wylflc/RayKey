@@ -1152,6 +1152,76 @@ The one hundred fifty-second A-share peer-group review output is other railway e
 
 This pass retains boundary rail-component and rail-signal/control companies when certification and installed-base barriers are visible.
 
+The one hundred fifty-third A-share peer-group review output is industrial gases:
+
+- `data/processed/a_share_industrial_gases_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-industrial-gases.md`
+
+This pass retains the equipment-plus-onsite-gas platform where air-separation engineering, customer qualification, and gas operations compound.
+
+The one hundred fifty-fourth A-share peer-group review output is cultural stationery:
+
+- `data/processed/a_share_cultural_stationery_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-cultural-stationery.md`
+
+This pass retains only the strongest stationery brand/channel leader and rejects weaker office-supply, export, and paper-stationery peers.
+
+The one hundred fifty-fifth A-share peer-group review output is petroleum and gas trade:
+
+- `data/processed/a_share_petroleum_gas_trade_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-petroleum-gas-trade.md`
+
+This pass rejects the whole petroleum/gas-trade group because the reviewed companies lack scarce upstream resources or irreplaceable infrastructure.
+
+The one hundred fifty-sixth A-share peer-group review output is apparel accessories:
+
+- `data/processed/a_share_apparel_accessories_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-apparel-accessories.md`
+
+This pass separates global footwear manufacturing and garment-accessory niche leadership from weak apparel, leather, shoe, and bag exposure.
+
+The one hundred fifty-seventh A-share peer-group review output is refractory materials:
+
+- `data/processed/a_share_refractory_materials_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-refractory-materials.md`
+
+This pass retains scarce-resource, specialty-insulation, and research-platform refractory cases while rejecting ordinary steel-cycle refractory service.
+
+The one hundred fifty-eighth A-share peer-group review output is motorcycles:
+
+- `data/processed/a_share_motorcycles_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-motorcycles.md`
+
+This pass retains only the visible mid/high-displacement motorcycle brand and product platform.
+
+The one hundred fifty-ninth A-share peer-group review output is other liquor:
+
+- `data/processed/a_share_other_liquor_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-liquor.md`
+
+This pass retains only the prepared-cocktail category leader and rejects the distressed follower brand.
+
+The one hundred sixtieth A-share peer-group review output is fluorochemicals:
+
+- `data/processed/a_share_fluorochemicals_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-fluorochemicals.md`
+
+This pass separates fluorite resources, refrigerant quota/integration, and high-end fluorine-material capability from commodity fluorochemical capacity.
+
+The one hundred sixty-first A-share peer-group review output is other building materials:
+
+- `data/processed/a_share_other_building_materials_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-building-materials.md`
+
+This pass retains only clear product-system or category leaders in a property-cycle-exposed building-material group.
+
+The one hundred sixty-second A-share peer-group review output is coal mining:
+
+- `data/processed/a_share_coal_mining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-coal-mining.md`
+
+This pass retains only exceptional coal-resource, low-cost, integration, global, or scarce coking-coal platforms and rejects ordinary commodity-cycle miners.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
