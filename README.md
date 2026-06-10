@@ -1507,6 +1507,31 @@ The two hundred thirteenth through two hundred twenty-second A-share peer-group 
 
 This pass reviews 126 companies, retains 44, and rejects 82. It retains scarce aerospace and shipbuilding platforms, selected aerospace subsystems, integrated polyester platforms, national oil-and-gas resource owners, coalbed-methane resources, tractor and outdoor-power-equipment platforms, special engineering plastics, functional films, PI films, high-performance polymer components, and life-science plastic consumables. It rejects online education, sports services, trust companies, internal-combustion engine makers, ordinary polyester capacity, small boats, oilfield services, commodity packaging, household plastics, generic modified plastics, molds, foam, and ST or transition cases when no durable moat is visible.
 
+The two hundred twenty-third through two hundred thirty-second A-share peer-group review outputs cover ten additional peer groups:
+
+- `data/processed/a_share_marine_fisheries_peer_group_decisions.csv`
+- `data/processed/a_share_textile_dyeing_printing_peer_group_decisions.csv`
+- `data/processed/a_share_education_information_services_peer_group_decisions.csv`
+- `data/processed/a_share_petroleum_refining_peer_group_decisions.csv`
+- `data/processed/a_share_compound_fertilizer_peer_group_decisions.csv`
+- `data/processed/a_share_civil_explosives_peer_group_decisions.csv`
+- `data/processed/a_share_magnetic_materials_peer_group_decisions.csv`
+- `data/processed/a_share_synthetic_resins_peer_group_decisions.csv`
+- `data/processed/a_share_recreational_goods_peer_group_decisions.csv`
+- `data/processed/a_share_nitrogen_fertilizer_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-marine-fisheries.md`
+- `docs/peer-group-calibration/a-share-textile-dyeing-printing.md`
+- `docs/peer-group-calibration/a-share-education-information-services.md`
+- `docs/peer-group-calibration/a-share-petroleum-refining.md`
+- `docs/peer-group-calibration/a-share-compound-fertilizer.md`
+- `docs/peer-group-calibration/a-share-civil-explosives.md`
+- `docs/peer-group-calibration/a-share-magnetic-materials.md`
+- `docs/peer-group-calibration/a-share-synthetic-resins.md`
+- `docs/peer-group-calibration/a-share-recreational-goods.md`
+- `docs/peer-group-calibration/a-share-nitrogen-fertilizer.md`
+
+This pass reviews 96 companies, retains 29, and rejects 67. It retains one protected textbook and education-publishing channel, national and resource/infrastructure-backed petroleum platforms, resource-integrated compound fertilizer cases, civil-explosive and mine-service platforms, global or differentiated magnetic-material leaders, specialty synthetic resins, and an exceptional integrated nitrogen-chemical platform. It rejects marine fisheries, textile dyeing, recreational goods, training/project education services, ordinary lubricants/asphalt/refining processors, pure fertilizer channels, small regional civil-explosive license holders, weaker duplicate magnet producers, and commodity resin cases.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
