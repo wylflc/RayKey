@@ -36,6 +36,10 @@ _Avoid_: current stock list when provider and retrieval time matter.
 The set of listed companies retained for ongoing attention after business-quality screening.
 _Avoid_: buy list, target list.
 
+**Final Screening Result**:
+A consolidated market-level screening output that contains one final attention decision per eligible listed company after triage, peer-group calibration, reviewer challenges, and any supplemental cleanup decisions have been resolved.
+_Avoid_: leaving multiple split decision tables as competing sources of truth after a market review is complete.
+
 **Watch Selection Route**:
 A label showing whether a listed company entered a **Watchlist** as a direct reviewer-accepted watch company or as a boundary company retained after analyst judgment under calibrated rules.
 _Avoid_: mixing explicit reviewer selections and analyst-inferred boundary decisions without traceability.
@@ -160,6 +164,7 @@ _Avoid_: report date when the specific event type matters.
 
 - A **Listed Company** can have one or more **Securities**.
 - A **Universe** contains **Securities**, but a **Watchlist** contains **Listed Companies**.
+- A **Final Screening Result** is the structured source of truth for a completed market review; filtering it to `watch` decisions produces the current **Watchlist** for that market.
 - A **Watch Selection Route** preserves whether a **Watchlist** entry came from direct reviewer acceptance or boundary-company judgment.
 - A **Universe Snapshot** records the **Securities** available from a provider at retrieval time and can be used as input to later screening.
 - **Screening Evidence** supports a **Moat Score**; a high enough **Moat Score** can produce a **Watchlist Candidate**.
