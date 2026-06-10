@@ -43,7 +43,9 @@ Resolved companies:
 
 The `信息技术-计算机软件-其他软件服务` group includes civil aviation control and defense-cyber companies whose customer validation and procurement cycles are not comparable with ordinary software-service companies.
 
-Pending companies:
+Resolution: this question was handled in `docs/peer-group-calibration/a-share-aviation-defense-cyber-software-remaining.md` and `data/processed/a_share_aviation_defense_cyber_software_remaining_peer_group_decisions.csv`. The table below is retained as the historical question log, not as a still-pending work queue.
+
+Resolved companies:
 
 | Security Code | Security Name | Pending Question |
 | --- | --- | --- |

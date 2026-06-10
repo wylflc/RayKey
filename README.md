@@ -1012,6 +1012,76 @@ The one hundred thirty-second A-share peer-group review output is small applianc
 
 This pass separates durable kitchen/cleaning appliance brands and motor engineering from trend products, ordinary ODM and weak small-appliance followers.
 
+The one hundred thirty-third A-share peer-group review output is ordinary steel:
+
+- `data/processed/a_share_ordinary_steel_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-ordinary-steel.md`
+
+This pass retains only Baosteel as a boundary high-end steel platform and rejects ordinary steel capacity as commodity-cycle exposure.
+
+The one hundred thirty-fourth A-share peer-group review output is aviation defense cyber software remaining:
+
+- `data/processed/a_share_aviation_defense_cyber_software_remaining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-aviation-defense-cyber-software-remaining.md`
+
+This pass resolves aviation traffic-control and defense-cyber software pending cases under mission-critical qualification rules.
+
+The one hundred thirty-fifth A-share peer-group review output is aviation equipment:
+
+- `data/processed/a_share_aviation_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-aviation-equipment.md`
+
+This pass separates aircraft/OEM platforms, avionics, engine controls, aviation composites and qualified subsystems from generic aircraft parts, MRO, commercial drones and weak ST cases.
+
+The one hundred thirty-sixth A-share peer-group review output is jewelry:
+
+- `data/processed/a_share_jewelry_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-jewelry.md`
+
+This pass keeps only the strongest heritage jewelry brand and rejects ordinary gold, diamond, fashion jewelry and watch retail models.
+
+The one hundred thirty-seventh A-share peer-group review output is white appliances:
+
+- `data/processed/a_share_white_appliances_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-white-appliances.md`
+
+This pass retains global appliance platforms with brand, service, R&D, manufacturing and component ecosystems while rejecting weaker white-appliance followers.
+
+The one hundred thirty-eighth A-share peer-group review output is livestock breeding:
+
+- `data/processed/a_share_livestock_breeding_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-livestock-breeding.md`
+
+This pass separates livestock operators with durable genetics, biosecurity, cost and farmer-network systems from ordinary cyclical farms and mixed agriculture cases.
+
+The one hundred thirty-ninth A-share peer-group review output is nonmetal new materials:
+
+- `data/processed/a_share_nonmetal_new_materials_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-nonmetal-new-materials.md`
+
+This pass separates strategic high-purity, defense, electronic and battery nonmetal materials from commodity glass fiber, graphite, silicon and synthetic-diamond cycles.
+
+The one hundred fortieth A-share peer-group review output is print media:
+
+- `data/processed/a_share_print_media_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-print-media.md`
+
+This pass keeps only selected education, content and science-publishing platforms while rejecting ordinary regional publishers and weak media names.
+
+The one hundred forty-first A-share peer-group review output is network tv:
+
+- `data/processed/a_share_network_tv_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-network-tv.md`
+
+This pass retains only boundary IPTV/internet-TV platforms where license, operator workflow and local user scale create defensible economics.
+
+The one hundred forty-second A-share peer-group review output is real estate services:
+
+- `data/processed/a_share_real_estate_services_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-real-estate-services.md`
+
+This pass rejects the whole real-estate-service group because property management, brokerage and related services lack durable pricing power.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
