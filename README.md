@@ -1582,6 +1582,25 @@ The two hundred forty-third through two hundred fifty-second A-share peer-group 
 
 This pass reviews 87 companies, retains 26, and rejects 61. It retains scarce offshore oilfield-service platforms, selected oilfield equipment and EPC cases, marine defense/ocean-data platforms, integrated viscose or high-performance fiber cases, the China State Construction platform, national and specialty engineering platforms, proprietary animation IP, market-infrastructure operators, and an integrated PVA/PVB/optical-film platform. It rejects forestry planting, coke, ordinary building contractors, most local project-engineering firms, smaller duplicate cleanroom or metallurgical contractors, weaker oilfield-service contractors, ordinary specialty markets, and ST or transition cases without a proved durable capability.
 
+The two hundred fifty-third through two hundred fifty-ninth A-share peer-group review outputs complete the remaining seven peer groups:
+
+- `data/processed/a_share_potash_remaining_peer_group_decisions.csv`
+- `data/processed/a_share_landscape_engineering_peer_group_decisions.csv`
+- `data/processed/a_share_lithium_remaining_peer_group_decisions.csv`
+- `data/processed/a_share_early_childhood_education_peer_group_decisions.csv`
+- `data/processed/a_share_adult_education_peer_group_decisions.csv`
+- `data/processed/a_share_industrial_park_development_peer_group_decisions.csv`
+- `data/processed/a_share_steel_structure_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-potash-remaining.md`
+- `docs/peer-group-calibration/a-share-landscape-engineering.md`
+- `docs/peer-group-calibration/a-share-lithium-remaining.md`
+- `docs/peer-group-calibration/a-share-early-childhood-education.md`
+- `docs/peer-group-calibration/a-share-adult-education.md`
+- `docs/peer-group-calibration/a-share-industrial-park-development.md`
+- `docs/peer-group-calibration/a-share-steel-structure.md`
+
+This final pass reviews 26 companies, retains 4, and rejects 22. It retains Asia-Potash as a boundary potash-resource platform, Zhongxin Group as a boundary industrial-park ecosystem operator, and Honglu Steel Structure plus Jinggong Steel Building as boundary steel-structure leaders. It rejects mixed or weaker potash/lithium exposure, landscape contractors, adult and early-childhood education names, ordinary park developers, smaller steel-structure contractors, and ST cases. After this pass, the A-share peer-group screening queue has no remaining unreviewed companies.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
