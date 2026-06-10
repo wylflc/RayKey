@@ -1222,6 +1222,76 @@ The one hundred sixty-second A-share peer-group review output is coal mining:
 
 This pass retains only exceptional coal-resource, low-cost, integration, global, or scarce coking-coal platforms and rejects ordinary commodity-cycle miners.
 
+The one hundred sixty-third A-share peer-group review output is lifting and transport equipment:
+
+- `data/processed/a_share_lifting_transport_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-lifting-transport-equipment.md`
+
+This pass retains only the global port-machinery and heavy-equipment platform while rejecting ordinary project equipment.
+
+The one hundred sixty-fourth A-share peer-group review output is aluminum remaining:
+
+- `data/processed/a_share_aluminum_remaining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-aluminum-remaining.md`
+
+This pass separates differentiated aluminum resource/cost, green-energy, high-value processing, and electronic-material niches from generic aluminum capacity.
+
+The one hundred sixty-fifth A-share peer-group review output is printing and packaging machinery:
+
+- `data/processed/a_share_printing_packaging_machinery_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-printing-packaging-machinery.md`
+
+This pass retains boundary complete-line and automated packaging equipment niches while rejecting ordinary machine assembly.
+
+The one hundred sixty-sixth A-share peer-group review output is healthcare care services:
+
+- `data/processed/a_share_healthcare_care_services_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-healthcare-care-services.md`
+
+This pass rejects the mixed healthcare-service case because the healthcare asset is not focused and defensible enough.
+
+The one hundred sixty-seventh A-share peer-group review output is freshwater fisheries:
+
+- `data/processed/a_share_freshwater_fisheries_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-freshwater-fisheries.md`
+
+This pass rejects the whole freshwater-fisheries and seafood-processing group because no scarce biological, water-right, or brand/channel moat is visible.
+
+The one hundred sixty-eighth A-share peer-group review output is wool textiles:
+
+- `data/processed/a_share_wool_textiles_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-wool-textiles.md`
+
+This pass retains the technical-fiber/new-material cross-industry case and rejects ordinary wool/textile exposure.
+
+The one hundred sixty-ninth A-share peer-group review output is pharmaceutical excipients:
+
+- `data/processed/a_share_pharma_excipients_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-pharma-excipients.md`
+
+This pass retains the high-end PEG derivative and pharmaceutical excipient platform.
+
+The one hundred seventieth A-share peer-group review output is scenic spots:
+
+- `data/processed/a_share_scenic_spots_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-scenic-spots.md`
+
+This pass retains only the strongest iconic scarce scenic-resource platform as a boundary observation.
+
+The one hundred seventy-first A-share peer-group review output is soda ash:
+
+- `data/processed/a_share_soda_ash_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-soda-ash.md`
+
+This pass retains the natural-alkali resource and cost leader while rejecting ordinary synthetic soda-ash capacity.
+
+The one hundred seventy-second A-share peer-group review output is phosphorus chemicals:
+
+- `data/processed/a_share_phosphorus_chemicals_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-phosphorus-chemicals.md`
+
+This pass retains the integrated phosphorus-resource/fine-chemical leader and a wet-process phosphate specialist.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
