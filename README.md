@@ -1082,6 +1082,76 @@ The one hundred forty-second A-share peer-group review output is real estate ser
 
 This pass rejects the whole real-estate-service group because property management, brokerage and related services lack durable pricing power.
 
+The one hundred forty-third A-share peer-group review output is real estate development:
+
+- `data/processed/a_share_real_estate_development_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-real-estate-development.md`
+
+This pass rejects ordinary real-estate developers but retains the misclassified semiconductor equipment/materials platform as a boundary technology case.
+
+The one hundred forty-fourth A-share peer-group review output is water conservancy construction:
+
+- `data/processed/a_share_water_conservancy_construction_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-water-conservancy-construction.md`
+
+This pass retains only the global hydropower, pumped-storage and renewable infrastructure engineering platform while rejecting regional/distressed water contractors.
+
+The one hundred forty-fifth A-share peer-group review output is tin remaining:
+
+- `data/processed/a_share_tin_remaining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-tin-remaining.md`
+
+This pass completes the tin group and retains the remaining tin/polymetallic resource company as a boundary strategic-resource case.
+
+The one hundred forty-sixth A-share peer-group review output is rare earth remaining:
+
+- `data/processed/a_share_rare_earth_remaining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-rare-earth-remaining.md`
+
+This pass completes remaining rare-earth names, separating quota/resource/platform roles from pure rare-earth price beta.
+
+The one hundred forty-seventh A-share peer-group review output is other rubber products:
+
+- `data/processed/a_share_other_rubber_products_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-rubber-products.md`
+
+This pass separates high-pressure hoses, rubber additives, ePTFE membranes and seismic isolation from ordinary rubber-product capacity.
+
+The one hundred forty-eighth A-share peer-group review output is special steel:
+
+- `data/processed/a_share_special_steel_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-special-steel.md`
+
+This pass separates broad special-steel and high-end alloy/tube capabilities from commodity pipe, stainless strip and steel-cycle exposure.
+
+The one hundred forty-ninth A-share peer-group review output is ground equipment:
+
+- `data/processed/a_share_ground_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-ground-equipment.md`
+
+This pass separates armored vehicle platforms and mission-critical defense electronics, radar, navigation and communications from weaker mixed equipment cases.
+
+The one hundred fiftieth A-share peer-group review output is road bridge construction:
+
+- `data/processed/a_share_road_bridge_construction_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-road-bridge-construction.md`
+
+This pass retains only global transport infrastructure engineering and tunnel specialization while rejecting local road/bridge contractors.
+
+The one hundred fifty-first A-share peer-group review output is railway vehicles:
+
+- `data/processed/a_share_railway_vehicles_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-railway-vehicles.md`
+
+This pass retains the national railway rolling-stock platform based on certification, installed base and system integration barriers.
+
+The one hundred fifty-second A-share peer-group review output is other railway equipment:
+
+- `data/processed/a_share_other_railway_equipment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-other-railway-equipment.md`
+
+This pass retains boundary rail-component and rail-signal/control companies when certification and installed-base barriers are visible.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
