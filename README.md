@@ -1362,6 +1362,76 @@ The one hundred eighty-second A-share peer-group review output is ceramics:
 
 This pass retains only the strongest ceramic-tile brand/channel case and the kaolin resource-backed ceramic-material case.
 
+The one hundred eighty-third A-share peer-group review output is home textiles:
+
+- `data/processed/a_share_home_textiles_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-home-textiles.md`
+
+This pass retains only differentiated national home-textile brand/channel leaders as boundary cases.
+
+The one hundred eighty-fourth A-share peer-group review output is cotton textiles:
+
+- `data/processed/a_share_cotton_textiles_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-cotton-textiles.md`
+
+This pass separates differentiated yarn/fabric platforms and cross-industry medical-consumer textile capability from ordinary cotton capacity.
+
+The one hundred eighty-fifth A-share peer-group review output is conglomerates:
+
+- `data/processed/a_share_conglomerates_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-conglomerates.md`
+
+This pass retains only conglomerates with material cross-industry hard assets such as electronic materials, battery materials, or strategic industrial assets.
+
+The one hundred eighty-sixth A-share peer-group review output is survey and consulting:
+
+- `data/processed/a_share_survey_consulting_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-survey-consulting.md`
+
+This pass retains qualification-heavy testing and transport-engineering platforms while rejecting generic consulting labor.
+
+The one hundred eighty-seventh A-share peer-group review output is veterinary medicine:
+
+- `data/processed/a_share_veterinary_medicine_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-veterinary-medicine.md`
+
+This pass retains regulatory/R&D-heavy animal vaccine and animal-health platforms while rejecting generic veterinary drug exposure.
+
+The one hundred eighty-eighth A-share peer-group review output is seed:
+
+- `data/processed/a_share_seed_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-seed.md`
+
+This pass retains germplasm and breeding leaders while rejecting regional or policy-beta seed names.
+
+The one hundred eighty-ninth A-share peer-group review output is auto services:
+
+- `data/processed/a_share_auto_services_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-auto-services.md`
+
+This pass retains accredited testing and proving-ground platforms while rejecting generic auto services.
+
+The one hundred ninetieth A-share peer-group review output is service robots:
+
+- `data/processed/a_share_service_robots_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-service-robots.md`
+
+This pass retains both consumer service-robot leaders because their algorithm, product, brand, and channel advantages are meaningfully differentiated.
+
+The one hundred ninety-first A-share peer-group review output is remaining joint-stock and city banks:
+
+- `data/processed/a_share_bank_remaining_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-bank-remaining.md`
+
+This pass completes the remaining bank group under the previously accepted explicit bank standard and adds no new bank watch names.
+
+The one hundred ninety-second A-share peer-group review output is polyurethane:
+
+- `data/processed/a_share_polyurethane_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-polyurethane.md`
+
+This pass retains the global MDI/polyurethane leader and a boundary battery-material solvent case while rejecting generic polyurethane and commodity chemical capacity.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
