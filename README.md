@@ -1292,6 +1292,76 @@ The one hundred seventy-second A-share peer-group review output is phosphorus ch
 
 This pass retains the integrated phosphorus-resource/fine-chemical leader and a wet-process phosphate specialist.
 
+The one hundred seventy-third A-share peer-group review output is hotels:
+
+- `data/processed/a_share_hotels_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-hotels.md`
+
+This pass retains only the strongest national hotel-chain brand/franchise platform and rejects local or weaker hotel operators.
+
+The one hundred seventy-fourth A-share peer-group review output is third-party payment:
+
+- `data/processed/a_share_third_party_payment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-third-party-payment.md`
+
+This pass retains the licensed merchant-acquiring and payment-service platform as a boundary case.
+
+The one hundred seventy-fifth A-share peer-group review output is coatings and pigments:
+
+- `data/processed/a_share_coatings_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-coatings.md`
+
+This pass separates national coating-brand/channel leadership and specialty pigment/material process capability from ordinary coating capacity.
+
+The one hundred seventy-sixth A-share peer-group review output is phosphate fertilizer:
+
+- `data/processed/a_share_phosphate_fertilizer_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-phosphate-fertilizer.md`
+
+This pass retains the phosphate-resource integrated fertilizer/chemical platform and rejects ordinary fertilizer capacity.
+
+The one hundred seventy-seventh A-share peer-group review output is tires:
+
+- `data/processed/a_share_tires_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-tires.md`
+
+This pass retains differentiated tire companies by domestic scale/channel, global OEM/export capability, process technology, and high-end niche optionality.
+
+The one hundred seventy-eighth A-share peer-group review output is chlor-alkali:
+
+- `data/processed/a_share_chlor_alkali_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-chlor-alkali.md`
+
+This pass retains only the integrated low-cost energy-chemical platform and rejects ordinary PVC/caustic-soda capacity.
+
+The one hundred seventy-ninth A-share peer-group review output is cement:
+
+- `data/processed/a_share_cement_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-cement.md`
+
+This pass retains exceptional cement cost/scale and overseas/new-material platform cases while rejecting ordinary regional cement.
+
+The one hundred eightieth A-share peer-group review output is pesticides:
+
+- `data/processed/a_share_pesticides_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-pesticides.md`
+
+This pass retains crop-protection registration/channel platforms and pesticide process-chemistry leaders while rejecting generic pesticide capacity.
+
+The one hundred eighty-first A-share peer-group review output is spandex and aramid:
+
+- `data/processed/a_share_spandex_aramid_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-spandex-aramid.md`
+
+This pass retains the spandex scale/cost leader and the aramid/high-performance fiber cross-industry case.
+
+The one hundred eighty-second A-share peer-group review output is ceramics:
+
+- `data/processed/a_share_ceramics_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-ceramics.md`
+
+This pass retains only the strongest ceramic-tile brand/channel case and the kaolin resource-backed ceramic-material case.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
