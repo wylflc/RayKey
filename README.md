@@ -1482,6 +1482,31 @@ The two hundred third through two hundred twelfth A-share peer-group review outp
 
 This pass reviews 160 companies, retains 13, and rejects 147. It retains China duty-free scale, Yiwu market infrastructure, a national energy-engineering platform, selected domestic cosmetics/specialty-chemical brands, and selected high-end glass/material niches while rejecting ordinary department stores, decoration contractors, trade distributors, property operators, chain retail, supermarkets, and project-based design firms.
 
+The two hundred thirteenth through two hundred twenty-second A-share peer-group review outputs cover ten additional peer groups:
+
+- `data/processed/a_share_space_equipment_peer_group_decisions.csv`
+- `data/processed/a_share_online_education_peer_group_decisions.csv`
+- `data/processed/a_share_polyester_peer_group_decisions.csv`
+- `data/processed/a_share_shipbuilding_peer_group_decisions.csv`
+- `data/processed/a_share_sports_services_peer_group_decisions.csv`
+- `data/processed/a_share_agricultural_machinery_peer_group_decisions.csv`
+- `data/processed/a_share_trust_peer_group_decisions.csv`
+- `data/processed/a_share_internal_combustion_engine_peer_group_decisions.csv`
+- `data/processed/a_share_oil_gas_exploration_peer_group_decisions.csv`
+- `data/processed/a_share_plastic_products_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-space-equipment.md`
+- `docs/peer-group-calibration/a-share-online-education.md`
+- `docs/peer-group-calibration/a-share-polyester.md`
+- `docs/peer-group-calibration/a-share-shipbuilding.md`
+- `docs/peer-group-calibration/a-share-sports-services.md`
+- `docs/peer-group-calibration/a-share-agricultural-machinery.md`
+- `docs/peer-group-calibration/a-share-trust.md`
+- `docs/peer-group-calibration/a-share-internal-combustion-engine.md`
+- `docs/peer-group-calibration/a-share-oil-gas-exploration.md`
+- `docs/peer-group-calibration/a-share-plastic-products.md`
+
+This pass reviews 126 companies, retains 44, and rejects 82. It retains scarce aerospace and shipbuilding platforms, selected aerospace subsystems, integrated polyester platforms, national oil-and-gas resource owners, coalbed-methane resources, tractor and outdoor-power-equipment platforms, special engineering plastics, functional films, PI films, high-performance polymer components, and life-science plastic consumables. It rejects online education, sports services, trust companies, internal-combustion engine makers, ordinary polyester capacity, small boats, oilfield services, commodity packaging, household plastics, generic modified plastics, molds, foam, and ST or transition cases when no durable moat is visible.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
