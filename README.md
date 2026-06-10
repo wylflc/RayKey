@@ -1532,6 +1532,31 @@ The two hundred twenty-third through two hundred thirty-second A-share peer-grou
 
 This pass reviews 96 companies, retains 29, and rejects 67. It retains one protected textbook and education-publishing channel, national and resource/infrastructure-backed petroleum platforms, resource-integrated compound fertilizer cases, civil-explosive and mine-service platforms, global or differentiated magnetic-material leaders, specialty synthetic resins, and an exceptional integrated nitrogen-chemical platform. It rejects marine fisheries, textile dyeing, recreational goods, training/project education services, ordinary lubricants/asphalt/refining processors, pure fertilizer channels, small regional civil-explosive license holders, weaker duplicate magnet producers, and commodity resin cases.
 
+The two hundred thirty-third through two hundred forty-second A-share peer-group review outputs cover ten additional peer groups:
+
+- `data/processed/a_share_glass_fiber_peer_group_decisions.csv`
+- `data/processed/a_share_film_peer_group_decisions.csv`
+- `data/processed/a_share_agricultural_services_peer_group_decisions.csv`
+- `data/processed/a_share_nylon_peer_group_decisions.csv`
+- `data/processed/a_share_state_banks_remaining_peer_group_decisions.csv`
+- `data/processed/a_share_wood_processing_peer_group_decisions.csv`
+- `data/processed/a_share_silk_peer_group_decisions.csv`
+- `data/processed/a_share_dye_chemicals_peer_group_decisions.csv`
+- `data/processed/a_share_sports_event_operation_peer_group_decisions.csv`
+- `data/processed/a_share_pe_vc_investment_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-glass-fiber.md`
+- `docs/peer-group-calibration/a-share-film.md`
+- `docs/peer-group-calibration/a-share-agricultural-services.md`
+- `docs/peer-group-calibration/a-share-nylon.md`
+- `docs/peer-group-calibration/a-share-state-banks-remaining.md`
+- `docs/peer-group-calibration/a-share-wood-processing.md`
+- `docs/peer-group-calibration/a-share-silk.md`
+- `docs/peer-group-calibration/a-share-dye-chemicals.md`
+- `docs/peer-group-calibration/a-share-sports-event-operation.md`
+- `docs/peer-group-calibration/a-share-pe-vc-investment.md`
+
+This pass reviews 58 companies, retains 12, and rejects 46. It retains global or niche glass-fiber/material platforms, scarce film distribution and animation/IP platforms, nylon process and high-end fabric niches, and dye/coating/pigment leaders. It rejects remaining state banks under the already accepted bank standard, agricultural service channels, wood processing, silk textiles, event operation, PE/VC shells, cinema chains, hit-driven studios, commodity fiberglass, ordinary nylon capacity, and smaller duplicate dye or textile-chemical producers.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
