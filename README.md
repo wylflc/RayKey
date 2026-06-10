@@ -1557,6 +1557,31 @@ The two hundred thirty-third through two hundred forty-second A-share peer-group
 
 This pass reviews 58 companies, retains 12, and rejects 46. It retains global or niche glass-fiber/material platforms, scarce film distribution and animation/IP platforms, nylon process and high-end fabric niches, and dye/coating/pigment leaders. It rejects remaining state banks under the already accepted bank standard, agricultural service channels, wood processing, silk textiles, event operation, PE/VC shells, cinema chains, hit-driven studios, commodity fiberglass, ordinary nylon capacity, and smaller duplicate dye or textile-chemical producers.
 
+The two hundred forty-third through two hundred fifty-second A-share peer-group review outputs cover ten additional peer groups:
+
+- `data/processed/a_share_oilfield_services_peer_group_decisions.csv`
+- `data/processed/a_share_forestry_planting_peer_group_decisions.csv`
+- `data/processed/a_share_marine_engineering_equipment_peer_group_decisions.csv`
+- `data/processed/a_share_coke_peer_group_decisions.csv`
+- `data/processed/a_share_viscose_fiber_peer_group_decisions.csv`
+- `data/processed/a_share_building_construction_peer_group_decisions.csv`
+- `data/processed/a_share_professional_engineering_peer_group_decisions.csv`
+- `data/processed/a_share_animation_peer_group_decisions.csv`
+- `data/processed/a_share_specialty_markets_peer_group_decisions.csv`
+- `data/processed/a_share_pva_vinylon_peer_group_decisions.csv`
+- `docs/peer-group-calibration/a-share-oilfield-services.md`
+- `docs/peer-group-calibration/a-share-forestry-planting.md`
+- `docs/peer-group-calibration/a-share-marine-engineering-equipment.md`
+- `docs/peer-group-calibration/a-share-coke.md`
+- `docs/peer-group-calibration/a-share-viscose-fiber.md`
+- `docs/peer-group-calibration/a-share-building-construction.md`
+- `docs/peer-group-calibration/a-share-professional-engineering.md`
+- `docs/peer-group-calibration/a-share-animation.md`
+- `docs/peer-group-calibration/a-share-specialty-markets.md`
+- `docs/peer-group-calibration/a-share-pva-vinylon.md`
+
+This pass reviews 87 companies, retains 26, and rejects 61. It retains scarce offshore oilfield-service platforms, selected oilfield equipment and EPC cases, marine defense/ocean-data platforms, integrated viscose or high-performance fiber cases, the China State Construction platform, national and specialty engineering platforms, proprietary animation IP, market-infrastructure operators, and an integrated PVA/PVB/optical-film platform. It rejects forestry planting, coke, ordinary building contractors, most local project-engineering firms, smaller duplicate cleanroom or metallurgical contractors, weaker oilfield-service contractors, ordinary specialty markets, and ST or transition cases without a proved durable capability.
+
 Fetch A-share screening evidence into resumable interim CSV files:
 
 ```bash
