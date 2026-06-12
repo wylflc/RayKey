@@ -21,6 +21,25 @@ AShareQuant is a research and data-analysis project for listed companies in main
 - Treat corporate actions, dividends, split/bonus events, trading calendars, suspension days, and currency as first-class data concerns for equity analysis.
 - For financial reports, distinguish reporting period, forecast/pre-announcement dates, official announcement dates, and the reported financial contents.
 
+## Investment Research Rules
+
+Use the user's personal investment system in `docs/personal-investment-system-v1.zh.md` as the default standard for equity analysis. Apply the rules strictly; the watchlist is intended to be small and high quality.
+
+- Apply a "strict entry, wide exit" rule for watchlists. Do not add a company to the core watchlist merely because it is familiar, popular, recently down, or has a plausible story. A company must have a durable reason to deserve continued attention.
+- Treat moat durability as the first filter. Ask whether a well-funded new entrant could easily enter the industry, replicate the product, buy traffic/channels/capacity, and erode returns. If yes, high current growth or high margins are likely not durable enough for watchlist inclusion.
+- Low-barrier consumer, retail, OEM, commodity processing, simple manufacturing, and traffic-buying businesses should normally be rejected unless they have exceptional brand mindshare, network effects, regulatory/resource constraints, switching costs, cost advantages, or verifiable category dominance.
+- Do not classify a company as GARP unless growth is both real and defensible. Growth driven by low barriers, ad spending, channel expansion, temporary margins, export cycles, or easily copied products does not qualify.
+- Do not call a stock undervalued just because the price fell. For ordinary non-monopoly businesses, roughly 20x-25x PE is not automatically cheap; it needs durable growth, strong cash conversion, and a clear margin of safety. Otherwise classify it as fairly valued or unproven.
+- Distinguish "worth understanding" from "worth watching." Many companies can be researched once and rejected. The watchlist should contain only companies that could plausibly become future holdings under the user's position rules.
+- Favor omission when evidence is mixed. If moat, valuation, and future compounding quality are not all compelling, reject or keep outside the watchlist rather than adding a low-conviction observation name.
+- For every recommendation, state the primary reason for inclusion or exclusion. If excluding a company, be explicit when the reason is weak moat, easy entry, valuation not cheap enough, poor cash conversion, or insufficient durable growth.
+
+Position discipline for future analysis:
+
+- Core holding candidates must justify 15%-25% position potential under the personal investment system. If a company cannot plausibly support that level after deeper verification, it should not be described as a core candidate.
+- Tactical positions are only for strong right-side signals or early verified catalysts, not for loosely tracking weak companies. Do not recommend many small "observation positions" as a substitute for strict watchlist selection.
+- Never recommend all-in concentration. Even high-conviction opportunities must respect the user's position limits, industry exposure limits, thesis risk, and liquidity risk.
+
 ## Validation
 
 - Run the most targeted useful check after changes: tests, lint, typecheck, build, or a small deterministic data/sample validation.
