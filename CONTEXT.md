@@ -140,9 +140,21 @@ _Avoid_: valuation score, buy score.
 A listed company or security that passes the current **Moat Screening** threshold and is worth later **Valuation Assessment**.
 _Avoid_: buy candidate, undervalued stock.
 
+**Investment Strategy Tag**:
+A primary investment-case classification that selects the correct analysis and valuation lens for a listed company or security, such as cash-flow compounder, cigar-butt undervaluation, GARP growth, supply-chain breakout, fallen champion, monopoly resource, or shareholder-return undervaluation.
+_Avoid_: industry label, theme label, price-action label.
+
 **Valuation Assessment**:
 Assessment of whether a security's current price is attractive relative to fundamentals or intrinsic value.
 _Avoid_: moat screening.
+
+**Scenario Valuation**:
+A **Valuation Assessment** expressed as bear, base, and bull cases with explicit assumptions about demand, margins, capital intensity, valuation multiple, asset value, or cycle position.
+_Avoid_: target price when assumptions are not stated.
+
+**Position Plan**:
+Non-binding portfolio guidance that maps a security's **Valuation Assessment**, thesis evidence, risk, and portfolio constraints to a suggested action or position range.
+_Avoid_: buy order, guaranteed allocation.
 
 **Market Data**:
 Daily trading records such as open, high, low, close, volume, turnover, and trading status.
@@ -183,6 +195,9 @@ _Avoid_: report date when the specific event type matters.
 - **Differentiated Peer Retention** and the **Dominance Rejection Test** should be applied together: keep multiple companies in one peer group only when their advantages are meaningfully different and hard to replace; reject a company when a stronger peer comprehensively covers its advantage.
 - **Low-Barrier Group Rejection** is allowed when an entire peer group lacks durable barriers; peer-group calibration does not require every industry to contribute at least one **Watchlist** company.
 - **Moat Screening** determines whether a **Listed Company** deserves attention; **Valuation Assessment** determines whether a **Security** may be attractively priced.
+- An **Investment Strategy Tag** determines which evidence and valuation method should be used in a **Valuation Assessment**; it is not interchangeable with an industry label or short-term market theme.
+- A **Scenario Valuation** supports a **Valuation Assessment** by making bear, base, and bull assumptions explicit before a security is considered for a **Position Plan**.
+- A **Position Plan** belongs to a **Security** and is downstream of both **Moat Screening** and **Valuation Assessment**; it must not be treated as proof that the underlying **Listed Company** has a stronger moat.
 - **Market Data** belongs to a **Security** and trading date.
 - **Corporate Actions** belong to a **Security** or **Listed Company** and affect how **Market Data** should be interpreted.
 - **Financial Report Data** belongs to a **Listed Company** and reporting period, with dates captured in the **Disclosure Timeline**.
@@ -196,4 +211,5 @@ _Avoid_: report date when the specific event type matters.
 
 - "Company" and "stock" are easy to conflate. Use **Listed Company** for the business entity and **Security** for the exchange-traded instrument.
 - "Worth attention" is resolved as **Watchlist** inclusion based on **Moat Screening**, not as a purchase recommendation.
+- "Position" and "watch" are easy to conflate. A **Position Plan** can recommend zero position, tactical monitoring, or a position range only after a separate **Valuation Assessment** on the relevant **Security**.
 - "Evidence insufficient" is narrow. It does not mean a company has not yet been reviewed; it means the company lacks enough public disclosure and authoritative external description to support a fair score.
