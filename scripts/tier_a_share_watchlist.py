@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""Tier A-share watchlist entries by business quality, excluding current valuation.
+"""Create a preliminary A-share watchlist review queue tier.
 
 The input watchlist is already a final screening output. This script adds a
-second-pass quality tier using the personal investment system:
+second-pass queue tier using the personal investment system:
 
 - quality first, valuation later;
 - peer-group double checks;
 - strict core-candidate anchors;
 - low-barrier downgrade pressure.
+
+This output is not a stock-analysis-compliant final company review. It does
+not read every company's annual report, interim/quarterly report, official
+announcement, or reputable research report. Treat the CSV as a prioritization
+aid for the authoritative deep-review queue only.
 """
 
 from __future__ import annotations
@@ -529,6 +534,11 @@ def main() -> None:
         "exchange",
         "industry",
         "peer_groups",
+        "analysis_scope",
+        "final_stock_analysis_compliant",
+        "deep_review_required",
+        "required_authoritative_sources",
+        "method_limitation",
         "quality_tier",
         "quality_tier_label",
         "primary_strategy_tag",
@@ -595,6 +605,11 @@ def main() -> None:
                     "exchange": row["exchange"],
                     "industry": row["industry"],
                     "peer_groups": row["peer_groups"],
+                    "analysis_scope": "preliminary_queue_tiering_only",
+                    "final_stock_analysis_compliant": "no",
+                    "deep_review_required": "yes",
+                    "required_authoritative_sources": "latest_annual_report;latest_interim_or_quarterly_report;official_announcement_or_ir;reputable_research_report_when_available",
+                    "method_limitation": "Generated from prior screening scores, peer-group labels, and local financial indicators; no per-company annual report or research-report reading was performed in this pass.",
                     "quality_tier": row["_tier"],
                     "quality_tier_label": row["_tier_label"],
                     "primary_strategy_tag": row["_strategy"],

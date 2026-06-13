@@ -117,6 +117,12 @@ The scorer writes `data/processed/a_share_full_coverage_scores.csv` and `data/pr
 
 For the completed A-share calibration, use `data/processed/a_share_final_screening_results.csv` directly. It replaces the former split peer-group decision CSVs and the generated peer-group watchlist CSV.
 
+The compact A-share watchlist and follow-up review files have different status:
+
+- `data/processed/a_share_final_watchlist.csv` contains only rows from `a_share_final_screening_results.csv` with `final_decision=watch`.
+- `data/processed/a_share_watchlist_quality_tiers.csv` is a preliminary queue-prioritization file. It is explicitly not a final company-by-company stock analysis because it does not read each company's annual report, current official disclosures, and reputable research reports.
+- `data/interim/a_share_authoritative_deep_review_queue.csv` is the work queue for the required per-company authoritative deep review. A row should be marked complete only after source-backed analysis under `docs/a-share-authoritative-deep-review-protocol.md`.
+
 Fetch Hong Kong screening evidence into resumable interim CSV files:
 
 ```bash
