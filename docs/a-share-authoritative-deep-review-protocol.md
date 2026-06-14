@@ -53,13 +53,26 @@ Final tiers should normally form a pyramid after enough companies have been revi
 
 Use the following stricter calibration from batch 009 onward:
 
-1. **L1 - Core candidate**: reserve for companies that can anchor the watchlist against the strongest existing peers. The company must have a hard-to-replicate moat, leading industry position, strong long-term business quality, and a source-backed path to remain important across cycles.
-2. **L2 - Quasi-core candidate**: use for high-quality companies with strong advantages, but with a material limitation such as cyclicality, valuation sensitivity, narrower market space, weaker proof of bottleneck status, governance risk, or weaker position versus L1 peers.
+1. **L1 - Core candidate**: reserve for companies that can anchor the watchlist against the strongest existing peers. The company must have a hard-to-replicate moat, leading industry position, strong long-term business quality, and a source-backed path to remain important across cycles. L1 is market-cap neutral: current market value, index weight, or trading liquidity cannot be used as a required condition for L1.
+2. **L2 - Quasi-core candidate**: use for high-quality companies with strong advantages, but with a material limitation such as cyclicality, narrower market space, weaker proof of bottleneck status, governance risk, weaker position versus L1 peers, or insufficient evidence that the advantage can remain durable across multiple product or industry cycles. Current valuation sensitivity belongs in a later valuation assessment and must not by itself downgrade a business-quality tier.
 3. **L3 - Tactical candidate**: do not use as a generic middle bucket. The company must have at least one clear tactical reason for attention: a visible industry catalyst, right-side trigger candidate, cycle inflection, local bottleneck, differentiated technology, meaningful shareholder-return catalyst, or source-backed turnaround path. If the thesis is only "good company, possible growth, or possible rebound", downgrade to L4.
 4. **L4 - Zero-position watch**: use as the conservative default for companies that are understandable and may deserve occasional review, but lack enough moat strength, catalyst clarity, peer differentiation, or evidence quality to occupy the first three tiers.
 5. **L5 - Remove from watchlist**: use when the company is low-barrier, easily copied, comprehensively dominated by stronger peers, weak on cash-flow quality, mainly theme/cycle driven without durable advantage, or only attractive under too many assumptions.
 
 Peer double-check must compare a company not only with weaker peers, but also with already assigned L1/L2/L3 anchors. A company should not enter L3 unless it would still deserve attention after being compared with the current L3 anchors.
+
+Use the following L1 subtypes to avoid mixing unrelated reasons:
+
+1. **L1 durable moat / cash-flow anchor**: a company can be L1 even when industry growth is slow if its moat is extremely hard to replicate, cash conversion and margin quality are exceptional, and the listed company is likely to remain a category anchor for many years. Weak industry growth, demographic pressure, or mature demand should be recorded in valuation, expected-return, and position-sizing notes; these factors should not downgrade an ultra-durable moat from L1 by themselves.
+2. **L1 strategic bottleneck / platform anchor**: a company can be L1 when it controls a critical technology, system platform, resource, standard, customer certification layer, or supply-chain bottleneck that is both material to downstream demand and difficult for well-funded entrants to replace.
+3. **L1 small-cap exception**: a smaller listed company can be L1 if authoritative sources show a genuinely irreplaceable niche, global or national leading position, high customer switching cost, and a plausible path for the advantage to remain material. Small size raises the evidence burden and may reduce eventual position size, but it does not cap the business-quality tier.
+
+For AI and semiconductor supply-chain names, do not equate short-term profit explosion with a stronger moat. Optical module, PCB, packaging, semiconductor equipment, EDA, and interface-chip companies must be compared on both:
+
+1. **Current bottleneck intensity**: whether downstream demand, customer certification, capacity, yield, and delivery constraints are causing near-term profit capture.
+2. **Durable technical or ecosystem moat**: whether patents, standards participation, design complexity, process know-how, platform software, customer lock-in, and multi-generation product roadmaps can protect the company after the current demand wave normalizes.
+
+If a company has very strong current bottleneck intensity but weaker multi-cycle technical or ecosystem durability, it may still be L1 as a strategic bottleneck anchor, but its notes must explicitly label product-cycle, customer-concentration, and pricing risks. Conversely, a company with deeper technical or ecosystem moat should not be kept below a current-cycle winner solely because its near-term earnings beta is lower.
 
 ## 1.7 Batch Size
 
