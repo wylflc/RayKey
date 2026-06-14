@@ -47,11 +47,25 @@ The review must separate three decisions:
 
 A cheap price cannot upgrade a weak business into a high-quality watchlist candidate. An expensive price cannot remove a genuinely high-quality business from the watchlist; it only affects the current action.
 
-## 1.6 Batch Size
+## 1.6 Tier Calibration
+
+Final tiers should normally form a pyramid after enough companies have been reviewed. The upper tiers are scarce attention slots, not descriptions of whether a company is merely good.
+
+Use the following stricter calibration from batch 009 onward:
+
+1. **L1 - Core candidate**: reserve for companies that can anchor the watchlist against the strongest existing peers. The company must have a hard-to-replicate moat, leading industry position, strong long-term business quality, and a source-backed path to remain important across cycles.
+2. **L2 - Quasi-core candidate**: use for high-quality companies with strong advantages, but with a material limitation such as cyclicality, valuation sensitivity, narrower market space, weaker proof of bottleneck status, governance risk, or weaker position versus L1 peers.
+3. **L3 - Tactical candidate**: do not use as a generic middle bucket. The company must have at least one clear tactical reason for attention: a visible industry catalyst, right-side trigger candidate, cycle inflection, local bottleneck, differentiated technology, meaningful shareholder-return catalyst, or source-backed turnaround path. If the thesis is only "good company, possible growth, or possible rebound", downgrade to L4.
+4. **L4 - Zero-position watch**: use as the conservative default for companies that are understandable and may deserve occasional review, but lack enough moat strength, catalyst clarity, peer differentiation, or evidence quality to occupy the first three tiers.
+5. **L5 - Remove from watchlist**: use when the company is low-barrier, easily copied, comprehensively dominated by stronger peers, weak on cash-flow quality, mainly theme/cycle driven without durable advantage, or only attractive under too many assumptions.
+
+Peer double-check must compare a company not only with weaker peers, but also with already assigned L1/L2/L3 anchors. A company should not enter L3 unless it would still deserve attention after being compared with the current L3 anchors.
+
+## 1.7 Batch Size
 
 Deep reviews should be performed in small batches. The queue uses 20-company batches only to make progress resumable. The batch label is not analytical evidence and must not be used to infer quality.
 
-## 1.7 Prohibited Shortcuts
+## 1.8 Prohibited Shortcuts
 
 The following are not acceptable as final analysis:
 
