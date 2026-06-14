@@ -227,6 +227,10 @@ The third A-share peer-group calibration is high-end medical devices and medical
 
 `迈瑞医疗` is retained as the broad medical-device platform example. `联影医疗` is retained as the high-end imaging example. `惠泰医疗`, `心脉医疗`, and `南微医学` are retained as specialized high-value device or consumable examples because their clinical niches are meaningfully different from the retained platforms and may have hard-to-replace doctor adoption, regulatory approval, recurring consumables, or treatment-pathway lock-in.
 
+Medical-device tiering must distinguish platform breadth from specialized clinical depth. A broad platform deserves L1 only when the product lines share hospital channels, installed base, service network, global registration capability, R&D reuse, quality systems, and cash conversion. Product breadth becomes a downgrade signal if it dilutes ROIC, creates integration drag, hides weak franchises, or lets focused competitors take share. Specialized device companies such as electrophysiology, vascular intervention, high-end imaging, endoscopy, implant, biomaterial, or recurring-consumable leaders can remain L2 despite very high technical value when their standalone platform scale, cash-flow depth, or multi-cycle category dominance is still narrower than the L1 anchors.
+
+Strategic acquisition by a broad platform is evidence that the target has meaningful clinical and technical value, but it is not sufficient by itself for L1. The target can be upgraded only after the acquisition or platform relationship demonstrably strengthens market share, global channel access, product adoption, margin durability, and cash-flow quality without making the target's thesis dependent on unproven synergy.
+
 `开立医疗`, `新产业`, `乐普医疗`, and `新华医疗` are rejected from this group under the **Dominance Rejection Test** or because their current evidence does not prove a sufficiently irreplaceable niche. `鱼跃医疗` is rejected from this group and should be reclassified into a home-healthcare or consumer-medical-device peer group if reviewed later.
 
 ## 11. Calibration Notes

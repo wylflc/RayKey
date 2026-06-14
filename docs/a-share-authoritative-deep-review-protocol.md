@@ -67,6 +67,13 @@ Use the following L1 subtypes to avoid mixing unrelated reasons:
 2. **L1 strategic bottleneck / platform anchor**: a company can be L1 when it controls a critical technology, system platform, resource, standard, customer certification layer, or supply-chain bottleneck that is both material to downstream demand and difficult for well-funded entrants to replace.
 3. **L1 small-cap exception**: a smaller listed company can be L1 if authoritative sources show a genuinely irreplaceable niche, global or national leading position, high customer switching cost, and a plausible path for the advantage to remain material. Small size raises the evidence burden and may reduce eventual position size, but it does not cap the business-quality tier.
 
+For medical-device companies, separate a broad platform moat from a specialized clinical moat:
+
+1. A broad platform can be L1 only when product breadth is reinforced by shared hospital channels, installed base, service network, quality systems, global registration capability, R&D reuse, and cash conversion. Merely having many product lines is not enough.
+2. Specialized high-barrier companies in electrophysiology, vascular intervention, high-end imaging, endoscopy, implants, consumables, or biomaterials normally start at L2 unless they can prove a category-defining position large enough to anchor the watchlist on their own.
+3. Acquisition or control by an L1 platform is positive validation of the target's technology and clinical value, but it does not automatically upgrade the target to L1. The target still needs standalone evidence of durable market leadership, cash-flow quality, and multi-cycle relevance; expected platform synergies should be recorded as an upgrade trigger, not assumed as already proven.
+4. A platform company should be downgraded if product-line breadth begins to dilute ROIC, weaken cash conversion, create integration drag, hide weak franchises behind strong ones, or if key product lines lose share against focused competitors.
+
 For AI and semiconductor supply-chain names, do not equate short-term profit explosion with a stronger moat. Optical module, PCB, packaging, semiconductor equipment, EDA, and interface-chip companies must be compared on both:
 
 1. **Current bottleneck intensity**: whether downstream demand, customer certification, capacity, yield, and delivery constraints are causing near-term profit capture.
