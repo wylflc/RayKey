@@ -517,6 +517,66 @@ If no pullback and price makes a new high within N days, buy first tranche by br
 
 "Keep watching" is not an allowed conclusion after a real trigger.
 
+### 9.5 Watch-Pool Event Momentum
+
+This tactical strategy is for high-quality watch-pool names that suddenly start being repriced by the market:
+
+```text
+High-quality watch-pool company -> volume breakout -> fast catalyst check -> tactical buy -> add only if momentum persists -> sell when momentum fails or thesis is disproven.
+```
+
+This strategy is allowed only for companies already in the full watch pool, priority watch pool, or ready-to-trigger pool. A random stock that suddenly rises does not qualify.
+
+Valid setups:
+
+1. A fallen leader starts a volume-backed bottom repair.
+2. A GARP company has an unexpected improvement in earnings, orders, margin, or industry cycle.
+3. An industry-chain bottleneck company receives demand, order, price, customer-validation, or policy catalyst.
+4. A shareholder-return deep-value company announces buyback, insider purchase, special dividend, asset revaluation, or value-unlock catalyst.
+
+Entry requires all of:
+
+1. The company already passed watch-pool quality screening.
+2. Daily volume is at least 2x the 20-day average.
+3. Price breaks a key platform, moving average, or recent high.
+4. A real catalyst can be verified within 24 hours, not only market rumor.
+5. Same-day or next-day liquidity shows real buying support, not only a thin one-day spike.
+
+Position path:
+
+| Stage | Trigger | Weight |
+| --- | --- | ---: |
+| First buy | Volume breakout and initially verified catalyst | 1/3 target, usually 1%-3% |
+| Second buy | Continued volume rise, or 2-5 trading days of sideways action above the launch platform | 1/3 target |
+| Third buy | Second breakout, further filing/research/report validation, or sector leaders strengthen together | 1/3 target |
+
+Hold only while:
+
+1. Price does not fall back below the launch platform.
+2. Pullbacks are lower-volume and advances are higher-volume.
+3. Sector or high-quality peers confirm.
+4. The catalyst is not disproven.
+5. Earnings-revision or valuation-reset room remains.
+
+Sell rules:
+
+1. Exit if price breaks the launch-day low.
+2. Exit if price spends two trading days back inside the breakout platform.
+3. Reduce after high-volume stalling or a long upper shadow that is not repaired the next day.
+4. Reduce or exit if both the 5-day and 10-day moving averages fail and no new fundamental evidence appears.
+5. Exit immediately if the catalyst is disproven.
+6. Take profits in tranches if the move already prices in the bull case and no further earnings revision appears.
+
+Prohibitions:
+
+1. Do not convert a failed event-momentum position into a long-term holding.
+2. Do not ignore a tactical failure merely because the company is high quality.
+3. Do not buy a volume spike without a real catalyst.
+4. Do not average down after the first buy without validation.
+5. Do not treat the launch price as a hard floor; if it breaks, re-underwrite.
+
+The goal is to capture the early main leg of a market repricing, not to predict the final top. Entry depends on catalyst and volume. Holding depends on continuation. Exit depends on momentum failure or thesis invalidation.
+
 ## 10. Add Rules
 
 Add only when thesis strengthens. Do not add merely because price falls.
@@ -805,6 +865,7 @@ Do not buy, or exit if already held, when severe:
 ```text
 Build a high-quality watch pool first.
 Wait for right-side trigger before buying.
+Respond through event-momentum rules when a watch-pool stock has a real volume-backed trigger.
 Enter in tranches.
 Upgrade only after validation.
 Do not average down without new evidence.
@@ -814,4 +875,3 @@ Exit immediately when thesis is broken.
 Use market regime to control total exposure.
 Use records and quarterly reviews to improve the system.
 ```
-
