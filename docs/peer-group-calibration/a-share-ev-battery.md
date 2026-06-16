@@ -30,7 +30,9 @@ The same evidence also argues for selectivity. Battery manufacturing remains cap
 
 Reviewer feedback retained `宁德时代` and `比亚迪`.
 
-The reviewer rejected `亿纬锂能` at medium confidence because, compared with `宁德时代`, it does not currently show a strong advantage across moat, technology, market position, or differentiated competition. I accept this rejection without strong dissent. EVE may still have product niches, but the current evidence is not enough to justify watchlist attention under a leader-focused battery standard.
+The reviewer initially rejected `亿纬锂能` at medium confidence because, compared with `宁德时代`, it did not show a strong enough advantage across moat, technology, market position, or differentiated competition under the leader-focused battery standard.
+
+This decision was revised on 2026-06-16 after the company's 2026H1 performance forecast and reputable broker estimate summaries materially changed the evidence set. `亿纬锂能` is now retained as a weak L2 / boundary quasi-core watch company. The revision is not an upgrade to CATL/BYD-level leadership; it recognizes that storage, cylindrical/power-battery execution, deducted-profit acceleration, and forward PEG evidence make the company worth ongoing attention if the 2026H1 report validates cash-flow quality.
 
 The reviewer then clarified a broader decision habit: when multiple peers compete in the same area, retain more than one company only when they compete through meaningfully different and hard-to-replace advantages. If one company is comprehensively dominated by a retained leader and lacks an irreplaceable niche, reject it rather than marking it unresolved just because the reviewer is less familiar with it.
 
@@ -42,7 +44,7 @@ The structured reviewer decision table is `data/processed/a_share_ev_battery_pee
 
 1. `宁德时代` is a core watch company in the power-battery group. Price war, cyclicality, and overseas policy risk should be monitored, but they are not rejection reasons by themselves.
 2. `比亚迪` is a core watch company in the new-energy platform group. Its vertical integration, battery capability, cost engineering, and vehicle-platform scale justify attention despite vehicle price-war exposure.
-3. `亿纬锂能` is rejected under the current standard because it lacks enough differentiated advantage versus CATL/BYD.
+3. `亿纬锂能` is retained as a weak L2 / boundary quasi-core company after the 2026H1 forecast and broker estimate revisions, but remains below CATL/BYD. It must be downgraded again if operating cash flow, receivables, inventory, margin, or customer evidence fails to validate the profit acceleration.
 4. `国轩高科`, `欣旺达`, `孚能科技`, `鹏辉能源`, and `珠海冠宇` are rejected from this peer group under the **Dominance Rejection Test**.
 5. For second-tier battery companies, market growth and ranking are not enough. They need clear evidence of differentiated capability, durable customers, profitability quality, and resilience against the leaders.
 6. `needs_more_evidence` should be reserved for missing key facts, not for cases where the reviewer is unfamiliar but has provided a decision rule that can be applied.
@@ -55,7 +57,7 @@ For this group:
 
 1. If `宁德时代` is rejected mainly because of price war or cyclicality, I would strongly dissent. It is the clearest global power-battery leader and should remain a core watch candidate unless evidence shows structural technology loss or customer flight.
 2. If `比亚迪` is rejected solely because it is exposed to vehicle price wars, I would dissent. Its vertical integration, battery capability, cost engineering, and global vehicle scale still justify continued attention, though governance, working-capital, and domestic margin pressure should be monitored.
-3. I would not strongly dissent if the reviewer rejects `亿纬锂能` or `国轩高科`; the accepted dominance rule now rejects both.
+3. After the 2026-06-16 reassessment, I would dissent if `亿纬锂能` is rejected without addressing its 2026H1 deducted-profit acceleration, storage/power-battery execution, and forward PEG evidence. The dissent is limited: EVE remains weak L2 / boundary quasi-core, not CATL/BYD-level L1.
 4. I would not dissent if the reviewer rejects `欣旺达`, `孚能科技`, `鹏辉能源`, or `珠海冠宇` for this power-battery group.
 
 ## 1.8 Original Rule Hypotheses

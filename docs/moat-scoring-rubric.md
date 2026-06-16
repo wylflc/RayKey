@@ -217,7 +217,7 @@ This rule can be overridden only when future evidence shows that a company has b
 
 The second A-share peer-group calibration is power batteries and new-energy vehicle platforms. The accepted watch companies are `宁德时代` and `比亚迪`.
 
-`亿纬锂能` is rejected under the current standard because the reviewer judged that it lacks enough differentiated advantage versus `宁德时代` and does not currently show a distinct competitive position strong enough for watchlist attention.
+`亿纬锂能` was initially rejected because it lacked enough differentiated advantage versus `宁德时代`. That decision was revised on 2026-06-16 after official 2026H1 forecast evidence and reputable broker estimate summaries indicated stronger deducted-profit acceleration and a materially lower forward PEG. It is now retained as a weak L2 / boundary quasi-core watch company, below `宁德时代` and `比亚迪`, and must be downgraded again if the 2026H1 report does not validate operating cash flow, receivables, inventory, margin, and customer evidence.
 
 `国轩高科`, `欣旺达`, `孚能科技`, `鹏辉能源`, and `珠海冠宇` are also rejected from the current power-battery and new-energy-platform watchlist under the **Dominance Rejection Test**. The reviewer did not know these companies well, but the accepted decision habit requires the analyst to reject weaker peers when the available evidence does not show a differentiated and hard-to-replace advantage versus `宁德时代` or `比亚迪`.
 

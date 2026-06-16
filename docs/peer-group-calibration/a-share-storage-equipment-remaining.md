@@ -4,7 +4,7 @@
 
 This note records the company-by-company review for the remaining unreviewed companies in `电气设备-电源设备-储能设备`.
 
-Six companies in this peer group had already been decided in the EV-battery calibration pass: 宁德时代 was retained, while 亿纬锂能、国轩高科、孚能科技、鹏辉能源、珠海冠宇 were rejected under the calibrated EV-battery comparison. This pass reviews the remaining storage-equipment, power-electronics, special-power, primary-battery, and battery-pack companies.
+Six companies in this peer group had already been decided in the EV-battery calibration pass: 宁德时代 was retained, while 国轩高科、孚能科技、鹏辉能源、珠海冠宇 were rejected under the calibrated EV-battery comparison. 亿纬锂能 was later revised on 2026-06-16 to weak L2 / boundary quasi-core watch status after its 2026H1 forecast and broker estimate revisions suggested materially stronger profit execution, subject to cash-flow and margin validation. This pass reviews the remaining storage-equipment, power-electronics, special-power, primary-battery, and battery-pack companies.
 
 ## 1.2 Retention Standard
 
@@ -38,7 +38,7 @@ Boundary watch after analyst judgment:
 Previously decided in the EV-battery pass:
 
 - 宁德时代: watch
-- 亿纬锂能: reject
+- 亿纬锂能: weak L2 / boundary quasi-core watch after 2026-06-16 reassessment; downgrade again if 2026H1 cash-flow, receivables, inventory, margin, or customer evidence fails to validate the profit acceleration.
 - 国轩高科: reject
 - 孚能科技: reject
 - 鹏辉能源: reject
