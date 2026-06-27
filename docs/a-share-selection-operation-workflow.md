@@ -1061,7 +1061,7 @@ python3 scripts/scan_holdings_sell_signals.py \
   --log-file data/processed/a_share_workflow_decision_log.csv
 ```
 
-脚本尚待实现：负责技术与风险类确定性触发；thesis、估值、治理、催化完成等判断由大模型执行。
+脚本 `scripts/scan_holdings_sell_signals.py` 负责确定性部分：割肉触及、3 个月锁定、盈利离场资格、割肉价上调建议（不超 MA120）、建仓金额与单票权重。硬离场例外（一票否决/突发事件/季报利润严重不及预期）和是否上调割肉价由大模型判定。
 
 ### 脚本可判定的卖出与风险触发
 
