@@ -10,6 +10,7 @@ AShareQuant is a research and data-analysis project for listed companies in main
 - Keep changes scoped to the requested task and match the repository's existing style.
 - Do not add dependencies, data providers, databases, schedulers, or external services unless the request clearly needs them.
 - After any completed file-change batch, create a git commit before the final response. Do not push unless explicitly asked.
+- Keep every git commit message to a single short sentence. Do not add a body, trailers, attribution, or co-author tags (for example `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`) or any other tool-generated signature.
 - Never store API keys, tokens, cookies, account identifiers, or paid-data credentials in the repository.
 
 ## Research And Data Principles
