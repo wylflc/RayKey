@@ -44,6 +44,26 @@ _Avoid_: leaving multiple split decision tables as competing sources of truth af
 A label showing whether a listed company entered a **Watchlist** as a direct reviewer-accepted watch company or as a boundary company retained after analyst judgment under calibrated rules.
 _Avoid_: mixing explicit reviewer selections and analyst-inferred boundary decisions without traceability.
 
+**Attention Class**:
+The first-round, full-universe classification of a listed company into one of three lifecycle states — worth-attention, boundary-pending, or garbage — before any quality tiering. It decides whether a company stays in the research pool at all.
+_Avoid_: quality tier, buy decision.
+
+**Worth-Attention Company**:
+A listed company the first round keeps for ongoing attention. The set of worth-attention companies is the **Watchlist**, and only these receive a **Quality Tier**.
+_Avoid_: buy candidate, current holding.
+
+**Boundary-Pending Company**:
+A listed company not currently worth attention but eligible to re-enter review on a hard trigger such as a new product, customer validation, major order, restructuring, or industry-structure change. It carries no **Quality Tier** while pending.
+_Avoid_: garbage, permanently rejected.
+
+**Garbage Company**:
+A listed company permanently excluded during the first round for absent durable quality or for governance/fraud reasons. It is removed from the pool and never re-screened on price, theme, or low PE; only its security master data is maintained.
+_Avoid_: boundary-pending, temporarily out, L5.
+
+**Quality Tier**:
+An L1–L5 business-quality rank assigned only to **Worth-Attention Companies**, ignoring current price. L1–L4 are keeper tiers (L1 core candidate, L2 quasi-core candidate, L3 tactical candidate, L4 zero-position watch). L5 is not a keeper grade: it means the company no longer deserves worth-attention and is demoted to **Boundary-Pending**. Permanent removal is expressed through **Attention Class** (garbage), never through L5.
+_Avoid_: using L5 to mean garbage; letting valuation move a tier.
+
 **Moat Screening**:
 Assessment of durable business advantages and resistance to competitive displacement.
 _Avoid_: valuation screen, cheap-stock screen.
@@ -178,6 +198,9 @@ _Avoid_: report date when the specific event type matters.
 - A **Universe** contains **Securities**, but a **Watchlist** contains **Listed Companies**.
 - A **Final Screening Result** is the structured source of truth for a completed market review; filtering it to `watch` decisions produces the current **Watchlist** for that market.
 - A **Watch Selection Route** preserves whether a **Watchlist** entry came from direct reviewer acceptance or boundary-company judgment.
+- A first-round **Attention Class** is assigned to every eligible listed company; only **Worth-Attention Companies** then receive a **Quality Tier**.
+- The **Watchlist** is the set of **Worth-Attention Companies** currently tiered L1–L4. A **Quality Tier** of L5 demotes a company out of the **Watchlist** into **Boundary-Pending**; permanent **Garbage** removal happens only in the first round and is not reversible.
+- A **Quality Tier** ranks business quality only; current price belongs to **Valuation Assessment** and must not move a tier.
 - A **Universe Snapshot** records the **Securities** available from a provider at retrieval time and can be used as input to later screening.
 - **Screening Evidence** supports a **Moat Score**; a high enough **Moat Score** can produce a **Watchlist Candidate**.
 - **Authoritative Research Sources** are required for a **Deep Company Review**; aggregator profile text can only be used as a discovery hint, not as analysis evidence.
