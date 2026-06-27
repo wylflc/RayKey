@@ -1,0 +1,1 @@
+See AGENTS.md for repository instructions. Follow it as the source of truth.
