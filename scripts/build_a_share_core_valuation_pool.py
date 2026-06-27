@@ -18,6 +18,8 @@ import csv
 from datetime import datetime, timezone
 from pathlib import Path
 
+from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_VALUATION = ROOT / "data/processed/a_share_focus_watchlist_l1_l2_valuation.csv"
@@ -125,12 +127,47 @@ def write_markdown(path: Path, rows: list[dict[str, str]], as_of: str) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def log_pool_decisions(
+    log_file: Path,
+    rows: list[dict[str, str]],
+    as_of: str,
+    valuation_file: Path,
+    tiers_file: Path,
+    output_csv: Path,
+    output_md: Path,
+) -> None:
+    logged_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    append_decision_log(
+        log_file,
+        [
+            {
+                "logged_at_utc": logged_at,
+                "workflow_stage": "core_valuation_pool",
+                "run_id": f"core_valuation_pool:{as_of}",
+                "as_of": as_of,
+                "security_code": row["security_code"],
+                "security_name": row["security_name"],
+                "decision_type": "core_valuation_eligible",
+                "decision_result": row["valuation_tier"],
+                "summary_reason": row.get("valuation_reason", ""),
+                "input_files": f"{valuation_file};{tiers_file}",
+                "source_urls": "",
+                "output_file": f"{output_csv};{output_md}",
+                "operator_or_script": "scripts/build_a_share_core_valuation_pool.py",
+                "workflow_version": WORKFLOW_VERSION,
+            }
+            for row in rows
+        ],
+    )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--valuation", type=Path, default=DEFAULT_VALUATION)
     parser.add_argument("--tiers", type=Path, default=DEFAULT_TIERS)
     parser.add_argument("--output-csv", type=Path, default=DEFAULT_OUTPUT_CSV)
     parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
+    parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
     parser.add_argument("--as-of", default=datetime.now(timezone.utc).date().isoformat())
     return parser.parse_args()
 
@@ -157,6 +194,15 @@ def main() -> None:
     ]
     write_csv(args.output_csv, rows, fieldnames)
     write_markdown(args.output_md, rows, args.as_of)
+    log_pool_decisions(
+        args.log_file,
+        rows,
+        args.as_of,
+        args.valuation,
+        args.tiers,
+        args.output_csv,
+        args.output_md,
+    )
     print(f"wrote {len(rows)} rows to {args.output_csv}")
 
 

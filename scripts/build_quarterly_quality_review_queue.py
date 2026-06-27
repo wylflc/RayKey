@@ -16,6 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_UNIVERSE = ROOT / "data/raw/a_share_securities.csv"
+DEFAULT_ATTENTION_TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"
 DEFAULT_PREVIOUS_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_FINANCIALS = ROOT / "data/interim/a_share_financial_indicators.csv"
 DEFAULT_OUTPUT = ROOT / "data/interim/a_share_quarterly_quality_review_queue.csv"
@@ -77,6 +78,31 @@ def tier_rank(tier: str) -> int:
     return 9
 
 
+def attention_class(row: dict[str, str] | None) -> str:
+    if not row:
+        return ""
+    raw = (
+        row.get("attention_class")
+        or row.get("initial_attention_class")
+        or row.get("watch_class")
+        or row.get("watch_action")
+        or ""
+    ).strip().lower()
+    aliases = {
+        "值得关注": "worth_attention",
+        "watch": "worth_attention",
+        "add": "worth_attention",
+        "keep": "worth_attention",
+        "临界待定": "boundary_pending",
+        "boundary": "boundary_pending",
+        "pending": "boundary_pending",
+        "垃圾公司": "garbage",
+        "garbage_company": "garbage",
+        "remove": "garbage",
+    }
+    return aliases.get(raw, raw)
+
+
 def material_financial_change(financial: dict[str, str] | None) -> list[str]:
     if not financial:
         return []
@@ -108,10 +134,12 @@ def material_financial_change(financial: dict[str, str] | None) -> list[str]:
 
 def build_queue(
     universe_rows: list[dict[str, str]],
+    attention_rows: list[dict[str, str]],
     previous_tier_rows: list[dict[str, str]],
     financial_rows: list[dict[str, str]],
     as_of: str,
 ) -> list[dict[str, object]]:
+    attention_by_code = {row["security_code"].zfill(6): row for row in attention_rows if row.get("security_code")}
     tiers_by_code = {row["security_code"].zfill(6): row for row in previous_tier_rows if row.get("security_code")}
     financials_by_code = {row["security_code"].zfill(6): row for row in financial_rows if row.get("security_code")}
 
@@ -124,41 +152,65 @@ def build_queue(
             continue
         previous = tiers_by_code.get(code)
         financial = financials_by_code.get(code)
+        attention = attention_by_code.get(code)
+        current_attention_class = attention_class(attention)
+        if current_attention_class == "garbage":
+            continue
+
         reasons: list[str] = []
 
-        if previous is None:
+        attention_review_date = parse_date((attention or {}).get("reviewed_at_utc") or (attention or {}).get("triaged_at_utc"))
+
+        if previous is None and current_attention_class not in {"worth_attention", "boundary_pending"}:
             reasons.append("new_or_unreviewed_security")
             current_tier = ""
             current_tier_label = ""
             strategy_tag = ""
-            last_quality_review_date = None
+            last_quality_review_date = attention_review_date
         else:
-            current_tier = previous.get("quality_tier", "")
-            current_tier_label = previous.get("quality_tier_label", "")
-            strategy_tag = previous.get("primary_strategy_tag", "")
-            last_quality_review_date = parse_date(previous.get("reviewed_at_utc"))
+            current_tier = (previous or {}).get("quality_tier", "")
+            current_tier_label = (previous or {}).get("quality_tier_label", "")
+            strategy_tag = (previous or {}).get("primary_strategy_tag", "")
+            last_quality_review_date = parse_date((previous or {}).get("reviewed_at_utc")) or attention_review_date
             rank = tier_rank(current_tier)
-            if rank <= 2:
+            if current_attention_class == "worth_attention" and previous is None:
+                reasons.append("worth_attention_missing_quality_tier")
+            elif rank <= 2:
                 reasons.append("l1_l2_routine_quarterly_review")
             elif rank == 3:
                 reasons.append("l3_watchlist_recheck")
 
         latest_report_date = parse_date((financial or {}).get("latest_report_date"))
         if latest_report_date and (last_quality_review_date is None or latest_report_date > last_quality_review_date):
-            reasons.append("latest_report_after_last_quality_review")
+            if current_attention_class == "boundary_pending":
+                reasons.append("boundary_pending_latest_report_after_last_review")
+            else:
+                reasons.append("latest_report_after_last_quality_review")
 
         financial_change_reasons = material_financial_change(financial)
         if financial_change_reasons:
+            if current_attention_class == "boundary_pending":
+                reasons.append("boundary_pending_material_financial_change")
             reasons.extend(financial_change_reasons)
+
+        if current_attention_class == "boundary_pending" and not (
+            "boundary_pending_latest_report_after_last_review" in reasons
+            or "boundary_pending_material_financial_change" in reasons
+        ):
+            continue
 
         if not reasons:
             continue
 
-        if "new_or_unreviewed_security" in reasons or "latest_report_after_last_quality_review" in reasons:
+        if (
+            "new_or_unreviewed_security" in reasons
+            or "latest_report_after_last_quality_review" in reasons
+            or "worth_attention_missing_quality_tier" in reasons
+        ):
             priority = "high"
         elif "l1_l2_routine_quarterly_review" in reasons:
             priority = "high"
-        elif "l3_watchlist_recheck" in reasons or financial_change_reasons:
+        elif "l3_watchlist_recheck" in reasons or financial_change_reasons or current_attention_class == "boundary_pending":
             priority = "medium"
         else:
             priority = "low"
@@ -172,6 +224,7 @@ def build_queue(
                 "security_name": universe_row.get("security_name", ""),
                 "listed_company_name": universe_row.get("listed_company_name", ""),
                 "industry": universe_row.get("industry", ""),
+                "current_attention_class": current_attention_class,
                 "current_quality_tier": current_tier,
                 "current_quality_tier_label": current_tier_label,
                 "current_strategy_tag": strategy_tag,
@@ -196,6 +249,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--market", default="A_SHARE")
     parser.add_argument("--as-of", required=True)
     parser.add_argument("--universe", type=Path, default=DEFAULT_UNIVERSE)
+    parser.add_argument("--attention-triage", type=Path, default=DEFAULT_ATTENTION_TRIAGE)
     parser.add_argument("--previous-tiers", type=Path, default=DEFAULT_PREVIOUS_TIERS)
     parser.add_argument("--financials", type=Path, default=DEFAULT_FINANCIALS)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
@@ -208,6 +262,7 @@ def main() -> None:
         raise SystemExit("Only --market A_SHARE is supported.")
     rows = build_queue(
         load_csv(args.universe),
+        load_csv(args.attention_triage),
         load_csv(args.previous_tiers),
         load_csv(args.financials),
         args.as_of,
@@ -220,6 +275,7 @@ def main() -> None:
         "security_name",
         "listed_company_name",
         "industry",
+        "current_attention_class",
         "current_quality_tier",
         "current_quality_tier_label",
         "current_strategy_tag",

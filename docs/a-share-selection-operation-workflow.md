@@ -10,26 +10,56 @@
 2. 估值分析用于排除过度透支的股票，而不是只寻找显著低估股票。
 3. 量价信号只在高质量、估值合格的股票池内触发。
 4. 每日输出的是买入候选，不是自动买入指令。
-5. 每一次结论必须保留来源、时间、输入数据口径和判断理由。
+5. 每一次业务质量、估值、量价、买入候选、移出或降级结论，必须同步写入 `data/processed/a_share_workflow_decision_log.csv`，保留简要信息来源、结论、结论时间、输入文件、输出文件、数据口径和判断理由。
 
 ## 2. 固定产物
 
 | 文件 | 作用 |
 | --- | --- |
+| `data/raw/a_share_securities.csv` | 当前A股证券基础名单；每季度审查前必须先从交易所公开名单更新 |
+| `data/processed/a_share_attention_triage.csv` | A股第一轮三类初筛结果：值得关注公司、临界待定公司、垃圾公司 |
 | `data/processed/a_share_watchlist_quality_tiers.csv` | A股值得关注公司质量分层结构化结果 |
 | `data/processed/a_share_watchlist_quality_tiers.md` | A股值得关注公司质量分层阅读版 |
 | `data/processed/a_share_core_valuation_pool.csv` | L1/L2核心质量公司估值合格池 |
 | `data/processed/a_share_core_valuation_pool.md` | L1/L2核心质量公司估值合格池阅读版 |
 | `data/processed/daily_buy_candidates.csv` | 每日量价触发后的买入候选 |
 | `data/processed/daily_volume_price_tracker.md` | 每日量价跟踪阅读版 |
+| `data/processed/a_share_workflow_decision_log.csv` | 全流程结论日志，用于后续溯源、复核和纠错 |
+
+### 2.1 结论日志格式
+
+每次产生可复核结论时，必须向 `data/processed/a_share_workflow_decision_log.csv` 追加记录。脚本自动产生的结论由脚本写入；大模型或人工审查产生的结论，在完成一个批次后同步写入。
+
+| 字段 | 含义 |
+| --- | --- |
+| `logged_at_utc` | 写入日志的UTC时间 |
+| `workflow_stage` | 阶段：`attention_triage`、`quality_tier_review`、`valuation_review`、`core_valuation_pool`、`daily_volume_price_scan`、`manual_buy_check`等 |
+| `run_id` | 批次标识，例如 `2026Q2_quality_review_batch_01` |
+| `as_of` | 结论对应日期 |
+| `security_code` | 股票代码 |
+| `security_name` | 股票名称 |
+| `decision_type` | 结论类型 |
+| `decision_result` | 结论结果 |
+| `summary_reason` | 100-300字以内的核心理由 |
+| `input_files` | 使用的输入文件 |
+| `source_urls` | 关键公告、年报、研报、数据源URL；多来源用分号分隔 |
+| `output_file` | 结论写入的结果文件 |
+| `operator_or_script` | 执行人、模型或脚本名 |
+| `workflow_version` | 本流程版本 |
 
 ## 3. 核心概念
 
 **值得关注公司**：
 通过业务质量筛选后，值得持续跟踪的上市公司。
 
+**临界待定公司**：
+当前不值得进入核心观察，但未来可能因新产品、客户验证、技术路线、行业格局、资产重组或经营改善而重新获得复核资格的公司。临界待定公司不进入每日量价扫描。
+
+**垃圾公司**：
+永久业务排除公司。进入该类后，后续季度不再分析其业务是否改善，不再进入质量分层、估值排雷和每日量价扫描，只维护证券基础信息。
+
 **质量分层**：
-只根据护城河、业务类型、竞争优势可持续性、技术壁垒、资本复制难度、市场地位、现金流质量和不可替代性分为L1-L5，不考虑当前股价。
+在第一轮三类初筛之后执行。只根据护城河、业务类型、竞争优势可持续性、技术壁垒、资本复制难度、市场地位、现金流质量和不可替代性分为L1-L5，不考虑当前股价。`garbage` 公司不再进入质量分层；为兼容旧文件，可将其记录为L5，但后续执行以 `attention_class = garbage` 为准。
 
 **核心质量公司**：
 质量分层为L1或L2的公司。
@@ -43,8 +73,12 @@
 ## 4. 总流程
 
 ```text
-全A上市公司
-  -> 季度全市场质量审查
+交易所最新A股证券名单
+  -> 更新 data/raw/a_share_securities.csv
+  -> 第一轮三类初筛
+  -> 剔除垃圾公司
+  -> 值得关注公司和触发复核的临界待定公司
+  -> 季度质量审查
   -> A股值得关注公司列表
   -> L1-L5质量分层
   -> L1/L2核心质量公司
@@ -64,24 +98,72 @@
 ### 5.2 输入
 
 1. `data/raw/a_share_securities.csv`
-2. 上一版 `data/processed/a_share_watchlist_quality_tiers.csv`
-3. 公司最新年报、半年报、季报、业绩预告、业绩快报
-4. 公司公告、交易所问询函、投资者关系材料
-5. 权威研报和专业机构研究材料
-6. 同行业历史校准文件和既有L1/L2/L3参考公司
+2. 上一版 `data/processed/a_share_attention_triage.csv`
+3. 上一版 `data/processed/a_share_watchlist_quality_tiers.csv`
+4. 公司最新年报、半年报、季报、业绩预告、业绩快报
+5. 公司公告、交易所问询函、投资者关系材料
+6. 权威研报和专业机构研究材料
+7. 同行业历史校准文件和既有L1/L2/L3参考公司
 
-### 5.3 队列生成脚本接口
+### 5.3 季度开始先更新A股证券名单
+
+每个季度开始分析前，先基于交易所公开名单刷新A股证券基础名单，确保新上市公司进入第一轮初筛。
+
+```bash
+python3 scripts/fetch_a_share_universe.py \
+  --output data/raw/a_share_securities.csv
+```
+
+执行要求：
+
+1. 保留 `source_provider`、`source_dataset`、`source_retrieved_at_utc`、`source_url` 等来源字段。
+2. 对比上一版 `data/raw/a_share_securities.csv`，识别本季度新增上市公司。
+3. 新上市公司进入 `attention_triage`，但上市时间过短、披露材料不足时，不直接归为垃圾公司，应先归为 `boundary_pending`。
+4. 更新证券名单这一动作不构成投资结论，但后续由此产生的新上市公司初筛结论必须写入 `data/processed/a_share_workflow_decision_log.csv`。
+
+### 5.4 第一轮三类初筛
+
+第一轮初筛只回答一个问题：这家公司以后是否值得继续消耗研究精力。
+
+| 分类 | 定义 | 后续处理 |
+| --- | --- | --- |
+| `worth_attention` / 值得关注公司 | 业务质量、护城河、行业地位、技术壁垒、资源壁垒、品牌壁垒、客户认证、成本优势、现金流质量或股东回报中至少有一项足够强，未来有机会成为真实持仓候选。定义与旧版“值得关注公司”一致。 | 进入质量分层和后续估值排雷 |
+| `boundary_pending` / 临界待定公司 | 当前不值得关注，但存在未来改善可能，例如新上市披露不足、技术路线尚未验证、行业格局可能变化、重大转型或资产重组尚未落地。 | 不进入每日扫描；仅在财报、公告、订单、客户验证、行业结构变化等硬触发出现时复核 |
+| `garbage` / 垃圾公司 | 业务和治理质量不值得长期跟踪。 | 永久业务排除，不再进入季度质量审查、估值排雷和每日量价扫描 |
+
+进入 `garbage` 的固定条件：
+
+1. 公司毫无可验证竞争力，产品或服务高度同质化。
+2. 出现过财务欺诈、重大虚假陈述、严重监管处罚、控股股东资金占用或严重审计异常。
+3. 酷爱媒体炒作、频繁蹭热点、公告和财报验证明显不匹配，存在造假或夸大宣传嫌疑。
+4. 经营质量长期较差，现金流、应收、存货、负债、治理结构长期无法解释。
+5. 所处业务没有护城河，一旦证明能赚钱，资金充足的新竞争者可以轻易进入并压低回报。
+6. 低壁垒零售、普通OEM、简单加工、普通贸易、普通渠道、普通消费品等业务，除非能证明有极强品牌、网络效应、监管牌照、资源约束、成本优势或品类垄断。
+7. 被更强同行全面覆盖，且没有差异化竞争位置。
+
+`garbage` 分类一旦确认，不因股价上涨、短期利润改善、媒体热度、主题炒作或低PE重新进入研究队列。只有证券基础信息继续维护。
+
+第一轮初筛输出字段：
+
+```text
+security_code, security_name, attention_class, attention_reason,
+garbage_reason, boundary_recheck_trigger, source_urls,
+reviewed_at_utc, workflow_version
+```
+
+### 5.5 队列生成脚本接口
 
 ```bash
 python3 scripts/build_quarterly_quality_review_queue.py \
   --market A_SHARE \
   --as-of YYYY-MM-DD \
   --universe data/raw/a_share_securities.csv \
+  --attention-triage data/processed/a_share_attention_triage.csv \
   --previous-tiers data/processed/a_share_watchlist_quality_tiers.csv \
   --output data/interim/a_share_quarterly_quality_review_queue.csv
 ```
 
-### 5.4 进入季度质量复核队列的条件
+### 5.6 进入季度质量复核队列的条件
 
 满足任一条件即进入队列：
 
@@ -89,24 +171,30 @@ python3 scripts/build_quarterly_quality_review_queue.py \
 2. 最新报告期晚于上次质量审查日期。
 3. 原L1/L2公司。
 4. 原L3公司出现业务、订单、利润率、技术路线、行业景气明显改善。
-5. 原L4/L5公司出现重大业务变化、重大订单、关键产品突破、资产重组或行业结构变化。
+5. `boundary_pending` 公司出现重大业务变化、重大订单、关键产品突破、资产重组、客户验证、行业结构变化或连续财报改善。
 6. 毛利率、净利率、经营现金流、负债率、研发投入、收入增速、利润增速出现重大变化。
 7. 发生重大诉讼、监管处罚、审计异常、控股股东风险、财务疑点。
 
-### 5.5 质量分层标准
+以下公司不进入队列：
+
+1. `attention_class = garbage` 的公司。
+2. `boundary_pending` 但没有硬触发的公司。
+3. 只有股价上涨、传闻、小作文或主题热度，但没有公告、财报、客户验证、订单、权威研报或行业数据支持的公司。
+
+### 5.7 质量分层标准
 
 | 层级 | 定义 | 仓位资格 |
 | --- | --- | --- |
 | L1 | 顶级核心候选。行业或细分赛道核心龙头，具备极强护城河、技术壁垒、资源壁垒、品牌壁垒、平台能力或监管壁垒，资本充足的新进入者也难以短期复制和超越。 | 估值合适且右侧确认后，可承载15%-25%核心仓 |
 | L2 | 准核心候选。护城河明确，但存在周期、政策、成长空间、业务结构、验证阶段或同业地位折扣。 | 估值合适且右侧确认后，可承载4%-10%准核心仓 |
 | L3 | 战术观察。具备产业机会、反转机会、技术期权、局部壁垒或周期修复弹性，但护城河、现金流、市场地位或不可替代性不足以进入核心层。 | 只适合战术仓或事件动量仓 |
-| L4 | 低优先级观察。有研究价值，但暂不值得进入核心跟踪。 | 默认不建仓 |
-| L5 | 不纳入观察。低壁垒、易复制、同质化、竞争激烈、财务质量差、治理风险高，或被更强同行全面覆盖。 | 不买入 |
+| L4 | 临界待定。有研究价值或潜在变化，但暂不值得进入核心跟踪。 | 默认不建仓，不进入每日扫描 |
+| L5 | 垃圾公司或永久排除。低壁垒、易复制、同质化、竞争激烈、财务质量差、治理风险高，或被更强同行全面覆盖。 | 不买入，后续以 `attention_class = garbage` 永久排除 |
 
-### 5.6 质量审查Prompt
+### 5.8 质量审查Prompt
 
 ```text
-请基于以下资料，对这家A股上市公司进行质量分层。本轮不考虑当前股价和估值，只判断业务质量。
+请基于以下资料，对这家A股上市公司进行第一轮三类初筛和质量分层。本轮不考虑当前股价和估值，只判断业务质量。
 
 输入资料：
 - 公司名称：
@@ -126,22 +214,29 @@ python3 scripts/build_quarterly_quality_review_queue.py \
 4. 与同行相比，它是否被更强公司全面覆盖？
 5. 当前业务优势是否可持续？
 6. 是否存在一票否决：财务造假、治理风险、现金流恶化、低壁垒高竞争。
-7. 只根据业务质量分为L1/L2/L3/L4/L5。
-8. 给出分层理由。
-9. 给出是否需要从观察池新增、移除、维持或降级。
+7. 先分为：worth_attention / boundary_pending / garbage。
+8. 如果是 garbage，明确垃圾分类原因，并说明后续是否永久排除。
+9. 如果不是 garbage，再根据业务质量分为L1/L2/L3/L4。
+10. 给出分层理由。
+11. 给出是否需要从观察池新增、移除、维持或降级。
+12. 给出本次结论应写入日志的简要来源、时间和判断理由。
 
 输出JSON：
 {
   "security_code": "",
   "security_name": "",
+  "attention_class": "worth_attention/boundary_pending/garbage",
   "quality_tier": "L1/L2/L3/L4/L5",
   "primary_strategy_tag": "",
   "moat_summary": "",
   "capital_replicability": "very_hard/hard/medium/easy",
   "peer_comparison": "",
+  "garbage_reason": "",
+  "boundary_recheck_trigger": "",
   "tier_reason": "",
   "watch_action": "add/keep/downgrade/remove",
-  "evidence_sources": []
+  "evidence_sources": [],
+  "decision_log_summary": ""
 }
 ```
 
@@ -341,7 +436,22 @@ normalized_market_cap = normalized_profit * 合理估值倍数
 ### 6.6 估值Prompt
 
 ```text
-请对以下L1/L2核心质量公司进行估值分档。本轮估值用于排除过度高估，不要求完整bear/base/bull，只判断当前价格是否已经充分反映bull case。
+请对以下L1/L2核心质量公司进行估值分档。本轮估值用于排除过度高估，不要求完整bear/base/bull，但必须按公司所属策略选择匹配的估值模型，并判断当前价格是否已经充分反映bull case。
+
+必须先应用以下估值原则：
+1. 估值只用于排除过度高估的核心质量公司，不因单纯PE高而排除产业爆发、研发投入期、盈利爬坡期公司。
+2. 不因单纯PE低而认定低估。
+3. 必须处理一次性亏损、一次性投资收益、公允价值变动、资产处置、补贴、资产减值、研发投入、产能爬坡、周期底部或商业模式转换导致的估值失真。
+4. 必须先确定策略标签，再使用对应估值模型。
+
+估值模型和档位：
+- DCF/现金流复利型：预期年化收益 = FCF收益率 + 保守利润增长率 + 股息/回购收益率 + 估值修复年化贡献。>=12%为低估，8%-12%为较低估，6%-8%为中性，4%-6%且L1或有明确催化为可接受较高估，<4%为高估。
+- 烟蒂深度低估型：保守清算价值 = 现金 + 0.8*应收账款 + 0.5*存货 + 0.3*固定资产 - 总负债。市值 <= 清算价值*0.7且有催化为低估，<=0.9且资产真实为较低估，接近清算价值但催化不足为中性，资产真实性不足或无兑现路径为高估。
+- GARP成长型：使用归一化PEG，不机械使用TTM PE。PEG <=0.7且增长可防守为低估，0.7-1.0为较低估，1.0-1.5为中性，1.5-2.0且盈利预测持续上修为可接受较高估，>2.0且无持续上修证据为高估。
+- 产业链爆发/关键瓶颈型：先验证需求票、瓶颈票、利润票。未来合理市值 = 未来2-3年正常化净利润 * 合理PE。当前市值 <= bull case合理市值*60%为低估，60%-80%为较低估，80%-100%为中性，100%-120%且盈利预测仍在上修为可接受较高估，>120%或bull case依赖极端假设为高估。
+- 落难白马型：使用正常化利润和修复后合理PE，重点判断核心业务是否结构性破坏、利润预期是否停止下修、现金流是否健康。正常化PE显著低于历史中枢且困境边际改善为低估，存在明显修复空间为较低估，公司质量仍在但触底不足为中性，结构性恶化或修复已定价为高估。
+- 垄断资源型：使用资源NAV、中枢商品价格、中枢FCF收益率和成本曲线，不使用周期顶部单年利润。当前市值 <= 中枢价格NAV*70%或中枢FCF收益率>=10%为低估，<=85%或FCF收益率7%-10%为较低估，接近中枢NAV为中性，必须依赖极端商品价格为高估。
+- 股东回报型低估：使用PB/ROE匹配、股息率、回购注销率和资产质量。股息率+回购率显著高于无风险利率且PB未透支ROE为低估，股东回报清晰且估值低于资产质量为较低估，稳健但弹性有限为中性，低增长但估值高于回报能力为高估。
 
 输入：
 - 公司名称/代码：
@@ -354,15 +464,17 @@ normalized_market_cap = normalized_profit * 合理估值倍数
 - 历史估值区间：
 - 行业周期位置：
 - 是否存在一次性收益/亏损/研发投入/产能爬坡/周期底部：
+- 当前市值与bull case合理市值/正常化估值的差距：
 
 请完成：
 1. 确认适用估值方法。
 2. 判断当前PE/PB/PEG是否失真，如失真则使用归一化估值。
-3. 给出bull case核心假设。
-4. 判断当前价格是否已经反映bull case。
+3. 写出估值模型中的关键输入，例如归一化利润、未来2-3年利润CAGR、合理PE、NAV、中枢FCF收益率或股息+回购率。
+4. 给出bull case核心假设，并判断当前价格是否已经反映bull case。
 5. 分为：低估/较低估/中性/可接受较高估/高估/无法估值。
 6. 判断是否进入核心估值合格池。
 7. 给出等待右侧触发时需要观察的关键指标。
+8. 给出本次估值结论应写入日志的简要来源、时间和判断理由。
 
 输出JSON：
 {
@@ -372,14 +484,38 @@ normalized_market_cap = normalized_profit * 合理估值倍数
   "strategy_tag": "",
   "valuation_tier": "",
   "valuation_method": "",
+  "valuation_model_inputs": "",
   "normalized_valuation_used": true,
+  "normalized_profit_or_value": "",
   "bull_case_assumption": "",
   "bull_case_priced_in": true,
   "core_valuation_eligible": true,
   "valuation_reason": "",
-  "tracking_metrics": []
+  "tracking_metrics": [],
+  "evidence_sources": [],
+  "decision_log_summary": ""
 }
 ```
+
+### 6.7 核心估值合格池物化脚本接口
+
+估值prompt输出的是估值结论，脚本只负责把已审查完成的估值表物化为每日扫描输入，不重新创造估值意见。
+
+```bash
+python3 scripts/build_a_share_core_valuation_pool.py \
+  --valuation data/processed/a_share_focus_watchlist_l1_l2_valuation.csv \
+  --tiers data/processed/a_share_watchlist_quality_tiers.csv \
+  --output-csv data/processed/a_share_core_valuation_pool.csv \
+  --output-md data/processed/a_share_core_valuation_pool.md \
+  --log-file data/processed/a_share_workflow_decision_log.csv \
+  --as-of YYYY-MM-DD
+```
+
+要求：
+
+1. 只纳入L1/L2。
+2. 只纳入估值档位为低估、较低估、中性、可接受较高估的公司。
+3. 每个纳入核心估值合格池的结论都要写入结论日志。
 
 ## 7. 阶段三：财报披露后的滚动更新
 
@@ -389,10 +525,13 @@ normalized_market_cap = normalized_profit * 合理估值倍数
 python3 scripts/build_report_update_queue.py \
   --market A_SHARE \
   --as-of YYYY-MM-DD \
+  --attention-triage data/processed/a_share_attention_triage.csv \
   --tiers data/processed/a_share_watchlist_quality_tiers.csv \
   --valuation-pool data/processed/a_share_core_valuation_pool.csv \
   --output data/interim/a_share_report_update_queue.csv
 ```
+
+`attention_class = garbage` 的公司不进入财报滚动更新队列。
 
 ### 7.2 质量复核触发
 
@@ -439,7 +578,8 @@ python3 scripts/screen_daily_volume_price_signals.py \
   --as-of YYYY-MM-DD \
   --input data/processed/a_share_core_valuation_pool.csv \
   --output-csv data/processed/daily_buy_candidates.csv \
-  --output-md data/processed/daily_volume_price_tracker.md
+  --output-md data/processed/daily_volume_price_tracker.md \
+  --log-file data/processed/a_share_workflow_decision_log.csv
 ```
 
 ### 8.4 基础指标
@@ -832,10 +972,27 @@ python3 scripts/backtest_signal_replay.py \
 4. 业务thesis、估值假设或催化剂被证伪。
 5. 出现重大财务或治理风险。
 
-## 14. 版本记录
+## 14. 执行方式
+
+本文件是A股选股、估值、量价扫描的主执行规范。后续可以用类似以下指令执行固定流程：
+
+```text
+请基于 docs/a-share-selection-operation-workflow.md 执行今天的A股每日量价扫描，并将结果写入固定输出文件和结论日志。
+```
+
+执行分工：
+
+1. 能由脚本稳定完成的部分必须用脚本执行，例如证券名单更新、队列生成、核心估值合格池物化、每日量价指标扫描和历史回放。
+2. 需要判断业务质量、护城河、估值模型、研报假设、公告真实性和用户defence的部分，由大模型按本文件中的prompt执行。
+3. 大模型执行时不得临时改标准；如发现标准不合理，先修改本文件，再按新版本重新执行。
+4. 每个产生结论的脚本输出和每个大模型批次结论都必须写入 `data/processed/a_share_workflow_decision_log.csv`；队列生成脚本只做调度，不单独写结论日志。
+5. 每日量价扫描不是买入命令。买入前仍需完成第10节人工核对。
+
+## 15. 版本记录
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
 | v1 | 2026-06-27 | 固定A股质量分层、核心估值合格池、每日量价扫描、连续放量定义和历史回放校准流程 |
 | v2 | 2026-06-27 | 将具名历史样本移出流程正文，改为外部回放案例机制 |
 | v3 | 2026-06-27 | 新增放量突破关键均线/趋势启动信号，明确前高突破不是唯一买入触发 |
+| v4 | 2026-06-27 | 新增结论日志、三类初筛、垃圾公司永久排除、季度证券名单更新要求，并补全估值执行prompt |

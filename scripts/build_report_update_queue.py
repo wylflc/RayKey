@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_ATTENTION_TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"
 DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_FINANCIALS = ROOT / "data/interim/a_share_financial_indicators.csv"
@@ -53,12 +54,39 @@ def is_core_tier(tier: str) -> bool:
     return tier.startswith("L1") or tier.startswith("L2")
 
 
+def attention_class(row: dict[str, str] | None) -> str:
+    if not row:
+        return ""
+    raw = (
+        row.get("attention_class")
+        or row.get("initial_attention_class")
+        or row.get("watch_class")
+        or row.get("watch_action")
+        or ""
+    ).strip().lower()
+    aliases = {
+        "值得关注": "worth_attention",
+        "watch": "worth_attention",
+        "add": "worth_attention",
+        "keep": "worth_attention",
+        "临界待定": "boundary_pending",
+        "boundary": "boundary_pending",
+        "pending": "boundary_pending",
+        "垃圾公司": "garbage",
+        "garbage_company": "garbage",
+        "remove": "garbage",
+    }
+    return aliases.get(raw, raw)
+
+
 def build_queue(
+    attention_rows: list[dict[str, str]],
     tier_rows: list[dict[str, str]],
     valuation_rows: list[dict[str, str]],
     financial_rows: list[dict[str, str]],
     as_of: str,
 ) -> list[dict[str, object]]:
+    attention_by_code = {row["security_code"].zfill(6): row for row in attention_rows if row.get("security_code")}
     financials_by_code = {row["security_code"].zfill(6): row for row in financial_rows if row.get("security_code")}
     valuation_by_code = {row["security_code"].zfill(6): row for row in valuation_rows if row.get("security_code")}
     as_of_date = parse_date(as_of) or datetime.now(timezone.utc).date()
@@ -67,6 +95,9 @@ def build_queue(
     for tier in tier_rows:
         code = tier.get("security_code", "").zfill(6)
         if not code:
+            continue
+        current_attention_class = attention_class(attention_by_code.get(code))
+        if current_attention_class == "garbage":
             continue
         financial = financials_by_code.get(code)
         valuation = valuation_by_code.get(code)
@@ -108,6 +139,7 @@ def build_queue(
                 "security_name": tier.get("security_name", ""),
                 "listed_company_name": tier.get("listed_company_name", ""),
                 "exchange": tier.get("exchange", ""),
+                "attention_class": current_attention_class,
                 "quality_tier": tier.get("quality_tier", ""),
                 "quality_tier_label": tier.get("quality_tier_label", ""),
                 "strategy_tag": tier.get("primary_strategy_tag", ""),
@@ -134,6 +166,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--market", default="A_SHARE")
     parser.add_argument("--as-of", required=True)
+    parser.add_argument("--attention-triage", type=Path, default=DEFAULT_ATTENTION_TRIAGE)
     parser.add_argument("--tiers", type=Path, default=DEFAULT_TIERS)
     parser.add_argument("--valuation-pool", type=Path, default=DEFAULT_VALUATION_POOL)
     parser.add_argument("--financials", type=Path, default=DEFAULT_FINANCIALS)
@@ -145,13 +178,20 @@ def main() -> None:
     args = parse_args()
     if args.market != "A_SHARE":
         raise SystemExit("Only --market A_SHARE is supported.")
-    rows = build_queue(load_csv(args.tiers), load_csv(args.valuation_pool), load_csv(args.financials), args.as_of)
+    rows = build_queue(
+        load_csv(args.attention_triage),
+        load_csv(args.tiers),
+        load_csv(args.valuation_pool),
+        load_csv(args.financials),
+        args.as_of,
+    )
     fieldnames = [
         "market_type",
         "security_code",
         "security_name",
         "listed_company_name",
         "exchange",
+        "attention_class",
         "quality_tier",
         "quality_tier_label",
         "strategy_tag",

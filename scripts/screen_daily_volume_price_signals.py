@@ -14,6 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "data/processed/a_share_core_valuation_pool.csv"
@@ -363,12 +365,46 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str) -> Non
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
+def log_scan_decisions(
+    log_file: Path,
+    rows: list[dict[str, object]],
+    as_of: str,
+    input_file: Path,
+    output_csv: Path,
+    output_md: Path,
+) -> None:
+    logged_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    entries: list[dict[str, object]] = []
+    for row in rows:
+        reason = row.get("signals") or row.get("wait_reasons") or row.get("action_bias") or ""
+        entries.append(
+            {
+                "logged_at_utc": logged_at,
+                "workflow_stage": "daily_volume_price_scan",
+                "run_id": f"daily_volume_price_scan:{as_of}",
+                "as_of": as_of,
+                "security_code": row.get("security_code", ""),
+                "security_name": row.get("security_name", ""),
+                "decision_type": "daily_signal_state",
+                "decision_result": row.get("signal_state", ""),
+                "summary_reason": reason,
+                "input_files": str(input_file),
+                "source_urls": row.get("data_source", ""),
+                "output_file": f"{output_csv};{output_md}",
+                "operator_or_script": "scripts/screen_daily_volume_price_signals.py",
+                "workflow_version": WORKFLOW_VERSION,
+            }
+        )
+    append_decision_log(log_file, entries)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--as-of", required=True, help="Trading date in YYYY-MM-DD format.")
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--output-csv", type=Path, default=DEFAULT_OUTPUT_CSV)
     parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
+    parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
     parser.add_argument("--symbols", default="", help="Optional comma-separated security codes to filter the input pool.")
     parser.add_argument("--timeout", type=float, default=8.0, help="Per-request network timeout in seconds.")
     parser.add_argument("--workers", type=int, default=8, help="Parallel data-provider requests.")
@@ -425,6 +461,7 @@ def main() -> None:
     ]
     write_csv(args.output_csv, rows, fieldnames)
     write_markdown(args.output_md, rows, args.as_of)
+    log_scan_decisions(args.log_file, rows, args.as_of, args.input, args.output_csv, args.output_md)
     print(f"scanned {len(rows)} rows from {args.input}")
 
 
