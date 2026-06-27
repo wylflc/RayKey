@@ -778,8 +778,11 @@ python3 scripts/backtest_signal_replay.py \
   --as-of YYYY-MM-DD \
   --symbols CODE1,CODE2 \
   --workflow-version a-share-selection-operation-v1 \
+  --input data/processed/a_share_core_valuation_pool.csv \
   --output data/interim/replay_external_validation_YYYYMMDD.csv
 ```
+
+说明：`backtest_signal_replay.py` 复用每日量价扫描规则，用于验证历史日期前的价格和成交量信号。完整历史回放必须提供当时已公开信息构造的 `--input` 核心估值合格池；如果使用当前核心估值合格池，则只能验证价格信号，不能证明当时已经满足质量和估值前置条件。
 
 ### 12.4 回放数据限制
 
