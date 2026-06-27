@@ -24,6 +24,9 @@
 | `data/processed/a_share_core_valuation_pool.md` | L1/L2核心质量公司估值合格池阅读版 |
 | `data/processed/daily_buy_candidates.csv` | 每日量价触发后的买入候选 |
 | `data/processed/daily_volume_price_tracker.md` | 每日量价跟踪阅读版 |
+| `data/processed/a_share_holdings.csv` | 当前真实持仓清单，手工维护，作为每日卖出扫描输入 |
+| `data/processed/daily_holdings_actions.csv` | 每日持仓监控与卖出扫描后的持仓动作清单 |
+| `data/processed/daily_holdings_tracker.md` | 每日持仓动作阅读版 |
 | `data/processed/a_share_workflow_decision_log.csv` | 全流程结论日志，用于后续溯源、复核和纠错 |
 
 ### 2.1 结论日志格式
@@ -33,7 +36,7 @@
 | 字段 | 含义 |
 | --- | --- |
 | `logged_at_utc` | 写入日志的UTC时间 |
-| `workflow_stage` | 阶段：`attention_triage`、`quality_tier_review`、`valuation_review`、`core_valuation_pool`、`daily_volume_price_scan`、`manual_buy_check`等 |
+| `workflow_stage` | 阶段：`attention_triage`、`quality_tier_review`、`valuation_review`、`core_valuation_pool`、`daily_volume_price_scan`、`manual_buy_check`、`holdings_sell_scan`、`manual_sell_check`等 |
 | `run_id` | 批次标识，例如 `2026Q2_quality_review_batch_01` |
 | `as_of` | 结论对应日期 |
 | `security_code` | 股票代码 |
@@ -87,6 +90,9 @@
   -> 买入候选输出
   -> 人工核对公告、研报和当日催化
   -> 决定是否建仓、等待回踩或放弃
+  -> 建仓后写入持仓清单
+  -> 每日持仓监控与卖出扫描
+  -> 持仓动作：持有/加仓资格/减仓/止盈/清仓/风险预警
 ```
 
 ## 5. 阶段一：季度全市场质量审查
@@ -964,6 +970,135 @@ python3 scripts/backtest_signal_replay.py \
 4. 业务thesis、估值假设或催化剂被证伪。
 5. 出现重大财务或治理风险。
 
+## 阶段五：每日持仓监控与卖出扫描
+
+阶段四产出买入候选；阶段五对照当前真实持仓，每个交易日收盘后执行一次，把“宽出”操作化。卖出扫描不是卖出命令，执行卖出前仍需人工核对。
+
+### 执行频率
+
+每个A股交易日收盘后，与阶段四每日量价扫描同时执行。
+
+### 输入
+
+1. `data/processed/a_share_holdings.csv`：当前真实持仓，手工维护。
+2. 前复权日线、周线、月线OHLCV。
+3. 行业指数与沪深300指数。
+4. `data/processed/a_share_core_valuation_pool.csv`：用于刷新持仓的最新估值档位。
+5. `data/processed/a_share_workflow_decision_log.csv`：用于回看持仓的策略标签、bear case与退出条件。
+6. 当日公告与重大新闻摘要。
+
+### 持仓清单字段
+
+`a_share_holdings.csv` 至少包含：
+
+```text
+security_code, security_name, strategy_tag, quality_tier, valuation_tier,
+position_layer, shares, cost_basis, current_weight_pct, entry_date,
+launch_platform_price, thesis_summary, bear_case, add_conditions,
+reduce_conditions, exit_conditions, last_review_date, notes
+```
+
+`position_layer` 取值：`core`、`quasi_core`、`tactical`。持仓权重、回撤预算和行业暴露由清单与最新行情计算。
+
+### 脚本接口
+
+```bash
+python3 scripts/scan_holdings_sell_signals.py \
+  --as-of YYYY-MM-DD \
+  --holdings data/processed/a_share_holdings.csv \
+  --valuation-pool data/processed/a_share_core_valuation_pool.csv \
+  --output-csv data/processed/daily_holdings_actions.csv \
+  --output-md data/processed/daily_holdings_tracker.md \
+  --log-file data/processed/a_share_workflow_decision_log.csv
+```
+
+脚本尚待实现：负责技术与风险类确定性触发；thesis、估值、治理、催化完成等判断由大模型执行。
+
+### 脚本可判定的卖出与风险触发
+
+技术失效（映射§13退出条件、§11.6）：
+
+1. 跌破突破平台。
+2. 跌破MA60且3-5个交易日未收回。
+3. 高位放量滞涨后连续缩量阴跌。
+4. 产业链爆发型持仓周线跌破30周均线。
+5. 现金流复利型持仓月线跌破12月均线。
+
+止盈刻度（映射§12.3，仅提示，不强制）：
+
+```text
++50% / +100% / +200% / +300%-500% 按既定刻度提示慢减
+每次 <= 剩余股数 10%-15%，两次减仓间隔 >= 20 个交易日
+```
+
+仓位与暴露超限（映射个人体系硬限与回撤预算）：
+
+1. 单票 > 30%。
+2. 同一产业链 > 40%。
+3. 同一大行业 > 60%。
+4. 战术持仓合计 > 15%。
+5. 账户自峰值回撤 -8% / -12% / -20% → 去杠杆 / 黄色警告 / 红色警告。
+
+单笔风险：`仓位权重 * 止损距离 > 账户1.5%` 时提示。
+
+### 大模型判定的卖出触发
+
+1. thesis卖出：订单未兑现、客户验证失败、毛利未改善、需求证伪、竞争加剧、技术路线变化、政策逻辑变化、管理层口径与披露数据冲突。
+2. 估值卖出：当前价已反映bull case、未来2-3年利润已被定价、股价远快于盈利上修、板块整体泡沫化、利好不再驱动股价。
+3. 催化完成后再承保：催化兑现后无下一个催化或盈利上修。
+4. 治理/财务红旗与一票否决：立即进入清仓评估。
+5. 机会成本：新机会评分高出 >= 15 分，或原持仓thesis明显走弱。
+
+### 持仓动作状态
+
+| 状态 | 含义 |
+| --- | --- |
+| `hold` | thesis与趋势成立，维持 |
+| `add_eligible` | 满足加仓条件，可按计划加仓 |
+| `reduce` | 触发减仓：超限、技术走弱或估值偏高 |
+| `trim_profit` | 触发止盈刻度，按慢减规则部分了结 |
+| `sell` | thesis或估值被证伪、技术彻底失效，清仓 |
+| `risk_alert` | 出现治理/财务/回撤预算风险，需立即复核 |
+| `thesis_review` | 出现需要重新承保的重大变化 |
+
+### 每日持仓输出格式
+
+```text
+日期：
+账户回撤状态：
+市场状态：
+
+今日持仓动作：
+
+1. 股票名称（代码）
+- 持仓动作：
+- 策略类型/质量层级/估值档位：
+- 当前权重/累计盈亏：
+- 触发条件：
+- 量价/技术状态：
+- 当日催化或风险：
+- 操作偏向：维持 / 可加仓 / 减仓X% / 止盈X% / 清仓 / 立即复核
+
+今日风险预警：
+今日加仓资格：
+```
+
+### 卖出前人工核对
+
+任何 `sell`、`reduce`、`trim_profit` 在实际执行前必须核对：
+
+1. 当日是否有澄清公告或被误读的利空。
+2. 是否处于不可交易状态（停牌、一字跌停）。
+3. 触发是否为单日噪声，是否需等待1-3个交易日确认。
+4. 减仓比例是否符合§12慢减约束。
+5. 卖出后若反向走强的再买回条件。
+
+### 与买入侧的衔接
+
+1. 阶段四产生 `buy_candidate` 并实际建仓后，必须把该持仓写入 `a_share_holdings.csv`，记录策略标签、突破平台价、bear case与退出条件。
+2. `a_share_holdings.csv` 与买入候选相互独立：买入候选是池内信号，持仓清单是已建仓事实。
+3. 每个持仓动作结论写入决策日志，`workflow_stage = holdings_sell_scan` 或 `manual_sell_check`。
+
 ## 14. 执行方式
 
 本文件是A股选股、估值、量价扫描的主执行规范。后续可以用类似以下指令执行固定流程：
@@ -974,11 +1109,12 @@ python3 scripts/backtest_signal_replay.py \
 
 执行分工：
 
-1. 能由脚本稳定完成的部分必须用脚本执行，例如证券名单更新、队列生成、核心估值合格池物化、每日量价指标扫描和历史回放。
+1. 能由脚本稳定完成的部分必须用脚本执行，例如证券名单更新、队列生成、核心估值合格池物化、每日量价指标扫描、每日持仓技术与风险触发扫描和历史回放。
 2. 需要判断业务质量、护城河、估值模型、研报假设、公告真实性和用户defence的部分，由大模型按本文件中的执行规则和输出字段执行。
 3. 大模型执行时不得临时改标准；如发现标准不合理，先修改本文件，再按新版本重新执行。
 4. 每个产生结论的脚本输出和每个大模型批次结论都必须写入 `data/processed/a_share_workflow_decision_log.csv`；队列生成脚本只做调度，不单独写结论日志。
 5. 每日量价扫描不是买入命令。买入前仍需完成第10节人工核对。
+6. 每日持仓卖出扫描不是卖出命令。卖出前仍需完成阶段五的人工核对，并遵守§12的慢减约束。
 
 ## 15. 版本记录
 
@@ -989,3 +1125,4 @@ python3 scripts/backtest_signal_replay.py \
 | v3 | 2026-06-27 | 新增放量突破关键均线/趋势启动信号，明确前高突破不是唯一买入触发 |
 | v4 | 2026-06-27 | 新增结论日志、三类初筛、垃圾公司永久排除、季度证券名单更新要求，并补全估值执行规则 |
 | v5 | 2026-06-27 | 将正文中的质量审查和估值对话式模板改为执行规则、输入材料和输出字段规范 |
+| v6 | 2026-06-27 | 新增阶段五每日持仓监控与卖出扫描，补全持仓清单输入、卖出与风险触发、持仓动作状态和卖出前人工核对，闭合“宽出”回路 |
