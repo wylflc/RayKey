@@ -715,27 +715,27 @@ close / MA20 - 1 > 25%
 
 在脚本正式作为每日流程使用前，必须验证该流程能识别历史上的高质量右侧启动机会。
 
-### 12.2 固定回放案例
+### 12.2 外部回放案例
 
-| 案例 | 回放日期 | 成功标准 |
-| --- | --- | --- |
-| 比亚迪 | 2020-01-13前后 | 在不使用未来信息的情况下，进入至少L2质量层级；估值分析不因当期利润低或PE失真排除；量价扫描在启动附近输出`buy_candidate`或`wait_confirmation` |
-| 宁德时代 | 2019-11前后 | 在不使用未来信息的情况下，进入L1/L2质量层级；估值分析使用动力电池渗透率、客户验证、产能和未来正常化利润，不因高PE排除；量价扫描在启动附近输出`buy_candidate`或`wait_confirmation` |
+具体回放案例不写入本流程文件。回放案例应作为外部验证集单独维护，避免把用于校准的历史样本固化为流程规则。
+
+每个外部回放案例至少记录：
+
+1. 回放股票代码。
+2. 回放日期。
+3. 当时已公开的公司资料、财报、公告、研报和行业数据。
+4. 当时已发生的价格和成交量数据。
+5. 该案例用于验证的流程环节：质量分层、估值排雷、量价触发或卖出规则。
+6. 成功标准。
 
 ### 12.3 回放脚本接口
 
 ```bash
 python3 scripts/backtest_signal_replay.py \
-  --as-of 2020-01-13 \
-  --symbols 002594 \
+  --as-of YYYY-MM-DD \
+  --symbols CODE1,CODE2 \
   --workflow-version a-share-selection-operation-v1 \
-  --output data/interim/replay_byd_2020_01_13.csv
-
-python3 scripts/backtest_signal_replay.py \
-  --as-of 2019-11-15 \
-  --symbols 300750 \
-  --workflow-version a-share-selection-operation-v1 \
-  --output data/interim/replay_catl_2019_11.csv
+  --output data/interim/replay_external_validation_YYYYMMDD.csv
 ```
 
 ### 12.4 回放数据限制
@@ -751,7 +751,7 @@ python3 scripts/backtest_signal_replay.py \
 
 ### 12.5 回放失败后的固定调整
 
-如果比亚迪或宁德时代回放失败，按以下规则调整流程：
+如果任一外部回放案例失败，按以下规则调整流程：
 
 1. 对产业链爆发股和战略能力型公司，降低当前利润在估值中的权重。
 2. 对处于研发、产能爬坡、商业模式切换、行业爆发前夜的公司，强制使用归一化利润和未来2-3年正常化利润。
@@ -791,3 +791,4 @@ python3 scripts/backtest_signal_replay.py \
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
 | v1 | 2026-06-27 | 固定A股质量分层、核心估值合格池、每日量价扫描、连续放量定义和历史回放校准流程 |
+| v2 | 2026-06-27 | 将具名历史样本移出流程正文，改为外部回放案例机制 |
