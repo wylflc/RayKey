@@ -211,6 +211,10 @@ def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
     if daily_bull and 0.03 <= ret_20d <= 0.20 and 1.1 <= vol_5d_ratio <= 1.8 and macd_cross_recent:
         signals.append("8.7.5 温和放量多头")
 
+    # 8.7 核心原则：有效放量且当日收涨即列买入候选，不要求突破前高或关键均线。
+    if effective_volume and float(row["pct_chg"]) > 0:
+        signals.append("8.7.0 放量上涨")
+
     overextended = close / ma20 - 1 > 0.25 or ret_5d > 0.30 or ret_20d > 0.60
     if overextended:
         signal_state = "wait_pullback"
@@ -227,6 +231,15 @@ def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
     else:
         signal_state = "wait_breakout"
         action_bias = "仅观察"
+
+    # §8.11 买入候选强势跟踪：强势程度仅由中短期量价走势判定。
+    ma5_v = float(row.get("ma5", close))
+    ma10_v = float(row.get("ma10", close))
+    short_strong = close > ma5_v >= ma10_v and ret_5d > 0 and vol_5d_ratio >= 1.1
+    mid_strong = close > ma20 and close > ma60 and ret_20d > 0
+    short_weak = close < ma5_v and ret_5d < 0
+    mid_weak = close < ma20 or close < ma60
+    trend_strength = "strong" if (short_strong and mid_strong) else "weakening" if (short_weak and mid_weak) else "neutral"
 
     return {
         "trade_date": row["date"],
@@ -261,6 +274,7 @@ def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
         "signal_state": signal_state,
         "priority": "",
         "action_bias": action_bias,
+        "trend_strength": trend_strength,
     }
 
 
@@ -428,6 +442,7 @@ def main() -> None:
         "signal_state",
         "priority",
         "action_bias",
+        "trend_strength",
         "signals",
         "wait_reasons",
         "close",
