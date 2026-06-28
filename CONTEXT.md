@@ -53,12 +53,12 @@ A listed company the first round keeps for ongoing attention. The set of worth-a
 _Avoid_: buy candidate, current holding.
 
 **Boundary-Pending Company**:
-A listed company not currently worth attention but eligible to re-enter review on a hard trigger such as a new product, customer validation, major order, restructuring, or industry-structure change. It carries no **Quality Tier** while pending.
+A listed company kept reviewable but off the watchlist for one of two reasons: reliable evidence is insufficient to judge it (including a new listing without an annual report), or it is judgeable but currently lacks a durable advantage while its industry is not structurally hopeless. It carries no **Quality Tier**, and re-enters review when reliable evidence appears or a hard trigger (new product, customer validation, major order, restructuring, industry-structure change) occurs.
 _Avoid_: garbage, permanently rejected.
 
 **Garbage Company**:
-A listed company permanently excluded during the first round for absent durable quality or for governance/fraud reasons. It is removed from the pool and never re-screened on price, theme, or low PE; only its security master data is maintained.
-_Avoid_: boundary-pending, temporarily out, L5.
+A listed company permanently excluded during the first round, only for a governance/fraud disaster or because its industry is structurally low-barrier with no durable advantage possible. Company-level current weakness in a non-hopeless industry is **Boundary-Pending**, not garbage. It is removed from the pool and never re-screened on price, theme, or low PE; only its security master data is maintained.
+_Avoid_: boundary-pending, temporarily out, L5, merely mediocre but not fraudulent.
 
 **Quality Tier**:
 An L1–L5 business-quality rank assigned only to **Worth-Attention Companies**, ignoring current price. L1–L4 are keeper tiers (L1 core candidate, L2 quasi-core candidate, L3 tactical candidate, L4 zero-position watch). L5 is not a keeper grade: it means the company no longer deserves worth-attention and is demoted to **Boundary-Pending**. Permanent removal is expressed through **Attention Class** (garbage), never through L5.
