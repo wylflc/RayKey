@@ -192,6 +192,10 @@ boundary_recheck_trigger, evidence_basis, reviewed_at_utc, workflow_version
 
 8. **结构性绝望行业（structural_industry garbage 的适用）**：当行业商业模式结构性破损——低进入门槛、垫资/应收/强地产或单一客户依赖、优势 execution-heavy 而非持久护城河、历史规模或当前利润不代表持久回报——判 `garbage(structural_industry)`，**且适用于相对龙头**（execution、品牌、历史规模在破损模式里不构成持久护城河）。仅当存在**结构确实不同的更高壁垒子赛道**（如高端幕墙系统 vs 普通室内装修）才碗出到 `boundary`。结构性判决在子行业/子赛道粒度上做。
 
+第一轮全量执行中校准补充：
+
+9. **基础设施垄断**（机场、港口、高速、水务、燃气等）：有不可复制的区域垄断地位，但回报受管制、无定价权、特许期有限，护城河不转化为超额回报 → `boundary_pending`（可逆）；出现非航/免税/提价/资产注入等明确改善再升 `worth_attention`。
+
 ### 5.5 队列生成脚本接口
 
 ```bash
