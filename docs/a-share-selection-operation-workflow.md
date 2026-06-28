@@ -188,6 +188,10 @@ boundary_recheck_trigger, evidence_basis, reviewed_at_utc, workflow_version
 6. **资本周期型制造业的护城河**（面板、半导体代工、光伏、LED、锂电等强周期、资本密集行业）：若龙头优势建立在**不可逆的结构性整合 + 客观巨大的资本/规模/技术壁垒**上（替代在客观上已很难），可判 `worth_attention`，即便穿越周期盈利尚未充分验证；周期性在 L1-L5 分层与估值折价。与规则 1 的区分：护城河**持久性本身存疑**（可能在需求下行中被侵蚀）时仍需穿越周期验证 → boundary；壁垒是客观结构性的则不需此前置证明。
 7. **治理灾难的可逆性**：治理灾难发生在**前控股股东**、现已更换控制权并重整 → `boundary_pending`（控制权变更=复核触发），不判永久 garbage；`garbage(governance_fraud)` 留给未解决/仍在持续、或同一责任人仍在位的造假与治理灾难。
 
+建筑装饰行业校准（见 `docs/peer-group-calibration/a-share-decoration-construction.md` §1.5）补充：
+
+8. **结构性绝望行业（structural_industry garbage 的适用）**：当行业商业模式结构性破损——低进入门槛、垫资/应收/强地产或单一客户依赖、优势 execution-heavy 而非持久护城河、历史规模或当前利润不代表持久回报——判 `garbage(structural_industry)`，**且适用于相对龙头**（execution、品牌、历史规模在破损模式里不构成持久护城河）。仅当存在**结构确实不同的更高壁垒子赛道**（如高端幕墙系统 vs 普通室内装修）才碗出到 `boundary`。结构性判决在子行业/子赛道粒度上做。
+
 ### 5.5 队列生成脚本接口
 
 ```bash
