@@ -1,0 +1,22 @@
+security_code,security_name,attention_class,attention_reason,capital_replicability_note,garbage_reason,garbage_subtype,boundary_recheck_trigger,evidence_basis,reviewed_at_utc,workflow_version
+600519,贵州茅台,worth_attention,全国超高端白酒龙头，品牌/赤水河产区/年份基酒/定价权穿越周期已验证,茅台品牌与产区、陈年基酒储备资金无法复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+000858,五粮液,worth_attention,全国浓香高端龙头，明代老窖池+品牌+全国渠道，穿越周期验证,老窖池与高端品牌不可资本复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+600809,山西汾酒,worth_attention,全国清香龙头，杏花村品牌，全国化扩张显示周期韧性,清香龙头品牌与历史不可复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+000568,泸州老窖,worth_attention,国窖1573全国高端 + 400年连续使用老窖池（不可替代）,连续使用老窖池物理与时间不可复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+002304,洋河股份,worth_attention,绵柔品类创建+海量基酒产能；当前渠道困难属落难白马，护城河未损,绵柔品类心智+基酒产能资本难快速复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+000596,古井贡酒,boundary_pending,安徽龙头，年份原浆+老八大品牌，区域护城河真实但穿越下行周期韧性未充分验证,安徽品牌与渠道难复制，但周期韧性未证,,,下行周期中价格/渠道/份额保持→升worth_attention,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+603369,今世缘,boundary_pending,江苏次高端，国缘+婚宴生态，区域护城河真实、未经穿越周期验证,,,,全国化或穿越周期韧性验证,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+603198,迎驾贡酒,boundary_pending,安徽，洞藏生态差异化，区域护城河，周期韧性未证,,,,次高端放量+周期韧性,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+603589,口子窖,boundary_pending,安徽兼香区域品牌，较弱，周期韧性未证,,,,渠道与份额改善,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+600779,水井坊,boundary_pending,高端单品牌但体量小、外资控股、波动大，持久性存疑,,,,规模与渠道稳定性提升,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+600702,舍得酒业,boundary_pending,老酒战略差异化但执行波动、复星系,,,,老酒战略兑现+盈利稳定,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+000799,酒鬼酒,boundary_pending,馥郁香独特香型niche+中粮系，但体量小、波动大,,,,馥郁香放量+穿越周期,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+600559,老白干酒,boundary_pending,河北区域+中低端为主，护城河弱,,,,高端化/份额提升,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+603919,金徽酒,boundary_pending,甘肃小区域龙头，体量小,,,,跨区域扩张验证,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+600197,伊力特,boundary_pending,新疆区域，扩张受限,,,,疆外扩张突破,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+002646,天佑德酒,boundary_pending,青海青稞酒差异化原料niche，但小、波动,,,,青稞品类放量,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+600199,金种子酒,boundary_pending,弱品牌大众价位，但华润入主赋能/重组中（硬触发）,,,,华润赋能后份额/盈利改善,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+000860,顺鑫农业,boundary_pending,牛栏山民酒龙头护城河真实，但房地产/生猪非核心拖累、结构混乱、可比性差,牛栏山品牌+渠道+成本真实难复制，但listco结构混乱,,,剥离非核心/结构清晰后,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+600238,*ST椰岛,boundary_pending,保健酒/白酒，*ST因连年亏损；未坐实造假故非garbage；资料弱、无法明确实际水平,,,,摘帽+经营改善；若核到治理造假则转garbage,需核验年报/监管公告,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+000995,皇台酒业,garbage,历史财务造假（虚增存货/收入），治理灾难,,历史财务造假（虚增存货/收入），治理灾难,governance_fraud,,需核验立案调查/处罚公告,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+600696,*ST岩石,garbage,长期治理灾难（前匹凸匹/慧球系，操纵与重大违规史），*ST,,长期治理灾难（操纵与重大违规史），*ST,governance_fraud,,需核验监管处罚/重组公告,2026-06-28T13:43:52Z,a-share-selection-operation-v9

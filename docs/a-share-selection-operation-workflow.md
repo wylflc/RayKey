@@ -171,6 +171,18 @@ boundary_recheck_trigger, evidence_basis, reviewed_at_utc, workflow_version
 
 `garbage_subtype` 取值：`governance_fraud` 或 `structural_industry`。
 
+#### 5.4.5 行业校准锚
+
+第一轮标准通过逐行业判例校准；每个行业的校准结论以可追溯方式记录在 `docs/peer-group-calibration/` 下对应文件，并在此沉淀可推广规则。
+
+白酒行业校准（见 `docs/peer-group-calibration/a-share-baijiu.md` §1.10）得到的可推广规则：
+
+1. **护城河需穿越周期验证**：`worth_attention` 要求护城河持久且已在完整下行周期中验证；护城河真实但穿越下行周期的能力尚未验证 → `boundary_pending`（可逆，验证后可升）。
+2. **行业增长前景不是第一轮排除项**：行业长期增长走弱不在第一轮排除公司，只在 L1-L5 分层与估值中折价；第一轮以竞争力为准。
+3. **传承品牌即资本难复制的护城河**：品牌 + 产区/原产地 + 老窖/不可替代实物资产 + 基酒/陈年库存 + 深耕渠道是典型持久护城河，此类行业并非结构性绝望。
+4. **ST/困境的处理**：仅因连年亏损被 ST/困境、未坐实造假 → 不判 garbage，按竞争力判（通常 boundary）；`garbage(governance_fraud)` 需有坐实的造假/治理灾难，并核验公告。
+5. **多元化拖累**：核心业务护城河真实、但被亏损非核心业务拖累、可比性差 → `boundary_pending`（剥离/重组后可逆），不直接 worth_attention 或 garbage。
+
 ### 5.5 队列生成脚本接口
 
 ```bash

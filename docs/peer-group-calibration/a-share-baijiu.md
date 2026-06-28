@@ -105,3 +105,17 @@ These are hypotheses for reviewer challenge, not final rules.
 - 泸州老窖 2025 half-year report and 2025 annual-report mirror: `https://disc.static.szse.cn/disc/disk03/finalpage/2025-08-30/9b7b5a04-d2f1-4f2b-ac1d-35d1a6cb25de.PDF`, `https://pdf.dfcfw.com/pdf/H2_AN202604281821699992_1.pdf`
 - 古井贡酒 2025 annual-report text mirror: `https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12258306&stockid=000596`
 - White-liquor annual-report compilation used only as a secondary checklist for smaller companies: `https://fsc.foodmate.net/show.php?itemid=742696`
+
+## 1.10 New-Standard Recalibration (ADR-0006)
+
+The round-1 three-class standard (operation-workflow §5.4, ADR-0006) is competitiveness / capital-replicability based and does not exclude on industry growth outlook at round-1. Re-applying it to baijiu supersedes the earlier top-three reviewer call in §1.5–§1.8: the secular-growth concern is no longer a round-1 excluder but a discount applied later at L1–L5 tiering and valuation. The bar for `worth_attention` is that the moat is durable AND demonstrated through a full downcycle.
+
+Calibrated round-1 result (written to `data/processed/a_share_attention_triage.csv`):
+
+| Class | Companies | Basis |
+| --- | --- | --- |
+| worth_attention (5) | 贵州茅台, 五粮液, 山西汾酒, 泸州老窖, 洋河股份 | National leader or irreplaceable old-cellar/category brand; moat proven through cycles. 洋河 is a fallen champion with intact moat. |
+| boundary_pending (14) | 古井贡酒, 今世缘, 迎驾贡酒, 口子窖 (strong regional, downcycle resilience unproven); 水井坊, 舍得酒业, 酒鬼酒, 老白干酒, 金徽酒, 伊力特, 天佑德酒, 金种子酒 (smaller / niche / weaker); 顺鑫农业 (real 牛栏山 moat but non-core drag); *ST椰岛 (chronic-loss *ST, fraud not confirmed) | Reversible; re-review on proven downcycle resilience, restructuring, or new reliable evidence. |
+| garbage / governance_fraud (2) | 皇台酒业, *ST岩石 | Documented financial-fraud / governance-disaster history; confirm against filings before freezing. |
+
+Generalizable rules distilled into operation-workflow §5.4.5: moat must be proven through a cycle; growth outlook is a tiering/valuation discount, not a round-1 excluder; heritage brand is a capital-replication-resistant moat; ST/distress from chronic losses without confirmed fraud is not garbage; diversified drag goes to boundary.
