@@ -43,3 +43,28 @@ security_code,security_name,attention_class,attention_reason,capital_replicabili
 300506,ST名家汇,garbage,照明工程，ST，项目制无壁垒,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；需核验：若确凿造假改 governance_fraud,2026-06-28T21:47:48Z,a-share-selection-operation-v10
 603828,*ST利达,garbage,柯利达，装饰，*ST,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；需核验：若确凿造假改 governance_fraud,2026-06-28T21:47:48Z,a-share-selection-operation-v10
 601886,江河集团,boundary_pending,高端幕墙系统（全球前列、技术/资质更高）+医疗健康多元化，属更高壁垒子赛道，与普通室内装修结构不同,高端幕墙技术/资质比普通装修更难复制，但仍项目制/地产相关,,,幕墙/医疗持久回报验证,a-share-decoration-construction.md,2026-06-28T21:47:48Z,a-share-selection-operation-v10
+000063,中兴通讯,worth_attention,电信设备全球前四（华为/爱立信/诺基亚/中兴/三星），研发/IP/运营商/规模护城河,5G专利/研发规模/运营商关系/算力布局难以资本快速复制,,,,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000157,中联重科,worth_attention,工程机械大三龙头之一，全球化+高机领先，地产下行中靠出口/高机验证韧性,规模/品牌/全球渠道/技术，工程机械龙头地位难复制,,,,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000333,美的集团,worth_attention,全球白电龙头+ToB多元化（KUKA/楼宇），强现金流，护城河明确,品牌/规模/渠道/成本/全球化难复制,,,,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000338,潍柴动力,worth_attention,中国重卡发动机第一+全球叉车第一（KION/林德液压），护城河明确,发动机规模/技术/配套+全球叉车，资本难复制,,,,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000408,藏格矿业,worth_attention,稀缺盐湖钾肥（察尔汗）+低成本盐湖锂+巨龙铜权益，垄断资源型护城河,察尔汗钾/低成本锂/巨龙铜资源不可复制,,,,round1轻量初筛；需核验治理（前控股股东历史占用）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000423,东阿阿胶,worth_attention,阿胶品类龙头，传承品牌护城河+定价权，2019去库存危机后恢复验证,阿胶品类=东阿阿胶，传承品牌资本难复制,,,,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000425,徐工机械,worth_attention,工程机械大三龙头之一，全球起重机第一，下行周期出口验证韧性,规模/品牌/全球渠道/技术，工程机械龙头地位难复制,,,,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000009,中国宝安,boundary_pending,控股平台，核心资产贝特瑞（全球负极龙头）真实，但多元化拖累/控股折价,,,,价值实现/分拆,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000027,深圳能源,boundary_pending,区域电力公用事业，规制回报、无强定价权护城河,,,,现金流/股东回报是否突出,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000028,国药一致,boundary_pending,国药系医药分销+国大药房，规模/牌照有壁垒但分销低毛利、护城河中等,,,,零售/分销份额与盈利质量,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000039,中集集团,boundary_pending,全球集装箱第一，但产品商品化/航运周期+多元化结构,,,,高附加值业务占比/穿越周期盈利,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000045,深纺织A,boundary_pending,偏光片进口替代niche（盛波光电），但亚规模,,,,偏光片放量/盈利,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000049,德赛电池,boundary_pending,苹果认证电池PACK粘性，但封装级护城河+客户集中,,,,储能/动力放量、客户分散,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000060,中金岭南,boundary_pending,中游铅锌矿+冶炼，商品周期，非清晰资源垄断,,,,低成本资源/储量提升,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000066,中国长城,boundary_pending,信创/飞腾自主可控期权（中电系），但执行弱、盈利差,,,,信创放量+盈利改善,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000088,盐田港,boundary_pending,港口区权益+物流园平台，非直接主导运营,,,,资产注入/价值实现,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000089,深圳机场,boundary_pending,区域枢纽机场垄断地位，但航空性收费受管制、无定价权、回报受限,,,,非航/免税放量；基础设施垄断口径校准,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000099,中信海直,boundary_pending,中国海上直升机近垄断niche，但小、单一客户（中海油）依赖,,,,通航/低空放量、客户分散,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000156,华数传媒,boundary_pending,浙江有线牌照+阿里参股，但有线电视结构性承压,,,,智慧广电/宽带转型兑现,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000166,申万宏源,boundary_pending,券商牌照+中大型，但同质化/周期，非清晰龙头,,,,差异化/财富管理领先,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000400,许继电气,boundary_pending,特高压直流技术+国网系，但系统内中游（弱于国电南瑞）、电网资本周期,,,,UHV份额/技术领先,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000404,长虹华意,boundary_pending,全球冰箱压缩机第一（规模），但商品化低毛利部件,,,,高端化/盈利提升,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000409,云鼎科技,boundary_pending,山东能源系煤矿智能化转型，未验证,,,,转型兑现,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000415,渤海租赁,boundary_pending,Avolon全球飞机租赁真实资产，但高杠杆+海航遗留,,,,去杠杆/治理理顺,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
+000429,粤高速A,boundary_pending,广东高速特许经营垄断，但回报受管制、特许期有限、无定价权,,,,基础设施垄断口径校准,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
