@@ -1202,7 +1202,7 @@ python3 scripts/scan_holdings_sell_signals.py \
 本文件是A股选股、估值、量价扫描的主执行规范。后续可以用类似以下指令执行固定流程：
 
 ```text
-请基于 docs/a-share-selection-operation-workflow.md 执行今天的A股每日量价扫描，并将结果写入固定输出文件和结论日志。
+请基于 docs/000_Ashare_workflow.md 执行今天的A股每日量价扫描，并将结果写入固定输出文件和结论日志。
 ```
 
 执行分工：
