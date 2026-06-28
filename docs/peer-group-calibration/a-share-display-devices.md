@@ -41,3 +41,17 @@ The remaining companies are rejected for now because they are ordinary display m
 ## 1.4 Sources
 
 This first-pass group review uses the local full-coverage scoring evidence and company-profile evidence already stored in `data/processed/a_share_company_triage_reviews.csv`, `data/processed/a_share_full_coverage_scores.csv`, and `data/interim/a_share_company_profiles.csv`. The decision rows preserve source URLs. Final deep-company reviews should replace aggregator discovery URLs with direct annual reports, exchange filings, product documentation, panel-customer qualification evidence, materials/process evidence, and reputable institutional research where needed.
+
+## 1.5 New-Standard Recalibration (ADR-0006)
+
+Re-applying the round-1 standard (operation-workflow §5.4) to the core panel makers — stricter than §1.3, since worth_attention now requires a structurally durable, hard-to-replicate moat:
+
+| Class | Companies | Basis |
+| --- | --- | --- |
+| worth_attention (2) | 京东方A, TCL科技 | Consolidated large-panel oligopoly leaders. Korea's irreversible LCD exit + a $10B+ leading-edge fab barrier make the scale/capital/OLED moat objectively hard to replicate; cyclicality is discounted at tiering/valuation, not a round-1 excluder. |
+| boundary_pending (6) | 深天马A (auto/small-panel niche, sub-scale); 维信诺, 和辉光电 (AMOLED challengers, loss-making, sub-scale); 彩虹股份 (substrate-glass import-substitution niche + sub-scale panel); 龙腾光电 (small commodity LCD); 华映科技 (governance disaster under the former parent, now under SOE restructuring) | Reversible; re-review on proven scale/profit, niche scale-up, or restructuring outcome. |
+| garbage | none | Post-consolidation the panel industry is not structurally hopeless; the one governance-troubled name is under new control + restructuring, so boundary rather than permanent garbage. |
+
+Calibration rules distilled into operation-workflow §5.4.5: (6) for capex-cyclical tech-manufacturing, an irreversible structural consolidation + an objectively large capital/scale/tech barrier can grant worth_attention before through-cycle profitability is proven — different from the baijiu rule because the moat's durability here is structural rather than in doubt; (7) a governance disaster under a former controlling shareholder, now under new control and restructuring, is boundary (control change = re-review trigger), not permanent garbage.
+
+Verify against filings before freezing (panel-customer qualification, OLED capacity/yield, 华映科技 restructuring status).

@@ -183,6 +183,11 @@ boundary_recheck_trigger, evidence_basis, reviewed_at_utc, workflow_version
 4. **ST/困境的处理**：仅因连年亏损被 ST/困境、未坐实造假 → 不判 garbage，按竞争力判（通常 boundary）；`garbage(governance_fraud)` 需有坐实的造假/治理灾难，并核验公告。
 5. **多元化拖累**：核心业务护城河真实、但被亏损非核心业务拖累、可比性差 → `boundary_pending`（剥离/重组后可逆），不直接 worth_attention 或 garbage。
 
+面板行业校准（见 `docs/peer-group-calibration/a-share-display-devices.md` §1.5）补充：
+
+6. **资本周期型制造业的护城河**（面板、半导体代工、光伏、LED、锂电等强周期、资本密集行业）：若龙头优势建立在**不可逆的结构性整合 + 客观巨大的资本/规模/技术壁垒**上（替代在客观上已很难），可判 `worth_attention`，即便穿越周期盈利尚未充分验证；周期性在 L1-L5 分层与估值折价。与规则 1 的区分：护城河**持久性本身存疑**（可能在需求下行中被侵蚀）时仍需穿越周期验证 → boundary；壁垒是客观结构性的则不需此前置证明。
+7. **治理灾难的可逆性**：治理灾难发生在**前控股股东**、现已更换控制权并重整 → `boundary_pending`（控制权变更=复核触发），不判永久 garbage；`garbage(governance_fraud)` 留给未解决/仍在持续、或同一责任人仍在位的造假与治理灾难。
+
 ### 5.5 队列生成脚本接口
 
 ```bash

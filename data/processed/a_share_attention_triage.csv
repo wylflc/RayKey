@@ -20,3 +20,11 @@ security_code,security_name,attention_class,attention_reason,capital_replicabili
 600238,*ST椰岛,boundary_pending,保健酒/白酒，*ST因连年亏损；未坐实造假故非garbage；资料弱、无法明确实际水平,,,,摘帽+经营改善；若核到治理造假则转garbage,需核验年报/监管公告,2026-06-28T13:43:52Z,a-share-selection-operation-v9
 000995,皇台酒业,garbage,历史财务造假（虚增存货/收入），治理灾难,,历史财务造假（虚增存货/收入），治理灾难,governance_fraud,,需核验立案调查/处罚公告,2026-06-28T13:43:52Z,a-share-selection-operation-v9
 600696,*ST岩石,garbage,长期治理灾难（前匹凸匹/慧球系，操纵与重大违规史），*ST,,长期治理灾难（操纵与重大违规史），*ST,governance_fraud,,需核验监管处罚/重组公告,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+000725,京东方A,worth_attention,全球LCD龙头+OLED#2；韩国不可逆退出LCD的寡头整合+$10B级资本壁垒+OLED前沿，护城河客观难复制,领先世代产线$10B+、规模/良率/客户认证客观难复制；整合不可逆,,,,a-share-display-devices.md（年报/行业整合）,2026-06-28T16:48:18Z,a-share-selection-operation-v9
+000100,TCL科技,worth_attention,TCL华星LCD#2；同属不可逆寡头整合+巨额资本壁垒，OLED/印刷OLED布局,规模+资本+整合壁垒客观难复制,,,,a-share-display-devices.md（年报/行业整合）,2026-06-28T16:48:18Z,a-share-selection-operation-v9
+000050,深天马A,boundary_pending,中小/车载/工控LTPS+柔性OLED，车载显示全球领先且认证粘性，但整体规模小、盈利弱，大尺寸OLED亚规模,,,,车载/专显niche规模与盈利兑现→可升worth_attention,a-share-display-devices.md（年报/行业整合）,2026-06-28T16:48:18Z,a-share-selection-operation-v9
+002387,维信诺,boundary_pending,AMOLED挑战者，持续亏损、亚规模 vs 三星/京东方,,,,OLED规模与盈利改善,a-share-display-devices.md（年报/行业整合）,2026-06-28T16:48:18Z,a-share-selection-operation-v9
+688538,和辉光电,boundary_pending,中小AMOLED，亚规模、亏损,,,,OLED规模与盈利改善,a-share-display-devices.md（年报/行业整合）,2026-06-28T16:48:18Z,a-share-selection-operation-v9
+600707,彩虹股份,boundary_pending,国产液晶玻璃基板稀缺niche（战略进口替代）+亚规模面板，周期弱,玻璃基板进口替代有壁垒，但规模未起,,,玻璃基板放量/面板盈利改善,a-share-display-devices.md（年报/行业整合）,2026-06-28T16:48:18Z,a-share-selection-operation-v9
+688055,龙腾光电,boundary_pending,小尺寸a-Si商品LCD，亚规模,,,,差异化/盈利改善,a-share-display-devices.md（年报/行业整合）,2026-06-28T16:48:18Z,a-share-selection-operation-v9
+000536,华映科技,boundary_pending,前大股东中华映管资金占用/违规担保/ST史；现福建国资重整中，控制权变更=复核触发；非ongoing fraud故非永久garbage,,,,国资重整后经营与治理改善,需核验重整/治理公告,2026-06-28T16:48:18Z,a-share-selection-operation-v9
