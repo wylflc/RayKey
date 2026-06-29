@@ -14,23 +14,23 @@ Round-1 three-class triage (`worth_attention` / `boundary_pending` / `garbage`) 
 
 | Class | Done |
 | --- | ---: |
-| worth_attention | 64 |
-| boundary_pending | 164 |
+| worth_attention | 72 |
+| boundary_pending | 181 |
 | garbage | 16 (governance_fraud 2 / structural_industry 14) |
-| **Total triaged** | **244 / 5653** |
+| **Total triaged** | **269 / 5653** |
 
-Remaining: `1_worth_attention` (prior worth_attention) **1033** · `2_ex_l5_boundary` **421** · `3_unreviewed` **3955**.
+Remaining: `1_worth_attention` (prior worth_attention) **1008** · `2_ex_l5_boundary` **421** · `3_unreviewed` **3955**.
 
-Batches done: 3 industry-calibration batches (baijiu 21, panel 8, decoration 15) + 8 priority-1 batches (200). Cadence 25/batch.
+Batches done: 3 industry-calibration batches (baijiu 21, panel 8, decoration 15) + 9 priority-1 batches (225). Cadence 25/batch.
 
-### Current worth_attention pool (64)
+### Current worth_attention pool (72)
 
 - **品牌消费:** 贵州茅台·五粮液·山西汾酒·泸州老窖·洋河股份(白酒) · 东阿阿胶·云南白药·华润三九(中药/OTC) · 美的集团·格力电器·苏泊尔(家电/炊具) · 双汇发展(肉制品)
-- **垄断/稀缺资源:** 藏格矿业·盐湖股份(盐湖钾锂) · 锡业股份(全球锡) · 赣锋锂业(全球锂资源/锂盐)
-- **军工高壁垒电子:** 振华科技·航天电器·中航光电(器件/连接器) · 紫光国微(军工FPGA)
-- **AI/半导体/高端电子:** 沃尔核材(高速铜连接) · 顺络电子(高端电感) · 通富微电(先进封装) · 福晶科技(光学晶体) · 光迅科技(光器件/光芯片) · 科大讯飞(AI语音/政教AI) · 北方华创(半导体设备) · 东山精密(AI PCB/FPC/光模块制造) · 雅克科技(半导体材料/前驱体) · 高德红外(红外/特种光电)
+- **垄断/稀缺资源:** 藏格矿业·盐湖股份(盐湖钾锂) · 锡业股份(全球锡) · 赣锋锂业·天齐锂业(全球锂资源/锂盐) · 天山铝业(铝资源/一体化成本)
+- **军工高壁垒电子:** 振华科技·航天电器·中航光电(器件/连接器) · 紫光国微(军工FPGA) · 海格通信(军工通信/北斗)
+- **AI/半导体/高端电子:** 沃尔核材(高速铜连接) · 顺络电子(高端电感) · 通富微电(先进封装) · 福晶科技(光学晶体) · 光迅科技(光器件/光芯片) · 科大讯飞(AI语音/政教AI) · 北方华创(半导体设备) · 东山精密(AI PCB/FPC/光模块制造) · 沪电股份(AI高速PCB) · 雅克科技(半导体材料/前驱体) · 江海股份(高端电容器) · 高德红外(红外/特种光电)
 - **软件/硬件生态:** 大华股份·海康威视(安防AIoT) · 石基信息(酒店信息系统) · 广联达(建筑信息化软件) · 奔图科技(国产打印生态)
-- **科技/装备龙头:** 中兴通讯·紫光股份(新华三) · 大族激光 · 三花智控(全球热管理) · 汉钟精机(压缩机/真空泵) · 华明装备(分接开关) · 水晶光电(精密光学) · 科华数据(AIDC电源/UPS) · 奥普光电(军工光电) · 杭氧股份(空分设备/工业气体) · 江苏神通(核电/特种阀门)
+- **科技/装备龙头:** 中兴通讯·紫光股份(新华三) · 大族激光 · 三花智控(全球热管理) · 汉钟精机(压缩机/真空泵) · 华明装备(分接开关) · 水晶光电(精密光学) · 科华数据·科士达(AIDC电源/UPS) · 奥普光电(军工光电) · 杭氧股份(空分设备/工业气体) · 江苏神通(核电/特种阀门) · 双环传动(精密齿轮/传动)
 - **资本周期龙头(规则6):** 京东方A·TCL科技(面板) · 中联重科·徐工机械·潍柴动力·中国重汽(机械/重卡)
 - **金融:** 宁波银行
 - **医药/生物:** 长春高新(金赛) · 华兰生物(浆站) · 上海莱士(血液制品) · 恩华药业(CNS/麻醉精神药) · 科伦药业(输液/ADC创新药) · 鱼跃医疗(家用医疗器械) · 隆平高科(种业/转基因)
@@ -38,6 +38,7 @@ Batches done: 3 industry-calibration batches (baijiu 21, panel 8, decoration 15)
 - **化工寡头:** 新和成(维生素)
 - **平台网络:** 分众传媒(电梯广告点位网络)
 - **物流网络:** 顺丰控股(直营时效物流/综合供应链)
+- **精密制造平台:** 立讯精密(消费电子/AI硬件精密制造)
 
 ## How to resume (for Codex)
 
