@@ -14,26 +14,27 @@ Round-1 three-class triage (`worth_attention` / `boundary_pending` / `garbage`) 
 
 | Class | Done |
 | --- | ---: |
-| worth_attention | 44 |
-| boundary_pending | 134 |
+| worth_attention | 53 |
+| boundary_pending | 150 |
 | garbage | 16 (governance_fraud 2 / structural_industry 14) |
-| **Total triaged** | **194 / 5653** |
+| **Total triaged** | **219 / 5653** |
 
-Remaining: `1_worth_attention` (prior worth_attention) **1083** · `2_ex_l5_boundary` **421** · `3_unreviewed` **3955**.
+Remaining: `1_worth_attention` (prior worth_attention) **1058** · `2_ex_l5_boundary` **421** · `3_unreviewed` **3955**.
 
-Batches done: 3 industry-calibration batches (baijiu 21, panel 8, decoration 15) + 6 priority-1 batches (150). Cadence 25/batch.
+Batches done: 3 industry-calibration batches (baijiu 21, panel 8, decoration 15) + 7 priority-1 batches (175). Cadence 25/batch.
 
-### Current worth_attention pool (44)
+### Current worth_attention pool (53)
 
 - **品牌消费:** 贵州茅台·五粮液·山西汾酒·泸州老窖·洋河股份(白酒) · 东阿阿胶·云南白药·华润三九(中药/OTC) · 美的集团·格力电器·苏泊尔(家电/炊具) · 双汇发展(肉制品)
 - **垄断/稀缺资源:** 藏格矿业·盐湖股份(盐湖钾锂) · 锡业股份(全球锡)
 - **军工高壁垒电子:** 振华科技·航天电器·中航光电(器件/连接器) · 紫光国微(军工FPGA)
-- **AI/半导体/高端电子:** 沃尔核材(高速铜连接) · 顺络电子(高端电感) · 通富微电(先进封装) · 福晶科技(光学晶体) · 科大讯飞(AI语音/政教AI)
-- **软件/硬件生态:** 石基信息(酒店信息系统) · 奔图科技(国产打印生态)
-- **科技/装备龙头:** 中兴通讯·紫光股份(新华三) · 大族激光 · 三花智控(全球热管理) · 汉钟精机(压缩机/真空泵)
+- **AI/半导体/高端电子:** 沃尔核材(高速铜连接) · 顺络电子(高端电感) · 通富微电(先进封装) · 福晶科技(光学晶体) · 光迅科技(光器件/光芯片) · 科大讯飞(AI语音/政教AI)
+- **软件/硬件生态:** 大华股份(安防AIoT) · 石基信息(酒店信息系统) · 奔图科技(国产打印生态)
+- **科技/装备龙头:** 中兴通讯·紫光股份(新华三) · 大族激光 · 三花智控(全球热管理) · 汉钟精机(压缩机/真空泵) · 华明装备(分接开关) · 水晶光电(精密光学) · 科华数据(AIDC电源/UPS) · 奥普光电(军工光电)
 - **资本周期龙头(规则6):** 京东方A·TCL科技(面板) · 中联重科·徐工机械·潍柴动力·中国重汽(机械/重卡)
 - **金融:** 宁波银行
-- **医药/生物:** 长春高新(金赛) · 华兰生物(浆站) · 鱼跃医疗(家用医疗器械) · 隆平高科(种业/转基因)
+- **医药/生物:** 长春高新(金赛) · 华兰生物(浆站) · 上海莱士(血液制品) · 恩华药业(CNS/麻醉精神药) · 鱼跃医疗(家用医疗器械) · 隆平高科(种业/转基因)
+- **农牧服务:** 海大集团(饲料/养殖服务平台)
 - **化工寡头:** 新和成(维生素)
 - **平台网络:** 分众传媒(电梯广告点位网络)
 
