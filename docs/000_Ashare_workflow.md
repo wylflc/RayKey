@@ -196,6 +196,34 @@ boundary_recheck_trigger, evidence_basis, reviewed_at_utc, workflow_version
 
 9. **基础设施垄断**（机场、港口、高速、水务、燃气等）：有不可复制的区域垄断地位，但回报受管制、无定价权、特许期有限，护城河不转化为超额回报 → `boundary_pending`（可逆）；出现非航/免税/提价/资产注入等明确改善再升 `worth_attention`。
 
+#### 5.4.6 全量第一轮重扫执行（可续跑）
+
+按 ADR-0006 标准对全部A股做第一轮三类初筛。这是**模型逐家判断，不是阈值脚本**（ADR-0004/0006）。可续跑、分批进行。进度与交接见 `docs/round1-rescan-progress.md`。
+
+输入：
+
+- `data/interim/a_share_full_rescan_queue.csv`：全覆盖工作队列，按优先级排序（`1_worth_attention` → `2_ex_l5_boundary` → `3_unreviewed`），附旧分层供参考。
+- `data/processed/a_share_attention_triage.csv`：已完成的三类初筛结果（本轮产物，§5.4.4 字段）。
+
+每批流程（默认 25 家）：
+
+1. 取下一批：从队列按优先级、排除已在 `a_share_attention_triage.csv` 中的 `security_code`，取下 25 家。
+2. 逐家独立判断（§5.4.1 总体原则 + §5.4.2/5.4.3 定义 + §5.4.5 校准锚规则 1-9）。轻量初筛：业务模式 + 是否有持久且难复制（资本复制测试）的护城河 + 是否有明显负面；不要求逐家通读年报。资料不足且无明显负面 → `boundary_pending`。
+3. 追加到 `a_share_attention_triage.csv`（§5.4.4 字段；worth_attention 填 `capital_replicability_note`，boundary 填 `boundary_recheck_trigger`，garbage 填 `garbage_reason`+`garbage_subtype`）。
+4. 向 `a_share_workflow_decision_log.csv` 追加一条本批结论（`workflow_stage = attention_triage`）。
+5. 提交（单句 message）。
+
+取下一批的查询：
+
+```python
+import csv
+done={r["security_code"].zfill(6) for r in csv.DictReader(open("data/processed/a_share_attention_triage.csv",encoding="utf-8-sig"))}
+q=list(csv.DictReader(open("data/interim/a_share_full_rescan_queue.csv",encoding="utf-8-sig")))
+nxt=[r for r in q if r["security_code"].zfill(6) not in done][:25]  # 已按优先级排序
+```
+
+完成标准：全部队列三类化后，第一轮结束；随后只对 `worth_attention` 公司执行阶段一第二步 L1-L5 质量分层（§5.7/§5.8）。
+
 ### 5.5 队列生成脚本接口
 
 ```bash
