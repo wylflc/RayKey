@@ -195,6 +195,20 @@ boundary_recheck_trigger, evidence_basis, reviewed_at_utc, workflow_version
 第一轮全量执行中校准补充：
 
 9. **基础设施垄断**（机场、港口、高速、水务、燃气等）：有不可复制的区域垄断地位，但回报受管制、无定价权、特许期有限，护城河不转化为超额回报 → `boundary_pending`（可逆）；出现非航/免税/提价/资产注入等明确改善再升 `worth_attention`。
+10. **极端牌照但回报受管制（核电等）**：即使牌照壁垒极强（如核电全国仅 2-3 家运营商），只要回报受管制、无定价权、护城河不转化为超额回报 → `boundary_pending`（规则 9 的延伸）；电价市场化、资产注入或非管制收益占比提升再升 `worth_attention`。
+11. **银行**：只有穿越周期的优质 franchise（持续低成本存款、风控、显著高于同业的 ROE，如宁波银行）才判 `worth_attention`；普通、同质化、强周期或主要靠规模的银行 → `boundary_pending`。
+
+#### 防过度纳入清单（worth_attention 的否决项）
+
+worth_attention 从严。出现以下情形，默认 `boundary_pending`，不纳入 worth_attention：
+
+1. **“研究价值/值得理解”不是理由**：worth_attention 要求持久、难复制、能转化为超额回报的护城河；“值得理解 ≠ 值得观察”。
+2. **护城河理由自带对冲**：理由里出现“规模弱/偏小/需跟踪/研究价值/受益于景气/有望”等对冲措辞 → 默认 boundary。
+3. **强位置 ≠ 超额回报护城河**：仅“细分/niche 能力强”，或强市场地位但属中游/低毛利/组装代工/客户高度集中 → 默认 boundary。
+4. **资源类三要素**：需同时具备稀缺 + 低成本曲线 + 规模/储量；仅“有矿/有资源”不够 → 默认 boundary。
+5. **景气受益不是护城河**：AI 资本开支、商品涨价、补贴等景气本身不构成护城河；要问景气退潮后是否仍有难复制壁垒。
+6. **规制回报/无定价权**：含极端牌照（核电、规制公用）与普通银行业务 → boundary（规则 9/10/11）。
+7. **与已判同行一致**：同行业/同类型中，更大或更强的同行若已判 boundary，更小的不应判 worth_attention。
 
 #### 5.4.6 全量第一轮重扫执行（可续跑）
 
@@ -208,7 +222,7 @@ boundary_recheck_trigger, evidence_basis, reviewed_at_utc, workflow_version
 每批流程（默认 25 家）：
 
 1. 取下一批：从队列按优先级、排除已在 `a_share_attention_triage.csv` 中的 `security_code`，取下 25 家。
-2. 逐家独立判断（§5.4.1 总体原则 + §5.4.2/5.4.3 定义 + §5.4.5 校准锚规则 1-9）。轻量初筛：业务模式 + 是否有持久且难复制（资本复制测试）的护城河 + 是否有明显负面；不要求逐家通读年报。资料不足且无明显负面 → `boundary_pending`。
+2. 逐家独立判断（§5.4.1 总体原则 + §5.4.2/5.4.3 定义 + §5.4.5 校准锚规则 1-11 + **防过度纳入清单**）。轻量初筛：业务模式 + 是否有持久且难复制（资本复制测试）的护城河 + 是否有明显负面；不要求逐家通读年报。资料不足且无明显负面 → `boundary_pending`。worth_attention 从严：先过一遍“防过度纳入清单”，存疑即 boundary。
 3. 追加到 `a_share_attention_triage.csv`（§5.4.4 字段；worth_attention 填 `capital_replicability_note`，boundary 填 `boundary_recheck_trigger`，garbage 填 `garbage_reason`+`garbage_subtype`）。
 4. 向 `a_share_workflow_decision_log.csv` 追加一条本批结论（`workflow_stage = attention_triage`）。
 5. 提交（单句 message）。

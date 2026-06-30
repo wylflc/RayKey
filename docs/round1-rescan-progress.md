@@ -14,8 +14,8 @@ Round-1 three-class triage (`worth_attention` / `boundary_pending` / `garbage`) 
 
 | Class | Done |
 | --- | ---: |
-| worth_attention | 96 |
-| boundary_pending | 232 |
+| worth_attention | 89 |
+| boundary_pending | 239 |
 | garbage | 16 (governance_fraud 2 / structural_industry 14) |
 | **Total triaged** | **344 / 5653** |
 
@@ -64,4 +64,5 @@ nxt=[r for r in q if r["security_code"].zfill(6) not in done][:25]  # priority-o
 2. Priority order: re-judge prior worth_attention first, then the 421 ex-L5 (temporarily reclassified to boundary), then the unreviewed.
 3. `garbage` rows that carry `需核验` in `evidence_basis` rest on documented fraud/governance history — confirm against filings before freezing.
 4. After the whole universe is triaged, run **L1–L5 tiering (§5.7/§5.8) on the worth_attention set only** (stage 1, step 2).
-5. Established calibration anchors (§5.4.5): brand-moat must be proven through a downcycle (baijiu); capex-cyclical with irreversible structural consolidation → worth_attention (panel, rule 6); structural_industry garbage applies even to the relative leader (decoration, rule 8); infrastructure monopoly with regulated returns → boundary (rule 9).
+5. Established calibration anchors (§5.4.5): brand-moat must be proven through a downcycle (baijiu); capex-cyclical with irreversible structural consolidation → worth_attention (panel, rule 6); structural_industry garbage applies even to the relative leader (decoration, rule 8); infrastructure monopoly with regulated returns → boundary (rule 9); extreme licence but regulated returns e.g. nuclear → boundary (rule 10); only best-run franchise banks → worth_attention (rule 11).
+6. **worth_attention is strict — run the 防过度纳入清单 (§5.4.5) every batch.** A 2026-06-30 audit found drift toward over-inclusion; 7 names were reclassified to boundary (中国广核·安宁股份·科华数据·科士达·伊戈尔·华亚智能·兆威机电). Disqualifiers: "research value" is not the bar; a moat note that hedges (规模弱/需跟踪/景气受益) → boundary; strong position ≠ excess-return moat; resources need scarcity + low cost + scale; a smaller peer cannot be worth_attention when a larger one is already boundary.
