@@ -1,4 +1,4 @@
-security_code,security_name,attention_class,attention_reason,capital_replicability_note,garbage_reason,garbage_subtype,boundary_recheck_trigger,evidence_basis,reviewed_at_utc,workflow_version
+﻿security_code,security_name,attention_class,attention_reason,capital_replicability_note,garbage_reason,garbage_subtype,boundary_recheck_trigger,evidence_basis,reviewed_at_utc,workflow_version
 600519,贵州茅台,worth_attention,全国超高端白酒龙头，品牌/赤水河产区/年份基酒/定价权穿越周期已验证,茅台品牌与产区、陈年基酒储备资金无法复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
 000858,五粮液,worth_attention,全国浓香高端龙头，明代老窖池+品牌+全国渠道，穿越周期验证,老窖池与高端品牌不可资本复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
 600809,山西汾酒,worth_attention,全国清香龙头，杏花村品牌，全国化扩张显示周期韧性,清香龙头品牌与历史不可复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
@@ -231,7 +231,7 @@ security_code,security_name,attention_class,attention_reason,capital_replicabili
 002405,四维图新,boundary_pending,高精地图和智能驾驶软件有数据与客户基础，但商业化、盈利能力和相对德赛西威等平台的差异化仍不清晰,,,,智驾软件/地图数据业务出现持续收入和现金流验证，或车企客户规模化绑定后复核,round1轻量初筛（既有深度复核；地图/智驾软件L4）,2026-06-29T11:00:36Z,a-share-selection-operation-v10
 002406,远东传动,boundary_pending,传动轴零部件业务客户基础存在，但产品可替代性强，汽车零部件配套属性难证明持久护城河,,,,新能源零部件形成高壁垒客户认证和利润占比，或行业格局显著改善后复核,round1轻量初筛（既有深度复核；汽车零部件L4）,2026-06-29T11:00:36Z,a-share-selection-operation-v10
 002409,雅克科技,worth_attention,半导体前驱体、电子材料和LNG保温材料处于关键材料环节，客户认证、配方工艺和产业化经验形成壁垒,电子材料/前驱体材料需要长期晶圆厂验证、配方know-how和稳定量产记录，资金难以短期复制客户信任与良率,,,,round1轻量初筛（既有深度复核；年报/季报/中银国际研报摘要）,2026-06-29T11:00:36Z,a-share-selection-operation-v10
-002410,广联达,boundary_pending,建筑信息化软件有存量客户和工作流粘性，但地产/建筑链下行、订阅转型和AI产品兑现仍需验证；落难软件战术观察不等于worth_attention,,,,造价/工程SaaS收入、现金流和客户留存恢复，并证明地产链弱周期下仍有定价权,2026-07-01过度纳入复核（§5.4.5规则10-11+防过度纳入清单；既有深度复核）,2026-07-01T07:46:06Z,a-share-selection-operation-v10
+002410,广联达,worth_attention,造价软件行业标准+高切换成本的垂直软件龙头；当前地产链周期承压(落难白马)，护城河未失,造价软件行业标准与客户工作流锁定难复制,,,,2026-07-01过度纠正复核（规则12：品类垄断/capped-capacity低成本龙头；用户裁决+既有深度复核）,2026-07-01T11:57:56Z,a-share-selection-operation-v10
 002414,高德红外,worth_attention,红外探测器、热成像产品和高端光电/先进装备系统平台，军工资质、芯片/系统集成和客户认证形成高壁垒,红外芯片、算法、系统集成、军工资质和装备客户验证均需长期积累，资金难以短期复制完整链条,,,,round1轻量初筛（既有深度复核；年报/季报/太平洋证券研报摘要）,2026-06-29T11:00:36Z,a-share-selection-operation-v10
 002415,海康威视,worth_attention,全球视频安防和AIoT龙头，渠道、算法、硬件供应链、行业解决方案和装机基础构成规模壁垒,全球渠道、海量行业场景、视觉AI算法、硬件平台和售后交付体系需要长期复合投入，资金难以快速复制,,,,round1轻量初筛（既有深度复核；年报/季报/国信证券研报摘要）,2026-06-29T11:00:36Z,a-share-selection-operation-v10
 002422,科伦药业,worth_attention,大输液主业现金流、规模渠道和创新药/ADC管线形成复合医药平台，传统业务与创新商业化均有可研究价值,输液规模渠道、生产体系、管线研发、临床推进和海外授权合作需要多年积累，不易被资金快速复制,,,,round1轻量初筛（既有深度复核；年报/季报/东海证券研报摘要）,2026-06-29T11:00:36Z,a-share-selection-operation-v10
@@ -260,7 +260,7 @@ security_code,security_name,attention_class,attention_reason,capital_replicabili
 002521,齐峰新材,boundary_pending,装饰原纸行业受地产和原材料周期影响，造纸产能和客户渠道可复制，缺少长期不可替代护城河,,,,高端特种纸或客户结构变化证明持续定价权和现金流质量后复核,round1轻量初筛（既有深度复核；装饰原纸L5）,2026-06-29T11:04:13Z,a-share-selection-operation-v10
 002527,新时达,boundary_pending,工业机器人、伺服和电梯控制有技术积累，但历史经营波动大，竞争地位弱于汇川等控制平台,,,,海尔入主后订单、毛利率、机器人业务份额和现金流持续改善后复核,round1轻量初筛（既有深度复核；机器人/控制L4）,2026-06-29T11:04:13Z,a-share-selection-operation-v10
 002531,天顺风能,boundary_pending,风塔和海工制造有规模与基地布局，但风电零部件议价权弱，产能和基地可被资本部分复制,,,,海外海工订单放量、毛利率改善和现金流验证基地/交付优势后复核,round1轻量初筛（既有深度复核；风塔L4）,2026-06-29T11:04:13Z,a-share-selection-operation-v10
-002532,天山铝业,boundary_pending,铝产业一体化和成本优势有价值，但铝资源不满足稀缺+低成本+规模三要素的垄断资源标准，周期利润不等于持久护城河,,,,资源、能源成本和产能规模穿越周期验证，证明长期低成本和稳定自由现金流,2026-07-01过度纳入复核（§5.4.5规则10-11+防过度纳入清单；既有深度复核）,2026-07-01T07:46:06Z,a-share-selection-operation-v10
+002532,天山铝业,worth_attention,低成本一体化电解铝龙头；产能红线让产能指标成稀缺牌照+自备电/一体化低成本，类资源护城河,电解铝产能指标稀缺牌照+一体化低成本曲线，难复制,,,,2026-07-01过度纠正复核（规则12：品类垄断/capped-capacity低成本龙头；用户裁决+既有深度复核）,2026-07-01T11:57:56Z,a-share-selection-operation-v10
 002534,西子洁能,boundary_pending,余热锅炉和清洁能源装备有工程经验，但项目制造属性较强，缺少能源核心瓶颈地位和长期定价权,,,,节能/储能装备形成可复制订单、高毛利和核心客户验证后复核,round1轻量初筛（既有深度复核；清洁能源装备L4）,2026-06-29T11:04:13Z,a-share-selection-operation-v10
 002544,普天科技,boundary_pending,通信网络、空天计算和信息化布局较广，但央企项目制系统集成属性强，业务复杂且回款/项目节奏不确定,,,,空天计算或通信核心产品形成标准化高毛利收入和明确卡位后复核,round1轻量初筛（既有深度复核；项目制通信信息化L4）,2026-06-29T11:04:13Z,a-share-selection-operation-v10
 002546,新联电子,boundary_pending,电力仪表和采集终端有电网资质和客户关系，但可替代供应商较多，弱于电网自动化平台龙头,,,,智能电网终端订单、毛利率和应收改善，或形成差异化平台能力后复核,round1轻量初筛（既有深度复核；电力仪表L4）,2026-06-29T11:04:13Z,a-share-selection-operation-v10
@@ -285,7 +285,7 @@ security_code,security_name,attention_class,attention_reason,capital_replicabili
 002653,海思科,boundary_pending,创新转型药企具备麻醉/疼痛产品和管线，但规模、全球突破和平台化能力弱于恒瑞等创新药龙头，先待验证,,,,核心产品快速放量、管线持续成功且现金流改善后复核,round1轻量初筛（既有深度复核；创新药L3边界）,2026-06-29T11:07:36Z,a-share-selection-operation-v10
 002675,东诚药业,worth_attention,核药和放射性药物具备牌照、短半衰期配送、医院准入、核素供应和研发管线壁垒，细分赛道稀缺,放射性药品资质、生产配送网络、医院准入、核素供应和临床管线不能被资金短期复制,,,,round1轻量初筛（既有深度复核；年报/季报/华鑫证券研报摘要）,2026-06-29T11:07:36Z,a-share-selection-operation-v10
 002687,乔治白,boundary_pending,职业装客户渠道有积累，但服装制造和品牌壁垒有限，招投标竞争充分，不符合严选观察标准,,,,职业装客户粘性、现金流和品牌定价权持续改善后复核,round1轻量初筛（既有深度复核；职业装L5）,2026-06-29T11:07:36Z,a-share-selection-operation-v10
-002690,美亚光电,boundary_pending,色选机和口腔CBCT是细分冠军，但“可研究niche壁垒”不足以证明可转化为长期超额回报，空间和新品放量仍需验证,,,,医疗设备出口/新品收入占比、利润率和渠道壁垒持续提升,2026-07-01过度纳入复核（§5.4.5规则10-11+防过度纳入清单；既有深度复核）,2026-07-01T07:46:06Z,a-share-selection-operation-v10
+002690,美亚光电,worth_attention,色选机品类垄断(全球领先)+口腔CBCT，已验证穿越周期高毛利(~50%)/高ROE/定价权,色选机技术/品牌/渠道品类垄断，已转化为超额回报，难复制,,,,2026-07-01过度纠正复核（规则12：品类垄断/capped-capacity低成本龙头；用户裁决+既有深度复核）,2026-07-01T11:57:56Z,a-share-selection-operation-v10
 002698,博实股份,boundary_pending,石化后处理和特种机器人是细分场景know-how，项目制和下游资本开支波动明显；“可研究对象”不是worth_attention门槛,,,,特种机器人或自动化设备形成标准化高毛利收入、客户锁定和稳定现金流,2026-07-01过度纳入复核（§5.4.5规则10-11+防过度纳入清单；既有深度复核）,2026-07-01T07:46:06Z,a-share-selection-operation-v10
 002706,良信股份,boundary_pending,中高端低压电器和固态断路器切入AIDC，但低压电器竞争充分，AIDC产品尚需订单和利润验证,,,,固态断路器/AIDC供配电订单、毛利率和客户认证持续验证后复核,round1轻量初筛（既有深度复核；低压电器L3边界）,2026-06-29T11:07:36Z,a-share-selection-operation-v10
 002709,天赐材料,boundary_pending,电解液和锂电材料龙头有配方、客户认证和一体化成本优势，但行业产能过剩和价格竞争显示资金可进入,,,,新材料、海外客户或一体化成本优势推动毛利率穿越周期后复核,round1轻量初筛（既有深度复核；锂电材料L3边界）,2026-06-29T11:07:36Z,a-share-selection-operation-v10

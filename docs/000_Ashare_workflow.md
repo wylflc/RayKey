@@ -197,6 +197,9 @@ boundary_recheck_trigger, evidence_basis, reviewed_at_utc, workflow_version
 9. **基础设施垄断**（机场、港口、高速、水务、燃气等）：有不可复制的区域垄断地位，但回报受管制、无定价权、特许期有限，护城河不转化为超额回报 → `boundary_pending`（可逆）；出现非航/免税/提价/资产注入等明确改善再升 `worth_attention`。
 10. **极端牌照但回报受管制（核电等）**：即使牌照壁垒极强（如核电全国仅 2-3 家运营商），只要回报受管制、无定价权、护城河不转化为超额回报 → `boundary_pending`（规则 9 的延伸）；电价市场化、资产注入或非管制收益占比提升再升 `worth_attention`。
 11. **银行**：只有穿越周期的优质 franchise（持续低成本存款、风控、显著高于同业的 ROE，如宁波银行）才判 `worth_attention`；普通、同质化、强周期或主要靠规模的银行 → `boundary_pending`。
+12. **品类垄断与 capped-capacity 商品**：防过度纳入清单不能误伤两类真实护城河：
+    - 细分品类龙头若已证明**品类垄断/全球领先 + 高毛利/高ROE/定价权 + 穿越周期超额回报**，不按“普通细分件”降级，仍可判 `worth_attention`（如美亚光电色选机）。
+    - 商品行业若存在**政策性产能红线/指标稀缺 + 低成本曲线 + 一体化规模优势**，产能指标可视为类资源牌照，低成本一体化龙头可判 `worth_attention`；仅有产能、仅有成本优势或无定价权的普通周期公司仍判 `boundary_pending`。
 
 #### 防过度纳入清单（worth_attention 的否决项）
 
@@ -210,6 +213,8 @@ worth_attention 从严。出现以下情形，默认 `boundary_pending`，不纳
 6. **规制回报/无定价权**：含极端牌照（核电、规制公用）与普通银行业务 → boundary（规则 9/10/11）。
 7. **与已判同行一致**：同行业/同类型中，更大或更强的同行若已判 boundary，更小的不应判 worth_attention。
 
+豁免：若公司满足规则 12 的品类垄断或 capped-capacity 低成本龙头条件，不能仅因“细分”“周期”“成长空间有限”降为 `boundary_pending`；成长空间和估值吸引力留到 L1-L5 分层与估值阶段处理。
+
 #### 5.4.6 全量第一轮重扫执行（可续跑）
 
 按 ADR-0006 标准对全部A股做第一轮三类初筛。这是**模型逐家判断，不是阈值脚本**（ADR-0004/0006）。可续跑、分批进行。进度与交接见 `docs/round1-rescan-progress.md`。
@@ -222,7 +227,7 @@ worth_attention 从严。出现以下情形，默认 `boundary_pending`，不纳
 每批流程（默认 25 家）：
 
 1. 取下一批：从队列按优先级、排除已在 `a_share_attention_triage.csv` 中的 `security_code`，取下 25 家。
-2. 逐家独立判断（§5.4.1 总体原则 + §5.4.2/5.4.3 定义 + §5.4.5 校准锚规则 1-11 + **防过度纳入清单**）。轻量初筛：业务模式 + 是否有持久且难复制（资本复制测试）的护城河 + 是否有明显负面；不要求逐家通读年报。资料不足且无明显负面 → `boundary_pending`。worth_attention 从严：先过一遍“防过度纳入清单”，存疑即 boundary。
+2. 逐家独立判断（§5.4.1 总体原则 + §5.4.2/5.4.3 定义 + §5.4.5 校准锚规则 1-12 + **防过度纳入清单及其豁免**）。轻量初筛：业务模式 + 是否有持久且难复制（资本复制测试）的护城河 + 是否有明显负面；不要求逐家通读年报。资料不足且无明显负面 → `boundary_pending`。worth_attention 从严：先过一遍“防过度纳入清单”，再检查规则 12 豁免；存疑即 boundary。
 3. 追加到 `a_share_attention_triage.csv`（§5.4.4 字段；worth_attention 填 `capital_replicability_note`，boundary 填 `boundary_recheck_trigger`，garbage 填 `garbage_reason`+`garbage_subtype`）。
 4. 向 `a_share_workflow_decision_log.csv` 追加一条本批结论（`workflow_stage = attention_triage`）。
 5. 提交（单句 message）。
