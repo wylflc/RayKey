@@ -73,8 +73,8 @@ Use the main target-market index, such as CSI 300 for A-shares, Hang Seng Index 
 
 | State | Conditions |
 | --- | --- |
-| Strong Market | Index above 200-day moving average, 200-day average rising, market breadth improving, volume expanding, clear leading sectors |
-| Weak Market | Index below 200-day moving average, 200-day average falling, weak breadth, no durable main theme |
+| Strong Market | Index above 250-day moving average, 250-day average rising, market breadth improving, volume expanding, clear leading sectors |
+| Weak Market | Index below 250-day moving average, 250-day average falling, weak breadth, no durable main theme |
 | Range Market | Neither strong nor weak |
 
 Confirm a state only after it persists for about 20 trading days. Market state controls aggressiveness and gross exposure. It does not automatically force selling of strong individual holdings.

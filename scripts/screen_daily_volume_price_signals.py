@@ -123,7 +123,7 @@ def add_indicators(rows: list[dict[str, float | str]]) -> None:
     dea = ema(dif, 9)
 
     for index, row in enumerate(rows):
-        for window in (5, 10, 20, 60, 120, 150, 200, 250):
+        for window in (5, 10, 20, 60, 120, 150, 250):
             if index + 1 >= window:
                 row[f"ma{window}"] = mean(float(item["close"]) for item in rows[index + 1 - window : index + 1])
         for window in (5, 20, 60):
@@ -196,8 +196,8 @@ def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.
         and close > ma60
         and ma20 >= float(rows[index - 5].get("ma20", ma20))
     )
-    # §8.6 长期趋势确认（原月线确认，v12日线化）：close 站上 MA120/MA200/MA250 之一。
-    long_term_confirm = any(f"ma{w}" in row and close > float(row[f"ma{w}"]) for w in (120, 200, 250))
+    # §8.6 长期趋势确认（原月线确认，日线化并精简）：close 站上 MA120/MA250 之一。
+    long_term_confirm = any(f"ma{w}" in row and close > float(row[f"ma{w}"]) for w in (120, 250))
     close_location = float(row["close_location"])
     break_periods: list[str] = []
     for window in (60, 120, 250, 500, 750):
@@ -299,7 +299,6 @@ def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.
         "ma60": ma60,
         "ma120": row.get("ma120", ""),
         "ma150": row.get("ma150", ""),
-        "ma200": row.get("ma200", ""),
         "ma250": row.get("ma250", ""),
         "amount_ma20": row.get("amount_ma20", ""),
         "ret_5d": ret_5d,
@@ -329,18 +328,18 @@ def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.
 
 
 def fetch_market_state(as_of: str, timeout: float) -> str:
-    """§8.12：沪深300 收盘与 MA200 判定市场状态（强势/弱势/震荡）。"""
+    """§8.12：沪深300 收盘与 MA250 判定市场状态（强势/弱势/震荡）。"""
     try:
         _, rows = fetch_daily_rows("000300", "SSE", as_of, timeout)
         closes = [float(row["close"]) for row in rows]
-        if len(closes) < 221:
+        if len(closes) < 271:
             return "震荡"
-        ma200_now = mean(closes[-200:])
-        ma200_prev = mean(closes[-220:-20])
+        ma250_now = mean(closes[-250:])
+        ma250_prev = mean(closes[-270:-20])
         close = closes[-1]
-        if close > ma200_now and ma200_now > ma200_prev:
+        if close > ma250_now and ma250_now > ma250_prev:
             return "强势"
-        if close < ma200_now and ma200_now < ma200_prev:
+        if close < ma250_now and ma250_now < ma250_prev:
             return "弱势"
         return "震荡"
     except Exception:  # noqa: BLE001 - index availability must not break the stock scan.
@@ -431,7 +430,7 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str, market
         "# A股每日量价跟踪",
         "",
         f"日期：{as_of}",
-        f"市场状态：{market_state}（§8.12，沪深300 vs MA200；弱势时操作偏向下调一档）",
+        f"市场状态：{market_state}（§8.12，沪深300 vs MA250；弱势时操作偏向下调一档）",
         "数据口径：东方财富前复权日线；仅扫描 `data/processed/a_share_core_valuation_pool.csv`。",
         "",
     ]
@@ -542,7 +541,6 @@ def main() -> None:
         "ma60",
         "ma120",
         "ma150",
-        "ma200",
         "ma250",
         "amount_ma20",
         "ret_5d",
