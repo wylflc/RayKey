@@ -123,7 +123,7 @@ def add_indicators(rows: list[dict[str, float | str]]) -> None:
     dea = ema(dif, 9)
 
     for index, row in enumerate(rows):
-        for window in (5, 10, 20, 60, 120, 200, 250):
+        for window in (5, 10, 20, 60, 120, 150, 200, 250):
             if index + 1 >= window:
                 row[f"ma{window}"] = mean(float(item["close"]) for item in rows[index + 1 - window : index + 1])
         for window in (5, 20, 60):
@@ -298,6 +298,7 @@ def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.
         "ma20": ma20,
         "ma60": ma60,
         "ma120": row.get("ma120", ""),
+        "ma150": row.get("ma150", ""),
         "ma200": row.get("ma200", ""),
         "ma250": row.get("ma250", ""),
         "amount_ma20": row.get("amount_ma20", ""),
@@ -540,6 +541,7 @@ def main() -> None:
         "ma20",
         "ma60",
         "ma120",
+        "ma150",
         "ma200",
         "ma250",
         "amount_ma20",
