@@ -468,3 +468,28 @@
 300593,新雷能,boundary_pending,军工电源资质壁垒真实但订单周期下行已亏损，竞争格局分散,,,,军品订单恢复与盈利转正后复核,round1轻量初筛（参考a-share-other-power-equipment.md同业校准；军工电源下行）,2026-07-05T23:35:19Z,a-share-selection-operation-v13
 300602,飞荣达,boundary_pending,电磁屏蔽导热材料中游，大客户集中，竞争充分无定价权,,,,AI终端散热品类份额与毛利率验证后复核,round1轻量初筛（参考a-share-other-electronic-devices.md同业校准；屏蔽导热中游）,2026-07-05T23:35:19Z,a-share-selection-operation-v13
 300604,长川科技,worth_attention,国产半导体测试机分选机龙头，SoC测试机批量突破，ATE软硬件生态壁垒明确,测试机软硬件生态、客户认证与工程迭代积累难以被新资本快速复制，与北方华创/晶盛机电同为国产设备平台保留,,,,round1轻量初筛（参考a-share-semiconductor-equipment.md同业校准；国产ATE龙头）,2026-07-05T23:35:19Z,a-share-selection-operation-v13
+300607,拓斯达,boundary_pending,工业机器人与注塑辅机集成商低壁垒，盈利恶化；更强同行埃斯顿已归临界（规则7）,,,,核心部件自制率与盈利结构性改善后复核,round1轻量初筛（参考a-share-industrial-robots.md同业校准；集成商低壁垒）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300620,光库科技,boundary_pending,光纤激光器件细分领先但规模小，薄膜铌酸锂调制器尚属期权,,,,薄膜铌酸锂调制器批量客户验证后复核,round1轻量初筛（a-share-communication-transmission.md Boundary watch；器件niche+期权）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300623,捷捷微电,boundary_pending,晶闸管细分第一但品类窄，MOSFET扩张进入同质化竞争，毛利下行,,,,功率器件结构升级与超额回报验证后复核,round1轻量初筛（参考a-share-discrete-semiconductors.md同业校准；晶闸管品类窄）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300624,万兴科技,boundary_pending,消费类软件出海依赖买量获客，AI原生工具冲击既有产品形态，无持久壁垒,,,,AI产品订阅留存与盈利质量验证后复核,round1轻量初筛（参考a-share-other-software-services.md同业校准；买量软件+AI冲击）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300627,华测导航,worth_attention,国产高精度GNSS定位龙头，测绘/农机自驾/形变监测多场景第一，全球化扩张且ROE持续20%左右,高精度算法+板卡自研+全球渠道与行业场景积累构成体系壁垒，国内无同量级对手，Trimble难以在性价比与渠道上压制,,,,round1轻量初筛（参考a-share-satellite-applications.md同业校准；高精度定位国产龙头）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300628,亿联网络,worth_attention,SIP话机全球份额第一，会议产品第二曲线，高毛利高ROE高分红穿越周期（规则12品类垄断）,全球渠道网络、微软生态认证与成本体系多年验证，新资本难以复制其全球运营商与渠道关系,,,,round1轻量初筛（参考a-share-communication-terminal.md同业校准；SIP话机全球垄断，规则12豁免）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300631,久吾高科,boundary_pending,陶瓷膜分离项目型小市值，盈利弱,,,,盐湖提锂等新场景订单兑现后复核,round1轻量初筛（参考a-share-environmental-services.md同业校准；膜分离项目型）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300638,广和通,boundary_pending,蜂窝模组全球前二但行业低毛利同质化价格战，强位置未转化超额回报（防过度纳入3）,,,,模组行业格局出清与毛利率中枢回升后复核,round1轻量初筛（a-share-communication-transmission.md Boundary watch；模组低毛利同质化）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300643,万通智控,boundary_pending,TPMS与气门嘴细分小市值汽车零部件,,,,全球份额与盈利持续提升后复核,round1轻量初筛（参考a-share-auto-parts.md同业校准；零部件niche）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300645,正元智慧,boundary_pending,校园信息化项目集成低壁垒,,,,产品化收入结构验证后复核,round1轻量初筛（参考a-share-integrated-internet-services.md同业校准；项目集成）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300655,晶瑞电材,boundary_pending,半导体湿化学品国产参与者，规模小盈利波动大，平台型材料对手更强,,,,高纯化学品份额与盈利稳定验证后复核,round1轻量初筛（参考a-share-other-chemical-raw-materials.md同业校准；湿化学品二线）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300656,民德电子,boundary_pending,条码识读加功率半导体多元化，均无领先位置,,,,功率半导体产线盈利验证后复核,round1轻量初筛（参考a-share-specialized-computer-equipment.md同业校准；多元化无主线）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300660,江苏雷利,boundary_pending,家电微电机中游零部件，客户集中低毛利,,,,线性驱动等高端品类超额回报验证后复核,round1轻量初筛（参考a-share-electric-motors.md同业校准；微电机中游）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300661,圣邦股份,worth_attention,模拟IC设计国产龙头，五千余料号平台化，信号链电源管理双线布局，车规突破,模拟料号库与工程师经验需长周期积累（TI模式），客户认证粘性强，国产同业无同量级平台,,,,round1轻量初筛（参考a-share-integrated-circuit.md同业校准；模拟IC国产平台龙头）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300666,江丰电子,worth_attention,超高纯溅射靶材国产龙头，进入台积电等先进制程供应链，半导体零部件平台扩张,超高纯提纯、焊接工艺与晶圆厂多年认证周期构成硬壁垒，国内无同量级对手，全球份额持续提升,,,,round1轻量初筛（参考a-share-semiconductor-materials.md同业校准；靶材国产龙头）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300673,佩蒂股份,boundary_pending,宠物咬胶代工为主，自有品牌弱，代工低壁垒,,,,自有品牌收入占比与品牌溢价验证后复核,round1轻量初筛（参考a-share-feed.md同业校准；宠物代工）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300674,宇信科技,boundary_pending,银行IT项目制人力密集，行业预算收缩竞争激烈,,,,产品化率与盈利质量结构性改善后复核,round1轻量初筛（参考a-share-other-internet-services.md同业校准；银行IT项目制）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300679,电连技术,boundary_pending,射频与车载连接器细分领先，但消费电子端竞争激烈、客户集中（防过度纳入3）,,,,车载高速连接份额与毛利率持续验证后复核,round1轻量初筛（参考a-share-other-electronic-devices.md同业校准；连接器细分强位置）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300685,艾德生物,worth_attention,肿瘤伴随诊断试剂国内第一，三类证审批壁垒与药企共同开发绑定，高毛利持续,注册证组合、临床数据与药企共同开发绑定需多年积累，新资本难以短期复制其审批与临床资源,,,,round1轻量初筛（参考a-share-biopharma.md同业校准；伴随诊断品类第一）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300691,联合光电,boundary_pending,安防镜头大客户依赖，车载AR转型尚未验证,,,,车载光学定点放量后复核,round1轻量初筛（参考a-share-optical-components.md同业校准；镜头中游大客户依赖）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300693,盛弘股份,boundary_pending,电能质量/充电模块/储能PCS多点参与且盈利尚可，但各赛道均有更强专业对手，无单点垄断,,,,任一主业形成品类领先与持续超额回报后复核,round1轻量初筛（参考a-share-storage-equipment-remaining.md同业校准；多点强位置无垄断，从严）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300700,岱勒新材,boundary_pending,金刚石线二线，行业产能过剩价格战,,,,钨丝线代际份额与盈利验证后复核,round1轻量初筛（参考a-share-other-special-machinery.md同业校准；耗材价格战二线）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300701,森霸传感,boundary_pending,热释电红外传感细分小市值,,,,品类扩张与超额回报验证后复核,round1轻量初筛（参考a-share-optical-components.md同业校准；传感niche）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300702,天宇股份,boundary_pending,沙坦类原料药同质化周期,,,,CDMO与制剂转型盈利验证后复核,round1轻量初筛（参考a-share-api.md同业校准；原料药同质化）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
+300706,阿石创,boundary_pending,溅射靶材二线，龙头江丰电子已保留，规模与技术差距明显（规则7）,,,,细分靶材品类突破与盈利验证后复核,round1轻量初筛（参考a-share-semiconductor-materials.md同业校准；靶材二线，规则7）,2026-07-05T23:35:40Z,a-share-selection-operation-v13
