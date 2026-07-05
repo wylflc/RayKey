@@ -23,6 +23,20 @@ DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_OUTPUT_MD = ROOT / "data/processed/daily_volume_price_tracker.md"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 
+MIN_AMOUNT_MA20 = 50_000_000  # §11.8 流动性门槛：20日均成交额低于5000万元不列买入候选。
+
+
+def limit_up_threshold_pct(code: str, name: str) -> float:
+    """§8.7.3 涨停阈值（pct_chg 为百分数）：主板9.5 / 创业板科创板19 / 北交所29 / 主板ST 4.5。"""
+    code = code.zfill(6)
+    if code.startswith(("30", "68")):
+        return 19.0
+    if code.startswith(("43", "83", "87", "88", "92")):
+        return 29.0
+    if "ST" in (name or "").upper():
+        return 4.5
+    return 9.5
+
 
 def load_csv(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8-sig") as handle:
@@ -109,12 +123,14 @@ def add_indicators(rows: list[dict[str, float | str]]) -> None:
     dea = ema(dif, 9)
 
     for index, row in enumerate(rows):
-        for window in (5, 10, 20, 60, 120, 240):
+        for window in (5, 10, 20, 60, 120, 200, 250):
             if index + 1 >= window:
                 row[f"ma{window}"] = mean(float(item["close"]) for item in rows[index + 1 - window : index + 1])
         for window in (5, 20, 60):
             if index + 1 >= window:
                 row[f"vol_ma{window}"] = mean(float(item["volume"]) for item in rows[index + 1 - window : index + 1])
+        if index + 1 >= 20:
+            row["amount_ma20"] = mean(float(item["amount"]) for item in rows[index + 1 - 20 : index + 1])
         for window in (60, 120, 250, 500, 750):
             if index >= window:
                 row[f"prev_high_{window}"] = max(float(item["high"]) for item in rows[index - window : index])
@@ -139,7 +155,7 @@ def volume_percentile(rows: list[dict[str, float | str]], index: int, window: in
     return 100 * sum(1 for value in values if value <= current) / len(values)
 
 
-def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
+def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.5) -> dict[str, object]:
     add_indicators(rows)
     index = len(rows) - 1
     row = rows[index]
@@ -174,12 +190,14 @@ def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
     )
 
     daily_bull = close > float(row.get("ma5", math.inf)) > float(row.get("ma10", math.inf)) > ma20 > ma60
-    strong_daily_bull = daily_bull and ma60 > float(row.get("ma120", math.inf)) > float(row.get("ma240", math.inf))
+    strong_daily_bull = daily_bull and ma60 > float(row.get("ma120", math.inf)) > float(row.get("ma250", math.inf))
     quasi_bull = (
         close > float(row.get("ma5", math.inf)) > float(row.get("ma10", math.inf)) > ma20
         and close > ma60
         and ma20 >= float(rows[index - 5].get("ma20", ma20))
     )
+    # §8.6 长期趋势确认（原月线确认，v12日线化）：close 站上 MA120/MA200/MA250 之一。
+    long_term_confirm = any(f"ma{w}" in row and close > float(row[f"ma{w}"]) for w in (120, 200, 250))
     close_location = float(row["close_location"])
     break_periods: list[str] = []
     for window in (60, 120, 250, 500, 750):
@@ -198,6 +216,15 @@ def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
         signals.append("8.7.2 放量突破关键均线/趋势启动")
     elif close > ma20 and close > ma60 and effective_volume and (daily_bull or quasi_bull):
         wait_reasons.append("均线突破但收盘位置不足")
+
+    # 8.7.3 缩量涨停：涨停 +（当日量<=20日均量*1.2，或前日已放量且当日量<=前日量*0.85）。
+    prev_vol = float(rows[index - 1]["volume"])
+    prev_vol_ma20 = float(rows[index - 1].get("vol_ma20", 0.0) or 0.0)
+    shrink_volume = float(row["volume"]) <= vol_ma20 * 1.2 or (
+        prev_vol_ma20 > 0 and prev_vol >= prev_vol_ma20 * 1.5 and float(row["volume"]) <= prev_vol * 0.85
+    )
+    if float(row["pct_chg"]) >= limit_up_pct and shrink_volume:
+        signals.append("8.7.3 缩量涨停")
 
     up_days = sum(1 for item in rows[index - 4 : index + 1] if float(item["close"]) > float(item["open"]))
     if up_days >= 4 and 0.08 <= ret_5d <= 0.25 and daily_bull and not (close_location < 0.4 and day_vol_ratio >= 1.8):
@@ -232,6 +259,12 @@ def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
         signal_state = "wait_breakout"
         action_bias = "仅观察"
 
+    # §11.8 流动性过滤：20日均成交额低于门槛的不列买入候选，仅提示。
+    amount_ma20 = float(row.get("amount_ma20", 0.0) or 0.0)
+    if signal_state == "buy_candidate" and amount_ma20 < MIN_AMOUNT_MA20:
+        signal_state = "liquidity_filtered"
+        action_bias = "仅观察（流动性不足）"
+
     # §8.11 买入候选强势跟踪：强势程度仅由中短期量价走势判定。
     ma5_v = float(row.get("ma5", close))
     ma10_v = float(row.get("ma10", close))
@@ -265,7 +298,9 @@ def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
         "ma20": ma20,
         "ma60": ma60,
         "ma120": row.get("ma120", ""),
-        "ma240": row.get("ma240", ""),
+        "ma200": row.get("ma200", ""),
+        "ma250": row.get("ma250", ""),
+        "amount_ma20": row.get("amount_ma20", ""),
         "ret_5d": ret_5d,
         "ret_20d": ret_20d,
         "ret_60d": ret_60d,
@@ -279,6 +314,7 @@ def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
         "daily_bull": daily_bull,
         "strong_daily_bull": strong_daily_bull,
         "quasi_bull": quasi_bull,
+        "long_term_confirm": long_term_confirm,
         "break_periods": ",".join(break_periods),
         "signals": "; ".join(signals),
         "wait_reasons": "; ".join(wait_reasons),
@@ -322,7 +358,13 @@ def assign_priority(row: dict[str, object]) -> str:
     quality_tier = str(row.get("quality_tier", ""))
     valuation_tier = str(row.get("valuation_tier", ""))
     break_periods = set(str(row.get("break_periods", "")).split(","))
-    if quality_tier == "L1" and valuation_tier in {"低估", "较低估", "中性"} and break_periods.intersection({"120", "250", "500", "750"}):
+    if (
+        quality_tier == "L1"
+        and valuation_tier in {"低估", "较低估", "中性"}
+        and break_periods.intersection({"120", "250", "500", "750"})
+        and row.get("daily_bull") is True
+        and row.get("long_term_confirm") is True
+    ):
         return "S"
     if quality_tier in {"L1", "L2"} and valuation_tier in {"低估", "较低估", "中性"}:
         return "A"
@@ -337,7 +379,7 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, 
         kline_url, price_rows = fetch_daily_rows(code, pool_row.get("exchange", ""), as_of, timeout)
         if not price_rows:
             raise RuntimeError("empty kline response")
-        signal = classify_signal(price_rows)
+        signal = classify_signal(price_rows, limit_up_threshold_pct(code, pool_row.get("security_name", "")))
     except Exception as exc:  # noqa: BLE001 - data-provider failures should not abort the batch.
         kline_url = ""
         signal = {
@@ -382,6 +424,7 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str, market
         ("今日等待确认", "wait_confirmation"),
         ("今日等待突破", "wait_breakout"),
         ("今日等待修复", "wait_repair"),
+        ("今日流动性过滤（§11.8）", "liquidity_filtered"),
     ]
     lines = [
         "# A股每日量价跟踪",
@@ -497,7 +540,9 @@ def main() -> None:
         "ma20",
         "ma60",
         "ma120",
-        "ma240",
+        "ma200",
+        "ma250",
+        "amount_ma20",
         "ret_5d",
         "ret_20d",
         "ret_60d",
@@ -511,6 +556,7 @@ def main() -> None:
         "daily_bull",
         "strong_daily_bull",
         "quasi_bull",
+        "long_term_confirm",
         "break_periods",
         "overextended",
         "data_source",

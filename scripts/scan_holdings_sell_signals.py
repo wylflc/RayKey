@@ -32,6 +32,12 @@ BASE_BUILD_AMOUNT = 250_000  # 25 万元
 PROFIT_LADDER = ((2.0, 0.50), (1.0, 0.35), (0.5, 0.20), (0.3, 0.10))
 LOCKUP_MONTHS = 3
 SINGLE_STOCK_WEIGHT_LIMIT = 0.30
+# §14 趋势保护线（v12 全部日线化）：档位 -> (均线窗口, 连续N日, 缓冲X)。
+TREND_PARAMS = {
+    "daily": (60, 3, 0.03),
+    "weekly": (150, 5, 0.03),
+    "monthly": (250, 10, 0.05),
+}
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -103,37 +109,13 @@ def rolling_ma(closes: list[float], window: int, back: int = 0) -> float | None:
     return sum(closes[end - window : end]) / window
 
 
-def completed_period_closes(dates: list[str], closes: list[float], mode: str, as_of: date) -> list[float]:
-    """周/月收盘序列，只保留 as_of 所在周期之前的已完成周期。"""
-
-    def period_key(d: date) -> tuple[int, int]:
-        if mode == "weekly":
-            iso = d.isocalendar()
-            return (iso[0], iso[1])
-        return (d.year, d.month)
-
-    current = period_key(as_of)
-    out: list[float] = []
-    last_key: tuple[int, int] | None = None
-    for dstr, close in zip(dates, closes):
-        key = period_key(date.fromisoformat(dstr))
-        if key >= current:
-            break
-        if key != last_key:
-            out.append(close)
-            last_key = key
-        else:
-            out[-1] = close
-    return out
-
-
 def trend_protection_level(row: dict[str, str]) -> str:
-    """趋势保护线档位：显式列优先，否则按 strategy_tag 映射（A/E/F/G→monthly，B/C/D→weekly）。"""
+    """趋势保护线档位：显式列优先，否则按 strategy_tag 映射（A/F/G→monthly，B/C/D/E→weekly）。"""
     level = (row.get("trend_protection_level") or "").strip().lower()
     if level in {"daily", "weekly", "monthly"}:
         return level
     tag = (row.get("strategy_tag") or "").strip().upper()[:1]
-    if tag in {"A", "E", "F", "G"}:
+    if tag in {"A", "F", "G"}:
         return "monthly"
     return "weekly"
 
@@ -197,26 +179,19 @@ def classify_holding(row: dict[str, str], as_of: date, timeout: float) -> dict[s
     raise_stop = bool(stop is not None and ma120 is not None and ma120 > stop and close > stop * 1.1)
     suggested_stop = round(ma120, 2) if raise_stop else ""
 
-    # 趋势保护线：分档判定（daily=MA60 连续3日收盘+3%缓冲；weekly/monthly=已完成周期收盘）。
+    # 趋势保护线（§14 v12）：三档统一日线判定——连续N日收盘低于保护线，且最新收盘距线跌幅>X%。
     level = trend_protection_level(row)
+    window, confirm_days, buffer_pct = TREND_PARAMS[level]
     trend_break = False
-    trend_line: float | None = None
+    trend_line = rolling_ma(closes, window)
     trend_ref: float | None = None
-    if level == "daily":
-        ma60_now = rolling_ma(closes, 60)
-        if ma60_now is not None and len(closes) >= 63:
-            below_3d = all(
-                closes[-i] < (rolling_ma(closes, 60, i - 1) or float("inf")) for i in (1, 2, 3)
-            )
-            trend_break = below_3d and close < ma60_now * (1 - 0.03)
-            trend_line, trend_ref = ma60_now, close
-    else:
-        window = 30 if level == "weekly" else 12
-        period_closes = completed_period_closes(dates, closes, level, as_of)
-        if len(period_closes) >= window:
-            trend_line = sum(period_closes[-window:]) / window
-            trend_ref = period_closes[-1]
-            trend_break = trend_ref < trend_line
+    if trend_line is not None and len(closes) >= window + confirm_days:
+        below_n = all(
+            closes[-i] < (rolling_ma(closes, window, i - 1) or float("inf"))
+            for i in range(1, confirm_days + 1)
+        )
+        trend_break = below_n and close < trend_line * (1 - buffer_pct)
+        trend_ref = close
 
     trend_actions = {
         "daily": "trend_exit_suggested",
@@ -234,8 +209,8 @@ def classify_holding(row: dict[str, str], as_of: date, timeout: float) -> dict[s
     elif trend_break:
         action = trend_actions[level]
         reason = (
-            f"趋势保护线({level})破位：参考收盘 {trend_ref} < 保护线 {round(trend_line, 3)}，"
-            "按分档动作复核（战术退出/减半/降档），非自动卖出"
+            f"趋势保护线({level}=MA{window})破位：连续{confirm_days}日收盘低于线且距线>{buffer_pct:.0%}，"
+            f"现收盘 {trend_ref} < 保护线 {round(trend_line, 3)}，按分档动作复核（战术退出/减半/降档），非自动卖出"
         )
     elif profit_pct is not None and profit_pct > 0 and additional_trim_pct > 0:
         action = "trim_eligible"
@@ -303,8 +278,8 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: date, total
     groups = [
         ("今日割肉清仓", "stop_loss_sell"),
         ("今日趋势保护触发：战术退出复核", "trend_exit_suggested"),
-        ("今日趋势保护触发：减半复核（周线破30周线）", "trend_reduce_half_suggested"),
-        ("今日趋势保护触发：降档复核（月线破12月线）", "trend_downgrade_suggested"),
+        ("今日趋势保护触发：减半复核（MA150档破位）", "trend_reduce_half_suggested"),
+        ("今日趋势保护触发：降档复核（MA250档破位）", "trend_downgrade_suggested"),
         ("今日止盈资格（<=允许上限）", "trim_eligible"),
         ("维持持有", "hold"),
         ("数据异常", "data_error"),
