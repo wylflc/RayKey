@@ -241,6 +241,18 @@ def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
     mid_weak = close < ma20 or close < ma60
     trend_strength = "strong" if (short_strong and mid_strong) else "weakening" if (short_weak and mid_weak) else "neutral"
 
+    # §8.7 信号分级：放量 × 短期多头 × 突破确认 → 强/中/弱（仅对买入候选）。
+    if signal_state == "buy_candidate":
+        breakout_confirm = any(sig.startswith(("8.7.1", "8.7.2")) for sig in signals)
+        if (daily_bull or quasi_bull) and breakout_confirm:
+            signal_grade, action_bias = "强", "可建目标仓位1/3"
+        elif daily_bull or quasi_bull:
+            signal_grade, action_bias = "中", "可小仓试探或等确认"
+        else:
+            signal_grade, action_bias = "弱", "等确认"
+    else:
+        signal_grade = ""
+
     return {
         "trade_date": row["date"],
         "close": close,
@@ -274,8 +286,28 @@ def classify_signal(rows: list[dict[str, float | str]]) -> dict[str, object]:
         "signal_state": signal_state,
         "priority": "",
         "action_bias": action_bias,
+        "signal_grade": signal_grade,
         "trend_strength": trend_strength,
     }
+
+
+def fetch_market_state(as_of: str, timeout: float) -> str:
+    """§8.12：沪深300 收盘与 MA200 判定市场状态（强势/弱势/震荡）。"""
+    try:
+        _, rows = fetch_daily_rows("000300", "SSE", as_of, timeout)
+        closes = [float(row["close"]) for row in rows]
+        if len(closes) < 221:
+            return "震荡"
+        ma200_now = mean(closes[-200:])
+        ma200_prev = mean(closes[-220:-20])
+        close = closes[-1]
+        if close > ma200_now and ma200_now > ma200_prev:
+            return "强势"
+        if close < ma200_now and ma200_now < ma200_prev:
+            return "弱势"
+        return "震荡"
+    except Exception:  # noqa: BLE001 - index availability must not break the stock scan.
+        return "未知"
 
 
 def rounded(value: object, digits: int = 4) -> object:
@@ -343,7 +375,7 @@ def scan(input_rows: list[dict[str, str]], as_of: str, symbols: set[str] | None,
     return [results_by_code[row["security_code"].zfill(6)] for row in eligible_rows if row["security_code"].zfill(6) in results_by_code]
 
 
-def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str) -> None:
+def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str, market_state: str) -> None:
     groups = [
         ("今日买入候选", "buy_candidate"),
         ("今日等待回踩", "wait_pullback"),
@@ -355,6 +387,7 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str) -> Non
         "# A股每日量价跟踪",
         "",
         f"日期：{as_of}",
+        f"市场状态：{market_state}（§8.12，沪深300 vs MA200；弱势时操作偏向下调一档）",
         "数据口径：东方财富前复权日线；仅扫描 `data/processed/a_share_core_valuation_pool.csv`。",
         "",
     ]
@@ -367,6 +400,7 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str) -> Non
         for index, row in enumerate(members, 1):
             lines.append(f"{index}. {row['security_name']}（{row['security_code']}）")
             lines.append(f"- 优先级：{row.get('priority') or '-'}")
+            lines.append(f"- 信号分级：{row.get('signal_grade') or '-'}")
             lines.append(f"- 质量/估值/策略：{row.get('quality_tier')} / {row.get('valuation_tier')} / {row.get('strategy_tag')}")
             lines.append(f"- 触发信号：{row.get('signals') or row.get('wait_reasons') or '-'}")
             lines.append(
@@ -429,7 +463,13 @@ def main() -> None:
     args = parse_args()
     symbols = {item.strip().zfill(6) for item in args.symbols.split(",") if item.strip()} or None
     input_rows = load_csv(args.input)
+    market_state = fetch_market_state(args.as_of, args.timeout)
     rows = scan(input_rows, args.as_of, symbols, args.timeout, args.workers)
+    for row in rows:
+        row["market_state"] = market_state
+        # §8.12：弱势市场下各信号分级的操作偏向下调一档。
+        if market_state == "弱势" and row.get("signal_state") == "buy_candidate":
+            row["action_bias"] = "可小仓试探或等确认" if row.get("signal_grade") == "强" else "等确认"
     fieldnames = [
         "trade_date",
         "security_code",
@@ -442,7 +482,9 @@ def main() -> None:
         "signal_state",
         "priority",
         "action_bias",
+        "signal_grade",
         "trend_strength",
+        "market_state",
         "signals",
         "wait_reasons",
         "close",
@@ -475,7 +517,7 @@ def main() -> None:
         "screened_at_utc",
     ]
     write_csv(args.output_csv, rows, fieldnames)
-    write_markdown(args.output_md, rows, args.as_of)
+    write_markdown(args.output_md, rows, args.as_of, market_state)
     log_scan_decisions(args.log_file, rows, args.as_of, args.input, args.output_csv, args.output_md)
     print(f"scanned {len(rows)} rows from {args.input}")
 

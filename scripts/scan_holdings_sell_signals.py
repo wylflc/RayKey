@@ -17,7 +17,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-from workflow_decision_log import append_decision_log
+from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +25,6 @@ DEFAULT_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_holdings_actions.csv"
 DEFAULT_OUTPUT_MD = ROOT / "data/processed/daily_holdings_tracker.md"
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
-WORKFLOW_VERSION = "a-share-selection-operation-v8"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 
 BASE_BUILD_AMOUNT = 250_000  # 25 万元
@@ -67,7 +66,7 @@ def infer_secid(code: str, exchange: str) -> str:
     return f"0.{code}"
 
 
-def fetch_closes(code: str, exchange: str, as_of: str, timeout: float) -> tuple[str, list[float]]:
+def fetch_daily(code: str, exchange: str, as_of: str, timeout: float) -> tuple[str, list[str], list[float]]:
     query = urllib.parse.urlencode(
         {
             "secid": infer_secid(code, exchange),
@@ -85,14 +84,58 @@ def fetch_closes(code: str, exchange: str, as_of: str, timeout: float) -> tuple[
     with urllib.request.urlopen(request, timeout=timeout) as response:
         payload = json.loads(response.read().decode("utf-8", "ignore"))
     klines = (payload.get("data") or {}).get("klines") or []
+    dates = [line.split(",")[0] for line in klines]
     closes = [float(line.split(",")[2]) for line in klines]
-    return url, closes
+    return url, dates, closes
 
 
 def moving_average(closes: list[float], window: int) -> float | None:
     if len(closes) < window:
         return None
     return sum(closes[-window:]) / window
+
+
+def rolling_ma(closes: list[float], window: int, back: int = 0) -> float | None:
+    """MA over `window` values ending `back` bars before the last bar."""
+    end = len(closes) - back
+    if end < window:
+        return None
+    return sum(closes[end - window : end]) / window
+
+
+def completed_period_closes(dates: list[str], closes: list[float], mode: str, as_of: date) -> list[float]:
+    """周/月收盘序列，只保留 as_of 所在周期之前的已完成周期。"""
+
+    def period_key(d: date) -> tuple[int, int]:
+        if mode == "weekly":
+            iso = d.isocalendar()
+            return (iso[0], iso[1])
+        return (d.year, d.month)
+
+    current = period_key(as_of)
+    out: list[float] = []
+    last_key: tuple[int, int] | None = None
+    for dstr, close in zip(dates, closes):
+        key = period_key(date.fromisoformat(dstr))
+        if key >= current:
+            break
+        if key != last_key:
+            out.append(close)
+            last_key = key
+        else:
+            out[-1] = close
+    return out
+
+
+def trend_protection_level(row: dict[str, str]) -> str:
+    """趋势保护线档位：显式列优先，否则按 strategy_tag 映射（A/E/F/G→monthly，B/C/D→weekly）。"""
+    level = (row.get("trend_protection_level") or "").strip().lower()
+    if level in {"daily", "weekly", "monthly"}:
+        return level
+    tag = (row.get("strategy_tag") or "").strip().upper()[:1]
+    if tag in {"A", "E", "F", "G"}:
+        return "monthly"
+    return "weekly"
 
 
 def months_between(start: date, end: date) -> int:
@@ -130,7 +173,7 @@ def classify_holding(row: dict[str, str], as_of: date, timeout: float) -> dict[s
     cumulative_trim = to_float(row.get("cumulative_trim_pct")) or 0.0
 
     try:
-        data_source, closes = fetch_closes(code, row.get("exchange", ""), as_of.isoformat(), timeout)
+        data_source, dates, closes = fetch_daily(code, row.get("exchange", ""), as_of.isoformat(), timeout)
         if not closes:
             raise RuntimeError("empty kline response")
         close = closes[-1]
@@ -154,11 +197,46 @@ def classify_holding(row: dict[str, str], as_of: date, timeout: float) -> dict[s
     raise_stop = bool(stop is not None and ma120 is not None and ma120 > stop and close > stop * 1.1)
     suggested_stop = round(ma120, 2) if raise_stop else ""
 
+    # 趋势保护线：分档判定（daily=MA60 连续3日收盘+3%缓冲；weekly/monthly=已完成周期收盘）。
+    level = trend_protection_level(row)
+    trend_break = False
+    trend_line: float | None = None
+    trend_ref: float | None = None
+    if level == "daily":
+        ma60_now = rolling_ma(closes, 60)
+        if ma60_now is not None and len(closes) >= 63:
+            below_3d = all(
+                closes[-i] < (rolling_ma(closes, 60, i - 1) or float("inf")) for i in (1, 2, 3)
+            )
+            trend_break = below_3d and close < ma60_now * (1 - 0.03)
+            trend_line, trend_ref = ma60_now, close
+    else:
+        window = 30 if level == "weekly" else 12
+        period_closes = completed_period_closes(dates, closes, level, as_of)
+        if len(period_closes) >= window:
+            trend_line = sum(period_closes[-window:]) / window
+            trend_ref = period_closes[-1]
+            trend_break = trend_ref < trend_line
+
+    trend_actions = {
+        "daily": "trend_exit_suggested",
+        "weekly": "trend_reduce_half_suggested",
+        "monthly": "trend_downgrade_suggested",
+    }
+
     # Deterministic action priority (forced_exit is decided by the model, not here).
     if stop is not None and close <= stop:
         action, reason = "stop_loss_sell", f"现价 {close} <= 割肉价 {stop}，无条件清仓"
     elif lockup_active:
         action, reason = "hold", f"持有约 {months_held} 个月 (<{LOCKUP_MONTHS})，锁定期内仅持有"
+        if trend_break:
+            reason += f"；趋势保护线({level})已破位，锁定期内不出卖出建议，建议复核并上调割肉价"
+    elif trend_break:
+        action = trend_actions[level]
+        reason = (
+            f"趋势保护线({level})破位：参考收盘 {trend_ref} < 保护线 {round(trend_line, 3)}，"
+            "按分档动作复核（战术退出/减半/降档），非自动卖出"
+        )
     elif profit_pct is not None and profit_pct > 0 and additional_trim_pct > 0:
         action = "trim_eligible"
         reason = f"持有>{LOCKUP_MONTHS}月且浮盈 {profit_pct:.0%}，允许累计卖出上限 {ceiling:.0%}，本次最多再卖 {additional_trim_pct:.0f}% 初始仓"
@@ -179,6 +257,10 @@ def classify_holding(row: dict[str, str], as_of: date, timeout: float) -> dict[s
             "ma120": round(ma120, 3) if ma120 is not None else "",
             "raise_stop_suggested": raise_stop,
             "suggested_stop_price": suggested_stop,
+            "trend_protection_level": level,
+            "trend_line_value": round(trend_line, 3) if trend_line is not None else "",
+            "trend_ref_close": round(trend_ref, 3) if trend_ref is not None else "",
+            "trend_break": trend_break,
             "initial_shares": initial_shares,
             "current_shares": current_shares,
             "cumulative_trim_pct": cumulative_trim,
@@ -220,6 +302,9 @@ def scan(rows: list[dict[str, str]], as_of: date, symbols: set[str] | None, time
 def write_markdown(path: Path, rows: list[dict[str, object]], as_of: date, total_assets: float, build_amount: int) -> None:
     groups = [
         ("今日割肉清仓", "stop_loss_sell"),
+        ("今日趋势保护触发：战术退出复核", "trend_exit_suggested"),
+        ("今日趋势保护触发：减半复核（周线破30周线）", "trend_reduce_half_suggested"),
+        ("今日趋势保护触发：降档复核（月线破12月线）", "trend_downgrade_suggested"),
         ("今日止盈资格（<=允许上限）", "trim_eligible"),
         ("维持持有", "hold"),
         ("数据异常", "data_error"),
@@ -247,6 +332,7 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: date, total
             lines.append(f"- 现价/成本/浮盈：{row.get('close','')} / {row.get('cost_basis','')} / {row.get('profit_pct','')}")
             lines.append(f"- 持有月数/锁定：{row.get('months_held','')} / {row.get('lockup_active','')}")
             lines.append(f"- 割肉价/MA120/上调建议：{row.get('stop_loss_price','')} / {row.get('ma120','')} / {row.get('suggested_stop_price','') or '-'}")
+            lines.append(f"- 趋势保护：{row.get('trend_protection_level','')} 线 {row.get('trend_line_value','') or '-'}，参考收盘 {row.get('trend_ref_close','') or '-'}，破位 {row.get('trend_break','')}")
             lines.append(f"- 当前权重：{row.get('current_weight_pct','')}%{'（超30%）' if row.get('weight_over_limit') else ''}")
             lines.append(f"- 触发：{row.get('action_reason','')}")
             lines.append("")
@@ -295,6 +381,7 @@ FIELDNAMES = [
     "as_of", "security_code", "security_name", "strategy_tag", "quality_tier", "valuation_tier",
     "entry_date", "months_held", "lockup_active", "cost_basis", "close", "profit_pct",
     "stop_loss_price", "stop_hit", "ma60", "ma120", "raise_stop_suggested", "suggested_stop_price",
+    "trend_protection_level", "trend_line_value", "trend_ref_close", "trend_break",
     "initial_shares", "current_shares", "cumulative_trim_pct", "profit_trim_ceiling_pct",
     "additional_trim_pct_allowed", "position_value", "current_weight_pct", "weight_over_limit",
     "holdings_action", "action_reason", "forced_exit_review", "data_source", "scanned_at_utc",
