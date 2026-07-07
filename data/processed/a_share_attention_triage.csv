@@ -1018,3 +1018,28 @@
 688023,安恒信息,boundary_pending,网安二线亏损（规则7弱于深信服）,,,,盈利拐点验证后复核,round1轻量初筛（规则7）,2026-07-07T14:48:19Z,a-share-selection-operation-v13
 688027,国盾量子,boundary_pending,量子通信商业化未证亏损,,,,市场化订单规模化后复核,round1轻量初筛（商业化未验证）,2026-07-07T14:48:19Z,a-share-selection-operation-v13
 688029,南微医学,boundary_pending,内镜耗材全球前三但安杰思成功切入止血夹证明壁垒中等，集采温和但竞争加剧,,,,竞争格局与海外增长中枢验证后复核,round1轻量初筛（资本复制已被安杰思部分证伪）,2026-07-07T14:48:19Z,a-share-selection-operation-v13
+688031,星环科技,boundary_pending,国产大数据平台亏损，云巨头生态挤压,,,,盈利模型验证后复核,round1轻量初筛（巨头挤压亏损）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688036,传音控股,boundary_pending,非洲手机份额第一品牌渠道真实，但小米正面进攻叠加存储成本挤压，利润大幅下滑，复制测试进行中,,,,小米等进攻下份额与利润率防守验证后复核,round1轻量初筛（防过度纳入：正面战场复制进行时，区别于安克品类生态位）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688041,海光信息,worth_attention,国产x86 CPU与DCU双稀缺，授权具历史窗口不可再得，信创与AI算力核心，吸收合并中科曙光后为算力平台存续主体,x86生态授权与DCU兼容生态壁垒极高，国产算力认证深厚，新资本无法复制授权与生态（同批次33曙光判定）,,,,round1轻量初筛（与中科曙光合并存续主体，口径一致）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688047,龙芯中科,boundary_pending,自主指令集CPU但生态远弱于海光鲲鹏，信创份额小持续亏损（规则7）,,,,LoongArch生态与盈利验证后复核,round1轻量初筛（规则7：海光更强）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688048,长光华芯,boundary_pending,激光芯片小市值波动,,,,高功率与光通信芯片放量后复核,round1轻量初筛（规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688050,爱博医疗,boundary_pending,人工晶体国产第一集采放量，OK镜第二，但外资主导高端，集采红利期后回报待验证,,,,高端晶体替代与消费眼科增长验证后复核,round1轻量初筛（集采环境从严：以价换量持续性待验证）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688052,纳芯微,boundary_pending,模拟芯片车规特色但价格战亏损（规则7弱于圣邦）,,,,盈利恢复与格局改善后复核,round1轻量初筛（规则7）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688056,莱伯泰科,boundary_pending,实验仪器小厂,,,,质谱放量后复核,round1轻量初筛（规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688057,金达莱,boundary_pending,分散污水处理订单回落,,,,商业模式转型验证后复核,round1轻量初筛（订单萎缩）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688059,华锐精密,boundary_pending,数控刀片三雄之一规模小价格竞争,,,,高端刀具份额突破后复核,round1轻量初筛（多家竞争规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688060,云涌科技,boundary_pending,工业信息安全小厂,,,,无重大变化则维持,round1轻量初筛（规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688072,拓荆科技,worth_attention,薄膜沉积设备（PECVD/ALD）国产第一近独家，先进制程与三维集成扩品类，客户验证深厚,薄膜工艺设备与产线验证壁垒十年级，国产格局近独家，资本无法速成,,,,round1轻量初筛（同中微/北方华创设备先例）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688076,ST诺泰,garbage,2023年报虚增收入利润被证监会行政处罚坐实，实控人未变更且被处罚，多肽景气无法豁免造假（需核验处罚决定书）,,财务造假：通过虚假交易虚增收入利润，行政处罚落地，责任人在位（造假坐实）,governance_fraud,,round1轻量初筛（governance_fraud，需核验处罚决定书与最新整改公告）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688080,映翰通,boundary_pending,工业物联网通信规模小,,,,海外与新品放量后复核,round1轻量初筛（防过度纳入2：规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688081,兴图新科,boundary_pending,军用视频小厂,,,,订单恢复后复核,round1轻量初筛（规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688082,盛美上海,worth_attention,清洗设备国产第一（SAPS/TEBO专利差异化），向电镀炉管平台化扩张，ROE15%以上增长强,清洗工艺专利与客户产线验证绑定，国产替代核心卡位，平台化复制难度高,,,,round1轻量初筛（同中微/拓荆设备先例）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688083,中望软件,boundary_pending,国产2D CAD第一但达索欧特克主导，3D未证，销售费用重盈利微薄,,,,3D CAD突破与盈利模型验证后复核,round1轻量初筛（强外资主导下国产替代早期，区别于华大九天EDA垄断）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688084,晶品特装,boundary_pending,军用机器人小厂,,,,订单放量后复核,round1轻量初筛（规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688088,虹软科技,boundary_pending,手机影像算法份额高但大客户自研内化风险已部分兑现，车载验证中，ROE中等,,,,车载算法规模化与手机份额防守验证后复核,round1轻量初筛（防过度纳入3：客户内化侵蚀，回报中等）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688089,嘉必优,boundary_pending,ARA/DHA小品类，专利到期后竞争,,,,新品类放量后复核,round1轻量初筛（品类小竞争加剧）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688095,福昕软件,boundary_pending,PDF全球第二但Adobe生态主导，订阅转型亏损,,,,订阅转型盈利验证后复核,round1轻量初筛（强者主导下转型未证）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688099,晶晨股份,boundary_pending,机顶盒电视SoC份额高但数字设计周期波动，AIoT竞争（同瑞芯微框架）,,,,端侧AI第二曲线与回报中枢验证后复核,round1轻量初筛（数字芯片设计框架一致）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688100,威胜信息,worth_attention,电网边缘通信（HPLC/物联）份额第一，ROE18%以上穿越招标周期，海外与AIDC配电扩张,招标市场连续第一且回报持续，客户认证与方案粘性积累，同炬华海兴先例,,,,round1轻量初筛（同炬华科技/海兴电力先例）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688101,三达膜,boundary_pending,膜技术水务中等,,,,工业膜放量后复核,round1轻量初筛（中等格局）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688103,国力电子,boundary_pending,真空电容继电器细分小市值,,,,半导体设备客户放量后复核,round1轻量初筛（规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
