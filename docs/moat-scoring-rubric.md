@@ -1,14 +1,16 @@
 # Moat Scoring Rubric
 
+> **Scope status (2026-07-08)**: A-share triage no longer uses this rubric. The operative A-share standard is `docs/000_Ashare_workflow.md` §5.4 (round-1 three-class triage, calibration anchors, anti-over-inclusion checklist) and §5.7 tiering, per ADR-0006. This rubric remains the operative baseline standard for the Hong Kong and U.S. full-coverage scorers (`scripts/run_hong_kong_full_coverage_scoring.py`, `scripts/run_us_full_coverage_scoring.py`). A-share calibration outcomes formerly recorded in §10.1.x are superseded; current A-share judgments live in the round-1 triage outputs, `docs/000_Ashare_workflow.md` §5.4.5/§5.7.1, and `docs/peer-group-calibration/`.
+
 ## 1. Purpose
 
-This rubric defines the baseline full-coverage business-quality triage standard for listed companies in the A-share, Hong Kong, and U.S. universes. It is not a valuation model and does not produce buy recommendations.
+This rubric defines the baseline full-coverage business-quality triage standard for listed companies in the Hong Kong and U.S. universes (and, historically, the A-share universe — see the scope status note above). It is not a valuation model and does not produce buy recommendations.
 
 The goal is to produce a first-layer triage signal with comparable dimensions, reliable public evidence, and explicit reasoning. ADR-0003 moves the canonical final watchlist decision to a two-layer company review, where companies with `triage_score >= 65`, companies marked `borderline`, and companies explicitly challenged by a reviewer receive a deep company review with common and special dimensions.
 
 ## 2. Scope
 
-The baseline full-coverage triage runs apply to every eligible listed company or listed security represented in `data/raw/a_share_securities.csv`, `data/raw/hong_kong_securities.csv`, and `data/raw/us_securities.csv`.
+The baseline full-coverage triage runs apply to every eligible listed company or listed security represented in `data/raw/hong_kong_securities.csv` and `data/raw/us_securities.csv`. The A-share universe formerly ran the same baseline scoring; its triage now follows `docs/000_Ashare_workflow.md` §5.4 instead.
 
 For the U.S. universe, raw Nasdaq Trader data contains many non-company or non-common-equity instruments. ETF, ETN, unit, warrant, right, preferred, closed-end fund, and similar instruments should remain in the processed output with a not-applicable screening status, but they should not receive listed-company moat scores.
 
@@ -167,71 +169,52 @@ The full-coverage processed CSV should preserve source security identifiers and 
 
 ## 10. Execution Plan
 
-1. Remove tracked local skill files from Git and keep `.agents/` ignored.
-2. Generate full A-share, Hong Kong, and U.S. research queues from the raw universes.
-3. Collect source evidence for each listed company by filings, official materials, and authoritative external descriptions.
-4. Normalize each company into a peer group.
-5. Assign every dimensional score with a reason and sources.
-6. Compute the weighted total from stored dimension scores, preserving two decimal places in each stored score.
-7. Validate that every eligible raw A-share, Hong Kong, and U.S. row has either full dimensional scores or the narrow `insufficient_disclosure` status; U.S. non-company/non-common-equity instruments must have an explicit not-applicable status.
-8. Run market-staged calibration: process A-share first, audit A-share triage coverage and reviewer-challenge routing, then use peer-group calibration to compare similar companies by industry before freezing reusable rules for Hong Kong and U.S. reviews.
-9. Generate processed full-coverage outputs and a watchlist candidate view.
+1. Generate Hong Kong and U.S. research queues from the raw universes.
+2. Collect source evidence for each listed company by filings, official materials, and authoritative external descriptions.
+3. Normalize each company into a peer group.
+4. Assign every dimensional score with a reason and sources.
+5. Compute the weighted total from stored dimension scores, preserving two decimal places in each stored score.
+6. Validate that every eligible raw Hong Kong and U.S. row has either full dimensional scores or the narrow `insufficient_disclosure` status; U.S. non-company/non-common-equity instruments must have an explicit not-applicable status.
+7. Run market-staged calibration per §10.1: the A-share calibration stage is complete and documented; reuse its accepted rules when calibrating Hong Kong and U.S. reviews.
+8. Generate processed full-coverage outputs and a watchlist candidate view.
 
 The full scores CSV remains security-level because raw universes are security-level. The compact watchlist view should be company-level where possible: if a market has duplicate currency counters, share classes, or otherwise duplicate listed-company identifiers, keep the full rows in the score output but keep one representative row in the watchlist.
 
 ## 10.1 Market-Staged Calibration Gate
 
-Do not treat cross-market output as final while the review standard is still being challenged. A-share is the first calibration market. The A-share workflow gate should check:
+Do not treat cross-market output as final while the review standard is still being challenged. A-share was the first calibration market; that stage is complete, and its accepted rules are documented in `docs/000_Ashare_workflow.md` §5.4.5/§5.7.1 and `docs/peer-group-calibration/`. When scoring a new market (Hong Kong, U.S.), the per-market gate should check:
 
-- The run is scoped to `A_SHARE` only.
-- Every eligible A-share listed company appears in the company-level triage output.
+- The run is scoped to a single market.
+- Every eligible listed company in that market appears in the company-level triage output.
 - Reviewer-challenged companies enter the deep-review queue even when their baseline triage scores are below threshold. These rows test routing only; they are not standard-setting anchors.
 - Score-band distribution is visible for reviewer inspection, but no fixed candidate quota is imposed.
 
-Passing this gate means the workflow has not structurally lost eligible A-share companies or reviewer challenges. It does not mean any challenged company has been finally accepted into the watchlist.
+Passing this gate means the workflow has not structurally lost eligible companies or reviewer challenges. It does not mean any challenged company has been finally accepted into the watchlist.
 
 The actual standard-setting step is **Peer-Group Calibration**:
 
-1. Choose one A-share industry or business type at a time.
+1. Choose one industry or business type at a time in the market being calibrated.
 2. Select multiple comparable listed companies from that peer group, including apparent leaders, second-tier companies, borderline companies, and companies that may be thematically attractive but weak in durable capability.
 3. For each company, summarize the moat, business or technology barriers, market position, advantages, weaknesses, cyclicality, and preliminary attention decision using authoritative research sources.
 4. Ask the reviewer to decide which companies deserve continued attention and which should be rejected, with reasons.
 5. Translate the comparison into reusable industry-specific screening standards, including positive indicators, disqualifying weaknesses, and special dimensions.
-6. Apply accepted A-share standards to Hong Kong and U.S. peer groups only after the A-share peer-group calibration is documented.
+6. Start Hong Kong and U.S. peer groups from the documented A-share standards (calibration anchors, anti-over-inclusion checklist, industry narratives) and record market-specific deviations explicitly.
 
 Peer-group calibration can use reviewer-challenged companies as ordinary examples when they belong to the selected industry, but it must not treat them as important merely because they were named earlier.
 
 Reviewer feedback is a calibration input, not an automatic override. When source-backed evidence indicates that a rejected company has durable capability or market position that the feedback may underweight, record an explicit analyst dissent and the evidence basis before revising the rule.
 
-When the reviewer is unfamiliar with a company but has provided a decision habit, infer the decision from that habit instead of marking the company unresolved. The current accepted habit is **Differentiated Peer Retention** plus the **Dominance Rejection Test**: keep multiple companies in a peer group only when each has a hard-to-replicate and meaningfully different advantage; reject companies that are comprehensively dominated by a retained peer and do not have an irreplaceable niche.
+When the reviewer is unfamiliar with a company but has provided a decision habit, infer the decision from that habit instead of marking the company unresolved. The current accepted habit is **Differentiated Peer Retention** plus the **Dominance Rejection Test** (canonical definitions in `CONTEXT.md`): keep multiple companies in a peer group only when each has a hard-to-replicate and meaningfully different advantage; reject companies that are comprehensively dominated by a retained peer and do not have an irreplaceable niche.
 
-### 10.1.1 Accepted Baijiu Calibration
+### 10.1.1 A-Share Calibration Records (superseded)
 
-The first accepted A-share peer-group calibration is baijiu. The reviewer accepted baijiu as worth monitoring but assigned the industry a discounted long-term growth outlook because younger consumers drink less and may shift future gifting and beverage preferences away from traditional baijiu.
+The accepted A-share peer-group calibrations formerly recorded here (baijiu, EV batteries and platforms, high-end medical devices) reflected the closed 2026-06 two-layer review round and no longer match current A-share conclusions — for example, the round-1 rescan holds five baijiu names as `worth_attention`, not three. Do not apply them.
 
-The accepted A-share baijiu watch group is limited to `贵州茅台`, `五粮液`, and `山西汾酒`. Other A-share baijiu companies, including strong regional leaders, former leaders, smaller companies, and turnaround or oversold-rebound candidates, should be rejected by default. The reason is not that these companies cannot rebound; it is that a weak long-term industry outlook makes second-tier and regional names poor uses of watchlist attention across a full cycle.
+Current sources:
 
-This rule can be overridden only when future evidence shows that a company has become a national or category-defining leader with durable pricing power, channel control, and resilience through a full downcycle.
-
-### 10.1.2 Partial EV Battery Calibration
-
-The second A-share peer-group calibration is power batteries and new-energy vehicle platforms. The accepted watch companies are `宁德时代` and `比亚迪`.
-
-`亿纬锂能` was initially rejected because it lacked enough differentiated advantage versus `宁德时代`. That decision was revised on 2026-06-16 after official 2026H1 forecast evidence and reputable broker estimate summaries indicated stronger deducted-profit acceleration and a materially lower forward PEG. It is now retained as a weak L2 / boundary quasi-core watch company, below `宁德时代` and `比亚迪`, and must be downgraded again if the 2026H1 report does not validate operating cash flow, receivables, inventory, margin, and customer evidence.
-
-`国轩高科`, `欣旺达`, `孚能科技`, `鹏辉能源`, and `珠海冠宇` are also rejected from the current power-battery and new-energy-platform watchlist under the **Dominance Rejection Test**. The reviewer did not know these companies well, but the accepted decision habit requires the analyst to reject weaker peers when the available evidence does not show a differentiated and hard-to-replace advantage versus `宁德时代` or `比亚迪`.
-
-### 10.1.3 Accepted Medical-Device Calibration
-
-The third A-share peer-group calibration is high-end medical devices and medical-device platforms. The accepted watch companies are `迈瑞医疗`, `联影医疗`, `惠泰医疗`, `心脉医疗`, and `南微医学`.
-
-`迈瑞医疗` is retained as the broad medical-device platform example. `联影医疗` is retained as the high-end imaging example. `惠泰医疗`, `心脉医疗`, and `南微医学` are retained as specialized high-value device or consumable examples because their clinical niches are meaningfully different from the retained platforms and may have hard-to-replace doctor adoption, regulatory approval, recurring consumables, or treatment-pathway lock-in.
-
-Medical-device tiering must distinguish platform breadth from specialized clinical depth. A broad platform deserves L1 only when the product lines share hospital channels, installed base, service network, global registration capability, R&D reuse, quality systems, and cash conversion. Product breadth becomes a downgrade signal if it dilutes ROIC, creates integration drag, hides weak franchises, or lets focused competitors take share. Specialized device companies such as electrophysiology, vascular intervention, high-end imaging, endoscopy, implant, biomaterial, or recurring-consumable leaders can remain L2 despite very high technical value when their standalone platform scale, cash-flow depth, or multi-cycle category dominance is still narrower than the L1 anchors.
-
-Strategic acquisition by a broad platform is evidence that the target has meaningful clinical and technical value, but it is not sufficient by itself for L1. The target can be upgraded only after the acquisition or platform relationship demonstrably strengthens market share, global channel access, product adoption, margin durability, and cash-flow quality without making the target's thesis dependent on unproven synergy.
-
-`开立医疗`, `新产业`, `乐普医疗`, and `新华医疗` are rejected from this group under the **Dominance Rejection Test** or because their current evidence does not prove a sufficiently irreplaceable niche. `鱼跃医疗` is rejected from this group and should be reclassified into a home-healthcare or consumer-medical-device peer group if reviewed later.
+- Per-industry calibration narratives: `docs/peer-group-calibration/` (e.g. `a-share-baijiu.md`, `a-share-ev-battery.md`, `a-share-medical-device.md`).
+- Reusable triage rules and tiering guidance: `docs/000_Ashare_workflow.md` §5.4.5 and §5.7.1.
+- Closed-round results: `data/archive/2026-06-two-layer-review/`.
 
 ## 11. Calibration Notes
 
