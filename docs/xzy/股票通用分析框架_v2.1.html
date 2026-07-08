@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>股票通用分析框架 v2.1 · 经营情况研判与买卖策略制定</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2329; --sub:#646a73; --line:#e5e6eb;
+    --red:#d9303e; --red-bg:#fef0f0; --green:#2ba471; --green-bg:#eafaf3;
+    --amber:#d98014; --amber-bg:#fff7e6; --blue:#3370ff; --blue-bg:#eaf1ff;
+    --purple:#7c3aed; --purple-bg:#f3eefe; --teal:#0d9488; --teal-bg:#e6f7f5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 60px}
+  h1{font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:6px}
+  .ver{display:inline-block;background:var(--blue);color:#fff;font-size:12px;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;font-weight:600}
+  h2{font-size:20px;font-weight:700;margin:34px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line);display:flex;align-items:center;gap:10px}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--blue);color:#fff;border-radius:8px;font-size:15px}
+  h2 .new-badge{display:inline-block;background:var(--green);color:#fff;font-size:11px;padding:1px 6px;border-radius:3px;font-weight:600}
+  h3{font-size:16.5px;font-weight:700;margin:20px 0 10px;color:var(--ink)}
+  h3 .tag-new{font-size:11px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:3px;margin-left:6px;font-weight:600;vertical-align:middle}
+  h4{font-size:14.5px;font-weight:600;margin:14px 0 8px;color:var(--sub)}
+  p{margin:8px 0}
+  .sub{color:var(--sub);font-size:13.5px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+  .lead{background:linear-gradient(135deg,#eaf1ff 0%,#f3eefe 100%);border:1px solid #d6e0ff;border-radius:14px;padding:22px 26px;margin:18px 0}
+  .lead .tldr{font-size:13px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:6px}
+  .lead p{font-size:15px;color:var(--ink)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px;background:var(--card);border-radius:8px;overflow:hidden}
+  th{background:#f5f6f8;text-align:left;padding:10px 12px;font-weight:600;color:var(--ink);border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafbfc}
+  .tag{display:inline-block;padding:2px 9px;border-radius:5px;font-size:12px;font-weight:600;line-height:1.6}
+  .t-pass{background:var(--green-bg);color:var(--green)}
+  .t-warn{background:var(--amber-bg);color:var(--amber)}
+  .t-fail{background:var(--red-bg);color:var(--red)}
+  .t-info{background:var(--blue-bg);color:var(--blue)}
+  .t-neutral{background:#f0f1f3;color:var(--sub)}
+  .decision-box{border-left:4px solid;padding:14px 18px;border-radius:0 8px 8px 0;margin:14px 0}
+  .db-go{border-color:var(--green);background:var(--green-bg)}
+  .db-wait{border-color:var(--amber);background:var(--amber-bg)}
+  .db-no{border-color:var(--red);background:var(--red-bg)}
+  .decision-box b{display:block;margin-bottom:4px;font-size:14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+  .mini{font-size:12.5px;color:var(--sub)}
+  .checklist{list-style:none}
+  .checklist li{padding:7px 0 7px 26px;position:relative;border-bottom:1px dashed var(--line)}
+  .checklist li:last-child{border-bottom:none}
+  .checklist li:before{content:"\2610";position:absolute;left:0;color:var(--blue);font-size:15px}
+  .checklist li.done:before{content:"\2611";color:var(--green)}
+  .formula{background:#f5f6f8;border:1px dashed var(--line);border-radius:6px;padding:10px 14px;margin:10px 0;font-family:"SF Mono",Consolas,monospace;font-size:13px;color:var(--ink)}
+  .kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+  .kpi{flex:1;min-width:120px;background:#f9fafb;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+  .kpi .v{font-size:20px;font-weight:700;color:var(--blue)}
+  .kpi .l{font-size:12px;color:var(--sub);margin-top:2px}
+  .template-input{background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-height:34px;color:var(--sub);font-size:13px;width:100%}
+  .template-input.empty:before{content:"\5728\6b64\586b\5199\2026";color:#bbb}
+  .toc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:16px 0}
+  .toc a{color:var(--blue);text-decoration:none;font-size:13.5px}
+  .toc ol{padding-left:20px}
+  .toc li{padding:2px 0}
+  .note{font-size:12.5px;color:var(--sub);background:#fafbfc;border-left:3px solid var(--line);padding:8px 12px;margin:10px 0;border-radius:0 4px 4px 0}
+  .note-warn{border-left-color:var(--amber);background:var(--amber-bg);color:var(--ink)}
+  .pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11.5px;font-weight:600;margin-left:6px}
+  .changelog{background:var(--green-bg);border:1px solid var(--green);border-radius:10px;padding:16px 20px;margin:16px 0}
+  .changelog h3{margin-top:0;color:var(--green)}
+  .changelog li{padding:4px 0}
+  .risk-matrix th{background:var(--red-bg)}
+  .risk-high{color:var(--red);font-weight:700}
+  .risk-med{color:var(--amber);font-weight:700}
+  .risk-low{color:var(--green);font-weight:700}
+  footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);text-align:center;color:var(--sub);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>股票通用分析框架<span class="ver">v2.1</span></h1>
+<p class="sub">经营情况研判 · 估值定价 · 买卖策略制定｜可套用于任意个股的完整决策流程</p>
+
+<div class="changelog">
+  <h3>v2.1 相对 v2.0 的改进清单（微观实战打磨）</h3>
+  <div class="grid2">
+    <div>
+      <b style="color:var(--teal)">★ v2.1 四项微调（补充包）</b>
+      <ul>
+        <li><b>第一步1.3</b>：行业周期定位增加"产能与技术周期"研判（CapEx拐点 + 新一代技术标准落地）</li>
+        <li><b>第三步3.1</b>：四维体检表增加"隐蔽性潜亏"排雷（存货跌价 / 应收账龄 / 商誉减值）</li>
+        <li><b>第五步5.1</b>：交易位置表增加"微观筹码/资金流向"确认列</li>
+        <li><b>风险矩阵</b>：宏观/市场类新增"估值锚失效"风险（市场审美/估值体系切换）</li>
+      </ul>
+    </div>
+    <div>
+      <b style="color:var(--green)">★ v2.0 保留项（不变）</b>
+      <ul>
+        <li>五步流水线 + 三色决策门结构不变</li>
+        <li>行业周期定位 / 催化剂地图 / 竞争对标 / 护城河侵蚀</li>
+        <li>收入质量拆解 / 资本配置效率 / 反向DCF / 估值适用性</li>
+        <li>技术形态内嵌第五步 / 风险因子矩阵 / 信心加权</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="changelog" style="background:var(--blue-bg);border-color:var(--blue)">
+  <h3 style="color:var(--blue);margin-top:0">v2.0 相对 v1.0 的改进清单（存档）</h3>
+  <div class="grid2">
+    <div>
+      <b style="color:var(--green)">★ 原有改进（技术形态融入第五步）</b>
+      <ul>
+        <li>5.1 交易位置判断加入形态特征（W底/头肩底/旗形等）</li>
+        <li>5.3 止损加入"核心形态破坏"维度</li>
+        <li>5.4 止盈加入顶背离/趋势线突破信号</li>
+        <li>决策卡增加"形态破位参考价"和"形态依据"栏</li>
+      </ul>
+    </div>
+    <div>
+      <b style="color:var(--blue)">★ 结构性新增（弥补原框架盲区）</b>
+      <ul>
+        <li><b>第一步</b>：新增行业周期定位 + 催化剂地图</li>
+        <li><b>第二步</b>：新增竞争对手量化对标 + 护城河侵蚀风险</li>
+        <li><b>第三步</b>：新增收入质量拆解（经常性 vs 一次性）+ 资本配置效率</li>
+        <li><b>第四步</b>：新增反向DCF/隐含预期拆解 + 估值方法适用性检验</li>
+        <li><b>第五步</b>：仓位计算加入信心加权</li>
+        <li><b>新增</b>：风险因子矩阵（独立模块）</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="lead">
+  <div class="tldr">TL;DR · 框架核心</div>
+  <p>本框架把“是否买入一只股票”拆成 <b>五步流水线</b>：① 业务拆解 + 行业周期 → ② 护城河与竞争格局 → ③ 财务体检 + 收入质量 → ④ 估值定价 + 隐含预期 → ⑤ 交易计划与风控。每一步都设有 <b>"通过 / 警示 / 否决"三色决策门</b>，前一步否决就不必走下一步。最终产出一张可填写的 <b>决策卡</b>：含是否买入、目标价、止损价、仓位、分仓路径和失效条件——拿到就能执行。</p>
+  <p class="sub" style="margin-top:10px">适用前提：本框架是"以合理价格买入优质公司并控制下行风险"的价值-成长混合派打法，适合中线（1-12个月）持有。纯短线情绪博弈、纯量化套利不在覆盖范围。对于Biotech/早期亏损/周期拐点等特殊类型公司，第四步设有估值方法适用性检验子模块。</p>
+</div>
+
+<div class="toc">
+  <b style="font-size:14px">目录</b>
+  <ol>
+    <li><a href="#s0">总览：五步流程图与决策门</a></li>
+    <li><a href="#s1">第一步 · 业务拆解 + 行业周期定位（定性）</a></li>
+    <li><a href="#s2">第二步 · 护城河与竞争格局评估</a></li>
+    <li><a href="#s3">第三步 · 财务健康度体检 + 收入质量（定量）</a></li>
+    <li><a href="#s4">第四步 · 估值与定价 + 隐含预期拆解</a></li>
+    <li><a href="#s5">第五步 · 交易计划与风控（含技术形态）</a></li>
+    <li><a href="#s6">风险因子矩阵（新增）</a></li>
+    <li><a href="#s7">决策卡模板（套用填写）</a></li>
+    <li><a href="#s8">常见陷阱与红线</a></li>
+  </ol>
+</div>
+
+<!-- ==================== 总览流程图 ==================== -->
+<h2 id="s0"><span class="num">0</span>总览：五步流程图与决策门</h2>
+
+<div class="card">
+<svg viewBox="0 0 1000 520" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#8a8f99"/>
+    </marker>
+  </defs>
+  <g font-family="-apple-system,sans-serif" font-size="13">
+    <!-- Step 1 -->
+    <rect x="20" y="40" width="180" height="90" rx="10" fill="#eaf1ff" stroke="#3370ff" stroke-width="1.5"/>
+    <text x="110" y="66" text-anchor="middle" font-weight="700" fill="#3370ff">① 业务拆解+周期</text>
+    <text x="110" y="88" text-anchor="middle" fill="#646a73" font-size="11.5">主营/赚钱方式</text>
+    <text x="110" y="104" text-anchor="middle" fill="#646a73" font-size="11.5">行业周期定位</text>
+    <text x="110" y="120" text-anchor="middle" fill="#646a73" font-size="11.5">催化剂地图</text>
+    <line x1="200" y1="85" x2="225" y2="85" stroke="#8a8f99" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polygon points="235,85 270,60 305,85 270,110" fill="#fff7e6" stroke="#d98014" stroke-width="1.5"/>
+    <text x="270" y="89" text-anchor="middle" font-size="10.5" fill="#d98014">看得懂?</text>
+    <text x="270" y="135" text-anchor="middle" font-size="11" fill="#d9303e" font-weight="600">否→放弃</text>
+    <line x1="270" y1="110" x2="270" y2="120" stroke="#d9303e" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+    <!-- Step 2 -->
+    <line x1="305" y1="85" x2="330" y2="85" stroke="#8a8f99" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="340" y="40" width="180" height="90" rx="10" fill="#f3eefe" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="430" y="66" text-anchor="middle" font-weight="700" fill="#7c3aed">② 护城河+竞争格局</text>
+    <text x="430" y="88" text-anchor="middle" fill="#646a73" font-size="11.5">ROIC/份额/壁垒</text>
+    <text x="430" y="104" text-anchor="middle" fill="#646a73" font-size="11.5">竞争对标</text>
+    <text x="430" y="120" text-anchor="middle" fill="#646a73" font-size="11.5">侵蚀风险</text>
+    <line x1="520" y1="85" x2="545" y2="85" stroke="#8a8f99" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polygon points="555,85 590,60 625,85 590,110" fill="#fff7e6" stroke="#d98014" stroke-width="1.5"/>
+    <text x="590" y="89" text-anchor="middle" font-size="10.5" fill="#d98014">有壁垒?</text>
+    <text x="590" y="135" text-anchor="middle" font-size="11" fill="#d9303e" font-weight="600">否→仅交易</text>
+    <line x1="590" y1="110" x2="590" y2="120" stroke="#d9303e" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+    <!-- Step 3 -->
+    <line x1="625" y1="85" x2="650" y2="85" stroke="#8a8f99" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="660" y="40" width="180" height="90" rx="10" fill="#e6f7f5" stroke="#0d9488" stroke-width="1.5"/>
+    <text x="750" y="66" text-anchor="middle" font-weight="700" fill="#0d9488">③ 财务体检+收入质量</text>
+    <text x="750" y="88" text-anchor="middle" fill="#646a73" font-size="11.5">成长/盈利/现金流</text>
+    <text x="750" y="104" text-anchor="middle" fill="#646a73" font-size="11.5">经常性 vs 一次性</text>
+    <text x="750" y="120" text-anchor="middle" fill="#646a73" font-size="11.5">资本配置效率</text>
+    <line x1="840" y1="85" x2="865" y2="85" stroke="#8a8f99" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polygon points="875,85 910,60 945,85 910,110" fill="#fff7e6" stroke="#d98014" stroke-width="1.5"/>
+    <text x="910" y="89" text-anchor="middle" font-size="10.5" fill="#d98014">无红旗?</text>
+    <text x="910" y="135" text-anchor="middle" font-size="11" fill="#d9303e" font-weight="600">有→降级</text>
+    <line x1="910" y1="110" x2="910" y2="120" stroke="#d9303e" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+    <!-- 第二行 -->
+    <line x1="910" y1="85" x2="910" y2="185" stroke="#8a8f99" stroke-width="1.5" marker-end="url(#arrow)" transform="translate(0,70)"/>
+    <!-- Step 4 -->
+    <rect x="180" y="230" width="180" height="90" rx="10" fill="#eafaf3" stroke="#2ba471" stroke-width="1.5"/>
+    <text x="270" y="256" text-anchor="middle" font-weight="700" fill="#2ba471">④ 估值定价+隐含预期</text>
+    <text x="270" y="278" text-anchor="middle" fill="#646a73" font-size="11.5">类型→方法→分位</text>
+    <text x="270" y="294" text-anchor="middle" fill="#646a73" font-size="11.5">反向DCF拆解</text>
+    <text x="270" y="310" text-anchor="middle" fill="#646a73" font-size="11.5">适用性检验</text>
+    <line x1="360" y1="275" x2="385" y2="275" stroke="#8a8f99" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <polygon points="395,275 430,250 465,275 430,300" fill="#fff7e6" stroke="#d98014" stroke-width="1.5"/>
+    <text x="430" y="279" text-anchor="middle" font-size="10.5" fill="#d98014">有性价比?</text>
+    <text x="430" y="325" text-anchor="middle" font-size="11" fill="#d9303e" font-weight="600">否→等更低价</text>
+    <line x1="430" y1="300" x2="430" y2="310" stroke="#d9303e" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+    <!-- Step 5 -->
+    <line x1="465" y1="275" x2="490" y2="275" stroke="#8a8f99" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="500" y="230" width="200" height="90" rx="10" fill="#fef0f0" stroke="#d9303e" stroke-width="1.5"/>
+    <text x="600" y="256" text-anchor="middle" font-weight="700" fill="#d9303e">⑤ 交易计划+风控+形态</text>
+    <text x="600" y="278" text-anchor="middle" fill="#646a73" font-size="11.5">买点/形态/止损/仓位</text>
+    <text x="600" y="294" text-anchor="middle" fill="#646a73" font-size="11.5">信心加权仓位</text>
+    <text x="600" y="310" text-anchor="middle" fill="#646a73" font-size="11.5">失效条件</text>
+    <line x1="700" y1="275" x2="725" y2="275" stroke="#8a8f99" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- 风险因子 -->
+    <rect x="735" y="230" width="180" height="90" rx="10" fill="#fff7e6" stroke="#d98014" stroke-width="1.5"/>
+    <text x="825" y="256" text-anchor="middle" font-weight="700" fill="#d98014">⚠ 风险因子矩阵</text>
+    <text x="825" y="278" text-anchor="middle" fill="#646a73" font-size="11.5">政策/竞争/财务</text>
+    <text x="825" y="294" text-anchor="middle" fill="#646a73" font-size="11.5">治理/宏观</text>
+    <text x="825" y="310" text-anchor="middle" fill="#646a73" font-size="11.5">概率×影响→应对</text>
+    <line x1="825" y1="320" x2="825" y2="350" stroke="#8a8f99" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- 最终决策 -->
+    <rect x="735" y="360" width="180" height="60" rx="12" fill="#1f2329" stroke="none"/>
+    <text x="825" y="385" text-anchor="middle" font-weight="700" fill="#fff" font-size="14">决策卡产出</text>
+    <text x="825" y="405" text-anchor="middle" fill="#c9cdd4" font-size="11">买入/等待/放弃 + 价位</text>
+
+    <!-- 底部说明 -->
+    <text x="500" y="460" text-anchor="middle" font-size="12" fill="#646a73">决策门原则：前一步未通过则不必走下一步 —— 橙色菱形是"关卡"，红色虚线是淘汰路径</text>
+    <text x="500" y="482" text-anchor="middle" font-size="11.5" fill="#8a8f99">三色门：通过=继续 ｜ 警示=降级或谨慎继续 ｜ 否决=放弃或仅短线</text>
+
+    <!-- 图例 -->
+    <g transform="translate(150,500)" font-size="11">
+      <rect x="0" y="0" width="14" height="14" rx="3" fill="#eafaf3" stroke="#2ba471"/>
+      <text x="20" y="11" fill="#646a73">通过</text>
+      <rect x="80" y="0" width="14" height="14" rx="3" fill="#fff7e6" stroke="#d98014"/>
+      <text x="100" y="11" fill="#646a73">警示</text>
+      <rect x="160" y="0" width="14" height="14" rx="3" fill="#fef0f0" stroke="#d9303e"/>
+      <text x="180" y="11" fill="#646a73">否决</text>
+    </g>
+  </g>
+</svg>
+</div>
+
+<p class="sub">五步流程的核心思想：<b>先用前三步筛掉"不该碰的公司"，再用第四步筛掉"该碰但现在太贵的公司"，最后在第五步把符合条件的公司变成可执行的单子</b>。绝大多数亏损不是买错了时机，而是把前三步该淘汰的公司拿到了第五步。</p>
+
+<!-- ==================== 第一步 ==================== -->
+<h2 id="s1"><span class="num">1</span>第一步 · 业务拆解 + 行业周期定位（定性）</h2>
+
+<p><b>目标</b>：30 分钟内搞清楚"这家公司靠什么赚钱、哪块业务决定估值、行业处于什么周期、近期有什么催化"。看不懂就直接放弃——这是第一条防线。</p>
+
+<h3>1.1 必答六问</h3>
+<div class="grid2">
+<div class="card">
+<h4>公司画像</h4>
+<ul class="checklist">
+  <li>主营卖什么产品/服务？一句话能说清吗？</li>
+  <li>收入结构：哪块业务贡献最大营收？哪块贡献最大利润？</li>
+  <li>主要客户是谁（To C / To B / To G）？集中度如何？</li>
+  <li>在产业链什么位置（上游原料/中游制造/下游品牌/渠道）？</li>
+</ul>
+</div>
+<div class="card">
+<h4>赚钱逻辑</h4>
+<ul class="checklist">
+  <li>商业模式：高毛利低周转？还是低毛利高周转？</li>
+  <li>增长来源：靠量（份额/新品）还是靠价（提价/升级）？</li>
+  <li>资本密集度：轻资产还是重资产？扩张要不要持续烧钱？</li>
+  <li>近 1-2 年最重要的经营变化是什么（新品/并购/转型/管理层变更）？</li>
+</ul>
+</div>
+</div>
+
+<h3>1.2 业务结构拆解表（套用模板）</h3>
+<table>
+<tr><th>业务板块</th><th>营收占比</th><th>毛利率</th><th>增速</th><th>收入质量</th><th>是否决定估值</th><th>趋势判断</th></tr>
+<tr><td>主业 A：______</td><td>____%</td><td>____%</td><td>____%</td><td>经常性/一次性</td><td><span class="tag t-info">是</span></td><td>______</td></tr>
+<tr><td>增长业务 B：______</td><td>____%</td><td>____%</td><td>____%</td><td>经常性/一次性</td><td><span class="tag t-neutral">潜在</span></td><td>______</td></tr>
+<tr><td>边缘/衰退 C：______</td><td>____%</td><td>____%</td><td>____%</td><td>经常性/一次性</td><td><span class="tag t-neutral">否</span></td><td>______</td></tr>
+</table>
+<p class="mini">提示：决定估值的那块业务（通常是高增长或高毛利板块）才是分析重点，其余板块只需了解趋势即可。“收入质量”列是v2.0新增列：区分经常性收入与一次性收入（如授权首付款、资产处置收益、政府补贴等），避免被一次性收入粉饰的利润误导估值。</p>
+
+<h3>1.3 行业周期定位<span class="tag-new">v2.0 新增</span><span class="tag-new" style="background:var(--teal-bg);color:var(--teal);border-color:var(--teal)">v2.1 产能与技术周期</span></h3>
+<p>同一家公司在行业周期的不同位置，财务数据的含义完全不同。周期股在顶点时财务最好看（高增长低PE），但那是卖出信号。</p>
+<table>
+<tr><th>周期阶段</th><th>特征</th><th>财务信号</th><th>估值特征</th><th>策略含义</th></tr>
+<tr><td><b>导入期</b></td><td>产品刚上市，未来不确定</td><td>亏损/微利，增速快</td><td>PS/EV为主，PE失效</td><td>看渠道和用户增长，不看利润</td></tr>
+<tr><td><b>成长期</b></td><td>份额快速扩张，格局未定</td><td>高增速，利润率上升</td><td>PEG为主，高PE可接受</td><td>看增速可持续性和壁垒强度</td></tr>
+<tr><td><b>成熟期</b></td><td>份额稳定，竞争格局已定</td><td>增速放缓，现金流好</td><td>PE/PB/股息率为主</td><td>看分红/回购和余量增长点</td></tr>
+<tr><td><b>衰退期</b></td><td>业务走下坡，转型不确定</td><td>收入下滑，利润变薄</td><td>看PB/清算价值</td><td>价值陷阱高发，底部不等于便宜</td></tr>
+<tr style="background:var(--teal-bg)"><td><b>产能/技术周期</b><br><span class="tag-new" style="background:var(--teal-bg);color:var(--teal);border-color:var(--teal)">v2.1</span></td><td>大规模扩产期末尾 / 去库存尾声 + 新技术标准推动换装潮</td><td>CapEx增速拐点 / 存货周转率拐点 / 新一代技术规范落地节奏</td><td>扩产期末尾：ROE/ROIC依然好看但即将价格战；去库存尾声：利润承压但左侧买点临近</td><td>扩产期末尾→警惕价格战风险，下调Bear目标价；去库存尾声+新技术落地→最佳左侧买点</td></tr>
+</table>
+<div class="note"><b>典型应用</b>：阳光电源（300274）在2021年属于“成长期”，市场给高PE合理；2025年光伏产业已从“成熟期”向“衰退期”过渡，落后产能被淘汰。三生国健（688336）的创新药管线处于“导入期→成长期”跳变，估值方法需随之切换。</div>
+<div class="note note-warn"><b>v2.1 产能与技术周期研判要点</b>：① 关注行业CapEx增速拐点——当全行业CapEx增速连续2年>20%时，即使当前ROE/ROIC依然好看，也可能即将迎来产能过剩和价格战；② 关注新一代技术标准落地节奏（如5G→5.5G→6G、TOPCon→HJT→钙钛矿、DDR4→DDR5→HBM）——去库存尾声+新技术规范推动换机/换装潮是最佳左侧买点；③ 对比重资产与硬科技行业时，"产能周期"比"生命周期"更精准——同一轮技术迭代中，先动者吃超额利润，后动者吃价格战。</div>
+
+<h3>1.4 催化剂地图<span class="tag-new">v2.0 新增</span></h3>
+<p>在持有期内，什么事件能够验证买入逻辑？如果想不出催化剂，说明逻辑还不够清晰。</p>
+<table>
+<tr><th>催化剂类型</th><th>示例</th><th>预计时点</th><th>影响程度</th><th>已定价?</th></tr>
+<tr><td>业绩兑现</td><td>季报/年报超预期</td><td>____</td><td>高/中/低</td><td>是/否</td></tr>
+<tr><td>产品里程碑</td><td>新药获批/新产品上市</td><td>____</td><td>高/中/低</td><td>是/否</td></tr>
+<tr><td>政策/行业事件</td><td>集采结果/补贴政策/行业规范</td><td>____</td><td>高/中/低</td><td>是/否</td></tr>
+<tr><td>BD/合作</td><td>授权交易/战略合作</td><td>____</td><td>高/中/低</td><td>是/否</td></tr>
+<tr><td>竞争格局变化</td><td>竞品退出/价格战结束</td><td>____</td><td>高/中/低</td><td>是/否</td></tr>
+</table>
+<div class="note"><b>关键原则</b>：催化剂必须可追踪、可验证。“行业景气改善”这类模糊表述不算催化剂——你无法判断它是否兑现。每个催化剂要写明具体事件、预计时点和影响路径，这是第五步“时间止损”的前提。</div>
+
+<div class="decision-box db-wait">
+  <b>决策门 ① · 看得懂吗？周期定位清楚吗？</b>
+  <span class="t-pass tag">通过</span> 能一句话讲清赚钱方式 + 能说出未来 3 年最关键的业绩变量 + 能定位行业周期 + 能列出持有期内的催化剂 → 进入第二步<br>
+  <span class="t-warn tag">警示</span> 业务复杂但可拆解 / 周期定位模糊 → 谨慎继续，重点补课<br>
+  <span class="t-fail tag">否决</span> 看不懂 / 商业模式不成立 / 严重依赖关联交易 / 无法列出任何催化剂 → <b>放弃，不必往下</b>
+</div>
+
+<!-- ==================== 第二步 ==================== -->
+<h2 id="s2"><span class="num">2</span>第二步 · 护城河与竞争格局评估</h2>
+
+<p><b>目标</b>：判断公司有没有"真壁垒"——能持续赚取超额回报（ROIC > WACC）的护城河。无壁垒的公司只能做短线交易，不能做中线投资。</p>
+
+<h3>2.1 护城河五力自检</h3>
+<table>
+<tr><th>护城河类型</th><th>判定信号</th><th>量化验证</th><th>强度</th></tr>
+<tr><td><b>品牌 / 无形资产</b></td><td>提价能力强、复购高、有定价权</td><td>毛利率显著高于同行 + 持续投入营销</td><td>☐强 ☐中 ☐弱</td></tr>
+<tr><td><b>成本优势</b></td><td>同质化产品里成本最低</td><td>单位成本低于同行 15%+ / 规模效应明显</td><td>☐强 ☐中 ☐弱</td></tr>
+<tr><td><b>网络效应</b></td><td>用户越多价值越大（平台/社交）</td><td>MAU 增长带动 ARPU 提升 + 高切换成本</td><td>☐强 ☐中 ☐弱</td></tr>
+<tr><td><b>转换成本</b></td><td>客户换供应商代价大（B 端 SaaS/企业软件）</td><td>续约率 >90% + 客户生命周期长</td><td>☐强 ☐中 ☐弱</td></tr>
+<tr><td><b>规模 / 牌照 / 资源</b></td><td>规模壁垒 / 牌照壁垒 / 资源独占</td><td>市占率前三 + 新进入者难以复制</td><td>☐强 ☐中 ☐弱</td></tr>
+</table>
+
+<h3>2.2 质地量化指标（取近 5 年数据）</h3>
+<div class="kpi-row">
+  <div class="kpi"><div class="v">>15%</div><div class="l">ROIC 连续 5 年<br>（优质公司门槛）</div></div>
+  <div class="kpi"><div class="v">>15%</div><div class="l">ROE 连续 5 年<br>（无杠杆也赚钱）</div></div>
+  <div class="kpi"><div class="v">>0</div><div class="l">自由现金流<br>持续为正</div></div>
+  <div class="kpi"><div class="v">上升/稳定</div><div class="l">市占率趋势<br>（3-5 年）</div></div>
+</div>
+
+<div class="note"><b>关键检验</b>：ROIC 连续 5 年 > 15% 是"有护城河"的硬指标。如果一家公司 ROIC 长期低于资金成本（约 8-10%），说明它在毁灭价值——无论故事多好听，都不是投资标的，顶多做交易。</div>
+
+<h3>2.3 管理层与治理速检</h3>
+<ul class="checklist">
+  <li>管理层是否诚信？承诺兑现率如何（对照过往业绩指引 vs 实际）</li>
+  <li>大股东是否持续减持 / 质押比例过高（>50% 警惕）</li>
+  <li>是否有频繁并购、跨界多元化、关联交易掏空迹象</li>
+  <li>分红 / 回购是否持续（股东回报意愿的硬证据）</li>
+  <li>核心高管是否稳定（近 3 年有无重大离职）</li>
+</ul>
+
+<h3>2.4 竞争对手量化对标<span class="tag-new">v2.0 新增</span></h3>
+<p>护城河不能只看自己，要和同行横向比。选 2-3 家可比公司，拉五年数据对比：</p>
+<table>
+<tr><th>对比维度</th><th>本公司</th><th>竞品 A</th><th>竞品 B</th><th>判断</th></tr>
+<tr><td>ROIC（5年均值）</td><td>____%</td><td>____%</td><td>____%</td><td>领先/持平/落后</td></tr>
+<tr><td>毛利率</td><td>____%</td><td>____%</td><td>____%</td><td>领先/持平/落后</td></tr>
+<tr><td>市占率趋势</td><td>____</td><td>____</td><td>____</td><td>扩大/稳定/趋缩</td></tr>
+<tr><td>收入CAGR</td><td>____%</td><td>____%</td><td>____%</td><td>领先/持平/落后</td></tr>
+<tr><td>估值（PE/PS）</td><td>____</td><td>____</td><td>____</td><td>溢价/合理/折价</td></tr>
+</table>
+<p class="mini">如果一家公司ROIC领先但估值偏低，说明市场未充分认识其护城河，是潜在机会；反之则需警惕。</p>
+
+<h3>2.5 护城河侵蚀风险<span class="tag-new">v2.0 新增</span></h3>
+<p>护城河不是静态的。问自己：<b>3年内，什么因素可能摧毁这条护城河？</b></p>
+<table>
+<tr><th>侵蚀因素</th><th>示例</th><th>发生概率</th><th>影响程度</th></tr>
+<tr><td>技术替代</td><td>新技术路线使现有产品贬值</td><td>高/中/低</td><td>致命/严重/轻微</td></tr>
+<tr><td>政策变化</td><td>集采/反垄断/行业规范调整</td><td>高/中/低</td><td>致命/严重/轻微</td></tr>
+<tr><td>携资跳入</td><td>巨头带资进入，价格战开始</td><td>高/中/低</td><td>致命/严重/轻微</td></tr>
+<tr><td>人才流失</td><td>核心团队离职/创业</td><td>高/中/低</td><td>致命/严重/轻微</td></tr>
+</table>
+<div class="note"><b>典型应用</b>：益赛普作为TNF-α抑制剂的护城河正在被集采侵蚀（份额从27%趋缩至23%），赛普丁作为HER2单抗面临生物类似药竞争。如果不识别这些侵蚀因素，就会错误地认为护城河仍然稳固。</div>
+
+<div class="decision-box db-wait">
+  <b>决策门 ② · 有真壁垒吗？竞争格局如何？</b>
+  <span class="t-pass tag">通过</span> 至少 1 条护城河为"强" + ROIC>15% + 竞争对标领先 + 管理层无红旗 + 侵蚀风险可控 → 进入第三步<br>
+  <span class="t-warn tag">警示</span> 护城河"中" + ROIC 10-15% / 侵蚀风险中等 → 可投资但要求更大安全边际（估值打折）<br>
+  <span class="t-fail tag">否决</span> 无护城河 + ROIC 持续 < 资金成本 / 竞争格局恶化 → <b>仅可短线交易，不做中线投资</b>
+</div>
+
+<!-- ==================== 第三步 ==================== -->
+<h2 id="s3"><span class="num">3</span>第三步 · 财务健康度体检 + 收入质量（定量）</h2>
+
+<p><b>目标</b>：用近 5 年（至少 3 年）财报数据验证前两步的定性判断，筛出财务造假 / 持续恶化 / 增长靠堆资产的"红旗公司"。<b>取数务必拉长周期</b>——只看 1-2 年会被周期误判。</p>
+
+<h3>3.1 四维体检表<span class="tag-new" style="background:var(--teal-bg);color:var(--teal);border-color:var(--teal)">v2.1 隐蔽性潜亏排雷</span></h3>
+<table>
+<tr><th>维度</th><th>关键指标</th><th>健康标准</th><th>红旗信号</th></tr>
+<tr><td rowspan="2"><b>成长性</b></td><td>营收 CAGR（3年/5年）</td><td>>行业增速</td><td>连续下滑 / 靠并购注水</td></tr>
+<tr><td>归母净利 CAGR</td><td>>营收增速（杠杆正向）</td><td>增收不增利 / 利润负增</td></tr>
+<tr><td rowspan="3"><b>盈利能力</b></td><td>毛利率</td><td>稳定或上行 + 高于同行</td><td>持续下行 + 低于同行</td></tr>
+<tr><td>净利率</td><td>>8%（制造业）/ >20%（消费/科技）</td><td>长期 <5% 且无改善</td></tr>
+<tr><td>ROE / ROIC</td><td>ROE>15% & ROIC>15%</td><td>靠高杠杆撑 ROE（ROIC 低）</td></tr>
+<tr><td rowspan="2"><b>现金流</b></td><td>经营现金流/净利润</td><td>>1（持续）</td><td>长期 <0.8 → 利润含金量低</td></tr>
+<tr><td>自由现金流（FCF）</td><td>持续为正或转正趋势</td><td>持续为负 + 还在扩张</td></tr>
+<tr><td rowspan="2"><b>资产负债</b></td><td>资产负债率</td><td>行业合理区间内</td><td>异常上升 / >70%（非金融）</td></tr>
+<tr><td>有息负债/现金</td><td>现金能覆盖有息负债</td><td>短债压力大 / 现金骤降</td></tr>
+<tr style="background:var(--teal-bg)"><td rowspan="3"><b>隐蔽性潜亏</b><br><span class="tag-new" style="background:var(--teal-bg);color:var(--teal);border-color:var(--teal)">v2.1</span></td><td>存货跌价风险</td><td>产品价格下行期 + 存货周转率变慢时需警觉</td><td>存货周转率骤降 + 产品价格下行 → 极易爆出巨额存货减值</td></tr>
+<tr style="background:var(--teal-bg)"><td>应收账款账龄</td><td>1年以上应收占比&le;20%</td><td>营收大增但应收同步大增 + 客户弱势 → 坏账计提风险极高</td></tr>
+<tr style="background:var(--teal-bg)"><td>商誉减值</td><td>商誉/净资产&le;30%</td><td>频繁溢价并购 + 宏观/行业逆风 → 商誉暴雷</td></tr>
+</table>
+
+<h3>3.2 质量增长匹配检验（最容易被忽略的红旗）</h3>
+<p>增长是真好还是靠"堆资产 + 借钱"硬撑出来的？用两个比值一查便知：</p>
+<div class="formula">
+增长质量 = 净利润增速 ÷ 净资产增速<br>
+&nbsp;&nbsp;• >1：利润增长快于资本投入 → 内生高质量增长 ✓<br>
+&nbsp;&nbsp;• ≈1：投入和利润同步 → 正常但需关注回报率是否下降<br>
+&nbsp;&nbsp;• <1：投入很多但利润增长慢 → <b>低效扩张，价值毁灭信号 ✗</b>
+</div>
+<div class="formula">
+ROE 拆解（杜邦）：ROE = 净利率 × 资产周转率 × 权益乘数<br>
+&nbsp;&nbsp;ROE 上升但靠"权益乘数（加杠杆）"撑 → 警惕<br>
+&nbsp;&nbsp;ROE 上升且靠"净利率 / 周转率"提升 → 高质量
+</div>
+
+<h3>3.3 收入质量拆解<span class="tag-new">v2.0 新增</span></h3>
+<p>这是v2.0最重要的新增模块。很多公司的利润爆发并不可持续——一次性收入（BD授权、资产处置、政府补贴）会让PE看起来极便宜，但前瞻性利润可能是阶跃式上升后断崖式下降。</p>
+<table>
+<tr><th>收入类型</th><th>特征</th><th>财务影响</th><th>市场定价含义</th></tr>
+<tr><td><b>经常性收入</b></td><td>产品销售、稳定服务费</td><td>可持续、可外推</td><td>应用正常PE估值</td></tr>
+<tr><td><b>一次性收入</b></td><td>授权首付款、资产处置、补贴</td><td>不可持续、无法外推</td><td>应从PE中剔除后评估</td></tr>
+<tr><td><b>里程碑款</b></td><td>BD交易的后续款项</td><td>有不确定性、但可能很大</td><td>作为期权价值单独估算</td></tr>
+</table>
+<div class="note note-warn"><b>检验方法：剔除一次性收入后的“经常性利润”</b><br>
+经常性净利润 = 报告期净利润 − 一次性收入税后贡献<br>
+经常性PE = 当前市值 ÷ 经常性净利润<br><br>
+<b>典型案例</b>：三生国健（688336）2025年营收42亿（+252%），利润29亿（+317%），但其中约28亿是辉瑟授权首付款。剔除后经常性利润仅约2-3亿，TTM PE 18x→前瞻PE 80x。如果不做收入质量拆解，就会得出“PEG 0.06极便宜”的荒谬结论。
+</div>
+
+<h3>3.4 资本配置效率<span class="tag-new">v2.0 新增</span></h3>
+<p>管理层拿钱干什么？这反映管理层的资本配置能力和股东回报意愿。</p>
+<table>
+<tr><th>资本配置行为</th><th>正面信号</th><th>负面信号</th></tr>
+<tr><td>分红/回购</td><td>持续分红 + 回购注销</td><td>从不分红 + 反复增发稀释</td></tr>
+<tr><td>并购</td><td>产业协同 / 补强护城河</td><td>跨界多元化 / 高溢价收购</td></tr>
+<tr><td>融资</td><td>项目型融资（产能扩张）</td><td>补流性融资（填坑）</td></tr>
+<tr><td>资本开支</td><td>管控费用、提升人效</td><td>管理费用激增 / 员工人数膨胀</td></tr>
+</table>
+
+<div class="decision-box db-wait">
+  <b>决策门 ③ · 财务有红旗吗？收入质量如何？</b>
+  <span class="t-pass tag">通过</span> 四维全绿 + 增长质量 >1 + 经常性利润稳定 + 资本配置合理 → 进入第四步<br>
+  <span class="t-warn tag">警示</span> 1-2 项黄牌（如现金流偶尔 <1）/ 一次性收入占比高 → 谨慎继续，估值上要求更大折扣<br>
+  <span class="t-fail tag">否决</span> 出现红旗（经营现金流长期为负 / ROIC<资金成本 / 财务疑点 / 经常性利润持续下滑） → <b>放弃</b>
+</div>
+
+<!-- ==================== 第四步 ==================== -->
+<h2 id="s4"><span class="num">4</span>第四步 · 估值与定价 + 隐含预期拆解</h2>
+
+<p><b>目标</b>：回答四件事——该用什么估值方法、当前估值反映了市场什么预期、当前价格相对合理价值是贵还是便宜、这个估值方法对这家公司是否有盲区。<b>取数务必拉 5-10 年历史</b>算分位，3 年看不出估值中枢。</p>
+
+<h3>4.1 公司类型 → 估值方法选择</h3>
+<table>
+<tr><th>公司类型</th><th>特征</th><th>主用方法</th><th>辅助验证</th></tr>
+<tr><td><b>高成长</b></td><td>增速>25%、赛道新</td><td>PEG / PS / EV-EBITDA</td><td>PE（看增速匹配）</td></tr>
+<tr><td><b>稳健成长</b></td><td>增速 10-25%、护城河稳</td><td>PE / PEG</td><td>DCF</td></tr>
+<tr><td><b>周期</b></td><td>盈利随周期大起大落</td><td>PB / 周期中枢 PE</td><td>盈利拐点判断</td></tr>
+<tr><td><b>价值/成熟</b></td><td>增速<10%、现金流稳</td><td>PE / PB / 股息率</td><td>DDM</td></tr>
+<tr><td><b>平台/金融</b></td><td>多业务线、资产负债驱动</td><td>分部估值（SOTP）/ DCF</td><td>P/AUM（金融）</td></tr>
+<tr style="background:var(--amber-bg)"><td><b>Biotech/早期亏损</b><span class="tag-new"></span></td><td>管线驱动价值、无利润或利润波动大</td><td>rNPV（风险调整净现值）/ 管线期权估值</td><td>PS / 同业BD交易对标</td></tr>
+<tr style="background:var(--amber-bg)"><td><b>周期拐点</b><span class="tag-new"></span></td><td>从亏损向盈利转变、或反之</td><td>正常化盈利的PE / EV-EBITDA</td><td>周期中枢PB</td></tr>
+</table>
+<p class="mini">橙色行为v2.0新增的特殊公司类型。对这类公司，常规PE/PEG框架会产生严重误导。</p>
+
+<h3>4.2 估值位置三重判断</h3>
+<div class="grid3">
+  <div class="card">
+    <h4 style="color:var(--blue)">① 历史纵向分位</h4>
+    <p class="mini">当前 PE/PB 在近 5 年所处的百分位</p>
+    <p><span class="tag t-pass"><30% 偏低</span><br><span class="tag t-warn">30-70% 中性</span><br><span class="tag t-fail">>70% 偏高</span></p>
+  </div>
+  <div class="card">
+    <h4 style="color:var(--blue)">② 行业横向对比</h4>
+    <p class="mini">与同业可比公司比 PE/PB</p>
+    <p>低于行业中位 + 质地更好 → 折价机会<br>高于同行但增速更快 → 需 PEG 验证合理性</p>
+  </div>
+  <div class="card">
+    <h4 style="color:var(--blue)">③ 预期拆解</h4>
+    <p class="mini">当前股价隐含了什么预期</p>
+    <p>高估值隐含高增速/景气持续<br>低估值隐含周期下行/治理折价<br><b>说清"已定价什么"是关键</b></p>
+  </div>
+</div>
+
+<h3>4.3 三情景估值法 → 目标价区间</h3>
+<p>不要给单一目标价，给 Bear / Base / Bull 三情景，分别对应悲观 / 中性 / 乐观假设，最后加权（如 25% / 50% / 25%）得到合理价值中枢。</p>
+
+<div id="chart-valuation" style="width:100%;height:320px;"></div>
+
+<table>
+<tr><th>情景</th><th>假设（增速/利率/份额）</th><th>估值方法</th><th>对应目标价</th><th>较现价空间</th></tr>
+<tr><td><span class="tag t-fail">Bear 悲观</span></td><td>增速下修 / 景气下行</td><td>______</td><td>____ 元</td><td class="t-fail">____%</td></tr>
+<tr><td><span class="tag t-info">Base 中性</span></td><td>维持当前趋势</td><td>______</td><td>____ 元</td><td>+____%</td></tr>
+<tr><td><span class="tag t-pass">Bull 乐观</span></td><td>超预期 / 逻辑重估</td><td>______</td><td>____ 元</td><td class="t-pass">+____%</td></tr>
+<tr style="background:#f5f6f8;font-weight:700"><td>加权合理价值</td><td colspan="2">25% / 50% / 25%</td><td>____ 元</td><td>+____%</td></tr>
+</table>
+
+<div class="note"><b>DCF 参数边界</b>（若用 DCF）：WACC 通常 8%-12%，永续增长率 2%-3%（不超过 GDP 增速）；terminal value 占比 >70% 要警示（说明估值过度依赖远期假设）。务必做敏感性分析。</div>
+
+<h3>4.4 反向DCF / 隐含预期拆解<span class="tag-new">v2.0 新增</span></h3>
+<p>正向估值是“我认为值多少”，反向DCF是“市场认为值多少”。二者对比才能发现预期差。</p>
+<div class="formula">
+<b>反向DCF逻辑</b><br>
+当前市值 = 未来现金流的折现值<br>
+→ 反推市场隐含的永续增长率和近期增速<br>
+→ 对比自己的判断：市场隐含的增速是否合理？<br><br>
+如果市场隐含增速 = 5%，你认为可达 15% → 预期差在你（低估）<br>
+如果市场隐含增速 = 20%，你认为只能 10% → 预期差在市场（高估）
+</div>
+<p class="mini">实操方法：用当前市值反推DCF模型，得到隐含的近期增速和永续增长率，再判断这个增速是否可实现。也可以用更简单的PEG反推：当前PE ÷ 合理增速 = PEG，PEG<1说明市场低估了增速。</p>
+
+<h3>4.5 估值方法适用性检验<span class="tag-new">v2.0 新增</span></h3>
+<p>每种估值方法都有盲区。在用某种方法得出“便宜”或“贵”的结论前，先检验该方法对这家公司是否有效。</p>
+<table>
+<tr><th>估值方法</th><th>适用场景</th><th>失效场景</th><th>替代方法</th></tr>
+<tr><td><b>PE / PEG</b></td><td>稳定盈利的成长型公司</td><td>周期股、亏损公司、利润含大量一次性收入</td><td>PB / 周期中枢PE / rNPV</td></tr>
+<tr><td><b>PB</b></td><td>重资产、金融、周期股</td><td>轻资产公司（PB失去意义）</td><td>PE / PS</td></tr>
+<tr><td><b>PS</b></td><td>亏损但增长快的公司</td><td>利润率极低且无改善趋势</td><td>EV-EBITDA / PEG</td></tr>
+<tr><td><b>DCF</b></td><td>现金流可预测的成熟公司</td><td>现金流为负或极不稳定</td><td>相对估值法</td></tr>
+<tr><td><b>rNPV</b></td><td>Biotech管线估值</td><td>已有成熟产品的公司</td><td>PE / PS</td></tr>
+</table>
+<div class="note note-warn"><b>核心原则</b>：如果估值方法选错，结论一定错。典型错误：用PE估值周期股（周期顶点PE低但其实是卖点）、用PE估值Biotech（利润不能反映管线价值）、用PE估值含一次性收入的公司（如三生国健）。</div>
+
+<div class="decision-box db-wait">
+  <b>决策门 ④ · 当前价格有性价比吗？估值方法适用吗？</b>
+  <span class="t-pass tag">通过</span> 加权合理价值较现价有 >20% 上行空间 + 历史分位 <50% + 估值方法适用 + 反向DCF隐含增速可实现 → 进入第五步（可买入）<br>
+  <span class="t-warn tag">警示</span> 上行空间 10-20% / 分位中性 / 估值方法有局限 → 观望，等回调或基本面强化<br>
+  <span class="t-fail tag">否决</span> 上行空间 <10% / 分位 >70% / 已透支预期 / 估值方法不适用 → <b>不买，等更低价或放弃</b>
+</div>
+
+<!-- ==================== 第五步 ==================== -->
+<h2 id="s5"><span class="num">5</span>第五步 · 交易计划与风控（含技术形态）</h2>
+
+<p><b>目标</b>：把"值得买的结论"变成"可执行的单子"——明确什么价位买、买多少、什么价位卖、什么条件止损。<b>没有止损位的计划不是计划。</b></p>
+
+<h3>5.1 先判断当前交易位置 + 形态分析<span class="tag-new">原改进方法升级</span><span class="tag-new" style="background:var(--teal-bg);color:var(--teal);border-color:var(--teal)">v2.1 资金流向</span></h3>
+<p>前四步解决了"买什么"和"值多少"，这一步解决"何时扣动扳机"。形态分析不是独立步骤，而是内嵌在交易位置判断中，使买点更具象化。<b>形态只有配合量能才有意义——量在价先。</b></p>
+<table>
+<tr><th>位置</th><th>基本特征</th><th>典型形态</th><th>量能信号</th><th>微观筹码/资金流向 <span class="tag-new" style="background:var(--teal-bg);color:var(--teal);border-color:var(--teal)">v2.1</span></th><th>策略倾向</th></tr>
+<tr><td><b>低位启动</b><br>（试错仓介入）</td><td>长期下跌后横盘</td><td><b>筑底形态</b>：W底、头肩底、圆弧底</td><td>放量突破颈线 + 30日低点</td><td>ETF净流入 / 龙虎榜机构买盘</td><td>试错仓介入；右侧放量突破颈线是最佳买点</td></tr>
+<tr><td><b>趋势中继</b><br>（回调加仓）</td><td>上升趋势中回调</td><td><b>整理形态</b>：上升旗形、箱体震荡、上升三角形</td><td>缩量回踩形态下沿 + 5/20日线</td><td>北向/南向资金连续净流入 + 持股比例上升</td><td>回调加仓；缩量回踩形态下沿是低吸买点</td></tr>
+<tr><td><b>高位加速</b></td><td>连续大涨后加速</td><td>无明确形态，纯粹情绪</td><td>远离5日线 + 放量急升</td><td>—</td><td>不追，等回踩</td></tr>
+<tr><td><b>高位震荡</b><br>（减仓/落袋）</td><td>高位横盘</td><td><b>顶部形态</b>：M头、头肩顶、高位放量长阴包阳</td><td>5日线走平 + 高换手(>15%)</td><td>主力资金净流出 / 龙虎榜机构卖盘</td><td>减仓 / 落袋；跌破颈线果断落袋</td></tr>
+<tr><td><b>下跌反抽</b></td><td>下跌后反弹</td><td>无明确形态，纯粹反弹</td><td>5日线下方 + 无量</td><td>—</td><td>不参与</td></tr>
+</table>
+
+<div class="note note-warn"><b>v2.1 资金流向确认原则</b>：① 形态突破必须有增量资金配合——单纯的形态突破如果没有量能放大和资金流入配合，常常演变成假突破；② A股核心资产/科技主线：观察ETF净流入、龙虎榜机构买盘作为右侧确认信号；③ 港股通标的：观察南向资金连续净流入且持股比例上升作为突破确认；④ 资金流向与形态共振时方可重仓，资金流向与形态背离时降低仓位或观望。</div>
+
+<div class="note"><b>形态分析使用原则</b>：① 形态只是辅助工具，不能取代基本面——基本面不过关的公司，形态再好也不买；② 多级别共振：日线和周线形态共振时信号最强；③ 设定形态失败的应对方案：假突破（突破后缩量跌回）应在3日内认错止损，不扛单。</div>
+
+<h3>5.2 买入：分仓路径（不要一把梭）</h3>
+<table>
+<tr><th>阶段</th><th>仓位</th><th>触发条件</th></tr>
+<tr><td>试错仓</td><td>10-20%</td><td>首次信号出现（逻辑催化 + 技术确认 + 形态验证）</td></tr>
+<tr><td>确认仓</td><td>+20-30%</td><td>走势符合预期（放量上行 / 站稳关键位）</td></tr>
+<tr><td>加仓仓</td><td>+20-30%</td><td>强势确认（突破前高 / 业绩兑现）</td></tr>
+<tr><td>上限</td><td>≤70%</td><td>极强势 + 环境支持（非满仓，留余地）</td></tr>
+</table>
+
+<h3>5.3 止损：三维止损框架 + 形态破位（核心风控）<span class="tag-new">原改进方法升级</span></h3>
+<div class="grid3">
+  <div class="card">
+    <h4 style="color:var(--red)">① 价格止损 + 形态破位</h4>
+    <p>跌破关键支撑位或幅度止损</p>
+    <p class="mini">• 跌破前低 / 20日线 / 关键位<br>• 核心形态破坏：突破箱体后缩量跌回（假突破）、跌破W底颈线<br>• 形态破坏时，哪亏不到5%也应执行纪律<br>• 幅度止损 -5% 至 -8%（按波动率调整）<br><b>确认方式要写清</b>：收盘破位 / 盘中破位 / 连续破位</p>
+  </div>
+  <div class="card">
+    <h4 style="color:var(--red)">② 逻辑止损</h4>
+    <p>核心催化失效则走人</p>
+    <p class="mini">• 利好落空 / 公告澄清<br>• 板块龙头跌停 / 板块跌 5%+<br>• 放量破位（量能放大 1.5 倍 + 破关键位）<br>• 业绩证伪买入逻辑</p>
+  </div>
+  <div class="card">
+    <h4 style="color:var(--red)">③ 时间止损</h4>
+    <p>横盘占用资金太久则退</p>
+    <p class="mini">• 短线 5-10 个交易日未验证<br>• 中线 1-2 个月未兑现逻辑<br>• 弱势震荡超阈值 → 降仓或退出<br>• 催化剂地图中的催化剂超期未兑现</p>
+  </div>
+</div>
+
+<div class="note"><b>止损纪律红线</b>：触发后<b>禁止重新评估持有理由</b>——评估应在触发前完成。最常见的亏损放大就是"触发止损后又找理由扛着"。同时区分<b>噪音 vs 真失效</b>：盘中插针快速收回通常是诱空，连续多日趋势性破位才是真失效。形态破坏是最客观的止损信号——它不依赖你的成本价或心态。</div>
+
+<h3>5.4 止盈：分批落袋 + 技术信号<span class="tag-new">原改进方法升级</span></h3>
+<ul class="checklist">
+  <li>到达 Base 目标价：卖出 1/3 回收成本，留底仓吃主升</li>
+  <li>到达 Bull 目标价：再卖 1/3，剩 1/3 做潜在第二段（设移动止损保护）</li>
+  <li>情绪止盈：换手 >15% + 放量滞涨 → 提前减仓</li>
+  <li><b>形态止盈（新增）</b>：出现<b>顶背离</b>（如MACD顶背离）或跌破上升趋势线 → 右侧减仓信号</li>
+  <li><b>形态破坏止盈（新增）</b>：跌破M头颈线 / 头肩顶颈线 + 换手率放大 → 果断落袋</li>
+  <li>若强势穿越 Bull 目标价：上调目标 + 移动止损跟随，不轻易下车</li>
+</ul>
+
+<h3>5.5 仓位计算公式 + 信心加权<span class="tag-new">v2.0 信心加权新增</span></h3>
+<div class="formula">
+  <b>仓位由可承受风险反推，不由主观信心正推</b><br><br>
+  单笔风险预算 = 账户总资金 × 单笔最大可承受亏损%（通常 1-2%）<br>
+  基础仓位 = 单笔风险预算 ÷ (买入价 - 止损价) ÷ 买入价<br><br>
+  <b>信心加权系数（v2.0新增）</b><br>
+  实际仓位 = 基础仓位 × 信心系数<br>
+  信心系数由五步决策门通过情况决定：<br>
+  &nbsp;&nbsp;• 四步全通过 + 形态共振 = 1.2（高信心，可适当加仓）<br>
+  &nbsp;&nbsp;• 三步通过 + 一步警示 = 1.0（标准仓位）<br>
+  &nbsp;&nbsp;• 两步通过 + 两步警示 = 0.5（低信心，仅试错仓）<br>
+  &nbsp;&nbsp;• 任一步否决 = 0（不买）<br><br>
+  例：账户 10 万，单笔最大亏 2%（2000 元），买入价 50 元，止损价 46 元（止损距离 8%）<br>
+  → 基础仓位 = 2000 ÷ 8% = 25,000 元（即账户 25%）<br>
+  → 若四步全通过 + 形态共振，实际仓位 = 25,000 × 1.2 = 30,000 元（30%）
+</div>
+<p class="mini">止损距离越远，仓位越小——而不是放宽纪律。没有止损位就无法计算仓位。信心加权不是说“感觉好就多买”，而是说“决策门通过越多，分析越充分，容错率越低，才能适当加仓”。</p>
+
+<h3>5.6 失效条件（高质量计划必备）</h3>
+<p>写下"什么情况出现就承认这笔交易错了"——避免死扛：</p>
+<ul class="checklist">
+  <li>催化证伪：核心利好未兑现 / 被公告澄清</li>
+  <li>板块转弱：龙头负反馈 / 板块退潮</li>
+  <li>放量破位：跌破关键位且量能放大</li>
+  <li>次日反馈差：买入后次日无延续 / 高开低走大阴</li>
+  <li>环境不支持：大盘转弱 / 风格切换不利于该类资产</li>
+  <li>形态破坏：核心形态颈线跌破（新增）</li>
+</ul>
+
+<!-- ==================== 风险因子矩阵 ==================== -->
+<h2 id="s6"><span class="num">⚠</span>风险因子矩阵<span class="new-badge">v2.0 新增</span><span class="new-badge" style="background:var(--teal);color:#fff">v2.1 估值锚失效</span></h2>
+
+<p>止损是被动的——触发后才执行。风险因子矩阵是主动的——在买入前就系统梳理“什么可能出错”，并预设应对方案。这是从“止损纪律”升级到“风险管理”的关键一步。</p>
+
+<table class="risk-matrix">
+<tr><th>风险类别</th><th>具体风险</th><th>发生概率</th><th>影响程度</th><th>预设应对</th></tr>
+<tr><td rowspan="2"><b>政策/监管</b></td><td>集采降价 / 反垄断调查</td><td class="risk-high">高</td><td class="risk-high">致命</td><td>评估集采后利润影响，调整Bear情景目标价</td></tr>
+<tr><td>行业规范收紧</td><td class="risk-med">中</td><td class="risk-med">严重</td><td>跟踪政策动态，设定政策止损线</td></tr>
+<tr><td rowspan="2"><b>竞争</b></td><td>携资跳入 / 价格战</td><td class="risk-med">中</td><td class="risk-high">严重</td><td>关注竞品动态，设定市占率下降阈值</td></tr>
+<tr><td>技术路线被替代</td><td class="risk-low">低</td><td class="risk-high">致命</td><td>定期评估技术趋势，设定逻辑止损条件</td></tr>
+<tr><td rowspan="2"><b>财务</b></td><td>现金流恶化</td><td class="risk-med">中</td><td class="risk-high">严重</td><td>监控季度现金流，设定现金流止损线</td></tr>
+<tr><td>资产负债率异常上升</td><td class="risk-low">低</td><td class="risk-med">严重</td><td>定期检查有息负债/现金比例</td></tr>
+<tr><td rowspan="2"><b>治理</b></td><td>大股东减持/质押</td><td class="risk-med">中</td><td class="risk-med">严重</td><td>监控股东动态，质押>50%则降仓</td></tr>
+<tr><td>管理层变动 / 关联交易</td><td class="risk-low">低</td><td class="risk-high">严重</td><td>跟踪公告，设定逻辑止损条件</td></tr>
+<tr><td rowspan="2"><b>宏观/市场</b></td><td>大盘系统性下跌</td><td class="risk-med">中</td><td class="risk-med">严重</td><td>设定大盘止损线（如指数跌破关键均线）</td></tr>
+<tr><td>风格切换（价值↔成长）</td><td class="risk-high">高</td><td class="risk-med">严重</td><td>关注市场风格信号，风格不匹则降仓</td></tr>
+<tr style="background:var(--teal-bg)"><td><b>估值锚失效</b><br><span class="tag-new" style="background:var(--teal-bg);color:var(--teal);border-color:var(--teal)">v2.1</span></td><td>市场审美/估值体系切换：缩量防御期资金抛弃PEG估值法，集体转向高股息DDM定价。即使标的成长性极好、估值分位处于历史极低位置（&lt;30%），也可能面临长期"估值锚失效"引发的杀估值</td><td class="risk-high">高</td><td class="risk-high">严重</td><td>当市场主线风格与持仓风格发生长周期背离（&gt;2个月）时，主动调降Base与Bear目标价；若持仓风格连续3个月跑输大盘，考虑切换至市场主线风格或减仓</td></tr>
+</table>
+
+<div class="note"><b>使用方法</b>：在填写决策卡时，同时填写风险矩阵。对每个“高概率×致命影响”的风险，必须写明确的预设应对方案（止损价 / 仓位调整 / 逻辑止损条件）。这样在风险发生时不需要临时决策，只需执行预案。</div>
+
+<!-- ==================== 决策卡模板 ==================== -->
+<h2 id="s7"><span class="num">★</span>决策卡模板（套用填写）</h2>
+
+<p>走完五步 + 风险矩阵后，把结论浓缩成这张卡——拿到就能下单。建议打印或存档，事后复盘用。</p>
+
+<div class="card" style="border:2px solid var(--blue)">
+<h3 style="color:var(--blue);margin-top:0">📋 个股交易决策卡 v2.1</h3>
+<div class="grid2">
+  <div>
+    <h4>标的</h4>
+    <div class="template-input empty"></div>
+    <h4>一句话投资逻辑（买的是什么）</h4>
+    <div class="template-input empty" style="min-height:60px"></div>
+    <h4>五步评估结论</h4>
+    <table style="margin:6px 0">
+      <tr><td>① 业务拆解+周期</td><td><span class="tag t-pass">通过</span> / <span class="tag t-warn">警示</span> / <span class="tag t-fail">否决</span></td></tr>
+      <tr><td>② 护城河+竞争</td><td><span class="tag t-pass">通过</span> / <span class="tag t-warn">警示</span> / <span class="tag t-fail">否决</span></td></tr>
+      <tr><td>③ 财务体检+收入质量</td><td><span class="tag t-pass">通过</span> / <span class="tag t-warn">警示</span> / <span class="tag t-fail">否决</span></td></tr>
+      <tr><td>④ 估值定价+隐含预期</td><td><span class="tag t-pass">通过</span> / <span class="tag t-warn">警示</span> / <span class="tag t-fail">否决</span></td></tr>
+      <tr><td>信心系数</td><td>0.5 / 1.0 / 1.2</td></tr>
+    </table>
+    <h4>催化剂地图（持有期内跟踪）</h4>
+    <table>
+      <tr><th>催化剂</th><th>预计时点</th><th>兑现?</th></tr>
+      <tr><td>______</td><td>______</td><td>☐</td></tr>
+      <tr><td>______</td><td>______</td><td>☐</td></tr>
+    </table>
+  </div>
+  <div>
+    <h4>关键价位（核心）</h4>
+    <table>
+      <tr><th>项目</th><th>价格</th><th>较现价</th><th>形态依据</th></tr>
+      <tr><td>当前价</td><td>____ 元</td><td>—</td><td>—</td></tr>
+      <tr><td>Bear 目标（止损参考）</td><td>____ 元</td><td class="t-fail">____%</td><td>—</td></tr>
+      <tr><td>Base 目标（止盈基准）</td><td><b>____ 元</b></td><td>+____%</td><td>—</td></tr>
+      <tr><td>Bull 目标（乐观）</td><td>____ 元</td><td class="t-pass">+____%</td><td>—</td></tr>
+      <tr style="background:#fef0f0"><td><b>止损价</b></td><td><b>____ 元</b></td><td class="t-fail">-____%</td><td>______</td></tr>
+      <tr style="background:#fff7e6"><td><b>形态破位参考价</b><span class="tag-new"></span></td><td><b>____ 元</b></td><td>-____%</td><td>跌破____形态颈线</td></tr>
+      <tr><td>建议买入区间</td><td>____ - ____ 元</td><td>—</td><td>突破____元箱体上沿</td></tr>
+    </table>
+    <h4>仓位与分仓</h4>
+    <table>
+      <tr><th>阶段</th><th>仓位</th><th>触发条件</th></tr>
+      <tr><td>试错仓</td><td>____%（____ 元）</td><td>______</td></tr>
+      <tr><td>确认仓</td><td>+____%（触发：______）</td><td>______</td></tr>
+      <tr><td>加仓仓</td><td>+____%（触发：______）</td><td>______</td></tr>
+      <tr><td>合计上限</td><td>____% × 信心系数</td><td>实际 = ____%</td></tr>
+    </table>
+  </div>
+</div>
+<h4>失效条件（任一触发即认错）</h4>
+<div class="template-input empty" style="min-height:50px"></div>
+<h4>风险因子矩阵（最高风险项）</h4>
+<table>
+<tr><th>风险</th><th>概率</th><th>影响</th><th>预设应对</th></tr>
+<tr><td>______</td><td>高/中/低</td><td>致命/严重/轻微</td><td>______</td></tr>
+<tr><td>______</td><td>高/中/低</td><td>致命/严重/轻微</td><td>______</td></tr>
+</table>
+<h4>监控清单（持有期间跟踪）</h4>
+<div class="template-input empty" style="min-height:50px"></div>
+<div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)">
+  <span class="tag t-pass">最终决策：买入</span> &nbsp; <span class="tag t-warn">观望等待</span> &nbsp; <span class="tag t-fail">放弃</span>
+  &nbsp;&nbsp;<span class="mini">| 制定日期：________ ｜ 复盘日期：________</span>
+</div>
+</div>
+
+<!-- ==================== 陷阱 ==================== -->
+<h2 id="s8"><span class="num">!</span>常见陷阱与红线</h2>
+
+<div class="grid2">
+<div class="card">
+<h4 style="color:var(--red)">🚫 分析阶段陷阱</h4>
+<ul class="checklist">
+  <li>只看 1-2 年数据就被周期误判——<b>至少拉 5 年</b></li>
+  <li>把"受益于行业景气"当投资逻辑——必须具体到影响路径</li>
+  <li>跨公司比 PE 不对齐财年口径（财年 vs 自然年）</li>
+  <li>高估值直接判"贵"——要看增速与质量是否匹配（PEG）</li>
+  <li>低估值直接判"便宜"——可能是价值陷阱（周期下行/治理差）</li>
+  <li>把研报当一手数据——研报需核实，优先采信交易所/年报</li>
+  <li><b>不区分经常性与一次性收入</b>——用含一次性收入的PE来估值会严重失真<span class="tag-new"></span></li>
+  <li><b>用错估值方法</b>——用PE估周期股/Biotech/亏损公司<span class="tag-new"></span></li>
+  <li><b>不看行业周期</b>——周期股顶点PE低是卖点不是买点<span class="tag-new"></span></li>
+</ul>
+</div>
+<div class="card">
+<h4 style="color:var(--red)">🚫 交易阶段陷阱</h4>
+<ul class="checklist">
+  <li>无止损位就买入——<b>没有止损就没有仓位计算</b></li>
+  <li>触发止损后又找理由扛——<b>评估应在触发前完成</b></li>
+  <li>用成本价/历史高点讨论止损——市场不关心你的成本</li>
+  <li>信心高就重仓——<b>仓位是风险决策不是方向决策</b></li>
+  <li>浮盈就盲目加码——加仓要逻辑强化 + 走势验证</li>
+  <li>把随机插针当破位——区分噪音与真失效</li>
+  <li><b>形态分析取代基本面</b>——形态只是辅助工具，基本面不过关不买<span class="tag-new"></span></li>
+  <li><b>形态信号不设应对方案</b>——假突破后死扛，应在3日内认错<span class="tag-new"></span></li>
+  <li><b>不做风险矩阵</b>——只有止损没有前置风险管理<span class="tag-new"></span></li>
+</ul>
+</div>
+</div>
+
+<div class="decision-box db-go">
+  <b>一句话总结</b>
+  本框架的精髓不在"找到会涨的股票"，而在<b>"先筛掉不该碰的，再筛掉太贵的，再拆解收入质量，最后把剩下的变成有纪律的单子"</b>。五步决策门逐级过滤，任何一步否决就不必往下——这比"分析完所有再决定"更省力也更安全。形态分析融入第五步后，"合理的估值"与"良好的技术图形"共振才是重仓出击的前提。严格执行止损纪律 + 风险矩阵前置防御 + 资金流向与形态共振确认，是把这个框架从"分析工具"变成"赚钱工具"的关键。
+</div>
+
+<footer>
+  股票通用分析框架 v2.1 · 适用于 A股 / 港股 / 美股中线投资决策<br>
+  v1.0 → v2.0：行业周期定位 / 催化剂地图 / 竞争对标 / 护城河侵蚀 / 收入质量拆解 / 资本配置效率 / 反向DCF / 估值适用性 / 技术形态 / 风险矩阵 / 信心加权<br>
+  v2.0 → v2.1：产能与技术周期 / 隐蔽性潜亏排雷 / 资金流向确认 / 估值锚失效风险<br>
+  本框架为方法论，不构成具体投资建议
+</footer>
+
+</div>
+
+<script>
+// 三情景估值示例图
+(function(){
+  var chart = echarts.init(document.getElementById('chart-valuation'));
+  chart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['当前价', 'Bear 悲观', 'Base 中性', 'Bull 乐观'], bottom: 0 },
+    grid: { left: '8%', right: '8%', top: '8%', bottom: '18%' },
+    xAxis: { type: 'category', data: ['示例公司 A\n(稳健成长)', '示例公司 B\n(高成长)', '示例公司 C\n(周期价值)', '示例公司 D\n(Biotech)'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '价格(元)', axisLabel: { fontSize: 11 } },
+    series: [
+      { name: '当前价', type: 'bar', barGap: 0, data: [50, 80, 15, 45], itemStyle: { color: '#8a8f99' } },
+      { name: 'Bear 悲观', type: 'bar', data: [42, 60, 12, 20], itemStyle: { color: '#d9303e' } },
+      { name: 'Base 中性', type: 'bar', data: [58, 95, 18, 55], itemStyle: { color: '#3370ff' } },
+      { name: 'Bull 乐观', type: 'bar', data: [68, 120, 22, 90], itemStyle: { color: '#2ba471' } }
+    ]
+  });
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+</body>
+</html>

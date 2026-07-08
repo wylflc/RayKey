@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>药明康德（603259）五步分析决策卡 · 2026-07-08</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2329; --sub:#646a73; --line:#e5e6eb;
+    --red:#d9303e; --red-bg:#fef0f0; --green:#2ba471; --green-bg:#eafaf3;
+    --amber:#d98014; --amber-bg:#fff7e6; --blue:#3370ff; --blue-bg:#eaf1ff;
+    --purple:#7c3aed; --purple-bg:#f3eefe; --teal:#0d9488; --teal-bg:#e6f7f5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 60px}
+  h1{font-size:24px;font-weight:700;margin-bottom:4px}
+  h2{font-size:19px;font-weight:700;margin:30px 0 12px;padding-bottom:7px;border-bottom:2px solid var(--line);display:flex;align-items:center;gap:10px}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--blue);color:#fff;border-radius:7px;font-size:14px}
+  h3{font-size:16px;font-weight:700;margin:18px 0 8px}
+  h4{font-size:14px;font-weight:600;margin:12px 0 6px;color:var(--sub)}
+  p{margin:6px 0}
+  .sub{color:var(--sub);font-size:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+  .lead{background:linear-gradient(135deg,#eaf1ff 0%,#f3eefe 100%);border:1px solid #d6e0ff;border-radius:12px;padding:18px 22px;margin:14px 0}
+  .lead .tldr{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:5px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;background:var(--card);border-radius:7px;overflow:hidden}
+  th{background:#f5f6f8;text-align:left;padding:8px 10px;font-weight:600;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11.5px;font-weight:600}
+  .t-pass{background:var(--green-bg);color:var(--green)}
+  .t-warn{background:var(--amber-bg);color:var(--amber)}
+  .t-fail{background:var(--red-bg);color:var(--red)}
+  .t-info{background:var(--blue-bg);color:var(--blue)}
+  .t-neutral{background:#f0f1f3;color:var(--sub)}
+  .decision-box{border-left:4px solid;padding:12px 16px;border-radius:0 7px 7px 0;margin:12px 0}
+  .db-go{border-color:var(--green);background:var(--green-bg)}
+  .db-wait{border-color:var(--amber);background:var(--amber-bg)}
+  .db-no{border-color:var(--red);background:var(--red-bg)}
+  .decision-box b{display:block;margin-bottom:3px;font-size:13.5px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+  .mini{font-size:12px;color:var(--sub)}
+  .checklist{list-style:none}
+  .checklist li{padding:5px 0 5px 22px;position:relative;border-bottom:1px dashed var(--line);font-size:13.5px}
+  .checklist li:last-child{border-bottom:none}
+  .checklist li:before{content:"\2713";position:absolute;left:0;color:var(--green);font-size:14px}
+  .formula{background:#f5f6f8;border:1px dashed var(--line);border-radius:5px;padding:8px 12px;margin:8px 0;font-family:"SF Mono",Consolas,monospace;font-size:12.5px}
+  .kpi-row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+  .kpi{flex:1;min-width:110px;background:#f9fafb;border:1px solid var(--line);border-radius:7px;padding:10px 12px}
+  .kpi .v{font-size:18px;font-weight:700;color:var(--blue)}
+  .kpi .l{font-size:11px;color:var(--sub);margin-top:2px}
+  .note{font-size:12px;color:var(--sub);background:#fafbfc;border-left:3px solid var(--line);padding:7px 10px;margin:8px 0;border-radius:0 4px 4px 0}
+  .note-warn{border-left-color:var(--amber);background:var(--amber-bg);color:var(--ink)}
+  .decision-card{border:2px solid var(--blue);border-radius:12px;padding:18px 20px;margin:14px 0;background:#fcfdff}
+  .src{font-size:11px;color:var(--sub);font-style:italic}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);text-align:center;color:var(--sub);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>药明康德（603259）五步分析决策卡</h1>
+<p class="sub">基于《股票通用分析框架 v2.1》｜分析日期：2026-07-08｜数据来源：westock-data 实时行情 + 财报 + 知乎深度研报（2026-06-24）</p>
+
+<div class="lead">
+  <div class="tldr">TL;DR · 核心结论</div>
+  <p><b>值得买入。</b>药明康德五步决策门全部通过，信心系数 <b>1.2（高信心）</b>。CRDMO 一体化平台护城河深厚（ROIC 22%），2025 年业绩强势复苏（净利+102.6%），2026Q1 持续高增（营收+28.8%）。当前 PE TTM 17.1 处于历史极低位（<10% 分位），市场过度定价了地缘政治风险。三情景加权合理价值 <b>142 元</b>，较现价 115.4 元有 <b>+23%</b> 上行空间。建议在 <b>108-115 元</b> 回调区间分仓买入，止损 <b>100 元</b>。</p>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="v">115.4 元</div><div class="l">当前价（2026-07-08）</div></div>
+  <div class="kpi"><div class="v">17.1x</div><div class="l">PE TTM</div></div>
+  <div class="kpi"><div class="v">3443 亿</div><div class="l">总市值</div></div>
+  <div class="kpi"><div class="v">+102.6%</div><div class="l">2025归母净利增速</div></div>
+  <div class="kpi"><div class="v">22.06%</div><div class="l">ROIC（当前）</div></div>
+</div>
+
+<!-- ==================== 第一步 ==================== -->
+<h2><span class="num">1</span>第一步 · 业务拆解 + 行业周期定位</h2>
+
+<h3>1.1 公司画像与赚钱逻辑</h3>
+<div class="grid2">
+<div class="card">
+<h4>公司画像</h4>
+<ul class="checklist">
+  <li>主营：CRDMO 一体化平台（合同研究、开发、生产）</li>
+  <li>业务板块：化学业务（WuXi Chemistry，主体）、测试、生物学、TIDES（多肽/寡核苷酸）</li>
+  <li>客户：全球药企 + 生物科技公司，美国市场收入占比 60-66%</li>
+  <li>产业链位置：CXO（医药研发外包）中游，端到端服务商</li>
+  <li>董事长：李革博士（创始人），2018 年 A 股上市</li>
+</ul>
+</div>
+<div class="card">
+<h4>赚钱逻辑</h4>
+<ul class="checklist">
+  <li>商业模式：高毛利（47.6%→50.4%）+ 规模效应，轻资产重人力</li>
+  <li>增长来源：TIDES 业务爆发（GLP-1 减肥药需求）+ 存量业务复苏</li>
+  <li>客户粘性：一体化平台使切换成本极高，续约率强</li>
+  <li>关键变量：地缘政治风险演变 + TIDES 产能释放节奏</li>
+</ul>
+</div>
+</div>
+
+<h3>1.2 行业周期定位</h3>
+<table>
+<tr><th>维度</th><th>判断</th><th>依据</th></tr>
+<tr><td>生命周期</td><td><span class="tag t-pass">成长期</span></td><td>全球新药研发持续增长，CXO 外包渗透率提升中</td></tr>
+<tr><td>TIDES 子周期</td><td><span class="tag t-pass">高速成长期</span></td><td>GLP-1 药物（司美格鲁肽等）需求爆发，多肽产能稀缺</td></tr>
+<tr><td>产能周期</td><td><span class="tag t-warn">扩产期末尾</span></td><td>公司 CapEx 从扩张转向聚焦效率，需警惕行业产能过剩</td></tr>
+<tr><td>政策周期</td><td><span class="tag t-warn">风险窗口期</span></td><td>生物安全法案温和化，但 BINSA 新法案 + 1260H 清单仍待解</td></tr>
+</table>
+
+<h3>1.3 催化剂地图</h3>
+<table>
+<tr><th>催化剂</th><th>预计时点</th><th>影响</th><th>已定价?</th></tr>
+<tr><td>2026 中报业绩兑现</td><td>2026-08</td><td>高</td><td>部分</td></tr>
+<tr><td>1260H 清单诉讼结果</td><td>2026 H2</td><td>高</td><td>否</td></tr>
+<tr><td>TIDES 产能释放 + 新订单</td><td>持续</td><td>高</td><td>否</td></tr>
+<tr><td>BINSA 法案进展</td><td>2026-2027</td><td>高（风险）</td><td>部分</td></tr>
+</table>
+
+<div class="decision-box db-go">
+  <b>决策门 ① · 通过</b>
+  <span class="tag t-pass">通过</span> 业务看得懂（CRDMO 一体化），周期定位清楚（成长期+TIDES爆发），催化剂明确（中报+诉讼+TIDES）→ 进入第二步
+</div>
+
+<!-- ==================== 第二步 ==================== -->
+<h2><span class="num">2</span>第二步 · 护城河与竞争格局评估</h2>
+
+<h3>2.1 护城河五力自检</h3>
+<table>
+<tr><th>护城河类型</th><th>判定</th><th>依据</th></tr>
+<tr><td><b>转换成本</b></td><td><span class="tag t-pass">强</span></td><td>CRDMO 端到端平台，客户切换供应商代价极高（项目中断+质量风险）</td></tr>
+<tr><td><b>规模/成本优势</b></td><td><span class="tag t-pass">强</span></td><td>数万研发人员 + 数千并行项目，固定成本被庞大项目基数摊薄</td></tr>
+<tr><td><b>品牌/无形资产</b></td><td><span class="tag t-warn">中</span></td><td>全球顶级药企认可，但 CXO 行业品牌溢价有限</td></tr>
+<tr><td><b>网络效应</b></td><td><span class="tag t-fail">弱</span></td><td>非平台型网络效应</td></tr>
+</table>
+
+<h3>2.2 质地量化（近 5 年）</h3>
+<div class="kpi-row">
+  <div class="kpi"><div class="v">22.06%</div><div class="l">ROIC（当前）<br>2023年13.88%→持续提升</div></div>
+  <div class="kpi"><div class="v">41.5%</div><div class="l">ROE（2025）<br>远超15%门槛</div></div>
+  <div class="kpi"><div class="v">172 亿</div><div class="l">经营现金流（2025）<br>FCFE 125.7亿</div></div>
+  <div class="kpi"><div class="v">全球龙头</div><div class="l">CXO 市占率<br>国内第一</div></div>
+</div>
+
+<h3>2.3 管理层与治理</h3>
+<ul class="checklist">
+  <li>李革博士创始团队稳定，专业能力强</li>
+  <li>2025 年股东回报 87.55 亿（分红 47.12 亿+回购），占归母净利近半 → 资本配置优秀</li>
+  <li>1260H 清单主动提起诉讼维权 → 管理层有担当</li>
+  <li>并购聚焦主业（CRDMO 能力补强），无盲目多元化</li>
+</ul>
+
+<h3>2.4 护城河侵蚀风险</h3>
+<table>
+<tr><th>侵蚀因素</th><th>概率</th><th>影响</th><th>对冲措施</th></tr>
+<tr><td>地缘政治（美国市场限制）</td><td><span class="tag t-warn">中</span></td><td><span class="tag t-fail">致命</span></td><td>全球化产能布局（新加坡/美国/瑞士）</td></tr>
+<tr><td>行业产能过剩</td><td><span class="tag t-warn">中</span></td><td><span class="tag t-warn">严重</span></td><td>TIDES 差异化产能稀缺性</td></tr>
+<tr><td>技术替代</td><td><span class="tag t-pass">低</span></td><td><span class="tag t-fail">致命</span></td><td>持续研发投入</td></tr>
+</table>
+
+<div class="decision-box db-go">
+  <b>决策门 ② · 通过</b>
+  <span class="tag t-pass">通过</span> 2 条护城河"强"（转换成本+规模）+ ROIC 22%>15% + 管理层优秀 + 侵蚀风险有对冲 → 进入第三步
+</div>
+
+<!-- ==================== 第三步 ==================== -->
+<h2><span class="num">3</span>第三步 · 财务体检 + 收入质量</h2>
+
+<h3>3.1 四维体检表</h3>
+<table>
+<tr><th>维度</th><th>指标</th><th>数值</th><th>判断</th></tr>
+<tr><td rowspan="2"><b>成长性</b></td><td>营收增速（2025）</td><td>+15.8%（454.56亿）</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td>归母净利增速（2025）</td><td>+102.6%（191.51亿）</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td rowspan="3"><b>盈利能力</b></td><td>毛利率</td><td>47.6%→50.4%（2026Q1提升）</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td>净利率</td><td>42.1%</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td>ROE / ROIC</td><td>41.5% / 22.06%</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td rowspan="2"><b>现金流</b></td><td>经营现金流/净利润</td><td>89.8%（172/191.5）</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td>自由现金流（FCFE）</td><td>125.7 亿（持续为正）</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td rowspan="2"><b>资产负债</b></td><td>资产负债率</td><td>51.6%</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td>现金/有息负债</td><td>351 亿 / 84 亿（现金远超负债）</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td rowspan="3" style="background:var(--teal-bg)"><b>隐蔽性潜亏</b></td><td>存货跌价</td><td>存货 89.93 亿（占资产 11%，正常）</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td>应收账龄</td><td>应收 72.81 亿（占营收 16%，合理）</td><td><span class="tag t-pass">绿</span></td></tr>
+<tr><td>商誉减值</td><td>商誉 8.64 亿（占净资产 1.9%，极低）</td><td><span class="tag t-pass">绿</span></td></tr>
+</table>
+
+<h3>3.2 收入质量拆解</h3>
+<div class="note note-warn"><b>关键结论</b>：2025 年净利+102.6% 主要来自经营杠杆释放（新冠订单退潮后效率提升）+ TIDES 业务放量，<b>非一次性收入</b>。经营现金流/净利润 89.8%，利润含金量高。2026Q1 营收+28.8%（持续经营+39.4%），增长可持续。</div>
+
+<div class="decision-box db-go">
+  <b>决策门 ③ · 通过</b>
+  <span class="tag t-pass">通过</span> 四维全绿 + 隐蔽性潜亏无红旗 + 收入质量高（经常性收入为主）+ 增长质量高 → 进入第四步
+</div>
+
+<!-- ==================== 第四步 ==================== -->
+<h2><span class="num">4</span>第四步 · 估值定价 + 隐含预期</h2>
+
+<h3>4.1 估值位置</h3>
+<table>
+<tr><th>维度</th><th>数值</th><th>判断</th></tr>
+<tr><td>PE TTM</td><td>17.1x</td><td><span class="tag t-pass">历史 <10% 分位（极低）</span></td></tr>
+<tr><td>PE 前瞻</td><td>18.51x</td><td>—</td></tr>
+<tr><td>PB</td><td>4.33x</td><td>—</td></tr>
+<tr><td>行业横向</td><td>CXO 行业均值 25-30x</td><td><span class="tag t-pass">明显折价</span></td></tr>
+<tr><td>隐含预期</td><td>市场隐含未来5年增速 5-8%</td><td><span class="tag t-warn">过度悲观</span></td></tr>
+<tr><td>实际增速</td><td>2026Q1 +28.8%</td><td><span class="tag t-pass">远超隐含</span></td></tr>
+</table>
+<p class="src">来源：westock-data 实时行情（2026-07-08）+ 知乎深度研报（2026-06-24）</p>
+
+<h3>4.2 三情景估值 → 目标价</h3>
+<div id="chart-valuation" style="width:100%;height:300px;"></div>
+
+<table>
+<tr><th>情景</th><th>核心假设</th><th>2026E净利</th><th>PE</th><th>目标价</th><th>较现价</th></tr>
+<tr><td><span class="tag t-fail">Bear 悲观</span></td><td>地缘政治恶化，美国业务萎缩50%</td><td>100 亿</td><td>15x</td><td><b>50 元</b></td><td class="t-fail">-56.7%</td></tr>
+<tr><td><span class="tag t-info">Base 中性</span></td><td>地缘政治可控，业务+20%增长</td><td>230 亿</td><td>20x</td><td><b>154 元</b></td><td>+33.4%</td></tr>
+<tr><td><span class="tag t-pass">Bull 乐观</span></td><td>风险缓和+TIDES放量，+30%</td><td>250 亿</td><td>25x</td><td><b>210 元</b></td><td class="t-pass">+82.0%</td></tr>
+<tr style="background:#f5f6f8;font-weight:700"><td>加权合理价值</td><td colspan="3">25% / 50% / 25%</td><td><b>142 元</b></td><td>+23.1%</td></tr>
+</table>
+
+<h3>4.3 反向 DCF 拆解</h3>
+<div class="formula">
+当前市值 3443 亿 ÷ 2025 净利 191.5 亿 = PE 17.1x<br>
+→ 市场隐含未来 5 年复合增速仅 5-8%（极保守）<br>
+→ 实际：2026Q1 营收+28.8%，管理层指引全年+20%以上<br>
+→ <b>预期差在市场（低估了增速和对冲能力）</b>
+</div>
+
+<div class="decision-box db-go">
+  <b>决策门 ④ · 通过</b>
+  <span class="tag t-pass">通过</span> 加权合理价值 142 元较现价+23% + 历史分位<10% + PE/PEG 适用 + 反向DCF隐含增速远低于实际 → 进入第五步（可买入）
+</div>
+
+<!-- ==================== 第五步 ==================== -->
+<h2><span class="num">5</span>第五步 · 交易计划与风控</h2>
+
+<h3>5.1 当前交易位置</h3>
+<div id="chart-kline" style="width:100%;height:340px;"></div>
+<table>
+<tr><th>判断项</th><th>结论</th></tr>
+<tr><td>位置</td><td><span class="tag t-info">趋势中继回调</span>——6/24放量突破，7/1冲高129.15，近两日缩量回调至115.4</td></tr>
+<tr><td>MACD</td><td>DIF 5.35 > DEA 5.07，多头排列但柱体缩小（0.557）</td></tr>
+<tr><td>量能</td><td>量比 0.6（缩量回调，健康）</td></tr>
+<tr><td>关键支撑</td><td>20日线 ~110-112 / 突破平台 106.9 / 前期平台 100</td></tr>
+<tr><td>关键阻力</td><td>7/1 高点 129.15（52周新高）</td></tr>
+</table>
+
+<h3>5.2 买入分仓路径</h3>
+<table>
+<tr><th>阶段</th><th>仓位</th><th>触发条件</th><th>价位</th></tr>
+<tr><td>试错仓</td><td>15%</td><td>回调至20日线附近 + 缩量企稳</td><td>108-112 元</td></tr>
+<tr><td>确认仓</td><td>+25%</td><td>放量站稳 115 + MACD 柱体重新放大</td><td>115-118 元</td></tr>
+<tr><td>加仓仓</td><td>+25%</td><td>突破前高 129.15 + 放量</td><td>130+ 元</td></tr>
+<tr><td>合计上限</td><td>65%</td><td>—</td><td>—</td></tr>
+</table>
+
+<h3>5.3 止损：三维框架</h3>
+<div class="grid3">
+<div class="card">
+<h4 style="color:var(--red)">① 价格止损</h4>
+<p class="mini"><b>止损价：100 元</b>（-13.4%）<br>跌破6月初平台支撑<br>确认方式：收盘跌破100元<br>或幅度止损-8%（约106元）取先触发者</p>
+</div>
+<div class="card">
+<h4 style="color:var(--red)">② 逻辑止损</h4>
+<p class="mini">1260H 诉讼败诉 / BINSA 法案通过且限制严厉 / 业绩增速降至<15% / 板块龙头负反馈</p>
+</div>
+<div class="card">
+<h4 style="color:var(--red)">③ 时间止损</h4>
+<p class="mini">3个月内未突破前高129.15 → 降仓50%<br>6个月内催化剂未兑现 → 退出</p>
+</div>
+</div>
+
+<h3>5.4 止盈规则</h3>
+<ul class="checklist">
+  <li>到达 Base 目标 154 元：卖出 1/3 回收成本</li>
+  <li>到达 Bull 目标 210 元：再卖 1/3，剩 1/3 移动止损跟随</li>
+  <li>情绪止盈：换手>15% + 放量滞涨 → 提前减仓</li>
+  <li>形态止盈：出现 MACD 顶背离 / 跌破上升趋势线 → 右侧减仓</li>
+</ul>
+
+<h3>5.5 仓位计算</h3>
+<div class="formula">
+账户 10 万，单笔最大亏 2%（2000 元）<br>
+买入价 112 元，止损价 100 元（止损距离 10.7%）<br>
+基础仓位 = 2000 ÷ 10.7% = 18,692 元（约 19%）<br>
+信心系数 1.2（四步全通过 + 形态共振）<br>
+<b>实际仓位 = 18,692 × 1.2 = 22,430 元（约 22%）</b>
+</div>
+
+<!-- ==================== 风险矩阵 ==================== -->
+<h2><span class="num">⚠</span>风险因子矩阵</h2>
+<table>
+<tr><th>风险</th><th>概率</th><th>影响</th><th>预设应对</th></tr>
+<tr><td><b>地缘政治</b>（BINSA/1260H）</td><td style="color:var(--red);font-weight:700">高</td><td style="color:var(--red);font-weight:700">致命</td><td>止损100元；诉讼败诉即减仓50%</td></tr>
+<tr><td><b>行业产能过剩</b></td><td style="color:var(--amber);font-weight:700">中</td><td style="color:var(--amber);font-weight:700">严重</td><td>跟踪CapEx增速；价格战启动降仓</td></tr>
+<tr><td><b>估值锚失效</b></td><td style="color:var(--amber);font-weight:700">中</td><td style="color:var(--amber);font-weight:700">严重</td><td>CXO板块连续3月跑输大盘则切换</td></tr>
+<tr><td><b>TIDES增速放缓</b></td><td style="color:var(--green);font-weight:700">低</td><td style="color:var(--amber);font-weight:700">严重</td><td>跟踪季度TIDES收入增速</td></tr>
+<tr><td><b>大盘系统性风险</b></td><td style="color:var(--amber);font-weight:700">中</td><td style="color:var(--amber);font-weight:700">严重</td><td>指数跌破关键均线则降仓</td></tr>
+</table>
+
+<!-- ==================== 决策卡 ==================== -->
+<h2><span class="num">★</span>决策卡（已填写）</h2>
+
+<div class="decision-card">
+<h3 style="color:var(--blue);margin-top:0">📋 药明康德（603259）交易决策卡</h3>
+<div class="grid2">
+  <div>
+    <h4>标的</h4>
+    <p><b>药明康德 sh603259</b>｜市值 3443 亿｜医药生物/CXO</p>
+    <h4>一句话投资逻辑</h4>
+    <p>买的是 <b>CRDMO 一体化平台的护城河 + TIDES 业务爆发期 + 地缘政治风险过度定价的修复</b>。市场用 17x PE 定价了 5-8% 增速，实际增速 28%+，预期差显著。</p>
+    <h4>五步评估结论</h4>
+    <table style="margin:5px 0">
+      <tr><td>① 业务拆解+周期</td><td><span class="tag t-pass">通过</span></td></tr>
+      <tr><td>② 护城河+竞争</td><td><span class="tag t-pass">通过</span></td></tr>
+      <tr><td>③ 财务体检+收入质量</td><td><span class="tag t-pass">通过</span></td></tr>
+      <tr><td>④ 估值定价+隐含预期</td><td><span class="tag t-pass">通过</span></td></tr>
+      <tr><td>信心系数</td><td><b>1.2（高信心）</b></td></tr>
+    </table>
+    <h4>催化剂地图</h4>
+    <table>
+      <tr><th>催化剂</th><th>预计时点</th><th>兑现?</th></tr>
+      <tr><td>2026中报业绩</td><td>2026-08</td><td>☐</td></tr>
+      <tr><td>1260H诉讼结果</td><td>2026 H2</td><td>☐</td></tr>
+      <tr><td>TIDES产能释放</td><td>持续</td><td>☐</td></tr>
+    </table>
+  </div>
+  <div>
+    <h4>关键价位</h4>
+    <table>
+      <tr><th>项目</th><th>价格</th><th>较现价</th><th>依据</th></tr>
+      <tr><td>当前价</td><td><b>115.4 元</b></td><td>—</td><td>2026-07-08收盘</td></tr>
+      <tr><td>Bear 目标</td><td>50 元</td><td class="t-fail">-56.7%</td><td>美国业务萎缩50%+PE15x</td></tr>
+      <tr><td>Base 目标</td><td><b>154 元</b></td><td>+33.4%</td><td>净利230亿+PE20x</td></tr>
+      <tr><td>Bull 目标</td><td>210 元</td><td class="t-pass">+82.0%</td><td>净利250亿+PE25x</td></tr>
+      <tr style="background:#f5f6f8"><td><b>加权合理价值</b></td><td><b>142 元</b></td><td>+23.1%</td><td>25/50/25加权</td></tr>
+      <tr style="background:#fef0f0"><td><b>止损价</b></td><td><b>100 元</b></td><td class="t-fail">-13.4%</td><td>6月初平台支撑</td></tr>
+      <tr><td>建议买入区间</td><td><b>108-115 元</b></td><td>—</td><td>回调至20日线附近</td></tr>
+    </table>
+    <h4>仓位与分仓</h4>
+    <table>
+      <tr><th>阶段</th><th>仓位</th><th>触发</th></tr>
+      <tr><td>试错仓</td><td>15%（~1.7万）</td><td>108-112元缩量企稳</td></tr>
+      <tr><td>确认仓</td><td>+25%</td><td>站稳115+放量</td></tr>
+      <tr><td>加仓仓</td><td>+25%</td><td>突破129.15</td></tr>
+      <tr><td>合计上限</td><td>65%</td><td>—</td></tr>
+    </table>
+  </div>
+</div>
+<h4>失效条件（任一触发即认错）</h4>
+<p>① 收盘跌破 100 元 ② 1260H 诉讼败诉 ③ BINSA 法案通过且限制严厉 ④ 季度营收增速降至 <15% ⑤ CXO 板块连续 3 月跑输大盘</p>
+<h4>监控清单</h4>
+<p>月度：营收/净利增速、TIDES 收入占比、美国收入占比变化 ｜ 事件：1260H 诉讼进展、BINSA 立法动态、大额 BD 合作公告 ｜ 技术：20 日线支撑、MACD 柱体变化、成交量</p>
+<div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)">
+  <span class="tag t-pass" style="font-size:14px;padding:4px 12px"><b>最终决策：买入</b></span>
+  &nbsp;&nbsp;<span class="mini">制定日期：2026-07-08 ｜ 复盘日期：2026-08-08（中报后）</span>
+</div>
+</div>
+
+<footer>
+  药明康德（603259）五步分析决策卡 · 基于《股票通用分析框架 v2.1》<br>
+  数据来源：westock-data 实时行情+财报（2026-07-08）｜知乎深度研报（2026-06-24）｜雪球分析文章（2026-05/06）<br>
+  <b>本分析为方法论应用示范，不构成具体投资建议。投资有风险，决策需谨慎。</b>
+</footer>
+
+</div>
+
+<script>
+// 三情景估值图
+echarts.init(document.getElementById('chart-valuation')).setOption({
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { data: ['当前价', 'Bear', 'Base', 'Bull', '加权合理价值'], bottom: 0 },
+  grid: { left: '10%', right: '8%', top: '8%', bottom: '18%' },
+  xAxis: { type: 'category', data: ['药明康德\n603259'], axisLabel: { fontSize: 12 } },
+  yAxis: { type: 'value', name: '价格(元)', axisLabel: { fontSize: 11 } },
+  series: [
+    { name: '当前价', type: 'bar', barGap: 0, data: [115.4], itemStyle: { color: '#8a8f99' } },
+    { name: 'Bear', type: 'bar', data: [50], itemStyle: { color: '#d9303e' } },
+    { name: 'Base', type: 'bar', data: [154], itemStyle: { color: '#3370ff' } },
+    { name: 'Bull', type: 'bar', data: [210], itemStyle: { color: '#2ba471' } },
+    { name: '加权合理价值', type: 'bar', data: [142], itemStyle: { color: '#d98014' } }
+  ]
+});
+
+// K线走势图（近30日）
+var klineData = [
+  ['2026-06-02',99.75,99.98,100.56,96.08,384078],
+  ['2026-06-03',98.85,99.37,100.30,98.00,341714],
+  ['2026-06-04',96.75,98.25,99.18,96.40,332222],
+  ['2026-06-05',96.56,98.38,100.24,96.03,424532],
+  ['2026-06-08',96.00,95.72,97.31,94.06,458456],
+  ['2026-06-09',93.48,93.88,93.88,88.32,824478],
+  ['2026-06-10',97.04,93.35,97.36,93.20,576466],
+  ['2026-06-11',97.07,96.01,97.60,95.53,329181],
+  ['2026-06-12',99.71,97.50,99.90,95.09,612700],
+  ['2026-06-15',99.37,99.10,99.76,97.84,367699],
+  ['2026-06-16',98.16,98.83,100.00,98.00,271703],
+  ['2026-06-17',98.20,98.26,98.79,96.50,273505],
+  ['2026-06-18',102.72,97.80,104.33,97.72,569423],
+  ['2026-06-22',106.83,103.16,106.97,101.70,571962],
+  ['2026-06-23',106.31,107.00,109.36,105.76,525084],
+  ['2026-06-24',115.40,106.90,116.94,106.90,1098058],
+  ['2026-06-25',117.22,114.00,118.50,113.23,764344],
+  ['2026-06-26',118.18,119.00,121.07,116.96,684942],
+  ['2026-06-29',126.17,117.21,126.80,116.80,1030535],
+  ['2026-06-30',124.51,125.00,126.80,123.00,793759],
+  ['2026-07-01',125.20,123.00,126.66,115.58,1124768],
+  ['2026-07-02',121.30,123.85,129.15,121.00,844699],
+  ['2026-07-03',124.12,123.60,125.06,119.52,712822],
+  ['2026-07-06',122.97,123.01,128.05,122.00,921698],
+  ['2026-07-07',118.30,120.50,122.95,118.01,665947],
+  ['2026-07-08',115.40,118.39,120.25,115.31,509875]
+];
+var dates = klineData.map(function(d){ return d[0]; });
+var ohlc = klineData.map(function(d){ return [d[1], d[2], d[4], d[3]]; });
+var vols = klineData.map(function(d){ return d[5]; });
+echarts.init(document.getElementById('chart-kline')).setOption({
+  tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+  legend: { data: ['日K', '成交量'], bottom: 0 },
+  grid: [
+    { left: '10%', right: '8%', top: '5%', height: '58%' },
+    { left: '10%', right: '8%', top: '70%', height: '22%' }
+  ],
+  xAxis: [
+    { type: 'category', data: dates, gridIndex: 0, axisLabel: { show: false } },
+    { type: 'category', data: dates, gridIndex: 1, axisLabel: { fontSize: 10, rotate: 45 } }
+  ],
+  yAxis: [
+    { scale: true, gridIndex: 0 },
+    { scale: true, gridIndex: 1, splitNumber: 2 }
+  ],
+  series: [
+    { name: '日K', type: 'candlestick', data: ohlc, xAxisIndex: 0, yAxisIndex: 0,
+      itemStyle: { color: '#d9303e', color0: '#2ba471', borderColor: '#d9303e', borderColor0: '#2ba471' } },
+    { name: '成交量', type: 'bar', data: vols, xAxisIndex: 1, yAxisIndex: 1, itemStyle: { color: '#8a8f99' } }
+  ]
+});
+window.addEventListener('resize', function(){
+  echarts.init(document.getElementById('chart-valuation')).resize();
+  echarts.init(document.getElementById('chart-kline')).resize();
+});
+</script>
+</body>
+</html>

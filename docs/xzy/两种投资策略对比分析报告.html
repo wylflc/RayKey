@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>两种投资策略详细对比分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+:root{
+--bg:#f7f8fa;--card:#ffffff;--ink:#1f2329;--sub:#646a73;--line:#e5e6eb;
+--red:#d9303e;--red-bg:#fef0f0;--green:#2ba471;--green-bg:#eafaf3;
+--amber:#d98014;--amber-bg:#fff7e6;--blue:#3370ff;--blue-bg:#eaf1ff;
+--purple:#7c3aed;--purple-bg:#f3eefe;--teal:#0d9488;--teal-bg:#e6f7f5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.8;font-size:15px}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 20px 60px}
+h1{font-size:28px;font-weight:700;letter-spacing:-.5px;margin-bottom:8px}
+h2{font-size:21px;font-weight:700;margin:38px 0 16px;padding-bottom:10px;border-bottom:2px solid var(--line);display:flex;align-items:center;gap:10px}
+h2 .num{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:var(--blue);color:#fff;border-radius:8px;font-size:15px}
+h3{font-size:17px;font-weight:700;margin:22px 0 10px;color:var(--ink)}
+h4{font-size:15px;font-weight:600;margin:14px 0 8px;color:var(--sub)}
+p{margin:10px 0}
+.sub{color:var(--sub);font-size:13.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin:16px 0;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+.lead{background:linear-gradient(135deg,#eaf1ff 0%,#f3eefe 100%);border:1px solid #d6e0ff;border-radius:14px;padding:24px 28px;margin:20px 0}
+.lead .tldr{font-size:13px;font-weight:700;color:var(--blue);letter-spacing:1px;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;background:var(--card);border-radius:8px;overflow:hidden}
+th{background:#f5f6f8;text-align:left;padding:11px 13px;font-weight:600;color:var(--ink);border-bottom:2px solid var(--line)}
+td{padding:10px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfc}
+.tag{display:inline-block;padding:2px 9px;border-radius:5px;font-size:12px;font-weight:600;line-height:1.6}
+.t-pass{background:var(--green-bg);color:var(--green)}
+.t-warn{background:var(--amber-bg);color:var(--amber)}
+.t-fail{background:var(--red-bg);color:var(--red)}
+.t-info{background:var(--blue-bg);color:var(--blue)}
+.t-purple{background:var(--purple-bg);color:var(--purple)}
+.t-teal{background:var(--teal-bg);color:var(--teal)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.pro-box{border-left:4px solid var(--green);background:var(--green-bg);padding:14px 18px;border-radius:0 8px 8px 0;margin:12px 0}
+.con-box{border-left:4px solid var(--red);background:var(--red-bg);padding:14px 18px;border-radius:0 8px 8px 0;margin:12px 0}
+.pro-box b,.con-box b{display:block;margin-bottom:6px;font-size:14px}
+.pro-box ul,.con-box ul{margin-left:18px;font-size:13.5px}
+.pro-box li,.con-box li{padding:3px 0}
+.note{font-size:13px;color:var(--sub);background:#fafbfc;border-left:3px solid var(--line);padding:10px 14px;margin:12px 0;border-radius:0 4px 4px 0}
+.note-key{border-left-color:var(--amber);background:var(--amber-bg);color:var(--ink)}
+.formula{background:#f5f6f8;border:1px dashed var(--line);border-radius:6px;padding:12px 16px;margin:12px 0;font-family:"SF Mono",Consolas,monospace;font-size:13px;color:var(--ink);line-height:1.9}
+.summary-box{background:linear-gradient(135deg,#eafaf3 0%,#e6f7f5 100%);border:2px solid var(--green);border-radius:14px;padding:24px 28px;margin:24px 0}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin:20px 0}
+.toc a{color:var(--blue);text-decoration:none;font-size:13.5px}
+.toc ol{padding-left:22px}
+.toc li{padding:3px 0}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);text-align:center;color:var(--sub);font-size:12.5px}
+.vs-table td:nth-child(2){background:#faf9ff}
+.vs-table td:nth-child(3){background:#f7fcfa}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>两种投资策略详细对比分析报告</h1>
+<p class="sub">A股选股-估值-量价操作流程 (v15) vs 股票通用分析框架 v2.1 · 全维度深度解析</p>
+
+<div class="lead">
+<div class="tldr">TL;DR · 核心结论</div>
+<p>两份文档描述的是<b>两种定位完全不同的投资体系</b>，而非同一类方法的两个版本。<b>A股选股-估值-量价操作流程</b>（以下简称"操作流程"）是一套<b>系统化、可重复执行的量化+基本面混合体系</b>，目标是全A股约5000家公司的批量筛选、长期跟踪与纪律化买卖；<b>股票通用分析框架 v2.1</b>（以下简称"分析框架"）是一套<b>针对单只股票的五步决策方法论</b>，目标是从研究到交易把一只股票彻底分析清楚并输出可执行决策卡。两者并非互斥——操作流程负责"全市场筛选+持仓管理"，分析框架负责"个股深度研判+单笔交易计划"，在实战中可以互补使用。</p>
+</div>
+
+<div class="toc">
+<b style="font-size:14px">目录</b>
+<ol>
+<li><a href="#s1">设计哲学与定位对比</a></li>
+<li><a href="#s2">选股范围与流程结构对比</a></li>
+<li><a href="#s3">质量评估体系对比</a></li>
+<li><a href="#s4">估值方法对比</a></li>
+<li><a href="#s5">买入时机与信号系统对比</a></li>
+<li><a href="#s6">风控与卖出体系对比</a></li>
+<li><a href="#s7">仓位管理对比</a></li>
+<li><a href="#s8">自动化与可执行性对比</a></li>
+<li><a href="#s9">优势与劣势总结</a></li>
+<li><a href="#s10">互补使用建议</a></li>
+</ol>
+</div>
+
+<h2 id="s1"><span class="num">1</span>设计哲学与定位对比</h2>
+
+<div class="grid2">
+<div class="card">
+<h3 style="color:var(--purple)">A股选股-估值-量价操作流程 (v15)</h3>
+<h4>定位</h4>
+<p>一套<b>可工程化执行的操作规范</b>，强调"固定产物、固定脚本、固定规则"。</p>
+<h4>哲学</h4>
+<ul>
+<li><b>业务质量决定是否值得长期跟踪</b>——先做全市场质量筛选</li>
+<li><b>估值用于排除过度透支</b>——而非只寻找低估</li>
+<li><b>量价信号只在高质量+估值合格池内触发</b>——三层漏斗递进</li>
+<li><b>每日输出买入候选而非买入指令</b>——人工核对后再执行</li>
+<li><b>每一次结论必须写入决策日志</b>——可溯源、可复核、可纠错</li>
+</ul>
+<h4>本质</h4>
+<p>把投资变成<b>流水线作业</b>：确定性部分交给脚本，判断部分交给大模型，人只做最终核对。追求的是<b>纪律性和可重复性</b>。</p>
+</div>
+
+<div class="card">
+<h3 style="color:var(--teal)">股票通用分析框架 v2.1</h3>
+<h4>定位</h4>
+<p>一套<b>可套用于任意个股的完整决策方法论</b>，强调"五步流水线+三色决策门"。</p>
+<h4>哲学</h4>
+<ul>
+<li><b>先筛掉不该碰的公司</b>——前三步是排除法</li>
+<li><b>再筛掉太贵的公司</b>——第四步是估值把关</li>
+<li><b>最后把剩下的变成有纪律的单子</b>——第五步是执行</li>
+<li><b>前一步否决就不必走下一步</b>——节省精力、降低风险</li>
+<li><b>没有止损位的计划不是计划</b>——强制风控</li>
+</ul>
+<h4>本质</h4>
+<p>把投资分析变成<b>结构化思考工具</b>：每一步都有明确的检查清单和决策门，最终产出一张"拿到就能下单"的决策卡。追求的是<b>分析深度和决策完整性</b>。</p>
+</div>
+</div>
+
+<div class="note note-key"><b>关键差异</b>：操作流程是"先有池子，再等信号"的<b>自上而下</b>体系——它先建立一个高质量的核心估值合格池，然后每日用量价信号在池中触发买入候选；分析框架是"先有标的，再做尽调"的<b>自下而上</b>体系——它从一只具体的股票出发，走完五步后决定买不买、买多少。两者代表了两种完全不同的投资工作方式。</p></div>
+
+<h2 id="s2"><span class="num">2</span>选股范围与流程结构对比</h2>
+
+<h3>2.1 选股范围</h3>
+<table class="vs-table">
+<tr><th style="width:22%">维度</th><th style="width:39%">操作流程 (v15)</th><th style="width:39%">分析框架 v2.1</th></tr>
+<tr><td><b>覆盖范围</b></td><td>全A股约5000+家上市公司，全覆盖初筛</td><td>单只股票，需用户自行指定标的</td></tr>
+<tr><td><b>市场适用</b></td><td>仅限A股（脚本、规则均针对A股设计）</td><td>A股 / 港股 / 美股通用</td></tr>
+<tr><td><b>持有周期</b></td><td>长周期跟踪（季度更新+每日扫描），适合核心仓长期持有</td><td>中线（1-12个月），价值-成长混合派</td></tr>
+<tr><td><b>选股起点</b></td><td>交易所证券名单 → 三类初筛 → 质量分层 → 估值排雷</td><td>用户指定一只股票 → 五步流水线</td></tr>
+</table>
+
+<h3>2.2 流程结构对照</h3>
+<table class="vs-table">
+<tr><th style="width:8%">阶段</th><th style="width:46%">操作流程 (v15)</th><th style="width:46%">分析框架 v2.1</th></tr>
+<tr><td><b>第一步</b></td><td><b>阶段一：季度全市场质量审查</b><br>更新证券名单 → 三类初筛(worth_attention/boundary_pending/garbage) → L1-L5质量分层</td><td><b>第一步：业务拆解 + 行业周期定位</b><br>必答六问 → 业务结构拆解 → 行业周期定位(含产能/技术周期) → 催化剂地图</td></tr>
+<tr><td><b>第二步</b></td><td><b>阶段二：核心估值排雷</b><br>只对L1/L2执行，7种估值策略(A-G)分档，排除高估</td><td><b>第二步：护城河与竞争格局评估</b><br>护城河五力自检 → 质地量化(ROIC/ROE) → 竞争对手量化对标 → 护城河侵蚀风险</td></tr>
+<tr><td><b>第三步</b></td><td><b>阶段三：财报滚动更新</b><br>质量复核触发 / 估值复核触发 / 事件复核触发</td><td><b>第三步：财务体检 + 收入质量</b><br>四维体检表 → 质量增长匹配 → 收入质量拆解(经常性vs一次性) → 资本配置效率</td></tr>
+<tr><td><b>第四步</b></td><td><b>阶段四：每日量价扫描</b><br>有效放量定义 → 右侧信号(8.7.1-8.7.7) → 信号分级(强/中/弱) → 买入候选优先级</td><td><b>第四步：估值定价 + 隐含预期</b><br>类型→方法选择 → 估值三重判断 → 三情景估值 → 反向DCF → 估值适用性检验</td></tr>
+<tr><td><b>第五步</b></td><td><b>阶段五：持仓监控 + 卖出扫描</b><br>割肉价 → 3个月锁定 → 趋势保护线(MA60/150/250分档) → 盈利离场 → 硬离场例外</td><td><b>第五步：交易计划 + 风控</b><br>交易位置+形态分析 → 分仓路径 → 三维止损 → 分批止盈 → 仓位计算+信心加权 → 失效条件</td></tr>
+<tr><td><b>附加</b></td><td>历史回放校准(§12)、市场状态判定(§8.12)</td><td>风险因子矩阵(独立模块)、决策卡模板、常见陷阱与红线</td></tr>
+</table>
+
+<div class="note"><b>结构差异的本质</b>：操作流程的"五阶段"是<b>时间递进</b>关系——先建池、再排雷、再更新、再扫信号、再管持仓，每个阶段有明确的执行频率和触发条件；分析框架的"五步"是<b>逻辑递进</b>关系——业务→护城河→财务→估值→交易，前一步否决就不走下一步。前者是"运营体系"，后者是"分析方法"。</div>
+
+<h2 id="s3"><span class="num">3</span>质量评估体系对比</h2>
+
+<h3>3.1 操作流程的质量评估</h3>
+<p>操作流程采用<b>三层漏斗式质量筛选</b>，极其精细：</p>
+<div class="formula">
+全A股名单<br>
+→ 第一轮三类初筛：worth_attention / boundary_pending / garbage<br>
+→ (仅worth_attention) L1-L5质量分层<br>
+→ 核心质量公司 = L1 + L2<br>
+→ 核心估值合格池 = L1/L2中估值未透支的股票
+</div>
+
+<p>其质量评估有三大特色：</p>
+<ul>
+<li><b>资本复制测试</b>：worth_attention的护城河必须能通过"资金充足的新进入者能否快速复制并侵蚀其回报"的测试，这是核心判定标准。</li>
+<li><b>行业校准锚</b>：沉淀了12条可推广规则和14组对照判例（如"长电worth、华能水电boundary"），用同行业判例校准标准，避免主观随意。</li>
+<li><b>防过度纳入清单</b>：7条否决项明确列出"研究价值≠值得观察""强位置≠超额回报护城河"等，从严控制worth_attention数量。</li>
+</ul>
+
+<h3>3.2 分析框架的质量评估</h3>
+<p>分析框架采用<b>护城河五力 + 量化验证 + 竞争对标</b>的组合方式：</p>
+<ul>
+<li><b>护城河五力自检</b>：品牌/无形资产、成本优势、网络效应、转换成本、规模/牌照/资源，每条分强/中/弱。</li>
+<li><b>硬指标门槛</b>：ROIC连续5年>15%、ROE连续5年>15%、自由现金流持续为正、市占率上升/稳定。</li>
+<li><b>竞争对手量化对标</b>：选2-3家可比公司拉5年数据对比ROIC、毛利率、市占率、收入CAGR、估值。</li>
+<li><b>护城河侵蚀风险</b>：前瞻性评估3年内技术替代、政策变化、携资跳入、人才流失的概率和影响。</li>
+</ul>
+
+<h3>3.3 质量评估对比小结</h3>
+<table class="vs-table">
+<tr><th style="width:22%">维度</th><th>操作流程 (v15)</th><th>分析框架 v2.1</th></tr>
+<tr><td><b>评估粒度</b></td><td>极细——L1-L5五档分层，每档有明确的仓位资格(15-25%/4-10%/战术仓/零仓/移出)</td><td>中等——通过/警示/否决三档，依赖分析者主观判断强度</td></tr>
+<tr><td><b>同业校准</b></td><td>系统化——12条规则+14组判例+行业校准锚文件</td><td>建议性——选2-3家可比公司对标，无固定判例库</td></tr>
+<tr><td><b>否决机制</b></td><td>双重否决——防过度纳入清单(7条)+一票否决(造假/治理)</td><td>三色门——护城河否决=仅可短线交易</td></tr>
+<tr><td><b>可复现性</b></td><td>高——逐家独立判断+决策日志，可复核纠错</td><td>低——依赖分析者经验，不同人结论可能不同</td></tr>
+<tr><td><b>前瞻性</b></td><td>较弱——以当前竞争力为准，穿越周期验证为辅</td><td>较强——专设"护城河侵蚀风险"前瞻评估</td></tr>
+</table>
+
+<h2 id="s4"><span class="num">4</span>估值方法对比</h2>
+
+<h3>4.1 操作流程的估值体系</h3>
+<p>操作流程定义了<b>7种分策略估值方法</b>，每种都有明确的档位标准：</p>
+<table>
+<tr><th>策略</th><th>类型</th><th>核心模型</th></tr>
+<tr><td>A</td><td>DCF/现金流复利型</td><td>预期年化收益 = FCF收益率 + 保守利润增长率 + 股息/回购收益率 + 估值修复</td></tr>
+<tr><td>B</td><td>烟蒂深度低估型</td><td>保守清算价值 = 现金 + 0.8×应收 + 0.5×存货 + 0.3×固定资产 - 总负债</td></tr>
+<tr><td>C</td><td>GARP成长型</td><td>归一化PEG</td></tr>
+<tr><td>D</td><td>产业链爆发/关键瓶颈型</td><td>未来合理市值 = 未来2-3年正常化净利润 × 合理PE</td></tr>
+<tr><td>E</td><td>落难白马型</td><td>正常化利润和修复后合理PE</td></tr>
+<tr><td>F</td><td>垄断资源型</td><td>资源NAV、中枢商品价格、中枢FCF收益率、成本曲线</td></tr>
+<tr><td>G</td><td>股东回报型低估</td><td>PB/ROE、股息率、回购注销率、资产质量</td></tr>
+</table>
+
+<p>其估值体系的<b>核心原则</b>是"估值只用于排除过度高估，不是只寻找显著低估"，并设有完善的<b>归一化估值</b>机制处理一次性亏损/收益、研发投入期、周期底部等失真场景。</p>
+
+<h3>4.2 分析框架的估值体系</h3>
+<p>分析框架的估值体系更注重<b>方法选择和预期拆解</b>：</p>
+<ul>
+<li><b>公司类型→方法映射</b>：高成长(PEG/PS)、稳健成长(PE/PEG)、周期(PB/中枢PE)、价值成熟(PE/PB/股息率)、平台金融(SOTP/DCF)、Biotech(rNPV)、周期拐点(正常化PE)。</li>
+<li><b>估值三重判断</b>：历史纵向分位 + 行业横向对比 + 预期拆解（说清"已定价什么"）。</li>
+<li><b>三情景估值</b>：Bear/Base/Bull分别假设，按25%/50%/25%加权得到合理价值中枢。</li>
+<li><b>反向DCF</b>：用当前市值反推隐含增速，对比自己判断发现预期差——这是分析框架的独特优势。</li>
+<li><b>估值方法适用性检验</b>：明确每种方法的失效场景和替代方法，防止"用PE估周期股"等典型错误。</li>
+</ul>
+
+<h3>4.3 估值方法对比小结</h3>
+<table class="vs-table">
+<tr><th style="width:22%">维度</th><th>操作流程 (v15)</th><th>分析框架 v2.1</th></tr>
+<tr><td><b>估值策略数</b></td><td>7种(A-G)，每种有量化档位标准</td><td>按公司类型映射，无固定档位表</td></tr>
+<tr><td><b>目标</b></td><td>排除高估（低估/较低估/中性/可接受较高估 → 入池）</td><td>寻找性价比（>20%上行空间+分位<50% → 通过）</td></tr>
+<tr><td><b>归一化处理</b></td><td>完善——6种失真场景+归一化公式</td><td>有——收入质量拆解(经常性vs一次性)</td></tr>
+<tr><td><b>反向DCF</b></td><td>无（以正向估值为主）</td><td>有——核心特色，发现预期差</td></tr>
+<tr><td><b>适用性检验</b></td><td>隐含在策略选择中</td><td>显式——独立子模块，明确失效场景</td></tr>
+<tr><td><b>可执行性</b></td><td>高——档位标准量化、脚本可物化</td><td>中——需分析者自行填表判断</td></tr>
+</table>
+
+<div class="note note-key"><b>估值维度结论</b>：操作流程的估值体系更<b>系统化、可量化</b>，适合批量处理；分析框架的估值体系更<b>有深度、防误导</b>，特别是反向DCF和估值适用性检验能有效避免"用错方法得出错误结论"。两者在归一化处理上都重视一次性收入的剔除，但分析框架用三生国健案例做了更生动的说明。</div>
+
+<h2 id="s5"><span class="num">5</span>买入时机与信号系统对比</h2>
+
+<h3>5.1 操作流程的量价信号系统</h3>
+<p>操作流程拥有<b>极其精细的右侧量价信号系统</b>，这是其最核心的特色之一：</p>
+<ul>
+<li><b>有效放量定义</b>：5种判定方式（单日放量/连续放量/启动前基准放量/持续堆量/高分位放量），避免单一指标误判。</li>
+<li><b>7种右侧触发形态</b>：放量突破前高(8.7.1)、放量突破关键均线(8.7.2)、缩量涨停(8.7.3)、连续上涨(8.7.4)、温和放量多头(8.7.5)、平台突破二次确认(8.7.6)、相对强度确认(8.7.7)。</li>
+<li><b>信号分级</b>：强/中/弱三档，按"放量×短期多头×突破确认"三层递进。</li>
+<li><b>买入候选优先级</b>：S/A/B/C四档，按"质量×估值"维度划分，与信号分级正交。</li>
+<li><b>过度延伸过滤</b>：close/MA20-1>25%或近5日涨幅>30%时改为wait_pullback，防止追高。</li>
+<li><b>市场状态判定</b>：用沪深300 vs MA250判定强势/弱势/震荡，弱势市场各档偏向下调一档。</li>
+<li><b>均线体系</b>：统一7条均线(MA5/10/20/60/120/150/250)，每条用途唯一且必要。</li>
+</ul>
+
+<h3>5.2 分析框架的交易时机系统</h3>
+<p>分析框架的买入时机判断更<b>偏定性、重形态</b>：</p>
+<ul>
+<li><b>交易位置判断</b>：低位启动/趋势中继/高位加速/高位震荡/下跌反抽五类，每类有特征+形态+量能+策略倾向。</li>
+<li><b>形态分析</b>：筑底形态(W底/头肩底/圆弧底)、整理形态(上升旗形/箱体/上升三角形)、顶部形态(M头/头肩顶)。</li>
+<li><b>资金流向确认(v2.1新增)</b>：ETF净流入、龙虎榜机构买盘、北向/南向资金净流入作为右侧确认。</li>
+<li><b>分仓路径</b>：试错仓(10-20%) → 确认仓(+20-30%) → 加仓仓(+20-30%) → 上限(≤70%)。</li>
+<li><b>核心原则</b>："形态只有配合量能才有意义——量在价先"，"形态只是辅助工具，不能取代基本面"。</li>
+</ul>
+
+<h3>5.3 买入时机对比小结</h3>
+<table class="vs-table">
+<tr><th style="width:22%">维度</th><th>操作流程 (v15)</th><th>分析框架 v2.1</th></tr>
+<tr><td><b>信号定义</b></td><td>极其量化——5种放量+7种形态+3档分级，脚本可自动判定</td><td>偏定性——形态+量能+资金流向，需人工综合判断</td></tr>
+<tr><td><b>触发前提</b></td><td>必须在核心估值合格池内（质量+估值双重前置）</td><td>必须通过前四步决策门（业务+护城河+财务+估值）</td></tr>
+<tr><td><b>防追高机制</b></td><td>过度延伸过滤——量化阈值(close/MA20-1>25%等)</td><td>交易位置判断——高位加速/高位震荡时"不追，等回踩"</td></tr>
+<tr><td><b>市场环境</b></td><td>有——沪深300 vs MA250判定市场状态，自动调整操作偏向</td><td>无独立机制——风险矩阵中有"大盘系统性下跌"但不自动调整</td></tr>
+<tr><td><b>分仓逻辑</b></td><td>建仓金额规则(25万起)+L1/L2仓位资格(15-25%/4-10%)</td><td>试错→确认→加仓三段式+信心加权系数(0.5/1.0/1.2)</td></tr>
+</table>
+
+<div class="note note-key"><b>买入时机结论</b>：操作流程的量价系统<b>远比分析框架精细和可执行</b>，特别是7种右侧触发形态和信号分级机制，是经过大量实战打磨的量化体系。分析框架的形态分析更像是"辅助参考"，而操作流程的量价系统是"核心引擎"。如果只看买入时机的精细度，操作流程完胜。</div>
+
+<h2 id="s6"><span class="num">6</span>风控与卖出体系对比</h2>
+
+<h3>6.1 操作流程的风控卖出体系</h3>
+<p>操作流程拥有<b>极其完整的卖出扫描体系</b>，这是"宽出"理念的工程化实现：</p>
+<ul>
+<li><b>割肉价（无条件清仓）</b>：买入时用户给定，只能上调不能下调，上调不超MA120。触及即清仓，不受3个月锁定限制。</li>
+<li><b>3个月锁定期</b>：买入后3个月内禁止任何卖出（硬离场例外除外），强制持有，避免情绪化操作。</li>
+<li><b>硬离场例外</b>：一票否决(造假/治理)/重大突发事件/季报利润严重不及预期，可打破3个月锁定立即清仓。</li>
+<li><b>趋势保护线（分档软性减仓）</b>：
+  <table>
+  <tr><th>持仓类型</th><th>保护线</th><th>跌破定义</th><th>触发动作</th></tr>
+  <tr><td>daily（战术仓）</td><td>MA60或平台</td><td>连续3日收盘低于线且距线>3%</td><td>退出复核</td></tr>
+  <tr><td>weekly（B/C/D/E）</td><td>MA150（约30周）</td><td>连续5日收盘低于线且距线>3%</td><td>减半复核</td></tr>
+  <tr><td>monthly（A/F/G）</td><td>MA250（年线）</td><td>连续10日收盘低于线且距线>5%</td><td>降档减仓复核</td></tr>
+  </table>
+</li>
+<li><b>盈利离场规则</b>：浮盈>=30%可卖10%、>=50%可卖20%、>=100%可卖35%、>=200%可卖50%，是允许上限非强制。</li>
+<li><b>风险预警</b>：单票>30%、同产业链>40%、同大行业>60%、战术仓>15%；账户回撤-8%/-12%/-20%三级响应。</li>
+<li><b>除权除息处理</b>：机械调整价格与股数字段，避免除权日误触发。</li>
+</ul>
+
+<h3>6.2 分析框架的风控卖出体系</h3>
+<p>分析框架的风控更<b>注重前置风险管理和多维止损</b>：</p>
+<ul>
+<li><b>三维止损框架</b>：
+  <ul>
+  <li>价格止损+形态破位：跌破前低/20日线/关键位，幅度止损-5%至-8%</li>
+  <li>逻辑止损：核心催化失效、利好落空、板块龙头跌停、业绩证伪</li>
+  <li>时间止损：短线5-10个交易日未验证，中线1-2个月未兑现逻辑</li>
+  </ul>
+</li>
+<li><b>分批止盈</b>：到Base目标价卖1/3、到Bull目标价再卖1/3、剩1/3做第二段；情绪止盈(换手>15%+放量滞涨)、形态止盈(顶背离/M头颈线)。</li>
+<li><b>风险因子矩阵（独立模块）</b>：政策/竞争/财务/治理/宏观五大类风险，每个评估概率×影响→预设应对方案，在买入前完成。</li>
+<li><b>失效条件</b>：催化证伪、板块转弱、放量破位、次日反馈差、环境不支持、形态破坏——任一触发即认错。</li>
+<li><b>止损纪律红线</b>："触发后禁止重新评估持有理由——评估应在触发前完成"。</li>
+</ul>
+
+<h3>6.3 风控卖出对比小结</h3>
+<table class="vs-table">
+<tr><th style="width:22%">维度</th><th>操作流程 (v15)</th><th>分析框架 v2.1</th></tr>
+<tr><td><b>卖出体系完整度</b></td><td>极高——割肉价+锁定+趋势保护+盈利离场+硬离场，五层防线</td><td>高——三维止损+分批止盈+风险矩阵+失效条件</td></tr>
+<tr><td><b>止损触发</b></td><td>割肉价（无条件硬底）+趋势保护线（分档软性，需复核）</td><td>价格止损+逻辑止损+时间止损（三维并行）</td></tr>
+<tr><td><b>锁定期</b></td><td>有——3个月锁定，强制持有，硬离场例外可破</td><td>无——但有"时间止损"概念(1-2个月未兑现则退)</td></tr>
+<tr><td><b>趋势保护</b></td><td>极精细——MA60/MA150/MA250三档，按持仓类型映射，连续N日+距线X%</td><td>无独立趋势保护线——融入"价格止损"中的"跌破关键位"</td></tr>
+<tr><td><b>前置风险管理</b></td><td>较弱——卖出扫描是每日被动执行</td><td>强——风险因子矩阵在买入前主动梳理，预设应对方案</td></tr>
+<tr><td><b>止盈逻辑</b></td><td>盈利离场上限(30%/50%/100%/200%对应10%/20%/35%/50%)</td><td>分批落袋(Base卖1/3→Bull卖1/3)+形态止盈</td></tr>
+<tr><td><b>可脚本化</b></td><td>高——scan_holdings_sell_signals.py自动判定</td><td>低——需人工判断形态、逻辑、时间</td></tr>
+</table>
+
+<div class="note note-key"><b>风控结论</b>：操作流程的卖出体系在<b>执行纪律和精细度上远超分析框架</b>——特别是割肉价+3个月锁定+分档趋势保护线的组合，能有效防止"触发止损后又找理由扛着"。但分析框架的<b>风险因子矩阵是独特优势</b>——它把风控从"被动触发"升级为"主动前置"，在买入前就预设应对方案，这是操作流程所缺乏的。理想状态是：用分析框架做买入前风险梳理，用操作流程做持仓期间纪律执行。</div>
+
+<h2 id="s7"><span class="num">7</span>仓位管理对比</h2>
+
+<div class="grid2">
+<div class="card">
+<h3 style="color:var(--purple)">操作流程的仓位管理</h3>
+<h4>建仓金额规则</h4>
+<div class="formula">
+总资产 < 500万：build_amount = 25万<br>
+总资产 >= 500万：build_amount = 50万<br>
+总资产 >= 1000万：build_amount = 100万<br>
+总资产 >= 2000万：build_amount = 200万<br>
+每达到 build_amount × 20 翻倍一次
+</div>
+<h4>仓位资格（按质量分层）</h4>
+<ul>
+<li>L1：估值合适+右侧确认 → 15%-25%核心仓</li>
+<li>L2：估值合适+右侧确认 → 4%-10%准核心仓</li>
+<li>L3：只适合战术仓或事件动量仓</li>
+<li>L4：默认不建仓</li>
+</ul>
+<h4>加仓条件</h4>
+<p>趋势继续成立+回踩不破+财报/订单/利润率/盈利预测至少一项验证+估值未进高估档。</p>
+</div>
+
+<div class="card">
+<h3 style="color:var(--teal)">分析框架的仓位管理</h3>
+<h4>仓位计算公式</h4>
+<div class="formula">
+单笔风险预算 = 账户总资金 × 单笔最大可承受亏损%(1-2%)<br>
+基础仓位 = 单笔风险预算 ÷ (买入价 - 止损价) ÷ 买入价<br>
+实际仓位 = 基础仓位 × 信心系数<br>
+<br>
+信心系数：<br>
+四步全通过+形态共振 = 1.2<br>
+三步通过+一步警示 = 1.0<br>
+两步通过+两步警示 = 0.5<br>
+任一步否决 = 0
+</div>
+<h4>分仓路径</h4>
+<ul>
+<li>试错仓：10-20%（首次信号）</li>
+<li>确认仓：+20-30%（走势符合预期）</li>
+<li>加仓仓：+20-30%（强势确认）</li>
+<li>上限：≤70%</li>
+</ul>
+</div>
+</div>
+
+<table class="vs-table">
+<tr><th style="width:22%">维度</th><th>操作流程 (v15)</th><th>分析框架 v2.1</th></tr>
+<tr><td><b>仓位计算逻辑</b></td><td>按质量分层(L1/L2)给固定仓位资格区间</td><td>按风险反推(单笔风险预算÷止损距离)×信心系数</td></tr>
+<tr><td><b>大资金适配</b></td><td>强——build_amount随总资产翻倍，天然适配大资金</td><td>弱——按账户百分比计算，大资金需自行调整</td></tr>
+<tr><td><b>止损与仓位关联</b></td><td>弱关联——割肉价独立设定，仓位由分层决定</td><td>强关联——"没有止损位就无法计算仓位"</td></tr>
+<tr><td><b>信心权重</b></td><td>无——质量分层本身已隐含信心</td><td>有——信心系数(0.5/1.0/1.2)显式加权</td></tr>
+</table>
+
+<h2 id="s8"><span class="num">8</span>自动化与可执行性对比</h2>
+
+<table class="vs-table">
+<tr><th style="width:22%">维度</th><th>操作流程 (v15)</th><th>分析框架 v2.1</th></tr>
+<tr><td><b>脚本化程度</b></td><td>极高——证券名单更新、队列生成、核心池物化、每日量价扫描、持仓卖出扫描、历史回放均有脚本接口</td><td>无——纯方法论，需人工填表执行</td></tr>
+<tr><td><b>固定产物</b></td><td>12个固定CSV/MD文件，每类结论有明确输出位置</td><td>1张决策卡（模板化但人工填写）</td></tr>
+<tr><td><b>决策日志</b></td><td>强制——a_share_workflow_decision_log.csv，14个字段完整记录</td><td>无——决策卡本身可存档但无日志体系</td></tr>
+<tr><td><b>跨轮次追溯</b></td><td>有——公司分析索引脚本，历史各轮结论合并为一行</td><td>无</td></tr>
+<tr><td><b>版本管理</b></td><td>有——v1到v15完整版本记录，每次修订有明确说明</td><td>有——v1.0→v2.0→v2.1改进清单</td></tr>
+<tr><td><b>人机分工</b></td><td>明确——确定性部分脚本执行，判断部分大模型执行，最终人工核对</td><td>未明确——全流程人工执行</td></tr>
+<tr><td><b>可复现性</b></td><td>极高——同一输入同一脚本同一结论</td><td>低——依赖分析者水平和状态</td></tr>
+</table>
+
+<h2 id="s9"><span class="num">9</span>优势与劣势总结</h2>
+
+<h3>9.1 操作流程 (v15) 的优势与劣势</h3>
+<div class="grid2">
+<div class="pro-box">
+<b>核心优势</b>
+<ul>
+<li><b>全市场覆盖</b>：5000+家A股全覆盖初筛，不遗漏任何潜在标的</li>
+<li><b>质量分层极精细</b>：L1-L5五档+12条校准规则+14组判例，标准可追溯</li>
+<li><b>量价信号系统极强</b>：7种右侧形态+5种放量定义+3档分级，实战打磨</li>
+<li><b>卖出纪律极严</b>：割肉价+3个月锁定+分档趋势保护，防止情绪化操作</li>
+<li><b>高度自动化</b>：脚本化执行+决策日志+跨轮次索引，可复现可追溯</li>
+<li><b>大资金适配</b>：build_amount翻倍规则天然适配资金增长</li>
+<li><b>版本迭代成熟</b>：v1到v15持续打磨，边缘判例丰富</li>
+</ul>
+</div>
+<div class="con-box">
+<b>主要劣势</b>
+<ul>
+<li><b>仅限A股</b>：脚本、规则、均线体系均针对A股设计，无法用于港股/美股</li>
+<li><b>缺乏反向DCF</b>：以正向估值为主，无隐含预期拆解机制</li>
+<li><b>缺乏前置风险矩阵</b>：卖出扫描是每日被动执行，无买入前主动风险梳理</li>
+<li><b>护城河侵蚀评估较弱</b>：以当前竞争力为准，前瞻性侵蚀评估不如分析框架</li>
+<li><b>形态分析较弱</b>：量价信号偏纯技术指标，缺乏W底/M头等经典形态分析</li>
+<li><b>初始建设成本高</b>：需完成全市场初筛+分层+估值才能运转，前期工作量大</li>
+<li><b>不适合快速决策</b>：流程重，不适合"今天看到一只股票，明天就要决定"的场景</li>
+</ul>
+</div>
+</div>
+
+<h3>9.2 分析框架 v2.1 的优势与劣势</h3>
+<div class="grid2">
+<div class="pro-box">
+<b>核心优势</b>
+<ul>
+<li><b>跨市场通用</b>：A股/港股/美股均可套用</li>
+<li><b>分析深度强</b>：五步流水线从业务到交易全覆盖，每步有检查清单</li>
+<li><b>反向DCF独特</b>：隐含预期拆解能发现市场预期差，避免"我觉得值多少"的主观陷阱</li>
+<li><b>估值适用性检验</b>：显式防止"用PE估周期股/Biotech"等典型错误</li>
+<li><b>风险因子矩阵</b>：买入前主动梳理五类风险，预设应对方案，前置防御</li>
+<li><b>收入质量拆解</b>：经常性vs一次性收入区分，三生国健案例生动</li>
+<li><b>形态分析丰富</b>：W底/M头/旗形等经典形态+资金流向确认，买点具象化</li>
+<li><b>信心加权仓位</b>：决策门通过情况与仓位显式关联，逻辑清晰</li>
+<li><b>上手快</b>：拿到一只股票即可走五步，无需前期建池</li>
+</ul>
+</div>
+<div class="con-box">
+<b>主要劣势</b>
+<ul>
+<li><b>无全市场筛选能力</b>：只能分析单只股票，无法主动发现标的</li>
+<li><b>无自动化</b>：纯人工填表，无法批量处理</li>
+<li><b>量价信号较弱</b>：形态分析偏定性，缺乏操作流程那种量化触发机制</li>
+<li><b>无卖出扫描体系</b>：止损止盈靠人工执行，无每日自动扫描</li>
+<li><b>无锁定期机制</b>：缺乏3个月锁定等强制持有纪律</li>
+<li><b>无趋势保护线</b>：卖出信号融入三维止损，但不如分档趋势保护精细</li>
+<li><b>无决策日志</b>：结论不可追溯，难以复盘纠错</li>
+<li><b>无市场状态判定</b>：不自动根据大盘环境调整操作偏向</li>
+<li><b>主观性强</b>：不同人用同一框架可能得出不同结论</li>
+</ul>
+</div>
+</div>
+
+<h2 id="s10"><span class="num">10</span>互补使用建议</h2>
+
+<div class="summary-box">
+<h3 style="margin-top:0;color:var(--green)">两种策略并非互斥，而是互补关系</h3>
+<p>经过全维度对比，两种策略各自的优势区域几乎不重叠，形成天然的互补结构：</p>
+
+<h4 style="margin-top:16px">推荐组合使用方式</h4>
+<table>
+<tr><th style="width:25%">环节</th><th style="width:37%">用操作流程</th><th style="width:38%">用分析框架</th></tr>
+<tr><td><b>标的发现</b></td><td>全市场初筛 → 核心估值合格池</td><td>—</td></tr>
+<tr><td><b>个股深度研判</b></td><td>—</td><td>五步流水线 + 反向DCF + 估值适用性检验</td></tr>
+<tr><td><b>买入前风险梳理</b></td><td>—</td><td>风险因子矩阵 + 失效条件预设</td></tr>
+<tr><td><b>买入时机触发</b></td><td>每日量价扫描 + 7种右侧信号 + 信号分级</td><td>—（形态分析可作为辅助参考）</td></tr>
+<tr><td><b>仓位决定</b></td><td>L1/L2仓位资格 + build_amount规则</td><td>信心加权系数微调</td></tr>
+<tr><td><b>持仓监控</b></td><td>每日卖出扫描 + 割肉价 + 趋势保护线</td><td>—</td></tr>
+<tr><td><b>卖出执行</b></td><td>割肉价/硬离场/盈利离场/趋势减仓</td><td>三维止损复核 + 形态止盈参考</td></tr>
+<tr><td><b>复盘纠错</b></td><td>决策日志 + 跨轮次索引</td><td>决策卡存档对比</td></tr>
+</table>
+
+<h4 style="margin-top:16px">一句话总结</h4>
+<p><b>操作流程是"运营体系"，分析框架是"分析工具"</b>。前者解决"如何在5000只股票里系统化地发现、跟踪、买卖"，后者解决"如何把一只股票彻底分析清楚并做出有纪律的决策"。实战中，用操作流程建立核心估值合格池并执行每日扫描，当某只股票触发买入候选时，再用分析框架做一次五步深度研判和风险矩阵梳理，最后用操作流程的量价信号和仓位规则执行交易、用卖出扫描体系管理持仓——这是两种策略融合使用的最佳路径。</p>
+</div>
+
+<footer>
+两种投资策略详细对比分析报告 · 基于 000_Ashare_workflow.md (v15) 与 股票通用分析框架_v2.1.html<br>
+本报告为方法论对比分析，不构成具体投资建议
+</footer>
+
+</div>
+</body>
+</html>
