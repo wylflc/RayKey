@@ -14,7 +14,7 @@ The project supports a reproducible equity-research workflow: build an investabl
 4. Daily volume-price scan producing buy candidates from the core valuation pool.
 5. Daily holdings monitoring and sell scan.
 
-A full-universe round-1 rescan is in progress; `docs/round1-rescan-progress.md` holds the live snapshot and handoff instructions. Every reviewed conclusion is appended to `data/processed/a_share_workflow_decision_log.csv`.
+The full-universe round-1 rescan is complete (5,653 companies triaged as of 2026-07-09: 261 worth_attention / 5,332 boundary_pending / 60 garbage); `docs/round1-rescan-progress.md` holds the final snapshot. Next per workflow §5.4.6: rebuild L1-L5 tiering over the worth_attention set, then L1/L2 valuation and the core valuation pool. Every reviewed conclusion is appended to `data/processed/a_share_workflow_decision_log.csv`.
 
 The personal investment system in `docs/personal-investment-system-v1.zh.md` (Chinese, canonical) is the default standard for all equity analysis.
 
