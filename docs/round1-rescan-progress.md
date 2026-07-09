@@ -49,8 +49,8 @@ Batches done: 3 industry-calibration batches (baijiu 21, panel 8, decoration 15)
 
 Round-1 triage finished 2026-07-09 (batches 01-225 + calibration batches; 5,653/5,653). Per `docs/000_Ashare_workflow.md` §5.4.6 完成标准 and 过渡期依赖, the follow-on sequence is:
 
-1. **L1-L5 quality tiering (§5.7/§5.8) over the 261 `worth_attention` names only** — rebuild `a_share_watchlist_quality_tiers.csv` from scratch; the 2026-06 tier file is a prior-round reference, not a starting point.
-2. **L1/L2 valuation triage (§6)** on the new tiers.
+1. ~~**L1-L5 quality tiering (§5.7/§5.8) over the 261 `worth_attention` names only**~~ — **DONE 2026-07-09** (13 batches, `tier_rebuild_202607_b01`-`b13`): `a_share_watchlist_quality_tiers.csv` rebuilt from scratch with §5.8 fields. Result: **L1 24 / L2 158 / L3 67 / L4 12 / L5 0** (261/261). L1 set: 茅台·美的·海天·公牛 | 紫金·长电·神华·海油 | 旭创·北方华创·中微·中芯·海光·澜起 | 金山办公·招行·东财 | 汇川·福耀·南瑞 | 宁德·迈瑞·恒瑞·万华. L5 was 0 because round-1 had just re-verified every name under the strict standard; eroding-moat names (汤臣倍健·长春高新·石基信息·奔图·海格·利亚德·洲明·电科院·麦克奥迪 etc.) sit at L4 zero-position watch — demote to L5/boundary next review if deterioration continues. Per-company rationale in the tiers CSV + decision log (`workflow_stage = quality_tier_review`).
+2. **L1/L2 valuation triage (§6)** on the new tiers (182 names) — NEXT.
 3. **Rebuild the core valuation pool** (`build_a_share_core_valuation_pool.py`) — until then, daily scans keep reading the prior-round pool as a transition reference only.
 4. `garbage` rows carrying `需核验` in `evidence_basis` (fraud/governance calls) should be confirmed against filings before being treated as frozen.
 
