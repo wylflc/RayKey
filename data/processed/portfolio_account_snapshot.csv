@@ -1,0 +1,2 @@
+as_of,net_assets_cny,total_assets_cny,margin_debt_cny,leverage_ratio,guarantee_ratio_pct,holdings_market_value_cny,cash_cny,position_count,top_position_weight_pct,account_peak_net_assets_cny,drawdown_from_peak_pct,source,note
+2026-07-09,2720179,4768741,2048562,1.75,232.8,4770462,0,6,41.4,2720179,0.0,user_reported,"用户2026-07-09报告；持仓市值合计与总资产差+1721(0.04%)为口径/四舍五入；净值峰值以首次记录为暂定基线，历史峰值更高请更正；杠杆1.75x超个人体系§4.1的1.3x上限、用户明示暂不调整(计划走熊后降负债)，回撤预算tripwire自本基线起算：净资产≤2,502,565(-8%)移除杠杆/≤2,393,758(-12%)黄色预警/≤2,176,143(-20%)红色预警"

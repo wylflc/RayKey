@@ -45,6 +45,7 @@
 | `data/processed/daily_buy_candidates.csv` | 每日量价触发后的买入候选 |
 | `data/processed/daily_volume_price_tracker.md` | 每日量价跟踪阅读版 |
 | `data/processed/a_share_holdings.csv` | 当前真实持仓清单，手工维护，作为每日卖出扫描输入 |
+| `data/processed/portfolio_account_snapshot.csv` | 账户级快照（追加式，手工维护）：净资产、总资产、融资负债、杠杆、担保比例、净值峰值与回撤基线；供 §14 账户回撤状态与个人投资体系 §13.1 回撤预算、§4 杠杆预警使用 |
 | `data/processed/daily_holdings_actions.csv` | 每日持仓监控与卖出扫描后的持仓动作清单 |
 | `data/processed/daily_holdings_tracker.md` | 每日持仓动作阅读版 |
 | `data/processed/a_share_workflow_decision_log.csv` | 全流程结论日志，用于后续溯源、复核和纠错 |
@@ -1151,6 +1152,7 @@ python3 scripts/backtest_signal_replay.py \
 4. `data/processed/a_share_core_valuation_pool.csv`：用于刷新持仓的最新估值档位。
 5. `data/processed/a_share_workflow_decision_log.csv`：用于回看持仓的策略标签、bear case与退出条件。
 6. 当日公告与重大新闻摘要。
+7. `data/processed/portfolio_account_snapshot.csv`：账户净资产/总资产/融资负债与净值峰值，用于账户回撤状态、杠杆与担保比例预警。
 
 ### 持仓清单字段
 
@@ -1371,3 +1373,4 @@ python3 scripts/scan_holdings_sell_signals.py \
 | v14 | 2026-07-07 | 新增§5.4.5边缘判例集（第27-61批重扫沉淀的14组对照判例）；§6.5七个分策略档位表并入§6.6总表为唯一口径；§13退出规则与§14硬离场例外去重；修正三处失效引用（§16一票否决→§11） |
 | v15 | 2026-07-08 | 文件结构整理：原权威深度复核协议 §1.6 分层校准并入为 §5.7.1（金字塔、L1三子类型、L3非中间桶、锚点对照、医疗器械与AI/半导体细则、禁止捷径）；新增 §2.2 跨轮次公司分析索引脚本与固定产物；2026-06 两层复核轮最终筛选结果归档至 `data/archive/2026-06-two-layer-review/`，删除已完成的深度复核队列、旧两层复核/同业校准/旧A股评分脚本与重复文档 |
 | v16 | 2026-07-08 | 吸收外部框架对比结论（docs/xzy 两份对比报告）：§6.6 估值执行步骤新增适用性前置检验与反向预期拆解（隐含预期作为 bull_case_priced_in 判定依据）；§6.4 新增收入质量三分类与经常性PE；§5.8 质量审查第5步加入 2-3 年护城河前瞻侵蚀检验；§10 买入前核对新增催化剂清单与风险预设应对；§14 大模型信号新增催化剂对照跟踪；§0 新增池外单票按需全链路研判（express）。有意不采纳：主观形态学识别（W底/M头等，与信号可脚本判定、可证伪原则冲突）、信心系数乘数（仓位已由分层×估值×信号×证据决定，乘数造成双重计数并可能突破风险预算）。同日补充：§14 风险预警阈值标注与个人投资体系 §2.1/§13.1 同步；moat-scoring-rubric 加范围状态横幅并撤销其过期的 A 股校准结论（§10.1.x） |
+| v17 | 2026-07-09 | 新增账户级快照固定产物 `portfolio_account_snapshot.csv`（净资产/总资产/融资负债/杠杆/担保比例/净值峰值与回撤基线，追加式手工维护），并列入 §14 输入，用于回撤预算与杠杆预警跟踪；首次录入真实持仓至 `a_share_holdings.csv`（6 只，股数/成本/割肉价待用户补充） |
