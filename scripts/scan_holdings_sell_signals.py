@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Scan A-share holdings for stop-loss, lockup, profit-exit, and stop-raise actions.
 
-Deterministic part of operation-workflow Stage 5. It does NOT decide hard-exit
-exceptions (§16 veto / sudden event / severe quarterly miss) or thesis/valuation
-sells; those are left to model judgment per the workflow's script/LLM split.
+Deterministic part of operation-workflow Stage 5: stop-loss hit, lockup, trend
+protection tiers, profit-exit ceilings, stop-raise suggestions, valuation-tier
+refresh against the core pool, account drawdown/leverage alerts from the account
+snapshot, and the 1.5% single-trade risk check. It does NOT decide exit-matrix
+Tier-1 hard falsification (veto / sudden event / severe quarterly miss /
+verified structural thesis break); those are left to model judgment per the
+workflow's script/LLM split (§14).
 """
 
 from __future__ import annotations
@@ -22,6 +26,8 @@ from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
+DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
+DEFAULT_ACCOUNT_SNAPSHOT = ROOT / "data/processed/portfolio_account_snapshot.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_holdings_actions.csv"
 DEFAULT_OUTPUT_MD = ROOT / "data/processed/daily_holdings_tracker.md"
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
@@ -32,6 +38,9 @@ BASE_BUILD_AMOUNT = 250_000  # 25 万元
 PROFIT_LADDER = ((2.0, 0.50), (1.0, 0.35), (0.5, 0.20), (0.3, 0.10))
 LOCKUP_MONTHS = 3
 SINGLE_STOCK_WEIGHT_LIMIT = 0.30
+SINGLE_TRADE_RISK_LIMIT = 0.015  # 个人体系 §13.2：仓位比例×止损距离 <= 净资产 1.5%
+# 个人体系 §13.1 回撤预算：自净值峰值 -8% 去杠杆 / -12% 黄色 / -20% 红色。
+DRAWDOWN_TIERS = ((0.20, "红色警告"), (0.12, "黄色警告"), (0.08, "去杠杆"))
 # §14 趋势保护线（v12 全部日线化）：档位 -> (均线窗口, 连续N日, 缓冲X)。
 TREND_PARAMS = {
     "daily": (60, 3, 0.03),
@@ -43,6 +52,23 @@ TREND_PARAMS = {
 def load_csv(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8-sig") as handle:
         return list(csv.DictReader(handle))
+
+
+def load_valuation_pool(path: Path) -> dict[str, dict[str, str]] | None:
+    """Core valuation pool keyed by code; None when the file is unavailable (§14 输入 4)."""
+    if not path.exists():
+        return None
+    return {row["security_code"].zfill(6): row for row in load_csv(path) if row.get("security_code")}
+
+
+def load_account_snapshot(path: Path) -> dict[str, str] | None:
+    """Latest row of the append-style account snapshot (§14 输入 7)."""
+    if not path.exists():
+        return None
+    rows = load_csv(path)
+    if not rows:
+        return None
+    return max(rows, key=lambda row: row.get("as_of", ""))
 
 
 def write_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str]) -> None:
@@ -141,10 +167,32 @@ def profit_ladder_ceiling(profit_pct: float) -> float:
     return 0.0
 
 
-def classify_holding(row: dict[str, str], as_of: date, timeout: float) -> dict[str, object]:
+def classify_holding(
+    row: dict[str, str], as_of: date, timeout: float, pool: dict[str, dict[str, str]] | None
+) -> dict[str, object]:
     code = (row.get("security_code") or "").zfill(6)
     result: dict[str, object] = {key: row.get(key, "") for key in row}
     result["security_code"] = code
+
+    # §14 持仓估值档位刷新：对照最新核心池；池不可用时标注未刷新。
+    if pool is None:
+        result["pool_valuation_tier"] = ""
+        result["valuation_alert"] = "估值池文件缺失，未刷新档位"
+    else:
+        pool_row = pool.get(code)
+        if pool_row is None:
+            result["pool_valuation_tier"] = "不在核心估值合格池"
+            result["valuation_alert"] = "已出池（高估/无法估值/降档），按§14风险预警5复核"
+        else:
+            pool_tier = pool_row.get("valuation_tier", "")
+            result["pool_valuation_tier"] = pool_tier
+            held_tier = (row.get("valuation_tier") or "").strip()
+            held_norm = held_tier.split("(")[0].split("（")[0].strip()
+            result["valuation_alert"] = (
+                f"档位变化：持仓记录[{held_tier}] -> 最新池[{pool_tier}]"
+                if held_norm and pool_tier and held_norm != pool_tier
+                else ""
+            )
 
     cost = to_float(row.get("cost_basis"))
     stop = to_float(row.get("stop_loss_price"))
@@ -252,29 +300,82 @@ def classify_holding(row: dict[str, str], as_of: date, timeout: float) -> dict[s
     return result
 
 
-def add_weights(rows: list[dict[str, object]]) -> tuple[float, int]:
-    total = sum(float(r.get("position_value") or 0.0) for r in rows if r.get("holdings_action") != "data_error")
+def add_weights(rows: list[dict[str, object]], snapshot: dict[str, str] | None) -> dict[str, object]:
+    """权重、build_amount、账户回撤/杠杆状态与单笔风险校验（§13/§14，个人体系 §13.1/§13.2）。
+
+    总资产 = 全部持仓市值（原则上不持现金）；净资产 = 总资产 - 融资负债（负债取账户快照最新行）。
+    """
+    valid_rows = [r for r in rows if r.get("holdings_action") != "data_error"]
+    total = sum(float(r.get("position_value") or 0.0) for r in valid_rows)
+    quotes_ok = bool(valid_rows) or not rows
+    margin_debt = to_float((snapshot or {}).get("margin_debt_cny")) or 0.0
+    recorded_peak = to_float((snapshot or {}).get("account_peak_net_assets_cny"))
+    net_assets = max(total - margin_debt, 0.0) if snapshot else total
+    peak = max(recorded_peak or 0.0, net_assets)
+    if not quotes_ok:
+        drawdown = 0.0
+        drawdown_status = "数据异常（行情不可用），未计算"
+    else:
+        drawdown = (1 - net_assets / peak) if peak > 0 else 0.0
+        drawdown_status = "正常"
+        for threshold, label in DRAWDOWN_TIERS:
+            if drawdown >= threshold:
+                drawdown_status = label
+                break
+    leverage = total / net_assets if net_assets > 0 else 0.0
+    guarantee_pct = total / margin_debt * 100 if margin_debt > 0 else 0.0
+
     for row in rows:
         value = float(row.get("position_value") or 0.0)
         weight = value / total if total else 0.0
         row["current_weight_pct"] = round(weight * 100, 2)
         row["weight_over_limit"] = bool(weight > SINGLE_STOCK_WEIGHT_LIMIT)
-    return total, current_build_amount(total)
+        # 单笔风险 = 持仓市值 × 止损距离 / 净资产（个人体系 §13.2 的持仓监控版）。
+        close = to_float(row.get("close"))
+        stop = to_float(row.get("stop_loss_price"))
+        if close and stop and close > stop and net_assets > 0:
+            risk = value * (close - stop) / close / net_assets
+            row["single_trade_risk_pct"] = round(risk * 100, 2)
+            row["single_trade_risk_over_limit"] = bool(risk > SINGLE_TRADE_RISK_LIMIT)
+        else:
+            row["single_trade_risk_pct"] = ""
+            row["single_trade_risk_over_limit"] = False
+
+    return {
+        "total_assets": total,
+        "build_amount": current_build_amount(total),
+        "snapshot_available": snapshot is not None,
+        "snapshot_as_of": (snapshot or {}).get("as_of", ""),
+        "margin_debt": margin_debt,
+        "net_assets": net_assets,
+        "peak_net_assets": peak,
+        "drawdown_pct": drawdown,
+        "drawdown_status": drawdown_status,
+        "leverage": leverage,
+        "guarantee_pct": guarantee_pct,
+    }
 
 
-def scan(rows: list[dict[str, str]], as_of: date, symbols: set[str] | None, timeout: float, workers: int) -> list[dict[str, object]]:
+def scan(
+    rows: list[dict[str, str]],
+    as_of: date,
+    symbols: set[str] | None,
+    timeout: float,
+    workers: int,
+    pool: dict[str, dict[str, str]] | None,
+) -> list[dict[str, object]]:
     eligible = [r for r in rows if r.get("security_code") and (not symbols or r["security_code"].zfill(6) in symbols)]
     if not eligible:
         return []
     by_code: dict[str, dict[str, object]] = {}
     with ThreadPoolExecutor(max_workers=max(1, workers)) as executor:
-        futures = {executor.submit(classify_holding, r, as_of, timeout): r["security_code"].zfill(6) for r in eligible}
+        futures = {executor.submit(classify_holding, r, as_of, timeout, pool): r["security_code"].zfill(6) for r in eligible}
         for future in as_completed(futures):
             by_code[futures[future]] = future.result()
     return [by_code[r["security_code"].zfill(6)] for r in eligible if r["security_code"].zfill(6) in by_code]
 
 
-def write_markdown(path: Path, rows: list[dict[str, object]], as_of: date, total_assets: float, build_amount: int) -> None:
+def write_markdown(path: Path, rows: list[dict[str, object]], as_of: date, account: dict[str, object]) -> None:
     groups = [
         ("今日割肉清仓", "stop_loss_sell"),
         ("今日趋势保护触发：战术退出复核", "trend_exit_suggested"),
@@ -284,17 +385,40 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: date, total
         ("维持持有", "hold"),
         ("数据异常", "data_error"),
     ]
+    if account["snapshot_available"]:
+        account_lines = [
+            (
+                f"账户回撤状态：{account['drawdown_status']}（净资产估算 {account['net_assets']:,.0f}，"
+                f"峰值 {account['peak_net_assets']:,.0f}，回撤 {account['drawdown_pct']:.1%}；"
+                f"负债取快照 {account['snapshot_as_of']}，现价重估）"
+            ),
+            f"杠杆/担保比例（估算）：{account['leverage']:.2f}x / {account['guarantee_pct']:.0f}%（融资负债 {account['margin_debt']:,.0f}）",
+        ]
+    else:
+        account_lines = ["账户回撤状态：账户快照文件缺失，未计算（降级运行，请补 `portfolio_account_snapshot.csv`）。"]
+    risk_over = [r for r in rows if r.get("single_trade_risk_over_limit")]
+    valuation_alerts = [r for r in rows if r.get("valuation_alert")]
     lines = [
         "# A股每日持仓动作",
         "",
         f"日期：{as_of.isoformat()}",
-        f"账户总资产（持仓市值，原则上不持现金）：{total_assets:,.0f}",
-        f"当前建仓金额 build_amount：{build_amount:,.0f}",
-        "账户回撤状态：需结合账户净值峰值人工判断（脚本未计算）。",
+        f"账户总资产（持仓市值，原则上不持现金）：{account['total_assets']:,.0f}",
+        f"当前建仓金额 build_amount（单批，§13口径）：{account['build_amount']:,.0f}",
+        *account_lines,
         "",
-        "> 硬离场例外（§16 一票否决 / 公司突发事件 / 季报利润严重不及预期）需由模型复核 `forced_exit_review`，可打破 3 个月锁定立即清仓。",
+        "> 退出优先级矩阵（§14）：Tier-0 割肉价触及=当日无条件清仓不得延迟；Tier-1 硬证伪（一票否决/突发事件/季报严重不及预期/经核实的结构性 thesis 证伪）需模型复核 `forced_exit_review`，可破 3 个月锁定；Tier-2 软走弱锁定期内只上调割肉价。",
         "",
     ]
+    if risk_over or valuation_alerts:
+        lines.extend(["## 今日风险预警", ""])
+        for row in risk_over:
+            lines.append(
+                f"- 单笔风险超限：{row.get('security_name','')}（{row.get('security_code','')}）"
+                f"权重×止损距离 = 净资产的 {row.get('single_trade_risk_pct','')}% > 1.5%，建议上调割肉价收窄风险"
+            )
+        for row in valuation_alerts:
+            lines.append(f"- 估值档位：{row.get('security_name','')}（{row.get('security_code','')}）{row.get('valuation_alert','')}")
+        lines.append("")
     for title, action in groups:
         members = [r for r in rows if r.get("holdings_action") == action]
         lines.extend([f"## {title}", ""])
@@ -302,13 +426,17 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: date, total
             lines.extend(["无。", ""])
             continue
         for index, row in enumerate(members, 1):
+            pool_tier = row.get("pool_valuation_tier", "") or "-"
             lines.append(f"{index}. {row.get('security_name','')}（{row.get('security_code','')}）")
-            lines.append(f"- 策略/质量/估值：{row.get('strategy_tag','')} / {row.get('quality_tier','')} / {row.get('valuation_tier','')}")
+            lines.append(f"- 策略/质量/估值：{row.get('strategy_tag','')} / {row.get('quality_tier','')} / {row.get('valuation_tier','')}（最新池：{pool_tier}）")
             lines.append(f"- 现价/成本/浮盈：{row.get('close','')} / {row.get('cost_basis','')} / {row.get('profit_pct','')}")
             lines.append(f"- 持有月数/锁定：{row.get('months_held','')} / {row.get('lockup_active','')}")
             lines.append(f"- 割肉价/MA120/上调建议：{row.get('stop_loss_price','')} / {row.get('ma120','')} / {row.get('suggested_stop_price','') or '-'}")
             lines.append(f"- 趋势保护：{row.get('trend_protection_level','')} 线 {row.get('trend_line_value','') or '-'}，参考收盘 {row.get('trend_ref_close','') or '-'}，破位 {row.get('trend_break','')}")
-            lines.append(f"- 当前权重：{row.get('current_weight_pct','')}%{'（超30%）' if row.get('weight_over_limit') else ''}")
+            lines.append(
+                f"- 当前权重：{row.get('current_weight_pct','')}%{'（超30%）' if row.get('weight_over_limit') else ''}；"
+                f"单笔风险：{row.get('single_trade_risk_pct','') or '-'}%{'（超1.5%）' if row.get('single_trade_risk_over_limit') else ''}"
+            )
             lines.append(f"- 触发：{row.get('action_reason','')}")
             lines.append("")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -343,6 +471,10 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--as-of", required=True, help="Trading date in YYYY-MM-DD format.")
     parser.add_argument("--holdings", type=Path, default=DEFAULT_HOLDINGS)
+    parser.add_argument("--valuation-pool", type=Path, default=DEFAULT_VALUATION_POOL,
+                        help="Core valuation pool CSV for refreshing holding valuation tiers (§14 输入 4).")
+    parser.add_argument("--account-snapshot", type=Path, default=DEFAULT_ACCOUNT_SNAPSHOT,
+                        help="Append-style account snapshot CSV for drawdown/leverage alerts (§14 输入 7).")
     parser.add_argument("--output-csv", type=Path, default=DEFAULT_OUTPUT_CSV)
     parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
     parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
@@ -354,11 +486,13 @@ def parse_args() -> argparse.Namespace:
 
 FIELDNAMES = [
     "as_of", "security_code", "security_name", "strategy_tag", "quality_tier", "valuation_tier",
+    "pool_valuation_tier", "valuation_alert",
     "entry_date", "months_held", "lockup_active", "cost_basis", "close", "profit_pct",
     "stop_loss_price", "stop_hit", "ma60", "ma120", "raise_stop_suggested", "suggested_stop_price",
     "trend_protection_level", "trend_line_value", "trend_ref_close", "trend_break",
     "initial_shares", "current_shares", "cumulative_trim_pct", "profit_trim_ceiling_pct",
     "additional_trim_pct_allowed", "position_value", "current_weight_pct", "weight_over_limit",
+    "single_trade_risk_pct", "single_trade_risk_over_limit",
     "holdings_action", "action_reason", "forced_exit_review", "data_source", "scanned_at_utc",
 ]
 
@@ -368,13 +502,19 @@ def main() -> None:
     as_of = date.fromisoformat(args.as_of)
     symbols = {item.strip().zfill(6) for item in args.symbols.split(",") if item.strip()} or None
     holdings = load_csv(args.holdings) if args.holdings.exists() else []
-    rows = scan(holdings, as_of, symbols, args.timeout, args.workers)
-    total_assets, build_amount = add_weights(rows)
+    pool = load_valuation_pool(args.valuation_pool)
+    snapshot = load_account_snapshot(args.account_snapshot)
+    rows = scan(holdings, as_of, symbols, args.timeout, args.workers, pool)
+    account = add_weights(rows, snapshot)
     write_csv(args.output_csv, rows, FIELDNAMES)
-    write_markdown(args.output_md, rows, as_of, total_assets, build_amount)
+    write_markdown(args.output_md, rows, as_of, account)
     if rows:
         log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv, args.output_md)
-    print(f"scanned {len(rows)} holdings; total_assets={total_assets:,.0f}; build_amount={build_amount:,.0f}")
+    print(
+        f"scanned {len(rows)} holdings; total_assets={account['total_assets']:,.0f}; "
+        f"net_assets={account['net_assets']:,.0f}; build_amount={account['build_amount']:,.0f}; "
+        f"drawdown={account['drawdown_pct']:.1%} ({account['drawdown_status']})"
+    )
 
 
 if __name__ == "__main__":

@@ -99,6 +99,10 @@ def build_pool(
                 "valuation_pe_ttm": row.get("pe_ttm", ""),
                 "valuation_pb": row.get("pb", ""),
                 "valuation_reason": row.get("valuation_reason", ""),
+                # §6.7：估值结论日原样透传；pool_as_of 只是物化日，不得当估值复核日用。
+                "valuation_reviewed_at": row.get("valuation_reviewed_at", ""),
+                "valuation_price_as_of": row.get("valuation_price_as_of", ""),
+                "evidence_available_at": row.get("evidence_available_at", ""),
                 "pool_as_of": as_of,
                 "source_file": str(DEFAULT_VALUATION.relative_to(ROOT)),
             }
@@ -189,6 +193,9 @@ def main() -> None:
         "valuation_pe_ttm",
         "valuation_pb",
         "valuation_reason",
+        "valuation_reviewed_at",
+        "valuation_price_as_of",
+        "evidence_available_at",
         "pool_as_of",
         "source_file",
     ]

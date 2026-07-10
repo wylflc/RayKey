@@ -103,7 +103,13 @@ def build_queue(
         valuation = valuation_by_code.get(code)
         latest_report_date = parse_date((financial or {}).get("latest_report_date"))
         last_quality_review_date = parse_date(tier.get("reviewed_at_utc"))
-        last_valuation_review_date = parse_date((valuation or {}).get("pool_as_of"))
+        # §7.3：估值复核触发以估值结论日为准；缺失时才回退池物化日并标注口径降级。
+        valuation_reviewed_raw = (valuation or {}).get("valuation_reviewed_at", "")
+        last_valuation_review_date = parse_date(valuation_reviewed_raw)
+        valuation_date_basis = "valuation_reviewed_at"
+        if last_valuation_review_date is None:
+            last_valuation_review_date = parse_date((valuation or {}).get("pool_as_of"))
+            valuation_date_basis = "pool_as_of_fallback" if last_valuation_review_date else "no_prior_valuation"
         quality_review_needed = bool(
             latest_report_date and (last_quality_review_date is None or latest_report_date > last_quality_review_date)
         )
@@ -147,8 +153,11 @@ def build_queue(
                 "latest_report_type": (financial or {}).get("latest_report_type", ""),
                 "last_quality_review_date": last_quality_review_date.isoformat() if last_quality_review_date else "",
                 "last_valuation_review_date": last_valuation_review_date.isoformat() if last_valuation_review_date else "",
+                "valuation_date_basis": valuation_date_basis,
                 "quality_review_needed": quality_review_needed,
                 "valuation_review_needed": valuation_review_needed,
+                # §7.5：估值复核未完成前冻结新增买入；每日扫描读取本列执行冻结。
+                "buy_blocked": "review_pending" if valuation_review_needed else "",
                 "update_scope": update_scope,
                 "queue_priority": priority,
                 "queue_reasons": ";".join(event_reasons),
@@ -199,8 +208,10 @@ def main() -> None:
         "latest_report_type",
         "last_quality_review_date",
         "last_valuation_review_date",
+        "valuation_date_basis",
         "quality_review_needed",
         "valuation_review_needed",
+        "buy_blocked",
         "update_scope",
         "queue_priority",
         "queue_reasons",

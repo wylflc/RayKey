@@ -87,8 +87,10 @@ FINANCIAL_COLUMNS = [
     "security_name",
     "latest_report_date",
     "latest_report_type",
+    "latest_report_notice_date",
     "latest_annual_report_date",
     "latest_annual_report_type",
+    "latest_annual_report_notice_date",
     "total_operating_revenue",
     "parent_net_profit",
     "gross_margin_pct",
@@ -353,8 +355,11 @@ def fetch_financials(raw: dict[str, str], timeout: int, retries: int, periods: i
             {
                 "latest_report_date": safe_str(latest.get("REPORT_DATE")),
                 "latest_report_type": safe_str(latest.get("REPORT_TYPE")),
+                # 公告日=可得时点（§12.4 available_at 硬约束的数据基础）；provider 无此键时留空。
+                "latest_report_notice_date": safe_str(latest.get("NOTICE_DATE") or latest.get("UPDATE_DATE")),
                 "latest_annual_report_date": safe_str(latest_annual.get("REPORT_DATE")) if latest_annual else "",
                 "latest_annual_report_type": safe_str(latest_annual.get("REPORT_TYPE")) if latest_annual else "",
+                "latest_annual_report_notice_date": safe_str(latest_annual.get("NOTICE_DATE") or latest_annual.get("UPDATE_DATE")) if latest_annual else "",
                 "total_operating_revenue": format_float(latest_annual.get("TOTALOPERATEREVE") if latest_annual else ""),
                 "parent_net_profit": format_float(latest_annual.get("PARENTNETPROFIT") if latest_annual else ""),
                 "gross_margin_pct": format_float(latest_annual.get("XSMLL") if latest_annual else ""),

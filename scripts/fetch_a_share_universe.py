@@ -394,6 +394,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default="utf-8-sig",
         help="CSV encoding. Default: utf-8-sig for Excel compatibility.",
     )
+    parser.add_argument(
+        "--no-snapshot",
+        action="store_true",
+        help="Skip writing the dated immutable snapshot copy (ADR-0001).",
+    )
     return parser.parse_args(argv)
 
 
@@ -409,6 +414,17 @@ def main(argv: list[str] | None = None) -> int:
     rows.extend(fetch_bse_rows(timeout=args.timeout, pause_seconds=args.pause_seconds))
     rows = finalize_rows(rows, retrieved_at_utc=retrieved_at_utc)
     write_csv(rows, args.output, args.encoding)
+
+    # ADR-0001 / workflow §5.3：同时另存带日期的不可变快照，主路径只保留最新版。
+    if not args.no_snapshot:
+        snapshot_dir = args.output.parent / "snapshots"
+        snapshot_name = f"{args.output.stem}_{retrieved_at_utc[:10].replace('-', '')}{args.output.suffix}"
+        snapshot_path = snapshot_dir / snapshot_name
+        if snapshot_path.exists():
+            print(f"Snapshot already exists, left untouched (immutable): {snapshot_path}")
+        else:
+            write_csv(rows, snapshot_path, args.encoding)
+            print(f"Wrote immutable snapshot to {snapshot_path}")
 
     print(f"Wrote {len(rows)} A-share securities to {args.output}")
     print(f"Source retrieved at UTC: {retrieved_at_utc}")

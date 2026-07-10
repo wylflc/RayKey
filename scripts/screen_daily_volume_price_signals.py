@@ -20,6 +20,7 @@ from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
+DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
 DEFAULT_OUTPUT_MD = ROOT / "data/processed/daily_volume_price_tracker.md"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 
@@ -417,9 +418,10 @@ def scan(input_rows: list[dict[str, str]], as_of: str, symbols: set[str] | None,
     return [results_by_code[row["security_code"].zfill(6)] for row in eligible_rows if row["security_code"].zfill(6) in results_by_code]
 
 
-def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str, market_state: str) -> None:
+def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str, market_state: str, review_note: str = "") -> None:
     groups = [
         ("今日买入候选", "buy_candidate"),
+        ("今日复核冻结（§7.5，复核完成前不得买入）", "buy_blocked_review_pending"),
         ("今日等待回踩", "wait_pullback"),
         ("今日等待确认", "wait_confirmation"),
         ("今日等待突破", "wait_breakout"),
@@ -431,7 +433,8 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str, market
         "",
         f"日期：{as_of}",
         f"市场状态：{market_state}（§8.12，沪深300 vs MA250；弱势时操作偏向下调一档）",
-        "数据口径：东方财富前复权日线；仅扫描 `data/processed/a_share_core_valuation_pool.csv`。",
+        "数据口径：东方财富前复权日线（运行时拉取，未落盘原始bars）；仅扫描 `data/processed/a_share_core_valuation_pool.csv`。",
+        review_note,
         "",
     ]
     for title, state in groups:
@@ -493,6 +496,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--as-of", required=True, help="Trading date in YYYY-MM-DD format.")
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
+    parser.add_argument("--review-queue", type=Path, default=DEFAULT_REVIEW_QUEUE,
+                        help="Report update queue CSV; pool stocks with buy_blocked=review_pending are frozen per §7.5.")
     parser.add_argument("--output-csv", type=Path, default=DEFAULT_OUTPUT_CSV)
     parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
     parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
@@ -502,17 +507,36 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+
+def load_blocked_codes(path: Path) -> set[str] | None:
+    """§7.5 复核期买入冻结：更新队列中 buy_blocked=review_pending 的代码；文件缺失返回 None（未启用）。"""
+    if not path.exists():
+        return None
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        rows = list(csv.DictReader(handle))
+    return {
+        row["security_code"].zfill(6)
+        for row in rows
+        if row.get("security_code") and (row.get("buy_blocked", "").strip() == "review_pending")
+    }
+
+
 def main() -> None:
     args = parse_args()
     symbols = {item.strip().zfill(6) for item in args.symbols.split(",") if item.strip()} or None
     input_rows = load_csv(args.input)
     market_state = fetch_market_state(args.as_of, args.timeout)
     rows = scan(input_rows, args.as_of, symbols, args.timeout, args.workers)
+    blocked = load_blocked_codes(args.review_queue)
     for row in rows:
         row["market_state"] = market_state
         # §8.12：弱势市场下各信号分级的操作偏向下调一档。
         if market_state == "弱势" and row.get("signal_state") == "buy_candidate":
             row["action_bias"] = "可小仓试探或等确认" if row.get("signal_grade") == "强" else "等确认"
+        # §7.5/§11.9 复核期买入冻结：有信号也不列买入候选。
+        if blocked and row.get("signal_state") == "buy_candidate" and str(row.get("security_code", "")).zfill(6) in blocked:
+            row["signal_state"] = "buy_blocked_review_pending"
+            row["action_bias"] = "复核完成前冻结买入（§7.5）"
     fieldnames = [
         "trade_date",
         "security_code",
@@ -563,7 +587,11 @@ def main() -> None:
         "screened_at_utc",
     ]
     write_csv(args.output_csv, rows, fieldnames)
-    write_markdown(args.output_md, rows, args.as_of, market_state)
+    review_note = (
+        "复核冻结：已启用（读取更新队列）。" if blocked is not None else
+        "复核冻结：未启用（更新队列文件缺失，§7.5 冻结未生效）。"
+    )
+    write_markdown(args.output_md, rows, args.as_of, market_state, review_note)
     log_scan_decisions(args.log_file, rows, args.as_of, args.input, args.output_csv, args.output_md)
     print(f"scanned {len(rows)} rows from {args.input}")
 
