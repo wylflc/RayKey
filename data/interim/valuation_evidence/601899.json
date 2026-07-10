@@ -1,6 +1,6 @@
 {
  "security_code": "601899",
- "retrieved_at_utc": "2026-07-10T10:12:51+00:00",
+ "retrieved_at_utc": "2026-07-10T13:16:52+00:00",
  "quote": {
   "price": 27.72,
   "change_pct": 0.36,
@@ -11,7 +11,7 @@
   "float_market_cap": 571081705841,
   "quote_time": 1783671102,
   "name": "紫金矿业",
-  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=0.000333%2C1.603288%2C1.603195%2C1.601899%2C1.600900%2C1.601088%2C1.600938%2C0.002371"
+  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=1.601965%2C0.002311%2C1.601899%2C1.600585%2C0.000733%2C1.600760%2C1.601919%2C1.600150%2C1.601%D1%8E%D1%82%D0%B4%D1%80%2C0.002460"
  },
  "source_urls": {
   "finance": "https://datacenter.eastmoney.com/securities/api/data/get?filter=%28SECUCODE%3D%22601899.SH%22%29&client=APP&source=HSF10&type=RPT_F10_FINANCE_MAINFINADATA&sty=APP_F10_MAINFINADATA&st=REPORT_DATE&ps=40&sr=-1",

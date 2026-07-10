@@ -1,0 +1,18 @@
+{
+ "security_code": "601ютдр",
+ "retrieved_at_utc": "2026-07-10T13:17:24+00:00",
+ "quote": {},
+ "source_urls": {
+  "finance": "https://datacenter.eastmoney.com/securities/api/data/get?filter=%28SECUCODE%3D%22601%D1%8E%D1%82%D0%B4%D1%80.SH%22%29&client=APP&source=HSF10&type=RPT_F10_FINANCE_MAINFINADATA&sty=APP_F10_MAINFINADATA&st=REPORT_DATE&ps=40&sr=-1",
+  "valuation_history": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_VALUEANALYSIS_DET&columns=ALL&filter=%28SECURITY_CODE%3D%22601%D1%8E%D1%82%D0%B4%D1%80%22%29&pageNumber=1&pageSize=1250&sortTypes=-1&sortColumns=TRADE_DATE&source=WEB&client=WEB",
+  "performance_predict": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_PUBLIC_OP_NEWPREDICT&columns=ALL&filter=%28SECURITY_CODE%3D%22601%D1%8E%D1%82%D0%B4%D1%80%22%29&pageNumber=1&pageSize=6&sortTypes=-1&sortColumns=NOTICE_DATE&source=WEB&client=WEB",
+  "performance_express": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_FCI_PERFORMANCEE&columns=ALL&filter=%28SECURITY_CODE%3D%22601%D1%8E%D1%82%D0%B4%D1%80%22%29&pageNumber=1&pageSize=4&sortTypes=-1&sortColumns=REPORT_DATE&source=WEB&client=WEB"
+ },
+ "fetch_status": "error",
+ "fetch_error": "forecast:'ascii' codec can't encode characters in position 48-51: ordinal not in range(128)",
+ "finance_periods": [],
+ "valuation_band": {},
+ "performance_predicts": [],
+ "performance_express": [],
+ "profit_forecast": {}
+}
