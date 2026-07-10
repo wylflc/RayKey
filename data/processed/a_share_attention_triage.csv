@@ -18,8 +18,8 @@
 600199,金种子酒,boundary_pending,弱品牌大众价位，但华润入主赋能/重组中（硬触发）,,,,华润赋能后份额/盈利改善,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
 000860,顺鑫农业,boundary_pending,牛栏山民酒龙头护城河真实，但房地产/生猪非核心拖累、结构混乱、可比性差,牛栏山品牌+渠道+成本真实难复制，但listco结构混乱,,,剥离非核心/结构清晰后,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
 600238,*ST椰岛,boundary_pending,保健酒/白酒，*ST因连年亏损；未坐实造假故非garbage；资料弱、无法明确实际水平,,,,摘帽+经营改善；若核到治理造假则转garbage,需核验年报/监管公告,2026-06-28T13:43:52Z,a-share-selection-operation-v9
-000995,皇台酒业,garbage,历史财务造假（虚增存货/收入），治理灾难,,历史财务造假（虚增存货/收入），治理灾难,governance_fraud,,需核验立案调查/处罚公告,2026-06-28T13:43:52Z,a-share-selection-operation-v9
-600696,*ST岩石,garbage,长期治理灾难（前匹凸匹/慧球系，操纵与重大违规史），*ST,,长期治理灾难（操纵与重大违规史），*ST,governance_fraud,,需核验监管处罚/重组公告,2026-06-28T13:43:52Z,a-share-selection-operation-v9
+000995,皇台酒业,garbage,历史财务造假（虚增存货/收入），治理灾难,,财务造假坐实（2016-10甘肃证监局处罚：2015年报虚增利润500万，公司罚40万+卢鸿毅等董监高处罚）+2017年6700万库亏刑事案；历史责任人虽出清，但现任实控人赵满堂2026-06又被证监会立案（信披违规，涉盛达系），治理灾难跨两代控制人延续，规则7豁免不适用,governance_fraud,,"坐实文书：甘肃证监局处罚(2016-10)；赵满堂立案告知书(证监立案字0142026039号,2026-06)；核验2026-07-10(web对照文书)",2026-07-10T09:34:52Z,a-share-selection-operation-v9
+600696,*ST岩石,garbage,长期治理灾难（前匹凸匹/慧球系，操纵与重大违规史），*ST,,治理灾难坐实：实控人韩啸2024-09因海银财富非法集资被刑事拘留（韩宏伟韩啸父子均被采取刑事强制措施），64.8%股份司法冻结，责任人未让渡控制权；公司已于2026-04-30终止上市（白酒退市第一股），仅维护证券基础信息至名单刷新剔除,governance_fraud,,坐实文书：上海奉贤警方立案通报(2024-09)+刑事强制措施；2026-04-30退市；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v9
 000725,京东方A,worth_attention,全球LCD龙头+OLED#2；韩国不可逆退出LCD的寡头整合+$10B级资本壁垒+OLED前沿，护城河客观难复制,领先世代产线$10B+、规模/良率/客户认证客观难复制；整合不可逆,,,,a-share-display-devices.md（年报/行业整合）,2026-06-28T16:48:18Z,a-share-selection-operation-v9
 000100,TCL科技,worth_attention,TCL华星LCD#2；同属不可逆寡头整合+巨额资本壁垒，OLED/印刷OLED布局,规模+资本+整合壁垒客观难复制,,,,a-share-display-devices.md（年报/行业整合）,2026-06-28T16:48:18Z,a-share-selection-operation-v9
 000050,深天马A,boundary_pending,中小/车载/工控LTPS+柔性OLED，车载显示全球领先且认证粘性，但整体规模小、盈利弱，大尺寸OLED亚规模,,,,车载/专显niche规模与盈利兑现→可升worth_attention,a-share-display-devices.md（年报/行业整合）,2026-06-28T16:48:18Z,a-share-selection-operation-v9
@@ -35,13 +35,13 @@
 002830,名雕股份,garbage,家装，小、无壁垒,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）,2026-06-28T21:47:48Z,a-share-selection-operation-v10
 300621,维业股份,garbage,公装，小、无壁垒,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）,2026-06-28T21:47:48Z,a-share-selection-operation-v10
 603030,全筑股份,garbage,住宅精装，地产依赖、严重困境,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）,2026-06-28T21:47:48Z,a-share-selection-operation-v10
-002047,*ST宝鹰,garbage,公装+海外，*ST，结构性破损叠加困境,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；需核验：若确凿造假改 governance_fraud,2026-06-28T21:47:48Z,a-share-selection-operation-v10
-002620,*ST瑞和,garbage,公装，*ST，破损叠加困境,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；需核验：若确凿造假改 governance_fraud,2026-06-28T21:47:48Z,a-share-selection-operation-v10
-002713,*ST东易,garbage,家装龙头之一，*ST，家装模式破损,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；需核验：若确凿造假改 governance_fraud,2026-06-28T21:47:48Z,a-share-selection-operation-v10
-002822,ST中装,garbage,公装，ST，破损叠加困境,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；需核验：若确凿造假改 governance_fraud,2026-06-28T21:47:48Z,a-share-selection-operation-v10
-002856,*ST美芝,garbage,建筑装饰，*ST,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；需核验：若确凿造假改 governance_fraud,2026-06-28T21:47:48Z,a-share-selection-operation-v10
-300506,ST名家汇,garbage,照明工程，ST，项目制无壁垒,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；需核验：若确凿造假改 governance_fraud,2026-06-28T21:47:48Z,a-share-selection-operation-v10
-603828,*ST利达,garbage,柯利达，装饰，*ST,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；需核验：若确凿造假改 governance_fraud,2026-06-28T21:47:48Z,a-share-selection-operation-v10
+002047,*ST宝鹰,garbage,公装+海外，*ST，结构性破损叠加困境,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；：若确凿造假改 governance_fraud；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v10
+002620,*ST瑞和,garbage,公装，*ST，破损叠加困境,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；：若确凿造假改 governance_fraud；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v10
+002713,*ST东易,garbage,家装龙头之一，*ST，家装模式破损,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；：若确凿造假改 governance_fraud；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v10
+002822,ST中装,garbage,公装，ST，破损叠加困境,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；：若确凿造假改 governance_fraud；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v10
+002856,*ST美芝,garbage,建筑装饰，*ST,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；：若确凿造假改 governance_fraud；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v10
+300506,ST名家汇,garbage,照明工程，ST，项目制无壁垒,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；：若确凿造假改 governance_fraud；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v10
+603828,*ST利达,garbage,柯利达，装饰，*ST,,建筑装饰商业模式结构性破损（低门槛/垫资/应收坏账/地产依赖/无持久护城河）,structural_industry,,a-share-decoration-construction.md（27/27历史评审无护城河）；：若确凿造假改 governance_fraud；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v10
 601886,江河集团,boundary_pending,高端幕墙系统（全球前列、技术/资质更高）+医疗健康多元化，属更高壁垒子赛道，与普通室内装修结构不同,高端幕墙技术/资质比普通装修更难复制，但仍项目制/地产相关,,,幕墙/医疗持久回报验证,a-share-decoration-construction.md,2026-06-28T21:47:48Z,a-share-selection-operation-v10
 000063,中兴通讯,worth_attention,电信设备全球前四（华为/爱立信/诺基亚/中兴/三星），研发/IP/运营商/规模护城河,5G专利/研发规模/运营商关系/算力布局难以资本快速复制,,,,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
 000157,中联重科,worth_attention,工程机械大三龙头之一，全球化+高机领先，地产下行中靠出口/高机验证韧性,规模/品牌/全球渠道/技术，工程机械龙头地位难复制,,,,round1轻量初筛（业务模式+护城河+负面，ADR-0006）,2026-06-28T22:01:25Z,a-share-selection-operation-v10
@@ -1030,7 +1030,7 @@
 688059,华锐精密,boundary_pending,数控刀片三雄之一规模小价格竞争,,,,高端刀具份额突破后复核,round1轻量初筛（多家竞争规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
 688060,云涌科技,boundary_pending,工业信息安全小厂,,,,无重大变化则维持,round1轻量初筛（规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
 688072,拓荆科技,worth_attention,薄膜沉积设备（PECVD/ALD）国产第一近独家，先进制程与三维集成扩品类，客户验证深厚,薄膜工艺设备与产线验证壁垒十年级，国产格局近独家，资本无法速成,,,,round1轻量初筛（同中微/北方华创设备先例）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
-688076,ST诺泰,garbage,2023年报虚增收入利润被证监会行政处罚坐实，实控人未变更且被处罚，多肽景气无法豁免造假（需核验处罚决定书）,,财务造假：通过虚假交易虚增收入利润，行政处罚落地，责任人在位（造假坐实）,governance_fraud,,round1轻量初筛（governance_fraud，需核验处罚决定书与最新整改公告）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
+688076,ST诺泰,garbage,2023年报虚增收入利润被证监会行政处罚坐实，实控人未变更且被处罚，多肽景气无法豁免造假（需核验处罚决定书）,,财务造假+欺诈发行坐实：2025-12-18行政处罚决定书（公司罚4740万+实控人赵德中罚1300万，合计7620万；2021年虚增收入3000万/利润2595万占20.64%，2023年可转债募集说明书重大虚假），责任人在位,governance_fraud,,"坐实文书：行政处罚决定书(2025-12-18,公告2025-072)；核验2026-07-10(web对照文书)",2026-07-10T09:34:52Z,a-share-selection-operation-v13
 688080,映翰通,boundary_pending,工业物联网通信规模小,,,,海外与新品放量后复核,round1轻量初筛（防过度纳入2：规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
 688081,兴图新科,boundary_pending,军用视频小厂,,,,订单恢复后复核,round1轻量初筛（规模弱）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
 688082,盛美上海,worth_attention,清洗设备国产第一（SAPS/TEBO专利差异化），向电镀炉管平台化扩张，ROE15%以上增长强,清洗工艺专利与客户产线验证绑定，国产替代核心卡位，平台化复制难度高,,,,round1轻量初筛（同中微/拓荆设备先例）,2026-07-07T14:48:20Z,a-share-selection-operation-v13
@@ -1724,7 +1724,7 @@
 000042,中洲控股,boundary_pending,深圳小房企,,,,行业出清后格局复核,round1轻量初筛（房地产）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
 000048,京基智农,boundary_pending,地产转型养猪，成本无极端优势，判例6仅豁免牧原,,,,养殖成本行业领先验证,round1轻量初筛（生猪养殖）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
 000055,方大集团,boundary_pending,幕墙+地铁屏蔽门，幕墙属较高壁垒子赛道不判垃圾（装饰校准），屏蔽门细分领先但项目制,,,,屏蔽门/光伏建筑盈利中枢验证,round1轻量初筛（幕墙/屏蔽门）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
-000056,*ST皇庭,garbage,违规担保与控股股东资金占用未解决，实控人仍在位，核心资产皇庭广场被司法拍卖抵债，治理灾难持续（判例13坐实侧）,,控股股东资金占用/违规担保坐实且未解决，责任人仍在位，核心资产被拍卖，治理灾难持续,governance_fraud,,round1轻量初筛（监管通报与债务处置公告史，需核验）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
+000056,*ST皇庭,garbage,违规担保与控股股东资金占用未解决，实控人仍在位，核心资产皇庭广场被司法拍卖抵债，治理灾难持续（判例13坐实侧）,,治理/财务长期不透明坐实（§5.4.3条件2）：2025年报被出具无法表示意见（2026-04，A股当季首份）+净资产-23.73亿资不抵债+核心资产皇庭广场被司法处置；郑康豪2010年至今任董事长（多份深圳证监局警示函/责令改正），责任人在位,governance_fraud,,坐实文书：2025年报无法表示意见审计报告(2026-04)+退市风险警示；深圳证监局警示函/责令改正(2022)；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 000058,深赛格,boundary_pending,华强北电子市场物业+杂业，区位真实但电商冲击无成长,,,,无重大变化则维持,round1轻量初筛（商业物业）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
 000059,华锦股份,boundary_pending,兵器系普通炼化周期亏损，华锦阿美精细化工大项目在建属重大变量,,,,华锦阿美项目投产后按新资产复核,round1轻量初筛（炼化）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
 000062,深圳华强,boundary_pending,元器件分销无壁垒,,,,无重大变化则维持,round1轻量初筛（电子分销）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
@@ -1764,7 +1764,7 @@
 000514,渝开发,boundary_pending,重庆小房企,,,,行业出清后格局复核,round1轻量初筛（房地产）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
 000516,国际医学,boundary_pending,西安民营综合医院重资产爬坡减亏中，综合医院盈利模型未验证且有停诊处罚史,,,,盈亏平衡+运营合规验证,round1轻量初筛（医疗服务）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
 000517,荣安地产,boundary_pending,宁波小房企,,,,行业出清后格局复核,round1轻量初筛（房地产）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
-000518,*ST四环,garbage,隐瞒实际控制人及一致行动关系信披违法被证监会坐实处罚（陆克平市场禁入），长期蹭热点炒作（疫苗/熊去氧胆酸），隐性控制体系未彻底清除，治理灾难（判例13坐实侧）,,隐瞒实控人信披违法坐实处罚+市场禁入，公司长期蹭热点，治理灾难未解决,governance_fraud,,round1轻量初筛（证监会处罚决定史+炒作史，需核验）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
+000518,*ST四环,garbage,隐瞒实际控制人及一致行动关系信披违法被证监会坐实处罚（陆克平市场禁入），长期蹭热点炒作（疫苗/熊去氧胆酸），隐性控制体系未彻底清除，治理灾难（判例13坐实侧）,,隐瞒实控人信披违法坐实：证监会对陆克平罚2734万+终身市场禁入（2014-2018隐瞒实控身份+违规增持+指使信披违法）；2023-10、2024-10两次再被立案；近3亿股司法拍卖中但控制权未完成变更，灾难未解决,governance_fraud,,坐实文书：证监会处罚+陆克平终身市场禁入决定书；再立案(2023-10/2024-10)；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 000520,凤凰航运,boundary_pending,长江散货航运商品化，破产重整史,,,,无重大变化则维持,round1轻量初筛（内河航运）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
 000521,长虹美菱,boundary_pending,冰箱二线品牌净利率2-3%，被海尔美的全面覆盖,,,,无重大变化则维持,round1轻量初筛（白电）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
 000523,红棉股份,boundary_pending,广州浪奇存货造假案坐实但责任人已刑事处理、国资重组置换业务改名，按治理灾难已处理口径降观察（判例7）,,,,置入业务质量与治理规范验证,round1轻量初筛（轻工/重组）,2026-07-08T12:45:18Z,a-share-selection-operation-v15
@@ -1913,12 +1913,12 @@
 000816,智慧农业,boundary_pending,农机柴油机壳化边缘,,,,注入实质资产后复核,round1轻量初筛（农机壳）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000818,航锦科技,boundary_pending,氯碱商品+军工电子二线，曾蹭GPU概念,,,,军工电子订单与盈利占比验证,round1轻量初筛（化工/军工电子）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000819,岳阳兴长,boundary_pending,石化配套小炼化+疫苗题材多年未成,,,,无重大变化则维持,round1轻量初筛（石化）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
-000820,*ST节能,garbage,神雾系革命性节能技术长期夸大宣传、示范项目大面积烂尾、公告与财报验证明显不匹配（造假嫌疑），信披违规被处分，集团债务灾难未解决公司长期壳化,,长期蹭热点夸大宣传、公告与财报明显不匹配（garbage条件2造假嫌疑），神雾系治理灾难未解决，主业空心多年,governance_fraud,,round1轻量初筛（神雾系暴雷史，需核验）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
+000820,*ST节能,boundary_pending,garbage纠错降级：造假坐实（2022-06证监会处罚决定书+吴道洪市场禁入）但责任人已实质出局——神雾集团股份司法拍卖至7.67%、2025年报为无控股股东无实控人状态；按§5.4.7规则7（责任人出清）降回boundary_pending。主业空心属可逆业务否决。,,,,新控制权落定+连续两年标准无保留审计+主业重建或重整方案落地,坐实文书：证监会处罚决定书(2022-06)+吴道洪/高章俊市场禁入决定书(csrc.gov.cn)；2025年报披露无实控人；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 000821,ST京机,boundary_pending,光伏层压机份额领先+纸箱机械，光伏下行亏损叠加ST内控整改类（判例13）,,,,摘帽+光伏设备盈利验证,round1轻量初筛（光伏设备）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000822,山东海化,boundary_pending,纯碱大厂商品周期无极端成本优势,,,,无重大变化则维持,round1轻量初筛（纯碱）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000823,超声电子,boundary_pending,普通PCB二线+超声仪器，弱于沪电深南高速卡位锚点,,,,高多层高速板突破验证,round1轻量初筛（PCB）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000825,太钢不锈,boundary_pending,不锈钢全球最大单体但产品商品化被青山体系压制ROE低，规模不转化超额回报（判例4口径）,,,,高端特钢占比盈利中枢验证,round1轻量初筛（不锈钢）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
-000826,*ST启环,garbage,启迪环境虚增在建工程与营收信披违法2023年处罚坐实，启迪系控股体系未变、债务危机持续，治理灾难未解决（判例13坐实侧）,,虚增在建工程/营收信披违法坐实处罚，责任控股体系仍在位，债务危机未解决,governance_fraud,,round1轻量初筛（证监会处罚与债务史，需核验）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
+000826,*ST启环,garbage,启迪环境虚增在建工程与营收信披违法2023年处罚坐实，启迪系控股体系未变、债务危机持续，治理灾难未解决（判例13坐实侧）,,财务造假坐实：湖北证监局行政处罚决定书（2017/2018年报及2019绿色债券募集说明书虚假记载——伪造分包合同虚构PPP完工百分比，两年虚增收入10.3亿/利润2.39亿，罚60万）；2025-09控股子公司再收处罚决定书；启迪系仍控股，债务危机未解决,governance_fraud,,坐实文书：湖北证监局行政处罚决定书(2023)+控股子公司处罚(2025-09)；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 000828,东莞控股,boundary_pending,莞深高速+租赁规制回报（规则9）,,,,无重大变化则维持,round1轻量初筛（高速公路）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000829,天音控股,boundary_pending,手机分销低毛利无壁垒+彩票,,,,无重大变化则维持,round1轻量初筛（分销）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000830,鲁西化工,boundary_pending,园区一体化真实但产品组合同质（PC己内酰胺化肥），成本管理与资本效率弱于华鲁恒升锚点，ROE周期波动,,,,高端化工新材料占比与盈利中枢验证,round1轻量初筛（煤化工园区）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
@@ -1941,7 +1941,7 @@
 000888,峨眉山Ａ,boundary_pending,峨眉山景区资源独占但门票索道受发改委限价、规制回报（规则9，同张家界口径），提价通道未打开,,,,门票索道市场化定价或客流结构性改善,round1轻量初筛（景区）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000889,中嘉博创,boundary_pending,通信服务外包商誉暴雷壳系,,,,注入实质资产后复核,round1轻量初筛（通信服务）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000890,法尔胜,boundary_pending,桥梁缆索老厂+保理暴雷，主业边缘,,,,主业重建验证,round1轻量初筛（金属制品）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
-000892,欢瑞世纪,garbage,借壳上市期间2013-2016连续虚增营收利润，2019年证监会处罚坐实，实控人陈援钟君艳夫妇仍控制公司，责任人在位（判例13坐实侧）,,借壳期间连续虚增营收利润坐实处罚，实控人夫妇仍在位，治理灾难未解决,governance_fraud,,round1轻量初筛（证监会处罚决定+实控人现状，需核验）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
+000892,欢瑞世纪,garbage,借壳上市期间2013-2016连续虚增营收利润，2019年证监会处罚坐实，实控人陈援钟君艳夫妇仍控制公司，责任人在位（判例13坐实侧）,,财务造假坐实且违规延续：2019-11重庆证监局处罚（2013-2016借壳期连续虚增利润累计2.25亿，罚没452万）；2025-11财政部再处罚（2022年虚增利润1288万占71.8%）；2026-04-21证监会再立案；实控人体系在位，治理灾难持续,governance_fraud,,坐实文书：重庆证监局处罚(2019-11)+财政部处罚(2025-11)+证监会立案告知书(2026-04-21)；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 000897,津滨发展,boundary_pending,天津滨海小房企,,,,行业出清后格局复核,round1轻量初筛（房地产）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000898,鞍钢股份,boundary_pending,普钢央企大厂同质商品,,,,无重大变化则维持,round1轻量初筛（钢铁）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
 000899,赣能股份,boundary_pending,江西火电规制回报（规则9）,,,,无重大变化则维持,round1轻量初筛（电力）,2026-07-08T13:07:45Z,a-share-selection-operation-v15
@@ -2117,7 +2117,7 @@
 002066,瑞泰科技,boundary_pending,耐火材料同质（中国建材系）,,,,无重大变化则维持,round1轻量初筛（耐材）,2026-07-08T20:06:54Z,a-share-selection-operation-v15
 002067,景兴纸业,boundary_pending,箱板纸商品同质,,,,无重大变化则维持,round1轻量初筛（造纸）,2026-07-08T20:06:54Z,a-share-selection-operation-v15
 002068,黑猫股份,boundary_pending,炭黑规模领先但商品同质无定价权（防过度纳入3）,,,,无重大变化则维持,round1轻量初筛（炭黑）,2026-07-08T20:06:54Z,a-share-selection-operation-v15
-002069,獐子岛,garbage,扇贝存货反复暴雷，2020年证监会借北斗轨迹核查坐实虚减虚增利润，时任董事长市场禁入；海底存货本质不可审计属治理财务长期不透明,,财务造假坐实（2020年证监会处罚：借扇贝死亡虚减利润、虚增利润，时任董事长吴厚刚市场禁入）；海底存货不可验证，治理财务长期不透明,governance_fraud,,round1轻量初筛（证监会处罚决定，需核验）,2026-07-08T20:06:54Z,a-share-selection-operation-v15
+002069,獐子岛,boundary_pending,garbage纠错降级：造假坐实（2020-06证监会处罚+吴厚刚终身市场禁入）但2022-03司法拍卖后控股股东变更（大连盐化集团/国资系），吴厚刚2020年已出局；按§5.4.7规则7与康美药业先例降回boundary_pending。海底存货审计可验证性仍是核心复核项。,,,,新控制权治理下连续两年标准无保留审计+底播存货盘点核查机制建立+主业盈利恢复,"坐实文书：证监会处罚决定书+市场禁入决定书(2020-06,csrc.gov.cn)；2022-03控股股东变更为大连盐化系；核验2026-07-10(web对照文书)",2026-07-10T09:34:52Z,a-share-selection-operation-v15
 002072,凯瑞德,boundary_pending,纺织主业空心多次跨界热点失败，前实控人操纵市场被处罚且控制权已多次变更（规则7），壳化,,,,实质主业重建后复核,round1轻量初筛（壳公司，需核验控制权）,2026-07-08T20:06:54Z,a-share-selection-operation-v15
 002074,国轩高科,boundary_pending,动力电池三线盈利微薄，弱于亿纬锂能（防过度纳入7），大众入股未改变双寡头压制,,,,盈利质量与海外放量验证,round1轻量初筛（动力电池）,2026-07-08T20:06:54Z,a-share-selection-operation-v15
 002075,沙钢股份,boundary_pending,特钢同质商品（判例4）,,,,无重大变化则维持,round1轻量初筛（钢铁）,2026-07-08T20:06:54Z,a-share-selection-operation-v15
@@ -2280,7 +2280,7 @@
 002319,乐通股份,boundary_pending,油墨小厂壳运作,,,,无重大变化则维持,round1轻量初筛（壳公司）,2026-07-08T20:06:55Z,a-share-selection-operation-v15
 002321,华英农业,boundary_pending,樱桃谷鸭商品禽类无定价权（判例6）重整后,,,,无重大变化则维持,round1轻量初筛（禽类）,2026-07-08T20:06:55Z,a-share-selection-operation-v15
 002322,理工能科,boundary_pending,电力软件环境监测平庸,,,,无重大变化则维持,round1轻量初筛（电力软件）,2026-07-08T20:06:55Z,a-share-selection-operation-v15
-002323,*ST雅博,garbage,雅百特2015-2016年虚构巴基斯坦海外工程虚增收入利润，证监会顶格处罚并刑事追责，A股标志性造假案；金属屋面围护工程属结构性破损行业（规则8），重整后无实质竞争力,,财务造假坐实（虚构境外工程虚增营收利润，证监会处罚+责任人刑事追责）；主业金属屋面工程属垫资低门槛破损模式，无重建持久优势可能,governance_fraud,,round1轻量初筛（证监会处罚与刑事判决，需核验）,2026-07-08T20:06:55Z,a-share-selection-operation-v15
+002323,*ST雅博,boundary_pending,garbage纠错降级：雅百特造假坐实（2017-12处罚+陆永终身禁入+2019刑事判决）但2021-04司法重整、枣庄国资（泉兴科技）入主，2026-05拟划转枣庄财金，责任人早已出清；按§5.4.7规则7降回boundary_pending。金属屋面围护系统属规则8碗出的更高壁垒子赛道口径，非纯装修。,,,,国资治理下审计连续干净+金属屋面主业订单与盈利重建（2026-06已获1.94亿订单，跟踪兑现）,坐实文书：证监会处罚(2017-12)+陆永刑事判决(2019-09)；2021重整枣庄国资入主；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 002326,永太科技,boundary_pending,氟精细化工+锂电氟化物产能过剩亏损,,,,无重大变化则维持,round1轻量初筛（氟化工）,2026-07-08T20:06:55Z,a-share-selection-operation-v15
 002328,新朋股份,boundary_pending,汽车冲压件代工,,,,无重大变化则维持,round1轻量初筛（冲压件）,2026-07-08T20:06:55Z,a-share-selection-operation-v15
 002329,皇氏集团,boundary_pending,区域水牛奶乳企弱势，跨界光伏蹭热点后退出（防过度纳入5）,,,,无重大变化则维持,round1轻量初筛（区域乳企）,2026-07-08T20:06:55Z,a-share-selection-operation-v15
@@ -2343,12 +2343,12 @@
 002420,毅昌科技,boundary_pending,电视外观结构件代工,,,,无重大变化则维持,round1轻量初筛（结构件代工）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
 002421,达实智能,boundary_pending,建筑智能化物联集成低壁垒,,,,无重大变化则维持,round1轻量初筛（建筑智能化）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
 002423,中粮资本,boundary_pending,中粮系金控牌照多元但无一线franchise竞争力（规则11口径）,,,,无重大变化则维持,round1轻量初筛（金控平台）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
-002424,ST百灵,garbage,苗药品牌真实但2021-2022年虚增虚减营收利润2024年证监会处罚坐实，实控人姜伟仍在位（判例13欢瑞口径：坐实虚增且责任人在位）,,财务造假坐实（2024年证监会处罚：2021-2022年年报虚假记载虚增营收利润），实控人仍在位未整改出清,governance_fraud,,round1轻量初筛（证监会处罚决定，需核验）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
+002424,ST百灵,garbage,苗药品牌真实但2021-2022年虚增虚减营收利润2024年证监会处罚坐实，实控人姜伟仍在位（判例13欢瑞口径：坐实虚增且责任人在位）,,财务造假坐实：贵州证监局行政处罚（事先告知2025-12-20：2019-2021少计销售费用累计虚增利润6.55亿、2023年虚减利润4.59亿；公司罚1000万+姜伟罚500万拟10年禁入，合计2560万），2025-12-23起ST；实控人姜伟另因涉嫌内幕交易等2025-12-03被立案，责任人在位,governance_fraud,,"坐实文书：贵州证监局行政处罚事先告知书(2025-12-20,程序进行中)+姜伟立案告知书(2025-12-03)；核验2026-07-10(web对照文书)",2026-07-10T09:34:52Z,a-share-selection-operation-v15
 002425,凯撒文化,boundary_pending,游戏动漫IP产品导向无平台壁垒,,,,无重大变化则维持,round1轻量初筛（游戏）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
 002426,胜利精密,boundary_pending,精密结构件代工并购爆雷收缩,,,,无重大变化则维持,round1轻量初筛（结构件代工）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
 002427,尤夫股份,boundary_pending,涤纶工业丝+锂电并购爆雷，前实控人操纵案已易主（规则7）,,,,主业重建验证,round1轻量初筛（工业丝，需核验）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
 002428,云南锗业,boundary_pending,锗资源稀缺且受出口管制，但盈利长期微薄未验证穿越周期超额回报，深加工规模小（防过度纳入4仅有资源不够）,,,,锗价中枢上移与盈利兑现验证,round1轻量初筛（锗资源）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
-002431,ST棕榈,garbage,园林景观龙头之一债务爆雷，豫资入主但主业仍是生态园林工程未实质转型，行业商业模式结构性破损（装饰校准规则8，同*ST美丽/*ST交投口径；区别于汇绿生态转型豁免）,,园林生态工程行业商业模式结构性破损（垫资/政府应收/低门槛），适用相对龙头；国资入主但主业未转型仍连亏,structural_industry,,round1轻量初筛（园林工程行业结构口径，需核验转型进度）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
+002431,ST棕榈,garbage,园林景观龙头之一债务爆雷，豫资入主但主业仍是生态园林工程未实质转型，行业商业模式结构性破损（装饰校准规则8，同*ST美丽/*ST交投口径；区别于汇绿生态转型豁免）,,园林生态工程行业商业模式结构性破损（垫资/政府应收/低门槛），适用相对龙头；国资入主但主业未转型仍连亏,structural_industry,,round1轻量初筛（园林工程行业结构口径，转型进度）；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 002432,九安医疗,boundary_pending,家用血压计弱于鱼跃欧姆龙，新冠试剂暴利属一次性，现金充裕但无主业护城河,,,,现金再配置形成新主业验证,round1轻量初筛（家用器械）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
 002434,万里扬,boundary_pending,汽车CVT变速器同质，新能源冲击变速器需求,,,,无重大变化则维持,round1轻量初筛（变速器）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
 002436,兴森科技,boundary_pending,PCB样板快件有服务粘性，IC载板国产追赶投入期未验证回报,,,,载板放量盈利验证,round1轻量初筛（PCB/载板）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
@@ -2370,7 +2370,7 @@
 002467,二六三,boundary_pending,企业通信邮箱视频会议小而平庸,,,,无重大变化则维持,round1轻量初筛（企业通信）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
 002468,申通快递,boundary_pending,通达系尾部份额单票利润最薄，加盟制同质价格战（同韵达批85口径）,,,,格局出清后单票盈利中枢验证,round1轻量初筛（快递）,2026-07-08T20:30:39Z,a-share-selection-operation-v15
 002469,三维化学,boundary_pending,化工工程催化剂小工程公司,,,,无重大变化则维持,round1轻量初筛（化工工程）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
-002470,金正大,garbage,复合肥龙头但2015-2018年虚构贸易虚增收入约230亿元利润20亿元，2021年证监会处罚坐实，A股肥料行业标志性造假案，实控人家族未彻底出清（判例13）,,财务造假坐实（2021年证监会处罚：2015-2018年虚增收入利润，规模巨大），责任人未彻底出清,governance_fraud,,round1轻量初筛（证监会处罚决定，需核验当前控制权）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
+002470,金正大,garbage,复合肥龙头但2015-2018年虚构贸易虚增收入约230亿元利润20亿元，2021年证监会处罚坐实，A股肥料行业标志性造假案，实控人家族未彻底出清（判例13）,,"财务造假坐实：证监会2022年""一号罚单""行政处罚决定书（2015-2018H1虚构贸易虚增收入230.73亿/利润19.9亿；公司罚150万+万连步罚款并10年市场禁入+李计国5年禁入等合计755万）；未见控制权变更证据，责任人未彻底出清",governance_fraud,,坐实文书：证监会行政处罚决定书+市场禁入决定书(2022-01/02)；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 002471,中超控股,boundary_pending,电缆同质+治理混乱控制权拉锯,,,,无重大变化则维持,round1轻量初筛（电缆）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002474,榕基软件,boundary_pending,政务软件小厂,,,,无重大变化则维持,round1轻量初筛（政务软件）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002476,宝莫股份,boundary_pending,聚丙烯酰胺油田化学同质,,,,无重大变化则维持,round1轻量初筛（油田化学）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
@@ -2379,7 +2379,7 @@
 002480,新筑股份,boundary_pending,轨交桥梁功能部件+光伏转型平庸,,,,无重大变化则维持,round1轻量初筛（轨交部件）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002481,双塔食品,boundary_pending,豌豆蛋白全球份额高但商品属性下游议价，盈利波动超额回报未验证,,,,蛋白定价权与回报稳定验证,round1轻量初筛（豌豆蛋白）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002483,润邦股份,boundary_pending,港机装备+危废同质,,,,无重大变化则维持,round1轻量初筛（港机）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
-002485,ST雪发,garbage,雪松系入主后大股东非经营性占用坐实被ST，雪松控股非法集资案实控人被捕，占用未解决股权冻结无人接盘，主业文旅贸易空心濒临退市（规则7反面：治理灾难未解决仍在持续）,,治理灾难未解决（雪松系占用坐实未追回，实控人因非法集资被刑事追责，股权冻结），主业空心化,governance_fraud,,round1轻量初筛（占用披露与刑事进展，需核验）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
+002485,ST雪发,garbage,雪松系入主后大股东非经营性占用坐实被ST，雪松控股非法集资案实控人被捕，占用未解决股权冻结无人接盘，主业文旅贸易空心濒临退市（规则7反面：治理灾难未解决仍在持续）,,治理灾难坐实：实控人张劲集资诈骗/非吸/背信损害上市公司利益案2026-06-26广东高院终审判处无期徒刑、没收全部财产（雪松系非吸超200亿）；张劲通过雪松文旅等间接持股69.4%（全数冻结质押）尚未司法处置，责任体系名义上仍在控制位,governance_fraud,,"坐实文书：广州中院一审+广东高院终审裁定(2026-06-26,无期徒刑)；核验2026-07-10(web对照文书)",2026-07-10T09:34:52Z,a-share-selection-operation-v15
 002486,嘉麟杰,boundary_pending,户外面料OEM,,,,无重大变化则维持,round1轻量初筛（面料OEM）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002488,金固股份,boundary_pending,钢制车轮+汽车后市场爆雷史,,,,无重大变化则维持,round1轻量初筛（车轮）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002489,浙江永强,boundary_pending,户外家具出口全球份额第一但OEM代工无定价权，客户集中（防过度纳入3）,,,,自主品牌与定价权验证,round1轻量初筛（户外家具OEM）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
@@ -2501,7 +2501,7 @@
 002660,茂硕电源,boundary_pending,LED电源+光伏逆变器小厂,,,,无重大变化则维持,round1轻量初筛（电源）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002661,克明食品,boundary_pending,挂面品类头部但低价品类毛利薄，未上市的金沙河规模更大（防过度纳入7类比）,,,,无重大变化则维持,round1轻量初筛（挂面）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002662,峰璟股份,boundary_pending,汽车内外饰件，中德合作破裂后收缩,,,,无重大变化则维持,round1轻量初筛（内饰件）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
-002663,普邦股份,garbage,地产园林龙头之一连年亏损，主业仍是园林绿化生态修复未实质转型，行业商业模式结构性破损（装饰校准规则8，同*ST美丽/*ST交投/ST棕榈口径）,,园林工程行业商业模式结构性破损（垫资/地产与政府应收/低门槛），适用相对龙头；公司未实质转型连年亏损,structural_industry,,round1轻量初筛（园林工程行业结构口径，需核验城市服务转型占比）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
+002663,普邦股份,garbage,地产园林龙头之一连年亏损，主业仍是园林绿化生态修复未实质转型，行业商业模式结构性破损（装饰校准规则8，同*ST美丽/*ST交投/ST棕榈口径）,,园林工程行业商业模式结构性破损（垫资/地产与政府应收/低门槛），适用相对龙头；公司未实质转型连年亏损,structural_industry,,round1轻量初筛（园林工程行业结构口径，城市服务转型占比）；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 002664,信质集团,boundary_pending,汽车电机定转子铁芯加工同质,,,,无重大变化则维持,round1轻量初筛（电机铁芯）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002666,德联集团,boundary_pending,汽车化学品分销低壁垒,,,,无重大变化则维持,round1轻量初筛（汽车化学品）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002667,*ST威领,boundary_pending,锂矿贸易转型失败ST,,,,无重大变化则维持,round1轻量初筛（ST转型）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
@@ -2538,7 +2538,7 @@
 002708,光洋股份,boundary_pending,轴承小厂,,,,无重大变化则维持,round1轻量初筛（轴承）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002712,思美传媒,boundary_pending,广告代理,,,,无重大变化则维持,round1轻量初筛（广告）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002715,登云股份,boundary_pending,气门小厂；IPO欺诈发行坐实但原实控人已退出多次易主（规则7）,,,,主业重建验证,round1轻量初筛（气门，需核验）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
-002717,*ST岭南,garbage,园林+水环境+文旅，债券违约ST，中山国资入主但主业仍是生态园林工程未实质转型，行业结构性破损（装饰校准规则8，同棕榈普邦口径）,,园林生态工程行业商业模式结构性破损，适用相对龙头；国资入主但主业未转型，债券违约连亏,structural_industry,,round1轻量初筛（园林工程行业结构口径，需核验转型进度）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
+002717,*ST岭南,garbage,园林+水环境+文旅，债券违约ST，中山国资入主但主业仍是生态园林工程未实质转型，行业结构性破损（装饰校准规则8，同棕榈普邦口径）,,园林生态工程行业商业模式结构性破损，适用相对龙头；国资入主但主业未转型，债券违约连亏,structural_industry,,round1轻量初筛（园林工程行业结构口径，转型进度）；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 002718,友邦吊顶,boundary_pending,集成吊顶品类开创但品类小地产链，盈利崩塌（同浙江美大逻辑更弱）,,,,无重大变化则维持,round1轻量初筛（集成吊顶）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002719,ST麦趣,boundary_pending,新疆乳企烘焙，丙二醇事件+占用ST整改,,,,整改摘帽,round1轻量初筛（ST乳企）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
 002721,金一文化,boundary_pending,黄金珠宝加盟批发爆雷，国资纾困仍亏濒退市,,,,重整或退市,round1轻量初筛（珠宝爆雷）,2026-07-08T20:30:40Z,a-share-selection-operation-v15
@@ -2577,7 +2577,7 @@
 002771,真视通,boundary_pending,视讯集成小厂,,,,无重大变化则维持,round1轻量初筛（视讯集成）,2026-07-08T20:42:29Z,a-share-selection-operation-v15
 002772,众兴菌业,boundary_pending,金针菇工厂化农产品商品同质,,,,无重大变化则维持,round1轻量初筛（食用菌）,2026-07-08T20:42:29Z,a-share-selection-operation-v15
 002774,快意电梯,boundary_pending,电梯三线弱于外资与康力,,,,无重大变化则维持,round1轻量初筛（电梯）,2026-07-08T20:42:29Z,a-share-selection-operation-v15
-002775,文科股份,garbage,原文科园林，主业仍是园林绿化工程连年亏损，算力转型属公告级题材未实质落地，行业商业模式结构性破损（装饰校准规则8，同*ST美丽/棕榈/普邦/岭南口径）,,园林工程行业商业模式结构性破损（垫资/政府应收/低门槛），适用相对龙头；转型未实质落地,structural_industry,,round1轻量初筛（园林工程行业结构口径，需核验转型进度）,2026-07-08T20:42:29Z,a-share-selection-operation-v15
+002775,文科股份,garbage,原文科园林，主业仍是园林绿化工程连年亏损，算力转型属公告级题材未实质落地，行业商业模式结构性破损（装饰校准规则8，同*ST美丽/棕榈/普邦/岭南口径）,,园林工程行业商业模式结构性破损（垫资/政府应收/低门槛），适用相对龙头；转型未实质落地,structural_industry,,round1轻量初筛（园林工程行业结构口径，转型进度）；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 002777,久远银海,boundary_pending,医保社保IT有细分位置但G端集成属性规模小（防过度纳入3）,,,,产品化与回报验证,round1轻量初筛（医保IT）,2026-07-08T20:42:29Z,a-share-selection-operation-v15
 002778,中晟高科,boundary_pending,润滑油小厂转型,,,,无重大变化则维持,round1轻量初筛（润滑油）,2026-07-08T20:42:29Z,a-share-selection-operation-v15
 002779,中坚科技,boundary_pending,园林机械OEM出口,,,,无重大变化则维持,round1轻量初筛（园林机械OEM）,2026-07-08T20:42:29Z,a-share-selection-operation-v15
@@ -2809,7 +2809,7 @@
 300075,数字政通,boundary_pending,城管网格化数字化头部但政务软件同质回款差（防过度纳入3）,,,,无重大变化则维持,round1轻量初筛（政务软件）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
 300076,*ST宁视,boundary_pending,大屏拼接显示小厂壳,,,,重整或重组,round1轻量初筛（ST壳）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
 300077,国民技术,boundary_pending,MCU安全芯片二线弱于兆易（防过度纳入7），理财失踪案为受害方,,,,无重大变化则维持,round1轻量初筛（MCU）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
-300078,思创智联,garbage,原思创医惠2019-2020年虚增营收利润被浙江证监局处罚坐实，实控人被十年市场禁入，责任人未彻底出清（判例13：坐实虚增且责任人在位）,,财务造假坐实（2019-2020年虚增营收利润，实控人十年市场禁入），责任人未出清,governance_fraud,,round1轻量初筛（处罚决定书，需核验当前控制权）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
+300078,思创智联,boundary_pending,garbage纠错降级：思创医惠造假与欺诈发行坐实（2024-01处罚决定书罚8570万+章笠中750万及10年禁入）但2025-04控制权已变更为苍南县财政局，责任人出清（刑事追责针对原责任人，2025-08公安调查中）；round1漏记该次易主，按§5.4.7规则7降回boundary_pending。,,,,苍南国资治理下连续两年干净审计+主业（物联网/智慧医疗）重建盈利+欺诈发行刑事案对公司层面无新责任,"坐实文书：证监会处罚决定书(2024-01,罚8570万+章笠中10年禁入)；2025-04实控人变更为苍南县财政局；核验2026-07-10(web对照文书)",2026-07-10T09:34:52Z,a-share-selection-operation-v15
 300079,数码视讯,boundary_pending,广电视频设备生态衰退转型平庸,,,,无重大变化则维持,round1轻量初筛（广电设备）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
 300080,易成新能,boundary_pending,光伏辅材多次转型平煤系,,,,无重大变化则维持,round1轻量初筛（光伏辅材）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
 300081,ST恒信,boundary_pending,文化VR内容小厂ST,,,,整改摘帽,round1轻量初筛（ST内容）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
@@ -2817,7 +2817,7 @@
 300083,创世纪,boundary_pending,3C钻攻机国产第一但设备同质、3C资本开支强周期盈利波动无定价权,,,,周期底部盈利与通用机床验证,round1轻量初筛（数控机床）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
 300085,银之杰,boundary_pending,金融科技外围长年蹭热点盈利微弱（防过度纳入2/5）,,,,无重大变化则维持,round1轻量初筛（金融科技）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
 300086,康芝药业,boundary_pending,儿童药平庸,,,,无重大变化则维持,round1轻量初筛（儿童药）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
-300091,*ST金灵,garbage,原金通灵2017-2022年连续六年财务造假坐实（2023年处罚），造假延续至国资入主后年份，控制权变更豁免不适用；流体机械主业平庸濒退市,,财务造假坐实（连续六年虚增利润，跨越控制权变更仍延续），治理财务长期不透明,governance_fraud,,round1轻量初筛（处罚决定书，需核验）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
+300091,*ST金灵,boundary_pending,"garbage纠错降级：金通灵六年造假坐实且已完整司法闭环——江苏证监局处罚、季伟刑事判决（2025-09有期徒刑6年）、投资者获赔7.75亿（2026年初基本完成）、2025年破产重整由汇通达10亿入主（第二次易主）；责任人出清+灾难已解决，round1""跨越控制权豁免不适用""的前提（灾难未了结）已消失，按§5.4.7规则7降回boundary_pending。",,,,重整完成后新治理下连续两年干净审计+风机/EPC主业重建盈利,坐实文书：江苏证监局处罚+上海三中院刑事判决(2025-09-30)+南京中院民事赔付(7.75亿)；2025破产重整汇通达入主；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 300092,科新机电,boundary_pending,压力容器小厂核电配套,,,,无重大变化则维持,round1轻量初筛（压力容器）,2026-07-08T20:42:30Z,a-share-selection-operation-v15
 300093,*ST金刚,boundary_pending,HJT光伏跨界失败债务危机ST,,,,重整或重组,round1轻量初筛（ST光伏跨界）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300094,国联水产,boundary_pending,对虾水产加工商品化亏损,,,,无重大变化则维持,round1轻量初筛（水产）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
@@ -2898,7 +2898,7 @@
 300194,福安药业,boundary_pending,重庆仿制药并购杂烩,,,,无重大变化则维持,round1轻量初筛（仿制药）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300195,长荣股份,boundary_pending,印刷烫金装备+天津国资,,,,无重大变化则维持,round1轻量初筛（印刷装备）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300196,长海股份,boundary_pending,玻纤制品一体化盈利稳定但规模远小于巨石泰山（防过度纳入7）,,,,无重大变化则维持,round1轻量初筛（玻纤）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
-300197,节能铁汉,garbage,原铁汉生态为园林PPP爆雷标志企业之一，中节能入主但主业仍是生态环保工程未实质转型仍亏损，行业结构性破损判决适用（装饰校准规则8，同棕榈/普邦/岭南口径）,,园林生态工程行业商业模式结构性破损（垫资/政府应收/低门槛），适用相对龙头；央企入主未改模式,structural_industry,,round1轻量初筛（园林工程行业结构口径，需核验转型进度）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
+300197,节能铁汉,garbage,原铁汉生态为园林PPP爆雷标志企业之一，中节能入主但主业仍是生态环保工程未实质转型仍亏损，行业结构性破损判决适用（装饰校准规则8，同棕榈/普邦/岭南口径）,,园林生态工程行业商业模式结构性破损（垫资/政府应收/低门槛），适用相对龙头；央企入主未改模式,structural_industry,,round1轻量初筛（园林工程行业结构口径，转型进度）；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 300198,*ST纳川,boundary_pending,HDPE管材+新能源跨界爆雷ST,,,,重整或重组,round1轻量初筛（ST管材）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300199,翰宇药业,boundary_pending,多肽药物长期亏损治理问题史，GLP-1代工订单属题材故事（防过度纳入5）,,,,GLP-1订单实质放量盈利验证,round1轻量初筛（多肽药）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300201,海伦哲,boundary_pending,高空作业车+军工电源治理内斗史,,,,无重大变化则维持,round1轻量初筛（专用车）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
@@ -2947,7 +2947,7 @@
 300263,隆华科技,boundary_pending,冷却设备+靶材并购二线弱于江丰（防过度纳入7）,,,,无重大变化则维持,round1轻量初筛（靶材）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300264,佳创视讯,boundary_pending,广电视讯小厂壳,,,,无重大变化则维持,round1轻量初筛（广电壳）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300266,兴源环境,boundary_pending,水环境PPP爆雷收缩但保留压滤机装备制造资产（对照景津差距大），新湖系入主，区别于纯园林公司不判行业garbage,,,,装备业务占比与盈利验证,round1轻量初筛（环保工程/装备）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
-300267,尔康制药,garbage,药用辅料，2015-2016年虚增净利约2.5亿证监会处罚坐实，实控人帅放文家族至今保留控制权（判例13：坐实虚增且责任人在位）,,财务造假坐实（虚增利润约2.5亿被处罚），实控人未出清,governance_fraud,,round1轻量初筛（处罚决定书，需核验）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
+300267,尔康制药,garbage,药用辅料，2015-2016年虚增净利约2.5亿证监会处罚坐实，实控人帅放文家族至今保留控制权（判例13：坐实虚增且责任人在位）,,财务造假坐实：湖南证监局处罚（2015-2016虚增营收2.73亿/净利2.48亿，公司罚60万+帅放文罚30万）；帅放文仍为控股股东（持股41.38%、质押97.94%，2026-04仍在减持），责任人在位,governance_fraud,,坐实文书：湖南证监局行政处罚(2018-04)；帅放文仍控股41.38%；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 300268,*ST佳沃,boundary_pending,联想系三文鱼高杠杆并购巨亏资不抵债ST，债务危机非造假,,,,债务重组落地,round1轻量初筛（ST水产）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300269,联建光电,boundary_pending,LED显示+户外广告并购全爆雷，被并购子公司业绩造假连带处罚（并购对赌造假类，主责子公司团队，区别于主体系统性造假）,,,,商誉出清与主业验证,round1轻量初筛（并购爆雷，需核验）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300270,中威电子,boundary_pending,安防传输小厂壳,,,,无重大变化则维持,round1轻量初筛（安防壳）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
@@ -3002,7 +3002,7 @@
 300348,长亮科技,boundary_pending,银行核心系统份额领先但项目制、银行预算压缩同质竞争（防过度纳入3）,,,,产品化与海外验证,round1轻量初筛（银行IT）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300350,华鹏飞,boundary_pending,物流+物联网爆雷壳,,,,无重大变化则维持,round1轻量初筛（壳公司）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300352,ST信源,boundary_pending,终端安全管理软件ST整改,,,,整改摘帽,round1轻量初筛（ST网安）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
-300355,蒙草生态,garbage,园林生态PPP爆雷标志企业之一，草原修复工程为主业未实质转型（种业库属科研资产非收入主体），行业结构性破损判决适用（装饰校准规则8，同铁汉/棕榈/普邦/岭南口径）,,园林生态工程行业商业模式结构性破损（垫资/政府应收/低门槛），适用相对龙头；主业未转型,structural_industry,,round1轻量初筛（园林工程行业结构口径，需核验种业转型占比）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
+300355,蒙草生态,garbage,园林生态PPP爆雷标志企业之一，草原修复工程为主业未实质转型（种业库属科研资产非收入主体），行业结构性破损判决适用（装饰校准规则8，同铁汉/棕榈/普邦/岭南口径）,,园林生态工程行业商业模式结构性破损（垫资/政府应收/低门槛），适用相对龙头；主业未转型,structural_industry,,round1轻量初筛（园林工程行业结构口径，种业转型占比）；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 300358,楚天科技,boundary_pending,制药装备第二同东富龙口径,,,,订单周期验证,round1轻量初筛（制药装备）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300359,全通教育,boundary_pending,校讯通崩塌壳,,,,无重大变化则维持,round1轻量初筛（教育壳）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
 300363,博腾股份,boundary_pending,CDMO第三梯队弱于凯莱英药明（防过度纳入7），新冠订单一次性暴利后回落亏损,,,,常规业务盈利修复,round1轻量初筛（CDMO）,2026-07-08T21:15:49Z,a-share-selection-operation-v15
@@ -3046,7 +3046,7 @@
 300424,航新科技,boundary_pending,航空维修检测设备小厂,,,,无重大变化则维持,round1轻量初筛（航空维修）,2026-07-08T21:15:50Z,a-share-selection-operation-v15
 300425,中建环能,boundary_pending,中建系水环境装备小盘,,,,无重大变化则维持,round1轻量初筛（水处理装备）,2026-07-08T21:15:50Z,a-share-selection-operation-v15
 300426,华智数媒,boundary_pending,原唐德影视，巴清传爆雷后易主改名，影视内容同华策口径,,,,无重大变化则维持,round1轻量初筛（影视）,2026-07-08T21:15:50Z,a-share-selection-operation-v15
-300427,红相股份,garbage,电力检测+军工并购，2017-2022年军工子公司连续六年虚增收入利润证监会处罚坐实、实控人父子被市场禁入但股权未彻底出清（判例13+金通灵连续多年造假口径）,,财务造假坐实（连续六年虚增军工收入利润，实控人被禁入），责任人未彻底出清,governance_fraud,,round1轻量初筛（处罚决定书，需核验控制权）,2026-07-08T21:15:50Z,a-share-selection-operation-v15
+300427,红相股份,garbage,电力检测+军工并购，2017-2022年军工子公司连续六年虚增收入利润证监会处罚坐实、实控人父子被市场禁入但股权未彻底出清（判例13+金通灵连续多年造假口径）,,财务造假+欺诈发行坐实：厦门证监局2024-04-03行政处罚决定书+市场禁入决定书（2017-2022六年虚增收入超10亿；实控人杨成罚2288万+终身市场禁入，注：责任主角为杨成而非round1所记杨保田）；2026-05-29杨成被移送检察机关审查起诉，杨氏家族仍为大股东，责任体系在位,governance_fraud,,坐实文书：厦门证监局行政处罚决定书+市场禁入决定书(2024-04-03)+移送起诉(2026-05-29)；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 300428,立中集团,boundary_pending,铝晶粒细化剂全球份额第一但利润主体为再生铝合金+车轮低毛利加工，整体ROE约10%平庸，细分垄断资产被稀释,,,,中间合金占比与回报结构验证,round1轻量初筛（铝合金，细分垄断被稀释）,2026-07-08T21:15:50Z,a-share-selection-operation-v15
 300430,*ST益通,boundary_pending,制药自动化小厂壳,,,,重整或重组,round1轻量初筛（ST壳）,2026-07-08T21:15:50Z,a-share-selection-operation-v15
 300432,富临精工,boundary_pending,汽车精密件+磷酸铁锂正极二线绑定宁德,,,,无重大变化则维持,round1轻量初筛（汽车件/正极）,2026-07-08T21:15:50Z,a-share-selection-operation-v15
@@ -3119,7 +3119,7 @@
 300531,优博讯,boundary_pending,手持终端PDA小厂,,,,无重大变化则维持,round1轻量初筛（PDA）,2026-07-08T21:47:40Z,a-share-selection-operation-v15
 300534,陇神戎发,boundary_pending,甘肃中药小盘,,,,无重大变化则维持,round1轻量初筛（中药）,2026-07-08T21:47:40Z,a-share-selection-operation-v15
 300535,达威股份,boundary_pending,皮革化学品小厂,,,,无重大变化则维持,round1轻量初筛（皮化）,2026-07-08T21:47:40Z,a-share-selection-operation-v15
-300536,农尚环境,garbage,武汉地产园林绿化公司连年萎缩，算力转型属公告级题材未实质落地（同文科股份口径），行业结构性破损判决适用（装饰校准规则8）,,园林工程行业商业模式结构性破损（垫资/地产与政府应收/低门槛），适用行业内公司；转型未实质落地,structural_industry,,round1轻量初筛（园林工程行业结构口径，需核验转型进度）,2026-07-08T21:47:40Z,a-share-selection-operation-v15
+300536,农尚环境,garbage,武汉地产园林绿化公司连年萎缩，算力转型属公告级题材未实质落地（同文科股份口径），行业结构性破损判决适用（装饰校准规则8）,,园林工程行业商业模式结构性破损（垫资/地产与政府应收/低门槛），适用行业内公司；转型未实质落地,structural_industry,,round1轻量初筛（园林工程行业结构口径，转型进度）；结构性行业判决不依赖造假文书，需核验标记为批次样板已清理，判决维持；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 300537,广信材料,boundary_pending,UV涂料油墨小厂,,,,无重大变化则维持,round1轻量初筛（涂料）,2026-07-08T21:47:40Z,a-share-selection-operation-v15
 300538,同益股份,boundary_pending,工程塑料分销,,,,无重大变化则维持,round1轻量初筛（分销）,2026-07-08T21:47:40Z,a-share-selection-operation-v15
 300539,横河精密,boundary_pending,精密模具塑件小厂,,,,无重大变化则维持,round1轻量初筛（模具塑件）,2026-07-08T21:47:40Z,a-share-selection-operation-v15
@@ -4143,7 +4143,7 @@
 600594,益佰制药,boundary_pending,贵州中药二线集采承压,,,,无重大变化则维持,round1轻量初筛（中药）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
 600595,中孚实业,boundary_pending,电解铝部分水电铝但整体成本中位高杠杆（对照云铝口径）,,,,无重大变化则维持,round1轻量初筛（电解铝）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
 600596,新安股份,boundary_pending,草甘膦+有机硅双商品周期,,,,无重大变化则维持,round1轻量初筛（化工）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
-600599,*ST熊猫,garbage,P2P银湖网非法吸存刑事立案、实控人赵伟平被批捕且控制权未变更，主业空心化面值退市边缘,,实控人涉非法吸收公众存款被批捕且未让渡控制权，上市公司沦为壳（判例13后半）,governance_fraud,,round1轻量初筛（互金爆雷，判例13）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
+600599,*ST熊猫,garbage,P2P银湖网非法吸存刑事立案、实控人赵伟平被批捕且控制权未变更，主业空心化面值退市边缘,,治理灾难坐实：实控人赵伟平2022-09因银湖网非法吸收公众存款罪被批捕（银湖网2019年北京警方立案），未让渡控制权；公司2025-12又因涉嫌信披违法违规被证监会立案，灾难持续,governance_fraud,,坐实文书：赵伟平批捕(2022-09)+银湖网刑事立案(2019)；公司立案告知书(2025-12)；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 600601,方正科技,boundary_pending,方正系重整后PCB+IT分销,,,,无重大变化则维持,round1轻量初筛（PCB分销）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
 600602,云赛智联,boundary_pending,上海国资IDC/算力+云，国资项目输血型,,,,算力业务盈利兑现复核,round1轻量初筛（IDC算力）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
 600604,市北高新,boundary_pending,上海市北园区,,,,无重大变化则维持,round1轻量初筛（园区）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
@@ -4192,7 +4192,7 @@
 600651,飞乐音响,boundary_pending,曾虚增利润已处罚但上海仪电国资控股、责任管理层更换（央企/国企整改口径→boundary），照明主业弱,,,,整改后主业验证,round1轻量初筛（国企整改）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
 600652,-,boundary_pending,已退市证券占位代码,,,,证券名单更新时剔除,round1轻量初筛（退市占位）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
 600653,申华控股,boundary_pending,华晨系汽车经销壳,,,,无重大变化则维持,round1轻量初筛（汽车经销壳）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
-600654,中安科,garbage,借壳中安消虚增收入与虚假盈利预测经证监会处罚、投资者诉讼终审败诉，控股股东中恒汇志（涂国身）未变更，安防集成主业持续恶化,,确认借壳造假且责任方仍在控股位（判例13后半）,governance_fraud,,round1轻量初筛（安防造假，判例13）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
+600654,中安科,garbage,借壳中安消虚增收入与虚假盈利预测经证监会处罚、投资者诉讼终审败诉，控股股东中恒汇志（涂国身）未变更，安防集成主业持续恶化,,借壳造假坐实：2019-05证监会行政处罚决定书（中恒汇志罚60万+涂国身罚30万+10年市场禁入，重组评估值严重虚增），投资者虚假陈述诉讼败诉赔付；中恒汇志（涂国身）至今仍为控股股东，责任体系在位,governance_fraud,,坐实文书：证监会行政处罚决定书(2019-05)+涂国身10年市场禁入；中恒汇志仍控股(2024年公司起诉其追讨业绩补偿)；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v15
 600655,豫园股份,boundary_pending,老庙黄金品牌真实但复星系流动性与地产多元拖累,,,,复星减杠杆/珠宝主业独立性复核,round1轻量初筛（黄金珠宝）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
 600656,-,boundary_pending,已退市证券占位代码,,,,证券名单更新时剔除,round1轻量初筛（退市占位）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
 600657,信达地产,boundary_pending,信达系地产,,,,无重大变化则维持,round1轻量初筛（地产）,2026-07-08T23:00:31Z,a-share-selection-operation-v15
@@ -4784,7 +4784,7 @@
 603373,安邦护卫,boundary_pending,安邦护卫：贵州押运安保，区域特许但规制服务定价，规则9口径,,,,市场化增值服务突破,round1轻量初筛（安保服务）,2026-07-09T07:38:15Z,a-share-selection-operation-v17
 603375,盛景微,boundary_pending,盛景微：电子雷管起爆控制模块第一，行业电子化红利期高份额，但单品类+客户为民爆集团（雪峰广大等），防3强位置,,,,第二品类+民爆整合后份额保持验证,round1轻量初筛（民爆电子）,2026-07-09T07:38:15Z,a-share-selection-operation-v17
 603376,大明电子,boundary_pending,大明电子：汽车电子开关次新，防3,,,,品类升级,round1轻量初筛（汽车电子）,2026-07-09T07:38:15Z,a-share-selection-operation-v17
-603377,ST东时,garbage,ST东时：东方时尚驾培，实控人徐雄因操纵本公司股票于2023年被批捕（后判决），且控制权未让渡，公司连年亏损，同*ST熊猫判例13后半口径,,实控人操纵证券市场刑事坐实且未让渡控制权（判例13后半，需核验终审与控制权现状）,governance_fraud,,round1轻量初筛（驾培治理）,2026-07-09T07:38:15Z,a-share-selection-operation-v17
+603377,ST东时,garbage,ST东时：东方时尚驾培，实控人徐雄因操纵本公司股票于2023年被批捕（后判决），且控制权未让渡，公司连年亏损，同*ST熊猫判例13后半口径,,治理灾难坐实：实控人徐雄操纵证券市场罪2026-01-23终审维持原判（有期徒刑六年六个月+罚金1.7亿）；控股股东及关联方非经营性占用3.87亿未解决；预重整进行中（2025-08已签重整投资协议，重整后产业投资人将成为控股股东）——重整落定+占用解决后触发garbage_review复核,governance_fraud,,坐实文书：上海一中院一审(2025-07)+终审裁定(2026-01-23)；纪律处分决定；重整协议(2025-08)；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v17
 603378,*ST亚士,boundary_pending,*ST亚士：工程建筑涂料（地产链爆雷亏损被ST），无坐实造假，判例13前半整改类,,,,债务出清+摘帽后按涂料品牌重评（需核验）,round1轻量初筛（ST建材）,2026-07-09T07:38:15Z,a-share-selection-operation-v17
 603380,易德龙,boundary_pending,易德龙：EMS电子制造服务中小批量利基，代工口径防3,,,,高毛利细分持续验证,round1轻量初筛（EMS）,2026-07-09T07:38:15Z,a-share-selection-operation-v17
 603381,永臻股份,boundary_pending,永臻股份：光伏边框铝加工，判例2主链周边加工费模式,,,,份额与加工费验证,round1轻量初筛（光伏部件）,2026-07-09T07:38:15Z,a-share-selection-operation-v17
@@ -5300,7 +5300,7 @@
 688553,汇宇制药,boundary_pending,汇宇制药：注射剂仿制药出海,,,,创新转型,round1轻量初筛（仿制药）,2026-07-09T08:22:57Z,a-share-selection-operation-v17
 688555,-,boundary_pending,已退市证券占位代码,,,,证券名单更新时剔除,round1轻量初筛（退市占位）,2026-07-09T08:22:57Z,a-share-selection-operation-v17
 688557,兰剑智能,boundary_pending,兰剑智能：智能仓储物流系统，项目制,,,,标准化占比,round1轻量初筛（物流自动化）,2026-07-09T08:22:57Z,a-share-selection-operation-v17
-688565,力源科技,garbage,力源科技：核电水处理设备商，2021年报虚增收入利润经证监会处罚坐实，实控人沈万中未让渡控制权（判例13后半，同ST百灵/金正大口径）,,财务造假坐实且责任人仍在控股位（需核验处罚决定书与控制权现状）,governance_fraud,,round1轻量初筛（水处理造假）,2026-07-09T08:22:57Z,a-share-selection-operation-v17
+688565,力源科技,garbage,力源科技：核电水处理设备商，2021年报虚增收入利润经证监会处罚坐实，实控人沈万中未让渡控制权（判例13后半，同ST百灵/金正大口径）,,财务造假坐实：浙江证监局2023-06-25行政处罚（上市当年2021虚增收入1.04亿/利润2707万占68.23%，公司罚300万+沈万中罚300万）；2025-07-28沈万中犯违规披露重要信息罪获刑一年缓刑一年六个月+罚金330万；沈辞职但提名其女沈家雯为董事，家族仍控制，责任体系在位,governance_fraud,,坐实文书：浙江证监局行政处罚决定书(2023-06-25)+上海二中院刑事判决书(2025-07-28)；核验2026-07-10(web对照文书),2026-07-10T09:34:52Z,a-share-selection-operation-v17
 688566,吉贝尔,boundary_pending,吉贝尔：尼群洛尔等小品种药,,,,新品种放量,round1轻量初筛（医药）,2026-07-09T08:22:57Z,a-share-selection-operation-v17
 688567,孚能科技,boundary_pending,孚能科技：软包动力电池，客户集中持续亏损（防7对宁德亿纬）,,,,盈利转正+固态卡位验证,round1轻量初筛（动力电池）,2026-07-09T08:22:57Z,a-share-selection-operation-v17
 688571,杭华股份,boundary_pending,杭华股份：油墨（UV/水性），利基,,,,品类升级,round1轻量初筛（油墨）,2026-07-09T08:22:57Z,a-share-selection-operation-v17
