@@ -1,6 +1,6 @@
 {
  "security_code": "600309",
- "retrieved_at_utc": "2026-07-10T10:29:25+00:00",
+ "retrieved_at_utc": "2026-07-10T13:03:37+00:00",
  "quote": {
   "price": 68.71,
   "change_pct": -0.25,
@@ -11,7 +11,7 @@
   "float_market_cap": 215094705422,
   "quote_time": 1783671097,
   "name": "万华化学",
-  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=0.300750%2C0.300760%2C1.600276%2C1.600309%2C0.000858%2C1.600809%2C0.000568%2C1.600132%2C1.600600%2C0.000423"
+  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=0.300685%2C1.688278%2C1.600161%2C1.600426%2C0.002648%2C1.600160%2C1.600309%2C0.002493%2C1.600346%2C1.601216"
  },
  "source_urls": {
   "finance": "https://datacenter.eastmoney.com/securities/api/data/get?filter=%28SECUCODE%3D%22600309.SH%22%29&client=APP&source=HSF10&type=RPT_F10_FINANCE_MAINFINADATA&sty=APP_F10_MAINFINADATA&st=REPORT_DATE&ps=40&sr=-1",
