@@ -43,7 +43,7 @@
 | `data/processed/a_share_watchlist_quality_tiers.csv` | A股值得关注公司质量分层结构化结果 |
 | `data/processed/000_a_share_watchlist_quality_tiers.md` | A股值得关注公司质量分层阅读版 |
 | `data/processed/a_share_core_valuation_pool.csv` | L1/L2核心质量公司估值合格池 |
-| `data/processed/000_a_share_core_valuation_pool.md` | L1/L2核心质量公司估值合格池阅读版 |
+| `data/processed/000_a_share_core_valuation_pool.md` | L1-L4全量估值结论阅读版：可买层（core/tactical）+watch_only仅观察层+文末高估/无法估值排除名单 |
 | `data/processed/daily_buy_candidates.csv` | 每日量价触发后的买入候选 |
 | `data/processed/pretrade_decisions.csv` | 买入前结构化闸门记录（§10）：每次买入决策一行，11 项字段齐备且通过才允许建仓；建仓后须回写持仓清单并在决策日志记 `execution_record` |
 | `data/processed/000_daily_volume_price_tracker.md` | 每日量价跟踪阅读版 |

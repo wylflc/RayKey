@@ -75,9 +75,11 @@ def build_pool(
     valuation_rows: list[dict[str, str]],
     tier_rows: list[dict[str, str]],
     as_of: str,
-) -> list[dict[str, str]]:
+) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+    """返回 (池行 core/tactical/watch_only, 排除行 高估/无法估值)。排除行只用于阅读版列示。"""
     tier_by_code = {row["security_code"].zfill(6): row for row in tier_rows}
     output: list[dict[str, str]] = []
+    excluded: list[dict[str, str]] = []
 
     for row in valuation_rows:
         code = row["security_code"].zfill(6)
@@ -95,6 +97,18 @@ def build_pool(
         elif valuation_tier in WATCH_VALUATIONS:
             pool_layer = "watch_only"
         else:
+            excluded.append(
+                {
+                    "security_code": code,
+                    "security_name": row.get("security_name", ""),
+                    "quality_tier_label": row.get("quality_tier") or (tier_row or {}).get("quality_tier_label", ""),
+                    "valuation_tier": valuation_tier or "（空）",
+                    "valuation_price": row.get("current_price", ""),
+                    "valuation_pe_ttm": row.get("pe_ttm", ""),
+                    "valuation_pb": row.get("pb", ""),
+                    "valuation_reason": row.get("valuation_reason", ""),
+                }
+            )
             continue
 
         output.append(
@@ -122,17 +136,17 @@ def build_pool(
             }
         )
 
-    return output
+    return output, excluded
 
 
-def write_markdown(path: Path, rows: list[dict[str, str]], as_of: str) -> None:
+def write_markdown(path: Path, rows: list[dict[str, str]], excluded: list[dict[str, str]], as_of: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = [
         "# A股核心估值合格池",
         "",
         f"生成日期：{as_of}",
         "",
-        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成。core/tactical 为按 §6.2.1 矩阵可买层；watch_only 为仅观察层（v20，可见不可买）。",
+        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是 L1-L4 全量估值结论阅读版：core/tactical 为按 §6.2.1 矩阵可买层；watch_only 为仅观察层（v20，可见不可买）；文末附高估/无法估值排除名单（不入池不扫描）。",
         "",
         "| 代码 | 名称 | 质量 | 层 | 估值 | 策略 | 估值价 | PE | PB |",
         "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: |",
@@ -141,6 +155,17 @@ def write_markdown(path: Path, rows: list[dict[str, str]], as_of: str) -> None:
         lines.append(
             "| {security_code} | {security_name} | {quality_tier_label} | {pool_layer} | {valuation_tier} | "
             "{strategy_tag} | {valuation_price} | {valuation_pe_ttm} | {valuation_pb} |".format(**row)
+        )
+    lines.extend(["", f"## 高估/无法估值排除名单（{len(excluded)} 家，不入池不扫描，仅列示）", "",
+                  "| 代码 | 名称 | 质量 | 估值 | 估值价 | PE | PB | 核心理由 |",
+                  "| --- | --- | --- | --- | ---: | ---: | ---: | --- |"])
+    for row in excluded:
+        reason = (row.get("valuation_reason") or "").replace("|", "、").replace("\n", " ")
+        if len(reason) > 80:
+            reason = reason[:80] + "…"
+        lines.append(
+            "| {security_code} | {security_name} | {quality_tier_label} | {valuation_tier} | "
+            "{valuation_price} | {valuation_pe_ttm} | {valuation_pb} | ".format(**row) + reason + " |"
         )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -194,7 +219,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of)
+    rows, excluded = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of)
     fieldnames = [
         "market_type",
         "security_code",
@@ -217,7 +242,7 @@ def main() -> None:
         "source_file",
     ]
     write_csv(args.output_csv, rows, fieldnames)
-    write_markdown(args.output_md, rows, args.as_of)
+    write_markdown(args.output_md, rows, excluded, args.as_of)
     log_pool_decisions(
         args.log_file,
         rows,
@@ -227,7 +252,7 @@ def main() -> None:
         args.output_csv,
         args.output_md,
     )
-    print(f"wrote {len(rows)} rows to {args.output_csv}")
+    print(f"wrote {len(rows)} pool rows to {args.output_csv}; {len(excluded)} excluded rows listed in {args.output_md}")
 
 
 if __name__ == "__main__":
