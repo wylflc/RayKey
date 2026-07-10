@@ -1,6 +1,6 @@
 {
  "security_code": "688041",
- "retrieved_at_utc": "2026-07-10T10:21:58+00:00",
+ "retrieved_at_utc": "2026-07-10T13:31:59+00:00",
  "quote": {
   "price": 353.0,
   "change_pct": -2.88,
@@ -11,7 +11,7 @@
   "float_market_cap": 820491346123,
   "quote_time": 1783671111,
   "name": "海光信息",
-  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=1.688012%2C1.688981%2C1.688041%2C1.688008%2C1.688111%2C1.600036%2C0.300059%2C0.300124%2C1.600660%2C1.600406"
+  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=0.000938%2C0.002158%2C1.600487%2C0.300394%2C0.002222%2C1.603290%2C1.688041%2C1.600699%2C1.601689%2C1.600741"
  },
  "source_urls": {
   "finance": "https://datacenter.eastmoney.com/securities/api/data/get?filter=%28SECUCODE%3D%22688041.SH%22%29&client=APP&source=HSF10&type=RPT_F10_FINANCE_MAINFINADATA&sty=APP_F10_MAINFINADATA&st=REPORT_DATE&ps=40&sr=-1",
