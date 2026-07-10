@@ -1,0 +1,154 @@
+{
+ "security_code": "920982",
+ "retrieved_at_utc": "2026-07-10T12:58:41+00:00",
+ "quote": {
+  "price": 118.2,
+  "change_pct": 2.52,
+  "pe_dynamic": 24.21,
+  "pe_ttm": 21.79,
+  "pb": 6.87,
+  "total_market_cap": 13600723188,
+  "float_market_cap": 6555975529,
+  "quote_time": 1783669056,
+  "name": "锦波生物",
+  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=1.688617%2C1.688301%2C0.002223%2C0.300896%2C0.920982%2C0.300573%2C0.300357"
+ },
+ "source_urls": {
+  "finance": "https://datacenter.eastmoney.com/securities/api/data/get?filter=%28SECUCODE%3D%22920982.SZ%22%29&client=APP&source=HSF10&type=RPT_F10_FINANCE_MAINFINADATA&sty=APP_F10_MAINFINADATA&st=REPORT_DATE&ps=40&sr=-1",
+  "valuation_history": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_VALUEANALYSIS_DET&columns=ALL&filter=%28SECURITY_CODE%3D%22920982%22%29&pageNumber=1&pageSize=1250&sortTypes=-1&sortColumns=TRADE_DATE&source=WEB&client=WEB",
+  "performance_predict": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_PUBLIC_OP_NEWPREDICT&columns=ALL&filter=%28SECURITY_CODE%3D%22920982%22%29&pageNumber=1&pageSize=6&sortTypes=-1&sortColumns=NOTICE_DATE&source=WEB&client=WEB",
+  "performance_express": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_FCI_PERFORMANCEE&columns=ALL&filter=%28SECURITY_CODE%3D%22920982%22%29&pageNumber=1&pageSize=4&sortTypes=-1&sortColumns=REPORT_DATE&source=WEB&client=WEB",
+  "profit_forecast": "https://emweb.securities.eastmoney.com/PC_HSF10/ProfitForecast/PageAjax?code=SZ920982"
+ },
+ "fetch_status": "fetched",
+ "fetch_error": "",
+ "finance_periods": [],
+ "valuation_band": {
+  "window_start": "2023-07-20 00:00:00",
+  "window_end": "2026-07-10 00:00:00",
+  "current_pe_ttm": 21.79416093,
+  "current_pb": 6.68107493,
+  "current_ps_ttm": 8.47777653,
+  "current_pcf": 21.97818783,
+  "pe_ttm_pct_rank": 0.3,
+  "pe_ttm_min": 21.25944801,
+  "pe_ttm_median": 40.37,
+  "pe_ttm_max": 88.3364458,
+  "pb_pct_rank": 0.3,
+  "pb_min": 6.51715685,
+  "pb_median": 15.05,
+  "pb_max": 30.00190035
+ },
+ "performance_predicts": [
+  {
+   "REPORT_DATE": "2024-12-31 00:00:00",
+   "NOTICE_DATE": "2025-01-23 00:00:00",
+   "PREDICT_FINANCE_CODE": "004",
+   "PREDICT_TYPE": "预增",
+   "PREDICT_AMT_LOWER": 719000000,
+   "PREDICT_AMT_UPPER": 737000000,
+   "ADD_AMP_LOWER": 139.83,
+   "ADD_AMP_UPPER": 145.83,
+   "PREDICT_CONTENT": "预计2024年1-12月归属于上市公司股东的净利润盈利:71,900万元至73,700万元,同比上年增长:139.83%至145.83%。",
+   "CHANGE_REASON_EXPLAIN": "公司秉持“原始创新、实事求是”的科研精神,围绕人体结构性材料和人类重大传染病两大领域,不断研发各种具有高级结构的重组人源化胶原蛋白创新型生物材料,并持续进行技术升级和完善。报告期内,公司积极研发新产品、强化品牌建设、努力开拓市场,实现了收入的可持续增长。"
+  },
+  {
+   "REPORT_DATE": "2024-06-30 00:00:00",
+   "NOTICE_DATE": "2024-07-03 00:00:00",
+   "PREDICT_FINANCE_CODE": "004",
+   "PREDICT_TYPE": "预增",
+   "PREDICT_AMT_LOWER": 290000000,
+   "PREDICT_AMT_UPPER": 310000000,
+   "ADD_AMP_LOWER": 165,
+   "ADD_AMP_UPPER": 183.28,
+   "PREDICT_CONTENT": "预计2024年1-6月归属于上市公司股东的净利润盈利:29,000万元至31,000万元,同比上年增长:165%至183.28%。",
+   "CHANGE_REASON_EXPLAIN": "公司持续加大研发投入、努力加大品牌宣传和市场开拓,实现了收入的可持续增长。"
+  },
+  {
+   "REPORT_DATE": "2024-03-31 00:00:00",
+   "NOTICE_DATE": "2024-04-15 00:00:00",
+   "PREDICT_FINANCE_CODE": "004",
+   "PREDICT_TYPE": "预增",
+   "PREDICT_AMT_LOWER": 85000000,
+   "PREDICT_AMT_UPPER": 105000000,
+   "ADD_AMP_LOWER": 97.65,
+   "ADD_AMP_UPPER": 144.16,
+   "PREDICT_CONTENT": "预计2024年1-3月归属于上市公司股东的净利润盈利:8,500万元至10,500万元,同比上年增长:97.65%至144.16%。",
+   "CHANGE_REASON_EXPLAIN": "公司持续加大研发投入、积极研发新产品及产品升级、并努力加大品牌宣传和市场开拓,实现了收入的可持续增长。"
+  },
+  {
+   "REPORT_DATE": "2023-12-31 00:00:00",
+   "NOTICE_DATE": "2024-01-26 00:00:00",
+   "PREDICT_FINANCE_CODE": "004",
+   "PREDICT_TYPE": "预增",
+   "PREDICT_AMT_LOWER": 280000000,
+   "PREDICT_AMT_UPPER": 300000000,
+   "ADD_AMP_LOWER": 156.47,
+   "ADD_AMP_UPPER": 174.79,
+   "PREDICT_CONTENT": "预计2023年1-12月归属于上市公司股东的净利润盈利:28,000万元至30,000万元,同比上年增长:156.47%至174.79%。",
+   "CHANGE_REASON_EXPLAIN": "公司持续加大研发投入、积极研发新产品及产品升级、并努力加大品牌宣传和市场开拓,实现了收入的可持续增长。"
+  },
+  {
+   "REPORT_DATE": "2017-12-31 00:00:00",
+   "NOTICE_DATE": "2018-01-31 00:00:00",
+   "PREDICT_FINANCE_CODE": "004",
+   "PREDICT_TYPE": "预增",
+   "PREDICT_AMT_LOWER": 30000000,
+   "PREDICT_AMT_UPPER": 37000000,
+   "ADD_AMP_LOWER": 55.16,
+   "ADD_AMP_UPPER": 91.37,
+   "PREDICT_CONTENT": "预计2017年1-12月归属于上市公司股东的净利润盈利:3000万元-3700万元,同比上期增长:55.16%-91.37%。",
+   "CHANGE_REASON_EXPLAIN": "公司在2017年归属挂牌公司股东的净利润取得显著增长主要可归因于:1)“抗HPV生物蛋白敷料”产品销售继续放量。锦波生物联合复旦大学,以病毒进入抑制剂JB蛋白(3-羟基领苯二甲酸酐修饰牛-β乳球蛋白,ZL201210066696.9)为核心抗病毒成分,共同开发的\"抗HPV生物蛋白敷料\"用于高危型HPV感染女性的治疗时,凭借HPV阳性患者使用三个月后超60%的转阴率,和迄今尚未发现任何不良临床反应的安全性,成为全球HPV治疗领域的重大突破。该制剂自2012年年底推出后,经数年学术推广和市场教育,在医学界的认知度和影响力已初步建立,推动该产品进入快速放量阶段;.2)公司轻医美体系产品在2017年快速放量。锦波生物在2016年年底起开始大力推动功能蛋白仿生轻医美体系产品的营销工作,该体系产品以锦波在全球范围内独有的高活性\"重组人源III型胶原蛋白\"(ZL201210482543.2),和在技术上独具特色的rhEGF(ZL200810211603.0)、生物法五胜肽(ZL201410755706.9)、生物法六胜肽(CN201510252409.7)等医美体系功能蛋白中的一种或数种为核心成分开发,因消费者使用后效果显著,快速被市场所接受。"
+  }
+ ],
+ "performance_express": [
+  {
+   "REPORT_DATE": "2025-12-31 00:00:00",
+   "NOTICE_DATE": "2026-02-27 00:00:00",
+   "UPDATE_DATE": "2026-02-27 00:00:00",
+   "TOTAL_OPERATE_INCOME": 1595372919.28,
+   "YSTZ": 10.572373156197,
+   "PARENT_NETPROFIT": 651175616.96,
+   "JLRTBZCL": -11.078222574177,
+   "WEIGHTAVG_ROE": 37.35,
+   "BASIC_EPS": 5.66
+  },
+  {
+   "REPORT_DATE": "2024-12-31 00:00:00",
+   "NOTICE_DATE": "2025-02-24 00:00:00",
+   "UPDATE_DATE": "2026-02-27 00:00:00",
+   "TOTAL_OPERATE_INCOME": 1442831399.69,
+   "YSTZ": 84.916695358511,
+   "PARENT_NETPROFIT": 732301620.38,
+   "JLRTBZCL": 144.266403210671,
+   "WEIGHTAVG_ROE": 58.41,
+   "BASIC_EPS": 6.36
+  },
+  {
+   "REPORT_DATE": "2023-12-31 00:00:00",
+   "NOTICE_DATE": "2024-02-26 00:00:00",
+   "UPDATE_DATE": "2025-02-24 00:00:00",
+   "TOTAL_OPERATE_INCOME": 780260212.25,
+   "YSTZ": 99.964993790604,
+   "PARENT_NETPROFIT": 299796292.39,
+   "JLRTBZCL": 174.601574254073,
+   "WEIGHTAVG_ROE": 43.96,
+   "BASIC_EPS": 3.57
+  },
+  {
+   "REPORT_DATE": "2022-12-31 00:00:00",
+   "NOTICE_DATE": "2024-02-26 00:00:00",
+   "UPDATE_DATE": "2024-02-26 00:00:00",
+   "TOTAL_OPERATE_INCOME": 390198402.96,
+   "YSTZ": 67.153655789883,
+   "PARENT_NETPROFIT": 109175008.63,
+   "JLRTBZCL": 90.242443206169,
+   "WEIGHTAVG_ROE": 28.31,
+   "BASIC_EPS": 1.75
+  }
+ ],
+ "profit_forecast": {
+  "status": -1,
+  "message": "股票代码不合法"
+ }
+}
