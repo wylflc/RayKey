@@ -1,6 +1,6 @@
 {
  "security_code": "002049",
- "retrieved_at_utc": "2026-07-10T10:52:30+00:00",
+ "retrieved_at_utc": "2026-07-10T11:02:19+00:00",
  "quote": {
   "price": 85.83,
   "change_pct": -1.45,
@@ -11,7 +11,7 @@
   "float_market_cap": 72913935278,
   "quote_time": 1783668897,
   "name": "紫光国微",
-  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=1.601958%2C0.002683%2C0.000733%2C0.002179%2C0.002049%2C0.300726%2C1.603267%2C1.688439%2C1.688629%2C0.300502"
+  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=0.300408%2C1.600563%2C1.600885%2C0.300811%2C1.688300%2C1.688072%2C1.688082%2C1.688120%2C1.688037%2C0.002049"
  },
  "source_urls": {
   "finance": "https://datacenter.eastmoney.com/securities/api/data/get?filter=%28SECUCODE%3D%22002049.SZ%22%29&client=APP&source=HSF10&type=RPT_F10_FINANCE_MAINFINADATA&sty=APP_F10_MAINFINADATA&st=REPORT_DATE&ps=40&sr=-1",
