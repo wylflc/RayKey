@@ -1,0 +1,133 @@
+{
+ "security_code": "920186",
+ "retrieved_at_utc": "2026-07-10T13:23:04+00:00",
+ "quote": {
+  "price": 96.29,
+  "change_pct": -5.32,
+  "pe_dynamic": 31.41,
+  "pe_ttm": 21.58,
+  "pb": 6.29,
+  "total_market_cap": 21553466939,
+  "float_market_cap": 11273223293,
+  "quote_time": 1783669056,
+  "name": "中科仪",
+  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=0.002025%2C1.688586%2C0.002384%2C0.002281%2C0.003031%2C0.002484%2C1.688729%2C1.688652%2C0.920186%2C0.300346"
+ },
+ "source_urls": {
+  "finance": "https://datacenter.eastmoney.com/securities/api/data/get?filter=%28SECUCODE%3D%22920186.SZ%22%29&client=APP&source=HSF10&type=RPT_F10_FINANCE_MAINFINADATA&sty=APP_F10_MAINFINADATA&st=REPORT_DATE&ps=40&sr=-1",
+  "valuation_history": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_VALUEANALYSIS_DET&columns=ALL&filter=%28SECURITY_CODE%3D%22920186%22%29&pageNumber=1&pageSize=1250&sortTypes=-1&sortColumns=TRADE_DATE&source=WEB&client=WEB",
+  "performance_predict": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_PUBLIC_OP_NEWPREDICT&columns=ALL&filter=%28SECURITY_CODE%3D%22920186%22%29&pageNumber=1&pageSize=6&sortTypes=-1&sortColumns=NOTICE_DATE&source=WEB&client=WEB",
+  "performance_express": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_FCI_PERFORMANCEE&columns=ALL&filter=%28SECURITY_CODE%3D%22920186%22%29&pageNumber=1&pageSize=4&sortTypes=-1&sortColumns=REPORT_DATE&source=WEB&client=WEB",
+  "profit_forecast": "https://emweb.securities.eastmoney.com/PC_HSF10/ProfitForecast/PageAjax?code=SZ920186"
+ },
+ "fetch_status": "fetched",
+ "fetch_error": "",
+ "finance_periods": [],
+ "valuation_band": {
+  "window_start": "2026-04-29 00:00:00",
+  "window_end": "2026-07-10 00:00:00",
+  "current_pe_ttm": 21.57673889,
+  "current_pb": 8.14683765,
+  "current_ps_ttm": 15.81377601,
+  "current_pcf": 85.32059755,
+  "pe_ttm_pct_rank": 46.9,
+  "pe_ttm_min": 16.12933498,
+  "pe_ttm_median": 22.2,
+  "pe_ttm_max": 28.23417905,
+  "pb_pct_rank": 46.9,
+  "pb_min": 6.090034,
+  "pb_median": 8.38,
+  "pb_max": 10.66052076
+ },
+ "performance_predicts": [
+  {
+   "REPORT_DATE": "2026-03-31 00:00:00",
+   "NOTICE_DATE": "2026-04-22 00:00:00",
+   "PREDICT_FINANCE_CODE": "006",
+   "PREDICT_TYPE": "略增",
+   "PREDICT_AMT_LOWER": 230000000,
+   "PREDICT_AMT_UPPER": 250000000,
+   "ADD_AMP_LOWER": 24.71,
+   "ADD_AMP_UPPER": 35.55,
+   "PREDICT_CONTENT": "预计2026年1-3月营业收入:23,000万元至25,000万元,同比上年增长:24.71%至35.55%。",
+   "CHANGE_REASON_EXPLAIN": null
+  },
+  {
+   "REPORT_DATE": "2026-03-31 00:00:00",
+   "NOTICE_DATE": "2026-04-22 00:00:00",
+   "PREDICT_FINANCE_CODE": "005",
+   "PREDICT_TYPE": "扭亏",
+   "PREDICT_AMT_LOWER": 19000000,
+   "PREDICT_AMT_UPPER": 23000000,
+   "ADD_AMP_LOWER": 996.73,
+   "ADD_AMP_UPPER": 1185.52,
+   "PREDICT_CONTENT": "预计2026年1-3月扣除非经常性损益后的净利润盈利:1,900万元至2,300万元,同比上年增长:996.73%至1185.52%。",
+   "CHANGE_REASON_EXPLAIN": null
+  },
+  {
+   "REPORT_DATE": "2026-03-31 00:00:00",
+   "NOTICE_DATE": "2026-04-22 00:00:00",
+   "PREDICT_FINANCE_CODE": "004",
+   "PREDICT_TYPE": "预增",
+   "PREDICT_AMT_LOWER": 115000000,
+   "PREDICT_AMT_UPPER": 125000000,
+   "ADD_AMP_LOWER": 596.18,
+   "ADD_AMP_UPPER": 656.72,
+   "PREDICT_CONTENT": "预计2026年1-3月归属于上市公司股东的净利润盈利:11,500万元至12,500万元,同比上年增长:596.18%至656.72%。",
+   "CHANGE_REASON_EXPLAIN": null
+  },
+  {
+   "REPORT_DATE": "2025-12-31 00:00:00",
+   "NOTICE_DATE": "2026-01-30 00:00:00",
+   "PREDICT_FINANCE_CODE": "006",
+   "PREDICT_TYPE": "略增",
+   "PREDICT_AMT_LOWER": 1241060000,
+   "PREDICT_AMT_UPPER": 1281060000,
+   "ADD_AMP_LOWER": 14.67,
+   "ADD_AMP_UPPER": 18.37,
+   "PREDICT_CONTENT": "预计2025年1-12月营业收入:124,106万元至128,106万元,同比上年增长:14.67%至18.37%。",
+   "CHANGE_REASON_EXPLAIN": null
+  },
+  {
+   "REPORT_DATE": "2025-12-31 00:00:00",
+   "NOTICE_DATE": "2026-01-30 00:00:00",
+   "PREDICT_FINANCE_CODE": "004",
+   "PREDICT_TYPE": "预增",
+   "PREDICT_AMT_LOWER": 835000000,
+   "PREDICT_AMT_UPPER": 875000000,
+   "ADD_AMP_LOWER": 333.17,
+   "ADD_AMP_UPPER": 353.92,
+   "PREDICT_CONTENT": "预计2025年1-12月归属于上市公司股东的净利润盈利:83,500万元至87,500万元,同比上年增长:333.17%至353.92%。",
+   "CHANGE_REASON_EXPLAIN": null
+  },
+  {
+   "REPORT_DATE": "2025-12-31 00:00:00",
+   "NOTICE_DATE": "2026-01-30 00:00:00",
+   "PREDICT_FINANCE_CODE": "005",
+   "PREDICT_TYPE": "略增",
+   "PREDICT_AMT_LOWER": 100360000,
+   "PREDICT_AMT_UPPER": 108360000,
+   "ADD_AMP_LOWER": 14.2,
+   "ADD_AMP_UPPER": 23.31,
+   "PREDICT_CONTENT": "预计2025年1-12月扣除非经常性损益后的净利润盈利:10,036万元至10,836万元,同比上年增长:14.2%至23.31%。",
+   "CHANGE_REASON_EXPLAIN": null
+  }
+ ],
+ "performance_express": [
+  {
+   "REPORT_DATE": "2025-03-31 00:00:00",
+   "NOTICE_DATE": "2026-04-09 00:00:00",
+   "UPDATE_DATE": "2026-04-09 00:00:00",
+   "TOTAL_OPERATE_INCOME": 184429100,
+   "YSTZ": null,
+   "PARENT_NETPROFIT": 16518600,
+   "JLRTBZCL": null,
+   "WEIGHTAVG_ROE": null,
+   "BASIC_EPS": null
+  }
+ ],
+ "profit_forecast": {
+  "status": -1,
+  "message": "股票代码不合法"
+ }
+}
