@@ -1,6 +1,6 @@
 {
  "security_code": "002714",
- "retrieved_at_utc": "2026-07-10T10:40:27+00:00",
+ "retrieved_at_utc": "2026-07-10T13:12:43+00:00",
  "quote": {
   "price": 38.14,
   "change_pct": 2.78,
@@ -11,7 +11,7 @@
   "float_market_cap": 125118241433,
   "quote_time": 1783668897,
   "name": "牧原股份",
-  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=0.301498%2C0.300866%2C1.603129%2C1.605499%2C1.689009%2C1.603529%2C0.300997%2C1.600886%2C0.300979%2C0.002714"
+  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=1.688122%2C1.688190%2C1.688281%2C1.688708%2C1.688563%2C0.002714%2C0.002352%2C0.002027%2C1.600415%2C0.300012"
  },
  "source_urls": {
   "finance": "https://datacenter.eastmoney.com/securities/api/data/get?filter=%28SECUCODE%3D%22002714.SZ%22%29&client=APP&source=HSF10&type=RPT_F10_FINANCE_MAINFINADATA&sty=APP_F10_MAINFINADATA&st=REPORT_DATE&ps=40&sr=-1",
