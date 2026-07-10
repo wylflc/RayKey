@@ -27,7 +27,14 @@ DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_MD = ROOT / "data/processed/a_share_core_valuation_pool.md"
 
-ELIGIBLE_VALUATION_TIERS = {"低估", "较低估", "中性", "可接受较高估"}
+# §6.2.1 分层×估值准入矩阵：层级越低，买入估值门槛越严。
+TIER_ELIGIBLE_VALUATIONS = {
+    "L1": {"低估", "较低估", "中性", "可接受较高估"},
+    "L2": {"低估", "较低估", "中性"},
+    "L3": {"低估", "较低估"},
+    "L4": {"低估"},
+}
+CORE_LAYER_TIERS = {"L1", "L2"}
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -56,10 +63,9 @@ def infer_exchange(code: str, tier_row: dict[str, str] | None) -> str:
 
 
 def normalize_quality_tier(value: str) -> str:
-    if value.startswith("L1"):
-        return "L1"
-    if value.startswith("L2"):
-        return "L2"
+    for tier in ("L1", "L2", "L3", "L4", "L5"):
+        if value.startswith(tier):
+            return tier
     return value
 
 
@@ -79,9 +85,8 @@ def build_pool(
         )
         valuation_tier = row.get("valuation_tier", "")
 
-        if quality_tier not in {"L1", "L2"}:
-            continue
-        if valuation_tier not in ELIGIBLE_VALUATION_TIERS:
+        eligible = TIER_ELIGIBLE_VALUATIONS.get(quality_tier)
+        if eligible is None or valuation_tier not in eligible:
             continue
 
         output.append(
@@ -92,6 +97,7 @@ def build_pool(
                 "exchange": infer_exchange(code, tier_row),
                 "quality_tier": quality_tier,
                 "quality_tier_label": row.get("quality_tier") or (tier_row or {}).get("quality_tier_label", ""),
+                "pool_layer": "core" if quality_tier in CORE_LAYER_TIERS else "tactical",
                 "strategy_tag": row.get("strategy_tag", ""),
                 "valuation_tier": valuation_tier,
                 "valuation_batch_id": row.get("valuation_batch_id", ""),
@@ -186,6 +192,7 @@ def main() -> None:
         "exchange",
         "quality_tier",
         "quality_tier_label",
+        "pool_layer",
         "strategy_tag",
         "valuation_tier",
         "valuation_batch_id",

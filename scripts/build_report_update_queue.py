@@ -50,8 +50,9 @@ def parse_date(value: str | None) -> date | None:
         return None
 
 
-def is_core_tier(tier: str) -> bool:
-    return tier.startswith("L1") or tier.startswith("L2")
+def is_valuation_scope_tier(tier: str) -> bool:
+    """§6.1/§7.3（v19）：L1-L4 全量纳入估值与估值复核范围。"""
+    return tier.startswith(("L1", "L2", "L3", "L4"))
 
 
 def attention_class(row: dict[str, str] | None) -> str:
@@ -114,7 +115,7 @@ def build_queue(
             latest_report_date and (last_quality_review_date is None or latest_report_date > last_quality_review_date)
         )
         valuation_review_needed = bool(
-            is_core_tier(tier.get("quality_tier", ""))
+            is_valuation_scope_tier(tier.get("quality_tier", ""))
             and latest_report_date
             and (last_valuation_review_date is None or latest_report_date > last_valuation_review_date)
         )
