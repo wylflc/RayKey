@@ -113,11 +113,29 @@ def fetch_daily(code: str, exchange: str, as_of: str, timeout: float) -> tuple[s
     )
     url = f"{EASTMONEY_KLINE}?{query}"
     request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        payload = json.loads(response.read().decode("utf-8", "ignore"))
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = json.loads(response.read().decode("utf-8", "ignore"))
+    except OSError:
+        return fetch_daily_tencent(code, exchange, as_of, timeout)
     klines = (payload.get("data") or {}).get("klines") or []
     dates = [line.split(",")[0] for line in klines]
     closes = [float(line.split(",")[2]) for line in klines]
+    return url, dates, closes
+
+
+def fetch_daily_tencent(code: str, exchange: str, as_of: str, timeout: float) -> tuple[str, list[str], list[float]]:
+    """后备源：腾讯前复权日线（与 screen_daily_volume_price_signals.py 同口径，v20）。"""
+    symbol = ("sh" if infer_secid(code, exchange).startswith("1.") else "sz") + code.zfill(6)
+    param = f"{symbol},day,2020-01-01,{as_of},1000,qfq"
+    url = f"https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={param}"
+    request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"})
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        payload = json.loads(response.read().decode("utf-8", "ignore"))
+    data = (payload.get("data") or {}).get(symbol) or {}
+    klines = data.get("qfqday") or data.get("day") or []
+    dates = [row[0] for row in klines]
+    closes = [float(row[2]) for row in klines]
     return url, dates, closes
 
 

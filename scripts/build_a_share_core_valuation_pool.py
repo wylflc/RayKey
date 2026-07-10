@@ -35,6 +35,8 @@ TIER_ELIGIBLE_VALUATIONS = {
     "L4": {"低估"},
 }
 CORE_LAYER_TIERS = {"L1", "L2"}
+# v20 §6.7.5：未过准入矩阵但估值非高估/非无法估值的 L1-L4 → watch_only 仅观察层。
+WATCH_VALUATIONS = {"低估", "较低估", "中性", "可接受较高估"}
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -86,7 +88,13 @@ def build_pool(
         valuation_tier = row.get("valuation_tier", "")
 
         eligible = TIER_ELIGIBLE_VALUATIONS.get(quality_tier)
-        if eligible is None or valuation_tier not in eligible:
+        if eligible is None:
+            continue
+        if valuation_tier in eligible:
+            pool_layer = "core" if quality_tier in CORE_LAYER_TIERS else "tactical"
+        elif valuation_tier in WATCH_VALUATIONS:
+            pool_layer = "watch_only"
+        else:
             continue
 
         output.append(
@@ -97,7 +105,7 @@ def build_pool(
                 "exchange": infer_exchange(code, tier_row),
                 "quality_tier": quality_tier,
                 "quality_tier_label": row.get("quality_tier") or (tier_row or {}).get("quality_tier_label", ""),
-                "pool_layer": "core" if quality_tier in CORE_LAYER_TIERS else "tactical",
+                "pool_layer": pool_layer,
                 "strategy_tag": row.get("strategy_tag", ""),
                 "valuation_tier": valuation_tier,
                 "valuation_batch_id": row.get("valuation_batch_id", ""),
@@ -124,14 +132,14 @@ def write_markdown(path: Path, rows: list[dict[str, str]], as_of: str) -> None:
         "",
         f"生成日期：{as_of}",
         "",
-        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成。只包含 L1/L2 且估值档位为低估、较低估、中性或可接受较高估的股票。",
+        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成。core/tactical 为按 §6.2.1 矩阵可买层；watch_only 为仅观察层（v20，可见不可买）。",
         "",
-        "| 代码 | 名称 | 质量 | 估值 | 策略 | 估值价 | PE | PB |",
-        "| --- | --- | --- | --- | --- | ---: | ---: | ---: |",
+        "| 代码 | 名称 | 质量 | 层 | 估值 | 策略 | 估值价 | PE | PB |",
+        "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: |",
     ]
     for row in rows:
         lines.append(
-            "| {security_code} | {security_name} | {quality_tier_label} | {valuation_tier} | "
+            "| {security_code} | {security_name} | {quality_tier_label} | {pool_layer} | {valuation_tier} | "
             "{strategy_tag} | {valuation_price} | {valuation_pe_ttm} | {valuation_pb} |".format(**row)
         )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -157,8 +165,10 @@ def log_pool_decisions(
                 "as_of": as_of,
                 "security_code": row["security_code"],
                 "security_name": row["security_name"],
-                "decision_type": "core_valuation_eligible",
-                "decision_result": row["valuation_tier"],
+                "decision_type": "scan_watch_only" if row["pool_layer"] == "watch_only" else "core_valuation_eligible",
+                "decision_result": (
+                    f"watch_only({row['valuation_tier']})" if row["pool_layer"] == "watch_only" else row["valuation_tier"]
+                ),
                 "summary_reason": row.get("valuation_reason", ""),
                 "input_files": f"{valuation_file};{tiers_file}",
                 "source_urls": "",

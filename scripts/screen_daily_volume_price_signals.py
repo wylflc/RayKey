@@ -456,6 +456,10 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, 
         }
     signal.update(pool_row)
     signal["security_code"] = code
+    # v20 §8.9 watch_only 仅观察层：信号可见但不可买。
+    if pool_row.get("pool_layer") == "watch_only" and signal.get("signal_state") == "buy_candidate":
+        signal["signal_state"] = "signal_watch_only"
+        signal["action_bias"] = "池外信号：24小时异动响应+事件复核（不可买）"
     signal["priority"] = assign_priority(signal)
     signal["data_source"] = kline_url
     signal["screened_at_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -484,6 +488,7 @@ def scan(input_rows: list[dict[str, str]], as_of: str, symbols: set[str] | None,
 def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str, market_state: str, review_note: str = "") -> None:
     groups = [
         ("今日买入候选", "buy_candidate"),
+        ("今日池外量价异动（watch_only，不可买、待§9.4核实）", "signal_watch_only"),
         ("今日复核冻结（§7.5，复核完成前不得买入）", "buy_blocked_review_pending"),
         ("今日等待回踩", "wait_pullback"),
         ("今日等待确认", "wait_confirmation"),
@@ -496,7 +501,7 @@ def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str, market
         "",
         f"日期：{as_of}",
         f"市场状态：{market_state}（§8.12，沪深300 vs MA250；弱势时操作偏向下调一档）",
-        "数据口径：东方财富前复权日线（运行时拉取，未落盘原始bars）；仅扫描 `data/processed/a_share_core_valuation_pool.csv`。",
+        "数据口径：东方财富前复权日线（运行时拉取，未落盘原始bars）；扫描 `data/processed/a_share_core_valuation_pool.csv`（core/tactical 可买层 + watch_only 仅观察层，v20）。",
         review_note,
         "",
     ]
@@ -607,6 +612,7 @@ def main() -> None:
         "exchange",
         "quality_tier",
         "quality_tier_label",
+        "pool_layer",
         "valuation_tier",
         "strategy_tag",
         "signal_state",
