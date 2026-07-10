@@ -23,6 +23,8 @@ DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
 DEFAULT_OUTPUT_MD = ROOT / "data/processed/daily_volume_price_tracker.md"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
+# 后备行情源：东财历史行情不可用时切换（同为前复权日线；成交额以收盘×量近似，仅影响流动性门槛估计）。
+TENCENT_KLINE = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
 
 MIN_AMOUNT_MA20 = 50_000_000  # §11.8 流动性门槛：20日均成交额低于5000万元不列买入候选。
 
@@ -81,7 +83,10 @@ def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float) -> tu
         }
     )
     url = f"{EASTMONEY_KLINE}?{query}"
-    payload = get_json(url, timeout)
+    try:
+        payload = get_json(url, timeout)
+    except OSError:
+        return fetch_daily_rows_tencent(code, exchange, as_of, timeout)
     klines = (payload.get("data") or {}).get("klines") or []
     rows: list[dict[str, float | str]] = []
     for line in klines:
@@ -98,6 +103,64 @@ def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float) -> tu
                 "pct_chg": float(parts[8]),
             }
         )
+    return url, rows
+
+
+def fetch_daily_rows_tencent(code: str, exchange: str, as_of: str, timeout: float) -> tuple[str, list[dict[str, float | str]]]:
+    """后备源：腾讯前复权日线。成交量单位为手（仅用于量比，口径内部一致）；
+    成交额接口未提供，以收盘价×成交量×100近似，只影响 §11 流动性门槛的估计。"""
+    symbol = ("sh" if infer_secid(code, exchange).startswith("1.") else "sz") + code.zfill(6)
+    param = f"{symbol},day,2020-01-01,{as_of},1000,qfq"
+    url = f"{TENCENT_KLINE}?param={param}"
+    request = urllib.request.Request(
+        url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"}
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        payload = json.loads(response.read().decode("utf-8", "ignore"))
+    data = (payload.get("data") or {}).get(symbol) or {}
+    klines = [list(parts) for parts in (data.get("qfqday") or data.get("day") or [])]
+    # 腾讯前复权序列可能滞后一个交易日：用不复权序列补齐最新K线。
+    # 成交量单位沪深口径不一（股/手），按重叠日成交量比例归一后再拼接。
+    if klines and str(klines[-1][0]) < as_of:
+        raw_url = f"{TENCENT_KLINE}?param={symbol},day,{klines[-1][0]},{as_of},10,"
+        raw_req = urllib.request.Request(
+            raw_url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"}
+        )
+        try:
+            with urllib.request.urlopen(raw_req, timeout=timeout) as response:
+                raw_data = (json.loads(response.read().decode("utf-8", "ignore")).get("data") or {}).get(symbol) or {}
+            raw_rows = raw_data.get("day") or []
+            overlap = {str(p[0]): float(p[5]) for p in raw_rows}
+            qfq_last_vol = float(klines[-1][5])
+            raw_same_vol = overlap.get(str(klines[-1][0]))
+            vol_scale = 1.0
+            if raw_same_vol and qfq_last_vol:
+                ratio = raw_same_vol / qfq_last_vol
+                vol_scale = 100.0 if ratio > 10 else 1.0
+            for parts in raw_rows:
+                if str(parts[0]) > str(klines[-1][0]) and str(parts[0]) <= as_of:
+                    klines.append([parts[0], parts[1], parts[2], parts[3], parts[4], float(parts[5]) / vol_scale])
+        except OSError:
+            pass
+    rows: list[dict[str, float | str]] = []
+    prev_close: float | None = None
+    for parts in klines:
+        close = float(parts[2])
+        volume = float(parts[5])
+        pct = 0.0 if prev_close in (None, 0.0) else (close / prev_close - 1) * 100
+        rows.append(
+            {
+                "date": parts[0],
+                "open": float(parts[1]),
+                "close": close,
+                "high": float(parts[3]),
+                "low": float(parts[4]),
+                "volume": volume,
+                "amount": close * volume * 100,
+                "pct_chg": pct,
+            }
+        )
+        prev_close = close
     return url, rows
 
 
