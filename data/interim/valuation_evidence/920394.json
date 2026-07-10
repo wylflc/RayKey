@@ -1,0 +1,166 @@
+{
+ "security_code": "920394",
+ "retrieved_at_utc": "2026-07-10T13:08:14+00:00",
+ "quote": {
+  "price": 52.52,
+  "change_pct": -1.04,
+  "pe_dynamic": 62.8,
+  "pe_ttm": 60.29,
+  "pb": 9.44,
+  "total_market_cap": 7681050000,
+  "float_market_cap": 7624476086,
+  "quote_time": 1783669056,
+  "name": "民士达",
+  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=0.300487%2C0.300910%2C1.600862%2C0.920394%2C0.000786%2C0.002318%2C0.300699%2C1.688295%2C1.600143%2C1.601233"
+ },
+ "source_urls": {
+  "finance": "https://datacenter.eastmoney.com/securities/api/data/get?filter=%28SECUCODE%3D%22920394.SZ%22%29&client=APP&source=HSF10&type=RPT_F10_FINANCE_MAINFINADATA&sty=APP_F10_MAINFINADATA&st=REPORT_DATE&ps=40&sr=-1",
+  "valuation_history": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_VALUEANALYSIS_DET&columns=ALL&filter=%28SECURITY_CODE%3D%22920394%22%29&pageNumber=1&pageSize=1250&sortTypes=-1&sortColumns=TRADE_DATE&source=WEB&client=WEB",
+  "performance_predict": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_PUBLIC_OP_NEWPREDICT&columns=ALL&filter=%28SECURITY_CODE%3D%22920394%22%29&pageNumber=1&pageSize=6&sortTypes=-1&sortColumns=NOTICE_DATE&source=WEB&client=WEB",
+  "performance_express": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_FCI_PERFORMANCEE&columns=ALL&filter=%28SECURITY_CODE%3D%22920394%22%29&pageNumber=1&pageSize=4&sortTypes=-1&sortColumns=REPORT_DATE&source=WEB&client=WEB",
+  "profit_forecast": "https://emweb.securities.eastmoney.com/PC_HSF10/ProfitForecast/PageAjax?code=SZ920394"
+ },
+ "fetch_status": "fetched",
+ "fetch_error": "",
+ "finance_periods": [],
+ "valuation_band": {
+  "window_start": "2023-04-25 00:00:00",
+  "window_end": "2026-07-10 00:00:00",
+  "current_pe_ttm": 60.29292046,
+  "current_pb": 9.10999292,
+  "current_ps_ttm": 17.3857092,
+  "current_pcf": 90.703081,
+  "pe_ttm_pct_rank": 92.1,
+  "pe_ttm_min": 18.89748194,
+  "pe_ttm_median": 37.3,
+  "pe_ttm_max": 88.06302225,
+  "pb_pct_rank": 91.1,
+  "pb_min": 2.46012581,
+  "pb_median": 5.28,
+  "pb_max": 13.30593216
+ },
+ "performance_predicts": [
+  {
+   "REPORT_DATE": "2024-12-31 00:00:00",
+   "NOTICE_DATE": "2025-01-13 00:00:00",
+   "PREDICT_FINANCE_CODE": "004",
+   "PREDICT_TYPE": "略增",
+   "PREDICT_AMT_LOWER": 98000000,
+   "PREDICT_AMT_UPPER": 118000000,
+   "ADD_AMP_LOWER": 20.05,
+   "ADD_AMP_UPPER": 44.55,
+   "PREDICT_CONTENT": "预计2024年1-12月归属于上市公司股东的净利润盈利:9,800万元至11,800万元,同比上年增长:20.05%至44.55%。",
+   "CHANGE_REASON_EXPLAIN": "本报告期内,航天航空、轨道交通等领域的快速发展带动芳纶纸蜂窝芯材用量大幅增加,新能源汽车等领域的快速崛起,欧美电网升级和算力需求增加带动变压器需求大幅增长,都促成了芳纶纸需求用量的增加。本报告期内,公司通过全球参展、布展,联合头部企业举办行业会,加强市场的开发力度等措施,进一步提升了全球的行业影响力和市场份额;同时通过提升信息化和智控水平等措施进一步降本增效,最终实现了收入和利润的稳步提升。"
+  },
+  {
+   "REPORT_DATE": "2024-12-31 00:00:00",
+   "NOTICE_DATE": "2025-01-13 00:00:00",
+   "PREDICT_FINANCE_CODE": "005",
+   "PREDICT_TYPE": "预增",
+   "PREDICT_AMT_LOWER": 87000000,
+   "PREDICT_AMT_UPPER": 97000000,
+   "ADD_AMP_LOWER": 41.43,
+   "ADD_AMP_UPPER": 57.69,
+   "PREDICT_CONTENT": "预计2024年1-12月扣除非经常性损益后的净利润盈利:8,700万元至9,700万元,同比上年增长:41.43%至57.69%。",
+   "CHANGE_REASON_EXPLAIN": "本报告期内,航天航空、轨道交通等领域的快速发展带动芳纶纸蜂窝芯材用量大幅增加,新能源汽车等领域的快速崛起,欧美电网升级和算力需求增加带动变压器需求大幅增长,都促成了芳纶纸需求用量的增加。本报告期内,公司通过全球参展、布展,联合头部企业举办行业会,加强市场的开发力度等措施,进一步提升了全球的行业影响力和市场份额;同时通过提升信息化和智控水平等措施进一步降本增效,最终实现了收入和利润的稳步提升。"
+  },
+  {
+   "REPORT_DATE": "2023-09-30 00:00:00",
+   "NOTICE_DATE": "2023-10-12 00:00:00",
+   "PREDICT_FINANCE_CODE": "004",
+   "PREDICT_TYPE": "略增",
+   "PREDICT_AMT_LOWER": 63927600,
+   "PREDICT_AMT_UPPER": 63927600,
+   "ADD_AMP_LOWER": 41.32,
+   "ADD_AMP_UPPER": 41.32,
+   "PREDICT_CONTENT": "预计2023年1-9月归属于上市公司股东的净利润盈利:6,392.76万元,同比上年增长:41.32%。",
+   "CHANGE_REASON_EXPLAIN": "报告期内,公司通过积极开拓市场,销售收入稳步增长;持续提升管理水平,生产经营稳定运行;始终坚持降本增效,毛利维持在较高水平。"
+  },
+  {
+   "REPORT_DATE": "2022-12-31 00:00:00",
+   "NOTICE_DATE": "2023-02-16 00:00:00",
+   "PREDICT_FINANCE_CODE": "005",
+   "PREDICT_TYPE": "预增",
+   "PREDICT_AMT_LOWER": 48000000,
+   "PREDICT_AMT_UPPER": 52000000,
+   "ADD_AMP_LOWER": 77.58,
+   "ADD_AMP_UPPER": 92.38,
+   "PREDICT_CONTENT": "预计2022年1-12月扣除非经常性损益后的净利润盈利:4,800万元至5,200万元,同比上年增长:77.58%至92.38%。",
+   "CHANGE_REASON_EXPLAIN": null
+  },
+  {
+   "REPORT_DATE": "2022-12-31 00:00:00",
+   "NOTICE_DATE": "2023-02-16 00:00:00",
+   "PREDICT_FINANCE_CODE": "006",
+   "PREDICT_TYPE": "略增",
+   "PREDICT_AMT_LOWER": 270000000,
+   "PREDICT_AMT_UPPER": 290000000,
+   "ADD_AMP_LOWER": 23.94,
+   "ADD_AMP_UPPER": 33.12,
+   "PREDICT_CONTENT": "预计2022年1-12月营业收入:27,000万元至29,000万元,同比上年增长:23.94%至33.12%。",
+   "CHANGE_REASON_EXPLAIN": null
+  },
+  {
+   "REPORT_DATE": "2022-12-31 00:00:00",
+   "NOTICE_DATE": "2023-02-16 00:00:00",
+   "PREDICT_FINANCE_CODE": "002",
+   "PREDICT_TYPE": "预增",
+   "PREDICT_AMT_LOWER": 61000000,
+   "PREDICT_AMT_UPPER": 65000000,
+   "ADD_AMP_LOWER": 63.63,
+   "ADD_AMP_UPPER": 74.36,
+   "PREDICT_CONTENT": "预计2022年1-12月净利润盈利:6,100万元至6,500万元,同比上年增长:63.63%至74.36%。",
+   "CHANGE_REASON_EXPLAIN": null
+  }
+ ],
+ "performance_express": [
+  {
+   "REPORT_DATE": "2025-12-31 00:00:00",
+   "NOTICE_DATE": "2026-02-26 00:00:00",
+   "UPDATE_DATE": "2026-02-26 00:00:00",
+   "TOTAL_OPERATE_INCOME": 447021214.71,
+   "YSTZ": 9.578553839767,
+   "PARENT_NETPROFIT": 128156003.83,
+   "JLRTBZCL": 27.489795234108,
+   "WEIGHTAVG_ROE": 16.44,
+   "BASIC_EPS": 0.88
+  },
+  {
+   "REPORT_DATE": "2024-12-31 00:00:00",
+   "NOTICE_DATE": "2025-02-25 00:00:00",
+   "UPDATE_DATE": "2026-02-26 00:00:00",
+   "TOTAL_OPERATE_INCOME": 407945897.3,
+   "YSTZ": 19.817832685043,
+   "PARENT_NETPROFIT": 100522558.37,
+   "JLRTBZCL": 23.138303176186,
+   "WEIGHTAVG_ROE": 14.79,
+   "BASIC_EPS": 0.69
+  },
+  {
+   "REPORT_DATE": "2023-12-31 00:00:00",
+   "NOTICE_DATE": "2024-02-27 00:00:00",
+   "UPDATE_DATE": "2025-02-25 00:00:00",
+   "TOTAL_OPERATE_INCOME": 340471771.32,
+   "YSTZ": 20.701800182178,
+   "PARENT_NETPROFIT": 81633866.78,
+   "JLRTBZCL": 28.73527050761,
+   "WEIGHTAVG_ROE": 15.85,
+   "BASIC_EPS": 0.62
+  },
+  {
+   "REPORT_DATE": "2022-12-31 00:00:00",
+   "NOTICE_DATE": "2024-02-27 00:00:00",
+   "UPDATE_DATE": "2024-02-27 00:00:00",
+   "TOTAL_OPERATE_INCOME": 282076796.54,
+   "YSTZ": 29.478623125044,
+   "PARENT_NETPROFIT": 63412199.67,
+   "JLRTBZCL": 70.097515134846,
+   "WEIGHTAVG_ROE": 20.82,
+   "BASIC_EPS": 0.61
+  }
+ ],
+ "profit_forecast": {
+  "status": -1,
+  "message": "股票代码不合法"
+ }
+}
