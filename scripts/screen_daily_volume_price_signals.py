@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
-DEFAULT_OUTPUT_MD = ROOT / "data/processed/daily_volume_price_tracker.md"
+DEFAULT_OUTPUT_MD = ROOT / "data/processed/000_daily_volume_price_tracker.md"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 # 后备行情源：东财历史行情不可用时切换（同为前复权日线；成交额以收盘×量近似，仅影响流动性门槛估计）。
 TENCENT_KLINE = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"

@@ -41,16 +41,16 @@
 | `data/raw/snapshots/a_share_securities_YYYYMMDD.csv` | 证券名单的带日期不可变快照（每次更新时自动另存，ADR-0001）；主路径仅保留最新版 |
 | `data/processed/a_share_attention_triage.csv` | A股第一轮三类初筛结果：值得关注公司、临界待定公司、垃圾公司 |
 | `data/processed/a_share_watchlist_quality_tiers.csv` | A股值得关注公司质量分层结构化结果 |
-| `data/processed/a_share_watchlist_quality_tiers.md` | A股值得关注公司质量分层阅读版 |
+| `data/processed/000_a_share_watchlist_quality_tiers.md` | A股值得关注公司质量分层阅读版 |
 | `data/processed/a_share_core_valuation_pool.csv` | L1/L2核心质量公司估值合格池 |
-| `data/processed/a_share_core_valuation_pool.md` | L1/L2核心质量公司估值合格池阅读版 |
+| `data/processed/000_a_share_core_valuation_pool.md` | L1/L2核心质量公司估值合格池阅读版 |
 | `data/processed/daily_buy_candidates.csv` | 每日量价触发后的买入候选 |
 | `data/processed/pretrade_decisions.csv` | 买入前结构化闸门记录（§10）：每次买入决策一行，11 项字段齐备且通过才允许建仓；建仓后须回写持仓清单并在决策日志记 `execution_record` |
-| `data/processed/daily_volume_price_tracker.md` | 每日量价跟踪阅读版 |
+| `data/processed/000_daily_volume_price_tracker.md` | 每日量价跟踪阅读版 |
 | `data/processed/a_share_holdings.csv` | 当前真实持仓清单，手工维护，作为每日卖出扫描输入 |
 | `data/processed/portfolio_account_snapshot.csv` | 账户级快照（追加式，手工维护）：净资产、总资产、融资负债、杠杆、担保比例、净值峰值与回撤基线；供 §14 账户回撤状态与个人投资体系 §13.1 回撤预算、§4 杠杆预警使用 |
 | `data/processed/daily_holdings_actions.csv` | 每日持仓监控与卖出扫描后的持仓动作清单 |
-| `data/processed/daily_holdings_tracker.md` | 每日持仓动作阅读版 |
+| `data/processed/000_daily_holdings_tracker.md` | 每日持仓动作阅读版 |
 | `data/processed/a_share_workflow_decision_log.csv` | 全流程结论日志，用于后续溯源、复核和纠错 |
 | `data/processed/a_share_company_analysis_index.csv` / `.md` | 跨轮次公司分析索引：每家公司一行，合并 round1 三类初筛、上一轮（2026-06 两层复核）筛选决策/L1-L5分层/估值结论与决策日志条数（§2.2） |
 
@@ -677,7 +677,7 @@ python3 scripts/build_a_share_core_valuation_pool.py \
   --valuation data/processed/a_share_focus_watchlist_l1_l2_valuation.csv \
   --tiers data/processed/a_share_watchlist_quality_tiers.csv \
   --output-csv data/processed/a_share_core_valuation_pool.csv \
-  --output-md data/processed/a_share_core_valuation_pool.md \
+  --output-md data/processed/000_a_share_core_valuation_pool.md \
   --log-file data/processed/a_share_workflow_decision_log.csv \
   --as-of YYYY-MM-DD
 ```
@@ -763,7 +763,7 @@ python3 scripts/screen_daily_volume_price_signals.py \
   --input data/processed/a_share_core_valuation_pool.csv \
   --review-queue data/interim/a_share_report_update_queue.csv \
   --output-csv data/processed/daily_buy_candidates.csv \
-  --output-md data/processed/daily_volume_price_tracker.md \
+  --output-md data/processed/000_daily_volume_price_tracker.md \
   --log-file data/processed/a_share_workflow_decision_log.csv
 ```
 
@@ -1308,6 +1308,7 @@ add_conditions, exit_conditions, last_review_date, notes
 1. 买入时必须在持仓清单写入 `stop_loss_price`（割肉价，由用户给定）。
 2. 当日价 <= `stop_loss_price` 时，无条件清仓，不受 3 个月锁定限制；**当日或次日开盘执行，不得以“等待 1-3 日确认”延迟**（见退出优先级矩阵 Tier-0）。
 3. 在触及割肉价之前，若持有时间 < 3 个月，禁止任何卖出；但触发退出优先级矩阵 Tier-1 硬证伪时除外（见下）。
+   - **建仓期豁免（2026-07-11 用户声明，撤销前有效）**：账户建仓期内本条 3 个月锁定暂停执行，持仓可按估值与 v20 仓位规则自由调整；豁免期间卖出扫描脚本的锁定标注仅供参考。用户宣布建仓期结束后恢复本条并删除本注。
 4. `stop_loss_price` 只能上调、不能下调；每次上调记录 `stop_loss_last_raised_date`。
 5. 上调后的 `stop_loss_price` 不得高于当日 MA120，避免用过高的割肉价作为卖出借口；例外（v20）：`trend_protection_level = daily` 的战术/事件仓按启动结构管理割肉价（启动平台、启动日低点、缩量回踩低点），不受 MA120 上限约束。
 
@@ -1370,7 +1371,7 @@ python3 scripts/scan_holdings_sell_signals.py \
   --valuation-pool data/processed/a_share_core_valuation_pool.csv \
   --account-snapshot data/processed/portfolio_account_snapshot.csv \
   --output-csv data/processed/daily_holdings_actions.csv \
-  --output-md data/processed/daily_holdings_tracker.md \
+  --output-md data/processed/000_daily_holdings_tracker.md \
   --log-file data/processed/a_share_workflow_decision_log.csv
 ```
 

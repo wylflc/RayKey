@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_VALUATION = ROOT / "data/processed/a_share_focus_watchlist_l1_l2_valuation.csv"
 DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/a_share_core_valuation_pool.csv"
-DEFAULT_OUTPUT_MD = ROOT / "data/processed/a_share_core_valuation_pool.md"
+DEFAULT_OUTPUT_MD = ROOT / "data/processed/000_a_share_core_valuation_pool.md"
 
 # §6.2.1 分层×估值准入矩阵：层级越低，买入估值门槛越严。
 TIER_ELIGIBLE_VALUATIONS = {

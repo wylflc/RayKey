@@ -29,7 +29,7 @@ DEFAULT_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
 DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_ACCOUNT_SNAPSHOT = ROOT / "data/processed/portfolio_account_snapshot.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_holdings_actions.csv"
-DEFAULT_OUTPUT_MD = ROOT / "data/processed/daily_holdings_tracker.md"
+DEFAULT_OUTPUT_MD = ROOT / "data/processed/000_daily_holdings_tracker.md"
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 
