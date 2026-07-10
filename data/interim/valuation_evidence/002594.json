@@ -1,6 +1,6 @@
 {
  "security_code": "002594",
- "retrieved_at_utc": "2026-07-10T12:52:43+00:00",
+ "retrieved_at_utc": "2026-07-10T13:40:41+00:00",
  "quote": {
   "price": 90.0,
   "change_pct": 3.6,
@@ -11,7 +11,7 @@
   "float_market_cap": 313795215000,
   "quote_time": 1783668861,
   "name": "比亚迪",
-  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=0.002594%2C0.300274%2C1.603806%2C0.300037%2C1.600031%2C0.000338%2C1.600066%2C0.002475%2C1.603259%2C1.688235"
+  "source_url": "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f2%2Cf3%2Cf9%2Cf12%2Cf14%2Cf20%2Cf21%2Cf23%2Cf115%2Cf124&secids=0.000157%2C0.000951%2C1.601127%2C0.000625%2C1.601633%2C1.601238%2C1.600104%2C0.002594%2C1.601alic%2C1.600606"
  },
  "source_urls": {
   "finance": "https://datacenter.eastmoney.com/securities/api/data/get?filter=%28SECUCODE%3D%22002594.SZ%22%29&client=APP&source=HSF10&type=RPT_F10_FINANCE_MAINFINADATA&sty=APP_F10_MAINFINADATA&st=REPORT_DATE&ps=40&sr=-1",
