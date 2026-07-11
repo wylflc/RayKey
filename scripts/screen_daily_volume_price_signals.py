@@ -459,7 +459,7 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, 
     # v20 §8.9 watch_only 仅观察层：信号可见但不可买。
     if pool_row.get("pool_layer") == "watch_only" and signal.get("signal_state") == "buy_candidate":
         signal["signal_state"] = "signal_watch_only"
-        signal["action_bias"] = "池外信号：24小时异动响应+事件复核（不可买）"
+        signal["action_bias"] = "池外信号：24小时异动响应+事件复核（默认不可买；L2×可接受较高估/L3×中性强信号可核对§6.2.1事件通道）"
     signal["priority"] = assign_priority(signal)
     signal["data_source"] = kline_url
     signal["screened_at_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
