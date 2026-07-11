@@ -626,9 +626,10 @@ normalized_market_cap = normalized_profit * 合理估值倍数
 5. 反向预期拆解：从当前市值反推市场隐含的增速、利润率或永续假设，与自己的关键输入对比，明确"市场已定价什么、预期差在哪"；隐含假设是否已达到bull case水平，是 `bull_case_priced_in` 的判定依据。
 6. 给出bull case核心假设，并判断当前价格是否已经反映bull case。
 7. 分为：低估、较低估、中性、可接受较高估、高估、无法估值。
-8. 判断是否进入核心估值合格池。
-9. 给出等待右侧触发时需要观察的关键指标。
-10. 将来源、结论、时间、输入文件、输出文件和简要判断理由写入结论日志。
+8. 给出合理价区间 `fair_price_low`/`fair_price_high`：该股按对应策略模型处于"中性"档的价格带（如 D 档为 bull 合理市值×80%-100%、C 档为归一化 PEG 1.0-1.5 对应价格），换算依据写入 `fair_price_basis`；区间必须与所定档位自洽（低估的估值价应低于区间下沿，高估应高于区间上沿，中性应落在区间内），锚点数据不足时按档位标准带换算并在 basis 注明。
+9. 判断是否进入核心估值合格池。
+10. 给出等待右侧触发时需要观察的关键指标。
+11. 将来源、结论、时间、输入文件、输出文件和简要判断理由写入结论日志。
 
 估值模型和档位：
 
@@ -656,6 +657,9 @@ normalized_valuation_used
 normalized_profit_or_value
 bull_case_assumption
 bull_case_priced_in
+fair_price_low
+fair_price_high
+fair_price_basis
 core_valuation_eligible
 valuation_reason
 tracking_metrics
@@ -689,6 +693,7 @@ python3 scripts/build_a_share_core_valuation_pool.py \
 3. 每个纳入核心估值合格池的结论都要写入结论日志。
 4. 估值表若含 `valuation_reviewed_at` 字段，物化时原样透传到池文件；`pool_as_of` 只表示物化日，不得当作估值复核日使用（§7.3 复核触发以 `valuation_reviewed_at` 为准，缺失时才回退 `pool_as_of`）。
 5. 未过准入矩阵但估值为低估/较低估/中性/可接受较高估的 L1-L4 公司，输出 `pool_layer = watch_only` 仅观察层（v20）：进入每日扫描可见范围，不具备买入资格；watch_only 行日志 `decision_type = scan_watch_only`。
+6. `fair_price_low`/`fair_price_high`/`fair_price_basis` 原样透传到池文件；阅读版 MD 对每只股票（含排除名单）展示合理价区间与空间（区间中值相对估值价的涨跌幅），不得只列当前股价。
 
 ## 7. 阶段三：财报披露后的滚动更新
 

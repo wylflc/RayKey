@@ -104,6 +104,9 @@ def build_pool(
                     "quality_tier_label": row.get("quality_tier") or (tier_row or {}).get("quality_tier_label", ""),
                     "valuation_tier": valuation_tier or "（空）",
                     "valuation_price": row.get("current_price", ""),
+                    "fair_price_low": row.get("fair_price_low", ""),
+                    "fair_price_high": row.get("fair_price_high", ""),
+                    "fair_price_basis": row.get("fair_price_basis", ""),
                     "valuation_pe_ttm": row.get("pe_ttm", ""),
                     "valuation_pb": row.get("pb", ""),
                     "valuation_reason": row.get("valuation_reason", ""),
@@ -124,6 +127,9 @@ def build_pool(
                 "valuation_tier": valuation_tier,
                 "valuation_batch_id": row.get("valuation_batch_id", ""),
                 "valuation_price": row.get("current_price", ""),
+                "fair_price_low": row.get("fair_price_low", ""),
+                "fair_price_high": row.get("fair_price_high", ""),
+                "fair_price_basis": row.get("fair_price_basis", ""),
                 "valuation_pe_ttm": row.get("pe_ttm", ""),
                 "valuation_pb": row.get("pb", ""),
                 "valuation_reason": row.get("valuation_reason", ""),
@@ -139,6 +145,20 @@ def build_pool(
     return output, excluded
 
 
+def fair_band_cells(row: dict[str, str]) -> tuple[str, str]:
+    """(合理价区间, 空间) 展示单元格；空间=区间中值相对估值价的涨跌幅。"""
+    low, high = row.get("fair_price_low", ""), row.get("fair_price_high", "")
+    try:
+        low_f, high_f, price = float(low), float(high), float(row.get("valuation_price", ""))
+    except ValueError:
+        return "—", "—"
+    band = low if low == high else f"{low}-{high}"
+    if price <= 0:
+        return band, "—"
+    upside = round(((low_f + high_f) / 2 / price - 1) * 100)
+    return band, ("0%" if upside == 0 else f"{upside:+d}%")
+
+
 def write_markdown(path: Path, rows: list[dict[str, str]], excluded: list[dict[str, str]], as_of: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = [
@@ -148,24 +168,32 @@ def write_markdown(path: Path, rows: list[dict[str, str]], excluded: list[dict[s
         "",
         "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是 L1-L4 全量估值结论阅读版：core/tactical 为按 §6.2.1 矩阵可买层；watch_only 为仅观察层（v20，可见不可买）；文末附高估/无法估值排除名单（不入池不扫描）。",
         "",
-        "| 代码 | 名称 | 质量 | 层 | 估值 | 策略 | 估值价 | PE | PB |",
-        "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: |",
+        "合理价区间为该股按其策略模型处于“中性”档的价格带（换算依据见池 CSV `fair_price_basis`）；空间为区间中值相对估值价的涨跌幅，正数代表上行空间。",
+        "",
+        "| 代码 | 名称 | 质量 | 层 | 估值 | 策略 | 估值价 | 合理价区间 | 空间 | PE | PB |",
+        "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in rows:
+        band, upside = fair_band_cells(row)
         lines.append(
             "| {security_code} | {security_name} | {quality_tier_label} | {pool_layer} | {valuation_tier} | "
-            "{strategy_tag} | {valuation_price} | {valuation_pe_ttm} | {valuation_pb} |".format(**row)
+            "{strategy_tag} | {valuation_price} | ".format(**row)
+            + f"{band} | {upside} | "
+            + "{valuation_pe_ttm} | {valuation_pb} |".format(**row)
         )
     lines.extend(["", f"## 高估/无法估值排除名单（{len(excluded)} 家，不入池不扫描，仅列示）", "",
-                  "| 代码 | 名称 | 质量 | 估值 | 估值价 | PE | PB | 核心理由 |",
-                  "| --- | --- | --- | --- | ---: | ---: | ---: | --- |"])
+                  "| 代码 | 名称 | 质量 | 估值 | 估值价 | 合理价区间 | 空间 | PE | PB | 核心理由 |",
+                  "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |"])
     for row in excluded:
         reason = (row.get("valuation_reason") or "").replace("|", "、").replace("\n", " ")
         if len(reason) > 80:
             reason = reason[:80] + "…"
+        band, upside = fair_band_cells(row)
         lines.append(
             "| {security_code} | {security_name} | {quality_tier_label} | {valuation_tier} | "
-            "{valuation_price} | {valuation_pe_ttm} | {valuation_pb} | ".format(**row) + reason + " |"
+            "{valuation_price} | ".format(**row)
+            + f"{band} | {upside} | "
+            + "{valuation_pe_ttm} | {valuation_pb} | ".format(**row) + reason + " |"
         )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -232,6 +260,9 @@ def main() -> None:
         "valuation_tier",
         "valuation_batch_id",
         "valuation_price",
+        "fair_price_low",
+        "fair_price_high",
+        "fair_price_basis",
         "valuation_pe_ttm",
         "valuation_pb",
         "valuation_reason",
