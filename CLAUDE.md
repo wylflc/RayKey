@@ -4,6 +4,8 @@
 
 AShareQuant is a research and data-analysis project for listed companies in mainland China and Hong Kong markets. Treat the latest user request and committed project docs as the source of truth for current priorities; do not turn transient requirements into reusable skill rules.
 
+**Core workflow file**: `docs/000_Ashare_workflow.md` is the master execution spec for the entire A-share pipeline (quality triage → tiering → valuation pool → daily volume/price scan → pretrade gate → holdings monitoring/sell scan). For any such task, route through its §0 task-routing table and execute per the matching section without asking the user to re-explain the process. Standards live only in that file: if one looks wrong, edit it first (§15), then re-run; never override or restate its thresholds elsewhere.
+
 ## Working Rules
 
 - Read relevant files before editing, especially `README.md`, `CONTEXT.md`, existing ADRs, and nearby code.
