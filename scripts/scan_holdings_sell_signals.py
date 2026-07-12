@@ -29,7 +29,6 @@ DEFAULT_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
 DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_ACCOUNT_SNAPSHOT = ROOT / "data/processed/portfolio_account_snapshot.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_holdings_actions.csv"
-DEFAULT_OUTPUT_MD = ROOT / "data/processed/000_daily_holdings_tracker.md"
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 
@@ -393,75 +392,7 @@ def scan(
     return [by_code[r["security_code"].zfill(6)] for r in eligible if r["security_code"].zfill(6) in by_code]
 
 
-def write_markdown(path: Path, rows: list[dict[str, object]], as_of: date, account: dict[str, object]) -> None:
-    groups = [
-        ("今日割肉清仓", "stop_loss_sell"),
-        ("今日趋势保护触发：战术退出复核", "trend_exit_suggested"),
-        ("今日趋势保护触发：减半复核（MA150档破位）", "trend_reduce_half_suggested"),
-        ("今日趋势保护触发：降档复核（MA250档破位）", "trend_downgrade_suggested"),
-        ("今日止盈资格（<=允许上限）", "trim_eligible"),
-        ("维持持有", "hold"),
-        ("数据异常", "data_error"),
-    ]
-    if account["snapshot_available"]:
-        account_lines = [
-            (
-                f"账户回撤状态：{account['drawdown_status']}（净资产估算 {account['net_assets']:,.0f}，"
-                f"峰值 {account['peak_net_assets']:,.0f}，回撤 {account['drawdown_pct']:.1%}；"
-                f"负债取快照 {account['snapshot_as_of']}，现价重估）"
-            ),
-            f"杠杆/担保比例（估算）：{account['leverage']:.2f}x / {account['guarantee_pct']:.0f}%（融资负债 {account['margin_debt']:,.0f}）",
-        ]
-    else:
-        account_lines = ["账户回撤状态：账户快照文件缺失，未计算（降级运行，请补 `portfolio_account_snapshot.csv`）。"]
-    risk_over = [r for r in rows if r.get("single_trade_risk_over_limit")]
-    valuation_alerts = [r for r in rows if r.get("valuation_alert")]
-    lines = [
-        "# A股每日持仓动作",
-        "",
-        f"日期：{as_of.isoformat()}",
-        f"账户总资产（持仓市值，原则上不持现金）：{account['total_assets']:,.0f}",
-        f"当前建仓金额 build_amount（单批，§13口径）：{account['build_amount']:,.0f}",
-        *account_lines,
-        "",
-        "> 退出优先级矩阵（§14）：Tier-0 割肉价触及=当日无条件清仓不得延迟；Tier-1 硬证伪（一票否决/突发事件/季报严重不及预期/经核实的结构性 thesis 证伪）需模型复核 `forced_exit_review`，可破 3 个月锁定；Tier-2 软走弱锁定期内只上调割肉价。",
-        "",
-    ]
-    if risk_over or valuation_alerts:
-        lines.extend(["## 今日风险预警", ""])
-        for row in risk_over:
-            lines.append(
-                f"- 单笔风险超限：{row.get('security_name','')}（{row.get('security_code','')}）"
-                f"权重×止损距离 = 净资产的 {row.get('single_trade_risk_pct','')}% > 1.5%，建议上调割肉价收窄风险"
-            )
-        for row in valuation_alerts:
-            lines.append(f"- 估值档位：{row.get('security_name','')}（{row.get('security_code','')}）{row.get('valuation_alert','')}")
-        lines.append("")
-    for title, action in groups:
-        members = [r for r in rows if r.get("holdings_action") == action]
-        lines.extend([f"## {title}", ""])
-        if not members:
-            lines.extend(["无。", ""])
-            continue
-        for index, row in enumerate(members, 1):
-            pool_tier = row.get("pool_valuation_tier", "") or "-"
-            lines.append(f"{index}. {row.get('security_name','')}（{row.get('security_code','')}）")
-            lines.append(f"- 策略/质量/估值：{row.get('strategy_tag','')} / {row.get('quality_tier','')} / {row.get('valuation_tier','')}（最新池：{pool_tier}）")
-            lines.append(f"- 现价/成本/浮盈：{row.get('close','')} / {row.get('cost_basis','')} / {row.get('profit_pct','')}")
-            lines.append(f"- 持有月数/锁定：{row.get('months_held','')} / {row.get('lockup_active','')}")
-            lines.append(f"- 割肉价/MA120/上调建议：{row.get('stop_loss_price','')} / {row.get('ma120','')} / {row.get('suggested_stop_price','') or '-'}")
-            lines.append(f"- 趋势保护：{row.get('trend_protection_level','')} 线 {row.get('trend_line_value','') or '-'}，参考收盘 {row.get('trend_ref_close','') or '-'}，破位 {row.get('trend_break','')}")
-            lines.append(
-                f"- 当前权重：{row.get('current_weight_pct','')}%{'（超30%）' if row.get('weight_over_limit') else ''}；"
-                f"单笔风险：{row.get('single_trade_risk_pct','') or '-'}%{'（超1.5%）' if row.get('single_trade_risk_over_limit') else ''}"
-            )
-            lines.append(f"- 触发：{row.get('action_reason','')}")
-            lines.append("")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(lines), encoding="utf-8")
-
-
-def log_decisions(log_file: Path, rows: list[dict[str, object]], as_of: date, holdings_file: Path, output_csv: Path, output_md: Path) -> None:
+def log_decisions(log_file: Path, rows: list[dict[str, object]], as_of: date, holdings_file: Path, output_csv: Path) -> None:
     logged_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     entries = [
         {
@@ -476,7 +407,7 @@ def log_decisions(log_file: Path, rows: list[dict[str, object]], as_of: date, ho
             "summary_reason": row.get("action_reason", ""),
             "input_files": str(holdings_file),
             "source_urls": row.get("data_source", ""),
-            "output_file": f"{output_csv};{output_md}",
+            "output_file": str(output_csv),
             "operator_or_script": "scripts/scan_holdings_sell_signals.py",
             "workflow_version": WORKFLOW_VERSION,
         }
@@ -494,7 +425,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--account-snapshot", type=Path, default=DEFAULT_ACCOUNT_SNAPSHOT,
                         help="Append-style account snapshot CSV for drawdown/leverage alerts (§14 输入 7).")
     parser.add_argument("--output-csv", type=Path, default=DEFAULT_OUTPUT_CSV)
-    parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
     parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
     parser.add_argument("--symbols", default="", help="Optional comma-separated security codes to filter holdings.")
     parser.add_argument("--timeout", type=float, default=8.0)
@@ -504,7 +434,7 @@ def parse_args() -> argparse.Namespace:
 
 FIELDNAMES = [
     "as_of", "security_code", "security_name", "strategy_tag", "quality_tier", "valuation_tier",
-    "pool_valuation_tier", "valuation_alert",
+    "position_status", "pool_valuation_tier", "valuation_alert",
     "entry_date", "months_held", "lockup_active", "cost_basis", "close", "profit_pct",
     "stop_loss_price", "stop_hit", "ma60", "ma120", "raise_stop_suggested", "suggested_stop_price",
     "trend_protection_level", "trend_line_value", "trend_ref_close", "trend_break",
@@ -525,13 +455,13 @@ def main() -> None:
     rows = scan(holdings, as_of, symbols, args.timeout, args.workers, pool)
     account = add_weights(rows, snapshot)
     write_csv(args.output_csv, rows, FIELDNAMES)
-    write_markdown(args.output_md, rows, as_of, account)
     if rows:
-        log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv, args.output_md)
+        log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv)
     print(
         f"scanned {len(rows)} holdings; total_assets={account['total_assets']:,.0f}; "
         f"net_assets={account['net_assets']:,.0f}; build_amount={account['build_amount']:,.0f}; "
-        f"drawdown={account['drawdown_pct']:.1%} ({account['drawdown_status']})"
+        f"drawdown={account['drawdown_pct']:.1%} ({account['drawdown_status']}); "
+        f"leverage={account['leverage']:.2f}x; guarantee={account['guarantee_pct']:.0f}%"
     )
 
 

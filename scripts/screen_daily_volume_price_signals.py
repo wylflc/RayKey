@@ -21,7 +21,6 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
-DEFAULT_OUTPUT_MD = ROOT / "data/processed/000_daily_volume_price_tracker.md"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 # 后备行情源：东财历史行情不可用时切换（同为前复权日线；成交额以收盘×量近似，仅影响流动性门槛估计）。
 TENCENT_KLINE = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
@@ -485,55 +484,12 @@ def scan(input_rows: list[dict[str, str]], as_of: str, symbols: set[str] | None,
     return [results_by_code[row["security_code"].zfill(6)] for row in eligible_rows if row["security_code"].zfill(6) in results_by_code]
 
 
-def write_markdown(path: Path, rows: list[dict[str, object]], as_of: str, market_state: str, review_note: str = "") -> None:
-    groups = [
-        ("今日买入候选", "buy_candidate"),
-        ("今日池外量价异动（watch_only，不可买、待§9.4核实）", "signal_watch_only"),
-        ("今日复核冻结（§7.5，复核完成前不得买入）", "buy_blocked_review_pending"),
-        ("今日等待回踩", "wait_pullback"),
-        ("今日等待确认", "wait_confirmation"),
-        ("今日等待突破", "wait_breakout"),
-        ("今日等待修复", "wait_repair"),
-        ("今日流动性过滤（§11.8）", "liquidity_filtered"),
-    ]
-    lines = [
-        "# A股每日量价跟踪",
-        "",
-        f"日期：{as_of}",
-        f"市场状态：{market_state}（§8.12，沪深300 vs MA250；弱势时操作偏向下调一档）",
-        "数据口径：东方财富前复权日线（运行时拉取，未落盘原始bars）；扫描 `data/processed/a_share_core_valuation_pool.csv`（core/tactical 可买层 + watch_only 仅观察层，v20）。",
-        review_note,
-        "",
-    ]
-    for title, state in groups:
-        lines.extend([f"## {title}", ""])
-        members = [row for row in rows if row.get("signal_state") == state]
-        if not members:
-            lines.extend(["无。", ""])
-            continue
-        for index, row in enumerate(members, 1):
-            lines.append(f"{index}. {row['security_name']}（{row['security_code']}）")
-            lines.append(f"- 优先级：{row.get('priority') or '-'}")
-            lines.append(f"- 信号分级：{row.get('signal_grade') or '-'}")
-            lines.append(f"- 质量/估值/策略：{row.get('quality_tier')} / {row.get('valuation_tier')} / {row.get('strategy_tag')}")
-            lines.append(f"- 触发信号：{row.get('signals') or row.get('wait_reasons') or '-'}")
-            lines.append(
-                "- 量价指标：收盘 {close}，5日 {ret_5d:.2%}，20日 {ret_20d:.2%}，"
-                "vol3 {vol_3d_ratio_20}，vol5 {vol_5d_ratio_20}，收盘位置 {close_location}".format(**row)
-            )
-            lines.append(f"- 操作偏向：{row.get('action_bias')}")
-            lines.append("")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(lines), encoding="utf-8")
-
-
 def log_scan_decisions(
     log_file: Path,
     rows: list[dict[str, object]],
     as_of: str,
     input_file: Path,
     output_csv: Path,
-    output_md: Path,
 ) -> None:
     logged_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     entries: list[dict[str, object]] = []
@@ -552,7 +508,7 @@ def log_scan_decisions(
                 "summary_reason": reason,
                 "input_files": str(input_file),
                 "source_urls": row.get("data_source", ""),
-                "output_file": f"{output_csv};{output_md}",
+                "output_file": str(output_csv),
                 "operator_or_script": "scripts/screen_daily_volume_price_signals.py",
                 "workflow_version": WORKFLOW_VERSION,
             }
@@ -567,7 +523,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--review-queue", type=Path, default=DEFAULT_REVIEW_QUEUE,
                         help="Report update queue CSV; pool stocks with buy_blocked=review_pending are frozen per §7.5.")
     parser.add_argument("--output-csv", type=Path, default=DEFAULT_OUTPUT_CSV)
-    parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
     parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
     parser.add_argument("--symbols", default="", help="Optional comma-separated security codes to filter the input pool.")
     parser.add_argument("--timeout", type=float, default=8.0, help="Per-request network timeout in seconds.")
@@ -660,9 +615,8 @@ def main() -> None:
         "复核冻结：已启用（读取更新队列）。" if blocked is not None else
         "复核冻结：未启用（更新队列文件缺失，§7.5 冻结未生效）。"
     )
-    write_markdown(args.output_md, rows, args.as_of, market_state, review_note)
-    log_scan_decisions(args.log_file, rows, args.as_of, args.input, args.output_csv, args.output_md)
-    print(f"scanned {len(rows)} rows from {args.input}")
+    log_scan_decisions(args.log_file, rows, args.as_of, args.input, args.output_csv)
+    print(f"scanned {len(rows)} rows from {args.input}; market_state={market_state}; {review_note}")
 
 
 if __name__ == "__main__":
