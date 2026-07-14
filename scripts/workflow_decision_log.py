@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
-WORKFLOW_VERSION = "a-share-selection-operation-v30"
+WORKFLOW_VERSION = "a-share-selection-operation-v31"
 
 DECISION_LOG_FIELDS = [
     "logged_at_utc",

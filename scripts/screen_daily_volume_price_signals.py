@@ -240,17 +240,17 @@ def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.
     ret_20d = pct_return(rows, index, 20) or 0.0
     ret_60d = pct_return(rows, index, 60) or 0.0
 
-    effective_volume = (
-        day_vol_ratio >= 1.8
-        or vol_3d_ratio >= 1.5
-        or vol_5d_ratio >= 1.4
-        or (vol_5d_ratio_baseline >= 1.6 and baseline_days >= 3)
-        or (
-            float(row.get("vol_ma5", 0.0)) > vol_ma20 > float(row.get("vol_ma60", math.inf))
-            and float(row.get("vol_ma5", 0.0)) / float(row.get("vol_ma60", math.inf)) >= 1.5
-        )
-        or (vol_percentile >= 80 and ret_5d > 0.03)
+    cond_single = day_vol_ratio >= 1.8
+    cond_multi = vol_3d_ratio >= 1.5 or vol_5d_ratio >= 1.4
+    cond_baseline = vol_5d_ratio_baseline >= 1.6 and baseline_days >= 3
+    cond_stacked = (
+        float(row.get("vol_ma5", 0.0)) > vol_ma20 > float(row.get("vol_ma60", math.inf))
+        and float(row.get("vol_ma5", 0.0)) / float(row.get("vol_ma60", math.inf)) >= 1.5
     )
+    cond_percentile = vol_percentile >= 80 and ret_5d > 0.03
+    effective_volume = cond_single or cond_multi or cond_baseline or cond_stacked or cond_percentile
+    # v31：有效放量仅由 §8.5 第 5 条（高分位放量）单独认定时，信号分级封顶「中」（低波动巨盘股分位易过 80 而无真实爆量）。
+    percentile_only_volume = cond_percentile and not (cond_single or cond_multi or cond_baseline or cond_stacked)
 
     daily_bull = close > float(row.get("ma5", math.inf)) > float(row.get("ma10", math.inf)) > ma20 > ma60
     strong_daily_bull = daily_bull and ma60 > float(row.get("ma120", math.inf)) > float(row.get("ma250", math.inf))
@@ -340,7 +340,7 @@ def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.
     # §8.7 信号分级：放量 × 短期多头 × 突破确认 → 强/中/弱（仅对买入候选）。
     if signal_state == "buy_candidate":
         breakout_confirm = any(sig.startswith(("8.7.1", "8.7.2")) for sig in signals)
-        if (daily_bull or quasi_bull) and breakout_confirm:
+        if (daily_bull or quasi_bull) and breakout_confirm and not percentile_only_volume:
             signal_grade, action_bias = "强", "可建目标仓位1/3"
         elif daily_bull or quasi_bull:
             signal_grade, action_bias = "中", "可小仓试探或等确认"
