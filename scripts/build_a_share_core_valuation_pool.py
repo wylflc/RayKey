@@ -48,9 +48,8 @@ WATCH_VALUATIONS = {"低估", "较低估", "中性", "可接受较高估"}
 # §6.2.1.6 价格自动定档阈值（v1.05 初始校准，修订先改工作流）。
 OVERVALUED_BAND_MULT = 1.2  # 带顶×1.2 以上 = 高估（沿 D 档 100-120% 惯例）
 DEEP_UNDERVALUED_UPSIDE = 0.40  # 带底以下且空间（区间中值/现价-1）>= 40% = 低估，否则较低估
-# 预告指标口径优先级：归母净利 > 扣非 > 营业收入（§6.7.8）。
+# 预告指标口径优先级：归母净利 > 扣非 > 营业收入（§6.7.8，仅作复核队列输入统计）。
 FORECAST_METRIC_PRIORITY = {"004": 0, "005": 1, "006": 2}
-FORECAST_NO_PE_TYPES = {"扭亏", "减亏", "续亏", "首亏", "预亏", "增亏"}
 
 
 def effective_valuation_tier(price: float | None, fair_low: float | None, fair_high: float | None) -> str | None:
@@ -192,38 +191,6 @@ def load_forecasts(path: Path) -> dict[str, dict[str, str]]:
     return best
 
 
-def forecast_cell(frow: dict[str, str] | None, spot_pe: float | None) -> str:
-    """中报预告展示：类型 同比中值 归母中值(亿) 前瞻PE≈现PE÷(1+同比中值)（§6.7.8 近似口径） (公告MM-DD)。"""
-    if not frow:
-        return "—"
-    metric_code = str(frow.get("predict_finance_code", ""))
-    metric_tag = {"004": "", "005": "扣非", "006": "营收"}.get(metric_code, "")
-    amt_low, amt_up = _to_float(frow.get("predict_amt_lower")), _to_float(frow.get("predict_amt_upper"))
-    amp_low, amp_up = _to_float(frow.get("add_amp_lower")), _to_float(frow.get("add_amp_upper"))
-    amt_mid = (amt_low + amt_up) / 2 if amt_low is not None and amt_up is not None else None
-    amp_mid = (amp_low + amp_up) / 2 if amp_low is not None and amp_up is not None else None
-    parts = [str(frow.get("predict_type", "")) + metric_tag]
-    if amp_mid is not None:
-        parts.append(f"{amp_mid:+.0f}%")
-    if amt_mid is not None and metric_code in {"004", "005"}:
-        parts.append(f"中值{amt_mid / 1e8:.1f}亿")
-    if (
-        metric_code in {"004", "005"}
-        and amt_mid is not None
-        and amt_mid > 0
-        and amp_mid is not None
-        and amp_mid > -95
-        and spot_pe
-        and spot_pe > 0
-        and str(frow.get("predict_type", "")) not in FORECAST_NO_PE_TYPES
-    ):
-        parts.append(f"前瞻PE≈{spot_pe / (1 + amp_mid / 100):.0f}")
-    notice = str(frow.get("notice_date", ""))
-    if len(notice) >= 10:
-        parts.append(f"({notice[5:10]})")
-    return " ".join(part for part in parts if part)
-
-
 def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     """阅读版单元格：现价/带位/空间/PE/PB 按行情快照刷新，档位按 §6.2.1.6 价格自动定档。"""
     low = _to_float(row.get("fair_price_low"))
@@ -339,12 +306,10 @@ def write_markdown(
             + " | {strategy_tag} | ".format(**row)
             + f"{cells['price']} | "
             + f"{cells['band']} | {cells['band_pos']} | {cells['upside']} | {cells['pe']} | {cells['pb']} | "
-            + "{valuation_reviewed_at} | {valuation_evidence_event} | ".format(
+            + "{valuation_reviewed_at} | {valuation_evidence_event} |".format(
                 valuation_reviewed_at=row.get("valuation_reviewed_at") or "—",
                 valuation_evidence_event=row.get("valuation_evidence_event") or "—",
             )
-            + forecast_cell(frow, cells["spot_pe"])  # type: ignore[arg-type]
-            + " |"
         )
 
     lines = [
@@ -357,12 +322,12 @@ def write_markdown(
         "- **档位按现价自动定档（§6.2.1.6，无人工复核）**：>1.2×带顶=高估；带顶~1.2×带顶=可接受较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`；当日变化在扫描报告与刷新日志列示。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
         "- 现价/PE/PB 为每日扫描时的行情快照（PE 为 TTM 口径）；现价缺失（停牌/请求失败）的行沿用估值时点值。",
         "- 带位 = 现价在合理价区间内的位置（↑越带顶 / ↓低于带底）；空间 = 区间中值相对现价的涨跌幅，正数代表上行空间。",
-        "- 中报预告列（§6.7.8）：类型 同比中值 归母中值 与「若延续 H1 增速」前瞻PE≈现价PE(TTM)÷(1+同比中值)（近似口径，亏损/扭亏/营收口径不适用）；预告按 §7.5.5 触发 express 估值复核（改带），本列不改档。",
+        "- 业绩预告不在本表展示（v1.09）：预告物化文件（§6.7.8）只作 §7.5.5 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
         "- 合理价区间为该股按其策略模型处于「中性」档的价格带，是估值的唯一输出锚（换算依据见池 CSV `fair_price_basis`；模型认可的公允中枢≈区间中值，空间列即按中值/现价计算）。",
         "- 估值时间 = 最近一次估值复核日（合理价区间的推导日）；估值事件 = 该次复核所依据的最新披露（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件）。档位每日按现价自动重算，带只在 §7 复核时更新——「价格改档、证据改带」。审定档、核心理由与复核时点价（`valuation_price`）见池 CSV。",
         "",
-        "| 代码 | 名称 | 质量 | 估值 | 策略 | 现价 | 合理价区间 | 带位 | 空间 | PE | PB | 估值时间 | 估值事件 | 中报预告 |",
-        "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |",
+        "| 代码 | 名称 | 质量 | 估值 | 策略 | 现价 | 合理价区间 | 带位 | 空间 | PE | PB | 估值时间 | 估值事件 |",
+        "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
         *body,
     ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -422,7 +387,7 @@ def log_price_refresh(
     summary_parts = [
         ("当日档位变化（价格自动定档）：" + "、".join(changes)) if changes else "当日无档位变化",
         f"现档≠审定档共 {len(drift)} 只",
-        f"中报预告覆盖 {len(list(flags.get('forecast') or []))} 只",
+        f"业绩预告覆盖 {len(list(flags.get('forecast') or []))} 只（§7.5.5 复核队列输入，不入表）",
     ]
     append_decision_log(
         log_file,
