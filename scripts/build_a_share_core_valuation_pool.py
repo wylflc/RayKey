@@ -332,12 +332,16 @@ def write_markdown(
             changes.append(f"{code}{row['security_name']} {prev}→{effective}")
         if frow:
             forecast_codes.append(code)
+        # 估值时点价附带复核日（MM-DD）：一眼可见"这条带是什么时候、在什么价上推导的"。
+        as_of_date = str(row.get("valuation_price_as_of") or row.get("valuation_reviewed_at") or "")
+        date_tag = f"({as_of_date[5:10]})" if len(as_of_date) >= 10 else ""
         body.append(
             "| {security_code} | {security_name} | {quality_tier_label} | ".format(**row)
             + str(cells["valuation_cell"])
             + " | {strategy_tag} | ".format(**row)
             + f"{cells['price']} | "
-            + "{valuation_price} | ".format(**row)
+            + "{valuation_price}".format(**row)
+            + f"{date_tag} | "
             + f"{cells['band']} | {cells['band_pos']} | {cells['upside']} | {cells['pe']} | {cells['pb']} | "
             + forecast_cell(frow, cells["spot_pe"])  # type: ignore[arg-type]
             + " |"
@@ -355,7 +359,7 @@ def write_markdown(
         "- 带位 = 现价在合理价区间内的位置（↑越带顶 / ↓低于带底）；空间 = 区间中值相对现价的涨跌幅，正数代表上行空间。",
         "- 中报预告列（§6.7.8）：类型 同比中值 归母中值 与「若延续 H1 增速」前瞻PE≈现价PE(TTM)÷(1+同比中值)（近似口径，亏损/扭亏/营收口径不适用）；预告按 §7.5.5 触发 express 估值复核（改带），本列不改档。",
         "- 合理价区间为该股按其策略模型处于「中性」档的价格带，是估值的唯一输出锚（换算依据见池 CSV `fair_price_basis`；模型认可的公允中枢≈区间中值，空间列即按中值/现价计算）。",
-        "- 估值时点价 = 该档位结论作出当日的市场价（审计基准，非模型输出）：低估/较低估标的的时点价按 §6.6.8 自洽要求本就低于区间下沿，高估标的高于区间上沿；现价与时点价的差即复核后的价格漂移。审定档与核心理由见池 CSV。",
+        "- 估值时点价 = 合理价区间被推导（估值复核）当日的市场价，括号内为复核日（审计基准，非模型输出）：档位每日按现价自动重算，但带只在 §7 复核（财报/预告/事件）时更新——「价格改档、证据改带」；低估/较低估标的的时点价按 §6.6.8 自洽要求本就低于区间下沿。审定档与核心理由见池 CSV。",
         "",
         "| 代码 | 名称 | 质量 | 估值 | 策略 | 现价 | 估值时点价 | 合理价区间 | 带位 | 空间 | PE | PB | 中报预告 |",
         "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
