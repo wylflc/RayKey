@@ -671,11 +671,12 @@ tracking_metrics
 evidence_sources
 decision_log_summary
 valuation_reviewed_at
+valuation_evidence_event
 valuation_price_as_of
 evidence_available_at
 ```
 
-时点字段口径：`valuation_reviewed_at` 为本次估值结论产生日（复核触发比较基准，区别于核心池物化日 `pool_as_of`）；`valuation_price_as_of` 为估值所用价格/市值的交易日；`evidence_available_at` 为所用最新财务资料的公开可得日（公告日，非报告期末）。估值结论没有固定有效期，失效由 §7 复核触发与 §7.5 买入冻结控制。
+时点字段口径：`valuation_reviewed_at` 为本次估值结论产生日（复核触发比较基准，区别于核心池物化日 `pool_as_of`）；`valuation_evidence_event` 为本次结论所依据的最新披露类型（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件，v1.08）；`valuation_price_as_of` 为估值所用价格/市值的交易日；`evidence_available_at` 为所用最新财务资料的公开可得日（公告日，非报告期末）。任何复核（含 express 增量复核、结论为"带不变"者）完成后必须更新 `valuation_reviewed_at` 与 `valuation_evidence_event`。估值结论没有固定有效期，失效由 §7 复核触发与 §7.5 买入冻结控制。
 
 ### 6.6.1 单票本地台账（v1.02：季度财务、研报、预告兑现）
 
@@ -710,7 +711,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 3. 每个纳入核心估值合格池的结论都要写入结论日志。
 4. 估值表若含 `valuation_reviewed_at` 字段，物化时原样透传到池文件；`pool_as_of` 只表示物化日，不得当作估值复核日使用（§7.3 复核触发以 `valuation_reviewed_at` 为准，缺失时才回退 `pool_as_of`）。
 5. 未过准入矩阵但估值为低估/较低估/中性/可接受较高估的 L1-L4 公司，输出 `pool_layer = watch_only` 仅观察层（v20）：进入每日扫描可见范围，不具备买入资格；watch_only 行日志 `decision_type = scan_watch_only`。
-6. `fair_price_low`/`fair_price_high`/`fair_price_basis` 与 `total_market_cap_bn`（§8.5.6 巨盘条件输入，十亿口径）原样透传到池 CSV。阅读版 MD 为**单一列表**（v1.05：不再分设高估/无法估值小节，全量统一展示、统一处理），不单列"层"；每行展示：估值（当日自动定档，与审定档不同时显示 `审定档→现档`）、策略、现价、**估值时点价**（v1.07 更名并置于现价之后：该档位结论作出当日的市场价，审计基准而非模型输出——低估/较低估标的的时点价按 §6.6.8 自洽要求本就低于区间下沿）、合理价区间（估值唯一输出锚，公允中枢≈区间中值）、带位、空间、现价口径 PE(TTM)/PB、中报预告（要求 8）；审定档与核心理由保留在池 CSV。
+6. `fair_price_low`/`fair_price_high`/`fair_price_basis` 与 `total_market_cap_bn`（§8.5.6 巨盘条件输入，十亿口径）原样透传到池 CSV。阅读版 MD 为**单一列表**（v1.05：不再分设高估/无法估值小节，全量统一展示、统一处理），不单列"层"；每行展示：估值（当日自动定档，与审定档不同时显示 `审定档→现档`）、策略、现价、合理价区间（估值唯一输出锚，公允中枢≈区间中值）、带位、空间、现价口径 PE(TTM)/PB、**估值时间**（最近一次估值复核日 `valuation_reviewed_at`）、**估值事件**（该次复核依据的最新披露 `valuation_evidence_event`，v1.08）、中报预告（要求 8）；复核时点价（`valuation_price`）、审定档与核心理由保留在池 CSV（v1.08 起不在 MD 展示）。
 7. 现价刷新与档位差分（v1.03/v1.05）：`--quotes fetch` 经 `scripts/a_share_quotes.py` 拉取腾讯批量行情快照；`--md-only` 供每日扫描调用——只重渲染 MD 并写一行 `pool_price_refresh` 汇总日志，不重写池 CSV、不逐股重写池结论。每次渲染把当日有效档位写入快照 `data/interim/pool_effective_tiers.csv`，与上一快照差分得出**当日档位变化名单**（进汇总日志与扫描报告第二节）；现价缺失（停牌/请求失败）的行沿用估值时点值定档。
 8. 中报/业绩预告列（v1.04）：`scripts/fetch_a_share_earnings_forecasts.py` 将东财业绩预告接口物化为 `data/interim/a_share_earnings_forecasts.csv`（代码、报告期、公告日、指标口径 004归母/005扣非/006营收、预告区间、同比增幅、去年同期、预告类型、检索时间与来源）；MD 按代码合并展示 类型/归母中值(亿)/同比中值 与「若延续 H1 增速」的前瞻 PE 近似（现价口径 PE(TTM) ÷ (1+同比中值)，亏损/扭亏与营收口径不适用），附公告日。预告仍按 §7.5.5 触发 express 估值复核义务——本列只作展示与复核提示，不改档。
 
@@ -764,7 +765,7 @@ python3 scripts/build_report_update_queue.py \
 1. 队列脚本对 `valuation_review_needed` 的股票输出 `buy_blocked = review_pending`。
 2. 每日量价扫描读取更新队列（`--review-queue`），对池内处于冻结状态的股票即使出现有效信号也只输出 `buy_blocked_review_pending`，不列买入候选（§8.9/§11）。
 3. 冻结不影响已有持仓的卖出扫描与风险监控。
-4. 解除条件：完成质量/估值复核并更新 `valuation_reviewed_at` 后，重新生成更新队列即自动解除；复核结论若为高估/无法估值或降档，则按正常规则移出核心池。
+4. 解除条件：完成质量/估值复核并更新 `valuation_reviewed_at` 与 `valuation_evidence_event` 后，重新生成更新队列即自动解除；复核结论若为高估/无法估值或降档，则按正常规则移出核心池。
 5. 预告季时效（v20）：L1-L4名单内公司披露业绩预告/快报当晚，须在下一交易日开盘前完成单票 express 估值增量更新（含策略标签复检，如GARP拐点确认改挂D口径），使买入冻结不横跨信号日；boundary_pending 公司命中复核触发的，当日写入复核队列。
 
 ## 8. 阶段四：每日量价扫描
@@ -1668,4 +1669,4 @@ Tier-2 软信号按矩阵处理（锁定期内只上调割肉价与风险预警�
 
 ## 16. 版本记录
 
-版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.07**（2026-07-17，池 MD"估值时点价"更名换位澄清）。
+版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.08**（2026-07-17，池 MD 撤时点价列、增估值时间/估值事件列，估值表新增 `valuation_evidence_event` 字段）。
