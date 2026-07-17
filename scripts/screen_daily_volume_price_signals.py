@@ -233,7 +233,7 @@ STAGE_REQUIRED = {
     ("L1", "低估"): 1,
     ("L1", "较低估"): 2,
     ("L1", "中性"): 3,
-    ("L1", "可接受较高估"): 4,
+    ("L1", "较高估"): 4,
     ("L2", "低估"): 2,
     ("L2", "较低估"): 3,
     ("L2", "中性"): 3,
@@ -719,7 +719,7 @@ def assign_priority(row: dict[str, object]) -> str:
         return "S"
     if quality_tier in {"L1", "L2"} and valuation_tier in {"低估", "较低估", "中性"}:
         return "A"
-    if quality_tier in {"L1", "L2"} and valuation_tier == "可接受较高估":
+    if quality_tier in {"L1", "L2"} and valuation_tier == "较高估":
         return "B"
     if quality_tier == "L4":
         return "D"

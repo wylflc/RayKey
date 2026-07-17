@@ -12,7 +12,7 @@ This script does not create new valuation opinions: the band, the reviewed
 baseline tier (审定档) and reasons come from the valuation table.
 
 Daily refresh: ``--md-only --quotes fetch`` re-renders only the reading MD
-(现价/带位/空间/PE/PB/中报预告 + auto tier), diffs effective tiers against the
+(现价/空间/PE/PB + auto tier), diffs effective tiers against the
 previous snapshot (`data/interim/pool_effective_tiers.csv`) and logs one
 `pool_price_refresh` summary row listing today's tier changes.
 """
@@ -38,13 +38,13 @@ DEFAULT_TIER_SNAPSHOT = ROOT / "data/interim/pool_effective_tiers.csv"
 
 # §6.2.1 分层×估值准入矩阵：层级越低，买入估值门槛越严。
 TIER_ELIGIBLE_VALUATIONS = {
-    "L1": {"低估", "较低估", "中性", "可接受较高估"},
+    "L1": {"低估", "较低估", "中性", "较高估"},
     "L2": {"低估", "较低估", "中性"},
     "L3": {"低估", "较低估"},
     "L4": {"低估"},
 }
 CORE_LAYER_TIERS = {"L1", "L2"}
-WATCH_VALUATIONS = {"低估", "较低估", "中性", "可接受较高估"}
+WATCH_VALUATIONS = {"低估", "较低估", "中性", "较高估"}
 # §6.2.1.6 价格自动定档阈值（v1.05 初始校准，修订先改工作流）。
 OVERVALUED_BAND_MULT = 1.2  # 带顶×1.2 以上 = 高估（沿 D 档 100-120% 惯例）
 DEEP_UNDERVALUED_UPSIDE = 0.40  # 带底以下且空间（区间中值/现价-1）>= 40% = 低估，否则较低估
@@ -53,14 +53,14 @@ FORECAST_METRIC_PRIORITY = {"004": 0, "005": 1, "006": 2}
 
 
 def effective_valuation_tier(price: float | None, fair_low: float | None, fair_high: float | None) -> str | None:
-    """§6.2.1.6 价格自动定档：>1.2×带顶=高估；带顶~1.2×带顶=可接受较高估；带内=中性；
+    """§6.2.1.6 价格自动定档：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；
     带底以下按空间 >=40% 分低估/较低估。无带或无价返回 None（调用方保留存档档位，如无法估值）。"""
     if not price or fair_low is None or fair_high is None or fair_low <= 0 or fair_high <= 0:
         return None
     if price > fair_high * OVERVALUED_BAND_MULT:
         return "高估"
     if price > fair_high:
-        return "可接受较高估"
+        return "较高估"
     if price >= fair_low:
         return "中性"
     mid = (fair_low + fair_high) / 2
@@ -192,7 +192,7 @@ def load_forecasts(path: Path) -> dict[str, dict[str, str]]:
 
 
 def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
-    """阅读版单元格：现价/带位/空间/PE/PB 按行情快照刷新，档位按 §6.2.1.6 价格自动定档。"""
+    """阅读版单元格：现价/空间/PE/PB 按行情快照刷新，档位按 §6.2.1.6 价格自动定档。"""
     low = _to_float(row.get("fair_price_low"))
     high = _to_float(row.get("fair_price_high"))
     val_price = _to_float(row.get("valuation_price"))
@@ -203,15 +203,6 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
         band = "—"
     else:
         band = row["fair_price_low"] if row["fair_price_low"] == row["fair_price_high"] else f"{row['fair_price_low']}-{row['fair_price_high']}"
-
-    if low is None or high is None or not ref_price:
-        band_pos = "—"
-    elif ref_price > high:
-        band_pos = f"↑+{(ref_price / high - 1) * 100:.0f}%"
-    elif ref_price < low:
-        band_pos = f"↓-{(1 - ref_price / low) * 100:.0f}%"
-    else:
-        band_pos = f"{(ref_price - low) / (high - low) * 100:.0f}%" if high > low else "0%"
 
     if low is None or high is None or not ref_price:
         upside = "—"
@@ -228,7 +219,6 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     return {
         "price": f"{spot:.2f}" if spot else "—",
         "band": band,
-        "band_pos": band_pos,
         "upside": upside,
         "pe": f"{spot_pe:.2f}" if spot_pe else str(row.get("valuation_pe_ttm") or "—"),
         "pb": f"{spot_pb:.2f}" if spot_pb else str(row.get("valuation_pb") or "—"),
@@ -279,7 +269,7 @@ def write_markdown(
     quote_line = (
         f"现价更新：{format_quote_time(quotes)}（腾讯行情快照，{len(quotes)}/{len(rows)} 只成功）"
         if quotes
-        else "现价未刷新（--quotes skip；现价/带位/空间/档位按估值时点价展示）"
+        else "现价未刷新（--quotes skip；现价/空间/档位按估值时点价展示）"
     )
     changes: list[str] = []
     drift: list[str] = []
@@ -305,7 +295,7 @@ def write_markdown(
             + str(cells["valuation_cell"])
             + " | {strategy_tag} | ".format(**row)
             + f"{cells['price']} | "
-            + f"{cells['band']} | {cells['band_pos']} | {cells['upside']} | {cells['pe']} | {cells['pb']} | "
+            + f"{cells['band']} | {cells['upside']} | {cells['pe']} | {cells['pb']} | "
             + "{valuation_reviewed_at} | {valuation_evidence_event} |".format(
                 valuation_reviewed_at=row.get("valuation_reviewed_at") or "—",
                 valuation_evidence_event=row.get("valuation_evidence_event") or "—",
@@ -319,15 +309,15 @@ def write_markdown(
         "",
         "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是 L1-L4 全量 worth_attention 单一列表阅读版（v1.05）。买入资格由 质量 × 当日档位 按 §6.2.1 矩阵判定；高估/无法估值不可买。",
         "",
-        "- **档位按现价自动定档（§6.2.1.6，无人工复核）**：>1.2×带顶=高估；带顶~1.2×带顶=可接受较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`；当日变化在扫描报告与刷新日志列示。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
+        "- **档位按现价自动定档（§6.2.1.6，无人工复核）**：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`；当日变化在扫描报告与刷新日志列示。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
         "- 现价/PE/PB 为每日扫描时的行情快照（PE 为 TTM 口径）；现价缺失（停牌/请求失败）的行沿用估值时点值。",
-        "- 带位 = 现价在合理价区间内的位置（↑越带顶 / ↓低于带底）；空间 = 区间中值相对现价的涨跌幅，正数代表上行空间。",
+        "- 空间 = 区间中值（模型认可的公允中枢）相对现价的涨跌幅，正数代表上行空间、负数代表现价已高于中枢；原带位列与空间重复，已移除（v1.10）。",
         "- 业绩预告不在本表展示（v1.09）：预告物化文件（§6.7.8）只作 §7.5.5 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
         "- 合理价区间为该股按其策略模型处于「中性」档的价格带，是估值的唯一输出锚（换算依据见池 CSV `fair_price_basis`；模型认可的公允中枢≈区间中值，空间列即按中值/现价计算）。",
         "- 估值时间 = 最近一次估值复核日（合理价区间的推导日）；估值事件 = 该次复核所依据的最新披露（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件）。档位每日按现价自动重算，带只在 §7 复核时更新——「价格改档、证据改带」。审定档、核心理由与复核时点价（`valuation_price`）见池 CSV。",
         "",
-        "| 代码 | 名称 | 质量 | 估值 | 策略 | 现价 | 合理价区间 | 带位 | 空间 | PE | PB | 估值时间 | 估值事件 |",
-        "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+        "| 代码 | 名称 | 质量 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
+        "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
         *body,
     ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
