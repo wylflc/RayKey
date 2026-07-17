@@ -619,16 +619,20 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, 
     signal["band_position"] = band_position
     signal["valuation_tier_effective"] = effective_tier
     signal["band_top_flag"] = band_top_flag
-    # §8.13 所需入场阶段：越带待复核或 watch_only 组合无常备资格 → 留空（不可买）。
-    if band_top_flag or pool_row.get("pool_layer") == "watch_only":
+    # §8.13 所需入场阶段：越带待复核或 watch_only/excluded 组合无常备资格 → 留空（不可买）。
+    if band_top_flag or pool_row.get("pool_layer") in {"watch_only", "excluded"}:
         signal["stage_required"] = ""
     else:
         signal["stage_required"] = STAGE_REQUIRED.get((pool_row.get("quality_tier", ""), stored_tier), "")
 
-    # v20 §8.9 watch_only 仅观察层：信号可见但不可买（v1.02 事件通道已关闭，无当日直买例外）。
-    if pool_row.get("pool_layer") == "watch_only" and signal.get("signal_state") == "buy_candidate":
+    # v20/v1.04 §8.9 watch_only / excluded 仅观察层：信号可见但不可买（v1.02 事件通道已关闭，无当日直买例外）。
+    if pool_row.get("pool_layer") in {"watch_only", "excluded"} and signal.get("signal_state") == "buy_candidate":
         signal["signal_state"] = "signal_watch_only"
-        signal["action_bias"] = "池内可见不可买：24小时异动响应+§7.4事件复核（v1.02 事件通道已关闭）"
+        if pool_row.get("pool_layer") == "excluded":
+            reentry_note = "，已回落带内走 §7.4.8 复核" if "带内" in band_position or "低于带底" in band_position else ""
+            signal["action_bias"] = f"高估/无法估值仅观察：不可买，24小时异动响应+§7.4复核{reentry_note}"
+        else:
+            signal["action_bias"] = "池内可见不可买：24小时异动响应+§7.4事件复核（v1.02 事件通道已关闭）"
     signal["priority"] = assign_priority(signal)
     signal["data_source"] = kline_url
     signal["screened_at_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
