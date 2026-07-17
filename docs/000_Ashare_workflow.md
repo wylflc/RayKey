@@ -710,7 +710,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 3. 每个纳入核心估值合格池的结论都要写入结论日志。
 4. 估值表若含 `valuation_reviewed_at` 字段，物化时原样透传到池文件；`pool_as_of` 只表示物化日，不得当作估值复核日使用（§7.3 复核触发以 `valuation_reviewed_at` 为准，缺失时才回退 `pool_as_of`）。
 5. 未过准入矩阵但估值为低估/较低估/中性/可接受较高估的 L1-L4 公司，输出 `pool_layer = watch_only` 仅观察层（v20）：进入每日扫描可见范围，不具备买入资格；watch_only 行日志 `decision_type = scan_watch_only`。
-6. `fair_price_low`/`fair_price_high`/`fair_price_basis` 与 `total_market_cap_bn`（§8.5.6 巨盘条件输入，十亿口径）原样透传到池 CSV。阅读版 MD 为**单一列表**（v1.05：不再分设高估/无法估值小节，全量统一展示、统一处理），不单列"层"；每行展示：估值（当日自动定档，与审定档不同时显示 `审定档→现档`）、策略、估值价、现价、合理价区间、带位、空间、现价口径 PE(TTM)/PB、中报预告（要求 8）；审定档与核心理由保留在池 CSV。
+6. `fair_price_low`/`fair_price_high`/`fair_price_basis` 与 `total_market_cap_bn`（§8.5.6 巨盘条件输入，十亿口径）原样透传到池 CSV。阅读版 MD 为**单一列表**（v1.05：不再分设高估/无法估值小节，全量统一展示、统一处理），不单列"层"；每行展示：估值（当日自动定档，与审定档不同时显示 `审定档→现档`）、策略、现价、**估值时点价**（v1.07 更名并置于现价之后：该档位结论作出当日的市场价，审计基准而非模型输出——低估/较低估标的的时点价按 §6.6.8 自洽要求本就低于区间下沿）、合理价区间（估值唯一输出锚，公允中枢≈区间中值）、带位、空间、现价口径 PE(TTM)/PB、中报预告（要求 8）；审定档与核心理由保留在池 CSV。
 7. 现价刷新与档位差分（v1.03/v1.05）：`--quotes fetch` 经 `scripts/a_share_quotes.py` 拉取腾讯批量行情快照；`--md-only` 供每日扫描调用——只重渲染 MD 并写一行 `pool_price_refresh` 汇总日志，不重写池 CSV、不逐股重写池结论。每次渲染把当日有效档位写入快照 `data/interim/pool_effective_tiers.csv`，与上一快照差分得出**当日档位变化名单**（进汇总日志与扫描报告第二节）；现价缺失（停牌/请求失败）的行沿用估值时点值定档。
 8. 中报/业绩预告列（v1.04）：`scripts/fetch_a_share_earnings_forecasts.py` 将东财业绩预告接口物化为 `data/interim/a_share_earnings_forecasts.csv`（代码、报告期、公告日、指标口径 004归母/005扣非/006营收、预告区间、同比增幅、去年同期、预告类型、检索时间与来源）；MD 按代码合并展示 类型/归母中值(亿)/同比中值 与「若延续 H1 增速」的前瞻 PE 近似（现价口径 PE(TTM) ÷ (1+同比中值)，亏损/扭亏与营收口径不适用），附公告日。预告仍按 §7.5.5 触发 express 估值复核义务——本列只作展示与复核提示，不改档。
 
@@ -1668,4 +1668,4 @@ Tier-2 软信号按矩阵处理（锁定期内只上调割肉价与风险预警�
 
 ## 16. 版本记录
 
-版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.06**（2026-07-17，8.7.9 底部企稳无量口径与 V 反计段、§8.13 阶段延续与承接、L2×中性=三段）。
+版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.07**（2026-07-17，池 MD"估值时点价"更名换位澄清）。
