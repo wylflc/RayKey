@@ -25,9 +25,8 @@ DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 # 后备行情源：东财历史行情不可用/空响应时切换（同为前复权日线；成交额以收盘×量近似，仅影响流动性门槛估计）。
-TENCENT_KLINE = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
-# 北交所：东财与 ifzq 均无历史K线，走腾讯 newfqkline（2026-07-17 实测有完整前复权日线）。
-TENCENT_KLINE_BSE = "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
+# 统一走腾讯 newfqkline：同构覆盖 sh/sz/bj，且为北交所唯一可用历史K线源；旧 web.ifzq 端点在批量扫描下易限流（2026-07-17 实测 501）。
+TENCENT_KLINE = "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
 
 MIN_AMOUNT_MA20 = 50_000_000  # §11.8 流动性门槛：20日均成交额低于5000万元不列买入候选。
 
@@ -118,7 +117,7 @@ def fetch_daily_rows_tencent(code: str, exchange: str, as_of: str, timeout: floa
     """后备源：腾讯前复权日线（北交所主源，走 newfqkline）。成交量单位为手（仅用于量比，口径内部一致）；
     成交额接口未提供，以收盘价×成交量×100近似，只影响 §11 流动性门槛的估计。"""
     symbol = quote_symbol(code, exchange)
-    base = TENCENT_KLINE_BSE if symbol.startswith("bj") else TENCENT_KLINE
+    base = TENCENT_KLINE
     param = f"{symbol},day,2020-01-01,{as_of},1000,qfq"
     url = f"{base}?param={param}"
     request = urllib.request.Request(
@@ -229,6 +228,7 @@ def volume_percentile(rows: list[dict[str, float | str]], index: int, window: in
 
 
 # §6.2.1 矩阵末列 × §8.13：各组合所需最低右侧入场阶段（1=首信号 2=初步承接 3=趋势反转确认 4=突破确认）。
+# v1.06：L2×中性 4→3（用户比亚迪 V 反锚点：7/2 提醒、7/6-7/9 建仓窗口须达标）。
 STAGE_REQUIRED = {
     ("L1", "低估"): 1,
     ("L1", "较低估"): 2,
@@ -236,7 +236,7 @@ STAGE_REQUIRED = {
     ("L1", "可接受较高估"): 4,
     ("L2", "低估"): 2,
     ("L2", "较低估"): 3,
-    ("L2", "中性"): 4,
+    ("L2", "中性"): 3,
     ("L3", "低估"): 3,
     ("L3", "较低估"): 3,
     ("L4", "低估"): 4,
@@ -329,6 +329,162 @@ def bottom_reversal_state(rows: list[dict[str, float | str]], index: int) -> boo
     return platform or v_reversal
 
 
+# ---- §8.7.9 / §8.13 v1.06：底部企稳无量口径、V反计段与阶段延续（校准锚点：双汇7/1、比亚迪7/2、茅台7/14-15）----
+LOW_POSITION_DD = 0.15  # 低位：距250日最高收盘回撤>=15%，或收盘在MA250下方
+V_REVERSAL_DD = 0.25  # V反语境：近10日最低收盘距250日最高回撤>=25%
+PLATFORM_AMP = 0.15  # 平台：近20日收盘振幅上限
+PLATFORM_UNDERCUT_TOL = 0.97  # 平台容忍近20日最低 >= 60日最低×0.97（允许小幅磨底假破位）
+STAGE_VALID_DAYS = 5  # 阶段有效期（交易日）：期内未失效即延续，新触发即刷新
+
+
+def _bull_at(rows: list[dict[str, float | str]], j: int) -> tuple[bool, bool]:
+    row = rows[j]
+    close = float(row["close"])
+    ma5, ma10, ma20, ma60 = (row.get(k) for k in ("ma5", "ma10", "ma20", "ma60"))
+    if None in (ma5, ma10, ma20, ma60):
+        return False, False
+    daily = close > float(ma5) > float(ma10) > float(ma20) > float(ma60)
+    quasi = (
+        close > float(ma5) > float(ma10) > float(ma20)
+        and close > float(ma60)
+        and j >= 5
+        and float(ma20) >= float(rows[j - 5].get("ma20") or ma20)
+    )
+    return daily, quasi
+
+
+def low_position_state(rows: list[dict[str, float | str]], j: int) -> bool:
+    if j + 1 < 250:
+        return False
+    closes = [float(row["close"]) for row in rows[j - 249 : j + 1]]
+    ma250 = rows[j].get("ma250")
+    return (max(closes) > 0 and closes[-1] <= max(closes) * (1 - LOW_POSITION_DD)) or (
+        ma250 is not None and closes[-1] < float(ma250)
+    )
+
+
+def platform_stable_state(rows: list[dict[str, float | str]], j: int) -> bool:
+    """§8.7.9 平台企稳前置：低位 + 近20日窄幅 + 近20日最低不显著低于60日最低。"""
+    if j + 1 < 60 or not low_position_state(rows, j):
+        return False
+    closes = [float(row["close"]) for row in rows[j - 59 : j + 1]]
+    last20 = closes[-20:]
+    return (
+        min(last20) > 0
+        and max(last20) / min(last20) - 1 <= PLATFORM_AMP
+        and min(last20) >= min(closes) * PLATFORM_UNDERCUT_TOL
+    )
+
+
+def v_reversal_context(rows: list[dict[str, float | str]], j: int) -> bool:
+    """V反语境：深回撤且近10日内创过60日收盘新低（刚出坑，无需已收复MA20）。"""
+    if j + 1 < 250:
+        return False
+    closes = [float(row["close"]) for row in rows[j - 249 : j + 1]]
+    max250 = max(closes)
+    last10, last60 = closes[-10:], closes[-60:]
+    return max250 > 0 and min(last10) <= max250 * (1 - V_REVERSAL_DD) and min(last10) <= min(last60) * 1.001
+
+
+def stage_day_trigger(rows: list[dict[str, float | str]], j: int, megacap_yi: float | None) -> tuple[int, list[str]]:
+    """当日新达段位（0-4）与触发标签（§8.13 v1.06）。8.7.9 各形态不要求 §8.5 有效放量。"""
+    row = rows[j]
+    close = float(row["close"])
+    pct = float(row["pct_chg"])
+    loc = float(row.get("close_location") or 0.0)
+    conds = volume_conditions(rows, j, megacap_yi)
+    dvr = float(conds["day_vol_ratio"]) if conds else 0.0
+    eff_vol = bool(conds and conds["effective"])
+    pct_only = bool(conds and conds["percentile_only"])
+    daily, quasi = _bull_at(rows, j)
+    ma5, ma20, ma60 = row.get("ma5"), row.get("ma20"), row.get("ma60")
+    stage, tags = 0, []
+    plat = platform_stable_state(rows, j)
+    vctx = v_reversal_context(rows, j)
+    # 一段：平台企稳大阳（无量口径）/ 平台温和转强 / V反启动阳线 / 8.7.8 底部放量反转
+    if plat and pct >= 2.5 and loc >= 0.6 and ma5 is not None and close > float(ma5):
+        stage = max(stage, 1)
+        tags.append("8.7.9a 平台企稳大阳")
+    if plat and ma5 is not None and row.get("ma10") is not None and float(ma5) > float(row["ma10"]):
+        up3 = j >= 2 and all(
+            float(rows[j - k]["close"]) > float(rows[j - k].get("ma5") or 9e18) for k in range(3)
+        )
+        if up3 and (pct_return(rows, j, 5) or 0.0) >= 0.015:
+            stage = max(stage, 1)
+            tags.append("8.7.9b 平台温和转强")
+    if vctx and pct >= 3.0 and dvr >= 1.3:
+        stage = max(stage, 1)
+        tags.append("8.7.9c V反启动阳线")
+    if bottom_reversal_state(rows, j) and bottom_day_condition(rows, j, megacap_yi):
+        hits = sum(1 for k in range(max(60, j - 9), j + 1) if bottom_day_condition(rows, k, megacap_yi))
+        stage = max(stage, 2 if hits >= 2 else 1)
+        tags.append("8.7.8 底部连续放量" if hits >= 2 else "8.7.8 底部/平台放量反转")
+    # 二段：平台上沿新高（量能不限）
+    if plat and j >= 19 and close >= max(float(x["close"]) for x in rows[j - 19 : j + 1]):
+        stage = max(stage, 2)
+        tags.append("8.7.9d 平台上沿新高")
+    # 三段：连续3日放量上涨，或 多头/准多头+当日有效放量上涨
+    three_up = (
+        j >= 3
+        and all(float(rows[j - k]["pct_chg"]) > 0 for k in range(3))
+        and bool(conds)
+        and float(conds["vol_3d_ratio"]) >= 1.5
+    )
+    if three_up or ((daily or quasi) and eff_vol and pct > 0):
+        stage = max(stage, 3)
+    # 四段：突破确认口径（多头+有效放量+收位+站上MA20/MA60；仅分位量不计）
+    if (
+        (daily or quasi)
+        and eff_vol
+        and not pct_only
+        and loc >= 0.6
+        and ma20 is not None
+        and ma60 is not None
+        and close > float(ma20)
+        and close > float(ma60)
+    ):
+        stage = 4
+    return stage, tags
+
+
+def compute_entry_stage(
+    rows: list[dict[str, float | str]], index: int, megacap_yi: float | None
+) -> tuple[int, int, list[str]]:
+    """§8.13 v1.06 有效段位（延续口径）：近 STAGE_VALID_DAYS 个交易日内达到的最高段位持续有效；
+    承接升段（触发后收盘未破触发日最低价即升二段——放量大涨后的缩量整理是延续不是转弱）；
+    有效期内收复MA20且高于触发日收盘 → 三段里程碑；失效条件：收盘跌破触发日最低价，或 放量下跌
+    （量比>=1.5且跌>=3%），或超过有效期无新触发。返回 (有效段位, 当日新达段位, 当日触发标签)。"""
+    start = max(60, index - 9)
+    eff, trig_idx, trig_low, trig_close = 0, None, None, None
+    today_stage, today_tags = 0, []
+    for j in range(start, index + 1):
+        row = rows[j]
+        close = float(row["close"])
+        pct = float(row["pct_chg"])
+        conds = volume_conditions(rows, j, megacap_yi)
+        heavy_down = bool(conds) and float(conds["day_vol_ratio"]) >= 1.5 and pct <= -3.0
+        if eff > 0 and (
+            (trig_low is not None and close < trig_low)
+            or heavy_down
+            or (trig_idx is not None and j - trig_idx > STAGE_VALID_DAYS)
+        ):
+            eff, trig_idx, trig_low, trig_close = 0, None, None, None
+        stage, tags = stage_day_trigger(rows, j, megacap_yi)
+        if j == index:
+            today_stage, today_tags = stage, tags
+        if stage > 0:
+            if eff == 0:
+                trig_low, trig_close = float(row["low"]), close
+            trig_idx = j  # 新触发刷新有效期；承接锚（触发日低/收）保持首次触发口径
+            eff = max(eff, stage)
+        elif eff == 1 and trig_low is not None and close >= trig_low:
+            eff = 2  # 承接升二段
+        ma20 = row.get("ma20")
+        if eff >= 1 and ma20 is not None and close > float(ma20) and trig_close is not None and close > trig_close:
+            eff = max(eff, 3)  # 趋势里程碑：收复MA20且较触发日有浮盈
+    return eff, today_stage, today_tags
+
+
 def classify_signal(
     rows: list[dict[str, float | str]],
     limit_up_pct: float = 9.5,
@@ -415,14 +571,11 @@ def classify_signal(
     if effective_volume and float(row["pct_chg"]) > 0:
         signals.append("8.7.0 放量上涨")
 
-    # §8.7.8 底部/平台放量反转（v1.02）：持续下跌后的首个右侧事实；10日窗内第2次命中记「底部连续放量」。
-    bottom_state = bottom_reversal_state(rows, index)
-    bottom_today = bottom_state and bottom_day_condition(rows, index, megacap_yi)
-    bottom_consecutive = False
-    if bottom_today:
-        hits = sum(1 for j in range(max(60, index - 9), index + 1) if bottom_day_condition(rows, j, megacap_yi))
-        bottom_consecutive = hits >= 2
-        signals.append("8.7.8 底部连续放量" if bottom_consecutive else "8.7.8 底部/平台放量反转")
+    # §8.7.8/§8.7.9 底部反转与企稳形态 + §8.13 v1.06 阶段延续：统一由计段函数判定。
+    entry_stage, entry_stage_today, stage_tags = compute_entry_stage(rows, index, megacap_yi)
+    for tag in stage_tags:
+        if tag not in signals:
+            signals.append(tag)
 
     overextended = close / ma20 - 1 > 0.25 or ret_5d > 0.30 or ret_20d > 0.60
     if overextended:
@@ -431,6 +584,11 @@ def classify_signal(
     elif signals:
         signal_state = "buy_candidate"
         action_bias = "可建目标仓位1/3"
+    elif entry_stage >= 1:
+        # §8.13.5 阶段延续（v1.06）：触发后的缩量整理日属于信号延续而非转弱，延续窗口内视同候选可按有效段位执行。
+        signals.append(f"8.13 阶段延续({entry_stage}段)")
+        signal_state = "buy_candidate"
+        action_bias = "阶段延续窗口内"
     elif wait_reasons:
         signal_state = "wait_confirmation"
         action_bias = "等确认"
@@ -468,29 +626,11 @@ def classify_signal(
     else:
         signal_grade = ""
 
-    # §8.13 入场阶段（当日口径，与分级正交）：1首信号 2初步承接 3趋势反转确认 4突破确认；高段覆盖低段。
-    entry_stage = 0
+    # §8.13 阶段已由 compute_entry_stage 统一判定（延续口径）；突破确认形态当日再补一次四段判定。
     if signals:
-        if bottom_today:
-            entry_stage = 2 if bottom_consecutive else 1
-        elif bottom_state and effective_volume and float(row["pct_chg"]) > 0:
-            # 一段后 3 个交易日内不破启动阳线低点且再度有效放量收涨 → 二段。
-            for j in range(max(4, index - 3), index):
-                if bottom_day_condition(rows, j, megacap_yi) and min(
-                    float(rows[k]["low"]) for k in range(j, index + 1)
-                ) >= float(rows[j]["low"]):
-                    entry_stage = 2
-                    break
-        three_up = (
-            index >= 3
-            and all(float(rows[index - k]["pct_chg"]) > 0 for k in range(3))
-            and vol_3d_ratio >= 1.5
-        )
-        if three_up or ((daily_bull or quasi_bull) and float(row["pct_chg"]) > 0):
-            entry_stage = max(entry_stage, 3)  # 连续3日放量上涨，或 多头/准多头+当日信号（≈分级中及以上）
         breakout_confirm_shape = any(sig.startswith(("8.7.1", "8.7.2")) for sig in signals)
         if (daily_bull or quasi_bull) and breakout_confirm_shape and not percentile_only_volume:
-            entry_stage = 4  # 8.7.6 二次确认与 8.7.7 相对强度仍属人工补判项
+            entry_stage = max(entry_stage, 4)
 
     return {
         "trade_date": row["date"],
@@ -531,6 +671,7 @@ def classify_signal(
         "signal_grade": signal_grade,
         "trend_strength": trend_strength,
         "entry_stage": entry_stage,
+        "entry_stage_today": entry_stage_today,
         "megacap_volume": bool(conds["megacap"]),
         "market_cap_now_yi": megacap_yi or "",
     }
@@ -779,6 +920,7 @@ def main() -> None:
         "action_bias",
         "signal_grade",
         "entry_stage",
+        "entry_stage_today",
         "stage_required",
         "stage_met",
         "megacap_volume",
