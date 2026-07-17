@@ -14,6 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+from a_share_quotes import quote_symbol
+from build_a_share_core_valuation_pool import TIER_ELIGIBLE_VALUATIONS, effective_valuation_tier
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
 
 
@@ -22,8 +24,10 @@ DEFAULT_INPUT = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
-# 后备行情源：东财历史行情不可用时切换（同为前复权日线；成交额以收盘×量近似，仅影响流动性门槛估计）。
+# 后备行情源：东财历史行情不可用/空响应时切换（同为前复权日线；成交额以收盘×量近似，仅影响流动性门槛估计）。
 TENCENT_KLINE = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
+# 北交所：东财与 ifzq 均无历史K线，走腾讯 newfqkline（2026-07-17 实测有完整前复权日线）。
+TENCENT_KLINE_BSE = "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
 
 MIN_AMOUNT_MA20 = 50_000_000  # §11.8 流动性门槛：20日均成交额低于5000万元不列买入候选。
 
@@ -81,12 +85,17 @@ def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float) -> tu
             "lmt": "1000",
         }
     )
+    # 北交所（92/43/83/87 前缀）：东财K线无数据，直接走腾讯 newfqkline。
+    if quote_symbol(code, exchange).startswith("bj"):
+        return fetch_daily_rows_tencent(code, exchange, as_of, timeout)
     url = f"{EASTMONEY_KLINE}?{query}"
     try:
         payload = get_json(url, timeout)
     except OSError:
         return fetch_daily_rows_tencent(code, exchange, as_of, timeout)
     klines = (payload.get("data") or {}).get("klines") or []
+    if not klines:
+        return fetch_daily_rows_tencent(code, exchange, as_of, timeout)
     rows: list[dict[str, float | str]] = []
     for line in klines:
         parts = line.split(",")
@@ -106,11 +115,12 @@ def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float) -> tu
 
 
 def fetch_daily_rows_tencent(code: str, exchange: str, as_of: str, timeout: float) -> tuple[str, list[dict[str, float | str]]]:
-    """后备源：腾讯前复权日线。成交量单位为手（仅用于量比，口径内部一致）；
+    """后备源：腾讯前复权日线（北交所主源，走 newfqkline）。成交量单位为手（仅用于量比，口径内部一致）；
     成交额接口未提供，以收盘价×成交量×100近似，只影响 §11 流动性门槛的估计。"""
-    symbol = ("sh" if infer_secid(code, exchange).startswith("1.") else "sz") + code.zfill(6)
+    symbol = quote_symbol(code, exchange)
+    base = TENCENT_KLINE_BSE if symbol.startswith("bj") else TENCENT_KLINE
     param = f"{symbol},day,2020-01-01,{as_of},1000,qfq"
-    url = f"{TENCENT_KLINE}?param={param}"
+    url = f"{base}?param={param}"
     request = urllib.request.Request(
         url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"}
     )
@@ -121,7 +131,7 @@ def fetch_daily_rows_tencent(code: str, exchange: str, as_of: str, timeout: floa
     # 腾讯前复权序列可能滞后一个交易日：用不复权序列补齐最新K线。
     # 成交量单位沪深口径不一（股/手），按重叠日成交量比例归一后再拼接。
     if klines and str(klines[-1][0]) < as_of:
-        raw_url = f"{TENCENT_KLINE}?param={symbol},day,{klines[-1][0]},{as_of},10,"
+        raw_url = f"{base}?param={symbol},day,{klines[-1][0]},{as_of},10,"
         raw_req = urllib.request.Request(
             raw_url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"}
         )
@@ -232,7 +242,6 @@ STAGE_REQUIRED = {
     ("L4", "低估"): 4,
 }
 MEGACAP_MIN_YI = 2000.0  # §8.5.6 巨盘温和放量：总市值阈值（亿，2026-07-17 初始校准）。
-BAND_TOP_FLAG_TIERS = {"低估", "较低估", "中性"}  # §6.2.1.6 价格刷新降档适用的存档档位。
 
 
 def to_float(value: object) -> float | None:
@@ -556,7 +565,8 @@ def assign_priority(row: dict[str, object]) -> str:
     if row.get("signal_state") != "buy_candidate":
         return ""
     quality_tier = str(row.get("quality_tier", ""))
-    valuation_tier = str(row.get("valuation_tier", ""))
+    # v1.05：优先级按当日价格自动定档（§6.2.1.6），不用审定档。
+    valuation_tier = str(row.get("valuation_tier_effective") or row.get("valuation_tier", ""))
     break_periods = set(str(row.get("break_periods", "")).split(","))
     if (
         quality_tier == "L1"
@@ -599,40 +609,36 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, 
     signal.update(pool_row)
     signal["security_code"] = code
 
-    # §6.2.1.6 档位价格一致性刷新 + 带内位置（v1.02）：升破带顶按可接受较高估口径待复核；跌破带底只提示。
+    # §6.2.1.6 价格自动定档 + 带内位置（v1.05）：档位由现价 vs 合理价区间每日自动重定，无人工复核；
+    # 无法估值不自动定档。买入资格 = 质量 × 当日档位 过 §6.2.1 矩阵。
     close = to_float(signal.get("close"))
     fair_low = to_float(pool_row.get("fair_price_low"))
     fair_high = to_float(pool_row.get("fair_price_high"))
     stored_tier = pool_row.get("valuation_tier", "")
-    band_position, effective_tier, band_top_flag = "", stored_tier, False
+    band_position = ""
     if close and fair_low and fair_high:
         if close > fair_high:
             band_position = f"越带顶+{(close / fair_high - 1) * 100:.0f}%"
-            if stored_tier in BAND_TOP_FLAG_TIERS:
-                effective_tier = "可接受较高估(待复核)"
-                band_top_flag = True
         elif close < fair_low:
             band_position = f"低于带底-{(1 - close / fair_low) * 100:.0f}%"
         else:
             pos = (close - fair_low) / (fair_high - fair_low) * 100 if fair_high > fair_low else 0.0
             band_position = f"带内{pos:.0f}%"
+    effective_tier = stored_tier if stored_tier == "无法估值" else (
+        effective_valuation_tier(close, fair_low, fair_high) or stored_tier
+    )
     signal["band_position"] = band_position
     signal["valuation_tier_effective"] = effective_tier
-    signal["band_top_flag"] = band_top_flag
-    # §8.13 所需入场阶段：越带待复核或 watch_only/excluded 组合无常备资格 → 留空（不可买）。
-    if band_top_flag or pool_row.get("pool_layer") in {"watch_only", "excluded"}:
-        signal["stage_required"] = ""
-    else:
-        signal["stage_required"] = STAGE_REQUIRED.get((pool_row.get("quality_tier", ""), stored_tier), "")
+    signal["valuation_tier_changed"] = effective_tier != stored_tier
+    eligible = effective_tier in TIER_ELIGIBLE_VALUATIONS.get(pool_row.get("quality_tier", ""), set())
+    signal["stage_required"] = (
+        STAGE_REQUIRED.get((pool_row.get("quality_tier", ""), effective_tier), "") if eligible else ""
+    )
 
-    # v20/v1.04 §8.9 watch_only / excluded 仅观察层：信号可见但不可买（v1.02 事件通道已关闭，无当日直买例外）。
-    if pool_row.get("pool_layer") in {"watch_only", "excluded"} and signal.get("signal_state") == "buy_candidate":
+    # §8.9：当日档位未过 §6.2.1 矩阵的组合（含高估/无法估值）出现信号 → 可见不可买。
+    if not eligible and signal.get("signal_state") == "buy_candidate":
         signal["signal_state"] = "signal_watch_only"
-        if pool_row.get("pool_layer") == "excluded":
-            reentry_note = "，已回落带内走 §7.4.8 复核" if "带内" in band_position or "低于带底" in band_position else ""
-            signal["action_bias"] = f"高估/无法估值仅观察：不可买，24小时异动响应+§7.4复核{reentry_note}"
-        else:
-            signal["action_bias"] = "池内可见不可买：24小时异动响应+§7.4事件复核（v1.02 事件通道已关闭）"
+        signal["action_bias"] = f"当日价格定档 {effective_tier}：未过 §6.2.1 矩阵，仅观察（24小时异动响应+§7.4复核）"
     signal["priority"] = assign_priority(signal)
     signal["data_source"] = kline_url
     signal["screened_at_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -748,8 +754,7 @@ def main() -> None:
                     row["action_bias"] = f"等入场阶段（已{stage}段/需{required}段）"
             else:
                 row["stage_met"] = False
-                if row.get("band_top_flag"):
-                    row["action_bias"] = "越带顶待复核（§7.4.7），复核前失去常备买入资格"
+                row["action_bias"] = "当日档位组合无所需阶段映射，仅观察（数据核对）"
         # §7.5/§11.9 复核期买入冻结：有信号也不列买入候选。
         if blocked and row.get("signal_state") == "buy_candidate" and str(row.get("security_code", "")).zfill(6) in blocked:
             row["signal_state"] = "buy_blocked_review_pending"
@@ -764,8 +769,8 @@ def main() -> None:
         "pool_layer",
         "valuation_tier",
         "valuation_tier_effective",
+        "valuation_tier_changed",
         "band_position",
-        "band_top_flag",
         "strategy_tag",
         "total_market_cap_bn",
         "market_cap_now_yi",

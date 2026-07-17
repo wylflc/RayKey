@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
 """Build the A-share core valuation pool.
 
-The pool is the formal input for daily volume-price screening. Buy eligibility
-requires both quality tier and a non-overvalued valuation grade (§6.2.1), but
-since v1.04 the pool CSV materializes ALL worth_attention L1-L4 names for the
-daily scan: 高估/无法估值 rows are kept as ``pool_layer = excluded``
-(visible, never buyable until a §7 review changes their grade) — daily price
-moves can invalidate an overvaluation call, and §7.4.8 review re-admits them.
+Materializes ALL worth_attention L1-L4 names (v1.04) into one pool CSV/MD for
+the daily scan. Since v1.05 the valuation tier is **price-auto-refreshed**
+(§6.2.1.6): the displayed/effective tier is derived每日 from spot price vs the
+reviewed fair band, with no manual review step — tier changes are simply
+reported in the daily scan entry. Reviews (§7: reports/预告/events) change the
+BAND; price changes the TIER; the §6.2.1 matrix maps tier to buy eligibility.
 
-This script intentionally does not create new valuation opinions. It only
-materializes the latest reviewed valuation table into the workflow input.
+This script does not create new valuation opinions: the band, the reviewed
+baseline tier (审定档) and reasons come from the valuation table.
 
-Daily price refresh (§6.7.7/§6.2.1.6): with ``--md-only --quotes fetch`` the
-script re-renders only the reading MD with a spot-quote column set
-(现价/带位/空间/PE/PB) plus the 中报预告 column (§6.7.8), flags pool rows whose
-price broke above the fair band top (估值列 ``*``, §7.4.7) and excluded 高估
-rows whose price fell back to/below the band top (``†``, §7.4.8), without
-rewriting the pool CSV or re-logging per-row pool decisions.
+Daily refresh: ``--md-only --quotes fetch`` re-renders only the reading MD
+(现价/带位/空间/PE/PB/中报预告 + auto tier), diffs effective tiers against the
+previous snapshot (`data/interim/pool_effective_tiers.csv`) and logs one
+`pool_price_refresh` summary row listing today's tier changes.
 """
 
 from __future__ import annotations
@@ -36,6 +34,7 @@ DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_MD = ROOT / "data/processed/000_a_share_core_valuation_pool.md"
 DEFAULT_FORECASTS = ROOT / "data/interim/a_share_earnings_forecasts.csv"
+DEFAULT_TIER_SNAPSHOT = ROOT / "data/interim/pool_effective_tiers.csv"
 
 # §6.2.1 分层×估值准入矩阵：层级越低，买入估值门槛越严。
 TIER_ELIGIBLE_VALUATIONS = {
@@ -45,13 +44,28 @@ TIER_ELIGIBLE_VALUATIONS = {
     "L4": {"低估"},
 }
 CORE_LAYER_TIERS = {"L1", "L2"}
-# v20 §6.7.5：未过准入矩阵但估值非高估/非无法估值的 L1-L4 → watch_only 仅观察层。
 WATCH_VALUATIONS = {"低估", "较低估", "中性", "可接受较高估"}
-# §6.2.1.6 价格刷新：现价升破带顶时打 * 的存档档位（可接受较高估/高估本就在带顶之上，不重复标）。
-BAND_TOP_FLAG_TIERS = {"低估", "较低估", "中性"}
+# §6.2.1.6 价格自动定档阈值（v1.05 初始校准，修订先改工作流）。
+OVERVALUED_BAND_MULT = 1.2  # 带顶×1.2 以上 = 高估（沿 D 档 100-120% 惯例）
+DEEP_UNDERVALUED_UPSIDE = 0.40  # 带底以下且空间（区间中值/现价-1）>= 40% = 低估，否则较低估
 # 预告指标口径优先级：归母净利 > 扣非 > 营业收入（§6.7.8）。
 FORECAST_METRIC_PRIORITY = {"004": 0, "005": 1, "006": 2}
 FORECAST_NO_PE_TYPES = {"扭亏", "减亏", "续亏", "首亏", "预亏", "增亏"}
+
+
+def effective_valuation_tier(price: float | None, fair_low: float | None, fair_high: float | None) -> str | None:
+    """§6.2.1.6 价格自动定档：>1.2×带顶=高估；带顶~1.2×带顶=可接受较高估；带内=中性；
+    带底以下按空间 >=40% 分低估/较低估。无带或无价返回 None（调用方保留存档档位，如无法估值）。"""
+    if not price or fair_low is None or fair_high is None or fair_low <= 0 or fair_high <= 0:
+        return None
+    if price > fair_high * OVERVALUED_BAND_MULT:
+        return "高估"
+    if price > fair_high:
+        return "可接受较高估"
+    if price >= fair_low:
+        return "中性"
+    mid = (fair_low + fair_high) / 2
+    return "低估" if mid / price - 1 >= DEEP_UNDERVALUED_UPSIDE else "较低估"
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -91,11 +105,12 @@ def build_pool(
     valuation_rows: list[dict[str, str]],
     tier_rows: list[dict[str, str]],
     as_of: str,
-) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
-    """返回 (可买/watch_only 池行, excluded 高估/无法估值行)。两组均物化入池 CSV（v1.04 全量扫描）。"""
+) -> list[dict[str, str]]:
+    """物化 L1-L4 全量为单一列表（v1.05）。pool_layer 为审定档口径的物化标注：
+    core/tactical（过矩阵）、watch_only（非高估未过矩阵）、excluded（高估/无法估值）；
+    每日买入资格以扫描时的价格自动定档为准，pool_layer 仅作审计口径。"""
     tier_by_code = {row["security_code"].zfill(6): row for row in tier_rows}
     output: list[dict[str, str]] = []
-    excluded: list[dict[str, str]] = []
 
     for row in valuation_rows:
         code = row["security_code"].zfill(6)
@@ -115,36 +130,37 @@ def build_pool(
         else:
             pool_layer = "excluded"
 
-        record = {
-            "market_type": "A_SHARE",
-            "security_code": code,
-            "security_name": row.get("security_name", ""),
-            "exchange": infer_exchange(code, tier_row),
-            "quality_tier": quality_tier,
-            "quality_tier_label": row.get("quality_tier") or (tier_row or {}).get("quality_tier_label", ""),
-            "pool_layer": pool_layer,
-            "strategy_tag": row.get("strategy_tag", ""),
-            "valuation_tier": valuation_tier or "（空）",
-            "valuation_batch_id": row.get("valuation_batch_id", ""),
-            "valuation_price": row.get("current_price", ""),
-            # §8.5.6 巨盘温和放量输入：估值时点总市值（十亿），扫描按现价比例折算。
-            "total_market_cap_bn": row.get("total_market_cap_bn", ""),
-            "fair_price_low": row.get("fair_price_low", ""),
-            "fair_price_high": row.get("fair_price_high", ""),
-            "fair_price_basis": row.get("fair_price_basis", ""),
-            "valuation_pe_ttm": row.get("pe_ttm", ""),
-            "valuation_pb": row.get("pb", ""),
-            "valuation_reason": row.get("valuation_reason", ""),
-            # §6.7：估值结论日原样透传；pool_as_of 只是物化日，不得当估值复核日用。
-            "valuation_reviewed_at": row.get("valuation_reviewed_at", ""),
-            "valuation_price_as_of": row.get("valuation_price_as_of", ""),
-            "evidence_available_at": row.get("evidence_available_at", ""),
-            "pool_as_of": as_of,
-            "source_file": str(DEFAULT_VALUATION.relative_to(ROOT)),
-        }
-        (excluded if pool_layer == "excluded" else output).append(record)
+        output.append(
+            {
+                "market_type": "A_SHARE",
+                "security_code": code,
+                "security_name": row.get("security_name", ""),
+                "exchange": infer_exchange(code, tier_row),
+                "quality_tier": quality_tier,
+                "quality_tier_label": row.get("quality_tier") or (tier_row or {}).get("quality_tier_label", ""),
+                "pool_layer": pool_layer,
+                "strategy_tag": row.get("strategy_tag", ""),
+                "valuation_tier": valuation_tier or "（空）",
+                "valuation_batch_id": row.get("valuation_batch_id", ""),
+                "valuation_price": row.get("current_price", ""),
+                # §8.5.6 巨盘温和放量输入：估值时点总市值（十亿），扫描按现价比例折算。
+                "total_market_cap_bn": row.get("total_market_cap_bn", ""),
+                "fair_price_low": row.get("fair_price_low", ""),
+                "fair_price_high": row.get("fair_price_high", ""),
+                "fair_price_basis": row.get("fair_price_basis", ""),
+                "valuation_pe_ttm": row.get("pe_ttm", ""),
+                "valuation_pb": row.get("pb", ""),
+                "valuation_reason": row.get("valuation_reason", ""),
+                # §6.7：估值结论日原样透传；pool_as_of 只是物化日，不得当估值复核日用。
+                "valuation_reviewed_at": row.get("valuation_reviewed_at", ""),
+                "valuation_price_as_of": row.get("valuation_price_as_of", ""),
+                "evidence_available_at": row.get("evidence_available_at", ""),
+                "pool_as_of": as_of,
+                "source_file": str(DEFAULT_VALUATION.relative_to(ROOT)),
+            }
+        )
 
-    return output, excluded
+    return output
 
 
 def _to_float(value: object) -> float | None:
@@ -164,16 +180,13 @@ def load_forecasts(path: Path) -> dict[str, dict[str, str]]:
         if row.get("is_latest") != "T":
             continue
         code = row["security_code"].zfill(6)
-        rank = (
-            FORECAST_METRIC_PRIORITY.get(str(row.get("predict_finance_code")), 9),
-            # notice_date 越新越好 → 取负序比较用字符串反转不便，改为在比较时判断。
-        )
+        rank = FORECAST_METRIC_PRIORITY.get(str(row.get("predict_finance_code")), 9)
         current = best.get(code)
         if current is None:
             best[code] = row
             continue
         cur_rank = FORECAST_METRIC_PRIORITY.get(str(current.get("predict_finance_code")), 9)
-        if rank[0] < cur_rank or (rank[0] == cur_rank and row.get("notice_date", "") > current.get("notice_date", "")):
+        if rank < cur_rank or (rank == cur_rank and row.get("notice_date", "") > current.get("notice_date", "")):
             best[code] = row
     return best
 
@@ -210,8 +223,8 @@ def forecast_cell(frow: dict[str, str] | None, spot_pe: float | None) -> str:
     return " ".join(part for part in parts if part)
 
 
-def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, str | bool | float | None]:
-    """阅读版单元格：现价/带位/空间/PE/PB 按行情快照刷新；无快照行沿用估值时点值。"""
+def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
+    """阅读版单元格：现价/带位/空间/PE/PB 按行情快照刷新，档位按 §6.2.1.6 价格自动定档。"""
     low = _to_float(row.get("fair_price_low"))
     high = _to_float(row.get("fair_price_high"))
     val_price = _to_float(row.get("valuation_price"))
@@ -223,19 +236,14 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, str | bo
     else:
         band = row["fair_price_low"] if row["fair_price_low"] == row["fair_price_high"] else f"{row['fair_price_low']}-{row['fair_price_high']}"
 
-    above_top = False
-    within_or_below_top = False
     if low is None or high is None or not ref_price:
         band_pos = "—"
     elif ref_price > high:
         band_pos = f"↑+{(ref_price / high - 1) * 100:.0f}%"
-        above_top = True
     elif ref_price < low:
         band_pos = f"↓-{(1 - ref_price / low) * 100:.0f}%"
-        within_or_below_top = True
     else:
         band_pos = f"{(ref_price - low) / (high - low) * 100:.0f}%" if high > low else "0%"
-        within_or_below_top = True
 
     if low is None or high is None or not ref_price:
         upside = "—"
@@ -243,12 +251,12 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, str | bo
         pct = round(((low + high) / 2 / ref_price - 1) * 100)
         upside = "0%" if pct == 0 else f"{pct:+d}%"
 
+    stored = str(row.get("valuation_tier", ""))
+    # 无法估值无可靠带，不自动定档（§6.2.1.6）；其余按现价（缺失时按估值价）定档。
+    effective = stored if stored == "无法估值" else (effective_valuation_tier(ref_price, low, high) or stored)
+
     spot_pe = _to_float(quote.get("pe_ttm")) if quote else None
     spot_pb = _to_float(quote.get("pb")) if quote else None
-    is_excluded = row.get("pool_layer") == "excluded"
-    # §6.2.1.6：可买/watch_only 行越带顶打 *（§7.4.7）；excluded 高估行回落带内打 †（§7.4.8）。
-    star = (not is_excluded) and above_top and row.get("valuation_tier", "") in BAND_TOP_FLAG_TIERS
-    dagger = is_excluded and row.get("valuation_tier", "") == "高估" and within_or_below_top
     return {
         "price": f"{spot:.2f}" if spot else "—",
         "band": band,
@@ -256,9 +264,8 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, str | bo
         "upside": upside,
         "pe": f"{spot_pe:.2f}" if spot_pe else str(row.get("valuation_pe_ttm") or "—"),
         "pb": f"{spot_pb:.2f}" if spot_pb else str(row.get("valuation_pb") or "—"),
-        "valuation_cell": str(row.get("valuation_tier", "")) + ("*" if star else "") + ("†" if dagger else ""),
-        "flagged": star,
-        "reentry": dagger,
+        "effective_tier": effective,
+        "valuation_cell": effective if effective == stored else f"{stored}→{effective}",
         "spot_pe": spot_pe,
     }
 
@@ -272,36 +279,60 @@ def format_quote_time(quotes: dict[str, dict]) -> str:
     return f"{t[:4]}-{t[4:6]}-{t[6:8]} {t[8:10]}:{t[10:12]}"
 
 
+def load_tier_snapshot(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    return {row["security_code"].zfill(6): row.get("effective_tier", "") for row in load_csv(path)}
+
+
+def write_tier_snapshot(path: Path, tiers: dict[str, tuple[str, str]], as_of: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["security_code", "security_name", "effective_tier", "as_of"])
+        writer.writeheader()
+        for code, (name, tier) in sorted(tiers.items()):
+            writer.writerow({"security_code": code, "security_name": name, "effective_tier": tier, "as_of": as_of})
+
+
 def write_markdown(
     path: Path,
     rows: list[dict[str, str]],
-    excluded: list[dict[str, str]],
     as_of: str,
     quotes: dict[str, dict] | None = None,
     forecasts: dict[str, dict[str, str]] | None = None,
-) -> dict[str, list[str]]:
-    """渲染阅读版 MD；返回 {'band_top': 越带顶待复核, 'reentry': 高估回落带内待复核, 'forecast': 有预告的代码}。"""
+    prev_tiers: dict[str, str] | None = None,
+) -> dict[str, object]:
+    """渲染单一列表阅读版 MD（v1.05）；返回 {'changes': 当日档位变化, 'drift': 现档≠审定档,
+    'forecast': 有预告代码, 'current_tiers': {code: (name, tier)}}。"""
     path.parent.mkdir(parents=True, exist_ok=True)
     quotes = quotes or {}
     forecasts = forecasts or {}
-    total = len(rows) + len(excluded)
+    prev_tiers = prev_tiers or {}
     quote_line = (
-        f"现价更新：{format_quote_time(quotes)}（腾讯行情快照，{len(quotes)}/{total} 只成功）"
+        f"现价更新：{format_quote_time(quotes)}（腾讯行情快照，{len(quotes)}/{len(rows)} 只成功）"
         if quotes
-        else "现价未刷新（--quotes skip；现价/带位/空间按估值时点价展示）"
+        else "现价未刷新（--quotes skip；现价/带位/空间/档位按估值时点价展示）"
     )
-    flags: dict[str, list[str]] = {"band_top": [], "reentry": [], "forecast": []}
+    changes: list[str] = []
+    drift: list[str] = []
+    forecast_codes: list[str] = []
+    current_tiers: dict[str, tuple[str, str]] = {}
 
-    def row_line(row: dict[str, str], with_reason: bool) -> str:
-        cells = display_cells(row, quotes.get(row["security_code"]))
-        frow = forecasts.get(row["security_code"])
-        if cells["flagged"]:
-            flags["band_top"].append(f"{row['security_code']}{row['security_name']}")
-        if cells["reentry"]:
-            flags["reentry"].append(f"{row['security_code']}{row['security_name']}")
+    body: list[str] = []
+    for row in rows:
+        code = row["security_code"]
+        cells = display_cells(row, quotes.get(code))
+        frow = forecasts.get(code)
+        effective = str(cells["effective_tier"])
+        current_tiers[code] = (row["security_name"], effective)
+        if effective != str(row.get("valuation_tier", "")):
+            drift.append(f"{code}{row['security_name']}")
+        prev = prev_tiers.get(code)
+        if prev and prev != effective:
+            changes.append(f"{code}{row['security_name']} {prev}→{effective}")
         if frow:
-            flags["forecast"].append(row["security_code"])
-        line = (
+            forecast_codes.append(code)
+        body.append(
             "| {security_code} | {security_name} | {quality_tier_label} | ".format(**row)
             + str(cells["valuation_cell"])
             + " | {strategy_tag} | {valuation_price} | ".format(**row)
@@ -309,44 +340,26 @@ def write_markdown(
             + forecast_cell(frow, cells["spot_pe"])  # type: ignore[arg-type]
             + " |"
         )
-        if with_reason:
-            reason = (row.get("valuation_reason") or "").replace("|", "、").replace("\n", " ")
-            if len(reason) > 80:
-                reason = reason[:80] + "…"
-            line = line + f" {reason} |"
-        return line
 
     lines = [
         "# A股核心估值合格池",
         "",
         f"生成日期：{as_of}｜{quote_line}",
         "",
-        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是 L1-L4 全量 worth_attention 估值结论阅读版（v1.04 起高估/无法估值名单同为每日扫描对象）。可买资格不单列：由 质量×估值 按 §6.2.1 矩阵判定（未过矩阵的组合与文末名单均为仅观察，机器口径见池 CSV `pool_layer`）。",
+        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是 L1-L4 全量 worth_attention 单一列表阅读版（v1.05）。买入资格由 质量 × 当日档位 按 §6.2.1 矩阵判定；高估/无法估值不可买。",
         "",
+        "- **档位按现价自动定档（§6.2.1.6，无人工复核）**：>1.2×带顶=高估；带顶~1.2×带顶=可接受较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`；当日变化在扫描报告与刷新日志列示。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
         "- 现价/PE/PB 为每日扫描时的行情快照（PE 为 TTM 口径）；现价缺失（停牌/请求失败）的行沿用估值时点值。",
         "- 带位 = 现价在合理价区间内的位置（↑越带顶 / ↓低于带底）；空间 = 区间中值相对现价的涨跌幅，正数代表上行空间。",
-        "- 估值列 `*` = 现价升破带顶：按 §6.2.1.6 以「可接受较高估」口径对待、触发 §7.4.7 express 复核，复核前失去常备买入资格。`†` = 高估名单现价已回落至带顶及以下：高估口径疑似失效，触发 §7.4.8 express 复核，复核改档后方可入池（不自动恢复）。",
-        "- 中报预告列（§6.7.8）：类型 同比中值 归母中值 与「若延续 H1 增速」前瞻PE≈现价PE(TTM)÷(1+同比中值)（近似口径，亏损/扭亏/营收口径不适用）；预告按 §7.5.5 触发 express 估值复核，本列不改档。",
-        "- 合理价区间为该股按其策略模型处于「中性」档的价格带（换算依据见池 CSV `fair_price_basis`）。",
+        "- 中报预告列（§6.7.8）：类型 同比中值 归母中值 与「若延续 H1 增速」前瞻PE≈现价PE(TTM)÷(1+同比中值)（近似口径，亏损/扭亏/营收口径不适用）；预告按 §7.5.5 触发 express 估值复核（改带），本列不改档。",
+        "- 合理价区间为该股按其策略模型处于「中性」档的价格带（换算依据见池 CSV `fair_price_basis`；审定档与核心理由见池 CSV）。",
         "",
         "| 代码 | 名称 | 质量 | 估值 | 策略 | 估值价 | 现价 | 合理价区间 | 带位 | 空间 | PE | PB | 中报预告 |",
         "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+        *body,
     ]
-    for row in rows:
-        lines.append(row_line(row, with_reason=False))
-    lines.extend(
-        [
-            "",
-            f"## 高估/无法估值名单（{len(excluded)} 家，每日扫描仅观察不可买；`†` 行走 §7.4.8 复核，改档后入池）",
-            "",
-            "| 代码 | 名称 | 质量 | 估值 | 策略 | 估值价 | 现价 | 合理价区间 | 带位 | 空间 | PE | PB | 中报预告 | 核心理由 |",
-            "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
-        ]
-    )
-    for row in excluded:
-        lines.append(row_line(row, with_reason=True))
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return flags
+    return {"changes": changes, "drift": drift, "forecast": forecast_codes, "current_tiers": current_tiers}
 
 
 def log_pool_decisions(
@@ -393,15 +406,16 @@ def log_price_refresh(
     as_of: str,
     quote_count: int,
     total: int,
-    flags: dict[str, list[str]],
+    flags: dict[str, object],
     output_md: Path,
 ) -> None:
-    """--md-only 现价刷新只写一行汇总日志，不重复逐股池结论。"""
-    band_top, reentry = flags.get("band_top", []), flags.get("reentry", [])
+    """--md-only 现价刷新只写一行汇总日志：当日档位变化 + 预告覆盖。"""
+    changes = list(flags.get("changes") or [])
+    drift = list(flags.get("drift") or [])
     summary_parts = [
-        ("越带顶待复核（§7.4.7）：" + "、".join(band_top)) if band_top else "无越带顶标的",
-        ("高估回落带内待复核（§7.4.8）：" + "、".join(reentry)) if reentry else "无回落带内标的",
-        f"中报预告覆盖 {len(flags.get('forecast', []))} 只",
+        ("当日档位变化（价格自动定档）：" + "、".join(changes)) if changes else "当日无档位变化",
+        f"现档≠审定档共 {len(drift)} 只",
+        f"中报预告覆盖 {len(list(flags.get('forecast') or []))} 只",
     ]
     append_decision_log(
         log_file,
@@ -414,7 +428,7 @@ def log_price_refresh(
                 "security_code": "POOL",
                 "security_name": "估值池现价刷新",
                 "decision_type": "pool_price_refresh",
-                "decision_result": f"quotes {quote_count}/{total}; band_top {len(band_top)}; reentry {len(reentry)}",
+                "decision_result": f"quotes {quote_count}/{total}; tier_changes {len(changes)}; drift {len(drift)}",
                 "summary_reason": "；".join(summary_parts),
                 "input_files": "",
                 "source_urls": "https://qt.gtimg.cn/;https://datacenter-web.eastmoney.com/",
@@ -438,7 +452,7 @@ def parse_args() -> argparse.Namespace:
         "--quotes",
         choices=["skip", "fetch"],
         default="skip",
-        help="fetch = 拉取腾讯批量行情快照，MD 按现价刷新（§6.7.7 每日扫描用）。",
+        help="fetch = 拉取腾讯批量行情快照，MD 按现价刷新并自动定档（§6.7.7 每日扫描用）。",
     )
     parser.add_argument(
         "--md-only",
@@ -451,18 +465,24 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_FORECASTS,
         help="业绩预告物化文件（fetch_a_share_earnings_forecasts.py 输出）；缺失时预告列显示 —。",
     )
+    parser.add_argument(
+        "--tier-snapshot",
+        type=Path,
+        default=DEFAULT_TIER_SNAPSHOT,
+        help="当日有效档位快照（用于次日差分出档位变化）。",
+    )
     parser.add_argument("--timeout", type=float, default=8.0, help="行情请求超时（秒）。")
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    rows, excluded = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of)
+    rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of)
     quotes: dict[str, dict] = {}
     if args.quotes == "fetch":
-        items = [(row["security_code"], row.get("exchange", "")) for row in rows + excluded]
-        quotes = fetch_spot_quotes(items, timeout=args.timeout)
+        quotes = fetch_spot_quotes([(row["security_code"], row.get("exchange", "")) for row in rows], timeout=args.timeout)
     forecasts = load_forecasts(args.forecasts)
+    prev_tiers = load_tier_snapshot(args.tier_snapshot)
     fieldnames = [
         "market_type",
         "security_code",
@@ -489,32 +509,20 @@ def main() -> None:
         "source_file",
     ]
     if not args.md_only:
-        write_csv(args.output_csv, rows + excluded, fieldnames)
-    flags = write_markdown(args.output_md, rows, excluded, args.as_of, quotes, forecasts)
+        write_csv(args.output_csv, rows, fieldnames)
+    flags = write_markdown(args.output_md, rows, args.as_of, quotes, forecasts, prev_tiers)
+    write_tier_snapshot(args.tier_snapshot, flags["current_tiers"], args.as_of)  # type: ignore[arg-type]
+    changes = list(flags.get("changes") or [])
+    summary = (
+        f"tier changes today: {'、'.join(changes) if changes else '无'}; "
+        f"drift vs 审定档: {len(list(flags.get('drift') or []))}; forecasts: {len(list(flags.get('forecast') or []))}"
+    )
     if args.md_only:
-        log_price_refresh(args.log_file, args.as_of, len(quotes), len(rows) + len(excluded), flags, args.output_md)
-        print(
-            f"refreshed {args.output_md} with {len(quotes)}/{len(rows) + len(excluded)} quotes; "
-            f"band-top: {'、'.join(flags['band_top']) if flags['band_top'] else '无'}; "
-            f"reentry: {'、'.join(flags['reentry']) if flags['reentry'] else '无'}; "
-            f"forecasts: {len(flags['forecast'])}"
-        )
+        log_price_refresh(args.log_file, args.as_of, len(quotes), len(rows), flags, args.output_md)
+        print(f"refreshed {args.output_md} with {len(quotes)}/{len(rows)} quotes; {summary}")
     else:
-        log_pool_decisions(
-            args.log_file,
-            rows + excluded,
-            args.as_of,
-            args.valuation,
-            args.tiers,
-            args.output_csv,
-            args.output_md,
-        )
-        print(
-            f"wrote {len(rows) + len(excluded)} pool rows ({len(excluded)} excluded-layer) to {args.output_csv}; "
-            f"band-top: {'、'.join(flags['band_top']) if flags['band_top'] else '无'}; "
-            f"reentry: {'、'.join(flags['reentry']) if flags['reentry'] else '无'}; "
-            f"forecasts: {len(flags['forecast'])}"
-        )
+        log_pool_decisions(args.log_file, rows, args.as_of, args.valuation, args.tiers, args.output_csv, args.output_md)
+        print(f"wrote {len(rows)} pool rows to {args.output_csv}; {summary}")
 
 
 if __name__ == "__main__":
