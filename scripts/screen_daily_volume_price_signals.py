@@ -218,7 +218,114 @@ def volume_percentile(rows: list[dict[str, float | str]], index: int, window: in
     return 100 * sum(1 for value in values if value <= current) / len(values)
 
 
-def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.5) -> dict[str, object]:
+# §6.2.1 矩阵末列 × §8.13：各组合所需最低右侧入场阶段（1=首信号 2=初步承接 3=趋势反转确认 4=突破确认）。
+STAGE_REQUIRED = {
+    ("L1", "低估"): 1,
+    ("L1", "较低估"): 2,
+    ("L1", "中性"): 3,
+    ("L1", "可接受较高估"): 4,
+    ("L2", "低估"): 2,
+    ("L2", "较低估"): 3,
+    ("L2", "中性"): 4,
+    ("L3", "低估"): 3,
+    ("L3", "较低估"): 3,
+    ("L4", "低估"): 4,
+}
+MEGACAP_MIN_YI = 2000.0  # §8.5.6 巨盘温和放量：总市值阈值（亿，2026-07-17 初始校准）。
+BAND_TOP_FLAG_TIERS = {"低估", "较低估", "中性"}  # §6.2.1.6 价格刷新降档适用的存档档位。
+
+
+def to_float(value: object) -> float | None:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+
+
+def volume_conditions(rows: list[dict[str, float | str]], index: int, megacap_yi: float | None = None) -> dict[str, object] | None:
+    """§8.5 六个有效放量条件在任意索引上的判定（供当日与 §8.7.8 历史窗复用）；指标不足返回 None。"""
+    row = rows[index]
+    vol_ma20 = float(row.get("vol_ma20") or 0.0)
+    if vol_ma20 <= 0 or index < 4:
+        return None
+    day_vol_ratio = float(row["volume"]) / vol_ma20
+    vol_3d_ratio = mean(float(item["volume"]) for item in rows[index - 2 : index + 1]) / vol_ma20
+    vol_5d_ratio = mean(float(item["volume"]) for item in rows[index - 4 : index + 1]) / vol_ma20
+    if index >= 59:
+        baseline = mean(float(item["volume"]) for item in rows[index - 59 : index - 19])
+        vol_5d_ratio_baseline = mean(float(item["volume"]) for item in rows[index - 4 : index + 1]) / baseline
+        baseline_days = sum(1 for item in rows[index - 4 : index + 1] if float(item["volume"]) > baseline * 1.2)
+    else:
+        vol_5d_ratio_baseline, baseline_days = 0.0, 0
+    vol_pct = volume_percentile(rows, index) or 0.0
+    ret_5d = pct_return(rows, index, 5) or 0.0
+
+    cond_single = day_vol_ratio >= 1.8
+    cond_multi = vol_3d_ratio >= 1.5 or vol_5d_ratio >= 1.4
+    cond_baseline = vol_5d_ratio_baseline >= 1.6 and baseline_days >= 3
+    cond_stacked = (
+        float(row.get("vol_ma5", 0.0)) > vol_ma20 > float(row.get("vol_ma60", math.inf))
+        and float(row.get("vol_ma5", 0.0)) / float(row.get("vol_ma60", math.inf)) >= 1.5
+    )
+    cond_percentile = vol_pct >= 80 and ret_5d > 0.03
+    # §8.5.6 巨盘温和放量（v1.02）：总市值>=2000亿且量比>=1.3（或3日>=1.25）且当日收涨；属真实量能命中。
+    cond_megacap = bool(
+        megacap_yi
+        and megacap_yi >= MEGACAP_MIN_YI
+        and float(row["pct_chg"]) > 0
+        and (day_vol_ratio >= 1.3 or vol_3d_ratio >= 1.25)
+    )
+    effective = cond_single or cond_multi or cond_baseline or cond_stacked or cond_percentile or cond_megacap
+    # v31 封顶只针对「仅 §8.5.5 分位」单独命中；§8.5.6 巨盘命中即不属仅分位（v1.02）。
+    percentile_only = cond_percentile and not (cond_single or cond_multi or cond_baseline or cond_stacked or cond_megacap)
+    return {
+        "day_vol_ratio": day_vol_ratio,
+        "vol_3d_ratio": vol_3d_ratio,
+        "vol_5d_ratio": vol_5d_ratio,
+        "vol_5d_ratio_baseline": vol_5d_ratio_baseline,
+        "vol_percentile": vol_pct,
+        "effective": effective,
+        "percentile_only": percentile_only,
+        "megacap": cond_megacap,
+    }
+
+
+def bottom_day_condition(rows: list[dict[str, float | str]], index: int, megacap_yi: float | None = None) -> bool:
+    """§8.7.8「当日」条件：有效放量 + 收涨>=3% + 收盘位置>=0.6。"""
+    conds = volume_conditions(rows, index, megacap_yi)
+    return bool(
+        conds
+        and conds["effective"]
+        and float(rows[index]["pct_chg"]) >= 3.0
+        and float(rows[index].get("close_location", 0.0)) >= 0.6
+    )
+
+
+def bottom_reversal_state(rows: list[dict[str, float | str]], index: int) -> bool:
+    """§8.7.8 前置状态：距250日最高收盘回撤>=25% 且（20日平台 或 V反已收复MA20）。"""
+    if index + 1 < 250:
+        return False
+    closes = [float(row["close"]) for row in rows[: index + 1]]
+    max250 = max(closes[-250:])
+    if max250 <= 0:
+        return False
+    platform = (
+        closes[-1] <= max250 * 0.75
+        and min(closes[-20:]) > min(closes[-60:-20])
+        and min(closes[-20:]) > 0
+        and max(closes[-20:]) / min(closes[-20:]) - 1 <= 0.15
+    )
+    ma20 = rows[index].get("ma20")
+    v_reversal = min(closes[-60:]) <= max250 * 0.75 and ma20 is not None and closes[-1] > float(ma20)
+    return platform or v_reversal
+
+
+def classify_signal(
+    rows: list[dict[str, float | str]],
+    limit_up_pct: float = 9.5,
+    cap_bn: float | None = None,
+    valuation_price: float | None = None,
+) -> dict[str, object]:
     add_indicators(rows)
     index = len(rows) - 1
     row = rows[index]
@@ -229,28 +336,22 @@ def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.
     ma20 = float(row["ma20"])
     ma60 = float(row["ma60"])
     vol_ma20 = float(row["vol_ma20"])
-    day_vol_ratio = float(row["volume"]) / vol_ma20
-    vol_3d_ratio = mean(float(item["volume"]) for item in rows[index - 2 : index + 1]) / vol_ma20
-    vol_5d_ratio = mean(float(item["volume"]) for item in rows[index - 4 : index + 1]) / vol_ma20
-    baseline = mean(float(item["volume"]) for item in rows[index - 59 : index - 19])
-    vol_5d_ratio_baseline = mean(float(item["volume"]) for item in rows[index - 4 : index + 1]) / baseline
-    baseline_days = sum(1 for item in rows[index - 4 : index + 1] if float(item["volume"]) > baseline * 1.2)
-    vol_percentile = volume_percentile(rows, index) or 0.0
+    # §8.5.6 输入：估值时点总市值（十亿）按现价/估值价折算为当前市值（亿）。
+    megacap_yi = cap_bn * 10.0 * close / valuation_price if cap_bn and valuation_price else None
+    conds = volume_conditions(rows, index, megacap_yi)
+    if conds is None:
+        return {"signal_state": "insufficient_price_history", "signals": []}
+    day_vol_ratio = float(conds["day_vol_ratio"])
+    vol_3d_ratio = float(conds["vol_3d_ratio"])
+    vol_5d_ratio = float(conds["vol_5d_ratio"])
+    vol_5d_ratio_baseline = float(conds["vol_5d_ratio_baseline"])
+    vol_percentile = float(conds["vol_percentile"])
     ret_5d = pct_return(rows, index, 5) or 0.0
     ret_20d = pct_return(rows, index, 20) or 0.0
     ret_60d = pct_return(rows, index, 60) or 0.0
-
-    cond_single = day_vol_ratio >= 1.8
-    cond_multi = vol_3d_ratio >= 1.5 or vol_5d_ratio >= 1.4
-    cond_baseline = vol_5d_ratio_baseline >= 1.6 and baseline_days >= 3
-    cond_stacked = (
-        float(row.get("vol_ma5", 0.0)) > vol_ma20 > float(row.get("vol_ma60", math.inf))
-        and float(row.get("vol_ma5", 0.0)) / float(row.get("vol_ma60", math.inf)) >= 1.5
-    )
-    cond_percentile = vol_percentile >= 80 and ret_5d > 0.03
-    effective_volume = cond_single or cond_multi or cond_baseline or cond_stacked or cond_percentile
-    # v31：有效放量仅由 §8.5 第 5 条（高分位放量）单独认定时，信号分级封顶「中」（低波动巨盘股分位易过 80 而无真实爆量）。
-    percentile_only_volume = cond_percentile and not (cond_single or cond_multi or cond_baseline or cond_stacked)
+    effective_volume = bool(conds["effective"])
+    # v31：有效放量仅由 §8.5 第 5 条（高分位放量）单独认定时，信号分级封顶「中」；§8.5.6 巨盘命中不属仅分位（v1.02）。
+    percentile_only_volume = bool(conds["percentile_only"])
 
     daily_bull = close > float(row.get("ma5", math.inf)) > float(row.get("ma10", math.inf)) > ma20 > ma60
     strong_daily_bull = daily_bull and ma60 > float(row.get("ma120", math.inf)) > float(row.get("ma250", math.inf))
@@ -305,6 +406,15 @@ def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.
     if effective_volume and float(row["pct_chg"]) > 0:
         signals.append("8.7.0 放量上涨")
 
+    # §8.7.8 底部/平台放量反转（v1.02）：持续下跌后的首个右侧事实；10日窗内第2次命中记「底部连续放量」。
+    bottom_state = bottom_reversal_state(rows, index)
+    bottom_today = bottom_state and bottom_day_condition(rows, index, megacap_yi)
+    bottom_consecutive = False
+    if bottom_today:
+        hits = sum(1 for j in range(max(60, index - 9), index + 1) if bottom_day_condition(rows, j, megacap_yi))
+        bottom_consecutive = hits >= 2
+        signals.append("8.7.8 底部连续放量" if bottom_consecutive else "8.7.8 底部/平台放量反转")
+
     overextended = close / ma20 - 1 > 0.25 or ret_5d > 0.30 or ret_20d > 0.60
     if overextended:
         signal_state = "wait_pullback"
@@ -349,6 +459,30 @@ def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.
     else:
         signal_grade = ""
 
+    # §8.13 入场阶段（当日口径，与分级正交）：1首信号 2初步承接 3趋势反转确认 4突破确认；高段覆盖低段。
+    entry_stage = 0
+    if signals:
+        if bottom_today:
+            entry_stage = 2 if bottom_consecutive else 1
+        elif bottom_state and effective_volume and float(row["pct_chg"]) > 0:
+            # 一段后 3 个交易日内不破启动阳线低点且再度有效放量收涨 → 二段。
+            for j in range(max(4, index - 3), index):
+                if bottom_day_condition(rows, j, megacap_yi) and min(
+                    float(rows[k]["low"]) for k in range(j, index + 1)
+                ) >= float(rows[j]["low"]):
+                    entry_stage = 2
+                    break
+        three_up = (
+            index >= 3
+            and all(float(rows[index - k]["pct_chg"]) > 0 for k in range(3))
+            and vol_3d_ratio >= 1.5
+        )
+        if three_up or ((daily_bull or quasi_bull) and float(row["pct_chg"]) > 0):
+            entry_stage = max(entry_stage, 3)  # 连续3日放量上涨，或 多头/准多头+当日信号（≈分级中及以上）
+        breakout_confirm_shape = any(sig.startswith(("8.7.1", "8.7.2")) for sig in signals)
+        if (daily_bull or quasi_bull) and breakout_confirm_shape and not percentile_only_volume:
+            entry_stage = 4  # 8.7.6 二次确认与 8.7.7 相对强度仍属人工补判项
+
     return {
         "trade_date": row["date"],
         "close": close,
@@ -387,6 +521,9 @@ def classify_signal(rows: list[dict[str, float | str]], limit_up_pct: float = 9.
         "action_bias": action_bias,
         "signal_grade": signal_grade,
         "trend_strength": trend_strength,
+        "entry_stage": entry_stage,
+        "megacap_volume": bool(conds["megacap"]),
+        "market_cap_now_yi": megacap_yi or "",
     }
 
 
@@ -433,16 +570,22 @@ def assign_priority(row: dict[str, object]) -> str:
         return "A"
     if quality_tier in {"L1", "L2"} and valuation_tier == "可接受较高估":
         return "B"
+    if quality_tier == "L4":
+        return "D"
     return "C"
 
 
 def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, object]:
     code = pool_row["security_code"].zfill(6)
+    cap_bn = to_float(pool_row.get("total_market_cap_bn"))
+    val_price = to_float(pool_row.get("valuation_price"))
     try:
         kline_url, price_rows = fetch_daily_rows(code, pool_row.get("exchange", ""), as_of, timeout)
         if not price_rows:
             raise RuntimeError("empty kline response")
-        signal = classify_signal(price_rows, limit_up_threshold_pct(code, pool_row.get("security_name", "")))
+        signal = classify_signal(
+            price_rows, limit_up_threshold_pct(code, pool_row.get("security_name", "")), cap_bn, val_price
+        )
     except Exception as exc:  # noqa: BLE001 - data-provider failures should not abort the batch.
         kline_url = ""
         signal = {
@@ -455,10 +598,37 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, 
         }
     signal.update(pool_row)
     signal["security_code"] = code
-    # v20 §8.9 watch_only 仅观察层：信号可见但不可买。
+
+    # §6.2.1.6 档位价格一致性刷新 + 带内位置（v1.02）：升破带顶按可接受较高估口径待复核；跌破带底只提示。
+    close = to_float(signal.get("close"))
+    fair_low = to_float(pool_row.get("fair_price_low"))
+    fair_high = to_float(pool_row.get("fair_price_high"))
+    stored_tier = pool_row.get("valuation_tier", "")
+    band_position, effective_tier, band_top_flag = "", stored_tier, False
+    if close and fair_low and fair_high:
+        if close > fair_high:
+            band_position = f"越带顶+{(close / fair_high - 1) * 100:.0f}%"
+            if stored_tier in BAND_TOP_FLAG_TIERS:
+                effective_tier = "可接受较高估(待复核)"
+                band_top_flag = True
+        elif close < fair_low:
+            band_position = f"低于带底-{(1 - close / fair_low) * 100:.0f}%"
+        else:
+            pos = (close - fair_low) / (fair_high - fair_low) * 100 if fair_high > fair_low else 0.0
+            band_position = f"带内{pos:.0f}%"
+    signal["band_position"] = band_position
+    signal["valuation_tier_effective"] = effective_tier
+    signal["band_top_flag"] = band_top_flag
+    # §8.13 所需入场阶段：越带待复核或 watch_only 组合无常备资格 → 留空（不可买）。
+    if band_top_flag or pool_row.get("pool_layer") == "watch_only":
+        signal["stage_required"] = ""
+    else:
+        signal["stage_required"] = STAGE_REQUIRED.get((pool_row.get("quality_tier", ""), stored_tier), "")
+
+    # v20 §8.9 watch_only 仅观察层：信号可见但不可买（v1.02 事件通道已关闭，无当日直买例外）。
     if pool_row.get("pool_layer") == "watch_only" and signal.get("signal_state") == "buy_candidate":
         signal["signal_state"] = "signal_watch_only"
-        signal["action_bias"] = "池外信号：24小时异动响应+事件复核（默认不可买；L2×可接受较高估/L3×中性强信号可核对§6.2.1事件通道）"
+        signal["action_bias"] = "池内可见不可买：24小时异动响应+§7.4事件复核（v1.02 事件通道已关闭）"
     signal["priority"] = assign_priority(signal)
     signal["data_source"] = kline_url
     signal["screened_at_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -556,6 +726,26 @@ def main() -> None:
         # §8.12：弱势市场下各信号分级的操作偏向下调一档。
         if market_state == "弱势" and row.get("signal_state") == "buy_candidate":
             row["action_bias"] = "可小仓试探或等确认" if row.get("signal_grade") == "强" else "等确认"
+        # §8.13 入场阶段判定：弱势市场所需阶段整体上调一段；未达段位的候选只等不买。
+        required = row.get("stage_required")
+        if isinstance(required, int) and market_state == "弱势":
+            required += 1
+            row["stage_required"] = required
+        stage = row.get("entry_stage") if isinstance(row.get("entry_stage"), int) else 0
+        if row.get("signal_state") == "buy_candidate":
+            if isinstance(required, int):
+                if required > 4:
+                    row["stage_met"] = False
+                    row["action_bias"] = "弱势市需8.7.6平台二次确认（人工判定）"
+                elif stage >= required:
+                    row["stage_met"] = True
+                else:
+                    row["stage_met"] = False
+                    row["action_bias"] = f"等入场阶段（已{stage}段/需{required}段）"
+            else:
+                row["stage_met"] = False
+                if row.get("band_top_flag"):
+                    row["action_bias"] = "越带顶待复核（§7.4.7），复核前失去常备买入资格"
         # §7.5/§11.9 复核期买入冻结：有信号也不列买入候选。
         if blocked and row.get("signal_state") == "buy_candidate" and str(row.get("security_code", "")).zfill(6) in blocked:
             row["signal_state"] = "buy_blocked_review_pending"
@@ -569,11 +759,20 @@ def main() -> None:
         "quality_tier_label",
         "pool_layer",
         "valuation_tier",
+        "valuation_tier_effective",
+        "band_position",
+        "band_top_flag",
         "strategy_tag",
+        "total_market_cap_bn",
+        "market_cap_now_yi",
         "signal_state",
         "priority",
         "action_bias",
         "signal_grade",
+        "entry_stage",
+        "stage_required",
+        "stage_met",
+        "megacap_volume",
         "trend_strength",
         "market_state",
         "signals",

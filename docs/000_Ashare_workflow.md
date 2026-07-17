@@ -44,8 +44,8 @@
 | `data/processed/a_share_attention_triage.csv` | A股第一轮三类初筛结果：值得关注公司、临界待定公司、垃圾公司 |
 | `data/processed/a_share_watchlist_quality_tiers.csv` | A股值得关注公司质量分层结构化结果 |
 | `data/processed/000_a_share_watchlist_quality_tiers.md` | A股值得关注公司质量分层阅读版 |
-| `data/processed/a_share_core_valuation_pool.csv` | L1/L2核心质量公司估值合格池 |
-| `data/processed/000_a_share_core_valuation_pool.md` | L1-L4全量估值结论阅读版：可买层（core/tactical）+watch_only仅观察层+文末高估/无法估值排除名单 |
+| `data/processed/a_share_core_valuation_pool.csv` | L1-L4 估值合格池机器口径（§6.2.1 矩阵物化，含 `pool_layer` 与 `total_market_cap_bn`） |
+| `data/processed/000_a_share_core_valuation_pool.md` | L1-L4全量估值结论阅读版：每日扫描时按行情快照刷新 现价/带位/空间/PE/PB（§6.7.7），越带顶行估值列打 `*` 待复核；不单列"层"（可买资格由质量×估值按 §6.2.1 判定）；文末附高估/无法估值排除名单（同口径展示） |
 | `data/processed/daily_buy_candidates.csv` | 每日量价触发后的买入候选 |
 | `data/processed/pretrade_decisions.csv` | 买入前结构化闸门记录（§10）：每次买入决策一行，15 项清单齐备且通过才允许建仓；建仓后须回写持仓清单并在决策日志记 `execution_record` |
 | `data/processed/a_share_holdings.csv` | 当前真实持仓清单，手工维护，作为每日卖出扫描输入 |
@@ -697,6 +697,9 @@ python3 scripts/build_a_share_core_valuation_pool.py \
   --output-md data/processed/000_a_share_core_valuation_pool.md \
   --log-file data/processed/a_share_workflow_decision_log.csv \
   --as-of YYYY-MM-DD
+
+# 每日现价刷新（§9.1 步骤 2 扫描后执行）：只重渲染 MD，不动池 CSV、不逐股写池结论
+python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --as-of YYYY-MM-DD
 ```
 
 要求：
@@ -706,7 +709,8 @@ python3 scripts/build_a_share_core_valuation_pool.py \
 3. 每个纳入核心估值合格池的结论都要写入结论日志。
 4. 估值表若含 `valuation_reviewed_at` 字段，物化时原样透传到池文件；`pool_as_of` 只表示物化日，不得当作估值复核日使用（§7.3 复核触发以 `valuation_reviewed_at` 为准，缺失时才回退 `pool_as_of`）。
 5. 未过准入矩阵但估值为低估/较低估/中性/可接受较高估的 L1-L4 公司，输出 `pool_layer = watch_only` 仅观察层（v20）：进入每日扫描可见范围，不具备买入资格；watch_only 行日志 `decision_type = scan_watch_only`。
-6. `fair_price_low`/`fair_price_high`/`fair_price_basis` 原样透传到池文件；阅读版 MD 对每只股票（含排除名单）展示合理价区间与空间（区间中值相对估值价的涨跌幅），不得只列当前股价。
+6. `fair_price_low`/`fair_price_high`/`fair_price_basis` 与 `total_market_cap_bn`（§8.5.6 巨盘条件输入，十亿口径）原样透传到池 CSV。阅读版 MD 不单列"层"（可买资格由质量×估值按 §6.2.1 判定），每行展示：估值价、现价、合理价区间、带位（现价在带内位置 / ↑越带顶 / ↓低于带底）、空间（区间中值相对现价的涨跌幅）与现价口径 PE(TTM)/PB；排除名单同口径展示。
+7. 现价刷新（v1.03）：`--quotes fetch` 经 `scripts/a_share_quotes.py` 拉取腾讯批量行情快照；`--md-only` 供每日扫描调用——只重渲染 MD 并写一行 `pool_price_refresh` 汇总日志（含越带顶名单），不重写池 CSV、不逐股重写池结论。现价升破带顶的行在估值列打 `*`（§6.2.1.6）并触发 §7.4.7 express 复核；现价缺失（停牌/请求失败）的行沿用估值时点值。
 
 ## 7. 阶段三：财报披露后的滚动更新
 
@@ -1048,7 +1052,7 @@ ST股票：涨幅 >= 4.5%
 
 分级与阶段的关系：本形态成立当日短期趋势通常未转多，按三层分级规则多评"弱/中"；但其对 §8.13 入场阶段的贡献独立于分级——单次成立即达一段，底部连续放量即达二段。参数（回撤 25%、振幅 15%、涨幅 3%、10 日窗口）为 2026-07-17 初始校准，按 §12 回放与 §12.6 台账修订。
 
-**脚本实现范围**：8.7.0 放量上涨、8.7.1、8.7.2、8.7.3、8.7.4、8.7.5 由 `screen_daily_volume_price_signals.py` 判定；8.7.6 平台二次确认、8.7.7 相对强度确认与 8.7.8 底部/平台放量反转需要突破历史状态、行业指数或回撤/平台状态数据，暂由人工/大模型在 §10 核对时判定，脚本未实现（§8.5 第 6 条巨盘条件与带内位置列同样待脚本同步，实现前扫描时人工补判）。
+**脚本实现范围（v1.03 同步）**：8.7.0 放量上涨、8.7.1-8.7.5、8.7.8 底部/平台放量反转（含底部连续放量）、§8.5 全部量能条件（含第 6 条巨盘温和放量，总市值=池 CSV `total_market_cap_bn` 按现价折算）、§8.13 入场阶段（`entry_stage`/`stage_required`/`stage_met`，弱势市 +1 段）与 §6.2.1.6 档位价格刷新（`valuation_tier_effective`/`band_position`/`band_top_flag`）均由 `screen_daily_volume_price_signals.py` 判定；8.7.6 平台二次确认与 8.7.7 相对强度确认需要突破历史状态与行业指数数据，仍由人工/大模型在 §10 核对时判定。
 
 ### 8.8 过度延伸过滤
 
@@ -1147,7 +1151,7 @@ watch_only 层不参与 S/A/B/C/D 定级与 §8.11 强势跟踪；`signal_watch_
 用户发起"当日的每日扫描"时按固定顺序执行——**先持仓、后池**：
 
 1. **持仓健康度**：运行 `scan_holdings_sell_signals.py --as-of 当日`（读取账户快照），按 §14 状态字与 §9.2 红黄绿映射汇总每只持仓的健康度、当日量价特征与需要的动作。
-2. **池内关注对象**：运行 `screen_daily_volume_price_signals.py --as-of 当日 --review-queue data/interim/a_share_report_update_queue.csv`，从输出中筛选 `buy_candidate`（按 §8.10 优先级 × §8.7 信号分级排序，标注 §8.13 入场阶段与带内位置）与 `signal_watch_only`，逐只写出关注原因。**候选判定纯量价×档位口径（v1.02）**：账户杠杆、仓位包络、资金状态、既有持仓结构一律不参与候选的判定、分级、阶段与排序；执行侧约束（包络、棘轮、买入时间窗）只在 §10 闸门与下单环节核对，扫描第二节不得出现基于账户状态的冻结、降序或"仅记录不执行"结论。
+2. **池内关注对象**：运行 `screen_daily_volume_price_signals.py --as-of 当日 --review-queue data/interim/a_share_report_update_queue.csv`，从输出中筛选 `buy_candidate`（按 §8.10 优先级 × §8.7 信号分级排序，标注 §8.13 入场阶段与带内位置）与 `signal_watch_only`，逐只写出关注原因。随后运行 `build_a_share_core_valuation_pool.py --md-only --quotes fetch --as-of 当日` 刷新池阅读版的现价/带位/空间/PE/PB 与越带顶 `*` 标记（§6.7.7）；刷新汇总里的越带顶名单进入 §7.4.7 复核队列。**候选判定纯量价×档位口径（v1.02）**：账户杠杆、仓位包络、资金状态、既有持仓结构一律不参与候选的判定、分级、阶段与排序；执行侧约束（包络、棘轮、买入时间窗）只在 §10 闸门与下单环节核对，扫描第二节不得出现基于账户状态的冻结、降序或"仅记录不执行"结论。
 3. **输出**：按 §9.2 格式先以回复形式给出，再将同一内容置顶写入 §9.4 扫描日志。两张 CSV 与决策日志照常由脚本生成（v25 起脚本不再生成独立 tracker 阅读版）；扫描日志是唯一每日阅读文件，不替代机器记录。
 4. **盘中口径（未收盘发起时）**：
    - 头部标注"盘中截至HH:MM"；当日 bar 为未完成 bar，"收盘价"实为最新价。
@@ -1196,7 +1200,7 @@ watch_only 层不参与 S/A/B/C/D 定级与 §8.11 强势跟踪；`signal_watch_
 
 原量价/持仓两份 tracker 阅读版自 v25 退役，脚本只写 CSV 与决策日志；逐股全量明细以两张每日 CSV 为准：
 
-- `daily_buy_candidates.csv`：池内全部扫描对象逐行，含 `signal_state`、`priority`、`signal_grade`、`action_bias`、`market_state` 与全部量价指标（§8.4）；`wait_*`、`inactive_watch`、`liquidity_filtered` 等非触发状态只留在 CSV，不进扫描日志。
+- `daily_buy_candidates.csv`：池内全部扫描对象逐行，含 `signal_state`、`priority`、`signal_grade`、`entry_stage`/`stage_required`/`stage_met`（§8.13）、`valuation_tier_effective`/`band_position`/`band_top_flag`（§6.2.1.6 价格刷新）、`megacap_volume`（§8.5.6）、`action_bias`、`market_state` 与全部量价指标（§8.4）；`wait_*`、`inactive_watch`、`liquidity_filtered` 等非触发状态只留在 CSV，不进扫描日志。
 - `daily_holdings_actions.csv`：每只持仓逐行，含 `holdings_action`、趋势保护判定、盈利离场资格、割肉价上调建议、权重与单笔风险、估值档位刷新。
 
 扫描日志（§9.2）中对信号分级强/中的买入候选与触发动作的持仓，按下列要点行展开；弱级与无触发标的只汇总只数，不逐股展开：
@@ -1633,4 +1637,4 @@ Tier-2 软信号按矩阵处理（锁定期内只上调割肉价与风险预警�
 
 ## 16. 版本记录
 
-版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.02**（2026-07-17，赔率闸门退役、重仓/轻仓二档、事件通道关闭、分段右侧入场、单票本地台账）。
+版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.03**（2026-07-17，池阅读版每日现价刷新去层列、扫描脚本落地 8.5.6/8.7.8/入场阶段/价格刷新）。
