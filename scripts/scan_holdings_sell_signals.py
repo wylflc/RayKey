@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Scan A-share holdings for stop-loss, lockup, profit-exit, and stop-raise actions.
+"""Scan A-share holdings for stop-loss, lockup, profit-exit, and trend actions.
 
 Deterministic part of operation-workflow Stage 5: stop-loss hit, lockup, trend
-protection tiers, profit-exit ceilings, stop-raise suggestions, valuation-tier
-refresh against the core pool, account drawdown/leverage alerts from the account
-snapshot, and the 1.5% single-trade risk check. It does NOT decide exit-matrix
-Tier-1 hard falsification (veto / sudden event / severe quarterly miss /
-verified structural thesis break); those are left to model judgment per the
-workflow's script/LLM split (§14).
+protection tiers, profit-exit ceilings, valuation-tier refresh against the core
+pool, account drawdown/leverage alerts from the account snapshot, and the 1.5%
+single-trade risk check. Stop prices are user-set at entry and never adjusted or
+suggested by the system (v1.11). It does NOT decide exit-matrix Tier-1 hard
+falsification (veto / sudden event / severe quarterly miss / verified structural
+thesis break); those are left to model judgment per the workflow's script/LLM
+split (§14).
 """
 
 from __future__ import annotations
@@ -254,7 +255,6 @@ def classify_holding(
                        "data_source": "", "scanned_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")})
         return result
 
-    ma120 = moving_average(closes, 120)
     ma60 = moving_average(closes, 60)
     profit_pct = (close / cost - 1) if cost else None
     entry = row.get("entry_date", "").strip()
@@ -264,10 +264,6 @@ def classify_holding(
     position_value = (current_shares or 0.0) * close
     ceiling = profit_ladder_ceiling(profit_pct) if profit_pct is not None else 0.0
     additional_trim_pct = max(0.0, ceiling * 100 - cumulative_trim)
-
-    # Stop-raise suggestion: only up, and never above MA120.
-    raise_stop = bool(stop is not None and ma120 is not None and ma120 > stop and close > stop * 1.1)
-    suggested_stop = round(ma120, 2) if raise_stop else ""
 
     # 趋势保护线（§14 v12）：三档统一日线判定——连续N日收盘低于保护线，且最新收盘距线跌幅>X%。
     level = trend_protection_level(row)
@@ -295,7 +291,7 @@ def classify_holding(
     elif lockup_active:
         action, reason = "hold", f"持有约 {months_held} 个月 (<{LOCKUP_MONTHS})，锁定期内仅持有"
         if trend_break:
-            reason += f"；趋势保护线({level})已破位，锁定期内不出卖出建议，建议复核并上调割肉价"
+            reason += f"；趋势保护线({level})已破位，锁定期内不出卖出建议，只作风险预警"
     elif trend_break:
         action = trend_actions[level]
         reason = (
@@ -319,9 +315,6 @@ def classify_holding(
             "stop_loss_price": stop if stop is not None else "",
             "stop_hit": bool(stop is not None and close <= stop),
             "ma60": round(ma60, 3) if ma60 is not None else "",
-            "ma120": round(ma120, 3) if ma120 is not None else "",
-            "raise_stop_suggested": raise_stop,
-            "suggested_stop_price": suggested_stop,
             "trend_protection_level": level,
             "trend_line_value": round(trend_line, 3) if trend_line is not None else "",
             "trend_ref_close": round(trend_ref, 3) if trend_ref is not None else "",
@@ -461,7 +454,7 @@ FIELDNAMES = [
     "as_of", "security_code", "security_name", "strategy_tag", "quality_tier", "valuation_tier",
     "position_status", "pool_valuation_tier", "valuation_alert",
     "entry_date", "months_held", "lockup_active", "cost_basis", "close", "profit_pct",
-    "stop_loss_price", "stop_hit", "ma60", "ma120", "raise_stop_suggested", "suggested_stop_price",
+    "stop_loss_price", "stop_hit", "ma60",
     "trend_protection_level", "trend_line_value", "trend_ref_close", "trend_break",
     "initial_shares", "current_shares", "cumulative_trim_pct", "profit_trim_ceiling_pct",
     "additional_trim_pct_allowed", "position_value", "current_weight_pct", "weight_over_limit",
