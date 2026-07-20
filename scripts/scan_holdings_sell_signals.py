@@ -21,6 +21,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+from a_share_quotes import quote_symbol
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 
 
@@ -31,6 +32,9 @@ DEFAULT_ACCOUNT_SNAPSHOT = ROOT / "data/processed/portfolio_account_snapshot.csv
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_holdings_actions.csv"
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
+# 统一走腾讯 newfqkline（与 screen_daily_volume_price_signals.py 同口径）：同构覆盖 sh/sz/bj，
+# 且为北交所唯一可用历史K线源；旧 web.ifzq 端点批量易限流且 qfq 序列收盘后滞后无补齐。
+TENCENT_KLINE = "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
 
 BASE_BUILD_AMOUNT = 250_000  # 25 万元
 # Cumulative sell ceiling (fraction of initial_shares) by profit level.
@@ -98,6 +102,9 @@ def infer_secid(code: str, exchange: str) -> str:
 
 
 def fetch_daily(code: str, exchange: str, as_of: str, timeout: float) -> tuple[str, list[str], list[float]]:
+    # 北交所（92/43/83/87 前缀）：东财K线无数据，直接走腾讯 newfqkline。
+    if quote_symbol(code, exchange).startswith("bj"):
+        return fetch_daily_tencent(code, exchange, as_of, timeout)
     query = urllib.parse.urlencode(
         {
             "secid": infer_secid(code, exchange),
@@ -118,23 +125,41 @@ def fetch_daily(code: str, exchange: str, as_of: str, timeout: float) -> tuple[s
     except OSError:
         return fetch_daily_tencent(code, exchange, as_of, timeout)
     klines = (payload.get("data") or {}).get("klines") or []
+    if not klines:
+        return fetch_daily_tencent(code, exchange, as_of, timeout)
     dates = [line.split(",")[0] for line in klines]
     closes = [float(line.split(",")[2]) for line in klines]
     return url, dates, closes
 
 
 def fetch_daily_tencent(code: str, exchange: str, as_of: str, timeout: float) -> tuple[str, list[str], list[float]]:
-    """后备源：腾讯前复权日线（与 screen_daily_volume_price_signals.py 同口径，v20）。"""
-    symbol = ("sh" if infer_secid(code, exchange).startswith("1.") else "sz") + code.zfill(6)
+    """后备源：腾讯前复权日线（与 screen_daily_volume_price_signals.py 同口径，走 newfqkline）。"""
+    symbol = quote_symbol(code, exchange)
     param = f"{symbol},day,2020-01-01,{as_of},1000,qfq"
-    url = f"https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={param}"
+    url = f"{TENCENT_KLINE}?param={param}"
     request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"})
     with urllib.request.urlopen(request, timeout=timeout) as response:
         payload = json.loads(response.read().decode("utf-8", "ignore"))
     data = (payload.get("data") or {}).get(symbol) or {}
     klines = data.get("qfqday") or data.get("day") or []
-    dates = [row[0] for row in klines]
+    dates = [str(row[0]) for row in klines]
     closes = [float(row[2]) for row in klines]
+    # 腾讯前复权序列收盘后可能滞后一个交易日：用不复权序列补齐最新K线（最新bar的qfq值=不复权值）。
+    if dates and dates[-1] < as_of:
+        raw_url = f"{TENCENT_KLINE}?param={symbol},day,{dates[-1]},{as_of},10,"
+        raw_request = urllib.request.Request(
+            raw_url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"}
+        )
+        try:
+            with urllib.request.urlopen(raw_request, timeout=timeout) as response:
+                raw_data = (json.loads(response.read().decode("utf-8", "ignore")).get("data") or {}).get(symbol) or {}
+        except OSError:
+            raw_data = {}
+        for parts in raw_data.get("day") or []:
+            if str(parts[0]) > dates[-1]:
+                dates.append(str(parts[0]))
+                closes.append(float(parts[2]))
+        url = f"{url};{raw_url}"
     return url, dates, closes
 
 
