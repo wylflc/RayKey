@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Scan A-share holdings for stop-loss, lockup, profit-exit, and trend actions.
+"""Scan A-share holdings for stop-loss, valuation-sell, and trend-sell actions.
 
-Deterministic part of operation-workflow Stage 5: stop-loss hit, lockup, trend
-protection tiers, profit-exit ceilings, valuation-tier refresh against the core
-pool, account drawdown/leverage alerts from the account snapshot, and the 1.5%
+Deterministic part of operation-workflow Stage 5 (§14 卖出许可, v1.12): stop-loss
+hit (Tier-0), valuation-sell eligibility (effective tier 较高估/高估 per §6.2.1.6
+computed from the pool's fair band, with the keep-floor amount = position value
+minus build_amount_cny), major-trend deterioration (close below MA60/MA120 —
+a sell PERMISSION, not an order), valuation-tier refresh against the core pool,
+account drawdown/leverage alerts from the account snapshot, and the 1.5%
 single-trade risk check. Stop prices are user-set at entry and never adjusted or
-suggested by the system (v1.11). It does NOT decide exit-matrix Tier-1 hard
+suggested by the system (v1.11). Lockup, profit ladders, and the three-tier
+trend-protection lines are retired (v1.12). It does NOT decide hard
 falsification (veto / sudden event / severe quarterly miss / verified structural
 thesis break); those are left to model judgment per the workflow's script/LLM
 split (§14).
@@ -38,19 +42,16 @@ EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 TENCENT_KLINE = "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
 
 BASE_BUILD_AMOUNT = 250_000  # 25 万元
-# Cumulative sell ceiling (fraction of initial_shares) by profit level.
-PROFIT_LADDER = ((2.0, 0.50), (1.0, 0.35), (0.5, 0.20), (0.3, 0.10))
-LOCKUP_MONTHS = 3
 SINGLE_STOCK_WEIGHT_LIMIT = 0.30
 SINGLE_TRADE_RISK_LIMIT = 0.015  # 个人体系 §13.2：仓位比例×止损距离 <= 净资产 1.5%
 # 个人体系 §13.1 回撤预算：自净值峰值 -8% 去杠杆 / -12% 黄色 / -20% 红色。
 DRAWDOWN_TIERS = ((0.20, "红色警告"), (0.12, "黄色警告"), (0.08, "去杠杆"))
-# §14 趋势保护线（v12 全部日线化）：档位 -> (均线窗口, 连续N日, 缓冲X)。
-TREND_PARAMS = {
-    "daily": (60, 3, 0.03),
-    "weekly": (150, 5, 0.03),
-    "monthly": (250, 10, 0.05),
-}
+# §6.2.1.6 价格自动定档（估值卖出资格用）：带顶 1.2 倍以上=高估；带底以下按空间分低估/较低估。
+OVERVALUED_MULT = 1.2
+DEEP_UNDERVALUED_SPACE = 0.40
+VALUATION_SELL_TIERS = {"较高估", "高估"}
+# §14 大趋势走坏（v1.12）：收盘跌破 MA60/MA120 即触发趋势卖出许可。
+TREND_WINDOWS = (60, 120)
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -170,32 +171,6 @@ def moving_average(closes: list[float], window: int) -> float | None:
     return sum(closes[-window:]) / window
 
 
-def rolling_ma(closes: list[float], window: int, back: int = 0) -> float | None:
-    """MA over `window` values ending `back` bars before the last bar."""
-    end = len(closes) - back
-    if end < window:
-        return None
-    return sum(closes[end - window : end]) / window
-
-
-def trend_protection_level(row: dict[str, str]) -> str:
-    """趋势保护线档位：显式列优先，否则按 strategy_tag 映射（A/F/G→monthly，B/C/D/E→weekly）。"""
-    level = (row.get("trend_protection_level") or "").strip().lower()
-    if level in {"daily", "weekly", "monthly"}:
-        return level
-    tag = (row.get("strategy_tag") or "").strip().upper()[:1]
-    if tag in {"A", "F", "G"}:
-        return "monthly"
-    return "weekly"
-
-
-def months_between(start: date, end: date) -> int:
-    months = (end.year - start.year) * 12 + (end.month - start.month)
-    if end.day < start.day:
-        months -= 1
-    return months
-
-
 def current_build_amount(total_assets: float) -> int:
     build = BASE_BUILD_AMOUNT
     while total_assets >= build * 20:
@@ -203,11 +178,19 @@ def current_build_amount(total_assets: float) -> int:
     return build
 
 
-def profit_ladder_ceiling(profit_pct: float) -> float:
-    for threshold, ceiling in PROFIT_LADDER:
-        if profit_pct >= threshold:
-            return ceiling
-    return 0.0
+def effective_valuation_tier(close: float, band_low: float | None, band_high: float | None) -> str:
+    """§6.2.1.6 价格自动定档；无带（无法估值/出池）返回空串，不自动定档。"""
+    if not band_low or not band_high or band_low <= 0 or band_high <= 0:
+        return ""
+    if close > band_high * OVERVALUED_MULT:
+        return "高估"
+    if close > band_high:
+        return "较高估"
+    if close >= band_low:
+        return "中性"
+    mid = (band_low + band_high) / 2
+    space = mid / close - 1
+    return "低估" if space >= DEEP_UNDERVALUED_SPACE else "较低估"
 
 
 def classify_holding(
@@ -218,6 +201,8 @@ def classify_holding(
     result["security_code"] = code
 
     # §14 持仓估值档位刷新：对照最新核心池；池不可用时标注未刷新。
+    band_low: float | None = None
+    band_high: float | None = None
     if pool is None:
         result["pool_valuation_tier"] = ""
         result["valuation_alert"] = "估值池文件缺失，未刷新档位"
@@ -227,6 +212,8 @@ def classify_holding(
             result["pool_valuation_tier"] = "不在核心估值合格池"
             result["valuation_alert"] = "已出池（高估/无法估值/降档），按§14风险预警5复核"
         else:
+            band_low = to_float(pool_row.get("fair_price_low"))
+            band_high = to_float(pool_row.get("fair_price_high"))
             pool_tier = pool_row.get("valuation_tier", "")
             result["pool_valuation_tier"] = pool_tier
             held_tier = (row.get("valuation_tier") or "").strip()
@@ -239,6 +226,7 @@ def classify_holding(
 
     cost = to_float(row.get("cost_basis"))
     stop = to_float(row.get("stop_loss_price"))
+    build_amount = to_float(row.get("build_amount_cny")) or 0.0
     initial_shares = to_float(row.get("initial_shares")) or 0.0
     current_shares = to_float(row.get("current_shares"))
     if current_shares is None:
@@ -256,53 +244,38 @@ def classify_holding(
         return result
 
     ma60 = moving_average(closes, 60)
+    ma120 = moving_average(closes, 120)
     profit_pct = (close / cost - 1) if cost else None
-    entry = row.get("entry_date", "").strip()
-    months_held = months_between(date.fromisoformat(entry), as_of) if entry else None
-    lockup_active = months_held is not None and months_held < LOCKUP_MONTHS
-
     position_value = (current_shares or 0.0) * close
-    ceiling = profit_ladder_ceiling(profit_pct) if profit_pct is not None else 0.0
-    additional_trim_pct = max(0.0, ceiling * 100 - cumulative_trim)
 
-    # 趋势保护线（§14 v12）：三档统一日线判定——连续N日收盘低于保护线，且最新收盘距线跌幅>X%。
-    level = trend_protection_level(row)
-    window, confirm_days, buffer_pct = TREND_PARAMS[level]
-    trend_break = False
-    trend_line = rolling_ma(closes, window)
-    trend_ref: float | None = None
-    if trend_line is not None and len(closes) >= window + confirm_days:
-        below_n = all(
-            closes[-i] < (rolling_ma(closes, window, i - 1) or float("inf"))
-            for i in range(1, confirm_days + 1)
-        )
-        trend_break = below_n and close < trend_line * (1 - buffer_pct)
-        trend_ref = close
+    # §14 大趋势走坏（v1.12）：收盘跌破 MA60/MA120 即触发趋势卖出许可（许可非指令）。
+    broken = [f"MA{w}" for w, ma in zip(TREND_WINDOWS, (ma60, ma120)) if ma is not None and close < ma]
+    trend_deterioration = "跌破" + "+".join(broken) if broken else ""
 
-    trend_actions = {
-        "daily": "trend_exit_suggested",
-        "weekly": "trend_reduce_half_suggested",
-        "monthly": "trend_downgrade_suggested",
-    }
+    # §14 估值卖出资格（v1.12）：现档较高估/高估，可卖金额=市值−建仓金额（留底原则）。
+    eff_tier = effective_valuation_tier(close, band_low, band_high)
+    valuation_sell = eff_tier in VALUATION_SELL_TIERS
+    valuation_sell_amount = max(0.0, position_value - build_amount) if valuation_sell and build_amount else 0.0
 
     # Deterministic action priority (forced_exit is decided by the model, not here).
     if stop is not None and close <= stop:
-        action, reason = "stop_loss_sell", f"现价 {close} <= 割肉价 {stop}，无条件清仓"
-    elif lockup_active:
-        action, reason = "hold", f"持有约 {months_held} 个月 (<{LOCKUP_MONTHS})，锁定期内仅持有"
-        if trend_break:
-            reason += f"；趋势保护线({level})已破位，锁定期内不出卖出建议，只作风险预警"
-    elif trend_break:
-        action = trend_actions[level]
-        reason = (
-            f"趋势保护线({level}=MA{window})破位：连续{confirm_days}日收盘低于线且距线>{buffer_pct:.0%}，"
-            f"现收盘 {trend_ref} < 保护线 {round(trend_line, 3)}，按分档动作复核（战术退出/减半/降档），非自动卖出"
+        action, reason = "stop_loss_sell", f"现价 {close} <= 割肉价 {stop}，无条件清仓（当日/次日执行）"
+    elif broken:
+        action = "trend_sell_allowed"
+        detail = "、".join(
+            f"{name}≈{round(ma, 2)}" for name, ma in zip(("MA60", "MA120"), (ma60, ma120)) if ma is not None
         )
-    elif profit_pct is not None and profit_pct > 0 and additional_trim_pct > 0:
-        action = "trim_eligible"
-        reason = f"持有>{LOCKUP_MONTHS}月且浮盈 {profit_pct:.0%}，允许累计卖出上限 {ceiling:.0%}，本次最多再卖 {additional_trim_pct:.0f}% 初始仓"
+        reason = f"大趋势走坏：收盘 {close} {trend_deterioration}（{detail}），允许减仓乃至清仓（许可非指令，人工核对后执行）"
+        if valuation_sell:
+            reason += f"；同时现档{eff_tier}具估值卖出资格"
+    elif valuation_sell:
+        action = "valuation_sell_eligible"
+        reason = (
+            f"现档{eff_tier}（收盘 {close} vs 合理价区间 {band_low}-{band_high}），允许卖出增值部分："
+            f"市值 {position_value:,.0f} − 建仓金额 {build_amount:,.0f} = 可卖约 {valuation_sell_amount:,.0f}（留底原则）"
+        )
     else:
-        action, reason = "hold", "无机械卖出触发"
+        action, reason = "hold", "无卖出许可触发（割肉/估值/趋势均未触发）"
 
     result.update(
         {
@@ -310,20 +283,18 @@ def classify_holding(
             "close": round(close, 3),
             "cost_basis": cost if cost is not None else "",
             "profit_pct": round(profit_pct, 4) if profit_pct is not None else "",
-            "months_held": months_held if months_held is not None else "",
-            "lockup_active": lockup_active,
             "stop_loss_price": stop if stop is not None else "",
             "stop_hit": bool(stop is not None and close <= stop),
             "ma60": round(ma60, 3) if ma60 is not None else "",
-            "trend_protection_level": level,
-            "trend_line_value": round(trend_line, 3) if trend_line is not None else "",
-            "trend_ref_close": round(trend_ref, 3) if trend_ref is not None else "",
-            "trend_break": trend_break,
+            "ma120": round(ma120, 3) if ma120 is not None else "",
+            "trend_deterioration": trend_deterioration,
+            "effective_valuation_tier": eff_tier,
+            "valuation_sell_eligible": valuation_sell,
+            "valuation_sell_allowed_amount": round(valuation_sell_amount, 2) if valuation_sell else "",
+            "sell_floor_amount": build_amount if build_amount else "",
             "initial_shares": initial_shares,
             "current_shares": current_shares,
             "cumulative_trim_pct": cumulative_trim,
-            "profit_trim_ceiling_pct": round(ceiling * 100, 1),
-            "additional_trim_pct_allowed": round(additional_trim_pct, 1),
             "position_value": round(position_value, 2),
             "holdings_action": action,
             "action_reason": reason,
@@ -453,11 +424,12 @@ def parse_args() -> argparse.Namespace:
 FIELDNAMES = [
     "as_of", "security_code", "security_name", "strategy_tag", "quality_tier", "valuation_tier",
     "position_status", "pool_valuation_tier", "valuation_alert",
-    "entry_date", "months_held", "lockup_active", "cost_basis", "close", "profit_pct",
-    "stop_loss_price", "stop_hit", "ma60",
-    "trend_protection_level", "trend_line_value", "trend_ref_close", "trend_break",
-    "initial_shares", "current_shares", "cumulative_trim_pct", "profit_trim_ceiling_pct",
-    "additional_trim_pct_allowed", "position_value", "current_weight_pct", "weight_over_limit",
+    "entry_date", "cost_basis", "close", "profit_pct",
+    "stop_loss_price", "stop_hit", "ma60", "ma120", "trend_deterioration",
+    "effective_valuation_tier", "valuation_sell_eligible", "valuation_sell_allowed_amount",
+    "sell_floor_amount",
+    "initial_shares", "current_shares", "cumulative_trim_pct",
+    "position_value", "current_weight_pct", "weight_over_limit",
     "single_trade_risk_pct", "single_trade_risk_over_limit",
     "holdings_action", "action_reason", "forced_exit_review", "data_source", "scanned_at_utc",
 ]
