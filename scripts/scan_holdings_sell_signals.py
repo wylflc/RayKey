@@ -253,6 +253,16 @@ def classify_holding(
 
     # §14 估值卖出资格（v1.12）：现档较高估/高估，可卖金额=市值−建仓金额（留底原则）。
     eff_tier = effective_valuation_tier(close, band_low, band_high)
+    # §9.2 持仓健康度表带位列（v1.15）：与池扫描同口径（越带顶+X% / 低于带底-X% / 带内X%）。
+    band_position = ""
+    if band_low and band_high and band_low > 0 and band_high > 0:
+        if close > band_high:
+            band_position = f"越带顶+{(close / band_high - 1) * 100:.0f}%"
+        elif close < band_low:
+            band_position = f"低于带底-{(1 - close / band_low) * 100:.0f}%"
+        else:
+            pos = (close - band_low) / (band_high - band_low) * 100 if band_high > band_low else 0.0
+            band_position = f"带内{pos:.0f}%"
     valuation_sell = eff_tier in VALUATION_SELL_TIERS
     valuation_sell_amount = max(0.0, position_value - build_amount) if valuation_sell and build_amount else 0.0
 
@@ -288,6 +298,7 @@ def classify_holding(
             "ma120": round(ma120, 3) if ma120 is not None else "",
             "trend_deterioration": trend_deterioration,
             "effective_valuation_tier": eff_tier,
+            "band_position": band_position,
             "valuation_sell_eligible": valuation_sell,
             "valuation_sell_allowed_amount": round(valuation_sell_amount, 2) if valuation_sell else "",
             "sell_floor_amount": build_amount if build_amount else "",
@@ -425,7 +436,7 @@ FIELDNAMES = [
     "position_status", "pool_valuation_tier", "valuation_alert",
     "entry_date", "cost_basis", "close", "profit_pct",
     "stop_loss_price", "stop_hit", "ma60", "ma120", "trend_deterioration",
-    "effective_valuation_tier", "valuation_sell_eligible", "valuation_sell_allowed_amount",
+    "effective_valuation_tier", "band_position", "valuation_sell_eligible", "valuation_sell_allowed_amount",
     "sell_floor_amount",
     "initial_shares", "current_shares", "cumulative_trim_pct",
     "position_value", "current_weight_pct", "weight_over_limit",
