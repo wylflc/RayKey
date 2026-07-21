@@ -52,32 +52,20 @@ DEEP_UNDERVALUED_UPSIDE = 0.40  # 带底以下且空间（区间中值/现价-1�
 FORECAST_METRIC_PRIORITY = {"004": 0, "005": 1, "006": 2}
 
 
-TIER_LOOSE_ORDER = ["高估", "较高估", "中性", "较低估", "低估"]  # 越靠后越宽松（低估方向）
-
-
-def effective_valuation_tier(
-    price: float | None, fair_low: float | None, fair_high: float | None, stored: str | None = None
-) -> str | None:
+def effective_valuation_tier(price: float | None, fair_low: float | None, fair_high: float | None) -> str | None:
     """§6.2.1.6 价格自动定档：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；
-    带底以下按空间 >=40% 分低估/较低估。无带或无价返回 None（调用方保留存档档位，如无法估值）。
-    v1.13 单向限档：传入审定档 stored 时，向宽松方向至多推进一档，更深档须经 §7.4.7 复核
-    写入审定档后方可生效；向收紧方向（高估方向）不设限。"""
+    带底以下按空间 >=40% 分低估/较低估。双向均不限幅（v1.14）——跌得够深即可高估直达低估。
+    无带或无价返回 None（调用方保留存档档位，如无法估值）。"""
     if not price or fair_low is None or fair_high is None or fair_low <= 0 or fair_high <= 0:
         return None
     if price > fair_high * OVERVALUED_BAND_MULT:
-        raw = "高估"
-    elif price > fair_high:
-        raw = "较高估"
-    elif price >= fair_low:
-        raw = "中性"
-    else:
-        mid = (fair_low + fair_high) / 2
-        raw = "低估" if mid / price - 1 >= DEEP_UNDERVALUED_UPSIDE else "较低估"
-    if stored in TIER_LOOSE_ORDER:
-        cap = TIER_LOOSE_ORDER.index(stored) + 1
-        if TIER_LOOSE_ORDER.index(raw) > cap:
-            return TIER_LOOSE_ORDER[cap]
-    return raw
+        return "高估"
+    if price > fair_high:
+        return "较高估"
+    if price >= fair_low:
+        return "中性"
+    mid = (fair_low + fair_high) / 2
+    return "低估" if mid / price - 1 >= DEEP_UNDERVALUED_UPSIDE else "较低估"
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -225,13 +213,7 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
 
     stored = str(row.get("valuation_tier", ""))
     # 无法估值无可靠带，不自动定档（§6.2.1.6）；其余按现价（缺失时按估值价）定档。
-    if stored == "无法估值":
-        effective, review_pending = stored, ""
-    else:
-        raw = effective_valuation_tier(ref_price, low, high)
-        effective = effective_valuation_tier(ref_price, low, high, stored) or stored
-        # v1.13 单向限档：raw 越过审定档+一档被钉住 → §7.4.7 下行越档复核待办。
-        review_pending = raw if raw and raw != effective else ""
+    effective = stored if stored == "无法估值" else (effective_valuation_tier(ref_price, low, high) or stored)
 
     spot_pe = _to_float(quote.get("pe_ttm")) if quote else None
     spot_pb = _to_float(quote.get("pb")) if quote else None
@@ -242,9 +224,7 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
         "pe": f"{spot_pe:.2f}" if spot_pe else str(row.get("valuation_pe_ttm") or "—"),
         "pb": f"{spot_pb:.2f}" if spot_pb else str(row.get("valuation_pb") or "—"),
         "effective_tier": effective,
-        "valuation_cell": (effective if effective == stored else f"{stored}→{effective}")
-        + ("‡" if review_pending else ""),
-        "review_pending": review_pending,
+        "valuation_cell": effective if effective == stored else f"{stored}→{effective}",
         "spot_pe": spot_pe,
     }
 
@@ -295,7 +275,6 @@ def write_markdown(
     changes: list[str] = []
     drift: list[str] = []
     forecast_codes: list[str] = []
-    review_pending: list[str] = []
     current_tiers: dict[str, tuple[str, str]] = {}
 
     body: list[str] = []
@@ -310,8 +289,6 @@ def write_markdown(
         prev = prev_tiers.get(code)
         if prev and prev != effective:
             changes.append(f"{code}{row['security_name']} {prev}→{effective}")
-        if cells.get("review_pending"):
-            review_pending.append(f"{code}{row['security_name']}(越档{cells['review_pending']})")
         if frow:
             forecast_codes.append(code)
         body.append(
@@ -333,8 +310,7 @@ def write_markdown(
         "",
         "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是 L1-L4 全量 worth_attention 单一列表阅读版（v1.05）。买入资格由 质量 × 当日档位 按 §6.2.1 矩阵判定；高估/无法估值不可买。",
         "",
-        "- **档位按现价自动定档（§6.2.1.6，无人工复核）**：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`；当日变化在扫描报告与刷新日志列示。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
-        "- **单向限档（v1.13）**：现档相对审定档向宽松方向（低估方向）至多推进一档；`‡` = 价格已越更深档边界、现档钉在审定档+一档，待 §7.4.7 下行越档复核确认证据后方可放行更深档。向收紧方向不设限。",
+        "- **档位按现价自动定档（§6.2.1.6，无人工复核，双向不限幅）**：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`——**箭头左端是审定档（最近一次证据复核的结论），不是昨日档**，可能是多日累计漂移；当日发生的变化另见扫描报告与刷新日志。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
         "- 现价/PE/PB 为每日扫描时的行情快照（PE 为 TTM 口径）；现价缺失（停牌/请求失败）的行沿用估值时点值。",
         "- 空间 = 区间中值（模型认可的公允中枢）相对现价的涨跌幅，正数代表上行空间、负数代表现价已高于中枢；原带位列与空间重复，已移除（v1.10）。",
         "- 业绩预告不在本表展示（v1.09）：预告物化文件（§6.7.8）只作 §7.5.5 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
@@ -346,8 +322,7 @@ def write_markdown(
         *body,
     ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return {"changes": changes, "drift": drift, "forecast": forecast_codes,
-            "review_pending": review_pending, "current_tiers": current_tiers}
+    return {"changes": changes, "drift": drift, "forecast": forecast_codes, "current_tiers": current_tiers}
 
 
 def log_pool_decisions(
@@ -400,15 +375,9 @@ def log_price_refresh(
     """--md-only 现价刷新只写一行汇总日志：当日档位变化 + 预告覆盖。"""
     changes = list(flags.get("changes") or [])
     drift = list(flags.get("drift") or [])
-    review_pending = list(flags.get("review_pending") or [])
     summary_parts = [
         ("当日档位变化（价格自动定档）：" + "、".join(changes)) if changes else "当日无档位变化",
         f"现档≠审定档共 {len(drift)} 只",
-        (
-            f"单向限档钉档待复核（§7.4.7）共 {len(review_pending)} 只：" + "、".join(review_pending)
-            if review_pending
-            else "无下行越档待复核"
-        ),
         f"业绩预告覆盖 {len(list(flags.get('forecast') or []))} 只（§7.5.5 复核队列输入，不入表）",
     ]
     append_decision_log(

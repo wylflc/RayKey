@@ -178,30 +178,18 @@ def current_build_amount(total_assets: float) -> int:
     return build
 
 
-TIER_LOOSE_ORDER = ["高估", "较高估", "中性", "较低估", "低估"]  # 越靠后越宽松（低估方向）
-
-
-def effective_valuation_tier(
-    close: float, band_low: float | None, band_high: float | None, stored: str | None = None
-) -> str:
-    """§6.2.1.6 价格自动定档；无带（无法估值/出池）返回空串，不自动定档。
-    v1.13 单向限档：相对审定档 stored 向宽松方向至多一档，收紧方向不设限（§7.4.7）。"""
+def effective_valuation_tier(close: float, band_low: float | None, band_high: float | None) -> str:
+    """§6.2.1.6 价格自动定档（双向不限幅，v1.14）；无带（无法估值/出池）返回空串，不自动定档。"""
     if not band_low or not band_high or band_low <= 0 or band_high <= 0:
         return ""
     if close > band_high * OVERVALUED_MULT:
-        raw = "高估"
-    elif close > band_high:
-        raw = "较高估"
-    elif close >= band_low:
-        raw = "中性"
-    else:
-        mid = (band_low + band_high) / 2
-        raw = "低估" if mid / close - 1 >= DEEP_UNDERVALUED_SPACE else "较低估"
-    if stored in TIER_LOOSE_ORDER:
-        cap = TIER_LOOSE_ORDER.index(stored) + 1
-        if TIER_LOOSE_ORDER.index(raw) > cap:
-            return TIER_LOOSE_ORDER[cap]
-    return raw
+        return "高估"
+    if close > band_high:
+        return "较高估"
+    if close >= band_low:
+        return "中性"
+    mid = (band_low + band_high) / 2
+    return "低估" if mid / close - 1 >= DEEP_UNDERVALUED_SPACE else "较低估"
 
 
 def classify_holding(
@@ -214,7 +202,6 @@ def classify_holding(
     # §14 持仓估值档位刷新：对照最新核心池；池不可用时标注未刷新。
     band_low: float | None = None
     band_high: float | None = None
-    pool_stored: str | None = None
     if pool is None:
         result["pool_valuation_tier"] = ""
         result["valuation_alert"] = "估值池文件缺失，未刷新档位"
@@ -227,7 +214,6 @@ def classify_holding(
             band_low = to_float(pool_row.get("fair_price_low"))
             band_high = to_float(pool_row.get("fair_price_high"))
             pool_tier = pool_row.get("valuation_tier", "")
-            pool_stored = pool_tier
             result["pool_valuation_tier"] = pool_tier
             held_tier = (row.get("valuation_tier") or "").strip()
             held_norm = held_tier.split("(")[0].split("（")[0].strip()
@@ -266,7 +252,7 @@ def classify_holding(
     trend_deterioration = "跌破" + "+".join(broken) if broken else ""
 
     # §14 估值卖出资格（v1.12）：现档较高估/高估，可卖金额=市值−建仓金额（留底原则）。
-    eff_tier = effective_valuation_tier(close, band_low, band_high, pool_stored)
+    eff_tier = effective_valuation_tier(close, band_low, band_high)
     valuation_sell = eff_tier in VALUATION_SELL_TIERS
     valuation_sell_amount = max(0.0, position_value - build_amount) if valuation_sell and build_amount else 0.0
 

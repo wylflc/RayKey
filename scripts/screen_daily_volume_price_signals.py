@@ -766,7 +766,7 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, 
             pos = (close - fair_low) / (fair_high - fair_low) * 100 if fair_high > fair_low else 0.0
             band_position = f"带内{pos:.0f}%"
     effective_tier = stored_tier if stored_tier == "无法估值" else (
-        effective_valuation_tier(close, fair_low, fair_high, stored_tier) or stored_tier
+        effective_valuation_tier(close, fair_low, fair_high) or stored_tier
     )
     signal["band_position"] = band_position
     signal["valuation_tier_effective"] = effective_tier
