@@ -34,6 +34,7 @@ DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_MD = ROOT / "data/processed/000_a_share_core_valuation_pool.md"
 DEFAULT_FORECASTS = ROOT / "data/interim/a_share_earnings_forecasts.csv"
+DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_TIER_SNAPSHOT = ROOT / "data/interim/pool_effective_tiers.csv"
 
 # §6.2.1 分层×估值准入矩阵：层级越低，买入估值门槛越严。
@@ -201,6 +202,25 @@ def forecasts_retrieved_on(path: Path) -> str:
     return max(stamps)[:10] if stamps else ""
 
 
+DISCLOSURE_LABELS = {"periodic_report": "定期报告", "express_report": "快报"}
+
+
+def load_disclosures(path: Path) -> dict[str, dict[str, str]]:
+    """§6.7.9（v1.18）：每代码取 正式定期报告/业绩快报 中公告日最新的一行，
+    供 §7.5.5 待复核名单判定（与预告公告日取并集后的最大者比较估值时间）。"""
+    if not path.exists():
+        return {}
+    best: dict[str, dict[str, str]] = {}
+    for row in load_csv(path):
+        if row.get("disclosure_type") not in DISCLOSURE_LABELS:
+            continue
+        code = row["security_code"].zfill(6)
+        current = best.get(code)
+        if current is None or row.get("notice_date", "") > current.get("notice_date", ""):
+            best[code] = row
+    return best
+
+
 def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     """阅读版单元格：现价/空间/PE/PB 按行情快照刷新，档位按 §6.2.1.6 价格自动定档。"""
     low = _to_float(row.get("fair_price_low"))
@@ -269,13 +289,16 @@ def write_markdown(
     quotes: dict[str, dict] | None = None,
     forecasts: dict[str, dict[str, str]] | None = None,
     prev_tiers: dict[str, str] | None = None,
+    disclosures: dict[str, dict[str, str]] | None = None,
 ) -> dict[str, object]:
     """渲染单一列表阅读版 MD（v1.05）；返回 {'changes': 当日档位变化, 'drift': 现档≠审定档,
-    'forecast': 有预告代码, 'forecast_pending': §7.5.5 待复核名单, 'current_tiers': {code: (name, tier)}}。"""
+    'forecast': 有预告代码, 'forecast_pending': §7.5.5 待复核名单（预告+快报+正式报告，v1.18）,
+    'disclosure': 有快报/正式报告代码, 'current_tiers': {code: (name, tier)}}。"""
     path.parent.mkdir(parents=True, exist_ok=True)
     quotes = quotes or {}
     forecasts = forecasts or {}
     prev_tiers = prev_tiers or {}
+    disclosures = disclosures or {}
     quote_line = (
         f"现价更新：{format_quote_time(quotes)}（腾讯行情快照，{len(quotes)}/{len(rows)} 只成功）"
         if quotes
@@ -284,6 +307,7 @@ def write_markdown(
     changes: list[str] = []
     drift: list[str] = []
     forecast_codes: list[str] = []
+    disclosure_codes: list[str] = []
     forecast_pending: list[str] = []
     current_tiers: dict[str, tuple[str, str]] = {}
 
@@ -299,13 +323,26 @@ def write_markdown(
         prev = prev_tiers.get(code)
         if prev and prev != effective:
             changes.append(f"{code}{row['security_name']} {prev}→{effective}")
+        drow = disclosures.get(code)
         if frow:
             forecast_codes.append(code)
-            # §6.7.8（v1.16）：公告日晚于估值时间 = §7.5.5 待复核（缺失回退 pool_as_of）。
-            reviewed = str(row.get("valuation_reviewed_at") or row.get("pool_as_of") or "")
-            notice = str(frow.get("notice_date") or "")
-            if notice and notice > reviewed:
-                forecast_pending.append(f"{code}{row['security_name']}({notice})")
+        if drow:
+            disclosure_codes.append(code)
+        if frow or drow:
+            # §6.7.8/§6.7.9（v1.16/v1.18）：预告/快报/正式报告公告日晚于 max(估值时间, 估值证据日)
+            # = §7.5.5 待复核（缺失回退 pool_as_of）——同晚复核吸收次日戳披露的不再伪欠账。
+            reviewed = max(
+                str(row.get("valuation_reviewed_at") or row.get("pool_as_of") or ""),
+                str(row.get("evidence_available_at") or ""),
+            )
+            events: list[tuple[str, str]] = []
+            if frow and frow.get("notice_date"):
+                events.append((str(frow["notice_date"]), "预告"))
+            if drow and drow.get("notice_date"):
+                events.append((str(drow["notice_date"]), DISCLOSURE_LABELS.get(str(drow.get("disclosure_type")), "披露")))
+            latest = max(events) if events else None
+            if latest and latest[0] > reviewed:
+                forecast_pending.append(f"{code}{row['security_name']}({latest[0]}·{latest[1]})")
         body.append(
             "| {security_code} | {security_name} | {quality_tier_label} | ".format(**row)
             + str(cells["valuation_cell"])
@@ -341,6 +378,7 @@ def write_markdown(
         "changes": changes,
         "drift": drift,
         "forecast": forecast_codes,
+        "disclosure": disclosure_codes,
         "forecast_pending": forecast_pending,
         "current_tiers": current_tiers,
     }
@@ -385,19 +423,27 @@ def log_pool_decisions(
     )
 
 
-def forecast_summary(flags: dict[str, object], forecast_retrieved: str, as_of: str) -> str:
-    """§6.7.8（v1.16）刷新汇总的预告部分：覆盖数 + 检索日（过期加警告）+ 待复核名单本身。"""
+def _freshness(retrieved: str, as_of: str, label: str) -> str:
+    if not retrieved:
+        return f"（{label}物化文件缺失，须按 §9.1 步骤 0 抓取）"
+    if retrieved < as_of:
+        return f"（检索于 {retrieved} ⚠️早于扫描日，数据过期，须按 §9.1 步骤 0 重抓）"
+    return f"（检索于 {retrieved}）"
+
+
+def forecast_summary(flags: dict[str, object], forecast_retrieved: str, as_of: str, disclosure_retrieved: str = "") -> str:
+    """§6.7.8/§6.7.9（v1.16/v1.18）刷新汇总的披露部分：预告与快报/正式报告覆盖数 +
+    各自检索日（过期加警告）+ §7.5.5 待复核名单本身（并集口径）。"""
     covered = len(list(flags.get("forecast") or []))
+    disclosed = len(list(flags.get("disclosure") or []))
     pending = list(flags.get("forecast_pending") or [])
-    if not forecast_retrieved:
-        freshness = "（预告物化文件缺失，须按 §9.1 步骤 0 抓取）"
-    elif forecast_retrieved < as_of:
-        freshness = f"（检索于 {forecast_retrieved} ⚠️早于扫描日，数据过期，须按 §9.1 步骤 0 重抓）"
-    else:
-        freshness = f"（检索于 {forecast_retrieved}）"
     shown = "、".join(pending[:40]) + (f" …等共 {len(pending)} 只" if len(pending) > 40 else "")
     pending_part = f"；§7.5.5 待复核 {len(pending)} 只（公告日晚于估值时间）" + (f"：{shown}" if pending else "")
-    return f"业绩预告覆盖 {covered} 只{freshness}{pending_part}"
+    return (
+        f"业绩预告覆盖 {covered} 只{_freshness(forecast_retrieved, as_of, '预告')}"
+        f"；快报/正式报告覆盖 {disclosed} 只{_freshness(disclosure_retrieved, as_of, '披露')}"
+        f"{pending_part}"
+    )
 
 
 def log_price_refresh(
@@ -408,15 +454,16 @@ def log_price_refresh(
     flags: dict[str, object],
     forecast_retrieved: str,
     output_md: Path,
+    disclosure_retrieved: str = "",
 ) -> None:
-    """--md-only 现价刷新只写一行汇总日志：当日档位变化 + 预告覆盖与 §7.5.5 待复核名单。"""
+    """--md-only 现价刷新只写一行汇总日志：当日档位变化 + 披露覆盖与 §7.5.5 待复核名单。"""
     changes = list(flags.get("changes") or [])
     drift = list(flags.get("drift") or [])
     pending = list(flags.get("forecast_pending") or [])
     summary_parts = [
         ("当日档位变化（价格自动定档）：" + "、".join(changes)) if changes else "当日无档位变化",
         f"现档≠审定档共 {len(drift)} 只",
-        forecast_summary(flags, forecast_retrieved, as_of),
+        forecast_summary(flags, forecast_retrieved, as_of, disclosure_retrieved),
     ]
     append_decision_log(
         log_file,
@@ -470,6 +517,12 @@ def parse_args() -> argparse.Namespace:
         help="业绩预告物化文件（fetch_a_share_earnings_forecasts.py 输出）；缺失时预告列显示 —。",
     )
     parser.add_argument(
+        "--disclosures",
+        type=Path,
+        default=DEFAULT_DISCLOSURES,
+        help="定期报告/业绩快报披露物化文件（fetch_a_share_report_disclosures.py 输出，§6.7.9）；缺失时待复核名单仅按预告判定。",
+    )
+    parser.add_argument(
         "--tier-snapshot",
         type=Path,
         default=DEFAULT_TIER_SNAPSHOT,
@@ -487,6 +540,8 @@ def main() -> None:
         quotes = fetch_spot_quotes([(row["security_code"], row.get("exchange", "")) for row in rows], timeout=args.timeout)
     forecasts = load_forecasts(args.forecasts)
     forecast_retrieved = forecasts_retrieved_on(args.forecasts)
+    disclosures = load_disclosures(args.disclosures)
+    disclosure_retrieved = forecasts_retrieved_on(args.disclosures)
     prev_tiers = load_tier_snapshot(args.tier_snapshot)
     fieldnames = [
         "market_type",
@@ -516,16 +571,16 @@ def main() -> None:
     ]
     if not args.md_only:
         write_csv(args.output_csv, rows, fieldnames)
-    flags = write_markdown(args.output_md, rows, args.as_of, quotes, forecasts, prev_tiers)
+    flags = write_markdown(args.output_md, rows, args.as_of, quotes, forecasts, prev_tiers, disclosures)
     write_tier_snapshot(args.tier_snapshot, flags["current_tiers"], args.as_of)  # type: ignore[arg-type]
     changes = list(flags.get("changes") or [])
     summary = (
         f"tier changes today: {'、'.join(changes) if changes else '无'}; "
         f"drift vs 审定档: {len(list(flags.get('drift') or []))}; "
-        f"{forecast_summary(flags, forecast_retrieved, args.as_of)}"
+        f"{forecast_summary(flags, forecast_retrieved, args.as_of, disclosure_retrieved)}"
     )
     if args.md_only:
-        log_price_refresh(args.log_file, args.as_of, len(quotes), len(rows), flags, forecast_retrieved, args.output_md)
+        log_price_refresh(args.log_file, args.as_of, len(quotes), len(rows), flags, forecast_retrieved, args.output_md, disclosure_retrieved)
         print(f"refreshed {args.output_md} with {len(quotes)}/{len(rows)} quotes; {summary}")
     else:
         log_pool_decisions(args.log_file, rows, args.as_of, args.valuation, args.tiers, args.output_csv, args.output_md)

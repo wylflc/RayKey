@@ -713,7 +713,8 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 5. 未过准入矩阵但估值为低估/较低估/中性/较高估的 L1-L4 公司，输出 `pool_layer = watch_only` 仅观察层（v20）：进入每日扫描可见范围，不具备买入资格；watch_only 行日志 `decision_type = scan_watch_only`。
 6. `fair_price_low`/`fair_price_high`/`fair_price_basis` 与 `total_market_cap_bn`（§8.5.6 巨盘条件输入，十亿口径）原样透传到池 CSV。阅读版 MD 为**单一列表**（v1.05：不再分设高估/无法估值小节，全量统一展示、统一处理），不单列"层"；每行展示：估值（当日自动定档，与审定档不同时显示 `审定档→现档`）、策略、现价、合理价区间（估值唯一输出锚，公允中枢≈区间中值）、空间、现价口径 PE(TTM)/PB、**估值时间**（最近一次估值复核日 `valuation_reviewed_at`）、**估值事件**（该次复核依据的最新披露 `valuation_evidence_event`，v1.08）；业绩预告不入表（v1.09，见要求 8），复核时点价（`valuation_price`）、审定档与核心理由保留在池 CSV。
 7. 现价刷新与档位差分（v1.03/v1.05）：`--quotes fetch` 经 `scripts/a_share_quotes.py` 拉取腾讯批量行情快照；`--md-only` 供每日扫描调用——只重渲染 MD 并写一行 `pool_price_refresh` 汇总日志，不重写池 CSV、不逐股重写池结论。每次渲染把当日有效档位写入快照 `data/interim/pool_effective_tiers.csv`，与上一快照差分得出**当日档位变化名单**（进汇总日志与扫描报告第二节）；现价缺失（停牌/请求失败）的行沿用估值时点值定档。
-8. 业绩预告物化（v1.04；v1.09 起不在 MD 展示；v1.16 起每日刷新）：`scripts/fetch_a_share_earnings_forecasts.py` 将东财业绩预告接口物化为 `data/interim/a_share_earnings_forecasts.csv`（`--report-date` 缺省自动取最近一个已结束的季度报告期末，可显式指定，适用一季报/中报/三季报/年度各预告季；字段含代码、报告期、公告日、指标口径 004归母/005扣非/006营收、预告区间、同比增幅、去年同期、预告类型、检索时间与来源）。该文件**不是一次性物化，而是每个扫描日经 §9.1 步骤 0 重抓**——预告披露是逐日到达的事件流，停更的文件等于关闭 §7.4/§7.5.5 的事件入口（判例：睿创微纳 2026-07-20 盘后预告，7/17 的旧文件使其三个交易日不可见）。该文件**只作 §7.5.5 express 复核队列的输入**，且刷新汇总**不得只报覆盖数**：必须列出**待复核名单本身**（代码+名称+公告日；判定=`is_latest=T` 且 预告公告日晚于该股 `valuation_reviewed_at`，缺失时回退 `pool_as_of`），并标注预告文件检索时间——检索日早于扫描日时加"⚠️预告数据过期"警告并按 §9.1 步骤 0 当场重抓。待复核名单逐票按 §7.5.5 express 复核闭环（复核更新 `valuation_reviewed_at`/`valuation_evidence_event` 后自动移出名单）；名单非空时写入扫描报告第二节与第三节待办。复核完成后其影响体现为 估值时间/估值事件 两列与合理价区间的更新，预告具体数字不进入池 MD。
+8. 业绩预告物化（v1.04；v1.09 起不在 MD 展示；v1.16 起每日刷新）：`scripts/fetch_a_share_earnings_forecasts.py` 将东财业绩预告接口物化为 `data/interim/a_share_earnings_forecasts.csv`（`--report-date` 缺省自动取最近一个已结束的季度报告期末，可显式指定，适用一季报/中报/三季报/年度各预告季；字段含代码、报告期、公告日、指标口径 004归母/005扣非/006营收、预告区间、同比增幅、去年同期、预告类型、检索时间与来源）。该文件**不是一次性物化，而是每个扫描日经 §9.1 步骤 0 重抓**——预告披露是逐日到达的事件流，停更的文件等于关闭 §7.4/§7.5.5 的事件入口（判例：睿创微纳 2026-07-20 盘后预告，7/17 的旧文件使其三个交易日不可见）。该文件**只作 §7.5.5 express 复核队列的输入**，且刷新汇总**不得只报覆盖数**：必须列出**待复核名单本身**（代码+名称+公告日+披露类型；判定=预告/快报/正式报告公告日的最大者晚于 max(`valuation_reviewed_at`, `evidence_available_at`)，缺失时回退 `pool_as_of`，v1.18 起为三类披露并集口径），并标注披露文件检索时间——检索日早于扫描日时加"⚠️数据过期"警告并按 §9.1 步骤 0 当场重抓。待复核名单逐票按 §7.5.5 express 复核闭环（复核更新 `valuation_reviewed_at`/`valuation_evidence_event` 后自动移出名单）；名单非空时写入扫描报告第二节与第三节待办。复核完成后其影响体现为 估值时间/估值事件 两列与合理价区间的更新，预告具体数字不进入池 MD。
+9. 定期报告与业绩快报披露物化（v1.18）：`scripts/fetch_a_share_report_disclosures.py` 将东财**正式定期报告披露**（RPT_LICO_FN_CPD，公告日=实际披露日，含归母/营收实际数与同比）与**业绩快报**（RPT_FCI_PERFORMANCEE）物化为 `data/interim/a_share_report_disclosures.csv`（`disclosure_type` 区分 periodic_report/express_report；`--report-date` 缺省口径同预告脚本）。与预告文件同为**每个扫描日经 §9.1 步骤 0 重抓**的事件流入口：仅抓预告等于对快报与正式报告闭眼（判例：华润三九 7/15、大族激光 7/21（归母 +163%）H1 快报在仅预告机制下持续不可见，直至 2026-07-22 本文件增设才被发现，两只均已超期）。该文件供 报告更新队列（§7.2/§7.3 公告日触发）与 待复核名单（要求 8 并集口径）使用；同一披露季内正式报告公告日晚于快报/预告的，正式报告构成新一次复核触发（快报/预告先行复核不豁免正式报告复核，实际数与预告的兑现偏差按 §6.6.1.3 回填台账）。
 
 ## 7. 阶段三：财报披露后的滚动更新
 
@@ -727,6 +728,7 @@ python3 scripts/build_report_update_queue.py \
   --tiers data/processed/a_share_watchlist_quality_tiers.csv \
   --valuation-pool data/processed/a_share_core_valuation_pool.csv \
   --forecasts data/interim/a_share_earnings_forecasts.csv \
+  --report-disclosures data/interim/a_share_report_disclosures.csv \
   --output data/interim/a_share_report_update_queue.csv
 ```
 
@@ -735,26 +737,30 @@ python3 scripts/build_report_update_queue.py \
 ### 7.2 质量复核触发
 
 ```text
-如果 latest_report_date > last_quality_review_date：
-    进入质量复核队列
+如果 定期报告公告日 > last_quality_review_date：
+    进入质量复核队列（v1.18，公告日口径）
+如果 latest_report_date（报告期末） > last_quality_review_date：
+    进入质量复核队列（回退口径：披露物化文件缺失时兜底）
 ```
 
 ### 7.3 估值复核触发
 
 ```text
-如果 quality_tier in ["L1", "L2", "L3", "L4"] 且 latest_report_date > last_valuation_review_date：
-    进入估值复核队列（queue_reasons = latest_report_after_last_valuation_review）
-如果 quality_tier in ["L1", "L2", "L3", "L4"] 且 业绩预告/快报公告日 > last_valuation_review_date：
-    进入估值复核队列（queue_reasons = forecast_after_last_valuation_review，v1.16）
+对 quality_tier in ["L1", "L2", "L3", "L4"]，以下任一公告日 > last_valuation_review_date 即进入估值复核队列：
+    业绩预告公告日   （queue_reasons = forecast_after_last_valuation_review，v1.16）
+    业绩快报公告日   （queue_reasons = express_report_after_last_valuation_review，v1.18）
+    正式定期报告公告日（queue_reasons = report_disclosure_after_last_valuation_review，v1.18）
+回退口径（披露物化文件缺失该股时兜底）：
+    latest_report_date（报告期末） > last_valuation_review_date（queue_reasons = latest_report_after_last_valuation_review）
 ```
 
-`last_valuation_review_date` 取估值表/核心池的 `valuation_reviewed_at`；该字段缺失时回退 `pool_as_of` 并在队列标注口径降级。预告公告日由队列脚本从预告物化文件（§6.7.8）确定性判定：**只要存在晚于估值时间的新预告即入队并冻结（§7.5），"是否大幅超/低预期"是复核的结论，不是入队的门槛**——门槛式措辞会让无人判断幅度时预告整体失流（睿创微纳 2026-07-20 判例）。
+`last_valuation_review_date` 取估值表/核心池的 `valuation_reviewed_at`；该字段缺失时回退 `pool_as_of` 并在队列标注口径降级。公告日实际与 **max(估值时间, 估值证据日 `evidence_available_at`)** 比较（v1.18）：当晚复核吸收了次日戳披露的（`evidence_available_at`=该披露公告日）不再构成伪欠账（判例：洛阳钼业/陕西煤业/中矿资源 7/10 晚复核已含 7/11 戳预告，仍被 7/22 名单标记需批量确认；代价是同日戳的披露更正不触发，靠 §7.4 事件通道与 24 小时异动响应兜底）。三类公告日由队列脚本从披露物化文件（预告 §6.7.8、快报/正式报告 §6.7.9）确定性判定：**只要存在晚于估值时间的新披露即入队并冻结（§7.5），"是否大幅超/低预期"是复核的结论，不是入队的门槛**——门槛式措辞会让无人判断幅度时预告整体失流（睿创微纳 2026-07-20 判例）。触发一律用**公告日**而非报告期末（v1.18）：报告期末与复核日比较在"复核日落在报告期末之后、披露日之前"时必然漏触发，而 v1.16 预告季强制当日复核使该情形成为常态（判例：2026-07 中报预告季全池复核日 ≥7/10 晚于报告期末 6/30，若按期末口径，8 月披露的正式中报将全部漏检）。
 
 ### 7.4 事件复核触发
 
 出现以下事件时立即进入事件复核队列：
 
-1. 业绩预告或业绩快报披露（L1-L4 一律经 §7.3 确定性入队，v1.16；幅度是否重大由复核判定，不作入队门槛）。
+1. 业绩预告、业绩快报或正式定期报告披露（L1-L4 一律经 §7.3 确定性入队，v1.16/v1.18；幅度是否重大由复核判定，不作入队门槛）。
 2. 重大订单、重大客户认证、重大产品发布。
 3. 重大并购、资产出售、控制权变更。
 4. 交易所问询、监管处罚、审计异常。
@@ -1184,7 +1190,7 @@ close / MA20 - 1 > 25%
 
 用户发起"当日的每日扫描"时按固定顺序执行——**先披露同步，再先持仓、后池**：
 
-0. **披露同步（v1.16，先于两项扫描）**：先刷新业绩预告物化文件，再重建报告更新队列——`python3 scripts/fetch_a_share_earnings_forecasts.py`（`--report-date` 缺省自动取最近一个已结束的季度报告期末；接口不可用时沿用旧文件，并在当日条目显式标注其检索日）→ `python3 scripts/build_report_update_queue.py --market A_SHARE --as-of 当日`。本步使 §7.5 买入冻结、§6.7.8 待复核名单与 §7.3/§7.4 复核触发全部基于当日最新披露；队列文件 `as_of` 早于扫描日即为执行缺陷，须当场补跑。判例：睿创微纳 2026-07-20 盘后中报预增 +242%-270%（公告日 7/21），因预告文件停在 7/17、队列停在 7/10、7/21 弱级触发不核公告，三层全部漏检，直至 7/22 用户指出——本步即为此增设。
+0. **披露同步（v1.16；v1.18 扩至全部三类披露，先于两项扫描）**：先刷新两个披露物化文件，再重建报告更新队列——`python3 scripts/fetch_a_share_earnings_forecasts.py`（业绩预告）→ `python3 scripts/fetch_a_share_report_disclosures.py`（**正式定期报告 + 业绩快报**，§6.7.9）→ `python3 scripts/build_report_update_queue.py --market A_SHARE --as-of 当日`（两个抓取脚本 `--report-date` 缺省自动取最近一个已结束的季度报告期末；接口不可用时沿用旧文件，并在当日条目显式标注其检索日）。本步保证**凡披露了定期报告、业绩快报或业绩预告的池内/名单内股票当日即被追踪**：公告日晚于其估值时间的自动进入 §6.7.8/§6.7.9 待复核名单与 §7.5 买入冻结，并按 §7.5.5 当日完成 express 估值复核、当日更新估值信息（合理价区间 + 估值时间/估值事件）。队列文件 `as_of` 早于扫描日即为执行缺陷，须当场补跑。判例：睿创微纳 2026-07-20 盘后中报预增 +242%-270%（公告日 7/21），因预告文件停在 7/17、队列停在 7/10、7/21 弱级触发不核公告，三层全部漏检，直至 7/22 用户指出——本步即为此增设；华润三九 7/15、大族激光 7/21（+163%）H1 业绩快报在仅预告抓取下不可见，直至 7/22 补建披露物化——v1.18 即为此扩容。
 1. **持仓健康度**：运行 `scan_holdings_sell_signals.py --as-of 当日`（读取账户快照），按 §14 状态字与 §9.2 红黄绿映射汇总每只持仓的健康度、当日量价特征与需要的动作。
 2. **池内关注对象**：运行 `screen_daily_volume_price_signals.py --as-of 当日 --review-queue data/interim/a_share_report_update_queue.csv`，从输出中筛选 `buy_candidate`（按 §8.10 优先级 × §8.7 信号分级排序，标注 §8.13 入场阶段与带内位置）与 `signal_watch_only`，逐只写出关注原因。随后运行 `build_a_share_core_valuation_pool.py --md-only --quotes fetch --as-of 当日` 刷新池阅读版（现价/空间/PE/PB/价格自动定档，§6.7.7）；刷新汇总给出的**当日档位变化名单**写入扫描报告第二节。**候选判定纯量价×档位口径（v1.02）**：账户杠杆、仓位包络、资金状态、既有持仓结构一律不参与候选的判定、分级、阶段与排序；执行侧约束（包络、棘轮、买入时间窗）只在 §10 闸门与下单环节核对，扫描第二节不得出现基于账户状态的冻结、降序或"仅记录不执行"结论。
 3. **输出**：按 §9.2 格式先以回复形式给出，再将同一内容置顶写入 §9.4 扫描日志。两张 CSV 与决策日志照常由脚本生成（v25 起脚本不再生成独立 tracker 阅读版）；扫描日志是唯一每日阅读文件，不替代机器记录。
@@ -1642,4 +1648,4 @@ python3 scripts/scan_holdings_sell_signals.py \
 
 ## 16. 版本记录
 
-版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.17**（2026-07-22，§12.6 增设第三组对照样本"规则驱动的退出"——体系促成的清仓/减仓逐笔跟踪 5/20 日前向收益，作为卖出规则修订的队列证据；紫光股份 2026-07-15 收敛清仓后 5 日 +28.5% 判例驱动，单一结果不修规则）。
+版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.18**（2026-07-22，披露同步扩容至全部三类披露——§9.1 步骤 0 新增正式定期报告+业绩快报每日物化（§6.7.9），§7.2/§7.3 复核触发全部改公告日口径（报告期末比较降为回退），凡披露定期报告/快报/预告的股票当日入待复核名单并按 §7.5.5 当日完成估值更新；华润三九 7/15、大族激光 7/21 快报仅预告机制下持续漏检判例驱动）。

@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Build the report-driven quality and valuation update queue."""
+"""Build the report-driven quality and valuation update queue.
+
+Since v1.18 the valuation-review triggers are keyed on **公告日** (disclosure
+notice dates) for all three event families — 业绩预告 (forecasts), 业绩快报
+(express reports) and 正式定期报告 (periodic reports) — fed by the two §9.1
+step-0 daily fetchers. The legacy period-end comparison (报告期末 vs 复核日,
+from the static financial-indicators snapshot) is kept only as a fallback: it
+systematically misses any report whose period ended before the last review but
+was published after it, which is the normal case in report season once v1.16
+forces same-day forecast reviews (判例: 华润三九 7/15 快报 / 大族激光 7/21
+快报 invisible until 2026-07-22)."""
 
 from __future__ import annotations
 
@@ -15,6 +25,7 @@ DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_FINANCIALS = ROOT / "data/interim/a_share_financial_indicators.csv"
 DEFAULT_FORECASTS = ROOT / "data/interim/a_share_earnings_forecasts.csv"
+DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_OUTPUT = ROOT / "data/interim/a_share_report_update_queue.csv"
 
 
@@ -70,6 +81,22 @@ def load_latest_forecasts(rows: list[dict[str, str]]) -> dict[str, dict[str, str
     return best
 
 
+def load_latest_disclosures(rows: list[dict[str, str]]) -> dict[str, dict[str, dict[str, str]]]:
+    """§7.3（v1.18）：每代码分别取 正式定期报告 与 业绩快报 的最新公告行。
+    正式报告优先 is_new=1；同类型多行取公告日最大者。"""
+    best: dict[str, dict[str, dict[str, str]]] = {}
+    for row in rows:
+        code = row.get("security_code", "").zfill(6)
+        dtype = row.get("disclosure_type", "")
+        if dtype not in ("periodic_report", "express_report"):
+            continue
+        slot = best.setdefault(code, {})
+        current = slot.get(dtype)
+        if current is None or row.get("notice_date", "") > current.get("notice_date", ""):
+            slot[dtype] = row
+    return best
+
+
 def attention_class(row: dict[str, str] | None) -> str:
     if not row:
         return ""
@@ -101,12 +128,14 @@ def build_queue(
     valuation_rows: list[dict[str, str]],
     financial_rows: list[dict[str, str]],
     forecast_rows: list[dict[str, str]],
+    disclosure_rows: list[dict[str, str]],
     as_of: str,
 ) -> list[dict[str, object]]:
     attention_by_code = {row["security_code"].zfill(6): row for row in attention_rows if row.get("security_code")}
     financials_by_code = {row["security_code"].zfill(6): row for row in financial_rows if row.get("security_code")}
     valuation_by_code = {row["security_code"].zfill(6): row for row in valuation_rows if row.get("security_code")}
     forecasts_by_code = load_latest_forecasts(forecast_rows)
+    disclosures_by_code = load_latest_disclosures(disclosure_rows)
     as_of_date = parse_date(as_of) or datetime.now(timezone.utc).date()
     output: list[dict[str, object]] = []
 
@@ -120,6 +149,17 @@ def build_queue(
         financial = financials_by_code.get(code)
         valuation = valuation_by_code.get(code)
         latest_report_date = parse_date((financial or {}).get("latest_report_date"))
+        latest_report_type = (financial or {}).get("latest_report_type", "")
+        # v1.18：正式定期报告/快报按公告日触发；报告期以披露物化文件为准刷新静态快照。
+        disclosure = disclosures_by_code.get(code, {})
+        periodic = disclosure.get("periodic_report")
+        express = disclosure.get("express_report")
+        periodic_notice_date = parse_date((periodic or {}).get("notice_date"))
+        express_notice_date = parse_date((express or {}).get("notice_date"))
+        periodic_period = parse_date((periodic or {}).get("report_date"))
+        if periodic_period and (latest_report_date is None or periodic_period > latest_report_date):
+            latest_report_date = periodic_period
+            latest_report_type = (periodic or {}).get("report_label", "") or latest_report_type
         last_quality_review_date = parse_date(tier.get("reviewed_at_utc"))
         # §7.3：估值复核触发以估值结论日为准；缺失时才回退池物化日并标注口径降级。
         valuation_reviewed_raw = (valuation or {}).get("valuation_reviewed_at", "")
@@ -128,31 +168,66 @@ def build_queue(
         if last_valuation_review_date is None:
             last_valuation_review_date = parse_date((valuation or {}).get("pool_as_of"))
             valuation_date_basis = "pool_as_of_fallback" if last_valuation_review_date else "no_prior_valuation"
+        # v1.18：公告日与 max(估值时间, 估值证据日) 比较——同晚复核吸收了次日戳披露的不再伪欠账
+        # （判例：洛阳钼业等 7/10 晚复核已含 7/11 戳预告，仍被名单标记需 7/22 批量确认）。
+        last_evidence_date = parse_date((valuation or {}).get("evidence_available_at"))
+        review_cutoff = last_valuation_review_date
+        if last_evidence_date and (review_cutoff is None or last_evidence_date > review_cutoff):
+            review_cutoff = last_evidence_date
+        # §7.2（v1.18）：正式报告公告日晚于上次质量复核即触发；报告期末比较仅作披露文件缺失时的回退。
         quality_review_needed = bool(
-            latest_report_date and (last_quality_review_date is None or latest_report_date > last_quality_review_date)
+            (
+                periodic_notice_date
+                and (last_quality_review_date is None or periodic_notice_date > last_quality_review_date)
+            )
+            or (
+                latest_report_date
+                and (last_quality_review_date is None or latest_report_date > last_quality_review_date)
+            )
         )
+        in_valuation_scope = is_valuation_scope_tier(tier.get("quality_tier", ""))
+        # 回退口径（报告期末 vs 复核日）：复核日落在报告期末与披露日之间时会漏触发，仅在披露文件缺失时兜底。
         report_valuation_trigger = bool(
-            is_valuation_scope_tier(tier.get("quality_tier", ""))
+            in_valuation_scope
             and latest_report_date
             and (last_valuation_review_date is None or latest_report_date > last_valuation_review_date)
         )
-        # §7.3（v1.16）：预告/快报公告日晚于估值时间即确定性入队冻结；幅度是复核的结论，不是入队门槛。
+        # §7.3（v1.16/v1.18）：预告/快报/正式报告公告日晚于估值时间即确定性入队冻结；幅度是复核的结论，不是入队门槛。
         forecast = forecasts_by_code.get(code)
         forecast_notice_date = parse_date((forecast or {}).get("notice_date"))
         forecast_valuation_trigger = bool(
-            is_valuation_scope_tier(tier.get("quality_tier", ""))
+            in_valuation_scope
             and forecast_notice_date
-            and (last_valuation_review_date is None or forecast_notice_date > last_valuation_review_date)
+            and (review_cutoff is None or forecast_notice_date > review_cutoff)
         )
-        valuation_review_needed = report_valuation_trigger or forecast_valuation_trigger
+        express_valuation_trigger = bool(
+            in_valuation_scope
+            and express_notice_date
+            and (review_cutoff is None or express_notice_date > review_cutoff)
+        )
+        periodic_valuation_trigger = bool(
+            in_valuation_scope
+            and periodic_notice_date
+            and (review_cutoff is None or periodic_notice_date > review_cutoff)
+        )
+        valuation_review_needed = (
+            report_valuation_trigger
+            or forecast_valuation_trigger
+            or express_valuation_trigger
+            or periodic_valuation_trigger
+        )
 
         event_reasons: list[str] = []
         if quality_review_needed:
             event_reasons.append("latest_report_after_last_quality_review")
-        if report_valuation_trigger:
-            event_reasons.append("latest_report_after_last_valuation_review")
+        if periodic_valuation_trigger:
+            event_reasons.append("report_disclosure_after_last_valuation_review")
+        if express_valuation_trigger:
+            event_reasons.append("express_report_after_last_valuation_review")
         if forecast_valuation_trigger:
             event_reasons.append("forecast_after_last_valuation_review")
+        if report_valuation_trigger and not periodic_valuation_trigger:
+            event_reasons.append("latest_report_after_last_valuation_review")
 
         if not event_reasons:
             continue
@@ -179,7 +254,10 @@ def build_queue(
                 "quality_tier_label": tier.get("quality_tier_label", ""),
                 "strategy_tag": tier.get("primary_strategy_tag", ""),
                 "latest_report_date": latest_report_date.isoformat() if latest_report_date else "",
-                "latest_report_type": (financial or {}).get("latest_report_type", ""),
+                "latest_report_type": latest_report_type,
+                "latest_periodic_notice_date": periodic_notice_date.isoformat() if periodic_notice_date else "",
+                "latest_periodic_report_label": (periodic or {}).get("report_label", ""),
+                "latest_express_notice_date": express_notice_date.isoformat() if express_notice_date else "",
                 "latest_forecast_notice_date": forecast_notice_date.isoformat() if forecast_notice_date else "",
                 "latest_forecast_type": (forecast or {}).get("predict_type", ""),
                 "last_quality_review_date": last_quality_review_date.isoformat() if last_quality_review_date else "",
@@ -216,6 +294,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_FORECASTS,
         help="业绩预告物化文件（§6.7.8，每日经 §9.1 步骤 0 重抓）；缺失时仅按定期报告触发。",
     )
+    parser.add_argument(
+        "--report-disclosures",
+        type=Path,
+        default=DEFAULT_DISCLOSURES,
+        help="定期报告/业绩快报披露物化文件（§6.7.9，每日经 §9.1 步骤 0 重抓）；缺失时退回报告期末比较口径。",
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     return parser.parse_args()
 
@@ -230,6 +314,7 @@ def main() -> None:
         load_csv(args.valuation_pool),
         load_csv(args.financials),
         load_csv(args.forecasts),
+        load_csv(args.report_disclosures),
         args.as_of,
     )
     fieldnames = [
@@ -244,6 +329,9 @@ def main() -> None:
         "strategy_tag",
         "latest_report_date",
         "latest_report_type",
+        "latest_periodic_notice_date",
+        "latest_periodic_report_label",
+        "latest_express_notice_date",
         "latest_forecast_notice_date",
         "latest_forecast_type",
         "last_quality_review_date",
@@ -260,7 +348,12 @@ def main() -> None:
     ]
     write_csv(args.output, rows, fieldnames)
     forecast_hits = sum(1 for row in rows if "forecast_after_last_valuation_review" in str(row["queue_reasons"]))
-    print(f"wrote {len(rows)} rows to {args.output}; forecast-triggered {forecast_hits}")
+    express_hits = sum(1 for row in rows if "express_report_after_last_valuation_review" in str(row["queue_reasons"]))
+    periodic_hits = sum(1 for row in rows if "report_disclosure_after_last_valuation_review" in str(row["queue_reasons"]))
+    print(
+        f"wrote {len(rows)} rows to {args.output}; "
+        f"forecast-triggered {forecast_hits}, express-triggered {express_hits}, periodic-triggered {periodic_hits}"
+    )
 
 
 if __name__ == "__main__":
