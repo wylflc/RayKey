@@ -14,6 +14,7 @@ DEFAULT_ATTENTION_TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"
 DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_FINANCIALS = ROOT / "data/interim/a_share_financial_indicators.csv"
+DEFAULT_FORECASTS = ROOT / "data/interim/a_share_earnings_forecasts.csv"
 DEFAULT_OUTPUT = ROOT / "data/interim/a_share_report_update_queue.csv"
 
 
@@ -55,6 +56,20 @@ def is_valuation_scope_tier(tier: str) -> bool:
     return tier.startswith(("L1", "L2", "L3", "L4"))
 
 
+def load_latest_forecasts(rows: list[dict[str, str]]) -> dict[str, dict[str, str]]:
+    """§7.3（v1.16）：每代码取最新公告日的预告行（仅 is_latest=T）。
+    指标口径（归母/扣非/营收）在此无关——入队只看公告日是否晚于估值时间。"""
+    best: dict[str, dict[str, str]] = {}
+    for row in rows:
+        if row.get("is_latest") != "T":
+            continue
+        code = row.get("security_code", "").zfill(6)
+        current = best.get(code)
+        if current is None or row.get("notice_date", "") > current.get("notice_date", ""):
+            best[code] = row
+    return best
+
+
 def attention_class(row: dict[str, str] | None) -> str:
     if not row:
         return ""
@@ -85,11 +100,13 @@ def build_queue(
     tier_rows: list[dict[str, str]],
     valuation_rows: list[dict[str, str]],
     financial_rows: list[dict[str, str]],
+    forecast_rows: list[dict[str, str]],
     as_of: str,
 ) -> list[dict[str, object]]:
     attention_by_code = {row["security_code"].zfill(6): row for row in attention_rows if row.get("security_code")}
     financials_by_code = {row["security_code"].zfill(6): row for row in financial_rows if row.get("security_code")}
     valuation_by_code = {row["security_code"].zfill(6): row for row in valuation_rows if row.get("security_code")}
+    forecasts_by_code = load_latest_forecasts(forecast_rows)
     as_of_date = parse_date(as_of) or datetime.now(timezone.utc).date()
     output: list[dict[str, object]] = []
 
@@ -114,17 +131,28 @@ def build_queue(
         quality_review_needed = bool(
             latest_report_date and (last_quality_review_date is None or latest_report_date > last_quality_review_date)
         )
-        valuation_review_needed = bool(
+        report_valuation_trigger = bool(
             is_valuation_scope_tier(tier.get("quality_tier", ""))
             and latest_report_date
             and (last_valuation_review_date is None or latest_report_date > last_valuation_review_date)
         )
+        # §7.3（v1.16）：预告/快报公告日晚于估值时间即确定性入队冻结；幅度是复核的结论，不是入队门槛。
+        forecast = forecasts_by_code.get(code)
+        forecast_notice_date = parse_date((forecast or {}).get("notice_date"))
+        forecast_valuation_trigger = bool(
+            is_valuation_scope_tier(tier.get("quality_tier", ""))
+            and forecast_notice_date
+            and (last_valuation_review_date is None or forecast_notice_date > last_valuation_review_date)
+        )
+        valuation_review_needed = report_valuation_trigger or forecast_valuation_trigger
 
         event_reasons: list[str] = []
         if quality_review_needed:
             event_reasons.append("latest_report_after_last_quality_review")
-        if valuation_review_needed:
+        if report_valuation_trigger:
             event_reasons.append("latest_report_after_last_valuation_review")
+        if forecast_valuation_trigger:
+            event_reasons.append("forecast_after_last_valuation_review")
 
         if not event_reasons:
             continue
@@ -152,6 +180,8 @@ def build_queue(
                 "strategy_tag": tier.get("primary_strategy_tag", ""),
                 "latest_report_date": latest_report_date.isoformat() if latest_report_date else "",
                 "latest_report_type": (financial or {}).get("latest_report_type", ""),
+                "latest_forecast_notice_date": forecast_notice_date.isoformat() if forecast_notice_date else "",
+                "latest_forecast_type": (forecast or {}).get("predict_type", ""),
                 "last_quality_review_date": last_quality_review_date.isoformat() if last_quality_review_date else "",
                 "last_valuation_review_date": last_valuation_review_date.isoformat() if last_valuation_review_date else "",
                 "valuation_date_basis": valuation_date_basis,
@@ -180,6 +210,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tiers", type=Path, default=DEFAULT_TIERS)
     parser.add_argument("--valuation-pool", type=Path, default=DEFAULT_VALUATION_POOL)
     parser.add_argument("--financials", type=Path, default=DEFAULT_FINANCIALS)
+    parser.add_argument(
+        "--forecasts",
+        type=Path,
+        default=DEFAULT_FORECASTS,
+        help="业绩预告物化文件（§6.7.8，每日经 §9.1 步骤 0 重抓）；缺失时仅按定期报告触发。",
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     return parser.parse_args()
 
@@ -193,6 +229,7 @@ def main() -> None:
         load_csv(args.tiers),
         load_csv(args.valuation_pool),
         load_csv(args.financials),
+        load_csv(args.forecasts),
         args.as_of,
     )
     fieldnames = [
@@ -207,6 +244,8 @@ def main() -> None:
         "strategy_tag",
         "latest_report_date",
         "latest_report_type",
+        "latest_forecast_notice_date",
+        "latest_forecast_type",
         "last_quality_review_date",
         "last_valuation_review_date",
         "valuation_date_basis",
@@ -220,7 +259,8 @@ def main() -> None:
         "generated_at_utc",
     ]
     write_csv(args.output, rows, fieldnames)
-    print(f"wrote {len(rows)} rows to {args.output}")
+    forecast_hits = sum(1 for row in rows if "forecast_after_last_valuation_review" in str(row["queue_reasons"]))
+    print(f"wrote {len(rows)} rows to {args.output}; forecast-triggered {forecast_hits}")
 
 
 if __name__ == "__main__":

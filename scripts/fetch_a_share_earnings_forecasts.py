@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Materialize A-share earnings preannouncements (业绩预告) from Eastmoney.
 
-Feeds the pool MD's 中报预告 column (§6.7.8) and the §7.5.5 express-review
-queue. Raw-first: the full-market forecast list for one report date is saved
-with provenance (retrieval time, source); consumers filter by their own code
-lists. Field notes (validated 2026-07-17): PREDICT_FINANCE_CODE 004=归母净利,
-005=扣非净利, 006=营业收入; amounts in CNY; PREYEAR_SAME_PERIOD = 去年同期值.
+Feeds the §7.5.5 express-review queue and the pool refresh summary (§6.7.8).
+Re-run every scan day per §9.1 step 0 — disclosures arrive daily, and a stale
+file silently closes the §7.4/§7.5.5 event inlet. Raw-first: the full-market
+forecast list for one report date is saved with provenance (retrieval time,
+source); consumers filter by their own code lists. Field notes (validated
+2026-07-17): PREDICT_FINANCE_CODE 004=归母净利, 005=扣非净利, 006=营业收入;
+amounts in CNY; PREYEAR_SAME_PERIOD = 去年同期值.
 """
 
 from __future__ import annotations
@@ -15,7 +17,7 @@ import csv
 import json
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +41,16 @@ FIELDNAMES = [
     "source",
     "retrieved_at_utc",
 ]
+
+
+def latest_ended_quarter_end(today: date | None = None) -> str:
+    """最近一个已结束的季度报告期末（§9.1 步骤 0 缺省口径）。"""
+    current = today or datetime.now(timezone.utc).date()
+    for month, day in ((9, 30), (6, 30), (3, 31)):
+        end = date(current.year, month, day)
+        if current > end:
+            return end.isoformat()
+    return f"{current.year - 1}-12-31"
 
 
 def fetch_pages(report_date: str, timeout: float, page_size: int) -> list[dict[str, object]]:
@@ -69,13 +81,18 @@ def fetch_pages(report_date: str, timeout: float, page_size: int) -> list[dict[s
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--report-date", default="2026-06-30", help="报告期，如 2026-06-30（中报）。")
+    parser.add_argument(
+        "--report-date",
+        default=None,
+        help="报告期，如 2026-06-30（中报）；缺省自动取最近一个已结束的季度报告期末。",
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--timeout", type=float, default=15.0)
     parser.add_argument("--page-size", type=int, default=500)
     args = parser.parse_args()
 
-    raw = fetch_pages(args.report_date, args.timeout, args.page_size)
+    report_date = args.report_date or latest_ended_quarter_end()
+    raw = fetch_pages(report_date, args.timeout, args.page_size)
     retrieved_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     out_rows = [
         {
@@ -102,7 +119,7 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=FIELDNAMES)
         writer.writeheader()
         writer.writerows(out_rows)
-    print(f"wrote {len(out_rows)} forecast rows (report_date={args.report_date}) to {args.output}")
+    print(f"wrote {len(out_rows)} forecast rows (report_date={report_date}) to {args.output}")
 
 
 if __name__ == "__main__":

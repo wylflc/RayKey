@@ -713,7 +713,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 5. 未过准入矩阵但估值为低估/较低估/中性/较高估的 L1-L4 公司，输出 `pool_layer = watch_only` 仅观察层（v20）：进入每日扫描可见范围，不具备买入资格；watch_only 行日志 `decision_type = scan_watch_only`。
 6. `fair_price_low`/`fair_price_high`/`fair_price_basis` 与 `total_market_cap_bn`（§8.5.6 巨盘条件输入，十亿口径）原样透传到池 CSV。阅读版 MD 为**单一列表**（v1.05：不再分设高估/无法估值小节，全量统一展示、统一处理），不单列"层"；每行展示：估值（当日自动定档，与审定档不同时显示 `审定档→现档`）、策略、现价、合理价区间（估值唯一输出锚，公允中枢≈区间中值）、空间、现价口径 PE(TTM)/PB、**估值时间**（最近一次估值复核日 `valuation_reviewed_at`）、**估值事件**（该次复核依据的最新披露 `valuation_evidence_event`，v1.08）；业绩预告不入表（v1.09，见要求 8），复核时点价（`valuation_price`）、审定档与核心理由保留在池 CSV。
 7. 现价刷新与档位差分（v1.03/v1.05）：`--quotes fetch` 经 `scripts/a_share_quotes.py` 拉取腾讯批量行情快照；`--md-only` 供每日扫描调用——只重渲染 MD 并写一行 `pool_price_refresh` 汇总日志，不重写池 CSV、不逐股重写池结论。每次渲染把当日有效档位写入快照 `data/interim/pool_effective_tiers.csv`，与上一快照差分得出**当日档位变化名单**（进汇总日志与扫描报告第二节）；现价缺失（停牌/请求失败）的行沿用估值时点值定档。
-8. 业绩预告物化（v1.04；v1.09 起不在 MD 展示）：`scripts/fetch_a_share_earnings_forecasts.py` 将东财业绩预告接口物化为 `data/interim/a_share_earnings_forecasts.csv`（`--report-date` 指定报告期，适用一季报/中报/三季报/年度各预告季；字段含代码、报告期、公告日、指标口径 004归母/005扣非/006营收、预告区间、同比增幅、去年同期、预告类型、检索时间与来源）。该文件**只作 §7.5.5 express 复核队列的输入**：刷新汇总统计预告覆盖数，预告公告日晚于 `valuation_reviewed_at` 的标的即为待复核名单；复核完成后其影响体现为 估值时间/估值事件 两列与合理价区间的更新，预告具体数字不进入池 MD。
+8. 业绩预告物化（v1.04；v1.09 起不在 MD 展示；v1.16 起每日刷新）：`scripts/fetch_a_share_earnings_forecasts.py` 将东财业绩预告接口物化为 `data/interim/a_share_earnings_forecasts.csv`（`--report-date` 缺省自动取最近一个已结束的季度报告期末，可显式指定，适用一季报/中报/三季报/年度各预告季；字段含代码、报告期、公告日、指标口径 004归母/005扣非/006营收、预告区间、同比增幅、去年同期、预告类型、检索时间与来源）。该文件**不是一次性物化，而是每个扫描日经 §9.1 步骤 0 重抓**——预告披露是逐日到达的事件流，停更的文件等于关闭 §7.4/§7.5.5 的事件入口（判例：睿创微纳 2026-07-20 盘后预告，7/17 的旧文件使其三个交易日不可见）。该文件**只作 §7.5.5 express 复核队列的输入**，且刷新汇总**不得只报覆盖数**：必须列出**待复核名单本身**（代码+名称+公告日；判定=`is_latest=T` 且 预告公告日晚于该股 `valuation_reviewed_at`，缺失时回退 `pool_as_of`），并标注预告文件检索时间——检索日早于扫描日时加"⚠️预告数据过期"警告并按 §9.1 步骤 0 当场重抓。待复核名单逐票按 §7.5.5 express 复核闭环（复核更新 `valuation_reviewed_at`/`valuation_evidence_event` 后自动移出名单）；名单非空时写入扫描报告第二节与第三节待办。复核完成后其影响体现为 估值时间/估值事件 两列与合理价区间的更新，预告具体数字不进入池 MD。
 
 ## 7. 阶段三：财报披露后的滚动更新
 
@@ -726,10 +726,11 @@ python3 scripts/build_report_update_queue.py \
   --attention-triage data/processed/a_share_attention_triage.csv \
   --tiers data/processed/a_share_watchlist_quality_tiers.csv \
   --valuation-pool data/processed/a_share_core_valuation_pool.csv \
+  --forecasts data/interim/a_share_earnings_forecasts.csv \
   --output data/interim/a_share_report_update_queue.csv
 ```
 
-`attention_class = garbage` 的公司不进入财报滚动更新队列。
+`attention_class = garbage` 的公司不进入财报滚动更新队列。队列每个扫描日随 §9.1 步骤 0 重建（v1.16）——队列文件停留在旧 `as_of` 时，§7.3/§7.4 的新触发与 §7.5 冻结全部失效，属执行缺陷。
 
 ### 7.2 质量复核触发
 
@@ -742,16 +743,18 @@ python3 scripts/build_report_update_queue.py \
 
 ```text
 如果 quality_tier in ["L1", "L2", "L3", "L4"] 且 latest_report_date > last_valuation_review_date：
-    进入估值复核队列
+    进入估值复核队列（queue_reasons = latest_report_after_last_valuation_review）
+如果 quality_tier in ["L1", "L2", "L3", "L4"] 且 业绩预告/快报公告日 > last_valuation_review_date：
+    进入估值复核队列（queue_reasons = forecast_after_last_valuation_review，v1.16）
 ```
 
-`last_valuation_review_date` 取估值表/核心池的 `valuation_reviewed_at`；该字段缺失时回退 `pool_as_of` 并在队列标注口径降级。
+`last_valuation_review_date` 取估值表/核心池的 `valuation_reviewed_at`；该字段缺失时回退 `pool_as_of` 并在队列标注口径降级。预告公告日由队列脚本从预告物化文件（§6.7.8）确定性判定：**只要存在晚于估值时间的新预告即入队并冻结（§7.5），"是否大幅超/低预期"是复核的结论，不是入队的门槛**——门槛式措辞会让无人判断幅度时预告整体失流（睿创微纳 2026-07-20 判例）。
 
 ### 7.4 事件复核触发
 
 出现以下事件时立即进入事件复核队列：
 
-1. 业绩预告或业绩快报大幅超预期或低于预期。
+1. 业绩预告或业绩快报披露（L1-L4 一律经 §7.3 确定性入队，v1.16；幅度是否重大由复核判定，不作入队门槛）。
 2. 重大订单、重大客户认证、重大产品发布。
 3. 重大并购、资产出售、控制权变更。
 4. 交易所问询、监管处罚、审计异常。
@@ -766,7 +769,7 @@ python3 scripts/build_report_update_queue.py \
 2. 每日量价扫描读取更新队列（`--review-queue`），对池内处于冻结状态的股票即使出现有效信号也只输出 `buy_blocked_review_pending`，不列买入候选（§8.9/§11）。
 3. 冻结不影响已有持仓的卖出扫描与风险监控。
 4. 解除条件：完成质量/估值复核并更新 `valuation_reviewed_at` 与 `valuation_evidence_event` 后，重新生成更新队列即自动解除；复核结论若为高估/无法估值或降档，则按正常规则移出核心池。
-5. 预告季时效（v20）：L1-L4名单内公司披露业绩预告/快报当晚，须在下一交易日开盘前完成单票 express 估值增量更新（含策略标签复检，如GARP拐点确认改挂D口径），使买入冻结不横跨信号日；boundary_pending 公司命中复核触发的，当日写入复核队列。
+5. 预告季时效（v20）：L1-L4名单内公司披露业绩预告/快报当晚，须在下一交易日开盘前完成单票 express 估值增量更新（含策略标签复检，如GARP拐点确认改挂D口径），使买入冻结不横跨信号日；boundary_pending 公司命中复核触发的，当日写入复核队列。**超期补做（v1.16）**：披露未被当晚发现的（漏检、非交易时段发起等），§9.1 步骤 0 检测到之时必须当场补做 express 复核，并在决策日志 `summary_reason` 注明超期原因；补做完成前该股保持 `review_pending` 冻结。复核义务与池内层无关——watch_only/excluded 行同样必须复核（冻结只关买入，带的时效性关系到档位、卖出许可与持仓监控）。
 
 ## 8. 阶段四：每日量价扫描
 
@@ -1179,8 +1182,9 @@ close / MA20 - 1 > 25%
 
 ### 9.1 组合流程（每交易日一次，支持盘中发起）
 
-用户发起"当日的每日扫描"时按固定顺序执行——**先持仓、后池**：
+用户发起"当日的每日扫描"时按固定顺序执行——**先披露同步，再先持仓、后池**：
 
+0. **披露同步（v1.16，先于两项扫描）**：先刷新业绩预告物化文件，再重建报告更新队列——`python3 scripts/fetch_a_share_earnings_forecasts.py`（`--report-date` 缺省自动取最近一个已结束的季度报告期末；接口不可用时沿用旧文件，并在当日条目显式标注其检索日）→ `python3 scripts/build_report_update_queue.py --market A_SHARE --as-of 当日`。本步使 §7.5 买入冻结、§6.7.8 待复核名单与 §7.3/§7.4 复核触发全部基于当日最新披露；队列文件 `as_of` 早于扫描日即为执行缺陷，须当场补跑。判例：睿创微纳 2026-07-20 盘后中报预增 +242%-270%（公告日 7/21），因预告文件停在 7/17、队列停在 7/10、7/21 弱级触发不核公告，三层全部漏检，直至 7/22 用户指出——本步即为此增设。
 1. **持仓健康度**：运行 `scan_holdings_sell_signals.py --as-of 当日`（读取账户快照），按 §14 状态字与 §9.2 红黄绿映射汇总每只持仓的健康度、当日量价特征与需要的动作。
 2. **池内关注对象**：运行 `screen_daily_volume_price_signals.py --as-of 当日 --review-queue data/interim/a_share_report_update_queue.csv`，从输出中筛选 `buy_candidate`（按 §8.10 优先级 × §8.7 信号分级排序，标注 §8.13 入场阶段与带内位置）与 `signal_watch_only`，逐只写出关注原因。随后运行 `build_a_share_core_valuation_pool.py --md-only --quotes fetch --as-of 当日` 刷新池阅读版（现价/空间/PE/PB/价格自动定档，§6.7.7）；刷新汇总给出的**当日档位变化名单**写入扫描报告第二节。**候选判定纯量价×档位口径（v1.02）**：账户杠杆、仓位包络、资金状态、既有持仓结构一律不参与候选的判定、分级、阶段与排序；执行侧约束（包络、棘轮、买入时间窗）只在 §10 闸门与下单环节核对，扫描第二节不得出现基于账户状态的冻结、降序或"仅记录不执行"结论。
 3. **输出**：按 §9.2 格式先以回复形式给出，再将同一内容置顶写入 §9.4 扫描日志。两张 CSV 与决策日志照常由脚本生成（v25 起脚本不再生成独立 tracker 阅读版）；扫描日志是唯一每日阅读文件，不替代机器记录。
@@ -1208,6 +1212,7 @@ close / MA20 - 1 > 25%
 - 名称（代码）｜优先级×信号分级｜层级×估值档｜入场阶段（§8.13：已达X段/需Y段）｜带内位置（现价 vs 合理价区间）｜关注原因：触发形态+量价要点+当日催化｜下一步（§10闸门核对 / 等下一段 / 等回踩）
 - 未过矩阵触发（可见不可买）：名称（代码）｜当日档位｜信号｜走24小时异动响应 + §7.4复核
 - 档位变化（价格自动定档，§6.2.1.6）：代码名称 原档→新档（当日新发生的；无则省略本行）
+- §7.5.5 待复核（预告/快报公告日晚于估值时间，§6.7.8 名单）：代码名称（公告日）…｜逐票 express 复核后移出；未闭环的列入第三节待办（无则省略本行）
 （今日无触发时写明扫描只数与"无有效信号"，可附 wait_confirmation 名单）
 
 ### 三、今日待办（无则省略本节）
@@ -1636,4 +1641,4 @@ python3 scripts/scan_holdings_sell_signals.py \
 
 ## 16. 版本记录
 
-版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.15**（2026-07-21，持仓健康度表增列估值三要素——§9.2 持仓行必列 层级×现档 与 带位（§6.2.1.6 口径，与候选行一致），`scan_holdings_sell_signals.py` 输出增 `band_position` 列）。
+版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.16**（2026-07-22，披露同步闭环——§9.1 新增步骤 0 每日重抓预告物化文件并重建报告更新队列，§7.3 预告公告日成为确定性估值复核触发（入队不设幅度门槛），§7.5.5 增超期补做条款，§6.7.8 刷新汇总由覆盖数改为输出待复核名单并标注检索时间；睿创微纳 2026-07-20 盘后中报预增三层漏检判例驱动）。

@@ -192,6 +192,15 @@ def load_forecasts(path: Path) -> dict[str, dict[str, str]]:
     return best
 
 
+def forecasts_retrieved_on(path: Path) -> str:
+    """预告物化文件的检索日（retrieved_at_utc 最大值的日期部分）；文件缺失返回空。
+    §6.7.8（v1.16）：检索日早于扫描日=数据过期，须按 §9.1 步骤 0 重抓。"""
+    if not path.exists():
+        return ""
+    stamps = [str(row.get("retrieved_at_utc") or "") for row in load_csv(path)]
+    return max(stamps)[:10] if stamps else ""
+
+
 def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     """阅读版单元格：现价/空间/PE/PB 按行情快照刷新，档位按 §6.2.1.6 价格自动定档。"""
     low = _to_float(row.get("fair_price_low"))
@@ -262,7 +271,7 @@ def write_markdown(
     prev_tiers: dict[str, str] | None = None,
 ) -> dict[str, object]:
     """渲染单一列表阅读版 MD（v1.05）；返回 {'changes': 当日档位变化, 'drift': 现档≠审定档,
-    'forecast': 有预告代码, 'current_tiers': {code: (name, tier)}}。"""
+    'forecast': 有预告代码, 'forecast_pending': §7.5.5 待复核名单, 'current_tiers': {code: (name, tier)}}。"""
     path.parent.mkdir(parents=True, exist_ok=True)
     quotes = quotes or {}
     forecasts = forecasts or {}
@@ -275,6 +284,7 @@ def write_markdown(
     changes: list[str] = []
     drift: list[str] = []
     forecast_codes: list[str] = []
+    forecast_pending: list[str] = []
     current_tiers: dict[str, tuple[str, str]] = {}
 
     body: list[str] = []
@@ -291,6 +301,11 @@ def write_markdown(
             changes.append(f"{code}{row['security_name']} {prev}→{effective}")
         if frow:
             forecast_codes.append(code)
+            # §6.7.8（v1.16）：公告日晚于估值时间 = §7.5.5 待复核（缺失回退 pool_as_of）。
+            reviewed = str(row.get("valuation_reviewed_at") or row.get("pool_as_of") or "")
+            notice = str(frow.get("notice_date") or "")
+            if notice and notice > reviewed:
+                forecast_pending.append(f"{code}{row['security_name']}({notice})")
         body.append(
             "| {security_code} | {security_name} | {quality_tier_label} | ".format(**row)
             + str(cells["valuation_cell"])
@@ -322,7 +337,13 @@ def write_markdown(
         *body,
     ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return {"changes": changes, "drift": drift, "forecast": forecast_codes, "current_tiers": current_tiers}
+    return {
+        "changes": changes,
+        "drift": drift,
+        "forecast": forecast_codes,
+        "forecast_pending": forecast_pending,
+        "current_tiers": current_tiers,
+    }
 
 
 def log_pool_decisions(
@@ -364,21 +385,38 @@ def log_pool_decisions(
     )
 
 
+def forecast_summary(flags: dict[str, object], forecast_retrieved: str, as_of: str) -> str:
+    """§6.7.8（v1.16）刷新汇总的预告部分：覆盖数 + 检索日（过期加警告）+ 待复核名单本身。"""
+    covered = len(list(flags.get("forecast") or []))
+    pending = list(flags.get("forecast_pending") or [])
+    if not forecast_retrieved:
+        freshness = "（预告物化文件缺失，须按 §9.1 步骤 0 抓取）"
+    elif forecast_retrieved < as_of:
+        freshness = f"（检索于 {forecast_retrieved} ⚠️早于扫描日，数据过期，须按 §9.1 步骤 0 重抓）"
+    else:
+        freshness = f"（检索于 {forecast_retrieved}）"
+    shown = "、".join(pending[:40]) + (f" …等共 {len(pending)} 只" if len(pending) > 40 else "")
+    pending_part = f"；§7.5.5 待复核 {len(pending)} 只（公告日晚于估值时间）" + (f"：{shown}" if pending else "")
+    return f"业绩预告覆盖 {covered} 只{freshness}{pending_part}"
+
+
 def log_price_refresh(
     log_file: Path,
     as_of: str,
     quote_count: int,
     total: int,
     flags: dict[str, object],
+    forecast_retrieved: str,
     output_md: Path,
 ) -> None:
-    """--md-only 现价刷新只写一行汇总日志：当日档位变化 + 预告覆盖。"""
+    """--md-only 现价刷新只写一行汇总日志：当日档位变化 + 预告覆盖与 §7.5.5 待复核名单。"""
     changes = list(flags.get("changes") or [])
     drift = list(flags.get("drift") or [])
+    pending = list(flags.get("forecast_pending") or [])
     summary_parts = [
         ("当日档位变化（价格自动定档）：" + "、".join(changes)) if changes else "当日无档位变化",
         f"现档≠审定档共 {len(drift)} 只",
-        f"业绩预告覆盖 {len(list(flags.get('forecast') or []))} 只（§7.5.5 复核队列输入，不入表）",
+        forecast_summary(flags, forecast_retrieved, as_of),
     ]
     append_decision_log(
         log_file,
@@ -391,7 +429,10 @@ def log_price_refresh(
                 "security_code": "POOL",
                 "security_name": "估值池现价刷新",
                 "decision_type": "pool_price_refresh",
-                "decision_result": f"quotes {quote_count}/{total}; tier_changes {len(changes)}; drift {len(drift)}",
+                "decision_result": (
+                    f"quotes {quote_count}/{total}; tier_changes {len(changes)}; drift {len(drift)}; "
+                    f"forecast_pending {len(pending)}"
+                ),
                 "summary_reason": "；".join(summary_parts),
                 "input_files": "",
                 "source_urls": "https://qt.gtimg.cn/;https://datacenter-web.eastmoney.com/",
@@ -445,6 +486,7 @@ def main() -> None:
     if args.quotes == "fetch":
         quotes = fetch_spot_quotes([(row["security_code"], row.get("exchange", "")) for row in rows], timeout=args.timeout)
     forecasts = load_forecasts(args.forecasts)
+    forecast_retrieved = forecasts_retrieved_on(args.forecasts)
     prev_tiers = load_tier_snapshot(args.tier_snapshot)
     fieldnames = [
         "market_type",
@@ -479,10 +521,11 @@ def main() -> None:
     changes = list(flags.get("changes") or [])
     summary = (
         f"tier changes today: {'、'.join(changes) if changes else '无'}; "
-        f"drift vs 审定档: {len(list(flags.get('drift') or []))}; forecasts: {len(list(flags.get('forecast') or []))}"
+        f"drift vs 审定档: {len(list(flags.get('drift') or []))}; "
+        f"{forecast_summary(flags, forecast_retrieved, args.as_of)}"
     )
     if args.md_only:
-        log_price_refresh(args.log_file, args.as_of, len(quotes), len(rows), flags, args.output_md)
+        log_price_refresh(args.log_file, args.as_of, len(quotes), len(rows), flags, forecast_retrieved, args.output_md)
         print(f"refreshed {args.output_md} with {len(quotes)}/{len(rows)} quotes; {summary}")
     else:
         log_pool_decisions(args.log_file, rows, args.as_of, args.valuation, args.tiers, args.output_csv, args.output_md)
