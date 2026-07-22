@@ -1,4 +1,4 @@
-﻿security_code,security_name,attention_class,attention_reason,capital_replicability_note,garbage_reason,garbage_subtype,boundary_recheck_trigger,evidence_basis,reviewed_at_utc,workflow_version
+security_code,security_name,attention_class,attention_reason,capital_replicability_note,garbage_reason,garbage_subtype,boundary_recheck_trigger,evidence_basis,reviewed_at_utc,workflow_version
 600519,贵州茅台,worth_attention,全国超高端白酒龙头，品牌/赤水河产区/年份基酒/定价权穿越周期已验证,茅台品牌与产区、陈年基酒储备资金无法复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
 000858,五粮液,worth_attention,全国浓香高端龙头，明代老窖池+品牌+全国渠道，穿越周期验证,老窖池与高端品牌不可资本复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
 600809,山西汾酒,worth_attention,全国清香龙头，杏花村品牌，全国化扩张显示周期韧性,清香龙头品牌与历史不可复制,,,,a-share-baijiu.md（2025年报/KPMG2025）,2026-06-28T13:43:52Z,a-share-selection-operation-v9
@@ -821,7 +821,7 @@
 601228,广州港,boundary_pending,港口规制（规则9）,,,,费率市场化改善后复核,round1轻量初筛（规则9规制回报口径）,2026-07-06T22:40:11Z,a-share-selection-operation-v13
 601298,青岛港,boundary_pending,港口效率与ROE居行业前列但装卸费率管制，规制回报（规则9）,,,,费率市场化或ROE中枢突破后复核,round1轻量初筛（规则9规制回报口径）,2026-07-06T22:40:11Z,a-share-selection-operation-v13
 601318,中国平安,boundary_pending,综合金融龙头但寿险代理人模式重构、利差损压力，ROE降至10%区间，franchise优势收窄（规则11从严）,,,,NBV与ROE趋势性回升后复核,round1轻量初筛（规则11从严：利差损环境超额回报未验证）,2026-07-06T22:40:11Z,a-share-selection-operation-v13
-601319,中国人保,boundary_pending,财险车险寡头但费率综改管制压价，集团寿险拖累（规则10类比）,,,,财险COR优势持续扩大且回报上移后复核,round1轻量初筛（规则10类比：费率管制）,2026-07-06T22:40:11Z,a-share-selection-operation-v13
+601319,中国人保,boundary_pending,"财险车险寡头但费率监管持续压价（规则10类比）；2026-07-22复核：COR优势收窄证伪""优势扩大""——2025整体COR97.5-97.6%被平安96.8%反超、车险COR领先由2024约1.3pct收窄至0.3-0.5pct，Q1'26 94.2%仍最低但改善幅度(-0.3pct)小于平安(-0.8)/太保(-1.0)；集团ROE16.1%(-0.6pct)、Q1归母-31.4%（投资端）。回报未上移，维持boundary。",,,,财险COR优势重新扩大（对平安差距回到≥1pct且连续两期）且集团ROE回升；或车险费率监管实质放松,2025年报摘要（COR97.6%/车险95.3%/ROE16.1%/NBV+64.5%）；Q1'26季报（COR94.2%、归母-31.4%）；同业2025：平安96.8%/太保97.5%；监管36号文非车报行合一+2026-05车险停业处罚（无放松）；检索2026-07-22,2026-07-22T07:32:56+00:00,a-share-selection-operation-v1.17
 601330,绿色动力,boundary_pending,垃圾焚烧规制国补退坡（规则9）,,,,供热转型回报改善后复核,round1轻量初筛（规则9规制回报口径）,2026-07-06T22:40:11Z,a-share-selection-operation-v13
 601333,广深铁路,boundary_pending,铁路客运定价管制ROE微薄（规则9）,,,,票价市场化与土地开发兑现后复核,round1轻量初筛（规则9规制回报口径）,2026-07-06T22:40:11Z,a-share-selection-operation-v13
 601339,百隆东方,boundary_pending,色纺纱双寡头但纺织商品化周期,,,,越南产能红利与格局改善后复核,round1轻量初筛（纺织商品化）,2026-07-06T22:40:11Z,a-share-selection-operation-v13
