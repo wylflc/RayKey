@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Scan A-share holdings for stop-loss, valuation-sell, and trend-sell actions.
 
-Deterministic part of operation-workflow Stage 5 (§14 卖出许可, v1.12): stop-loss
-hit (Tier-0), valuation-sell eligibility (effective tier 较高估/高估 per §6.2.1.6
-computed from the pool's fair band, with the keep-floor amount = position value
-minus build_amount_cny), major-trend deterioration (close below MA60/MA120 —
-a sell PERMISSION, not an order), valuation-tier refresh against the core pool,
+Deterministic part of operation-workflow Stage 5 (§14 卖出许可, v1.12; trend split
+v1.19): stop-loss hit (Tier-0), valuation-sell eligibility (effective tier
+较高估/高估 per §6.2.1.6 computed from the pool's fair band, with the keep-floor
+amount = position value minus build_amount_cny), major-trend deterioration under
+the two-state reference (§14 v1.19 — trend-state positions: close below
+MA60/MA120; reversal/base-state positions, i.e. first-entry-day close below that
+day's MA120 and not yet graduated by a close above MA120: close below the launch
+structure anchor `launch_platform_price` or MA20; a sell PERMISSION, not an
+order), valuation-tier refresh against the core pool,
 account drawdown/leverage alerts from the account snapshot, and the 1.5%
 single-trade risk check. Stop prices are user-set at entry and never adjusted or
 suggested by the system (v1.11). Lockup, profit ladders, and the three-tier
@@ -50,8 +54,11 @@ DRAWDOWN_TIERS = ((0.20, "红色警告"), (0.12, "黄色警告"), (0.08, "去杠
 OVERVALUED_MULT = 1.2
 DEEP_UNDERVALUED_SPACE = 0.40
 VALUATION_SELL_TIERS = {"较高估", "高估"}
-# §14 大趋势走坏（v1.12）：收盘跌破 MA60/MA120 即触发趋势卖出许可。
+# §14 大趋势走坏（v1.19 分态）：趋势态持仓收盘跌破 MA60/MA120 触发趋势卖出许可；
+# 反转/筑底态持仓（首次建仓日收盘 < 当日MA120，未毕业）改按启动结构锚/MA20 判定。
 TREND_WINDOWS = (60, 120)
+TREND_STATE_TREND = "趋势态"
+TREND_STATE_REVERSAL = "反转/筑底态"
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -171,6 +178,31 @@ def moving_average(closes: list[float], window: int) -> float | None:
     return sum(closes[-window:]) / window
 
 
+def classify_trend_state(dates: list[str], closes: list[float], entry_date: str) -> str:
+    """§14 v1.19 持仓趋势参照分态：首次建仓日收盘 < 当日MA120 → 反转/筑底态；
+    自建仓后任一收盘 > 当日MA120 即毕业转趋势态（不可逆）。上市不足 120 日无
+    MA120 的按反转态处理；无建仓日记录时保守沿用趋势态（原 v1.12 口径）。"""
+    if not entry_date:
+        return TREND_STATE_TREND
+    start = next((i for i, d in enumerate(dates) if d >= entry_date), None)
+    if start is None:
+        return TREND_STATE_TREND
+    state = None
+    for i in range(start, len(closes)):
+        ma = sum(closes[i - 119 : i + 1]) / 120 if i + 1 >= 120 else None
+        if ma is None:
+            if state is None:
+                state = TREND_STATE_REVERSAL  # 上市不足120日：无MA120，按反转态
+            continue
+        if state is None:
+            if closes[i] >= ma:
+                return TREND_STATE_TREND
+            state = TREND_STATE_REVERSAL
+        elif closes[i] > ma:
+            return TREND_STATE_TREND  # 毕业（不可逆）
+    return state or TREND_STATE_TREND
+
+
 def current_build_amount(total_assets: float) -> int:
     build = BASE_BUILD_AMOUNT
     while total_assets >= build * 20:
@@ -242,14 +274,38 @@ def classify_holding(
                        "data_source": "", "scanned_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")})
         return result
 
+    ma20 = moving_average(closes, 20)
     ma60 = moving_average(closes, 60)
     ma120 = moving_average(closes, 120)
     profit_pct = (close / cost - 1) if cost else None
     position_value = (current_shares or 0.0) * close
 
-    # §14 大趋势走坏（v1.12）：收盘跌破 MA60/MA120 即触发趋势卖出许可（许可非指令）。
-    broken = [f"MA{w}" for w, ma in zip(TREND_WINDOWS, (ma60, ma120)) if ma is not None and close < ma]
-    trend_deterioration = "跌破" + "+".join(broken) if broken else ""
+    # §14 大趋势走坏（v1.19 分态）：趋势态对照 MA60/MA120；反转/筑底态对照启动结构锚+MA20。
+    trend_state = classify_trend_state(dates, closes, (row.get("entry_date") or "").strip())
+    launch = to_float(row.get("launch_platform_price"))
+    structure_broken = False
+    if trend_state == TREND_STATE_TREND:
+        broken = [f"MA{w}" for w, ma in zip(TREND_WINDOWS, (ma60, ma120)) if ma is not None and close < ma]
+        trend_deterioration = "跌破" + "+".join(broken) if broken else ""
+        trend_detail = "、".join(
+            f"{name}≈{round(ma, 2)}" for name, ma in zip(("MA60", "MA120"), (ma60, ma120)) if ma is not None
+        )
+    else:
+        broken = []
+        if launch is not None and close < launch:
+            broken.append("启动结构")
+            structure_broken = True
+        if ma20 is not None and close < ma20:
+            broken.append("MA20")
+        trend_deterioration = "反转态跌破" + "+".join(broken) if broken else ""
+        trend_detail = "、".join(
+            part
+            for part in (
+                f"启动结构锚≈{launch}" if launch is not None else "",
+                f"MA20≈{round(ma20, 2)}" if ma20 is not None else "",
+            )
+            if part
+        )
 
     # §14 估值卖出资格（v1.12）：现档较高估/高估，可卖金额=市值−建仓金额（留底原则）。
     eff_tier = effective_valuation_tier(close, band_low, band_high)
@@ -271,10 +327,13 @@ def classify_holding(
         action, reason = "stop_loss_sell", f"现价 {close} <= 割肉价 {stop}，无条件清仓（当日/次日执行）"
     elif broken:
         action = "trend_sell_allowed"
-        detail = "、".join(
-            f"{name}≈{round(ma, 2)}" for name, ma in zip(("MA60", "MA120"), (ma60, ma120)) if ma is not None
-        )
-        reason = f"大趋势走坏：收盘 {close} {trend_deterioration}（{detail}），允许减仓乃至清仓（许可非指令，人工核对后执行）"
+        if trend_state == TREND_STATE_TREND:
+            label = "大趋势走坏"
+        elif structure_broken:
+            label = "反转态走坏·结构档（右侧事实失效，§8.13.4）"
+        else:
+            label = "反转态走坏·短期档"
+        reason = f"{label}：收盘 {close} {trend_deterioration}（{trend_detail}），允许减仓乃至清仓（许可非指令，人工核对后执行）"
         if valuation_sell:
             reason += f"；同时现档{eff_tier}具估值卖出资格"
     elif valuation_sell:
@@ -294,8 +353,10 @@ def classify_holding(
             "profit_pct": round(profit_pct, 4) if profit_pct is not None else "",
             "stop_loss_price": stop if stop is not None else "",
             "stop_hit": bool(stop is not None and close <= stop),
+            "ma20": round(ma20, 3) if ma20 is not None else "",
             "ma60": round(ma60, 3) if ma60 is not None else "",
             "ma120": round(ma120, 3) if ma120 is not None else "",
+            "trend_ref_state": trend_state,
             "trend_deterioration": trend_deterioration,
             "effective_valuation_tier": eff_tier,
             "band_position": band_position,
@@ -435,7 +496,7 @@ FIELDNAMES = [
     "as_of", "security_code", "security_name", "strategy_tag", "quality_tier", "valuation_tier",
     "position_status", "pool_valuation_tier", "valuation_alert",
     "entry_date", "cost_basis", "close", "profit_pct",
-    "stop_loss_price", "stop_hit", "ma60", "ma120", "trend_deterioration",
+    "stop_loss_price", "stop_hit", "ma20", "ma60", "ma120", "trend_ref_state", "trend_deterioration",
     "effective_valuation_tier", "band_position", "valuation_sell_eligible", "valuation_sell_allowed_amount",
     "sell_floor_amount",
     "initial_shares", "current_shares", "cumulative_trim_pct",
