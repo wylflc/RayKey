@@ -335,6 +335,9 @@ V_REVERSAL_DD = 0.25  # V反语境：近10日最低收盘距250日最高回撤>=
 PLATFORM_AMP = 0.15  # 平台：近20日收盘振幅上限
 PLATFORM_UNDERCUT_TOL = 0.97  # 平台容忍近20日最低 >= 60日最低×0.97（允许小幅磨底假破位）
 STAGE_VALID_DAYS = 5  # 阶段有效期（交易日）：期内未失效即延续，新触发即刷新
+PERSIST_WINDOW_DAYS = 10  # §8.11.1 持续候选回溯窗（交易日），同时是计段函数的回溯起点
+PERSIST_STAGE_MET_DAYS = 8  # §8.11.1 窗内段位达标日数门槛：持续可买而非一日达标
+PERSIST_TRIGGER_DAYS = 4  # §8.11.1 窗内新触发日数门槛：反复自我确认而非挂在一次旧触发上延续
 
 
 def _bull_at(rows: list[dict[str, float | str]], j: int) -> tuple[bool, bool]:
@@ -449,14 +452,20 @@ def stage_day_trigger(rows: list[dict[str, float | str]], j: int, megacap_yi: fl
 
 def compute_entry_stage(
     rows: list[dict[str, float | str]], index: int, megacap_yi: float | None
-) -> tuple[int, int, list[str]]:
+) -> tuple[int, int, list[str], list[int], int]:
     """§8.13 v1.06 有效段位（延续口径）：近 STAGE_VALID_DAYS 个交易日内达到的最高段位持续有效；
     承接升段（触发后收盘未破触发日最低价即升二段——放量大涨后的缩量整理是延续不是转弱）；
     有效期内收复MA20且高于触发日收盘 → 三段里程碑；失效条件：收盘跌破触发日最低价，或 放量下跌
-    （量比>=1.5且跌>=3%），或超过有效期无新触发。返回 (有效段位, 当日新达段位, 当日触发标签)。"""
-    start = max(60, index - 9)
+    （量比>=1.5且跌>=3%），或超过有效期无新触发。
+
+    返回 (有效段位, 当日新达段位, 当日触发标签, 回溯窗内逐日有效段位, 回溯窗内新触发日数)。
+    后两项服务 §8.11.1 持续候选提醒（v1.20）：逐日有效段位供调用方对照所需段位数达标日数，
+    新触发日数区分"反复自我确认"与"挂在一次旧触发上延续"。"""
+    start = max(60, index - PERSIST_WINDOW_DAYS + 1)
     eff, trig_idx, trig_low, trig_close = 0, None, None, None
     today_stage, today_tags = 0, []
+    stage_by_day: list[int] = []
+    trigger_days = 0
     for j in range(start, index + 1):
         row = rows[j]
         close = float(row["close"])
@@ -477,12 +486,14 @@ def compute_entry_stage(
                 trig_low, trig_close = float(row["low"]), close
             trig_idx = j  # 新触发刷新有效期；承接锚（触发日低/收）保持首次触发口径
             eff = max(eff, stage)
+            trigger_days += 1
         elif eff == 1 and trig_low is not None and close >= trig_low:
             eff = 2  # 承接升二段
         ma20 = row.get("ma20")
         if eff >= 1 and ma20 is not None and close > float(ma20) and trig_close is not None and close > trig_close:
             eff = max(eff, 3)  # 趋势里程碑：收复MA20且较触发日有浮盈
-    return eff, today_stage, today_tags
+        stage_by_day.append(eff)
+    return eff, today_stage, today_tags, stage_by_day, trigger_days
 
 
 def classify_signal(
@@ -572,7 +583,9 @@ def classify_signal(
         signals.append("8.7.0 放量上涨")
 
     # §8.7.8/§8.7.9 底部反转与企稳形态 + §8.13 v1.06 阶段延续：统一由计段函数判定。
-    entry_stage, entry_stage_today, stage_tags = compute_entry_stage(rows, index, megacap_yi)
+    entry_stage, entry_stage_today, stage_tags, stage_by_day, stage_trigger_days = compute_entry_stage(
+        rows, index, megacap_yi
+    )
     for tag in stage_tags:
         if tag not in signals:
             signals.append(tag)
@@ -672,6 +685,8 @@ def classify_signal(
         "trend_strength": trend_strength,
         "entry_stage": entry_stage,
         "entry_stage_today": entry_stage_today,
+        "stage_by_day": stage_by_day,  # §8.11.1 内部中间量，不出 CSV
+        "stage_trigger_days": stage_trigger_days,
         "megacap_volume": bool(conds["megacap"]),
         "market_cap_now_yi": megacap_yi or "",
     }
@@ -883,6 +898,11 @@ def main() -> None:
             required += 1
             row["stage_required"] = required
         stage = row.get("entry_stage") if isinstance(row.get("entry_stage"), int) else 0
+        # §8.11.1 持续候选（v1.20）：所需段位在弱势市已上调，故达标日数在此处结算。
+        stage_by_day = row.pop("stage_by_day", []) or []
+        row["stage_met_days"] = (
+            sum(1 for eff in stage_by_day if eff >= required) if isinstance(required, int) else 0
+        )
         if row.get("signal_state") == "buy_candidate":
             if isinstance(required, int):
                 if required > 4:
@@ -900,6 +920,17 @@ def main() -> None:
         if blocked and row.get("signal_state") == "buy_candidate" and str(row.get("security_code", "")).zfill(6) in blocked:
             row["signal_state"] = "buy_blocked_review_pending"
             row["action_bias"] = "复核完成前冻结买入（§7.5）"
+        # §8.11.1 持续候选置顶提醒（v1.20）：持续达标 × 反复新触发 × 未转弱。
+        # 判例特宝生物 2026-07-15→07-27：连续 8 日 buy_candidate、段位全程达标、期间 4 日新触发，
+        # 但 5 日为弱级，按 §9.3「弱级只汇总只数」在阅读版日志中不可见。本标只解决可见性，
+        # 不改变分级/优先级/入场阶段/买入资格。持仓的排除在 §9.2 组稿时执行（第一节已逐只可见）。
+        row["persistent_candidate"] = bool(
+            row.get("signal_state") == "buy_candidate"
+            and row.get("stage_met") is True
+            and row.get("stage_met_days", 0) >= PERSIST_STAGE_MET_DAYS
+            and row.get("stage_trigger_days", 0) >= PERSIST_TRIGGER_DAYS
+            and row.get("trend_strength") != "weakening"
+        )
     fieldnames = [
         "trade_date",
         "security_code",
@@ -923,6 +954,9 @@ def main() -> None:
         "entry_stage_today",
         "stage_required",
         "stage_met",
+        "stage_met_days",
+        "stage_trigger_days",
+        "persistent_candidate",
         "megacap_volume",
         "trend_strength",
         "market_state",
