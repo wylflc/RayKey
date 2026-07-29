@@ -18,6 +18,7 @@
 | 历史回放验证 | §12 | `backtest_signal_replay.py` | 点位时点池 → replay CSV | 解释成败、给调整建议 |
 | 这只股票现在能不能买（池外单票快速研判） | 单票 express：§5.4 → §5.7 → §6 → §8 | 无（量价按 §8 规则单票核对） | 单票 → 各段产物 + 决策日志 | 全链路分段判定，任一段否决即止 |
 | 指令命中重蹈覆辙红线（无信号左侧买入 / 摊平加仓 / 下调、取消割肉价 / 拆除防护层、整体转左侧） | 个人体系 §17 + 本文件 §15.1 | 无（模型对照红线清单逐项核对） | 用户指令 → 劝阻答复 + 替代路径；坚持执行则 §10.4 off_system 前置记录 + `discipline_intervention` 日志 | 红线识别、引用病历纠正劝阻、如实留痕 |
+| 我关注的非A股公司（港股/美股/韩股）质量几档、该用什么模型、现价贵不贵 | §6.8 海外关注清单 | `build_a_share_core_valuation_pool.py`（渲染附表）+ `scripts/overseas_quotes.py`（行情） | `overseas_watchlist_valuation.csv` → 池 MD 附表 + `overseas_watchlist` 日志 | 按 §5.7 分层、§6.5 选模型、归一化/中枢利润定带；**一律不可买**，不进 §8 扫描与 §10 闸门 |
 
 **单票按需全链路研判（express）**：对任意指定股票（含池外），按 §5.4 三类判定 → 若 `worth_attention` 按 §5.7 分层 → 若 L1-L4 按 §6 估值定档（入池按 §6.2.1 分层×估值准入矩阵） → 若入池再按 §8 检查当日量价信号，任一段否决即停止并给出结论。express 使用与批量流程完全相同的标准，不得降低门槛，也不得跳过 §10 人工核对与 §11 风险过滤；各段结论照常写入对应产物文件与决策日志，使一次性分析可追溯、可复用。该路径用于"今天想知道某只股票值不值得买"的快速决策场景。
 
@@ -45,8 +46,10 @@
 | `data/processed/a_share_watchlist_quality_tiers.csv` | A股值得关注公司质量分层结构化结果 |
 | `data/processed/000_a_share_watchlist_quality_tiers.md` | A股值得关注公司质量分层阅读版 |
 | `data/processed/a_share_core_valuation_pool.csv` | L1-L4 估值合格池机器口径（§6.2.1 矩阵物化，含 `pool_layer` 与 `total_market_cap_bn`） |
-| `data/processed/000_a_share_core_valuation_pool.md` | L1-L4 全量 worth_attention 单一列表阅读版（v1.05）：每日扫描时按行情快照刷新 现价/空间/PE/PB，档位按 §6.2.1.6 价格自动定档（与审定档不同显示 `审定档→现档`），尾列 估值时间/估值事件（v1.08-v1.09，业绩预告不入表）；可买资格由质量×当日档位按 §6.2.1 判定 |
+| `data/processed/000_a_share_core_valuation_pool.md` | L1-L4 全量 worth_attention 单一列表阅读版（v1.05）：每日扫描时按行情快照刷新 现价/空间/PE/PB，档位按 §6.2.1.6 价格自动定档（与审定档不同显示 `审定档→现档`），尾列 估值时间/估值事件（v1.08-v1.09，业绩预告不入表）；可买资格由质量×当日档位按 §6.2.1 判定；文末附**海外关注清单**（非A股观察口径，§6.8，不可买） |
 | `data/interim/pool_effective_tiers.csv` | 当日有效档位快照（价格自动定档结果），供次日刷新差分出档位变化名单（§6.7.7） |
+| `data/processed/overseas_watchlist_valuation.csv` | 海外关注清单（非A股）的质量分层+估值结论单一表（§6.8）：用户点名的港股/美股/韩股公司，含 `market_type`/`currency`/`buy_eligibility`；渲染为池 MD 附表，**不进池 CSV、不进每日量价扫描、无买入资格** |
+| `data/interim/overseas_effective_tiers.csv` | 海外附表当日有效档位快照（键为 `市场:代码`），供次日差分出附表档位变化（§6.8） |
 | `data/processed/daily_buy_candidates.csv` | 每日量价触发后的买入候选 |
 | `data/processed/pretrade_decisions.csv` | 买入前结构化闸门记录（§10）：每次买入决策一行，15 项清单齐备且通过才允许建仓；建仓后须回写持仓清单并在决策日志记 `execution_record` |
 | `data/processed/a_share_holdings.csv` | 当前真实持仓清单，手工维护，作为每日卖出扫描输入 |
@@ -65,7 +68,7 @@
 | 字段 | 含义 |
 | --- | --- |
 | `logged_at_utc` | 写入日志的UTC时间 |
-| `workflow_stage` | 阶段：`attention_triage`、`quality_tier_review`、`valuation_review`、`core_valuation_pool`、`daily_volume_price_scan`、`manual_buy_check`、`pretrade_decision`、`execution_record`、`holdings_sell_scan`、`manual_sell_check`、`garbage_review`、`discipline_intervention`（重蹈覆辙拦截，§15.1）、`system_revision`（体系规则修订）、`position_status_review`（建仓期持仓定级，§14）等 |
+| `workflow_stage` | 阶段：`attention_triage`、`quality_tier_review`、`valuation_review`、`core_valuation_pool`、`daily_volume_price_scan`、`manual_buy_check`、`pretrade_decision`、`execution_record`、`holdings_sell_scan`、`manual_sell_check`、`garbage_review`、`discipline_intervention`（重蹈覆辙拦截，§15.1）、`system_revision`（体系规则修订）、`position_status_review`（建仓期持仓定级，§14）、`overseas_watchlist`（非A股关注清单结论，§6.8）等 |
 | `run_id` | 批次标识，例如 `2026Q2_quality_review_batch_01` |
 | `as_of` | 结论对应日期 |
 | `security_code` | 股票代码 |
@@ -715,6 +718,48 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 7. 现价刷新与档位差分（v1.03/v1.05）：`--quotes fetch` 经 `scripts/a_share_quotes.py` 拉取腾讯批量行情快照；`--md-only` 供每日扫描调用——只重渲染 MD 并写一行 `pool_price_refresh` 汇总日志，不重写池 CSV、不逐股重写池结论。每次渲染把当日有效档位写入快照 `data/interim/pool_effective_tiers.csv`，与上一快照差分得出**当日档位变化名单**（进汇总日志与扫描报告第二节）；现价缺失（停牌/请求失败）的行沿用估值时点值定档。
 8. 业绩预告物化（v1.04；v1.09 起不在 MD 展示；v1.16 起每日刷新）：`scripts/fetch_a_share_earnings_forecasts.py` 将东财业绩预告接口物化为 `data/interim/a_share_earnings_forecasts.csv`（`--report-date` 缺省自动取最近一个已结束的季度报告期末，可显式指定，适用一季报/中报/三季报/年度各预告季；字段含代码、报告期、公告日、指标口径 004归母/005扣非/006营收、预告区间、同比增幅、去年同期、预告类型、检索时间与来源）。该文件**不是一次性物化，而是每个扫描日经 §9.1 步骤 0 重抓**——预告披露是逐日到达的事件流，停更的文件等于关闭 §7.4/§7.5.5 的事件入口（判例：睿创微纳 2026-07-20 盘后预告，7/17 的旧文件使其三个交易日不可见）。该文件**只作 §7.5.5 express 复核队列的输入**，且刷新汇总**不得只报覆盖数**：必须列出**待复核名单本身**（代码+名称+公告日+披露类型；判定=预告/快报/正式报告公告日的最大者晚于 max(`valuation_reviewed_at`, `evidence_available_at`)，缺失时回退 `pool_as_of`，v1.18 起为三类披露并集口径），并标注披露文件检索时间——检索日早于扫描日时加"⚠️数据过期"警告并按 §9.1 步骤 0 当场重抓。待复核名单逐票按 §7.5.5 express 复核闭环（复核更新 `valuation_reviewed_at`/`valuation_evidence_event` 后自动移出名单）；名单非空时写入扫描报告第二节与第三节待办。复核完成后其影响体现为 估值时间/估值事件 两列与合理价区间的更新，预告具体数字不进入池 MD。
 9. 定期报告与业绩快报披露物化（v1.18）：`scripts/fetch_a_share_report_disclosures.py` 将东财**正式定期报告披露**（RPT_LICO_FN_CPD，公告日=实际披露日，含归母/营收实际数与同比）与**业绩快报**（RPT_FCI_PERFORMANCEE）物化为 `data/interim/a_share_report_disclosures.csv`（`disclosure_type` 区分 periodic_report/express_report；`--report-date` 缺省口径同预告脚本）。与预告文件同为**每个扫描日经 §9.1 步骤 0 重抓**的事件流入口：仅抓预告等于对快报与正式报告闭眼（判例：华润三九 7/15、大族激光 7/21（归母 +163%）H1 快报在仅预告机制下持续不可见，直至 2026-07-22 本文件增设才被发现，两只均已超期）。该文件供 报告更新队列（§7.2/§7.3 公告日触发）与 待复核名单（要求 8 并集口径）使用；同一披露季内正式报告公告日晚于快报/预告的，正式报告构成新一次复核触发（快报/预告先行复核不豁免正式报告复核，实际数与预告的兑现偏差按 §6.6.1.3 回填台账）。
+
+### 6.8 海外关注清单（非A股，观察口径，v1.22）
+
+用户长期关注但不在 A 股上市的公司（港股、美股、韩股），用与 A 股完全相同的质量与估值口径回答三件事：**质量几档、该用哪个模型、现价贵不贵**。个人投资体系是账户级总规则（覆盖 A 股/港股/美股），本节只是把该体系的分层与估值口径延伸到非 A 股标的上，不改变本文件其余章节的 A 股范围。
+
+**边界（硬约束）**：
+
+1. **一律不可买、不构成买入候选**：本清单不写入 `a_share_core_valuation_pool.csv`，不进 §8 每日量价扫描，不走 §10 买入前闸门，§6.2.1 分层×估值准入矩阵不适用（`buy_eligibility` 恒为 `off_pipeline_watch_only`）。清单里出现「较低估」不等于可买。
+2. **不污染 A 股机器口径**：A 股扫描/披露/持仓脚本的数据源均为东财与腾讯 A 股接口，海外标的既无对应的预告/快报接口，也无涨跌停、量比与 §8 均线体系的同源数据；因此海外清单单独建表、单独快照，A 股主表的只数统计（如「261/261」）不含海外行。
+3. **不降低门槛**：质量分层用 §5.7/§5.7.1，策略标签与估值模型用 §6.5/§6.6，归一化与失真处理用 §6.3/§6.4，档位自动定档用 §6.2.1.6。唯一豁免是 §5.7.1 的金字塔校准——本清单是用户点名的自选名单而非全市场筛选结果，层级分布天然偏上，不作分布约束。
+4. **证券与公司分离**：同一公司的不同上市线是不同标的。清单按**实际定价用的那条线**建行并在 `notes` 写明（例：阿里巴巴/京东取港股线；SK 海力士的美国线只有 OTC ADR、报价停更且流动性不足，故取 KRX 主线）。
+
+**单文件承载**：海外清单不分设分层表与估值表，`data/processed/overseas_watchlist_valuation.csv` 一行一家，字段为 §6.6 输出字段加四个市场字段：
+
+```text
+market_type（HK/US/KR）  security_code  security_name  exchange  currency
+quality_tier  tier_reason  strategy_tag  valuation_tier  valuation_method
+valuation_batch_id  valuation_price  valuation_price_as_of  total_market_cap_bn（十亿，本币）
+valuation_pe_ttm  valuation_pb  fair_price_low  fair_price_high  fair_price_basis
+normalized_valuation_used  normalized_profit_or_value  bull_case_assumption  bull_case_priced_in
+valuation_reason  tracking_metrics  evidence_sources
+valuation_reviewed_at  valuation_evidence_event  evidence_available_at
+buy_eligibility（恒 off_pipeline_watch_only）  notes
+```
+
+**币种与行情**：现价、合理价区间、空间一律用该标的的**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较；`total_market_cap_bn` 同为本币。行情与 A 股同源腾讯快照，字段布局按市场不同，由 `scripts/overseas_quotes.py` 承担（HK 有 PE/PB，US 无 PB，KR 无 PE/PB——缺失列显示 `—`，并沿用估值表内的复核时点值）。表观 PE 不作定档依据：多数标的（周期顶部的存储股、被一次性投资收益抬高的科技股、亏损或战投期的平台股）必须按 §6.4 用归一化/中枢利润，换算过程写在 `fair_price_basis`。
+
+**复核触发（§7 的海外适配）**：海外标的没有东财预告/快报/定期报告接口，§6.7.8/§6.7.9 的自动待复核名单不覆盖它们。改为：①各公司财报日已知者写入 `notes`，披露次日按 §7.3/§7.5.5 的 express 口径复核带与档；②重大事件（指引调整、并购、监管裁决、周期价格拐点）按 §7.4 触发。复核完成后更新 `valuation_reviewed_at` 与 `valuation_evidence_event`。带只由证据复核修改，档位每日随价自动重定——「价格改档、证据改带」在海外清单同样成立。
+
+**脚本接口**：
+
+```bash
+# 附表随池 MD 一起渲染（每日现价刷新同时刷新附表）
+python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --as-of YYYY-MM-DD
+
+# 自定义清单路径（缺省 data/processed/overseas_watchlist_valuation.csv；文件缺失即不渲染附表）
+python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch \
+  --overseas data/processed/overseas_watchlist_valuation.csv \
+  --overseas-tier-snapshot data/interim/overseas_effective_tiers.csv
+```
+
+**日志**：逐票结论以 `workflow_stage = overseas_watchlist`、`decision_type = overseas_watch` 写入决策日志，`security_code` 为 `市场:代码`，`decision_result` 为 `质量档×估值档（策略，不可买）`。为避免每日刷新重复留痕，脚本**只记 `valuation_reviewed_at == as_of` 的行**（新增或改带当日各一行）；附表当日档位变化并入 `pool_price_refresh` 汇总行。
 
 ## 7. 阶段三：财报披露后的滚动更新
 
@@ -1711,4 +1756,4 @@ python3 scripts/scan_holdings_sell_signals.py \
 
 ## 16. 版本记录
 
-版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.21**（2026-07-29，两项用户决定：①**趋势态毕业口径由"单日收盘越过 MA120"收紧为 §8.6 中期多头排列 `close > MA20 > MA60 > MA120`**——单日穿越不等于反转完成，旧口径使底部仓冲高即转趋势态、次日正常回调便报"趋势走坏"（紫金矿业/宁德时代/小商品城 2026-07-29 判例）；②**上涨型机械警告全部去除**——单笔风险持仓监控版（§14 风险预警 4）退役（该指标只可能因股价上涨触发，与 v1.20 已撤销的止损网格同构），结构上限与档位金额改主动口径（§13 第 8 条：主动加仓硬拦不变，被动漂移不预警、不建议减仓，仅禁止加仓 + 每 10 个百分点台阶复核持有资格），§9.2 新增"不得进入黄组的项"。割肉价 Tier-0、建仓时 1.5%N 校验、回撤梯、包络、棘轮全部保留）。历史版本 **v1.20**（2026-07-27，两项用户决定：①**止损网格 6%N/8%N 预算撤销**——R7 冷静期 2026-07-20→07-27 满 5 个交易日并经书面确认，§13 第 5 条改为单一杠杆维度的风险提醒（>160%N 警告；市场转弱/政策性风险/持仓性价比下降任一成立提醒收敛 130%N，两项及以上或回撤 -8% 提醒收敛 100%N），割肉价 Tier-0、单笔 1.5%N、回撤梯、包络、棘轮、结构上限均不变；②新增 **§8.11.1 持续候选置顶提醒**——持续段位达标×反复新触发×未转弱的候选单列一行，修补 §9.3「弱级只汇总只数」造成的可见性盲区（特宝生物 2026-07-15→07-27 连续 8 日候选、段位全程达标、仅 2 日被点名判例），脚本新增 `stage_met_days`/`stage_trigger_days`/`persistent_candidate` 三列）。
+版本记录自 v1.00 起移至 `docs/000_Ashare_workflow_changelog.md` 维护，本文件不再逐版累积。当前版本：**v1.22**（2026-07-29，新增 **§6.8 海外关注清单**：用户点名的 19 家非 A 股公司（港股 6 / 美股 11 / 韩股 2）按与 A 股完全相同的 §5.7 分层、§6.5 策略模型、§6.3/§6.4 归一化与 §6.2.1.6 价格自动定档口径建表，物化为 `overseas_watchlist_valuation.csv` 并渲染为池 MD 文末附表；硬边界为**一律不可买**——不入池 CSV、不进 §8 扫描、不走 §10 闸门、§6.2.1 准入矩阵不适用，仅回答「质量几档、用什么模型、现价贵不贵」；现价/带按各自交易货币，行情由新增 `scripts/overseas_quotes.py` 取腾讯 HK/US/KR 快照；日志新增 `overseas_watchlist` 阶段，只在复核当日留痕）。历史版本 **v1.21**（2026-07-29，两项用户决定：①**趋势态毕业口径由"单日收盘越过 MA120"收紧为 §8.6 中期多头排列 `close > MA20 > MA60 > MA120`**——单日穿越不等于反转完成，旧口径使底部仓冲高即转趋势态、次日正常回调便报"趋势走坏"（紫金矿业/宁德时代/小商品城 2026-07-29 判例）；②**上涨型机械警告全部去除**——单笔风险持仓监控版（§14 风险预警 4）退役（该指标只可能因股价上涨触发，与 v1.20 已撤销的止损网格同构），结构上限与档位金额改主动口径（§13 第 8 条：主动加仓硬拦不变，被动漂移不预警、不建议减仓，仅禁止加仓 + 每 10 个百分点台阶复核持有资格），§9.2 新增"不得进入黄组的项"。割肉价 Tier-0、建仓时 1.5%N 校验、回撤梯、包络、棘轮全部保留）。历史版本 **v1.20**（2026-07-27，两项用户决定：①**止损网格 6%N/8%N 预算撤销**——R7 冷静期 2026-07-20→07-27 满 5 个交易日并经书面确认，§13 第 5 条改为单一杠杆维度的风险提醒（>160%N 警告；市场转弱/政策性风险/持仓性价比下降任一成立提醒收敛 130%N，两项及以上或回撤 -8% 提醒收敛 100%N），割肉价 Tier-0、单笔 1.5%N、回撤梯、包络、棘轮、结构上限均不变；②新增 **§8.11.1 持续候选置顶提醒**——持续段位达标×反复新触发×未转弱的候选单列一行，修补 §9.3「弱级只汇总只数」造成的可见性盲区（特宝生物 2026-07-15→07-27 连续 8 日候选、段位全程达标、仅 2 日被点名判例），脚本新增 `stage_met_days`/`stage_trigger_days`/`persistent_candidate` 三列）。

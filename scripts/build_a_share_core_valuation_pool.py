@@ -15,6 +15,11 @@ Daily refresh: ``--md-only --quotes fetch`` re-renders only the reading MD
 (现价/空间/PE/PB + auto tier), diffs effective tiers against the
 previous snapshot (`data/interim/pool_effective_tiers.csv`) and logs one
 `pool_price_refresh` summary row listing today's tier changes.
+
+The same MD carries the 海外关注清单 appendix (§6.8): non-A-share names the user
+tracks, rendered from `overseas_watchlist_valuation.csv` with the identical
+§6.2.1.6 price-auto-tier logic but kept out of the pool CSV, out of the daily
+volume/price scan and out of buy eligibility.
 """
 
 from __future__ import annotations
@@ -25,6 +30,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from a_share_quotes import fetch_spot_quotes
+from overseas_quotes import fetch_overseas_quotes
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
 
 
@@ -36,6 +42,9 @@ DEFAULT_OUTPUT_MD = ROOT / "data/processed/000_a_share_core_valuation_pool.md"
 DEFAULT_FORECASTS = ROOT / "data/interim/a_share_earnings_forecasts.csv"
 DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_TIER_SNAPSHOT = ROOT / "data/interim/pool_effective_tiers.csv"
+DEFAULT_OVERSEAS = ROOT / "data/processed/overseas_watchlist_valuation.csv"
+DEFAULT_OVERSEAS_TIER_SNAPSHOT = ROOT / "data/interim/overseas_effective_tiers.csv"
+MARKET_LABELS = {"HK": "港股", "US": "美股", "KR": "韩股"}
 
 # §6.2.1 分层×估值准入矩阵：层级越低，买入估值门槛越严。
 TIER_ELIGIBLE_VALUATIONS = {
@@ -267,10 +276,14 @@ def format_quote_time(quotes: dict[str, dict]) -> str:
     return f"{t[:4]}-{t[4:6]}-{t[6:8]} {t[8:10]}:{t[10:12]}"
 
 
-def load_tier_snapshot(path: Path) -> dict[str, str]:
+def load_tier_snapshot(path: Path, pad_code: bool = True) -> dict[str, str]:
+    """pad_code=False 供海外附表快照使用（键为 `市场:代码`，不能按6位补零）。"""
     if not path.exists():
         return {}
-    return {row["security_code"].zfill(6): row.get("effective_tier", "") for row in load_csv(path)}
+    return {
+        (row["security_code"].zfill(6) if pad_code else row["security_code"]): row.get("effective_tier", "")
+        for row in load_csv(path)
+    }
 
 
 def write_tier_snapshot(path: Path, tiers: dict[str, tuple[str, str]], as_of: str) -> None:
@@ -282,6 +295,88 @@ def write_tier_snapshot(path: Path, tiers: dict[str, tuple[str, str]], as_of: st
             writer.writerow({"security_code": code, "security_name": name, "effective_tier": tier, "as_of": as_of})
 
 
+def load_overseas(path: Path) -> list[dict[str, str]]:
+    """§6.8 海外关注清单：文件缺失即视为空清单（附表不渲染），不影响 A 股主表。"""
+    if not path.exists():
+        return []
+    return [row for row in load_csv(path) if row.get("security_code")]
+
+
+def _fmt_number(value: float | None, currency: str) -> str:
+    """韩元等无小数币种按千分位整数展示，其余保留两位小数。"""
+    if value is None:
+        return "—"
+    if currency == "KRW":
+        return f"{value:,.0f}"
+    return f"{value:.2f}"
+
+
+def build_overseas_section(
+    rows: list[dict[str, str]],
+    quotes: dict[str, dict] | None = None,
+    prev_tiers: dict[str, str] | None = None,
+) -> tuple[list[str], dict[str, object]]:
+    """渲染 §6.8 海外关注清单附表：档位仍按 §6.2.1.6 现价自动定档，但不入池 CSV、
+    不入每日量价扫描、无买入资格。返回 (MD 行, {'changes', 'current_tiers'})。"""
+    if not rows:
+        return [], {"changes": [], "current_tiers": {}}
+    quotes = quotes or {}
+    prev_tiers = prev_tiers or {}
+    changes: list[str] = []
+    current_tiers: dict[str, tuple[str, str]] = {}
+    body: list[str] = []
+    for row in rows:
+        market = str(row.get("market_type", "")).upper()
+        code = row["security_code"]
+        key = f"{market}:{code}"
+        quote = quotes.get(key)
+        currency = str((quote or {}).get("currency") or row.get("currency") or "")
+        cells = display_cells(row, quote)
+        effective = str(cells["effective_tier"])
+        current_tiers[key] = (row["security_name"], effective)
+        prev = prev_tiers.get(key)
+        if prev and prev != effective:
+            changes.append(f"{row['security_name']} {prev}→{effective}")
+        spot = _to_float((quote or {}).get("price"))
+        price_cell = _fmt_number(spot if spot else _to_float(row.get("valuation_price")), currency)
+        low, high = _to_float(row.get("fair_price_low")), _to_float(row.get("fair_price_high"))
+        if low is None or high is None:
+            band_cell = "—"
+        elif currency == "KRW":
+            band_cell = f"{_fmt_number(low, currency)}-{_fmt_number(high, currency)}"
+        else:
+            # 与 A 股主表一致：带原样透传估值表字符串，不重新格式化位数。
+            band_cell = f"{row['fair_price_low']}-{row['fair_price_high']}"
+        body.append(
+            "| {market} | {code} | {name} | {tier} | ".format(
+                market=f"{MARKET_LABELS.get(market, market)}·{currency}" if currency else MARKET_LABELS.get(market, market),
+                code=code,
+                name=row["security_name"],
+                tier=row.get("quality_tier", "—"),
+            )
+            + f"{cells['valuation_cell']} | {row.get('strategy_tag', '—')} | "
+            + f"{price_cell} | {band_cell} | {cells['upside']} | {cells['pe']} | {cells['pb']} | "
+            + f"{row.get('valuation_reviewed_at') or '—'} | {row.get('valuation_evidence_event') or '—'} |"
+        )
+    lines = [
+        "",
+        "## 附：海外关注清单（非A股，观察口径）",
+        "",
+        f"用户长期关注但不在 A 股上市的公司，共 {len(rows)} 家，由 `data/processed/overseas_watchlist_valuation.csv` 渲染（§6.8）。",
+        "",
+        "- **一律不可买、不构成买入候选**：本清单不入 `a_share_core_valuation_pool.csv`、不进每日量价扫描（§8）、不走买入前闸门（§10），§6.2.1 分层×估值准入矩阵不适用。它只回答「质量几档、该用什么模型、现价贵不贵」。",
+        "- 质量分层（§5.7）与策略标签（§6.5）口径与 A 股完全一致，不降低门槛；本清单是用户点名的自选名单而非全市场筛选结果，故层级分布天然偏上，不适用 §5.7.1 的金字塔校准。",
+        "- 档位同样按 §6.2.1.6 现价自动定档（>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估），与审定档不同的行显示 `审定档→现档`。带只由证据复核修改。",
+        "- 现价/合理价区间/空间均为各自**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较；行情同源腾讯快照（`scripts/overseas_quotes.py`）。",
+        "- PE 为行情快照 TTM 口径：美股线不提供 PB、韩股线不提供 PE/PB，缺失列显示 —，判档依据见 CSV `fair_price_basis`（多数标的以归一化/中枢利润为锚，表观 PE 不作定档依据）。",
+        "",
+        "| 市场 | 代码 | 名称 | 质量 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
+        "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+        *body,
+    ]
+    return lines, {"changes": changes, "current_tiers": current_tiers}
+
+
 def write_markdown(
     path: Path,
     rows: list[dict[str, str]],
@@ -290,6 +385,7 @@ def write_markdown(
     forecasts: dict[str, dict[str, str]] | None = None,
     prev_tiers: dict[str, str] | None = None,
     disclosures: dict[str, dict[str, str]] | None = None,
+    extra_sections: list[str] | None = None,
 ) -> dict[str, object]:
     """渲染单一列表阅读版 MD（v1.05）；返回 {'changes': 当日档位变化, 'drift': 现档≠审定档,
     'forecast': 有预告代码, 'forecast_pending': §7.5.5 待复核名单（预告+快报+正式报告，v1.18）,
@@ -368,10 +464,16 @@ def write_markdown(
         "- 业绩预告不在本表展示（v1.09）：预告物化文件（§6.7.8）只作 §7.5.5 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
         "- 合理价区间为该股按其策略模型处于「中性」档的价格带，是估值的唯一输出锚（换算依据见池 CSV `fair_price_basis`；模型认可的公允中枢≈区间中值，空间列即按中值/现价计算）。",
         "- 估值时间 = 最近一次估值复核日（合理价区间的推导日）；估值事件 = 该次复核所依据的最新披露（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件）。档位每日按现价自动重算，带只在 §7 复核时更新——「价格改档、证据改带」。审定档、核心理由与复核时点价（`valuation_price`）见池 CSV。",
+        *(
+            ["- 文末附**海外关注清单**（非A股，§6.8）：只作质量与估值观察，不入本池 CSV、不进每日量价扫描、无买入资格。"]
+            if extra_sections
+            else []
+        ),
         "",
         "| 代码 | 名称 | 质量 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
         "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
         *body,
+        *(extra_sections or []),
     ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return {
@@ -423,6 +525,45 @@ def log_pool_decisions(
     )
 
 
+def log_overseas_decisions(
+    log_file: Path,
+    rows: list[dict[str, str]],
+    as_of: str,
+    overseas_file: Path,
+    output_md: Path,
+) -> None:
+    """§6.8 海外关注清单逐票结论日志：decision_type 固定 overseas_watch（不可买，仅观察）。
+
+    只记**当日复核**的行（`valuation_reviewed_at == as_of`），因此每日现价刷新不重复写结论，
+    新增或改带的标的在复核当日各留一行。"""
+    rows = [row for row in rows if row.get("valuation_reviewed_at") == as_of]
+    if not rows:
+        return
+    logged_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    append_decision_log(
+        log_file,
+        [
+            {
+                "logged_at_utc": logged_at,
+                "workflow_stage": "overseas_watchlist",
+                "run_id": f"overseas_watchlist:{as_of}",
+                "as_of": as_of,
+                "security_code": f"{row.get('market_type', '')}:{row['security_code']}",
+                "security_name": row["security_name"],
+                "decision_type": "overseas_watch",
+                "decision_result": f"{row.get('quality_tier', '')}×{row.get('valuation_tier', '')}（{row.get('strategy_tag', '')}，不可买）",
+                "summary_reason": row.get("valuation_reason", ""),
+                "input_files": str(overseas_file),
+                "source_urls": row.get("evidence_sources", ""),
+                "output_file": str(output_md),
+                "operator_or_script": "scripts/build_a_share_core_valuation_pool.py",
+                "workflow_version": WORKFLOW_VERSION,
+            }
+            for row in rows
+        ],
+    )
+
+
 def _freshness(retrieved: str, as_of: str, label: str) -> str:
     if not retrieved:
         return f"（{label}物化文件缺失，须按 §9.1 步骤 0 抓取）"
@@ -455,16 +596,24 @@ def log_price_refresh(
     forecast_retrieved: str,
     output_md: Path,
     disclosure_retrieved: str = "",
+    overseas_flags: dict[str, object] | None = None,
 ) -> None:
     """--md-only 现价刷新只写一行汇总日志：当日档位变化 + 披露覆盖与 §7.5.5 待复核名单。"""
     changes = list(flags.get("changes") or [])
     drift = list(flags.get("drift") or [])
     pending = list(flags.get("forecast_pending") or [])
+    overseas_changes = list((overseas_flags or {}).get("changes") or [])
+    overseas_total = len((overseas_flags or {}).get("current_tiers") or {})
     summary_parts = [
         ("当日档位变化（价格自动定档）：" + "、".join(changes)) if changes else "当日无档位变化",
         f"现档≠审定档共 {len(drift)} 只",
         forecast_summary(flags, forecast_retrieved, as_of, disclosure_retrieved),
     ]
+    if overseas_total:
+        summary_parts.append(
+            f"海外关注清单（§6.8，不可买）{overseas_total} 家，"
+            + ("档位变化：" + "、".join(overseas_changes) if overseas_changes else "无档位变化")
+        )
     append_decision_log(
         log_file,
         [
@@ -528,6 +677,18 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_TIER_SNAPSHOT,
         help="当日有效档位快照（用于次日差分出档位变化）。",
     )
+    parser.add_argument(
+        "--overseas",
+        type=Path,
+        default=DEFAULT_OVERSEAS,
+        help="海外关注清单估值表（§6.8）：渲染为阅读版 MD 附表；缺失时不渲染附表。",
+    )
+    parser.add_argument(
+        "--overseas-tier-snapshot",
+        type=Path,
+        default=DEFAULT_OVERSEAS_TIER_SNAPSHOT,
+        help="海外附表当日有效档位快照（键为 市场:代码）。",
+    )
     parser.add_argument("--timeout", type=float, default=8.0, help="行情请求超时（秒）。")
     return parser.parse_args()
 
@@ -535,14 +696,20 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of)
+    overseas_rows = load_overseas(args.overseas)
     quotes: dict[str, dict] = {}
+    overseas_quotes: dict[str, dict] = {}
     if args.quotes == "fetch":
         quotes = fetch_spot_quotes([(row["security_code"], row.get("exchange", "")) for row in rows], timeout=args.timeout)
+        overseas_quotes = fetch_overseas_quotes(
+            [(row.get("market_type", ""), row["security_code"]) for row in overseas_rows], timeout=args.timeout
+        )
     forecasts = load_forecasts(args.forecasts)
     forecast_retrieved = forecasts_retrieved_on(args.forecasts)
     disclosures = load_disclosures(args.disclosures)
     disclosure_retrieved = forecasts_retrieved_on(args.disclosures)
     prev_tiers = load_tier_snapshot(args.tier_snapshot)
+    prev_overseas_tiers = load_tier_snapshot(args.overseas_tier_snapshot, pad_code=False)
     fieldnames = [
         "market_type",
         "security_code",
@@ -571,16 +738,33 @@ def main() -> None:
     ]
     if not args.md_only:
         write_csv(args.output_csv, rows, fieldnames)
-    flags = write_markdown(args.output_md, rows, args.as_of, quotes, forecasts, prev_tiers, disclosures)
+    overseas_section, overseas_flags = build_overseas_section(overseas_rows, overseas_quotes, prev_overseas_tiers)
+    flags = write_markdown(
+        args.output_md, rows, args.as_of, quotes, forecasts, prev_tiers, disclosures, overseas_section
+    )
     write_tier_snapshot(args.tier_snapshot, flags["current_tiers"], args.as_of)  # type: ignore[arg-type]
+    if overseas_rows:
+        write_tier_snapshot(args.overseas_tier_snapshot, overseas_flags["current_tiers"], args.as_of)  # type: ignore[arg-type]
     changes = list(flags.get("changes") or [])
+    overseas_changes = list(overseas_flags.get("changes") or [])
     summary = (
         f"tier changes today: {'、'.join(changes) if changes else '无'}; "
         f"drift vs 审定档: {len(list(flags.get('drift') or []))}; "
         f"{forecast_summary(flags, forecast_retrieved, args.as_of, disclosure_retrieved)}"
+        + (
+            f"; 海外附表 {len(overseas_rows)} 家（{len(overseas_quotes)} 只取到行情），"
+            f"档位变化：{'、'.join(overseas_changes) if overseas_changes else '无'}"
+            if overseas_rows
+            else ""
+        )
     )
+    # 海外附表结论只在复核当日入日志（见 log_overseas_decisions），故两种模式都调用。
+    log_overseas_decisions(args.log_file, overseas_rows, args.as_of, args.overseas, args.output_md)
     if args.md_only:
-        log_price_refresh(args.log_file, args.as_of, len(quotes), len(rows), flags, forecast_retrieved, args.output_md, disclosure_retrieved)
+        log_price_refresh(
+            args.log_file, args.as_of, len(quotes), len(rows), flags, forecast_retrieved,
+            args.output_md, disclosure_retrieved, overseas_flags,
+        )
         print(f"refreshed {args.output_md} with {len(quotes)}/{len(rows)} quotes; {summary}")
     else:
         log_pool_decisions(args.log_file, rows, args.as_of, args.valuation, args.tiers, args.output_csv, args.output_md)
