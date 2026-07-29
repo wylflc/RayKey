@@ -325,6 +325,9 @@ def build_overseas_section(
     changes: list[str] = []
     current_tiers: dict[str, tuple[str, str]] = {}
     body: list[str] = []
+    # 与 A 股主表一致按质量档 L1→L4 排序；稳定排序使同档内保持清单原序（港股→美股→韩股）。
+    tier_rank = {tier: index for index, tier in enumerate(("L1", "L2", "L3", "L4", "L5"))}
+    rows = sorted(rows, key=lambda row: tier_rank.get(normalize_quality_tier(str(row.get("quality_tier", ""))), 99))
     for row in rows:
         market = str(row.get("market_type", "")).upper()
         code = row["security_code"]
@@ -366,6 +369,7 @@ def build_overseas_section(
         "",
         "- **一律不可买、不构成买入候选**：本清单不入 `a_share_core_valuation_pool.csv`、不进每日量价扫描（§8）、不走买入前闸门（§10），§6.2.1 分层×估值准入矩阵不适用。它只回答「质量几档、该用什么模型、现价贵不贵」。",
         "- 质量分层（§5.7）与策略标签（§6.5）口径与 A 股完全一致，不降低门槛；本清单是用户点名的自选名单而非全市场筛选结果，故层级分布天然偏上，不适用 §5.7.1 的金字塔校准。",
+        "- 行序与 A 股主表一致按**质量档 L1→L4**排列，同档内保持 港股→美股→韩股 顺序。",
         "- 档位同样按 §6.2.1.6 现价自动定档（>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估），与审定档不同的行显示 `审定档→现档`。带只由证据复核修改。",
         "- 现价/合理价区间/空间均为各自**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较；行情同源腾讯快照（`scripts/overseas_quotes.py`）。",
         "- PE 为行情快照 TTM 口径：美股线不提供 PB、韩股线不提供 PE/PB，缺失列显示 —，判档依据见 CSV `fair_price_basis`（多数标的以归一化/中枢利润为锚，表观 PE 不作定档依据）。",
