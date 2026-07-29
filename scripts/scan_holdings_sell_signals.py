@@ -2,18 +2,21 @@
 """Scan A-share holdings for stop-loss, valuation-sell, and trend-sell actions.
 
 Deterministic part of operation-workflow Stage 5 (§14 卖出许可, v1.12; trend split
-v1.19): stop-loss hit (Tier-0), valuation-sell eligibility (effective tier
-较高估/高估 per §6.2.1.6 computed from the pool's fair band, with the keep-floor
-amount = position value minus build_amount_cny), major-trend deterioration under
-the two-state reference (§14 v1.19 — trend-state positions: close below
-MA60/MA120; reversal/base-state positions, i.e. first-entry-day close below that
-day's MA120 and not yet graduated by a close above MA120: close below the launch
-structure anchor `launch_platform_price` or MA20; a sell PERMISSION, not an
-order), valuation-tier refresh against the core pool,
-account drawdown/leverage alerts from the account snapshot, and the 1.5%
-single-trade risk check. Stop prices are user-set at entry and never adjusted or
-suggested by the system (v1.11). Lockup, profit ladders, and the three-tier
-trend-protection lines are retired (v1.12). It does NOT decide hard
+v1.19, graduation tightened v1.21): stop-loss hit (Tier-0), valuation-sell
+eligibility (effective tier 较高估/高估 per §6.2.1.6 computed from the pool's fair
+band, with the keep-floor amount = position value minus build_amount_cny),
+major-trend deterioration under the two-state reference (§14 — trend-state
+positions: close below MA60/MA120; reversal/base-state positions, i.e. the §8.6
+mid-term bullish alignment `close > MA20 > MA60 > MA120` never yet reached since
+first entry: close below the launch structure anchor `launch_platform_price` or
+MA20; a sell PERMISSION, not an order), valuation-tier refresh against the core
+pool, and account drawdown/leverage alerts from the account snapshot. Stop prices
+are user-set at entry and never adjusted or suggested by the system (v1.11).
+Lockup, profit ladders, and the three-tier trend-protection lines are retired
+(v1.12); the holding-period single-trade-risk alert and passive weight-drift
+warnings are retired (v1.21 — both can only fire on price appreciation, so they
+warn on winners rather than on risk; the entry-time 1.5%N check in §13.6 and the
+active-side structural caps in the §10 gate are untouched). It does NOT decide hard
 falsification (veto / sudden event / severe quarterly miss / verified structural
 thesis break); those are left to model judgment per the workflow's script/LLM
 split (§14).
@@ -46,8 +49,7 @@ EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 TENCENT_KLINE = "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
 
 BASE_BUILD_AMOUNT = 250_000  # 25 万元
-SINGLE_STOCK_WEIGHT_LIMIT = 0.30
-SINGLE_TRADE_RISK_LIMIT = 0.015  # 个人体系 §13.2：仓位比例×止损距离 <= 净资产 1.5%
+SINGLE_STOCK_WEIGHT_LIMIT = 0.30  # §13 第 8 条单票红线；v1.21 起仅为审计事实位（被动漂移不预警）
 # 个人体系 §13.1 回撤预算：自净值峰值 -8% 去杠杆 / -12% 黄色 / -20% 红色。
 DRAWDOWN_TIERS = ((0.20, "红色警告"), (0.12, "黄色警告"), (0.08, "去杠杆"))
 # §6.2.1.6 价格自动定档（估值卖出资格用）：带顶 1.2 倍以上=高估；带底以下按空间分低估/较低估。
@@ -74,13 +76,19 @@ def load_valuation_pool(path: Path) -> dict[str, dict[str, str]] | None:
 
 
 def load_account_snapshot(path: Path) -> dict[str, str] | None:
-    """Latest row of the append-style account snapshot (§14 输入 7)."""
+    """Latest row of the append-style account snapshot (§14 输入 7).
+
+    Ties on as_of resolve to the LAST appended row: same-day rows are corrections
+    that supersede earlier ones (e.g. a broker-exact row replacing an estimate).
+    `max()` alone would keep the first, silently ignoring the correction.
+    """
     if not path.exists():
         return None
     rows = load_csv(path)
     if not rows:
         return None
-    return max(rows, key=lambda row: row.get("as_of", ""))
+    latest = max(row.get("as_of", "") for row in rows)
+    return [row for row in rows if row.get("as_of", "") == latest][-1]
 
 
 def write_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str]) -> None:
@@ -178,36 +186,32 @@ def moving_average(closes: list[float], window: int) -> float | None:
     return sum(closes[-window:]) / window
 
 
+def mid_term_bullish_alignment(closes: list[float], index: int) -> bool:
+    """§8.6 中期多头排列（v1.21）：close > MA20 > MA60 > MA120。均线排列是慢变量，
+    单日价格穿越 MA120 不构成成立；上市不足 120 日无 MA120 者恒不成立。"""
+    if index + 1 < 120:
+        return False
+    ma20 = sum(closes[index - 19 : index + 1]) / 20
+    ma60 = sum(closes[index - 59 : index + 1]) / 60
+    ma120 = sum(closes[index - 119 : index + 1]) / 120
+    return closes[index] > ma20 > ma60 > ma120
+
+
 def classify_trend_state(dates: list[str], closes: list[float], entry_date: str) -> str:
-    """§14 v1.19 持仓趋势参照分态：首次建仓日收盘 < 当日MA120 → 反转/筑底态；
-    自建仓后任一收盘 > 当日MA120 即毕业转趋势态（不可逆）。上市不足 120 日无
-    MA120 的按反转态处理；无建仓日记录时保守沿用趋势态（原 v1.12 口径）。"""
+    """§14 v1.21 持仓趋势参照分态：首次建仓日 §8.6 中期多头排列不成立 → 反转/筑底态；
+    自建仓后任一交易日中期多头排列成立即毕业转趋势态（不可逆）。原 v1.19「任一收盘
+    > 当日MA120 即毕业」已废止——单日穿越不等于反转完成，会使底部仓冲高即转趋势态、
+    次日正常回调便报趋势走坏（紫金矿业/宁德时代/小商品城 2026-07-29 判例）。上市不足
+    120 日无 MA120 的按反转态处理；无建仓日记录时保守沿用趋势态。"""
     if not entry_date:
         return TREND_STATE_TREND
     start = next((i for i, d in enumerate(dates) if d >= entry_date), None)
     if start is None:
         return TREND_STATE_TREND
-    state = None
     for i in range(start, len(closes)):
-        ma = sum(closes[i - 119 : i + 1]) / 120 if i + 1 >= 120 else None
-        if ma is None:
-            if state is None:
-                state = TREND_STATE_REVERSAL  # 上市不足120日：无MA120，按反转态
-            continue
-        if state is None:
-            if closes[i] >= ma:
-                return TREND_STATE_TREND
-            state = TREND_STATE_REVERSAL
-        elif closes[i] > ma:
-            return TREND_STATE_TREND  # 毕业（不可逆）
-    return state or TREND_STATE_TREND
-
-
-def current_build_amount(total_assets: float) -> int:
-    build = BASE_BUILD_AMOUNT
-    while total_assets >= build * 20:
-        build *= 2
-    return build
+        if mid_term_bullish_alignment(closes, i):
+            return TREND_STATE_TREND  # 建仓日成立=趋势态建仓；之后成立=毕业（不可逆）
+    return TREND_STATE_REVERSAL
 
 
 def effective_valuation_tier(close: float, band_low: float | None, band_high: float | None) -> str:
@@ -380,10 +384,14 @@ def classify_holding(
 def add_weights(rows: list[dict[str, object]], snapshot: dict[str, str] | None) -> dict[str, object]:
     """权重、build_amount、账户回撤/杠杆状态与单笔风险校验（§13/§14，个人体系 §13.1/§13.2）。
 
-    总资产 = 全部持仓市值（原则上不持现金）；净资产 = 总资产 - 融资负债（负债取账户快照最新行）。
+    总资产 = 全部持仓市值 + 账户快照现金（原则上不持现金，但快照记有余额时必须计入，
+    否则净资产被系统性低估、回撤被高估）；净资产 = 总资产 - 融资负债（均取快照最新行）。
+    结构占比与单票权重仍按持仓市值计（§13 第 3 条，杠杆与现金中性）。
     """
     valid_rows = [r for r in rows if r.get("holdings_action") != "data_error"]
-    total = sum(float(r.get("position_value") or 0.0) for r in valid_rows)
+    holdings_value = sum(float(r.get("position_value") or 0.0) for r in valid_rows)
+    cash = to_float((snapshot or {}).get("cash_cny")) or 0.0
+    total = holdings_value + cash
     quotes_ok = bool(valid_rows) or not rows
     margin_debt = to_float((snapshot or {}).get("margin_debt_cny")) or 0.0
     recorded_peak = to_float((snapshot or {}).get("account_peak_net_assets_cny"))
@@ -404,23 +412,27 @@ def add_weights(rows: list[dict[str, object]], snapshot: dict[str, str] | None) 
 
     for row in rows:
         value = float(row.get("position_value") or 0.0)
-        weight = value / total if total else 0.0
+        weight = value / holdings_value if holdings_value else 0.0
         row["current_weight_pct"] = round(weight * 100, 2)
+        # §13 第 8 条被动口径（v1.21）：本列降为审计事实位，被动上涨越限不预警、不建议减仓；
+        # 主动越限（新建仓/加仓）由 §10 闸门第 11 项在买入前拦截，不经本脚本。
         row["weight_over_limit"] = bool(weight > SINGLE_STOCK_WEIGHT_LIMIT)
-        # 单笔风险 = 持仓市值 × 止损距离 / 净资产（个人体系 §13.2 的持仓监控版）。
+        # 单笔风险持仓监控值：§14 风险预警 4 已于 v1.21 退役（该值 = 持股数×(现价−割肉价)÷净资产，
+        # 是现价的单调增函数，只可能因上涨触发），保留数值为审计字段，不再置 over_limit 标记。
+        # 建仓时的 1.5%N 校验（§13 第 6 条）仍是买入前置硬条件，在 §10 闸门环节完成。
         close = to_float(row.get("close"))
         stop = to_float(row.get("stop_loss_price"))
         if close and stop and close > stop and net_assets > 0:
             risk = value * (close - stop) / close / net_assets
             row["single_trade_risk_pct"] = round(risk * 100, 2)
-            row["single_trade_risk_over_limit"] = bool(risk > SINGLE_TRADE_RISK_LIMIT)
         else:
             row["single_trade_risk_pct"] = ""
-            row["single_trade_risk_over_limit"] = False
+        row["single_trade_risk_over_limit"] = False
 
     return {
         "total_assets": total,
-        "build_amount": current_build_amount(total),
+        "holdings_value": holdings_value,
+        "cash": cash,
         "snapshot_available": snapshot is not None,
         "snapshot_as_of": (snapshot or {}).get("as_of", ""),
         "margin_debt": margin_debt,
@@ -520,7 +532,7 @@ def main() -> None:
         log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv)
     print(
         f"scanned {len(rows)} holdings; total_assets={account['total_assets']:,.0f}; "
-        f"net_assets={account['net_assets']:,.0f}; build_amount={account['build_amount']:,.0f}; "
+        f"net_assets={account['net_assets']:,.0f}; cash={account['cash']:,.0f}; "
         f"drawdown={account['drawdown_pct']:.1%} ({account['drawdown_status']}); "
         f"leverage={account['leverage']:.2f}x; guarantee={account['guarantee_pct']:.0f}%"
     )
