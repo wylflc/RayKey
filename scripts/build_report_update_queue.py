@@ -175,14 +175,21 @@ def build_queue(
         if last_evidence_date and (review_cutoff is None or last_evidence_date > review_cutoff):
             review_cutoff = last_evidence_date
         # §7.2（v1.18）：正式报告公告日晚于上次质量复核即触发；报告期末比较仅作披露文件缺失时的回退。
+        # v1.26：与 §7.3 同构，改与 max(质量复核日, 质量证据日) 比较——当晚吸收次日戳披露的复核
+        # 不再被判伪欠账（判例：宏发股份 7/29 晚复核吸收 7/30 戳中报；东鹏/顺络/乐鑫 7/30 同形态复现）。
+        # 分层表未填 evidence_available_at 时自动退化为纯复核日比较，历史行行为不变。
+        quality_evidence_date = parse_date(tier.get("evidence_available_at"))
+        quality_cutoff = last_quality_review_date
+        if quality_evidence_date and (quality_cutoff is None or quality_evidence_date > quality_cutoff):
+            quality_cutoff = quality_evidence_date
         quality_review_needed = bool(
             (
                 periodic_notice_date
-                and (last_quality_review_date is None or periodic_notice_date > last_quality_review_date)
+                and (quality_cutoff is None or periodic_notice_date > quality_cutoff)
             )
             or (
                 latest_report_date
-                and (last_quality_review_date is None or latest_report_date > last_quality_review_date)
+                and (quality_cutoff is None or latest_report_date > quality_cutoff)
             )
         )
         in_valuation_scope = is_valuation_scope_tier(tier.get("quality_tier", ""))
@@ -261,6 +268,12 @@ def build_queue(
                 "latest_forecast_notice_date": forecast_notice_date.isoformat() if forecast_notice_date else "",
                 "latest_forecast_type": (forecast or {}).get("predict_type", ""),
                 "last_quality_review_date": last_quality_review_date.isoformat() if last_quality_review_date else "",
+                "quality_evidence_available_at": quality_evidence_date.isoformat() if quality_evidence_date else "",
+                "quality_date_basis": (
+                    "quality_evidence_available_at"
+                    if quality_evidence_date and quality_cutoff == quality_evidence_date
+                    else "reviewed_at_utc"
+                ),
                 "last_valuation_review_date": last_valuation_review_date.isoformat() if last_valuation_review_date else "",
                 "valuation_date_basis": valuation_date_basis,
                 "quality_review_needed": quality_review_needed,
@@ -335,6 +348,8 @@ def main() -> None:
         "latest_forecast_notice_date",
         "latest_forecast_type",
         "last_quality_review_date",
+        "quality_evidence_available_at",
+        "quality_date_basis",
         "last_valuation_review_date",
         "valuation_date_basis",
         "quality_review_needed",
