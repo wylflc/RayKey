@@ -104,8 +104,9 @@ Per workflow §5.4.6, these prior-round files remain transition references (the 
 
 ## Project Docs
 
-- `AGENTS.md` contains repository-specific instructions for coding agents.
+- `CLAUDE.md` contains repository-specific instructions for coding agents (`AGENTS.md` is a pointer to it).
 - `CONTEXT.md` defines the stable domain language used by the project.
+- `docs/000_Ashare_workflow.md` is the master execution spec for the A-share pipeline; `docs/personal-investment-system-v1.zh.md` governs investment judgment.
 - `.agents/` and `.codex/` are local agent workspaces and are intentionally ignored by Git.
 
 ## Development Workflow

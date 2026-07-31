@@ -1,240 +1,95 @@
 # AShareQuant
 
-AShareQuant models listed-company research for mainland China, Hong Kong, and U.S. equity markets. This context keeps stable domain language separate from changing implementation plans and task-specific requirements.
+AShareQuant models listed-company research for mainland China, Hong Kong, and U.S. equity markets. This file holds stable domain language only. Executable standards live in `docs/000_Ashare_workflow.md`; investment judgment standards live in `docs/personal-investment-system-v1.zh.md`.
 
-## Language
+## Entities
 
-**Listed Company**:
-The business entity being researched, which may correspond to one or more tradable securities.
-_Avoid_: stock, ticker, security when referring to the business entity.
+**Listed Company** — the business entity being researched. It may correspond to one or more tradable securities. Distinct from **Security**: use *listed company* for the business, *security* for the exchange-traded instrument.
 
-**Security**:
-A tradable instrument identified by exchange, symbol, share class, and market-specific identifiers.
-_Avoid_: company when referring to the listed instrument.
+**Security** — a tradable instrument identified by exchange, symbol, share class, and market-specific identifiers. **A-Share**, **Hong Kong**, and **U.S. Securities** are the market-specific cases; the exchange and share class are part of the identity, not incidental labels.
 
-**A-Share Security**:
-A security listed on a mainland China exchange and traded under that market's rules.
-_Avoid_: China stock when the exchange and share class matter.
+**Universe** — the full set of listed securities eligible for a given analysis run. Eligibility rules are part of the meaning.
 
-**Hong Kong Security**:
-A security listed on the Hong Kong market and traded under that market's rules.
-_Avoid_: HK company when referring only to the instrument.
+**Universe Snapshot** — a timestamped capture of securities returned by a named provider, with source provenance retained for auditability.
 
-**U.S. Security**:
-A security listed on a U.S. exchange and represented by its listing exchange, symbol, share class or security type, and provider identifiers.
-_Avoid_: U.S. company when referring only to the listed instrument.
+## Attention And Quality
 
-**Universe**:
-The full set of listed securities eligible for a given analysis run.
-_Avoid_: all stocks when eligibility rules are part of the meaning.
+**Attention Class** — the first-round, full-universe classification of a listed company into one of three lifecycle states, assigned before any quality tiering. It decides whether a company stays in the research pool at all, and is a separate decision from **Quality Tier** (ADR-0005).
 
-**Universe Snapshot**:
-A timestamped capture of securities returned by a named data provider for a universe construction run, with source provenance retained for auditability.
-_Avoid_: current stock list when provider and retrieval time matter.
+- **Worth-Attention Company** — kept for ongoing attention. This set *is* the **Watchlist**, and only these receive a **Quality Tier**.
+- **Boundary-Pending Company** — reviewable but off the watchlist, for one of two reasons: reliable evidence is insufficient to judge it (including a new listing without an annual report), or it is judgeable but currently lacks a durable advantage while its industry is not structurally hopeless. Carries no quality tier; re-enters review when reliable evidence appears or a hard trigger occurs (new product, customer validation, major order, restructuring, industry-structure change) — never on price action alone.
+- **Garbage Company** — permanently excluded, and only for a governance/fraud disaster or an industry structurally low-barrier enough that no company can build a durable advantage. Company-level weakness in a non-hopeless industry is boundary-pending, not garbage. Never re-screened on price, theme, or low PE; only security master data is maintained. One narrow correction path exists (`garbage_review`, back to boundary-pending) — see workflow §5.4.7.
 
-**Watchlist**:
-The set of listed companies retained for ongoing attention after business-quality screening.
-_Avoid_: buy list, target list.
+**Watchlist** — the set of listed companies retained for ongoing attention after business-quality screening. Not a buy list: watchlist membership says the business deserves attention, not that the security is worth owning.
 
-**Final Screening Result**:
-A consolidated market-level screening output that contains one final attention decision per eligible listed company after triage, peer-group calibration, reviewer challenges, and any supplemental cleanup decisions have been resolved.
-_Avoid_: leaving multiple split decision tables as competing sources of truth after a market review is complete.
+**Quality Tier** — a business-quality rank assigned only to worth-attention companies, ignoring current price. Current price belongs to **Valuation Assessment** and must never move a tier. Permanent removal from research is expressed through **Attention Class**, not through a tier. Tier definitions and the tier's exact relationship to watchlist membership are governed by workflow §5.7/§5.8; a scored redesign is in progress in `docs/000_Ashare_tiering_v2_design.md` and is not yet live.
 
-**Watch Selection Route**:
-A label showing whether a listed company entered a **Watchlist** as a direct reviewer-accepted watch company or as a boundary company retained after analyst judgment under calibrated rules.
-_Avoid_: mixing explicit reviewer selections and analyst-inferred boundary decisions without traceability.
+**Insufficient Disclosure** — a narrow status for a company too newly listed to have enough periodic reports *and* lacking authoritative public business descriptions. It does not mean "not yet reviewed".
 
-**Attention Class**:
-The first-round, full-universe classification of a listed company into one of three lifecycle states — worth-attention, boundary-pending, or garbage — before any quality tiering. It decides whether a company stays in the research pool at all.
-_Avoid_: quality tier, buy decision.
+## Screening
 
-**Worth-Attention Company**:
-A listed company the first round keeps for ongoing attention. The set of worth-attention companies is the **Watchlist**, and only these receive a **Quality Tier**.
-_Avoid_: buy candidate, current holding.
+**Moat Screening** — assessment of durable business advantages and resistance to competitive displacement. Determines whether a listed company deserves attention; **Valuation Assessment** separately determines whether a security may be attractively priced.
 
-**Boundary-Pending Company**:
-A listed company kept reviewable but off the watchlist for one of two reasons: reliable evidence is insufficient to judge it (including a new listing without an annual report), or it is judgeable but currently lacks a durable advantage while its industry is not structurally hopeless. It carries no **Quality Tier**, and re-enters review when reliable evidence appears or a hard trigger (new product, customer validation, major order, restructuring, industry-structure change) occurs.
-_Avoid_: garbage, permanently rejected.
+**Screening Evidence** — reliable source-backed information supporting a moat-screening decision.
 
-**Garbage Company**:
-A listed company permanently excluded during the first round, only for a governance/fraud disaster or because its industry is structurally low-barrier with no durable advantage possible. Company-level current weakness in a non-hopeless industry is **Boundary-Pending**, not garbage. It is removed from the pool and never re-screened on price, theme, or low PE; only its security master data is maintained.
-_Avoid_: boundary-pending, temporarily out, L5, merely mediocre but not fraudulent.
+**Authoritative Research Source** — a company filing, periodic report, exchange announcement, official investor-relations material, regulator disclosure, reputable institution report, or clearly attributed professional research report. Aggregator company introductions and scraped profile blurbs are discovery hints, never analysis evidence.
 
-**Quality Tier**:
-An L1–L5 business-quality rank assigned only to **Worth-Attention Companies**, ignoring current price. L1–L4 are keeper tiers (L1 core candidate, L2 quasi-core candidate, L3 tactical candidate, L4 zero-position watch). L5 is not a keeper grade: it means the company no longer deserves worth-attention and is demoted to **Boundary-Pending**. Permanent removal is expressed through **Attention Class** (garbage), never through L5.
-_Avoid_: using L5 to mean garbage; letting valuation move a tier.
+**Capital Replicability Test** — asking whether a well-funded new entrant could quickly build the same capability, enter the industry, and overtake the company mainly through capital spending. Size and current profitability are not themselves evidence of strength.
 
-**Moat Screening**:
-Assessment of durable business advantages and resistance to competitive displacement.
-_Avoid_: valuation screen, cheap-stock screen.
+**Capability-First Scoring** — giving primary weight to durable capability, technical or process barriers, market position, and long-term industry outlook, while using current profitability, ROE, and cash flow as risk constraints rather than the main reason a company enters or leaves the watchlist.
 
-**Screening Evidence**:
-Reliable source-backed information used to support a **Moat Screening** decision.
-_Avoid_: unsourced notes, model guesses.
+**Cyclicality Profile** — whether a company's industry is mainly stable, structurally growing, macro-credit cyclical, commodity cyclical, property/rate cyclical, capex cyclical, or demand/policy cyclical.
 
-**Authoritative Research Source**:
-A company filing, periodic report, exchange announcement, official investor-relations material, regulator disclosure, reputable institution report, or clearly attributed professional research report used as primary support for a company review.
-_Avoid_: aggregator company introductions, scraped profile blurbs, unsourced summaries.
+**Compounding Profile** — whether a company has a plausible path to compound value through brand, data, innovation, regulated assets, installed base, balance-sheet discipline, or scale/process advantages. A large addressable market is not itself a compounding path.
 
-**Full-Coverage Screening Run**:
-A screening run that attempts to score every eligible listed company in a universe with the same rubric, rather than only companies that were manually selected first.
-_Avoid_: candidate sampling, partial watchlist when the run claims universe coverage.
+**Strategic Resource Cycle** — a cyclicality profile for resource companies still exposed to commodity prices but holding non-generic advantages: scarce reserve ownership, reserve replacement, low-cost development, mine engineering, difficult-ore processing, or global asset integration. Not interchangeable with generic commodity producers.
 
-**Two-Layer Company Review**:
-A **Moat Screening** workflow with a broad first-layer triage across the universe and a second-layer deep review for companies that are retained, borderline, or explicitly challenged.
-_Avoid_: treating a fixed-weight score as the final research judgment.
+## Peer-Group Calibration
 
-**Triage Review**:
-A fast first-layer review that assigns a preliminary attention decision from limited but reliable evidence and routes companies to reject, borderline, or deep review.
-_Avoid_: final score, full investment memo.
+**Peer-Group Calibration** — the standard-setting workflow: compare multiple similar companies in one industry or business type, summarize each one's moat, advantages, weaknesses and market position, then turn the reviewer's accepted and rejected examples into reusable screening standards. Preferred over anchoring a market on a few familiar names.
 
-**Deep Company Review**:
-A second-layer company-level review that reads authoritative sources, states a business thesis, tests counterarguments, scores common dimensions, and adds special dimensions where the company's real advantage is not captured by the common set.
-_Avoid_: one-size-fits-all scoring row.
+**Differentiated Peer Retention** — keep multiple companies from one peer group only when each has a hard-to-replicate and meaningfully different advantage.
 
-**Dimensional Score**:
-A 0-100 score for one explicit screening dimension, such as business moat, technology barrier, market position, business quality, operating quality, industry outlook, or governance and risk quality.
-_Avoid_: unweighted impression, single blended note.
+**Dominance Rejection Test** — reject a company when a stronger peer comprehensively dominates it across moat, technology or process capability, market position, customer validation, and business quality, and the weaker company lacks an irreplaceable niche.
 
-**Special Dimension**:
-A company-specific review dimension used in a **Deep Company Review** when a listed company's real advantage is specific to its business type, such as CRDMO platform depth, clinical adoption, vertical integration, scarce-origin brand power, or global resource development capability.
-_Avoid_: forcing every company into the same fixed dimensions.
+**Low-Barrier Group Rejection** — an entire peer group may be rejected when the business model is easy for capital and execution to copy. No rule requires every industry to contribute a watchlist company.
 
-**Cyclicality Profile**:
-A screening label that identifies whether a listed company's industry is mainly stable, structurally growing, macro-credit cyclical, commodity cyclical, property/rate cyclical, capex cyclical, or demand/policy cyclical.
-_Avoid_: treating all growth industries or all current profit leaders as equally durable.
+**Cross-Industry Advantage Review** — before finally rejecting a company judged inside one peer group, check for material hard-to-replicate assets, licences, resource rights, equity interests, or operating systems from another business line. Qualifies only when the aggregate company-level thesis is source-backed and material, not a conglomerate-discount story.
 
-**Compounding Profile**:
-A screening label that identifies whether a listed company has a plausible path to compound value through brand, data, innovation, regulated assets, installed base, balance-sheet discipline, or scale/process advantages.
-_Avoid_: assuming high current revenue or a large addressable market automatically means compound growth.
+## Valuation And Action
 
-**Strategic Resource Cycle**:
-A cyclicality profile for resource companies that remain exposed to commodity prices but have non-generic advantages from scarce reserve ownership, reserve replacement, low-cost development, mine engineering, difficult-ore processing, or global asset integration.
-_Avoid_: treating all miners or upstream producers as interchangeable commodity-cycle businesses.
+**Investment Strategy Tag** — the primary investment-case classification that selects the correct analysis and valuation lens (cash-flow compounder, cigar-butt undervaluation, GARP growth, supply-chain breakout, fallen champion, monopoly resource, shareholder-return undervaluation). It is not an industry, theme, or price-action label, and it determines which valuation method applies.
 
-**Cross-Market Calibration**:
-A scoring adjustment used when evidence source richness, local peer-group definitions, or market structure would otherwise make scores from different exchanges non-comparable.
-_Avoid_: forcing every market to have the same number of watchlist candidates or applying a valuation opinion inside moat screening.
+**Valuation Assessment** — whether a security's current price is attractive relative to fundamentals or intrinsic value.
 
-**Market-Staged Calibration**:
-A workflow for validating screening standards one market at a time before applying the accepted rules to another market.
-_Avoid_: mixing A-share, Hong Kong, and U.S. outputs while the standard itself is still being challenged.
+**Scenario Valuation** — a valuation assessment expressed as bear, base, and bull cases with explicit assumptions about demand, margins, capital intensity, multiple, asset value, or cycle position. A target price without stated assumptions is not one.
 
-**Peer-Group Calibration**:
-A standard-setting workflow that compares multiple similar listed companies in the same industry or business type, summarizes their moat, advantages, weaknesses, market position, and preliminary attention decision, then uses reviewer feedback to refine reusable screening standards.
-_Avoid_: using a few familiar or randomly named companies as the standard anchor for an entire market.
+**Pretrade Decision** — the structured buy gate between a buy candidate and an actual position: one row per decision covering thesis, scenarios, position tier, exposure checks, and the single-trade risk check. Governed by workflow §10.
 
-**Cross-Industry Advantage Review**:
-A secondary check in **Peer-Group Calibration** for listed companies that were judged inside one industry group but also have material hard-to-replicate assets, licenses, resource rights, equity interests, controlling-shareholder capability, or operating systems from another business line.
-_Avoid_: rejecting a listed company only because it is weaker than the best peer in the current comparison group when its aggregate company-level advantage is materially different.
+**Position Plan** — non-binding portfolio guidance downstream of both moat screening and valuation assessment. It belongs to a security, and is never evidence that the underlying company has a stronger moat.
 
-**Differentiated Peer Retention**:
-A peer-group calibration rule that allows multiple listed companies in the same industry to remain on the watchlist only when each has a hard-to-replicate and meaningfully different advantage.
-_Avoid_: retaining weaker peers merely because they also rank well or benefit from the same industry growth.
+## Market And Financial Data
 
-**Dominance Rejection Test**:
-A peer-group calibration test that rejects a listed company when a stronger peer comprehensively dominates it across moat, technology or process capability, market position, customer validation, and business quality, and the weaker company lacks an irreplaceable niche.
-_Avoid_: keeping a company because it is unfamiliar, second-tier, or might rebound without a distinct durable advantage.
+**Market Data** — daily trading records (open, high, low, close, volume, turnover, trading status). Belongs to a security and trading date.
 
-**Low-Barrier Group Rejection**:
-A peer-group decision that can reject every listed company in an industry or subindustry when the business model is easy for capital and management execution to copy, durable margins are weak, and incremental profit is likely to attract new competition.
-_Avoid_: forcing at least one watchlist company to exist in every industry.
+**Corporate Action** — an issuer event affecting ownership, cash flows, or historical price comparability: dividends, splits, bonus shares, rights issues. Affects how market data must be interpreted.
 
-**Capability-First Scoring**:
-A scoring stance for **Moat Screening** that gives primary weight to durable business capability, technical or process barriers, market position, and long-term industry outlook, while using current profitability, ROE, and cash flow as risk constraints rather than the main reason a company enters or leaves the **Watchlist**.
-_Avoid_: treating current losses or weak margins as proof that a company lacks a moat when source-backed evidence shows hard-to-replicate capability.
+**Financial Report Data** — reported statements, key metrics, narrative disclosures, and their reporting periods. Belongs to a listed company and reporting period.
 
-**Capital Replicability Test**:
-A way to evaluate competitive strength by asking whether a well-funded new entrant could quickly build the same capability, enter the industry, and overtake the listed company mainly through capital spending.
-_Avoid_: assuming a business is strong only because it is large or profitable today.
+**Disclosure Timeline** — expected, preliminary, forecast, and official announcement dates for reporting events. The workflow's review triggers depend on distinguishing these from the reporting period itself.
 
-**Insufficient Disclosure**:
-A narrow screening status for a listed company that is too newly listed to have enough periodic reports and also lacks authoritative public business descriptions from filings, regulators, credible media, or research institutions.
-_Avoid_: not yet researched, missing evidence row.
+## Key Relationships
 
-**Moat Score**:
-A rough 0-100 quality score from **Moat Screening** based on source-backed evidence of business barriers, technical barriers, market position, cash flow quality, and margin quality.
-_Avoid_: valuation score, buy score.
+- A listed company can have several securities. A **Universe** contains securities; a **Watchlist** contains listed companies.
+- Every eligible company gets an **Attention Class**; only worth-attention companies then receive a **Quality Tier**.
+- **Moat Screening** gates attention; **Valuation Assessment** gates price; **Position Plan** is downstream of both. None substitutes for another.
+- An **Investment Strategy Tag** must be assigned before valuation, because it selects the method.
+- In A-share operational files, `security_code` is the working anchor for company-level conclusions. Multi-security companies (AH duals, for example) keep the conclusion on the A-share code; cross-market reuse maps through the company analysis index rather than assuming one code per company.
 
-**Watchlist Candidate**:
-A listed company or security that passes the current **Moat Screening** threshold and is worth later **Valuation Assessment**.
-_Avoid_: buy candidate, undervalued stock.
+## Retired Vocabulary
 
-**Investment Strategy Tag**:
-A primary investment-case classification that selects the correct analysis and valuation lens for a listed company or security, such as cash-flow compounder, cigar-butt undervaluation, GARP growth, supply-chain breakout, fallen champion, monopoly resource, or shareholder-return undervaluation.
-_Avoid_: industry label, theme label, price-action label.
+These terms appear in older documents under `docs/peer-group-calibration/` and in `docs/moat-scoring-rubric.md`. They are no longer part of the operative A-share model — treat them as historical:
 
-**Valuation Assessment**:
-Assessment of whether a security's current price is attractive relative to fundamentals or intrinsic value.
-_Avoid_: moat screening.
-
-**Scenario Valuation**:
-A **Valuation Assessment** expressed as bear, base, and bull cases with explicit assumptions about demand, margins, capital intensity, valuation multiple, asset value, or cycle position.
-_Avoid_: target price when assumptions are not stated.
-
-**Position Plan**:
-Non-binding portfolio guidance that maps a security's **Valuation Assessment**, thesis evidence, risk, and portfolio constraints to a suggested action or position range.
-_Avoid_: buy order, guaranteed allocation.
-
-**Market Data**:
-Daily trading records such as open, high, low, close, volume, turnover, and trading status.
-_Avoid_: financial data.
-
-**Corporate Action**:
-An issuer event that affects ownership, cash flows, or historical price comparability, such as dividends, splits, bonus shares, or rights issues.
-_Avoid_: price data.
-
-**Financial Report Data**:
-Reported financial statements, key metrics, narrative disclosures, and their reporting periods.
-_Avoid_: market data.
-
-**Disclosure Timeline**:
-Expected, preliminary, forecast, and official announcement dates for financial reporting events.
-_Avoid_: report date when the specific event type matters.
-
-## Relationships
-
-- A **Listed Company** can have one or more **Securities**.
-- A **Universe** contains **Securities**, but a **Watchlist** contains **Listed Companies**.
-- A **Final Screening Result** is the structured source of truth for a completed market review; filtering it to `watch` decisions produces the current **Watchlist** for that market.
-- A **Watch Selection Route** preserves whether a **Watchlist** entry came from direct reviewer acceptance or boundary-company judgment.
-- A first-round **Attention Class** is assigned to every eligible listed company; only **Worth-Attention Companies** then receive a **Quality Tier**.
-- The **Watchlist** is the set of **Worth-Attention Companies** currently tiered L1–L4. A **Quality Tier** of L5 demotes a company out of the **Watchlist** into **Boundary-Pending**; a **Garbage** decision requires confirmed evidence, can be issued in any round, and never travels through L5. Garbage has exactly one narrow correction path (`garbage_review`, back to Boundary-Pending) when the original evidence is overturned, control has changed with responsible parties gone, or a pending-verification call fails confirmation within its deadline — see workflow §5.4.7.
-- A **Quality Tier** ranks business quality only; current price belongs to **Valuation Assessment** and must not move a tier.
-- A **Pretrade Decision** is the structured buy gate between a buy candidate and an actual position: one row per decision covering thesis, three scenarios and odds, target position and tranches, exposure checks, and the 1.5% single-trade risk check; any missing or failing field keeps the security at buy-candidate.
-- In A-share operational files, `security_code` is the working anchor for company-level conclusions; multi-security companies (for example AH duals) keep the conclusion on the A-share code, and cross-market reuse must map through the company analysis index rather than assuming one code per company.
-- A **Universe Snapshot** records the **Securities** available from a provider at retrieval time and can be used as input to later screening.
-- **Screening Evidence** supports a **Moat Score**; a high enough **Moat Score** can produce a **Watchlist Candidate**.
-- **Authoritative Research Sources** are required for a **Deep Company Review**; aggregator profile text can only be used as a discovery hint, not as analysis evidence.
-- A **Full-Coverage Screening Run** must produce at least a **Triage Review** for every eligible **Listed Company**, except the narrow **Insufficient Disclosure** case.
-- A **Two-Layer Company Review** sends companies from **Triage Review** into **Deep Company Review** when the triage score is at least 65, the triage decision is borderline, or the company is explicitly challenged by a reviewer.
-- A **Deep Company Review** can include **Special Dimensions** in addition to common public dimensions.
-- A **Dimensional Score** should apply the **Capital Replicability Test** where relevant so the score reflects durable competitive strength rather than current size alone.
-- **Capability-First Scoring** keeps **Moat Screening** focused on real competitive capability before valuation or short-term earnings normalization.
-- **Cyclicality Profile** and **Compounding Profile** explain how the industry outlook contributes to **Moat Screening** without turning it into a valuation or market-momentum signal.
-- A **Strategic Resource Cycle** company can enter a **Watchlist** if its resource and process advantages are strong enough, even though commodity prices still make its earnings cyclical.
-- **Cross-Market Calibration** should correct mechanical scoring bias while preserving company-level evidence and dimensional score traceability.
-- **Market-Staged Calibration** should validate one market's **Triage Review** and **Deep Company Review** behavior before turning the lessons into reusable rules for other markets.
-- **Peer-Group Calibration** is the preferred way to form reusable standards: the reviewer compares similar listed companies first, then the accepted/rejected examples become standard-setting evidence.
-- **Cross-Industry Advantage Review** should be applied before final rejection when a listed company has material assets or capabilities outside the selected peer group. Cross-industry breadth qualifies only when the aggregate company-level thesis is source-backed, material, hard to replicate, and not merely a conglomerate discount story.
-- **Differentiated Peer Retention** and the **Dominance Rejection Test** should be applied together: keep multiple companies in one peer group only when their advantages are meaningfully different and hard to replace; reject a company when a stronger peer comprehensively covers its advantage.
-- **Low-Barrier Group Rejection** is allowed when an entire peer group lacks durable barriers; peer-group calibration does not require every industry to contribute at least one **Watchlist** company.
-- **Moat Screening** determines whether a **Listed Company** deserves attention; **Valuation Assessment** determines whether a **Security** may be attractively priced.
-- An **Investment Strategy Tag** determines which evidence and valuation method should be used in a **Valuation Assessment**; it is not interchangeable with an industry label or short-term market theme.
-- A **Scenario Valuation** supports a **Valuation Assessment** by making bear, base, and bull assumptions explicit before a security is considered for a **Position Plan**.
-- A **Position Plan** belongs to a **Security** and is downstream of both **Moat Screening** and **Valuation Assessment**; it must not be treated as proof that the underlying **Listed Company** has a stronger moat.
-- **Market Data** belongs to a **Security** and trading date.
-- **Corporate Actions** belong to a **Security** or **Listed Company** and affect how **Market Data** should be interpreted.
-- **Financial Report Data** belongs to a **Listed Company** and reporting period, with dates captured in the **Disclosure Timeline**.
-
-## Example Dialogue
-
-> **Dev:** "If a company passes moat screening, should it be marked as a buy?"
-> **Domain expert:** "No. It enters the Watchlist. Buying requires a separate Valuation Assessment on the relevant Security."
-
-## Flagged Ambiguities
-
-- "Company" and "stock" are easy to conflate. Use **Listed Company** for the business entity and **Security** for the exchange-traded instrument.
-- "Worth attention" is resolved as **Watchlist** inclusion based on **Moat Screening**, not as a purchase recommendation.
-- "Position" and "watch" are easy to conflate. A **Position Plan** can recommend zero position, tactical monitoring, or a position range only after a separate **Valuation Assessment** on the relevant **Security**.
-- "Evidence insufficient" is narrow. It does not mean a company has not yet been reviewed; it means the company lacks enough public disclosure and authoritative external description to support a fair score.
+- **Two-Layer Company Review**, **Triage Review**, **Deep Company Review**, **Full-Coverage Screening Run**, **Dimensional Score**, **Special Dimension**, **Moat Score** — the score-driven two-layer review, de-scoped from A-shares by ADR-0006. `docs/moat-scoring-rubric.md` now serves the Hong Kong and U.S. coverage scorers only. Do not confuse the old `Moat Score` with the tiering-v2 `quality_score`.
+- **Final Screening Result**, **Watch Selection Route** — pointed at `a_share_final_screening_results.csv`, which no longer exists. Current structured sources of truth are `a_share_attention_triage.csv` and `a_share_watchlist_quality_tiers.csv`.
+- **Cross-Market Calibration**, **Market-Staged Calibration** — belong to the Hong Kong/U.S. scoring path, not the A-share pipeline.
