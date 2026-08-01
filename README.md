@@ -14,7 +14,7 @@ The project supports a reproducible equity-research workflow: build an investabl
 4. Daily volume-price scan producing buy candidates from the core valuation pool.
 5. Daily holdings monitoring and sell scan.
 
-The full-universe round-1 rescan is complete (5,653 companies triaged as of 2026-07-09: 261 worth_attention / 5,332 boundary_pending / 60 garbage); `docs/round1-rescan-progress.md` holds the final snapshot. Tiering over that set was rebuilt on 2026-08-01 under workflow v1.27 (L1 21 / L2 231 / L3 9, all evidence-reviewed). Every reviewed conclusion is appended to `data/processed/a_share_workflow_decision_log.csv`.
+The full-universe round-1 rescan is complete (5,653 companies triaged as of 2026-07-09: 261 worth_attention / 5,332 boundary_pending / 60 garbage); `docs/archive/round1-rescan-progress.md` holds the final snapshot. Tiering over that set was rebuilt on 2026-08-01 under workflow v1.27 (L1 21 / L2 231 / L3 9, all evidence-reviewed). Every reviewed conclusion is appended to `data/processed/a_share_workflow_decision_log.csv`.
 
 The personal investment system in `docs/000_personal-investment-system-v1.zh.md` (Chinese, canonical) is the default standard for all equity analysis.
 
@@ -23,7 +23,7 @@ The personal investment system in `docs/000_personal-investment-system-v1.zh.md`
 - `docs/000_Ashare_workflow.md` — main A-share workflow specification.
 - `docs/000_personal-investment-system-v1.zh.md` — personal investment rulebook.
 - `docs/Ashare_quality_rubric.md` — the Q1/Q2 scoring detail behind workflow §5.7 tier assignment.
-- `docs/round1-rescan-progress.md` — round-1 rescan progress and handoff.
+- `docs/archive/` — completed process logs and one-off audits (round-1 rescan handoff, 2026-07-14 workflow diagnostic, 2026-07-31 instruction audit). Not inputs to any live flow.
 - `docs/peer-group-calibration/` — per-industry calibration narratives; the audit trail of how the round-1 rules were formed.
 - `docs/moat-scoring-rubric.md` — dimensional triage rubric, still the standard for the Hong Kong / U.S. full-coverage scorers.
 - `docs/adr/` — architecture decision records; ADR-0006 defines the current round-1 triage standard.

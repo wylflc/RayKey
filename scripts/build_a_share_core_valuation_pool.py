@@ -145,6 +145,7 @@ def build_pool(
     每日实际状态以扫描时的价格自动定档为准，本列仅作审计口径。"""
     tier_by_code = {row["security_code"].zfill(6): row for row in tier_rows}
     output: list[dict[str, str]] = []
+    skipped: list[str] = []
 
     for row in valuation_rows:
         code = row["security_code"].zfill(6)
@@ -155,6 +156,10 @@ def build_pool(
         valuation_tier = row.get("valuation_tier", "")
 
         if quality_tier not in TIER_ELIGIBLE_VALUATIONS:
+            # OI-003：**不得静默跳过**。旧口径遇到无法归入 L1/L2/L3 的行直接 continue，
+            # v1.27 三档重构后估值表仍带旧五档，12 行 L4 因此消失于池与每日扫描而无任何
+            # 提示——与「全量 worth_attention 统一扫描」的意图相反。现改为计数并上报。
+            skipped.append(f"{code}{row.get('security_name','')}({quality_tier or '空'})")
             continue
         state = matrix_state(quality_tier, valuation_tier)
 
@@ -218,6 +223,9 @@ def build_pool(
             }
         )
 
+    if skipped:
+        print(f"⚠️ 分层不可归类被跳过 {len(skipped)} 行（OI-003）：{'、'.join(skipped[:10])}"
+              + ("…" if len(skipped) > 10 else ""))
     return output
 
 

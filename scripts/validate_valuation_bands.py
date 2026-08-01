@@ -63,10 +63,10 @@ BAND_TOLERANCE = 0.02  # §6.7 要求 10 第 4 项
 TYPE_TABLE: dict[str, dict] = {
     "A": {
         "name": "现金流复利型",
-        "anchors": {"annual_distributable_cash": 2, "normalized_profit": 1},
+        "anchors": {"annual_distributable_cash": 1, "normalized_profit": 1},
         # v1.30 (OI-004)：A-2 的锚是自身历史交易水平，系数按质量分层分档。
         # 其余类型的锚已是正常化/偏乐观口径，系数不随分层变动。
-        "coefs": {"normalized_profit": {"L1": (0.90, 1.15), "L2": (0.85, 1.05), "L3": (0.80, 1.00)}},
+        "coefs": {"normalized_profit": {"L1": (0.90, 1.15), "L2": (0.85, 1.05), "L3": (0.80, 1.00)}, "annual_distributable_cash": {"L1": (0.90, 1.15), "L2": (0.85, 1.05), "L3": (0.80, 1.00)}},
     },
     "C": {
         "name": "GARP成长型",
@@ -102,8 +102,8 @@ TYPE_TABLE: dict[str, dict] = {
     },
     "K": {
         "name": "稳态现金分配型",
-        "anchors": {"normalized_profit": 1, "bvps": 1, "dps": 2},
-        "coefs": {"normalized_profit": {"L1": (0.90, 1.15), "L2": (0.85, 1.05), "L3": (0.80, 1.00)}, "bvps": (0.85, 1.00), },
+        "anchors": {"normalized_profit": 1, "bvps": 1, "dps": 1},
+        "coefs": {"normalized_profit": {"L1": (0.90, 1.15), "L2": (0.85, 1.05), "L3": (0.80, 1.00)}, "bvps": (0.85, 1.00), "dps": {"L1": (0.90, 1.15), "L2": (0.85, 1.05), "L3": (0.80, 1.00)}},
     },
     "M": {
         "name": "管线/研发资产型",

@@ -79,12 +79,17 @@ PEER_MULTIPLE_LEVELS = (3, 2)    # 只用三级/二级行业；退到一级会�
 AS_OF_YEAR = 2026                # 折现基准年（现值口径的 T0）
 
 # §6.5.3 A-1 / K primary / 通用校验二（v1.34，结 OI-008）
-A1_REQUIRED_RETURN = (0.06, 0.08)    # A 类要求回报区间（中性档对应）
-A1_MAX_G = 0.04                      # A-1 的 g 上限（§6.5.2）
-K_RATE_RANGE = (0.030, 0.045)        # K 类折现率 = 10Y 国债 + 资产风险溢价
+# v1.35（结 OI-009）：单点要求回报 + 固定带系数，带宽交回带系数控制。
+# 原「rate 区间 [8%−g, 6%−g]」使带宽恒为 2.0 倍，档位分辨力退化。
+A1_REQUIRED_RETURN = 0.070           # A-1 要求回报 = 10Y 国债 1.8% + 成熟股权风险溢价 5.2%
+K_REQUIRED_RETURN = 0.065            # K   要求回报 = 10Y 国债 1.8% + 受监管长久期资产溢价 4.7%
+# 永续增长上限：高分红成熟公司按定义把大部分利润分掉，留存不足以支撑更高的永续增长。
+# 2.5% 对应「长期通胀 + 极低实际增长」，即公司长期存在但不再扩张，低于 §6.5.4 的通用
+# 3.5% 上限。**它不是收益率目标**——Gordon 的 g 是终局增长假设，取高会让分母塌陷。
+PERPETUAL_G_CAP = 0.025
 A1_A2_DIVERGENCE = 0.25              # 双口径中值偏离 >25% 置 band_fragile（§6.5.3）
-A1_MIN_PAYOUT = 0.60                 # A-1 参与取孰低的分红率门槛（见下方说明）
-GORDON_MIN_SPREAD = 0.015            # Gordon 分母下限：g 必须 ≤ r_low − 1.5pp，否则模型发散
+A1_MIN_PAYOUT = 0.60                 # A-1 参与定带的分红率门槛（辅条件）
+GORDON_MIN_SPREAD = 0.015            # Gordon 分母下限：g 必须 ≤ r − 1.5pp，否则模型发散
 DIVIDENDS_PATH = ROOT / "data/interim/a_share_dividends.csv"
 
 
@@ -443,11 +448,11 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
         growth = 0.0
         if roe_rows and payout is not None:
-            growth = max(0.0, min(A1_MAX_G, statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0))))
+            growth = max(0.0, min(PERPETUAL_G_CAP, statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0))))
         mid = (low + high) / 2
         cash_yield = distributable / (mid * shares * 1e8)
         total = cash_yield + growth
-        r_low, r_high = A1_REQUIRED_RETURN
+        r_low, r_high = A1_REQUIRED_RETURN - 0.01, A1_REQUIRED_RETURN + 0.01
         verdict = ("总回报高于要求区间，带偏保守" if total > r_high else
                    "总回报低于要求区间，带偏乐观" if total < r_low else "总回报落在要求区间内，带自洽")
         note = (f"通用校验二（{sr_data['year']}）：带中值处现金回报 {cash_yield:.2%}"
@@ -534,40 +539,51 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
             profit = ttm(periods, "PARENTNETPROFIT")
             payout = (sr["cash"] / profit) if (profit and profit > 0) else None
-            growth = A1_MAX_G
+            growth = PERPETUAL_G_CAP
             if roe_rows and payout is not None:
-                growth = min(A1_MAX_G, max(0.0, statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0))))
-            growth = min(growth, A1_REQUIRED_RETURN[0] - GORDON_MIN_SPREAD)
+                growth = min(PERPETUAL_G_CAP, max(0.0, statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0))))
+            growth = min(growth, A1_REQUIRED_RETURN - GORDON_MIN_SPREAD)
             distributable = sr["cash"] + sr["cancel_rate"] * (quote.get("total_market_cap") or 0)
-            a1_low = distributable / (A1_REQUIRED_RETURN[1] - growth) / 1e8 / shares
-            a1_high = distributable / (A1_REQUIRED_RETURN[0] - growth) / 1e8 / shares
+            a1_fair = distributable / (A1_REQUIRED_RETURN - growth) / 1e8 / shares
+            a1_lo_coef, a1_hi_coef = A2_COEFS.get(tier_key, (0.85, 1.05))
+            a1_low, a1_high = a1_fair * a1_lo_coef, a1_fair * a1_hi_coef
             a2_mid = anchor / 1e8 * multiple * (low_coef + high_coef) / 2 / shares
             a1_mid = (a1_low + a1_high) / 2
-            gate = "参与取孰低" if (payout or 0) >= A1_MIN_PAYOUT else f"分红率 <{A1_MIN_PAYOUT:.0%}，仅作对照不参与定带"
+            sustainable_g = (statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0))
+                             if (roe_rows and payout is not None) else None)
+            a1_eligible = ((payout or 0) >= A1_MIN_PAYOUT
+                           and sustainable_g is not None and sustainable_g <= PERPETUAL_G_CAP)
+            gate = ("参与取孰低" if a1_eligible else
+                    (f"分红率 {payout:.0%} <{A1_MIN_PAYOUT:.0%}，仅作对照" if (payout or 0) < A1_MIN_PAYOUT else
+                     f"可持续内生增长 {sustainable_g:.1%} > 永续上限 {PERPETUAL_G_CAP:.1%}"
+                     f"（单阶段 Gordon 会结构性低估），仅作对照"))
             card["band_sensitivity"] = (
                 f"A-1 股东回报口径：{sr['year']} 年现金分红 {sr['cash']/1e8:.1f}亿 + 回购注销率 "
                 f"{sr['cancel_rate']:.2%} = 可分配现金 {distributable/1e8:.1f}亿；g={growth:.2%}"
                 f"（分红率 {payout:.0%}，{gate}）→ 带 {a1_low:.4g}~{a1_high:.4g}；A-2 带中值 {a2_mid:.4g}。")
             if a2_mid and abs(a1_mid / a2_mid - 1) > A1_A2_DIVERGENCE:
                 card["band_fragile"] = "true"
-            # §6.5.3 取孰低——但**只在分红率 ≥60% 时让 A-1 参与**。
-            # A-1 是 Gordon-on-可分配现金，其 g 上限 4% 代表不了低分红公司的再投资增长：
-            # ROE 20%、分红率 30% 的公司真实内生增长约 14%，被 4% 上限截断后 A-1 会
-            # 系统性偏低（实测东阿阿胶带砍半、国电南瑞被拉宽）。分红率不足时 A-1 只
-            # 写入敏感度作对照，不参与定带。
-            if (payout or 0) >= A1_MIN_PAYOUT and a1_high < anchor / 1e8 * multiple * high_coef / shares:
+            # §6.5.3 取孰低——A-1 参与定带须**同时**满足两条：
+            #   ① 分红率 ≥60%（现金分配是主要价值实现途径）
+            #   ② **可持续内生增长 ≤ 永续上限**（ROE × 留存率 ≤ 2.5%）
+            # 第②条是关键：单阶段 Gordon 只对「再投资增长已低于永续上限」的真稳态公司
+            # 成立。对还能以高于永续增长率再投资的公司，把 g 截断到 2.5% 会结构性低估
+            # ——贵州茅台 ROE 32.5%×留存 21% = 6.8%，截断后 A-1 给 1158-1479，
+            # 而 A-2 为 1792-2290；国电南瑞同形态。这类公司需两阶段模型，本版不建，
+            # A-1 只写入敏感度作对照。
+            if a1_eligible and a1_high < anchor / 1e8 * multiple * high_coef / shares:
                 # §6.5.2 A-1 是**形态2 收益率型**：带 = 锚 ÷ [rate_high, rate_low]，
                 # 带系数不参与（恒为 1），倍数字段填 rate 区间。
                 anchor = distributable
-                multiple = f"{A1_REQUIRED_RETURN[0]-growth:.4f}~{A1_REQUIRED_RETURN[1]-growth:.4f}"
+                multiple = round(1 / (A1_REQUIRED_RETURN - growth), 4)
                 card["anchor_metric"] = "annual_distributable_cash"
                 card["anchor_scope"] = "market_cap"
-                low_coef = high_coef = 1
-                card["band_low_coef"] = card["band_high_coef"] = 1
+                low_coef, high_coef = a1_lo_coef, a1_hi_coef
+                card["band_low_coef"], card["band_high_coef"] = low_coef, high_coef
                 source = "required_return"
                 basis = (f"A-1（与 A-2 取孰低，本行 A-1 更低）：可分配现金 {distributable/1e8:.1f}亿"
-                         f"（{sr['year']} 现金分红 + 回购注销）÷ [{A1_REQUIRED_RETURN[1]:.0%}−g, "
-                         f"{A1_REQUIRED_RETURN[0]:.0%}−g]，g={growth:.2%}")
+                         f"（{sr['year']} 现金分红 + 回购注销）÷ (r {A1_REQUIRED_RETURN:.1%} − g {growth:.2%})"
+                         f" × 分层系数 [{low_coef}, {high_coef}]")
     elif tag_letter == "C":
         value, count, year = best_consensus(evidence, (0, 1), min_coverage=2)
         if value and count == 2:
@@ -693,23 +709,25 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             profit = ttm(periods, "PARENTNETPROFIT")
             payout = (sr["cash"] / profit) if (profit and profit > 0) else 1.0
             roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
-            growth = min(MAX_G, max(0.0, (statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0)))
-                                    if roe_rows else 0.0))
+            growth = min(PERPETUAL_G_CAP, max(0.0, (statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0)))
+                                              if roe_rows else 0.0))
             # g 逼近或超过 r 时 Gordon 发散（判例：长江电力 g=3.5% ≥ r_low=3.0% 得出负带）
-            growth = min(growth, K_RATE_RANGE[0] - GORDON_MIN_SPREAD)
-            anchor, multiple, source = dps, f"{K_RATE_RANGE[0]-growth:.4f}~{K_RATE_RANGE[1]-growth:.4f}", "gordon"
+            growth = min(growth, K_REQUIRED_RETURN - GORDON_MIN_SPREAD)
+            k_lo, k_hi = A2_COEFS.get(tier_key, (0.85, 1.05))
+            anchor, multiple, source = dps, round(1 / (K_REQUIRED_RETURN - growth), 4), "gordon"
             card["anchor_metric"] = "dps"
             card["anchor_scope"] = "per_share"
-            card["band_low_coef"] = card["band_high_coef"] = 1
+            card["band_low_coef"], card["band_high_coef"] = k_lo, k_hi
+            low_coef, high_coef = k_lo, k_hi
             card["anchor_quality"] = "primary"
             card["upgrade_path"] = ""
-            low = dps / (K_RATE_RANGE[1] - growth)
-            high = dps / (K_RATE_RANGE[0] - growth)
+            low = dps * multiple * k_lo
+            high = dps * multiple * k_hi
             # K primary 本身就是股东回报口径，不再叠加通用校验二（同一信息用两次）
             card["fair_price_low"], card["fair_price_high"] = f"{low:.4g}", f"{high:.4g}"
             card["band_sensitivity"] = (f"Gordon：DPS {dps:.3f} 元（{sr['year']} 现金分红 {sr['cash']/1e8:.1f}亿"
-                                        f"÷ {shares:.2f}亿股）÷ [r−g]，r∈[{K_RATE_RANGE[0]:.1%},{K_RATE_RANGE[1]:.1%}]，"
-                                        f"g={growth:.2%}（分红率 {payout:.0%}）")
+                                        f"÷ {shares:.2f}亿股）÷ (r {K_REQUIRED_RETURN:.1%} − g {growth:.2%})"
+                                        f" × 分层系数 [{k_lo}, {k_hi}]（分红率 {payout:.0%}）")
             # 与 K-2（PE 中枢回归）取孰低——r∈[3.0%,4.5%] 是按受监管长久期资产校准的，
             # 套到非监管的稳态消费公司过于宽松；取孰低让口径自己纠偏（同 A/J/F-2 的处理）。
             k2_profit = ttm(periods, "KCFJCXSYJLR")
@@ -726,8 +744,8 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                 low_coef, high_coef = k2_lo, k2_hi
                 card["fair_price_low"] = card["fair_price_high"] = ""
                 card["band_sensitivity"] = (
-                    f"K primary Gordon 带 {low:.4g}~{high:.4g}（DPS {dps:.3f}，r∈"
-                    f"[{K_RATE_RANGE[0]:.1%},{K_RATE_RANGE[1]:.1%}]，g={growth:.2%}）**高于 K-2，未采用**；"
+                    f"K primary Gordon 带 {low:.4g}~{high:.4g}（DPS {dps:.3f}，r {K_REQUIRED_RETURN:.1%}，"
+                    f"g={growth:.2%}）**高于 K-2，未采用**；"
                     f"K-2：扣非归母 TTM {k2_profit/1e8:.2f}亿 × PE 中位 {k2_pe}{k2_conv}")
                 basis = card["band_sensitivity"]
                 if abs((low + high) / 2 / ((k2_profit / 1e8 * k2_pe * (k2_lo + k2_hi) / 2 / shares)) - 1) > A1_A2_DIVERGENCE:
@@ -831,18 +849,7 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         card["multiple_or_rate"] = f"{multiple}"
         card["multiple_source"] = source
         divisor = shares if card["anchor_scope"] == "market_cap" else 1.0
-        if divisor and card["anchor_metric"] == "annual_distributable_cash":
-            rates = [float(x) for x in str(multiple).split("~")]
-            low, high = (float(card["anchor_value"]) / rates[1] / divisor,
-                         float(card["anchor_value"]) / rates[0] / divisor)
-            _, _, sr_note = shareholder_return_check(low, high)
-            card["fair_price_low"], card["fair_price_high"] = f"{low:.4g}", f"{high:.4g}"
-            extra = card.get("band_sensitivity") or ""
-            card["band_sensitivity"] = (f"形态2 收益率型：锚 ÷ [{rates[1]:.4f}, {rates[0]:.4f}]；"
-                                        + share_count_check(evidence, shares)
-                                        + (f"｜{extra}" if extra else "")
-                                        + (f"｜{sr_note}" if sr_note else ""))
-        elif divisor:
+        if divisor:
             value = float(card["anchor_value"]) * float(multiple)
             low, high = value * low_coef / divisor, value * high_coef / divisor
             sens_low = value * 0.85 * low_coef / divisor
