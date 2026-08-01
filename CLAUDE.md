@@ -17,7 +17,7 @@ Treat the latest user request and committed project docs as the source of truth 
 - Keep changes scoped to the request and match the repository's existing style.
 - Do not add dependencies, data providers, databases, schedulers, or external services unless the request clearly needs them.
 - `docs/xzy/` holds another person's investment-system materials. Do not use or reference it in analysis unless the user explicitly cites it.
-- **`000_` filename prefix is reserved for files the user opens and reads directly** — it exists to keep those files sorted to the top. Do not add it to design notes, audits, changelogs, issue registers, or any other agent/program working document. Currently prefixed: `docs/000_Ashare_workflow.md`, `docs/000_personal-investment-system-v1.zh.md`, `data/processed/000_a_share_core_valuation_pool.md`, `000_a_share_watchlist_quality_tiers.md`, `000_daily_scan_log.md`.
+- **`000_` filename prefix is reserved for files the user opens and reads directly** — it exists to keep those files sorted to the top. Do not add it to design notes, audits, changelogs, issue registers, or any other agent/program working document. Currently prefixed: `docs/000_Ashare_workflow.md`, `docs/000_personal-investment-system-v1.zh.md`, `data/processed/000_a_share_core_valuation_pool.md`, `000_daily_scan_log.md`.
 - After any completed file-change batch, create a git commit before the final response. Do not push unless explicitly asked.
 - Git commit messages: one short sentence. No body, trailers, attribution, co-author tags, or any tool-generated signature.
 - Never store API keys, tokens, cookies, account identifiers, or paid-data credentials in the repository.
