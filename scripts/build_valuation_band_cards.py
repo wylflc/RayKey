@@ -92,6 +92,12 @@ K_REQUIRED_RETURN = 0.065            # K   要求回报 = 10Y 国债 1.8% + 受�
 # 2.5% 对应「长期通胀 + 极低实际增长」，即公司长期存在但不再扩张，低于 §6.5.4 的通用
 # 3.5% 上限。**它不是收益率目标**——Gordon 的 g 是终局增长假设，取高会让分母塌陷。
 PERPETUAL_G_CAP = 0.025
+# §6.5.3 两阶段 DCF 交叉校验（v1.40）：单阶段 Gordon 在 g 逼近 r 时发散，所以 A-1 被
+# 「可持续内生增长 ≤2.5%」挡在门外——代价是**所有还在增长的公司都没有绝对法对照**，
+# 只剩自身历史 PE 中位这一相对法。相对法按构造无法发现系统性错价：若市场长期给低
+# 估值，中位数就把这个低估值当成"合理"。两阶段 DCF 消除该盲区，并反解隐含折现率。
+DCF_STAGE1_YEARS = 10
+DCF_PERCENTILE_EXTREME = (15.0, 85.0)   # 现 PE 分位落在两端 → 倍数锚在另一个估值制度里
 A1_A2_DIVERGENCE = 0.25              # 双口径中值偏离 >25% 置 band_fragile（§6.5.3）
 A1_MIN_PAYOUT = 0.60                 # A-1 参与定带的分红率门槛（辅条件）
 GORDON_MIN_SPREAD = 0.015            # Gordon 分母下限：g 必须 ≤ r − 1.5pp，否则模型发散
@@ -160,6 +166,31 @@ def _peer_universe() -> tuple[dict[str, str], dict[str, float]]:
             medians[path.stem] = float(value)
     _PEER_CACHE["data"] = (industries, medians)
     return _PEER_CACHE["data"]
+
+
+def two_stage_dcf(cash: float, g1: float, g2: float, rate: float, years: int = DCF_STAGE1_YEARS) -> float:
+    """两阶段 DCF：N 年按可持续内生增长 g1，其后按永续 g2。"""
+    if rate <= g2:
+        return 0.0
+    stage1 = sum(cash * (1 + g1) ** t / (1 + rate) ** t for t in range(1, years + 1))
+    terminal = cash * (1 + g1) ** years * (1 + g2) / (rate - g2) / (1 + rate) ** years
+    return stage1 + terminal
+
+
+def implied_discount_rate(market_cap: float, cash: float, g1: float, g2: float) -> float | None:
+    """从现价反解隐含折现率——「市场要求这家公司给多少年化回报」。
+
+    比「相对历史中位贵/便宜」有用得多：它是一个可以直接和你的机会成本比较的数。
+    """
+    if market_cap <= 0 or cash <= 0:
+        return None
+    for step in range(1, 400):
+        rate = g2 + 0.0005 * step
+        if rate <= g2 + 0.001:
+            continue
+        if two_stage_dcf(cash, g1, g2, rate) <= market_cap:
+            return round(rate, 4)
+    return None
 
 
 def excess_profit_value(run_rate: float, mid_cycle: float, years: int,
@@ -471,6 +502,7 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         "implied_excess_years": "",
         "excess_years_ladder": "",
         "cycle_gap_kind": "",
+        "multiple_regime_flag": "",
         "band_sensitivity": "",
         "band_fragile": "false",
         "fair_price_low": "",
@@ -638,9 +670,9 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
             profit = ttm(periods, "PARENTNETPROFIT")
             payout = (sr["cash"] / profit) if (profit and profit > 0) else None
-            growth = PERPETUAL_G_CAP
-            if roe_rows and payout is not None:
-                growth = min(PERPETUAL_G_CAP, max(0.0, statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0))))
+            growth_raw = (statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0))
+                          if (roe_rows and payout is not None) else PERPETUAL_G_CAP)
+            growth = min(PERPETUAL_G_CAP, max(0.0, growth_raw))
             growth = min(growth, A1_REQUIRED_RETURN - GORDON_MIN_SPREAD)
             distributable = sr["cash"] + sr["cancel_rate"] * (quote.get("total_market_cap") or 0)
             a1_fair = distributable / (A1_REQUIRED_RETURN - growth) / 1e8 / shares
@@ -652,6 +684,12 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                              if (roe_rows and payout is not None) else None)
             a1_eligible = ((payout or 0) >= A1_MIN_PAYOUT
                            and sustainable_g is not None and sustainable_g <= PERPETUAL_G_CAP)
+            cap_now = float(quote.get("total_market_cap") or 0)
+            dcf_value = two_stage_dcf(distributable, min(growth_raw, 0.12), PERPETUAL_G_CAP, A1_REQUIRED_RETURN)
+            implied_r = implied_discount_rate(cap_now, distributable, min(growth_raw, 0.12), PERPETUAL_G_CAP)
+            dcf_note = (f"两阶段DCF（{DCF_STAGE1_YEARS}年 g1={min(growth_raw,0.12):.2%}→永续 {PERPETUAL_G_CAP:.1%}，"
+                        f"r={A1_REQUIRED_RETURN:.1%}）每股 {dcf_value/1e8/shares:.4g}"
+                        + (f"；**现价反解隐含折现率 r≈{implied_r:.1%}**" if implied_r else ""))
             gate = ("参与取孰低" if a1_eligible else
                     (f"分红率 {payout:.0%} <{A1_MIN_PAYOUT:.0%}，仅作对照" if (payout or 0) < A1_MIN_PAYOUT else
                      f"可持续内生增长 {sustainable_g:.1%} > 永续上限 {PERPETUAL_G_CAP:.1%}"
@@ -659,7 +697,8 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             card["band_sensitivity"] = (
                 f"A-1 股东回报口径：{sr['year']} 年现金分红 {sr['cash']/1e8:.1f}亿 + 回购注销率 "
                 f"{sr['cancel_rate']:.2%} = 可分配现金 {distributable/1e8:.1f}亿；g={growth:.2%}"
-                f"（分红率 {payout:.0%}，{gate}）→ 带 {a1_low:.4g}~{a1_high:.4g}；A-2 带中值 {a2_mid:.4g}。")
+                f"（分红率 {payout:.0%}，{gate}）→ 带 {a1_low:.4g}~{a1_high:.4g}；A-2 带中值 {a2_mid:.4g}。"
+                f"｜{dcf_note}")
             if a2_mid and abs(a1_mid / a2_mid - 1) > A1_A2_DIVERGENCE:
                 card["band_fragile"] = "true"
             # §6.5.3 取孰低——A-1 参与定带须**同时**满足两条：
@@ -954,6 +993,14 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             sens_low = value * 0.85 * low_coef / divisor
             sens_high = value * 1.15 * high_coef / divisor
             _, _, sr_note = shareholder_return_check(low, high)
+            # v1.40：倍数取自身历史中位时，若现 PE 处 5 年极端分位，说明**倍数锚在另一个
+            # 估值制度里**——中位数会把旧制度锁进结论。全池实测 81 家用相对法，其中 39 家
+            # （48%）处极端分位。只标记不改带：分位本身是市场意见，不能反过来当成事实。
+            pct_rank = band.get("pe_ttm_pct_rank")
+            if (card["multiple_source"] == "own_history_median" and pct_rank is not None
+                    and (pct_rank <= DCF_PERCENTILE_EXTREME[0] or pct_rank >= DCF_PERCENTILE_EXTREME[1])):
+                side = "低位" if pct_rank <= DCF_PERCENTILE_EXTREME[0] else "高位"
+                card["multiple_regime_flag"] = f"现PE处5年{pct_rank:.1f}%分位（{side}极端）"
             # §6.5.4 运行率校验 + 情景带（v1.36）：把「这是周期顶还是新平台」的假设显式化。
             # 基准用 **TTM**（四个单季之和）而非单季×4——单季年化对季节性生意必然误报
             # （白酒一季度为旺季，山西汾酒/洋河/伊利首轮均被误标）。TTM 天然抵消季节性。
@@ -1012,7 +1059,9 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                                         + share_count_check(evidence, shares)
                                         + (f"｜{extra}" if extra else "")
                                         + (f"｜{sr_note}" if sr_note else "")
-                                        + (f"｜{card.get('cycle_note') or ''}" if card.get("cycle_note") else ""))
+                                        + (f"｜{card.get('cycle_note') or ''}" if card.get("cycle_note") else "")
+                                        + (f"｜⚑倍数制度提示：{card['multiple_regime_flag']}——"
+                                           f"历史中位可能锚在另一个估值制度上" if card.get("multiple_regime_flag") else ""))
     elif not card["note"] and not card["needs_external"]:
         card["note"] = "锚定量或倍数取数失败，须人工补"
 
