@@ -92,6 +92,9 @@ A1_MIN_PAYOUT = 0.60                 # A-1 参与定带的分红率门槛（辅�
 GORDON_MIN_SPREAD = 0.015            # Gordon 分母下限：g 必须 ≤ r − 1.5pp，否则模型发散
 DIVIDENDS_PATH = ROOT / "data/interim/a_share_dividends.csv"
 
+# §6.5.4 运行率硬校验（v1.36，OI-001 的原始第 5 条，此前只写在文档、引擎实现 0 次）
+RUN_RATE_FLOOR = 0.85            # 锚 < TTM 归母 × 0.85 即触发周期假设标记
+
 
 _DIVIDEND_CACHE: dict[str, dict] = {}
 
@@ -147,6 +150,33 @@ def _peer_universe() -> tuple[dict[str, str], dict[str, float]]:
             medians[path.stem] = float(value)
     _PEER_CACHE["data"] = (industries, medians)
     return _PEER_CACHE["data"]
+
+
+def latest_quarter_annualized(periods: list[dict], field: str = "PARENTNETPROFIT") -> tuple[float | None, str]:
+    """最近一个已披露季度的**年化运行率**（单季 × 4）。
+
+    §6.5.4：`峰值/中枢盈利输入不得低于最近一个已披露季度的年化运行率`。该条是 OI-001
+    为美光判例写的，但此前**只存在于文档、引擎实现 0 次**——直接后果是本轮把美光判成
+    「量级错误」（真相：FY2026Q3 单季净利 $28.24B，年化 $113B，前瞻 EPS $150 完全成立），
+    并在 A 股产出 13 行锚低于运行率的结论（紫金矿业锚/运行率仅 0.42）。
+    """
+    rows = [p for p in periods if p.get(field) is not None]
+    rows.sort(key=lambda p: p["REPORT_DATE"], reverse=True)
+    by_date = {p["REPORT_DATE"][:10]: p for p in rows}
+    order = ["03-31", "06-30", "09-30", "12-31"]
+    for period in rows:
+        date = period["REPORT_DATE"][:10]
+        year, mmdd = date[:4], date[5:10]
+        if mmdd not in order:
+            continue
+        idx = order.index(mmdd)
+        current = float(period[field])
+        if idx == 0:
+            return current * 4, date
+        prior = by_date.get(f"{year}-{order[idx - 1]}")
+        if prior is not None and prior.get(field) is not None:
+            return (current - float(prior[field])) * 4, date
+    return None, ""
 
 
 def deducted_pe_median(evidence: dict, pe_median: float | None) -> tuple[float | None, str]:
@@ -387,6 +417,10 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         "anchor_quality": "primary",
         "upgrade_path": "",
         "band_is_floor": "",
+        "cycle_assumption": "",
+        "scenario_band_low": "",
+        "scenario_band_high": "",
+        "cycle_note": "",
         "band_sensitivity": "",
         "band_fragile": "false",
         "fair_price_low": "",
@@ -855,13 +889,38 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             sens_low = value * 0.85 * low_coef / divisor
             sens_high = value * 1.15 * high_coef / divisor
             _, _, sr_note = shareholder_return_check(low, high)
+            # §6.5.4 运行率校验 + 情景带（v1.36）：把「这是周期顶还是新平台」的假设显式化。
+            # 基准用 **TTM**（四个单季之和）而非单季×4——单季年化对季节性生意必然误报
+            # （白酒一季度为旺季，山西汾酒/洋河/伊利首轮均被误标）。TTM 天然抵消季节性。
+            run_rate = ttm(periods, "PARENTNETPROFIT")
+            quarter_rate, run_date = latest_quarter_annualized(periods)
+            anchor_abs = float(card["anchor_value"]) * (1e8 if card["anchor_scope"] == "market_cap" else 1)
+            if (run_rate and run_rate > 0 and card["anchor_scope"] == "market_cap"
+                    and anchor_abs < run_rate * RUN_RATE_FLOOR):
+                ratio = anchor_abs / run_rate
+                # 情景用 max(TTM, 最近季年化)——季度加速时 TTM 本身也滞后（美光判例）
+                basis_rate = max(run_rate, quarter_rate or 0)
+                scen_low = basis_rate / 1e8 * float(multiple) * low_coef / divisor
+                scen_high = basis_rate / 1e8 * float(multiple) * high_coef / divisor
+                card["cycle_assumption"] = "mean_reversion_assumed"
+                card["scenario_band_low"], card["scenario_band_high"] = f"{scen_low:.4g}", f"{scen_high:.4g}"
+                card["band_fragile"] = "true"
+                card["cycle_note"] = (
+                    f"⚠周期假设显式化：锚 {anchor_abs/1e8:.1f}亿 仅为 TTM 归母 {run_rate/1e8:.1f}亿 的 "
+                    f"{ratio:.2f} 倍（最近季年化 {(quarter_rate or 0)/1e8:.1f}亿，{run_date}）"
+                    f"——本带**假设均值回归**。"
+                    f"若为结构性变化（供给纪律、格局重构、需求台阶），运行率延续情景的带为 "
+                    f"{scen_low:.4g}~{scen_high:.4g}，与本带相差 {scen_high / high:.1f} 倍。"
+                    f"二者取舍是**供给侧判断**（在建产能、资本开支纪律、格局集中度），非财务数据可定；"
+                    f"取得该证据前本行不触发 §14 提醒卖出（OI-011）。")
             card["fair_price_low"], card["fair_price_high"] = f"{low:.4g}", f"{high:.4g}"
             extra = card.get("band_sensitivity") or ""
             card["band_sensitivity"] = (f"锚±15% → 带 {sens_low:.4g}~{sens_high:.4g}"
                                         f"（基准 {low:.4g}~{high:.4g}）；"
                                         + share_count_check(evidence, shares)
                                         + (f"｜{extra}" if extra else "")
-                                        + (f"｜{sr_note}" if sr_note else ""))
+                                        + (f"｜{sr_note}" if sr_note else "")
+                                        + (f"｜{card.get('cycle_note') or ''}" if card.get("cycle_note") else ""))
     elif not card["note"] and not card["needs_external"]:
         card["note"] = "锚定量或倍数取数失败，须人工补"
 

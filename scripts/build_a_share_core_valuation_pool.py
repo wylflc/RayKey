@@ -172,6 +172,10 @@ def build_pool(
         # 只在「连下限都便宜」时有信息量；反向读作「贵」不成立，故不触发提醒卖出。
         if str(row.get("band_is_floor", "")).strip().lower() == "true" and state == "trim_alert":
             state = "holdable"
+        # §6.5.4（v1.36）：锚假设均值回归、而当前运行率显著更高的行，「贵」的结论取决于
+        # 未取得的供给侧证据，不得据以发卖出提醒（同下限带处理）。
+        if row.get("cycle_assumption") == "mean_reversion_assumed" and state == "trim_alert":
+            state = "holdable"
         if not band_problems:
             band_status = "ok"
         elif band_severity == "blocking":
@@ -200,6 +204,9 @@ def build_pool(
                 "band_status": band_status,
                 "anchor_quality": row.get("anchor_quality", ""),
                 "band_is_floor": row.get("band_is_floor", ""),
+                "cycle_assumption": row.get("cycle_assumption", ""),
+                "scenario_band_low": row.get("scenario_band_low", ""),
+                "scenario_band_high": row.get("scenario_band_high", ""),
                 "upgrade_path": row.get("upgrade_path", ""),
                 "strategy_tag": row.get("strategy_tag", ""),
                 "valuation_tier": valuation_tier or "（空）",
@@ -782,6 +789,9 @@ def main() -> None:
         "band_status",
         "anchor_quality",
         "band_is_floor",
+        "cycle_assumption",
+        "scenario_band_low",
+        "scenario_band_high",
         "upgrade_path",
         "strategy_tag",
         "valuation_tier",
