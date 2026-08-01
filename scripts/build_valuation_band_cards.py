@@ -86,7 +86,12 @@ AS_OF_YEAR = 2026                # 折现基准年（现值口径的 T0）
 # §6.5.3 A-1 / K primary / 通用校验二（v1.34，结 OI-008）
 # v1.35（结 OI-009）：单点要求回报 + 固定带系数，带宽交回带系数控制。
 # 原「rate 区间 [8%−g, 6%−g]」使带宽恒为 2.0 倍，档位分辨力退化。
-A1_REQUIRED_RETURN = 0.070           # A-1 要求回报 = 10Y 国债 1.8% + 成熟股权风险溢价 5.2%
+# A-1 折现率（v1.41）：**r 是折现率不是收益目标**。把 r 设成收益目标（如 20%）会让
+# 几乎没有公司能过，等于永远不买；超额收益应来自「买价 < 内在价值」，不是抬高 r。
+# 8.5% = 10Y 国债 1.8% + 股权风险溢价 6.7%，并经全池实证校准：34 家 A 类的现价隐含
+# 折现率中位 8.1%、四分位 6.8%/9.6%，与 §6.6 早已写好的 A 档标准（≥12% 低估 /
+# 8-12% 较低估 / 6-8% 中性 / 4-6% 较高估 / <4% 高估）几乎完全重合。
+A1_REQUIRED_RETURN = 0.085
 K_REQUIRED_RETURN = 0.065            # K   要求回报 = 10Y 国债 1.8% + 受监管长久期资产溢价 4.7%
 # 永续增长上限：高分红成熟公司按定义把大部分利润分掉，留存不足以支撑更高的永续增长。
 # 2.5% 对应「长期通胀 + 极低实际增长」，即公司长期存在但不再扩张，低于 §6.5.4 的通用
@@ -166,6 +171,50 @@ def _peer_universe() -> tuple[dict[str, str], dict[str, float]]:
             medians[path.stem] = float(value)
     _PEER_CACHE["data"] = (industries, medians)
     return _PEER_CACHE["data"]
+
+
+def business_trend_test(evidence: dict) -> tuple[str, str]:
+    """业务是否存在**不可逆的劣化/优化**（v1.41，用户指令）。
+
+    用于判断「自身历史 PE 中位」还能不能用作倍数锚：
+    · 现 PE 处低位极端 + **无劣化** → 低估值是情绪而非基本面，历史 PE 趋势可参考；
+      有劣化 → 低估值反映真实恶化，历史中位不可信，须人工重估。
+    · 现 PE 处高位极端 + **无优化** → 高估值不可持续，历史 PE 趋势可参考；
+      有优化 → 重估可能是结构性的，历史中位偏低，须人工重估。
+
+    判据全部取自可机械核对的财务趋势（净利率、ROE、营收、现金转化），不含主观项；
+    市占率与竞争格局无结构化数据源，须人工补（写入 note）。
+    """
+    rows = annual_rows(evidence.get("finance_periods") or [])[:4]
+    if len(rows) < 4:
+        return "", "年报期数不足 4 年，趋势不可判"
+
+    def series(field: str) -> list[float]:
+        return [float(r[field]) for r in rows if r.get(field) is not None]
+
+    margins, roes = series("XSJLL"), series("ROEJQ")
+    revenues = series("TOTALOPERATEREVE")
+    cash_ratios = series("JYXJLYYSR")
+    bad, good = [], []
+    if len(margins) >= 3:
+        if margins[0] < margins[1] < margins[2]:
+            bad.append(f"净利率连续 3 年下降（{margins[2]:.1f}%→{margins[0]:.1f}%）")
+        if margins[0] > margins[1] > margins[2]:
+            good.append(f"净利率连续 3 年上升（{margins[2]:.1f}%→{margins[0]:.1f}%）")
+    if len(roes) >= 3:
+        if roes[0] < roes[1] < roes[2]:
+            bad.append(f"ROE 连续 3 年下降（{roes[2]:.1f}%→{roes[0]:.1f}%）")
+        if roes[0] > roes[1] > roes[2]:
+            good.append(f"ROE 连续 3 年上升（{roes[2]:.1f}%→{roes[0]:.1f}%）")
+    if len(revenues) >= 3 and revenues[0] < revenues[1] < revenues[2]:
+        bad.append("营收连续 3 年下降")
+    if len(cash_ratios) >= 3 and cash_ratios[0] < cash_ratios[1] < cash_ratios[2] and cash_ratios[0] < 0.05:
+        bad.append("经营现金流/营收连续 3 年下降且低于 5%")
+    if bad:
+        return "劣化", "；".join(bad)
+    if good:
+        return "优化", "；".join(good)
+    return "无明显趋势", "净利率/ROE/营收/现金转化均未见连续 3 年单向变化"
 
 
 def two_stage_dcf(cash: float, g1: float, g2: float, rate: float, years: int = DCF_STAGE1_YEARS) -> float:
@@ -503,6 +552,8 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         "excess_years_ladder": "",
         "cycle_gap_kind": "",
         "multiple_regime_flag": "",
+        "implied_return": "",
+        "implied_return_tier": "",
         "band_sensitivity": "",
         "band_fragile": "false",
         "fair_price_low": "",
@@ -596,6 +647,8 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         """
         margins = [float(r["XSJLL"]) for r in annuals if r.get("XSJLL") is not None]
         revenue = ttm(periods, "TOTALOPERATEREVE")
+        revenue_ttm = revenue
+        profit_ttm = ttm(periods, "PARENTNETPROFIT")
         if len(margins) < 5 or not revenue:
             return None, ""
         # OI-010：营收本身强周期时，规模基准改用跨周期营收中位
@@ -619,11 +672,35 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             prior = statistics.median(margins[5:10])
             if prior and abs(recent / prior - 1) > STRUCTURAL_BREAK_THRESHOLD:
                 window, label = margins[:5], "近 5 年（结构断点检验命中）"
-        margin = statistics.median(window)
+        # v1.41：中枢净利率改**加权口径**（用户指令）：0.5×TTM + 0.3×近3年中位 + 0.2×窗口中位。
+        # 纯历史中位假设均值回归，而一致预期常与之相反——紫金矿业 22 家覆盖预期净利率
+        # 17.7%→20.0%、神火股份 19 家预期 18.6%→19.1%，均为继续上行。加权让当期与近期
+        # 得到应有权重，同时保留窗口中位作为长周期约束。
+        ttm_margin = (profit_ttm / revenue_ttm * 100) if (profit_ttm and revenue_ttm and revenue_ttm > 0) else None
+        window_median = statistics.median(window)
+        margin = window_median
+        weight_note = f"{label}净利率中位 {window_median:.2f}%"
+        if ttm_margin is not None and ttm_margin > 0 and len(margins) >= 3:
+            near3 = statistics.median(margins[:3])
+            margin = 0.5 * ttm_margin + 0.3 * near3 + 0.2 * window_median
+            weight_note = (f"加权净利率 {margin:.2f}%（0.5×TTM {ttm_margin:.2f}% + 0.3×近3年中位 "
+                           f"{near3:.2f}% + 0.2×{label}中位 {window_median:.2f}%）")
+            # 上限：不得超过一致预期隐含净利率——防止用当期高点外推超过分析师预期
+            fwd, cnt, fy = consensus_median(evidence, 0)
+            fwd_rev = None
+            for row_ in ((evidence.get("profit_forecast") or {}).get("yctj_list") or []):
+                if row_.get("YEAR") == fy and row_.get("TOTAL_OPERATE_INCOME"):
+                    fwd_rev = float(row_["TOTAL_OPERATE_INCOME"])
+            if fwd and fwd_rev and cnt >= 3:
+                fwd_margin = fwd / fwd_rev * 100
+                if margin > fwd_margin:
+                    margin = fwd_margin
+                    weight_note += f"；**上限收敛至 {fy}E 一致预期隐含净利率 {fwd_margin:.2f}%（{cnt} 家）**"
+                else:
+                    weight_note += f"；{fy}E 一致预期隐含 {fwd_margin:.2f}%（{cnt} 家）未构成上限"
         if margin <= 0:
             return None, ""
-        return revenue * margin / 100, (
-            f"{scale_note} {revenue/1e8:.2f}亿 × {label}净利率中位 {margin:.2f}%")
+        return revenue * margin / 100, f"{scale_note} {revenue/1e8:.2f}亿 × {weight_note}"
 
     def cyclical_fallback(label: str) -> None:
         """F-2 / H-2：中枢归母 × 终值 PE 与 BVPS × 自身 PB 中位，取孰低（§6.5.5.1）。"""
@@ -675,21 +752,38 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             growth = min(PERPETUAL_G_CAP, max(0.0, growth_raw))
             growth = min(growth, A1_REQUIRED_RETURN - GORDON_MIN_SPREAD)
             distributable = sr["cash"] + sr["cancel_rate"] * (quote.get("total_market_cap") or 0)
-            a1_fair = distributable / (A1_REQUIRED_RETURN - growth) / 1e8 / shares
+            # v1.41：改用两阶段 DCF——单阶段 Gordon 在 g 逼近 r 时发散，才需要 g≤2.5% 门槛；
+            # 两阶段消除该约束，A-1 因此对**还在增长的公司**也可用（原门槛把它们全挡在外）。
+            a1_fair = two_stage_dcf(distributable, min(growth_raw, 0.12),
+                                    PERPETUAL_G_CAP, A1_REQUIRED_RETURN) / 1e8 / shares
             a1_lo_coef, a1_hi_coef = A2_COEFS.get(tier_key, (0.85, 1.05))
             a1_low, a1_high = a1_fair * a1_lo_coef, a1_fair * a1_hi_coef
             a2_mid = anchor / 1e8 * multiple * (low_coef + high_coef) / 2 / shares
             a1_mid = (a1_low + a1_high) / 2
             sustainable_g = (statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0))
                              if (roe_rows and payout is not None) else None)
-            a1_eligible = ((payout or 0) >= A1_MIN_PAYOUT
-                           and sustainable_g is not None and sustainable_g <= PERPETUAL_G_CAP)
+            # v1.41 实测否决「A-1 定带」：改用两阶段 DCF 并取消 g 门槛后，A-1 为 21 家定带，
+            # 但结果不通过常识检验——贵州茅台得 868-1110 而现价 1205 判高估，其 PE 仅 18.2、
+            # 股息率约 4%、内生增长 7%，预期回报明显高于 r=8.5%。**根因：A-1 的锚是「分配
+            # 给股东的现金」，对高 ROE 留存型公司系统性低估**——茅台仅留存 12.5% 却以 32.5%
+            # ROE 再投资，该部分价值需 FCFE/owner earnings 才能抓住，而本地无资本开支数据。
+            # 故 A-1 **不定带，只作交叉校验**；其真正有用的输出是**现价反解的隐含折现率**，
+            # 它可直接与机会成本比较，并按 §6.6 A 档标准读档（≥12% 低估 … <4% 高估）。
+            a1_eligible = False
             cap_now = float(quote.get("total_market_cap") or 0)
             dcf_value = two_stage_dcf(distributable, min(growth_raw, 0.12), PERPETUAL_G_CAP, A1_REQUIRED_RETURN)
             implied_r = implied_discount_rate(cap_now, distributable, min(growth_raw, 0.12), PERPETUAL_G_CAP)
+            if implied_r is not None:
+                card["implied_return"] = f"{implied_r:.4f}"
+                card["implied_return_tier"] = (
+                    "低估" if implied_r >= 0.12 else "较低估" if implied_r >= 0.08 else
+                    "中性" if implied_r >= 0.06 else "较高估" if implied_r >= 0.04 else "高估")
             dcf_note = (f"两阶段DCF（{DCF_STAGE1_YEARS}年 g1={min(growth_raw,0.12):.2%}→永续 {PERPETUAL_G_CAP:.1%}，"
                         f"r={A1_REQUIRED_RETURN:.1%}）每股 {dcf_value/1e8/shares:.4g}"
-                        + (f"；**现价反解隐含折现率 r≈{implied_r:.1%}**" if implied_r else ""))
+                        + (f"；**现价反解隐含折现率 r≈{implied_r:.1%} → 按 §6.6 A 档标准读作「"
+                           f"{card['implied_return_tier']}」**（≥12%低估/8-12%较低估/6-8%中性/4-6%较高估/<4%高估）。"
+                           f"注：A-1 锚为分配现金，对高 ROE 留存型公司偏低，故只作交叉校验不定带"
+                           if implied_r else ""))
             gate = ("参与取孰低" if a1_eligible else
                     (f"分红率 {payout:.0%} <{A1_MIN_PAYOUT:.0%}，仅作对照" if (payout or 0) < A1_MIN_PAYOUT else
                      f"可持续内生增长 {sustainable_g:.1%} > 永续上限 {PERPETUAL_G_CAP:.1%}"
@@ -701,6 +795,12 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                 f"｜{dcf_note}")
             if a2_mid and abs(a1_mid / a2_mid - 1) > A1_A2_DIVERGENCE:
                 card["band_fragile"] = "true"
+                # v1.41：两法背离 >25% 时**不得据较低的那条发卖出提醒**——A-2 是相对法、
+                # 有「看不见系统性错价」的构造性盲区，A-1 是绝对法、有参数敏感性，二者
+                # 失效方式不同。取孰低对买入侧是保守的（正确），但反过来当「贵」的证据
+                # 不成立。同下限带与周期假设未决的处置。
+                card["cycle_note"] = ((card.get("cycle_note") or "")
+                    + f"⚑A-1/A-2 背离 {abs(a1_mid/a2_mid-1):.0%}（DCF 每股 {a1_mid:.4g} vs 相对法 {a2_mid:.4g}）。")
             # §6.5.3 取孰低——A-1 参与定带须**同时**满足两条：
             #   ① 分红率 ≥60%（现金分配是主要价值实现途径）
             #   ② **可持续内生增长 ≤ 永续上限**（ROE × 留存率 ≤ 2.5%）
@@ -719,9 +819,9 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                 low_coef, high_coef = a1_lo_coef, a1_hi_coef
                 card["band_low_coef"], card["band_high_coef"] = low_coef, high_coef
                 source = "required_return"
-                basis = (f"A-1（与 A-2 取孰低，本行 A-1 更低）：可分配现金 {distributable/1e8:.1f}亿"
-                         f"（{sr['year']} 现金分红 + 回购注销）÷ (r {A1_REQUIRED_RETURN:.1%} − g {growth:.2%})"
-                         f" × 分层系数 [{low_coef}, {high_coef}]")
+                basis = (f"A-1 两阶段DCF（与 A-2 取孰低，本行 A-1 更低）：可分配现金 {distributable/1e8:.1f}亿"
+                         f"（{sr['year']} 现金分红 + 回购注销），{DCF_STAGE1_YEARS} 年 g1={min(growth_raw,0.12):.2%}"
+                         f"→永续 {PERPETUAL_G_CAP:.1%}，r={A1_REQUIRED_RETURN:.1%} × 分层系数 [{low_coef}, {high_coef}]")
     elif tag_letter == "C":
         value, count, year = best_consensus(evidence, (0, 1), min_coverage=2)
         if value and count == 2:
@@ -1000,7 +1100,16 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             if (card["multiple_source"] == "own_history_median" and pct_rank is not None
                     and (pct_rank <= DCF_PERCENTILE_EXTREME[0] or pct_rank >= DCF_PERCENTILE_EXTREME[1])):
                 side = "低位" if pct_rank <= DCF_PERCENTILE_EXTREME[0] else "高位"
-                card["multiple_regime_flag"] = f"现PE处5年{pct_rank:.1f}%分位（{side}极端）"
+                trend, detail = business_trend_test(evidence)
+                if side == "低位":
+                    verdict = ("**历史 PE 趋势可参考**（低估值无基本面劣化支撑，属情绪）"
+                               if trend != "劣化" else "**历史中位不可信**——存在劣化，低估值反映真实恶化，须人工重估")
+                else:
+                    verdict = ("**历史 PE 趋势可参考**（高估值无基本面优化支撑，不可持续）"
+                               if trend != "优化" else "**历史中位可能偏低**——存在优化，重估或为结构性，须人工重估")
+                card["multiple_regime_flag"] = f"现PE处5年{pct_rank:.1f}%分位（{side}极端）｜业务趋势：{trend}（{detail}）｜{verdict}"
+                if (side == "低位" and trend == "劣化") or (side == "高位" and trend == "优化"):
+                    card["band_fragile"] = "true"
             # §6.5.4 运行率校验 + 情景带（v1.36）：把「这是周期顶还是新平台」的假设显式化。
             # 基准用 **TTM**（四个单季之和）而非单季×4——单季年化对季节性生意必然误报
             # （白酒一季度为旺季，山西汾酒/洋河/伊利首轮均被误标）。TTM 天然抵消季节性。

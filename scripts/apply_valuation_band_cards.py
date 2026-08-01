@@ -59,7 +59,7 @@ CARD_FIELDS = [
     "growth_option_value", "growth_option_share", "growth_option_evidence_level",
     "growth_option_probability", "growth_option_milestones",
     "base_band_low", "base_band_high",
-    "anchor_quality", "upgrade_path", "band_is_floor", "cycle_assumption", "scenario_band_low", "scenario_band_high", "cycle_note", "implied_excess_years", "multiple_regime_flag",
+    "anchor_quality", "upgrade_path", "band_is_floor", "cycle_assumption", "scenario_band_low", "scenario_band_high", "cycle_note", "implied_excess_years", "multiple_regime_flag", "implied_return", "implied_return_tier",
 ]
 
 
