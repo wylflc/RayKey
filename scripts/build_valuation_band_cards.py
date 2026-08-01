@@ -71,6 +71,63 @@ MAX_G = 0.035
 TERMINAL_R_BY_TIER = {"L1": 0.09, "L2": 0.10, "L3": 0.11}
 TERMINAL_G = 0.03
 
+# §6.5.4 中枢窗口结构断点检验（v1.32，OI-007）：近 5 年净利率中位与前 5 年中位
+# 偏离 >50% 即判存在结构断点，窗口收缩到近 5 年——否则结构性成长会被当成周期波动。
+STRUCTURAL_BREAK_THRESHOLD = 0.50
+PEER_MULTIPLE_MIN_GROUP = 3      # 同业组最少家数
+PEER_MULTIPLE_LEVELS = (3, 2)    # 只用三级/二级行业；退到一级会把整个板块当同业
+AS_OF_YEAR = 2026                # 折现基准年（现值口径的 T0）
+
+
+_PEER_CACHE: dict[str, tuple[dict[str, str], dict[str, float]]] = {}
+
+
+def _peer_universe() -> tuple[dict[str, str], dict[str, float]]:
+    """行业映射 + 各票自身 5 年 PE 中位（同业中枢倍数的样本池）。"""
+    if "data" in _PEER_CACHE:
+        return _PEER_CACHE["data"]
+    industries: dict[str, str] = {}
+    profiles = ROOT / "data/interim/a_share_company_profiles.csv"
+    if profiles.exists():
+        with profiles.open(encoding="utf-8-sig") as handle:
+            for row in csv.DictReader(handle):
+                code = row.get("security_code") or row.get("\ufeffsecurity_code")
+                if code:
+                    industries[code] = row.get("eastmoney_industry", "") or ""
+    medians: dict[str, float] = {}
+    for path in EVIDENCE_DIR.glob("*.json"):
+        try:
+            band = (json.loads(path.read_text(encoding="utf-8")).get("valuation_band") or {})
+        except Exception:
+            continue
+        value = band.get("pe_ttm_median")
+        if value and 0 < value < 200:      # 剔除亏损年造成的极端 PE
+            medians[path.stem] = float(value)
+    _PEER_CACHE["data"] = (industries, medians)
+    return _PEER_CACHE["data"]
+
+
+def peer_multiple(code: str) -> tuple[float | None, str]:
+    """§6.5.4（v1.32，OI-006）：同业中枢 PE = 同业各票「自身 5 年 PE 中位」的中位数。
+
+    只用三级/二级行业分组且组内 ≥3 家。退到一级会把整个板块当同业——判例：
+    紫金矿业退到「有色金属」16 家得 29.6x（混入锂/稀土），京东方退到「电子设备」
+    55 家得 48.8x，两者对各自细分行业都无意义。
+    """
+    industries, medians = _peer_universe()
+    own = industries.get(code, "")
+    if not own:
+        return None, ""
+    for level in PEER_MULTIPLE_LEVELS:
+        key = "-".join(own.split("-")[:level])
+        peers = [v for c, v in medians.items()
+                 if c != code and "-".join(industries.get(c, "").split("-")[:level]) == key
+                 and industries.get(c)]
+        if len(peers) >= PEER_MULTIPLE_MIN_GROUP:
+            trimmed = sorted(peers)[1:-1] if len(peers) >= 5 else sorted(peers)
+            return round(statistics.median(trimmed), 2), f"{key}（{len(peers)} 家同业，{level} 级）"
+    return None, ""
+
 
 def load_evidence(code: str) -> dict | None:
     path = EVIDENCE_DIR / f"{code}.json"
@@ -217,6 +274,33 @@ def c_to_a_signal(evidence: dict) -> tuple[bool, str]:
     return (cond1 and cond2 and cond3), detail
 
 
+def forward_present_value(code: str, anchor: float, year: int | None, as_of_year: int,
+                          rate: float | None, terminal_pe: float | None) -> tuple[float | None, str]:
+    """远期利润锚 → **现值**（v1.32，结 OI-006）。
+
+    `PV = E(T+n) × PE终值 ÷ (1+r)^n`。两处纠正：
+
+    1. **必须折现**。`E(T+n) × PE` 得到的是 T+n 时点的价值，不是现值；v1.30/v1.31
+       漏了折现，等于把 2-3 年后的价格当成今天该付的价格。
+    2. **倍数只能取终值口径**。自身历史 PE 中位嵌着当年的增长预期（v1.30 已认定），
+       **同业历史 PE 中位嵌着同一个年代的行业增长预期，毛病完全相同**——判例：
+       宁德时代同业中枢 33.77x 用在 2028E 归母上，隐含市值 4.8 万亿、为当时市值
+       18289 亿的 2.6 倍。故同业中枢只作交叉校验写入敏感度，不作建带倍数。
+
+    窗口之后的增长不进 base 带，按 §6.5.6 成长期权有界补入——这正是该机制存在的理由。
+    """
+    if not (rate and terminal_pe and anchor and year):
+        return None, ""
+    years = max(1, year - as_of_year)
+    present = anchor * terminal_pe / (1 + rate) ** years
+    peer, peer_note = peer_multiple(code)
+    note = (f"终值 PE {terminal_pe}x = 1/({rate:.0%}−{TERMINAL_G:.0%})，"
+            f"折现 {years} 年回现值（÷{(1 + rate) ** years:.3f}）"
+            + (f"；交叉校验：同业中枢 PE {peer}x（{peer_note}），仅作对照不入带——"
+               f"行业历史倍数同样嵌有当年的增长预期" if peer else ""))
+    return present, note
+
+
 def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict:
     evidence = load_evidence(code)
     card = {
@@ -283,22 +367,42 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
     bvps = (float(quote["price"]) / float(current_pb)) if (quote.get("price") and current_pb) else None
     annuals = annual_rows(periods)
 
-    def mid_cycle_profit() -> float | None:
-        values = [float(r["PARENTNETPROFIT"]) for r in annuals if r.get("PARENTNETPROFIT") is not None]
-        if len(values) < 5:
-            return None
-        mean = statistics.mean(values[:7])
-        # 跨周期均值为负（窗口含重整/巨亏年）时盈利口径失效，让路给净资产兜底。
-        return mean if mean > 0 else None
+    def mid_cycle_profit() -> tuple[float | None, str]:
+        """§6.5.4（v1.32）：中枢归母 = TTM 营收 × 窗口净利率中位。
+
+        规模取自**当期营收**、周期取自**历史利润率**——把结构性成长与周期波动分开。
+        原「近 7 个年报归母算术均值」会把十年间的结构性扩张当成周期低点（紫金矿业
+        判例：均值 216 亿 vs 规模口径 338 亿），且被单一重整年击穿（盐湖股份 −459 亿
+        使均值为负）。中位数天然抗离群年，营收缩放天然吸收规模变化。
+        """
+        margins = [float(r["XSJLL"]) for r in annuals if r.get("XSJLL") is not None]
+        revenue = ttm(periods, "TOTALOPERATEREVE")
+        if len(margins) < 5 or not revenue:
+            return None, ""
+        recent = statistics.median(margins[:5])
+        window, label = margins[:10], "近 10 年"
+        if len(margins) >= 10:
+            prior = statistics.median(margins[5:10])
+            if prior and abs(recent / prior - 1) > STRUCTURAL_BREAK_THRESHOLD:
+                window, label = margins[:5], "近 5 年（结构断点检验命中）"
+        margin = statistics.median(window)
+        if margin <= 0:
+            return None, ""
+        return revenue * margin / 100, (
+            f"TTM 营收 {revenue/1e8:.2f}亿 × {label}净利率中位 {margin:.2f}%")
 
     def cyclical_fallback(label: str) -> None:
         """F-2 / H-2：中枢归母 × 终值 PE 与 BVPS × 自身 PB 中位，取孰低（§6.5.5.1）。"""
         nonlocal anchor, multiple, source, basis
-        mid = mid_cycle_profit()
-        if not (mid and terminal_pe and shares):
+        mid, mid_basis = mid_cycle_profit()
+        own_pe = band.get("pe_ttm_median")
+        # 锚是「当期规模下的正常化盈利」→ 倍数取同期口径（自身 5 年 PE 中位），
+        # 不用终值公式（那是给远期利润锚配的，§6.5.2.1 锚与倍数同期约束）。
+        cycle_multiple = own_pe if own_pe and own_pe > 0 else terminal_pe
+        if not (mid and cycle_multiple and shares):
             card["note"] = f"{label} 兜底不可算（年报期数不足或缺分层/股本）"
             return
-        earnings_price = mid * terminal_pe / 1e8 * low_coef / shares
+        earnings_price = mid * cycle_multiple / 1e8 * low_coef / shares
         book_price = bvps * pb_median * low_coef if (bvps and pb_median) else None
         use_book = book_price is not None and book_price < earnings_price
         card["anchor_quality"] = "fallback"
@@ -307,12 +411,12 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             card["anchor_scope"] = "per_share"
             card["anchor_metric"] = "bvps"
             basis = (f"{label} 兜底（取孰低→PB 口径）：每股净资产 {bvps:.2f} 元 × 自身 5 年 PB 中位 {pb_median}"
-                     f"；对照口径 跨周期中枢归母 {mid/1e8:.2f}亿 × 终值 PE {terminal_pe}x（更高，未采用）")
+                     f"；对照口径 中枢归母 {mid/1e8:.2f}亿 × 自身 PE 中位 {cycle_multiple}（更高，未采用）")
         else:
-            anchor, multiple, source = mid, terminal_pe, "required_return"
+            anchor, multiple, source = mid, cycle_multiple, ("own_history_median" if own_pe else "required_return")
             card["anchor_metric"] = "mid_cycle_profit"
-            basis = (f"{label} 兜底（取孰低→中枢盈利口径）：跨周期中枢归母 {mid/1e8:.2f}亿"
-                     f"（{min(7,len(annuals))} 个年报均值）× 终值 PE = 1/({terminal_rate:.0%}−{TERMINAL_G:.0%}) = {terminal_pe}x"
+            basis = (f"{label} 兜底（取孰低→中枢盈利口径）：中枢归母 = {mid_basis} = {mid/1e8:.2f}亿"
+                     f"；× 自身 5 年 PE 中位 {cycle_multiple}（同期口径）"
                      + (f"；对照口径 BVPS×PB中位 更高，未采用" if book_price else ""))
         card["upgrade_path"] = ("资源储量与 NAV（储量报告/年报储量披露）" if label == "F-2"
                                 else "中枢 EBITDA 与同业成熟期 EV/EBITDA")
@@ -403,16 +507,14 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             card["band_fragile"] = "true"
             card["anchor_quality"] = "fallback"
             card["upgrade_path"] = "研报覆盖补至 ≥3 家"
-        if value and rate:
-            anchor = value
-            multiple = round(1 / (rate - TERMINAL_G), 2)
-            source = "required_return"
-            basis = (f"{year}E 正常化归母中位数 {anchor/1e8:.2f}亿（{count} 家覆盖）；"
-                     f"合理 PE = 1/(r−g) = 1/({rate:.0%}−{TERMINAL_G:.0%}) = {multiple}x"
-                     f"——§6.5.2.1 锚与倍数同期约束：远期利润锚禁用自身历史 PE 中位"
-                     f"（自身 5 年中位 {band.get('pe_ttm_median')} 含增长定价，会双重计入）；"
-                     f"待按成熟期同业中位细化")
-            card["needs_external"] = ""
+        present, pv_note = forward_present_value(code, value or 0, year, AS_OF_YEAR, rate, terminal_pe)
+        if value and present:
+            years = max(1, (year or AS_OF_YEAR) - AS_OF_YEAR)
+            anchor, source = value, "required_return"
+            multiple = round(terminal_pe / (1 + rate) ** years, 4)   # 倍数含折现，保证可复算
+            card["band_is_floor"] = "true"   # 窗口后增长不入 base 带，按 §6.5.6 期权补
+            basis = (f"{year}E 正常化归母中位数 {anchor/1e8:.2f}亿（{count} 家覆盖）× {multiple} "
+                     f"= 现值口径；{pv_note}。**窗口后增长不计入 base 带**，为下限")
         elif rate:
             # 覆盖 ≤1 家：base 带只按已兑现盈利建，成长部分走 §6.5.6 成长期权
             profit_ttm = ttm(periods, "KCFJCXSYJLR")
@@ -465,6 +567,7 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             anchor = revenue * normalized / 100
             multiple, source = terminal_pe, "required_return"
             card["anchor_quality"] = "fallback"
+            card["band_is_floor"] = "true"   # EPV 按定义剥离增长，为下限
             card["upgrade_path"] = "同业成熟期归一化经营利润率、合同负债占比"
             basis = (f"N-2 兜底 EPV：TTM 营收 {revenue/1e8:.2f}亿 × 归一化净利率 {normalized:.2f}%"
                      f"（自身历史峰值 {peak:.2f}% × 85%，§6.5.4 授权）= {anchor/1e8:.2f}亿"
@@ -473,8 +576,11 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             card["note"] = "N-2 兜底不可算（缺营收/净利率历史或分层）"
     elif tag_letter in ("M", "P"):
         value, count, year = best_consensus(evidence, (0, 1), min_coverage=2)
-        if value and terminal_pe:
-            anchor, multiple, source = value, terminal_pe, "required_return"
+        present, pv_note = forward_present_value(code, value or 0, year, AS_OF_YEAR, terminal_rate, terminal_pe)
+        if value and present:
+            years = max(1, (year or AS_OF_YEAR) - AS_OF_YEAR)
+            anchor, source = value, "required_return"
+            multiple = round(terminal_pe / (1 + terminal_rate) ** years, 4)
             card["anchor_quality"] = "fallback"
             card["anchor_metric"] = "forward_normalized_profit"
             card["band_is_floor"] = "true"   # M-2/P-2 明确不含管线/订单价值
@@ -482,7 +588,7 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             card["upgrade_path"] = ("管线阶段、适应症空间、BD 条款 → SOTP + rNPV" if tag_letter == "M"
                                     else "在手订单额与交付排期 → backlog 年化归母")
             basis = (f"{tag_letter}-2 下限带：{year}E 归母中位数 {anchor/1e8:.2f}亿（{count} 家覆盖）"
-                     f"× 终值 PE {terminal_pe}x——**{label}记 0**，为不含未兑现价值的下限；"
+                     f"× {multiple}（现值口径；{pv_note}）——**{label}记 0**，为不含未兑现价值的下限；"
                      f"完整价值须经 §6.5.6 成长期权或补齐外部取证后上修")
         else:
             card["note"] = f"{tag_letter}-2 下限带不可算（研报覆盖 <2 家或缺分层）"

@@ -167,12 +167,6 @@ def build_pool(
         # 只在「连下限都便宜」时有信息量；反向读作「贵」不成立，故不触发提醒卖出。
         if str(row.get("band_is_floor", "")).strip().lower() == "true" and state == "trim_alert":
             state = "holdable"
-        # OI-006 过渡口径：倍数来自未校准的终值 PE = 1/(r−g) 时不触发提醒卖出。
-        # 该参数对全类型给同一倍数、量级未经回放校准（换口径前后 D 类分布整片翻转），
-        # 用它发卖出提醒等于用一个未证参数处置真实仓位。买入侧不放宽——终值倍数偏保守，
-        # 「连保守口径都便宜」是有信息量的；反向读作「贵」不成立。校准落地后删除本段。
-        if row.get("multiple_source") == "required_return" and state == "trim_alert":
-            state = "holdable"
         if not band_problems:
             band_status = "ok"
         elif band_severity == "blocking":
