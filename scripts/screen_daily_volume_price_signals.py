@@ -228,18 +228,15 @@ def volume_percentile(rows: list[dict[str, float | str]], index: int, window: in
 
 
 # §6.2.1 矩阵末列 × §8.13：各组合所需最低右侧入场阶段（1=首信号 2=初步承接 3=趋势反转确认 4=突破确认）。
-# v1.06：L2×中性 4→3（用户比亚迪 V 反锚点：7/2 提醒、7/6-7/9 建仓窗口须达标）。
+# v1.27 三档重构：锚点按新档语义重述——L1×低估=1（原锚点保留）、L2×较低估=3（承继原 L3×较低估）、
+# L2×低估=2（原 L2×中性=3 的比亚迪判例因中性已不可买而失效，改以低估档承接其原意）。属语义搬迁非参数放宽，须 3 个月回放验证。
 STAGE_REQUIRED = {
     ("L1", "低估"): 1,
     ("L1", "较低估"): 2,
     ("L1", "中性"): 3,
-    ("L1", "较高估"): 4,
     ("L2", "低估"): 2,
     ("L2", "较低估"): 3,
-    ("L2", "中性"): 3,
     ("L3", "低估"): 3,
-    ("L3", "较低估"): 3,
-    ("L4", "低估"): 4,
 }
 MEGACAP_MIN_YI = 2000.0  # §8.5.6 巨盘温和放量：总市值阈值（亿，2026-07-17 初始校准）。
 
@@ -732,12 +729,9 @@ def assign_priority(row: dict[str, object]) -> str:
         and row.get("long_term_confirm") is True
     ):
         return "S"
-    if quality_tier in {"L1", "L2"} and valuation_tier in {"低估", "较低估", "中性"}:
+    # v1.27：B 档（L1×较高估）随三态矩阵删除——L1 较高估改为仅可持有；D 档随 L4 退役删除。
+    if quality_tier in {"L1", "L2"} and (quality_tier, valuation_tier) in STAGE_REQUIRED:
         return "A"
-    if quality_tier in {"L1", "L2"} and valuation_tier == "较高估":
-        return "B"
-    if quality_tier == "L4":
-        return "D"
     return "C"
 
 

@@ -63,8 +63,8 @@ def parse_date(value: str | None) -> date | None:
 
 
 def is_valuation_scope_tier(tier: str) -> bool:
-    """§6.1/§7.3（v19）：L1-L4 全量纳入估值与估值复核范围。"""
-    return tier.startswith(("L1", "L2", "L3", "L4"))
+    """§6.1/§7.3（v1.27）：三档全量纳入估值与估值复核范围。"""
+    return tier.startswith(("L1", "L2", "L3"))
 
 
 def load_latest_forecasts(rows: list[dict[str, str]]) -> dict[str, dict[str, str]]:

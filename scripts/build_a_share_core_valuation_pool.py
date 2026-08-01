@@ -46,15 +46,37 @@ DEFAULT_OVERSEAS = ROOT / "data/processed/overseas_watchlist_valuation.csv"
 DEFAULT_OVERSEAS_TIER_SNAPSHOT = ROOT / "data/interim/overseas_effective_tiers.csv"
 MARKET_LABELS = {"HK": "港股", "US": "美股", "KR": "韩股"}
 
-# §6.2.1 分层×估值准入矩阵：层级越低，买入估值门槛越严。
+# §6.2.1 分层×估值三态矩阵（v1.27 三档重构）：可买 / 可持有 / 提醒卖出。
 TIER_ELIGIBLE_VALUATIONS = {
-    "L1": {"低估", "较低估", "中性", "较高估"},
-    "L2": {"低估", "较低估", "中性"},
-    "L3": {"低估", "较低估"},
-    "L4": {"低估"},
+    "L1": {"低估", "较低估", "中性"},
+    "L2": {"低估", "较低估"},
+    "L3": {"低估"},
 }
+# 可持有：不可新建仓/加仓，已持仓不因此卖出。
+TIER_HOLDABLE_VALUATIONS = {
+    "L1": {"较高估"},
+    "L2": {"中性"},
+    "L3": {"较低估"},
+}
+# 提醒卖出起点（该档及以上触发 §14 估值卖出减仓梯）。
+TIER_TRIM_ALERT_FROM = {"L1": "高估", "L2": "较高估", "L3": "中性"}
+VALUATION_ORDER = ["低估", "较低估", "中性", "较高估", "高估"]
 CORE_LAYER_TIERS = {"L1", "L2"}
 WATCH_VALUATIONS = {"低估", "较低估", "中性", "较高估"}
+
+
+def matrix_state(tier: str, valuation: str) -> str:
+    """§6.2.1 三态：buyable / holdable / trim_alert / na。"""
+    if tier not in TIER_ELIGIBLE_VALUATIONS or valuation not in VALUATION_ORDER:
+        return "na"
+    if valuation in TIER_ELIGIBLE_VALUATIONS[tier]:
+        return "buyable"
+    if valuation in TIER_HOLDABLE_VALUATIONS[tier]:
+        return "holdable"
+    start = TIER_TRIM_ALERT_FROM[tier]
+    if VALUATION_ORDER.index(valuation) >= VALUATION_ORDER.index(start):
+        return "trim_alert"
+    return "na"
 # §6.2.1.6 价格自动定档阈值（v1.05 初始校准，修订先改工作流）。
 OVERVALUED_BAND_MULT = 1.2  # 带顶×1.2 以上 = 高估（沿 D 档 100-120% 惯例）
 DEEP_UNDERVALUED_UPSIDE = 0.40  # 带底以下且空间（区间中值/现价-1）>= 40% = 低估，否则较低估
@@ -105,7 +127,7 @@ def infer_exchange(code: str, tier_row: dict[str, str] | None) -> str:
 
 
 def normalize_quality_tier(value: str) -> str:
-    for tier in ("L1", "L2", "L3", "L4", "L5"):
+    for tier in ("L1", "L2", "L3"):
         if value.startswith(tier):
             return tier
     return value
@@ -116,9 +138,10 @@ def build_pool(
     tier_rows: list[dict[str, str]],
     as_of: str,
 ) -> list[dict[str, str]]:
-    """物化 L1-L4 全量为单一列表（v1.05）。pool_layer 为审定档口径的物化标注：
-    core/tactical（过矩阵）、watch_only（非高估未过矩阵）、excluded（高估/无法估值）；
-    每日买入资格以扫描时的价格自动定档为准，pool_layer 仅作审计口径。"""
+    """物化全量 worth_attention 为单一列表（v1.05）。v1.27 三档重构：
+    pool_layer 仅 core（L1/L2）/ tactical（L3）/ excluded（无法估值）——**watch_only 已退役**，
+    买入端只有二态。新增 matrix_state 记录审定档口径的三态（buyable/holdable/trim_alert）；
+    每日实际状态以扫描时的价格自动定档为准，本列仅作审计口径。"""
     tier_by_code = {row["security_code"].zfill(6): row for row in tier_rows}
     output: list[dict[str, str]] = []
 
@@ -130,15 +153,14 @@ def build_pool(
         )
         valuation_tier = row.get("valuation_tier", "")
 
-        eligible = TIER_ELIGIBLE_VALUATIONS.get(quality_tier)
-        if eligible is None:
+        if quality_tier not in TIER_ELIGIBLE_VALUATIONS:
             continue
-        if valuation_tier in eligible:
-            pool_layer = "core" if quality_tier in CORE_LAYER_TIERS else "tactical"
-        elif valuation_tier in WATCH_VALUATIONS:
-            pool_layer = "watch_only"
-        else:
+        state = matrix_state(quality_tier, valuation_tier)
+        # v1.27：档位决定 core/tactical，与当日估值档无关；仅「无法估值」排除。
+        if state == "na":
             pool_layer = "excluded"
+        else:
+            pool_layer = "core" if quality_tier in CORE_LAYER_TIERS else "tactical"
 
         output.append(
             {
@@ -149,6 +171,7 @@ def build_pool(
                 "quality_tier": quality_tier,
                 "quality_tier_label": row.get("quality_tier") or (tier_row or {}).get("quality_tier_label", ""),
                 "pool_layer": pool_layer,
+                "matrix_state": state,
                 "strategy_tag": row.get("strategy_tag", ""),
                 "valuation_tier": valuation_tier or "（空）",
                 "valuation_batch_id": row.get("valuation_batch_id", ""),
@@ -325,8 +348,8 @@ def build_overseas_section(
     changes: list[str] = []
     current_tiers: dict[str, tuple[str, str]] = {}
     body: list[str] = []
-    # 与 A 股主表一致按质量档 L1→L4 排序；稳定排序使同档内保持清单原序（港股→美股→韩股）。
-    tier_rank = {tier: index for index, tier in enumerate(("L1", "L2", "L3", "L4", "L5"))}
+    # 与 A 股主表一致按质量档 L1→L3 排序；稳定排序使同档内保持清单原序（港股→美股→韩股）。
+    tier_rank = {tier: index for index, tier in enumerate(("L1", "L2", "L3"))}
     rows = sorted(rows, key=lambda row: tier_rank.get(normalize_quality_tier(str(row.get("quality_tier", ""))), 99))
     for row in rows:
         market = str(row.get("market_type", "")).upper()
@@ -500,7 +523,7 @@ def log_pool_decisions(
     output_md: Path,
 ) -> None:
     logged_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    decision_types = {"watch_only": "scan_watch_only", "excluded": "scan_excluded"}
+    decision_types = {"excluded": "scan_excluded"}
     append_decision_log(
         log_file,
         [
@@ -722,6 +745,7 @@ def main() -> None:
         "quality_tier",
         "quality_tier_label",
         "pool_layer",
+        "matrix_state",
         "strategy_tag",
         "valuation_tier",
         "valuation_batch_id",
