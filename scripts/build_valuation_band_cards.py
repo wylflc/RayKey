@@ -39,7 +39,7 @@ EVIDENCE_DIR = ROOT / "data/interim/valuation_evidence"
 
 # §6.5.2 类型表：tag -> (anchor_metric, shape, (low_coef, high_coef), 本地可算?)
 TYPE_SPEC = {
-    "A": ("normalized_profit", 1, (0.80, 1.00), True),        # A-2 PE 中枢回归
+    "A": ("normalized_profit", 1, None, True),                # A-2；系数按分层，见 A2_COEFS
     "C": ("forward_normalized_profit", 1, (1.0, 1.5), True),  # 系数即 PEG 带
     "D": ("normalized_profit_2_3y", 1, (0.80, 1.00), True),
     "E": ("repaired_normalized_profit", 1, (0.85, 1.00), True),
@@ -52,9 +52,24 @@ TYPE_SPEC = {
     "P": ("backlog_annual_profit", 1, (0.80, 1.00), False),   # 在手订单须外部取证
 }
 
+# §6.5.2 A-2 带系数按质量分层分档（v1.30，OI-004）
+A2_COEFS = {"L1": (0.90, 1.15), "L2": (0.85, 1.05), "L3": (0.80, 1.00)}
+
+# §6.5.3 C → A 迁出判据（v1.30，OI-005），带 12%/15% 迟滞
+# 阈值按近三年最低 ROE 分档：ROE 越高，价值中来自存量特许经营权的比重越大，
+# PEG（不含资本效率）越早失效，故越早迁出 C。
+C_TO_A_CAGR_BY_ROE = ((20.0, 0.15), (12.0, 0.12))   # (ROE 下限, CAGR 阈值)
+C_TO_A_MIN_ROE = 12.0
+C_TO_A_MIN_CASH_CONV = 0.8
+
 RISK_FREE = 0.018          # 10Y 国债，初始校准；修订先改工作流 §6.5.4
 COE_BANK = 0.018 + 0.095   # 银行 ERP 8.0%-11.0% 取中值
 MAX_G = 0.035
+
+# §6.5.2.1 锚与倍数的同期约束（v1.30）：远期利润锚必须配终值倍数。
+# PE = 1/(r − g_终值)，r 按质量分层（风险越高要求回报越高）。
+TERMINAL_R_BY_TIER = {"L1": 0.09, "L2": 0.10, "L3": 0.11}
+TERMINAL_G = 0.03
 
 
 def load_evidence(code: str) -> dict | None:
@@ -130,6 +145,20 @@ def consensus_median(evidence: dict, year_offset: int = 0) -> tuple[float | None
     return statistics.median(values), len(values), target
 
 
+def best_consensus(evidence: dict, offsets: tuple[int, ...], min_coverage: int = 3):
+    """在给定的预测年偏移中，取**覆盖达标的最远年份**。
+
+    §6.5.2 D 类的锚是"未来 2-3 年正常化归母"——硬取第 3 年会在覆盖薄的中小盘上
+    整片落空，而第 2 年同样落在标准区间内。返回 (归母中位数, 覆盖数, 年份)；
+    全部不达标返回 (None, 0, None)。
+    """
+    for offset in offsets:
+        value, count, year = consensus_median(evidence, offset)
+        if value and count >= min_coverage:
+            return value, count, year
+    return None, 0, None
+
+
 def share_count_check(evidence: dict, shares_out: float | None) -> str:
     """§6.6.1.2a 股本口径校验：研报归母 ÷ 研报 EPS 反算隐含股本，与现股本比对。"""
     detail = (evidence.get("profit_forecast") or {}).get("ycmx") or []
@@ -147,6 +176,45 @@ def share_count_check(evidence: dict, shares_out: float | None) -> str:
         return f"通过（隐含股本 {med:.4f}亿 ≈ 现股本 {shares_out:.4f}亿）"
     return (f"⚠️不一致（隐含 {med:.4f}亿 vs 现 {shares_out:.4f}亿，比值 {ratio:.3f}）"
             f"——研报 EPS 为送转/增发前口径，一律用归母建带")
+
+
+def c_to_a_signal(evidence: dict) -> tuple[bool, str]:
+    """§6.5.3 C → A 迁出判据（v1.30）：三条须全部成立。
+
+    ① 三年一致预期归母 CAGR < 12%  ② 近三年 ROE 均 ≥ 12%  ③ 经营现金流/净利润 ≥ 0.8
+    只满足 ① 的不迁 A——那是质量下滑，须回 §6.5.0 重走判定顺序。
+    「连续两次复核」由估值执行侧跨轮判断，本函数只给单轮读数。
+    """
+    profits = [consensus_median(evidence, i)[0] for i in range(3)]
+    if not all(profits) or profits[0] <= 0:
+        return False, "增速不可算"
+    cagr = (profits[-1] / profits[0]) ** 0.5 - 1
+
+    rows = annual_rows(evidence.get("finance_periods") or [])[:3]
+    roes = [float(r["ROEJQ"]) for r in rows if r.get("ROEJQ") is not None]
+    revenue = ttm(evidence.get("finance_periods") or [], "TOTALOPERATEREVE")
+    # §6.5.2.1 取数陷阱三：JYXJLYYSR 是**小数比率**（0.3644 = 36.44%），
+    # 与同记录内的 XSJLL/ROEJQ（百分数）单位不同，不得再除以 100。
+    ratios = [float(r["JYXJLYYSR"]) for r in rows if r.get("JYXJLYYSR") is not None]
+    profit_ttm = ttm(evidence.get("finance_periods") or [], "PARENTNETPROFIT")
+    cash_conv = None
+    if ratios and revenue and profit_ttm and profit_ttm > 0:
+        cash_conv = (statistics.median(ratios) * revenue) / profit_ttm
+
+    min_roe = min(roes) if len(roes) >= 3 else None
+    threshold = next((t for floor, t in C_TO_A_CAGR_BY_ROE if min_roe is not None and min_roe >= floor), None)
+    cond1 = threshold is not None and cagr < threshold
+    cond2 = min_roe is not None and min_roe >= C_TO_A_MIN_ROE
+    cond3 = cash_conv is not None and cash_conv >= C_TO_A_MIN_CASH_CONV
+    threshold_text = f"<{threshold:.0%}" if threshold is not None else "本判据不适用（ROE<12%）"
+    roe_text = f"{min_roe:.1f}%" if min_roe is not None else "不可算"
+    detail = (f"三年一致预期 CAGR {cagr:.1%}（判据① {threshold_text} {'✓' if cond1 else '✗'}"
+              f"，阈值按近三年最低 ROE {roe_text} 分档）；"
+              f"近三年 ROE {'/'.join(f'{r:.1f}' for r in roes[:3])}（②均≥12% {'✓' if cond2 else '✗'}）；"
+              f"经营现金流/净利润 {cash_conv:.2f}（③≥0.8 {'✓' if cond3 else '✗'}）"
+              if cash_conv is not None else
+              f"三年一致预期 CAGR {cagr:.1%}；现金转化不可算")
+    return (cond1 and cond2 and cond3), detail
 
 
 def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict:
@@ -177,7 +245,13 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
     if spec is None:
         card["note"] = f"未知标签 {tag_letter}"
         return card
-    anchor_metric, shape, (low_coef, high_coef), local = spec
+    anchor_metric, shape, coefs, local = spec
+    if coefs is None:                                  # A-2：系数按质量分层（§6.5.2，v1.30）
+        coefs = A2_COEFS.get(str(quality_tier).strip().upper())
+        if coefs is None:
+            card["note"] = f"A-2 需要 L1/L2/L3 分层定系数，实得 '{quality_tier}'"
+            return card
+    low_coef, high_coef = coefs
     card.update(anchor_metric=anchor_metric, band_low_coef=low_coef, band_high_coef=high_coef)
 
     if evidence is None:
@@ -218,26 +292,39 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                  f"5年 PE 中位 {multiple}（窗口 {band.get('window_start','')[:10]}~{band.get('window_end','')[:10]}，"
                  f"现分位 {band.get('pe_ttm_pct_rank')}%）") if anchor and multiple else ""
     elif tag_letter == "C":
-        value, count, year = consensus_median(evidence, 0)
-        if value and count >= 3:
+        value, count, year = best_consensus(evidence, (0, 1))
+        if value:
             anchor = value
-            profits = [consensus_median(evidence, i)[0] for i in range(3)]
-            if all(profits) and profits[0] > 0:
-                cagr = (profits[-1] / profits[0]) ** (1 / 2) - 1
+            # g 取覆盖达标的最长可算区间（优先三年，退而两年），按实际年数年化
+            far_value, far_count, far_year = best_consensus(evidence, (2, 1))
+            if far_value and far_year and far_year > year and anchor > 0:
+                span = far_year - year
+                cagr = (far_value / anchor) ** (1 / span) - 1
                 multiple = round(cagr * 100, 2)
                 source = "required_return"
                 basis = (f"{year}E 归母中位数 {anchor/1e8:.2f}亿（{count} 家研报）；"
-                         f"g = 三年一致预期归母 CAGR {multiple}%（带系数即 PEG 1.0-1.5）")
+                         f"g = {year}E→{far_year}E 一致预期归母 CAGR {multiple}%"
+                         f"（{span} 年，{far_count} 家覆盖；带系数即 PEG 1.0-1.5）")
         if anchor and not multiple:
-            card["note"] = "增速不可算（预测年份不足 3 年）"
+            card["note"] = "增速不可算（无第二个覆盖 ≥3 家的预测年）"
     elif tag_letter == "D":
-        value, count, year = consensus_median(evidence, 2)
-        if value and count >= 3:
+        # §6.5.2「未来 2-3 年正常化归母」：取覆盖达标的最远年份（第 3 年优先，退第 2 年）
+        value, count, year = best_consensus(evidence, (2, 1))
+        rate = TERMINAL_R_BY_TIER.get(str(quality_tier).strip().upper())
+        if value and rate:
             anchor = value
-            multiple = band.get("pe_ttm_median")
-            source = "own_history_median"
-            basis = (f"{year}E 正常化归母中位数 {anchor/1e8:.2f}亿（{count} 家）；"
-                     f"合理 PE 取 5 年中位 {multiple}（待按同业中位复核）")
+            multiple = round(1 / (rate - TERMINAL_G), 2)
+            source = "required_return"
+            basis = (f"{year}E 正常化归母中位数 {anchor/1e8:.2f}亿（{count} 家覆盖）；"
+                     f"合理 PE = 1/(r−g) = 1/({rate:.0%}−{TERMINAL_G:.0%}) = {multiple}x"
+                     f"——§6.5.2.1 锚与倍数同期约束：远期利润锚禁用自身历史 PE 中位"
+                     f"（自身 5 年中位 {band.get('pe_ttm_median')} 含增长定价，会双重计入）；"
+                     f"待按成熟期同业中位细化")
+            card["needs_external"] = ""
+        elif not value:
+            card["note"] = "无覆盖 ≥3 家的 2-3 年预测年"
+        else:
+            card["note"] = f"D 类终值倍数需 L1/L2/L3 分层，实得 '{quality_tier}'"
     elif tag_letter == "E":
         rows = annual_rows(periods)
         margins = [float(r["XSJLL"]) for r in rows if r.get("XSJLL") is not None]

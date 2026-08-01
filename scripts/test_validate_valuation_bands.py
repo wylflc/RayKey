@@ -68,9 +68,35 @@ def option_row(**overrides) -> dict:
     return model_row(**defaults)
 
 
+def a2_row(tier: str, low: float, high: float) -> dict:
+    """A-2 行：锚为归一化归母 × 自身 5 年 PE 中位，系数按分层。"""
+    value = ANCHOR * MULT
+    return model_row(
+        quality_tier=tier,
+        strategy_tag="A-现金流复利型",
+        anchor_metric="normalized_profit",
+        multiple_source="own_history_median",
+        band_low_coef=str(low),
+        band_high_coef=str(high),
+        fair_price_low=str(value * low / SHARES),
+        fair_price_high=str(value * high / SHARES),
+        base_band_low=str(value * low / SHARES),
+        base_band_high=str(value * high / SHARES),
+    )
+
+
 CASES: list[tuple[str, callable, str | None]] = [
     # (名称, 取问题列表的函数, 期望命中的关键片段；None = 期望无问题)
     ("合法模型带通过", lambda: check_row(model_row())[0], None),
+    # OI-004：A-2 带系数按质量分层分档（L1 0.90-1.15 / L2 0.85-1.05 / L3 0.80-1.00）
+    ("A-2 L1 用 0.90-1.15 通过",
+     lambda: check_row(a2_row("L1", 0.90, 1.15))[0], None),
+    ("A-2 L3 用 0.80-1.00 通过",
+     lambda: check_row(a2_row("L3", 0.80, 1.00))[0], None),
+    ("A-2 L3 误用 L1 系数被拦",
+     lambda: check_row(a2_row("L3", 0.90, 1.15))[0], "检查3"),
+    ("A-2 L2 误用 L1 系数被拦",
+     lambda: check_row(a2_row("L2", 0.90, 1.15))[0], "检查3"),
     ("合法模型带 severity=ok", lambda: [] if check_row(model_row())[1] == "ok" else ["severity 应为 ok"], None),
     ("档位反推带被拦（检查6）",
      lambda: check_row(model_row(band_derivation="fallback"))[0], "检查6"),

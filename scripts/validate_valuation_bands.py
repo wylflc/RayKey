@@ -64,7 +64,9 @@ TYPE_TABLE: dict[str, dict] = {
     "A": {
         "name": "现金流复利型",
         "anchors": {"annual_distributable_cash": 2, "normalized_profit": 1},
-        "coefs": {"normalized_profit": (0.80, 1.00)},
+        # v1.30 (OI-004)：A-2 的锚是自身历史交易水平，系数按质量分层分档。
+        # 其余类型的锚已是正常化/偏乐观口径，系数不随分层变动。
+        "coefs": {"normalized_profit": {"L1": (0.90, 1.15), "L2": (0.85, 1.05), "L3": (0.80, 1.00)}},
     },
     "C": {
         "name": "GARP成长型",
@@ -349,7 +351,13 @@ def check_row(row: dict) -> tuple[list[str], str]:
             # 检查 3：带系数等于类型表规定值（形态2 不适用）
             if shape == 1:
                 allowed = spec["coefs"].get(anchor_metric)
-                allowed_sets = allowed if isinstance(allowed, list) else [allowed]
+                if isinstance(allowed, dict):          # 按质量分层分档（A-2，v1.30）
+                    tier = str(row.get("quality_tier", "") or "").strip().upper()
+                    allowed_sets = [allowed[tier]] if tier in allowed else list(allowed.values())
+                    if tier not in allowed:
+                        problems.append(f"检查3 A-2 带系数按分层分档，但 quality_tier='{tier}' 不在 L1/L2/L3")
+                else:
+                    allowed_sets = allowed if isinstance(allowed, list) else [allowed]
                 got = (to_float(row.get("band_low_coef")), to_float(row.get("band_high_coef")))
                 if None in got:
                     problems.append("检查3 带系数缺失")
