@@ -31,7 +31,7 @@
 
 - 使用估值档「**可接受较高估**」——该名称在现行工作流中命中 **0 次**（现行为 低估/较低估/中性/较高估/高估/无法估值）。
 - 入池规则「only 低估/较低估/中性/可接受较高估 enter」——已被 §6.2.1 **分层×估值准入矩阵**取代（还有 watch_only 层）。
-- 引用 `docs/personal-investment-system-v1.md` §8 —— **文件不存在**（实际为 `-v1.zh.md`）。
+- 引用 `docs/personal-investment-system-v1.md` §8 —— **文件不存在**（当时实际为 `docs/personal-investment-system-v1.zh.md`；2026-08-01 已改名为 `docs/000_personal-investment-system-v1.zh.md`）。
 
 ### 1.3 `a-share-peer-calibration/SKILL.md` —— 指向不存在的"唯一事实源"
 
@@ -82,7 +82,7 @@
 
 ### 2.2 `CLAUDE.md` 复述个人投资体系
 
-"Investment Research Rules" + "Position discipline" 共 16 条，内容与 `docs/personal-investment-system-v1.zh.md`（§1 核心原则 / §5 选股策略分类 / §15 禁止事项 / §16 一票否决）重复——而 CLAUDE.md 自己第一句就写着"以该文件为默认标准"。**既指路又复述**，正是文章说的"把 CLAUDE.md 当成完整知识库"。
+"Investment Research Rules" + "Position discipline" 共 16 条，内容与 `docs/000_personal-investment-system-v1.zh.md`（§1 核心原则 / §5 选股策略分类 / §15 禁止事项 / §16 一票否决）重复——而 CLAUDE.md 自己第一句就写着"以该文件为默认标准"。**既指路又复述**，正是文章说的"把 CLAUDE.md 当成完整知识库"。
 
 ### 2.3 skill 的 "Required Local Context" 列举 CONTEXT.md 词条
 
@@ -139,7 +139,7 @@
 | `CONTEXT.md` | 删/降格死术语为一节「Retired Vocabulary」、删机械 `_Avoid_`、修正 Quality Tier 定义 |
 | `README.md` | 指令源指向由 AGENTS.md 改为 CLAUDE.md，并补上两份主 spec |
 
-**未改动**：`docs/000_Ashare_workflow.md`（唯一标准源，本次不动其内容）、`docs/personal-investment-system-v1.zh.md`、`docs/peer-group-calibration/`（审计上下文）、用户级 skill（`diagnose`/`tdd`/`write-a-skill` 等为通用工具，与本 repo 领域无关，未见过度指导）。
+**未改动**：`docs/000_Ashare_workflow.md`（唯一标准源，本次不动其内容）、`docs/000_personal-investment-system-v1.zh.md`、`docs/peer-group-calibration/`（审计上下文）、用户级 skill（`diagnose`/`tdd`/`write-a-skill` 等为通用工具，与本 repo 领域无关，未见过度指导）。
 
 ### 体量变化
 

@@ -1,6 +1,6 @@
 # 证据复核日志
 
-按 `docs/Ashare_moat_strength_rubric.md` §10.8 协议执行。每批完成即追加，任务中断可从此恢复。
+按 `docs/Ashare_quality_rubric.md` §10.8 协议执行。每批完成即追加，任务中断可从此恢复。
 状态：`verified` 证据支持原判｜`verified_stronger` 证据强于原判｜`verified_with_caveat` 支持但有保留｜`corrected` 已更正｜`reexamined_no_source` 按 §10.7 偏差模式复检、未取外部新证据
 
 ## P0 批次一：L3 消费/资源/LED/PCB 5 家（2026-07-31）

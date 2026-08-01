@@ -1,6 +1,6 @@
 # AShareQuant
 
-AShareQuant models listed-company research for mainland China, Hong Kong, and U.S. equity markets. This file holds stable domain language only. Executable standards live in `docs/000_Ashare_workflow.md`; investment judgment standards live in `docs/personal-investment-system-v1.zh.md`.
+AShareQuant models listed-company research for mainland China, Hong Kong, and U.S. equity markets. This file holds stable domain language only. Executable standards live in `docs/000_Ashare_workflow.md`; investment judgment standards live in `docs/000_personal-investment-system-v1.zh.md`.
 
 ## Entities
 

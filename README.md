@@ -8,20 +8,21 @@ The project supports a reproducible equity-research workflow: build an investabl
 
 `docs/000_Ashare_workflow.md` is the executable specification for the five-stage A-share loop. Its §0 routing table maps instructions to modules and scripts.
 
-1. Quarterly full-market quality review: round-1 three-class triage (`worth_attention` / `boundary_pending` / `garbage`, ADR-0006), then L1-L5 quality tiering for worth-attention companies (§5.7/§5.7.1/§5.8).
-2. Valuation screening for L1/L2 core-quality companies, materialized into the core valuation pool.
+1. Quarterly full-market quality review: round-1 three-class triage (`worth_attention` / `boundary_pending` / `garbage`, ADR-0006), then three-tier quality tiering (L1 strong / L2 medium / L3 weak moat) for worth-attention companies (§5.7/§5.7.1/§5.8, workflow v1.27).
+2. Valuation screening across the worth-attention set, materialized into the core valuation pool (core layer = L1/L2, tactical = L3).
 3. Rolling updates after financial-report disclosures.
 4. Daily volume-price scan producing buy candidates from the core valuation pool.
 5. Daily holdings monitoring and sell scan.
 
-The full-universe round-1 rescan is complete (5,653 companies triaged as of 2026-07-09: 261 worth_attention / 5,332 boundary_pending / 60 garbage); `docs/round1-rescan-progress.md` holds the final snapshot. Next per workflow §5.4.6: rebuild L1-L5 tiering over the worth_attention set, then L1/L2 valuation and the core valuation pool. Every reviewed conclusion is appended to `data/processed/a_share_workflow_decision_log.csv`.
+The full-universe round-1 rescan is complete (5,653 companies triaged as of 2026-07-09: 261 worth_attention / 5,332 boundary_pending / 60 garbage); `docs/round1-rescan-progress.md` holds the final snapshot. Tiering over that set was rebuilt on 2026-08-01 under workflow v1.27 (L1 21 / L2 231 / L3 9, all evidence-reviewed). Every reviewed conclusion is appended to `data/processed/a_share_workflow_decision_log.csv`.
 
-The personal investment system in `docs/personal-investment-system-v1.zh.md` (Chinese, canonical) is the default standard for all equity analysis.
+The personal investment system in `docs/000_personal-investment-system-v1.zh.md` (Chinese, canonical) is the default standard for all equity analysis.
 
 ## Repository Layout
 
 - `docs/000_Ashare_workflow.md` — main A-share workflow specification.
-- `docs/personal-investment-system-v1.zh.md` — personal investment rulebook.
+- `docs/000_personal-investment-system-v1.zh.md` — personal investment rulebook.
+- `docs/Ashare_quality_rubric.md` — the Q1/Q2 scoring detail behind workflow §5.7 tier assignment.
 - `docs/round1-rescan-progress.md` — round-1 rescan progress and handoff.
 - `docs/peer-group-calibration/` — per-industry calibration narratives; the audit trail of how the round-1 rules were formed.
 - `docs/moat-scoring-rubric.md` — dimensional triage rubric, still the standard for the Hong Kong / U.S. full-coverage scorers.
@@ -106,7 +107,7 @@ Per workflow §5.4.6, these prior-round files remain transition references (the 
 
 - `CLAUDE.md` contains repository-specific instructions for coding agents (`AGENTS.md` is a pointer to it).
 - `CONTEXT.md` defines the stable domain language used by the project.
-- `docs/000_Ashare_workflow.md` is the master execution spec for the A-share pipeline; `docs/personal-investment-system-v1.zh.md` governs investment judgment.
+- `docs/000_Ashare_workflow.md` is the master execution spec for the A-share pipeline; `docs/000_personal-investment-system-v1.zh.md` governs investment judgment.
 - `.agents/` and `.codex/` are local agent workspaces and are intentionally ignored by Git.
 
 ## Development Workflow
