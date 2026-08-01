@@ -386,6 +386,121 @@ def v_reversal_context(rows: list[dict[str, float | str]], j: int) -> bool:
     return max250 > 0 and min(last10) <= max250 * (1 - V_REVERSAL_DD) and min(last10) <= min(last60) * 1.001
 
 
+def pullback_to_ma_support(rows: list[dict[str, float | str]], index: int,
+                          vol_ma20: float) -> str | None:
+    """§8.7.10 回踩关键均线企稳（回撤承接型，v1.37）。
+
+    现有 §8.7.1-8.7.9 全是**向上穿越触发**；本组三个信号补的是「先涨后回、在关键位置
+    获得支撑再走」这一类。判定链：中期结构未坏 → 回撤幅度落在「回踩」而非「破位」区间
+    → 触及关键均线 → 缩量回踩（获利回吐而非抛售）→ 当日企稳收阳。
+    """
+    row = rows[index]
+    close, low = float(row["close"]), float(row["low"])
+    ma20 = to_float(row.get("ma20"))
+    ma60 = to_float(row.get("ma60"))
+    if ma20 is None or ma60 is None or index < 25:
+        return None
+    # 前置：中期结构未坏——收盘在 MA60 上方且 MA20 未走平走坏
+    ma20_prev = to_float(rows[index - 5].get("ma20"))
+    if not (close > ma60 and ma20_prev is not None and ma20 >= ma20_prev):
+        return None
+    # 回撤幅度：从近 20 日最高价回落 4%-18%。低于 4% 不算回踩，高于 18% 是破位不是回踩。
+    window = rows[index - 19: index + 1]
+    peak = max(float(r["high"]) for r in window)
+    peak_idx = max(range(index - 19, index + 1), key=lambda j: float(rows[j]["high"]))
+    drawdown = 1 - close / peak if peak else 0.0
+    if not 0.04 <= drawdown <= 0.18:
+        return None
+    # 触线：近 3 日内触及 MA20/MA60/MA120 之一（取被触及的最高级别，越长越重）
+    touched = None
+    for name, key, value in (("MA120", "ma120", to_float(row.get("ma120"))),
+                             ("MA60", "ma60", ma60), ("MA20", "ma20", ma20)):
+        if value is None:
+            continue
+        # 均线必须**上行**：下行均线不构成支撑，只是下跌过程中的一条线
+        prior = to_float(rows[index - 5].get(key))
+        if prior is None or value < prior:
+            continue
+        if any(float(rows[j]["low"]) <= value * 1.02 for j in range(max(0, index - 2), index + 1)):
+            touched, touched_value = name, value
+            break
+    if touched is None:
+        return None
+    # 缩量回踩：回撤段（自高点日起）均量 ≤ 20 日均量 ×1.1，说明是获利回吐不是抛售
+    leg = rows[peak_idx: index + 1]
+    if vol_ma20 <= 0 or mean([float(r["volume"]) for r in leg]) > vol_ma20 * 1.1:
+        return None
+    # 企稳：当日收阳、收在被触均线之上、且高于前一日收盘
+    if not (close > float(row["open"]) and close >= touched_value * 0.99
+            and close > float(rows[index - 1]["close"])):
+        return None
+    # **承接必须有量**：无量的企稳只是漂移，不是买盘接手。回放实测缺此条时
+    # 20 日中位 −1.3%、胜率 45%（基准 +0.2%/51%）。
+    if float(row["volume"]) < max(float(rows[index - 1]["volume"]) * 1.2, vol_ma20 * 0.9):
+        return None
+    return f"8.7.10 回踩{touched}企稳(回撤{drawdown:.0%})"
+
+
+def pullback_after_breakout(rows: list[dict[str, float | str]], index: int,
+                            breakout_days: list[int]) -> str | None:
+    """§8.7.11 突破后回踩短均线确认（回撤承接型，v1.37）。
+
+    §8.7.6「平台突破后二次确认」只覆盖「再突破」，不覆盖「回踩 5/10 日线后企稳」——
+    后者是突破成立最常见的第二买点。要求突破未被否定（不破突破日收盘 7%）、回踩缩量、
+    当日在 MA10 上方收阳。
+    """
+    if not breakout_days or index < 12:
+        return None
+    b = max(breakout_days)
+    if not 2 <= index - b <= 15:            # 突破后 2-15 个交易日内的回踩才算确认
+        return None
+    row = rows[index]
+    close = float(row["close"])
+    ma10 = to_float(row.get("ma10"))
+    if ma10 is None:
+        return None
+    breakout_close = float(rows[b]["close"])
+    breakout_volume = float(rows[b]["volume"])
+    if close < breakout_close * 0.93:        # 跌超 7% 视为突破失败，不是回踩
+        return None
+    if not any(float(rows[j]["low"]) <= ma10 * 1.02 for j in range(max(0, index - 2), index + 1)):
+        return None
+    leg = rows[b + 1: index + 1]
+    if not leg or mean([float(r["volume"]) for r in leg]) > breakout_volume * 0.7:
+        return None                          # 回踩必须缩量；不缩量说明是派发
+    ma10_prev = to_float(rows[index - 5].get("ma10"))
+    if ma10_prev is None or ma10 < ma10_prev:      # MA10 须上行
+        return None
+    if not (close > float(row["open"]) and close >= ma10 * 0.99):
+        return None
+    if float(row["volume"]) < float(rows[index - 1]["volume"]) * 1.2:   # 承接须有量
+        return None
+    return f"8.7.11 突破后回踩MA10确认(突破后{index - b}日)"
+
+
+def limit_up_next_day_absorption(rows: list[dict[str, float | str]], index: int,
+                                 limit_up_pct: float, prev_was_shrink_limit_up: bool) -> str | None:
+    """§8.7.12 缩量涨停次日承接（回撤承接型，v1.37）。
+
+    §8.7.3 只判涨停当日，而涨停的信息量要到**次日**才兑现：低开被买回、或横盘不抛，
+    都说明筹码锁定；高开冲高回落则相反。两条承接路径（放量承接 / 缩量横盘）任一成立即可。
+    """
+    if not prev_was_shrink_limit_up or index < 2:
+        return None
+    row, prev = rows[index], rows[index - 1]
+    close, open_, pct = float(row["close"]), float(row["open"]), float(row["pct_chg"])
+    prev_close, prev_open = float(prev["close"]), float(prev["open"])
+    prev_volume = float(prev["volume"])
+    volume = float(row["volume"])
+    if close < prev_open:                    # 吞没涨停实体 = 承接失败
+        return None
+    if volume >= prev_volume * 1.5 and close >= prev_close * 0.97 and open_ <= prev_close:
+        return f"8.7.12 缩量涨停次日放量承接(量比{volume / prev_volume:.1f})"
+    if abs(pct) <= 0.03 and volume <= prev_volume * 1.2:
+        return f"8.7.12 缩量涨停次日缩量横盘({pct:+.1%})"
+    return None
+
+
 def stage_day_trigger(rows: list[dict[str, float | str]], j: int, megacap_yi: float | None) -> tuple[int, list[str]]:
     """当日新达段位（0-4）与触发标签（§8.13 v1.06）。8.7.9 各形态不要求 §8.5 有效放量。"""
     row = rows[j]
@@ -498,9 +613,11 @@ def classify_signal(
     limit_up_pct: float = 9.5,
     cap_bn: float | None = None,
     valuation_price: float | None = None,
+    at_index: int | None = None,
 ) -> dict[str, object]:
+    """at_index 缺省为最后一根K线；§9.5 缺口回溯用它在历史任一日重算信号。"""
     add_indicators(rows)
-    index = len(rows) - 1
+    index = len(rows) - 1 if at_index is None else at_index
     row = rows[index]
     if index < 60 or "ma20" not in row or "ma60" not in row or "vol_ma20" not in row:
         return {"signal_state": "insufficient_price_history", "signals": []}
@@ -542,6 +659,24 @@ def classify_signal(
         if previous_high is not None and close > float(previous_high) * 1.005:
             break_periods.append(str(window))
 
+    # §8.7.11 需要「近期突破日」：回看 20 日，重算哪几日构成 8.7.1/8.7.2 式突破
+    breakout_days: list[int] = []
+    for j in range(max(60, index - 20), index):
+        rj = rows[j]
+        cj = float(rj["close"])
+        cond_j = volume_conditions(rows, j, megacap_yi)
+        if cond_j is None or not bool(cond_j["effective"]):
+            continue
+        loc_j = float(rj["close_location"])
+        if loc_j < 0.6:
+            continue
+        # 只认**创新高式**突破：单纯站上均线太宽松，回放实测导致 8.7.11 触发 534 次、
+        # 20 日中位 −1.6%。突破日还须当日显著上涨，排除横盘蹭线。
+        broke_high = any(rj.get(f"prev_high_{w}") is not None and cj > float(rj[f"prev_high_{w}"]) * 1.005
+                         for w in (60, 120, 250))
+        if broke_high and float(rj["pct_chg"]) >= 0.03:
+            breakout_days.append(j)
+
     signals: list[str] = []
     wait_reasons: list[str] = []
     if break_periods and effective_volume and close_location >= 0.6:
@@ -578,6 +713,29 @@ def classify_signal(
     # 8.7 核心原则：有效放量且当日收涨即列买入候选，不要求突破前高或关键均线。
     if effective_volume and float(row["pct_chg"]) > 0:
         signals.append("8.7.0 放量上涨")
+
+    # §8.7.10-8.7.12 回撤承接型（v1.37）：现有信号全是向上穿越触发，本组补「先涨后回、
+    # 在关键位置获得支撑再走」这一类——用户点名的三种形态，缺一不可脚本化。
+    observation_tags: list[str] = []
+    # 8.7.11 通过 §12 回放（77 次触发，20 日中位 +1.4%、胜率 51%，达到全信号基准），作正式信号。
+    pullback_bo = pullback_after_breakout(rows, index, breakout_days)
+    if pullback_bo:
+        signals.append(pullback_bo)
+    # 8.7.10 **未通过回放**：加严（均线须上行 + 企稳日须有量）后反而更差——由 330 次/−1.3%/45%
+    # 变为 78 次/−3.7%/40%，显著劣于基准 +0.3%/51%。按 §12.5 不得作买入触发，降为观察标记。
+    pullback_ma = pullback_to_ma_support(rows, index, vol_ma20)
+    if pullback_ma:
+        observation_tags.append(pullback_ma + "[观察·未过回放]")
+    prev_row = rows[index - 1]
+    prev_vol_ma20_v = to_float(prev_row.get("vol_ma20")) or 0.0
+    prev_prev_vol = float(rows[index - 2]["volume"]) if index >= 2 else 0.0
+    prev_shrink = (float(prev_row["volume"]) <= prev_vol_ma20_v * 1.2) or (
+        prev_prev_vol > 0 and float(prev_row["volume"]) <= prev_prev_vol * 0.85)
+    prev_limit_up = float(prev_row["pct_chg"]) >= limit_up_pct and prev_shrink
+    # 8.7.12 回放样本仅 4 次触发，不足以判定（4 次全负），按 §12.5 先作观察标记、不作买入触发。
+    absorption = limit_up_next_day_absorption(rows, index, limit_up_pct, prev_limit_up)
+    if absorption:
+        observation_tags.append(absorption + "[观察·样本不足]")
 
     # §8.7.8/§8.7.9 底部反转与企稳形态 + §8.13 v1.06 阶段延续：统一由计段函数判定。
     entry_stage, entry_stage_today, stage_tags, stage_by_day, stage_trigger_days = compute_entry_stage(
@@ -673,6 +831,7 @@ def classify_signal(
         "long_term_confirm": long_term_confirm,
         "break_periods": ",".join(break_periods),
         "signals": "; ".join(signals),
+        "observation_tags": "; ".join(observation_tags),
         "wait_reasons": "; ".join(wait_reasons),
         "overextended": overextended,
         "signal_state": signal_state,
@@ -686,6 +845,45 @@ def classify_signal(
         "stage_trigger_days": stage_trigger_days,
         "megacap_volume": bool(conds["megacap"]),
         "market_cap_now_yi": megacap_yi or "",
+    }
+
+
+def gap_review(rows: list[dict[str, float | str]], as_of: str, since: str,
+               limit_up_pct: float, cap_bn: float | None, valuation_price: float | None) -> dict[str, object]:
+    """§9.5 缺口回溯（v1.37）：把 since→as_of 之间**未被扫描的交易日**逐日重算一遍。
+
+    现行 §9.1 是单日快照——隔一周再扫，期间出现过的放量、反转、信号触发全部不可见，
+    只能看到"今天什么样"。缺口回溯逐日重跑 `classify_signal`，回答三件事：
+    期间是否触发过任一 §8.7 信号（哪天、什么信号）、最大单日放量倍数、区间涨跌幅。
+    """
+    idx = {str(r["date"]): j for j, r in enumerate(rows)}
+    gap_days = [d for d in idx if since < d <= as_of]
+    if len(gap_days) <= 1:
+        return {}
+    fired: list[str] = []
+    max_ratio, max_ratio_day = 0.0, ""
+    for d in sorted(gap_days):
+        j = idx[d]
+        if j < 60:
+            continue
+        vol_ma20 = to_float(rows[j].get("vol_ma20")) or 0.0
+        if vol_ma20 > 0:
+            ratio = float(rows[j]["volume"]) / vol_ma20
+            if ratio > max_ratio:
+                max_ratio, max_ratio_day = ratio, d
+        res = classify_signal(rows, limit_up_pct, cap_bn, valuation_price, at_index=j)
+        sig = res.get("signals") or ""
+        if sig and d != as_of:                    # 当日信号已由主扫描输出，此处只报"期间曾触发"
+            fired.append(f"{d}:{sig}")
+    first, last = sorted(gap_days)[0], sorted(gap_days)[-1]
+    ret = float(rows[idx[last]]["close"]) / float(rows[idx[first]]["open"]) - 1
+    return {
+        "gap_trading_days": len(gap_days),
+        "gap_return": round(ret, 4),
+        "gap_max_vol_ratio": round(max_ratio, 2),
+        "gap_max_vol_day": max_ratio_day,
+        "gap_signals_fired": "; ".join(fired[-6:]),
+        "gap_signal_days": len(fired),
     }
 
 
@@ -735,7 +933,7 @@ def assign_priority(row: dict[str, object]) -> str:
     return "C"
 
 
-def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, object]:
+def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = "") -> dict[str, object]:
     code = pool_row["security_code"].zfill(6)
     cap_bn = to_float(pool_row.get("total_market_cap_bn"))
     val_price = to_float(pool_row.get("valuation_price"))
@@ -743,9 +941,10 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, 
         kline_url, price_rows = fetch_daily_rows(code, pool_row.get("exchange", ""), as_of, timeout)
         if not price_rows:
             raise RuntimeError("empty kline response")
-        signal = classify_signal(
-            price_rows, limit_up_threshold_pct(code, pool_row.get("security_name", "")), cap_bn, val_price
-        )
+        limit_up = limit_up_threshold_pct(code, pool_row.get("security_name", ""))
+        gap = gap_review(list(price_rows), as_of, since, limit_up, cap_bn, val_price) if since else {}
+        signal = classify_signal(price_rows, limit_up, cap_bn, val_price)
+        signal.update(gap)
     except Exception as exc:  # noqa: BLE001 - data-provider failures should not abort the batch.
         kline_url = ""
         signal = {
@@ -795,7 +994,20 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float) -> dict[str, 
     return {key: rounded(value) for key, value in signal.items()}
 
 
-def scan(input_rows: list[dict[str, str]], as_of: str, symbols: set[str] | None, timeout: float, workers: int) -> list[dict[str, object]]:
+def detect_last_scan(log_path: Path, as_of: str) -> str:
+    """§9.5：自动检出上一次扫描日——缺口回溯不能依赖人记得传 --since。"""
+    if not log_path.exists():
+        return ""
+    dates = set()
+    with log_path.open(encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            if row.get("decision_type") == "daily_signal_state" and row.get("as_of"):
+                dates.add(row["as_of"])
+    prior = sorted(d for d in dates if d < as_of)
+    return prior[-1] if prior else ""
+
+
+def scan(input_rows: list[dict[str, str]], as_of: str, symbols: set[str] | None, timeout: float, workers: int, since: str = "") -> list[dict[str, object]]:
     eligible_rows = []
     for pool_row in input_rows:
         code = pool_row["security_code"].zfill(6)
@@ -807,7 +1019,7 @@ def scan(input_rows: list[dict[str, str]], as_of: str, symbols: set[str] | None,
 
     results_by_code: dict[str, dict[str, object]] = {}
     with ThreadPoolExecutor(max_workers=max(1, workers)) as executor:
-        futures = {executor.submit(scan_one, row, as_of, timeout): row["security_code"].zfill(6) for row in eligible_rows}
+        futures = {executor.submit(scan_one, row, as_of, timeout, since): row["security_code"].zfill(6) for row in eligible_rows}
         for future in as_completed(futures):
             code = futures[future]
             results_by_code[code] = future.result()
@@ -848,6 +1060,12 @@ def log_scan_decisions(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--since",
+        default="auto",
+        help='§9.5 缺口回溯起点。"auto"（缺省）从决策日志检出上次扫描日；'
+             '给具体日期则强制回溯该日之后；给空串关闭回溯。',
+    )
     parser.add_argument("--as-of", required=True, help="Trading date in YYYY-MM-DD format.")
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--review-queue", type=Path, default=DEFAULT_REVIEW_QUEUE,
@@ -879,7 +1097,14 @@ def main() -> None:
     symbols = {item.strip().zfill(6) for item in args.symbols.split(",") if item.strip()} or None
     input_rows = load_csv(args.input)
     market_state = fetch_market_state(args.as_of, args.timeout)
-    rows = scan(input_rows, args.as_of, symbols, args.timeout, args.workers)
+    since = args.since
+    if since == "auto":
+        since = detect_last_scan(args.log_file, args.as_of)
+        if since:
+            print(f"§9.5 缺口回溯：检出上次扫描日 {since}，将回溯 {since}→{args.as_of} 区间")
+        else:
+            print("§9.5 缺口回溯：未检出上次扫描日，本次按单日快照执行")
+    rows = scan(input_rows, args.as_of, symbols, args.timeout, args.workers, since)
     blocked = load_blocked_codes(args.review_queue)
     for row in rows:
         row["market_state"] = market_state
@@ -955,6 +1180,13 @@ def main() -> None:
         "trend_strength",
         "market_state",
         "signals",
+        "observation_tags",
+        "gap_trading_days",
+        "gap_return",
+        "gap_max_vol_ratio",
+        "gap_max_vol_day",
+        "gap_signal_days",
+        "gap_signals_fired",
         "wait_reasons",
         "close",
         "high",
