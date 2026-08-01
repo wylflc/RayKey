@@ -89,18 +89,24 @@ def evidence_cutoff(code: str) -> tuple[str, str]:
         data = json.loads(path.read_text(encoding="utf-8"))
     except Exception:                                     # noqa: BLE001
         return "", ""
-    candidates: list[tuple[str, str]] = []
+    # 三元组排序键 (公告日, 报告期, 标签)：**同一天披露多份时按报告期新旧决定**，
+    # 不能靠标签字符串序。判例：泸州老窖 2026-04-29 同日披露年报与一季报，按字符串序
+    # 「年报」>「一季报」，池 MD 因此把估值事件写成「年报」，而实际最新报告期是一季报。
+    candidates: list[tuple[str, str, str]] = []
     for period in data.get("finance_periods") or []:
         if period.get("NOTICE_DATE"):
             label = REPORT_TYPE_LABEL.get(period.get("REPORT_TYPE"), period.get("REPORT_TYPE") or "定期报告")
-            candidates.append((period["NOTICE_DATE"][:10], label))
+            candidates.append((period["NOTICE_DATE"][:10], (period.get("REPORT_DATE") or "")[:10], label))
     for item in data.get("performance_express") or []:
         if item.get("NOTICE_DATE"):
-            candidates.append((item["NOTICE_DATE"][:10], "业绩快报"))
+            candidates.append((item["NOTICE_DATE"][:10], (item.get("REPORT_DATE") or "")[:10], "业绩快报"))
     for item in data.get("performance_predicts") or []:
         if item.get("NOTICE_DATE"):
-            candidates.append((item["NOTICE_DATE"][:10], "业绩预告"))
-    return max(candidates) if candidates else ("", "")
+            candidates.append((item["NOTICE_DATE"][:10], (item.get("REPORT_DATE") or "")[:10], "业绩预告"))
+    if not candidates:
+        return "", ""
+    best = max(candidates)
+    return best[0], best[2]
 
 
 def exchange_of(code: str) -> str:

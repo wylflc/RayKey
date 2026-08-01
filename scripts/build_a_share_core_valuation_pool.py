@@ -451,6 +451,25 @@ def build_overseas_section(
     return lines, {"changes": changes, "current_tiers": current_tiers}
 
 
+_RESEARCH_CACHE: dict[str, str] = {}
+
+
+def _evidence_retrieved(code: str) -> str:
+    """证据文件的检索日（§7.4.1 研报触发只能靠新鲜度，不能靠研报发布日比较）。"""
+    if code in _RESEARCH_CACHE:
+        return _RESEARCH_CACHE[code]
+    path = ROOT / f"data/interim/valuation_evidence/{code}.json"
+    result = ""
+    if path.exists():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            result = (data.get("retrieved_at_utc") or "")[:10]
+        except Exception:                                  # noqa: BLE001
+            result = ""
+    _RESEARCH_CACHE[code] = result
+    return result
+
+
 def write_markdown(
     path: Path,
     rows: list[dict[str, str]],
@@ -524,6 +543,7 @@ def write_markdown(
             latest = max(events) if events else None
             if latest and latest[0] > reviewed:
                 forecast_pending.append(f"{code}{row['security_name']}({latest[0]}·{latest[1]})")
+
         body.append(
             "| {security_code} | {security_name} | {quality_tier_label} | {quality_score} | ".format(**row)
             + str(cells["valuation_cell"])
