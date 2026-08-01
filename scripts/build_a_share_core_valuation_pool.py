@@ -31,6 +31,7 @@ from pathlib import Path
 
 from a_share_quotes import fetch_spot_quotes
 from overseas_quotes import fetch_overseas_quotes
+from validate_valuation_bands import check_row as check_band_card
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
 
 
@@ -156,6 +157,20 @@ def build_pool(
         if quality_tier not in TIER_ELIGIBLE_VALUATIONS:
             continue
         state = matrix_state(quality_tier, valuation_tier)
+
+        # §6.7 要求 10/11（v1.28）：带必须是 §6.5.1 两形态之一算出的模型带。
+        # blocking（档位反推 / 已退役标签 / 复算不符）→ 降为可持有：不得新建仓加仓，
+        # 但不触发 §14 提醒卖出（反推带的偏差双向，只切买入侧是唯一不制造新错误动作的过渡态）。
+        # backfill（模型带、仅建带卡未回填）→ 限期登记义务，买入资格不变（同 §10.4 研究档案项）。
+        band_problems, band_severity = check_band_card(row)
+        if not band_problems:
+            band_status = "ok"
+        elif band_severity == "blocking":
+            band_status = "rebuild_required"
+            if state == "buyable":
+                state = "holdable"
+        else:
+            band_status = "backfill_due"
         # v1.27：档位决定 core/tactical，与当日估值档无关；仅「无法估值」排除。
         if state == "na":
             pool_layer = "excluded"
@@ -172,6 +187,8 @@ def build_pool(
                 "quality_tier_label": row.get("quality_tier") or (tier_row or {}).get("quality_tier_label", ""),
                 "pool_layer": pool_layer,
                 "matrix_state": state,
+                "band_derivation": row.get("band_derivation", "") or ("fallback" if band_status == "rebuild_required" else ""),
+                "band_status": band_status,
                 "strategy_tag": row.get("strategy_tag", ""),
                 "valuation_tier": valuation_tier or "（空）",
                 "valuation_batch_id": row.get("valuation_batch_id", ""),
@@ -746,6 +763,8 @@ def main() -> None:
         "quality_tier_label",
         "pool_layer",
         "matrix_state",
+        "band_derivation",
+        "band_status",
         "strategy_tag",
         "valuation_tier",
         "valuation_batch_id",
