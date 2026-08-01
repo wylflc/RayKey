@@ -238,6 +238,7 @@ def classify_holding(
     # §14 持仓估值档位刷新：对照最新核心池；池不可用时标注未刷新。
     band_low: float | None = None
     band_high: float | None = None
+    pool_row: dict[str, str] | None = None
     if pool is None:
         result["pool_valuation_tier"] = ""
         result["valuation_alert"] = "估值池文件缺失，未刷新档位"
@@ -324,7 +325,33 @@ def classify_holding(
             pos = (close - band_low) / (band_high - band_low) * 100 if band_high > band_low else 0.0
             band_position = f"带内{pos:.0f}%"
     valuation_sell = eff_tier in VALUATION_SELL_TIERS
-    valuation_sell_amount = max(0.0, position_value - build_amount) if valuation_sell and build_amount else 0.0
+    # v1.39：估值卖出资格必须与池的三态口径同源。池已按 §6.5.5.1 与 §6.5.4 抑制两类
+    # 卖出提醒——下限带（明确不含成长/管线/订单价值）与周期假设未决（「贵」取决于
+    # 未取得的供给侧证据）——本处此前独立重算，导致同一只票池判可持有、卖出扫描判
+    # 可卖（判例：紫金矿业、神火股份 2026-08-01）。
+    suppress_reason = ""
+    if valuation_sell and pool_row:
+        if str(pool_row.get("band_is_floor", "")).strip().lower() == "true":
+            suppress_reason = "下限带（§6.5.5.1：明确不含未兑现价值，反向读作『贵』不成立）"
+        elif pool_row.get("cycle_assumption") == "mean_reversion_assumed":
+            suppress_reason = "周期假设未决（§6.5.4：中枢锚假设均值回归，运行率显著更高）"
+    if suppress_reason:
+        valuation_sell = False
+    # §14 v1.27 减仓梯（v1.39 落地）：原「留底原则（剩余市值 ≥ 建仓金额）」已于 v1.27
+    # 废止——它是卖出规则最后一个成本锚，与「卖出只由估值决定、与盈亏无关」抵触。
+    # 脚本此前仍按旧口径算，两只可卖持仓均得出「可卖约 0」。现改为按档分级的减仓梯：
+    # 台阶 {M, H, 1.2H, 1.44H}，每跨一阶减**剩余股数**的 20%，1.44H 起 40%。
+    trim_pct, trim_step = 0.0, ""
+    if valuation_sell and band_low and band_high:
+        mid = (band_low + band_high) / 2
+        steps = [("M", mid), ("H", band_high), ("1.2H", band_high * 1.2), ("1.44H", band_high * 1.44)]
+        tier_key = ((pool_row or {}).get("quality_tier") or row.get("quality_tier") or "").strip().upper()
+        start = {"L1": 2, "L2": 1, "L3": 0}.get(tier_key, 1)
+        crossed = [(name, level) for i, (name, level) in enumerate(steps) if i >= start and close >= level]
+        if crossed:
+            trim_step = crossed[-1][0]
+            trim_pct = 0.40 if trim_step == "1.44H" else 0.20
+    valuation_sell_amount = position_value * trim_pct
 
     # Deterministic action priority (forced_exit is decided by the model, not here).
     if stop is not None and close <= stop:
@@ -343,9 +370,14 @@ def classify_holding(
     elif valuation_sell:
         action = "valuation_sell_eligible"
         reason = (
-            f"现档{eff_tier}（收盘 {close} vs 合理价区间 {band_low}-{band_high}），允许卖出增值部分："
-            f"市值 {position_value:,.0f} − 建仓金额 {build_amount:,.0f} = 可卖约 {valuation_sell_amount:,.0f}（留底原则）"
+            f"现档{eff_tier}（收盘 {close} vs 合理价区间 {band_low}-{band_high}）；§14 减仓梯已跨至 "
+            f"{trim_step} 台阶 → 提醒减持**剩余股数的 {trim_pct:.0%}**，约 {valuation_sell_amount:,.0f} 元"
+            f"（按剩余股数递减、永不清仓，天然形成底仓；提醒非指令，防抖需连续 3 日维持）"
         )
+    elif suppress_reason:
+        action = "hold"
+        reason = (f"现档{eff_tier}本会触发估值卖出，但按 {suppress_reason} 抑制——"
+                  f"该带不足以支撑卖出结论，须先补齐相应证据")
     else:
         action, reason = "hold", "无卖出许可触发（割肉/估值/趋势均未触发）"
 
