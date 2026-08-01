@@ -107,6 +107,10 @@ A1_A2_DIVERGENCE = 0.25              # 双口径中值偏离 >25% 置 band_fragi
 A1_MIN_PAYOUT = 0.60                 # A-1 参与定带的分红率门槛（辅条件）
 GORDON_MIN_SPREAD = 0.015            # Gordon 分母下限：g 必须 ≤ r − 1.5pp，否则模型发散
 DIVIDENDS_PATH = ROOT / "data/interim/a_share_dividends.csv"
+# §6.5.4 人工重估结论（v1.42）：业务趋势检验只能机械判「有没有连续单向变化」，
+# 判不了「这个变化是否不可逆」——后者要看幅度、要看一致预期是否确认。逐票判定的
+# 结论落在此文件，供建带引擎读取，使人工判断可复算、可审计，而不是散在正文里。
+MANUAL_REVALUATION = ROOT / "data/interim/manual_revaluation_2026-08-01.csv"
 
 # §6.5.4 运行率硬校验（v1.36，OI-001 的原始第 5 条，此前只写在文档、引擎实现 0 次）
 RUN_RATE_FLOOR = 0.85            # 锚 < TTM 归母 × 0.85 即触发周期假设标记
@@ -115,6 +119,19 @@ RUN_RATE_FLOOR = 0.85            # 锚 < TTM 归母 × 0.85 即触发周期假�
 # 但也肯定不是无限期，取决于技术门槛以及新玩家是否大幅扩产」。
 # 价值 = Σ(t=1..N) 运行率利润/(1+r)^t + 中枢利润 × 终值PE /(1+r)^N
 EXCESS_YEARS_LADDER = (0, 2, 4, 6)      # 敏感度阶梯
+
+
+_MANUAL_CACHE: dict[str, dict] = {}
+
+
+def manual_verdict(code: str) -> dict | None:
+    """逐票人工重估结论。`pe_median_usable`: yes 可沿用历史 PE 中位／no 不可信／watch 维持但标脆弱。"""
+    if not _MANUAL_CACHE and MANUAL_REVALUATION.exists():
+        with MANUAL_REVALUATION.open(encoding="utf-8-sig") as handle:
+            for row in csv.DictReader(handle):
+                _MANUAL_CACHE[row["security_code"].zfill(6)] = row
+        _MANUAL_CACHE.setdefault("__loaded__", {})
+    return _MANUAL_CACHE.get(code)
 
 
 _DIVIDEND_CACHE: dict[str, dict] = {}
@@ -171,6 +188,37 @@ def _peer_universe() -> tuple[dict[str, str], dict[str, float]]:
             medians[path.stem] = float(value)
     _PEER_CACHE["data"] = (industries, medians)
     return _PEER_CACHE["data"]
+
+
+def consensus_revision(evidence: dict, year_offset: int = 0) -> tuple[str, float | None, int]:
+    """一致预期的**修正方向**（v1.42，用户指令）——研报在上调还是下调。
+
+    财务数据滞后、研报前瞻，但研报对周期股有顺周期外推的通病（§6.3.5）。修正方向是
+    对这一通病的安全阀：上调说明周期未见顶，下调是最早的转向信号。
+    做法：把同一预测年的研报按发布日排序、对半分，比较较新半数与较旧半数的归母中位数。
+    """
+    detail = (evidence.get("profit_forecast") or {}).get("ycmx") or []
+    stats = (evidence.get("profit_forecast") or {}).get("yctj_list") or []
+    years = sorted({int(r["YEAR"]) for r in stats if r.get("YEAR_MARK") == "E"})
+    if not years:
+        return "", None, 0
+    target = years[min(year_offset, len(years) - 1)]
+    points = []
+    for report in detail:
+        for slot in (1, 2, 3, 4):
+            if (report.get(f"YEAR{slot}") == target and report.get(f"YEAR_MARK{slot}") == "E"
+                    and report.get(f"PARENT_NETPROFIT{slot}") and report.get("PUBLISH_DATE")):
+                points.append((report["PUBLISH_DATE"][:10], float(report[f"PARENT_NETPROFIT{slot}"])))
+    if len(points) < 4:
+        return "覆盖不足", None, len(points)
+    points.sort()
+    half = len(points) // 2
+    older = statistics.median(v for _, v in points[:half])
+    newer = statistics.median(v for _, v in points[half:])
+    if older <= 0:
+        return "不可算", None, len(points)
+    change = newer / older - 1
+    return ("上调" if change > 0.01 else "下调" if change < -0.01 else "持平"), change, len(points)
 
 
 def business_trend_test(evidence: dict) -> tuple[str, str]:
@@ -554,6 +602,7 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         "multiple_regime_flag": "",
         "implied_return": "",
         "implied_return_tier": "",
+        "manual_verdict": "",
         "band_sensitivity": "",
         "band_fragile": "false",
         "fair_price_low": "",
@@ -703,12 +752,30 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         return revenue * margin / 100, f"{scale_note} {revenue/1e8:.2f}亿 × {weight_note}"
 
     def cyclical_fallback(label: str) -> None:
-        """F-2 / H-2：中枢归母 × 终值 PE 与 BVPS × 自身 PB 中位，取孰低（§6.5.5.1）。"""
+        """F-2 / H-2：中枢归母 × 倍数 与 BVPS × 自身 PB 中位，取孰低（§6.5.5.1）。
+
+        v1.42：中枢盈利**优先取一致预期**（前瞻），历史加权口径退为下位——财务数据滞后，
+        而周期拐点先反映在研报里。安全阀是**修正方向**：一致预期在下调（>5%）时不采信
+        前瞻锚，退回历史加权口径，因为研报对周期股有顺周期外推的通病（§6.3.5）。
+        """
         nonlocal anchor, multiple, source, basis
         mid, mid_basis = mid_cycle_profit()
+        fwd, fwd_count, fwd_year = best_consensus(evidence, (0, 1), min_coverage=3)
+        direction, change, points = consensus_revision(evidence, 0)
+        if fwd and fwd_count >= 3:
+            if direction == "下调" and change is not None and change < -0.05:
+                mid_basis += (f"；⚠一致预期**下调 {abs(change):.1%}**（{points} 份研报），"
+                              f"按 §6.5.5.1 安全阀不采信前瞻锚，沿用历史加权口径")
+            else:
+                mid = fwd
+                mid_basis = (f"{fwd_year}E 一致预期归母中位 {fwd/1e8:.2f}亿（{fwd_count} 家覆盖）"
+                             f"——**前瞻锚优先于历史口径**（财务数据滞后、周期拐点先现于研报）；"
+                             f"预期修正方向 **{direction}"
+                             + (f" {change:+.1%}" if change is not None else "")
+                             + f"**（{points} 份研报按发布日对半比较）")
         own_pe = band.get("pe_ttm_median")
-        # 锚是「当期规模下的正常化盈利」→ 倍数取同期口径（自身 5 年 PE 中位），
-        # 不用终值公式（那是给远期利润锚配的，§6.5.2.1 锚与倍数同期约束）。
+        # 倍数取自身 5 年 PE 中位。锚为 T+1 一致预期时属前瞻 PE 口径（标准做法）；
+        # 远期（T+2/T+3）锚才受 §6.5.2.1 同期约束禁用历史倍数，此处不适用。
         cycle_multiple = own_pe if own_pe and own_pe > 0 else terminal_pe
         if not (mid and cycle_multiple and shares):
             card["note"] = f"{label} 兜底不可算（年报期数不足或缺分层/股本）"
@@ -736,12 +803,32 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
     if tag_letter == "A":
         anchor = ttm(periods, "KCFJCXSYJLR")
         sr = shareholder_return(code)
+        mv = manual_verdict(code)
         multiple, conv = deducted_pe_median(evidence, band.get("pe_ttm_median"))
         source = "own_history_median"
-        basis = (f"A-2：扣非归母 TTM（四单季差分）{anchor/1e8:.2f}亿；"
+        if mv and mv.get("pe_median_usable") == "no":
+            # 人工复核判定劣化确凿 → 历史 PE 中位锚在劣化前的盈利水平上，不可沿用。
+            # 改以一致预期为锚（若覆盖足够），并标脆弱。
+            fwd_a, cnt_a, fy_a = best_consensus(evidence, (0, 1), min_coverage=3)
+            card["band_fragile"] = "true"
+            if fwd_a:
+                anchor = fwd_a
+                card["anchor_metric"] = "forward_normalized_profit"
+                card["manual_verdict"] = mv["verdict"]
+                basis = (f"A-2 人工重估（{mv['verdict']}）：**历史 PE 中位不可沿用**——"
+                         f"{mv['evidence'][:110]}。改以 {fy_a}E 一致预期归母 {fwd_a/1e8:.2f}亿"
+                         f"（{cnt_a} 家）为锚 × 自身 5 年 PE 中位 {multiple}{conv}")
+            else:
+                card["manual_verdict"] = mv["verdict"] + "（一致预期覆盖不足，沿用 A-2 并标脆弱）"
+        elif mv:
+            card["manual_verdict"] = mv["verdict"]
+            if mv.get("pe_median_usable") == "watch":
+                card["band_fragile"] = "true"
+        if not basis:
+            basis = (f"A-2：扣非归母 TTM（四单季差分）{anchor/1e8:.2f}亿；"
                  f"5年 PE 中位 {band.get('pe_ttm_median')} → {multiple}{conv}"
-                 f"（窗口 {band.get('window_start','')[:10]}~{band.get('window_end','')[:10]}，"
-                 f"现分位 {band.get('pe_ttm_pct_rank')}%）") if anchor and multiple else ""
+                     f"（窗口 {band.get('window_start','')[:10]}~{band.get('window_end','')[:10]}，"
+                     f"现分位 {band.get('pe_ttm_pct_rank')}%）") if anchor and multiple else ""
         # A-1（§6.5.3 双口径强制，v1.34 结 OI-008）：股东回报 Gordon 口径
         if sr and anchor and multiple and shares:
             roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
@@ -1079,6 +1166,12 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                  f"账面价值为唯一可计量锚；须按 §6.5.3 通用校验一核对清算价值地板")
         card["note"] = ""
 
+
+    mv_any = manual_verdict(code)
+    if mv_any and not card.get("manual_verdict"):
+        card["manual_verdict"] = mv_any["verdict"]
+        if mv_any.get("pe_median_usable") in ("no", "watch"):
+            card["band_fragile"] = "true"
 
     if anchor and multiple:
         card["anchor_value"] = f"{anchor/1e8:.4f}" if card["anchor_scope"] != "per_share" else f"{anchor:.4f}"

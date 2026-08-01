@@ -27,6 +27,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import json  # noqa: E402
+
 from a_share_quotes import fetch_spot_quotes  # noqa: E402
 from build_a_share_core_valuation_pool import effective_valuation_tier  # noqa: E402
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log  # noqa: E402
@@ -59,13 +61,46 @@ CARD_FIELDS = [
     "growth_option_value", "growth_option_share", "growth_option_evidence_level",
     "growth_option_probability", "growth_option_milestones",
     "base_band_low", "base_band_high",
-    "anchor_quality", "upgrade_path", "band_is_floor", "cycle_assumption", "scenario_band_low", "scenario_band_high", "cycle_note", "implied_excess_years", "multiple_regime_flag", "implied_return", "implied_return_tier",
+    "anchor_quality", "upgrade_path", "band_is_floor", "cycle_assumption", "scenario_band_low", "scenario_band_high", "cycle_note", "implied_excess_years", "multiple_regime_flag", "implied_return", "implied_return_tier", "manual_verdict",
 ]
 
 
 def read(path: Path) -> list[dict]:
     with path.open(encoding="utf-8-sig") as handle:
         return list(csv.DictReader(handle))
+
+
+EVIDENCE_DIR = ROOT / "data/interim/valuation_evidence"
+REPORT_TYPE_LABEL = {"年报": "年报", "中报": "中报", "一季报": "一季报", "三季报": "三季报"}
+
+
+def evidence_cutoff(code: str) -> tuple[str, str]:
+    """证据文件里**最新披露的公告日与类型**（v1.42）。
+
+    此前 `evidence_available_at` / `valuation_evidence_event` 从不由流水线刷新——早期用
+    一次性脚本回填后就冻住了，导致每次重新取证都对 §7.5.5 待复核队列不可见：证据里已有
+    7 月中报/预告，账面仍写 4 月一季报，队列因此永远清不掉（判例：中国神华证据 07-15 /
+    账面 04-25，宁德时代 07-25 / 04-16，金山办公 07-29 / 04-24）。
+    """
+    path = EVIDENCE_DIR / f"{code}.json"
+    if not path.exists():
+        return "", ""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:                                     # noqa: BLE001
+        return "", ""
+    candidates: list[tuple[str, str]] = []
+    for period in data.get("finance_periods") or []:
+        if period.get("NOTICE_DATE"):
+            label = REPORT_TYPE_LABEL.get(period.get("REPORT_TYPE"), period.get("REPORT_TYPE") or "定期报告")
+            candidates.append((period["NOTICE_DATE"][:10], label))
+    for item in data.get("performance_express") or []:
+        if item.get("NOTICE_DATE"):
+            candidates.append((item["NOTICE_DATE"][:10], "业绩快报"))
+    for item in data.get("performance_predicts") or []:
+        if item.get("NOTICE_DATE"):
+            candidates.append((item["NOTICE_DATE"][:10], "业绩预告"))
+    return max(candidates) if candidates else ("", "")
 
 
 def exchange_of(code: str) -> str:
@@ -153,7 +188,14 @@ def main() -> int:
             row["fair_price_basis"] = f"§6.5.2.1 锚定量不可得，判无法估值：{reason}"
             stats["unvaluable"] += 1
 
-        row["valuation_reviewed_at"] = args.as_of
+        cutoff_date, cutoff_event = evidence_cutoff(code)
+        if cutoff_date:
+            row["evidence_available_at"] = cutoff_date
+            row["valuation_evidence_event"] = cutoff_event
+            # 复核日按实际证据日回填：设为今日会让 §7.5.5 队列静默为空（安全方向是宁可多入队列）
+            row["valuation_reviewed_at"] = cutoff_date
+        else:
+            row["valuation_reviewed_at"] = args.as_of
         row["valuation_method"] = f"工作流 v1.30 全量重建（{TAG_NAMES.get(letter, letter)}）"
 
     if args.dry_run:
