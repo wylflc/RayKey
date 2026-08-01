@@ -74,6 +74,11 @@ TERMINAL_G = 0.03
 # §6.5.4 中枢窗口结构断点检验（v1.32，OI-007）：近 5 年净利率中位与前 5 年中位
 # 偏离 >50% 即判存在结构断点，窗口收缩到近 5 年——否则结构性成长会被当成周期波动。
 STRUCTURAL_BREAK_THRESHOLD = 0.50
+# §6.5.4 营收周期性判据（v1.38，结 OI-010）：以「近 10 年营收下降年占比」区分
+# 结构性成长与周期摆动。中枢口径用当期营收缩放的前提是营收本身不强周期；对存储器、
+# 煤炭这类价与量同向摆动的品种，当期（峰值）营收缩放等于只归一化了利润率、没归一化规模。
+REVENUE_GROWTH_MAX_DOWN = 0.20     # 下降年占比 ≤20% → 结构性成长，用当期营收
+REVENUE_CYCLE_MIN_DOWN = 0.30      # 下降年占比 ≥30% → 周期摆动，用跨周期营收中位
 PEER_MULTIPLE_MIN_GROUP = 3      # 同业组最少家数
 PEER_MULTIPLE_LEVELS = (3, 2)    # 只用三级/二级行业；退到一级会把整个板块当同业
 AS_OF_YEAR = 2026                # 折现基准年（现值口径的 T0）
@@ -94,6 +99,11 @@ DIVIDENDS_PATH = ROOT / "data/interim/a_share_dividends.csv"
 
 # §6.5.4 运行率硬校验（v1.36，OI-001 的原始第 5 条，此前只写在文档、引擎实现 0 次）
 RUN_RATE_FLOOR = 0.85            # 锚 < TTM 归母 × 0.85 即触发周期假设标记
+# §6.5.4 超额利润持续年数（v1.38，结 OI-011）：把「周期顶 vs 结构性变化」的二选一，
+# 换成一个连续量——超额利润还能持续几年。用户原述：「高利润持续的时间可能会比较长，
+# 但也肯定不是无限期，取决于技术门槛以及新玩家是否大幅扩产」。
+# 价值 = Σ(t=1..N) 运行率利润/(1+r)^t + 中枢利润 × 终值PE /(1+r)^N
+EXCESS_YEARS_LADDER = (0, 2, 4, 6)      # 敏感度阶梯
 
 
 _DIVIDEND_CACHE: dict[str, dict] = {}
@@ -150,6 +160,43 @@ def _peer_universe() -> tuple[dict[str, str], dict[str, float]]:
             medians[path.stem] = float(value)
     _PEER_CACHE["data"] = (industries, medians)
     return _PEER_CACHE["data"]
+
+
+def excess_profit_value(run_rate: float, mid_cycle: float, years: int,
+                        rate: float, terminal_pe: float) -> float:
+    """中枢价值 + N 年**超额**利润现值（§6.5.4，OI-011）。
+
+    `价值 = 中枢利润 × 终值PE + Σ(t=1..N) (运行率 − 中枢) / (1+r)^t`
+
+    超额是 `运行率 − 中枢`，不是运行率本身；终值是从当下起算的永续，不再按 N 折现——
+    首版两处都写错（把全部利润当超额、又对终值二次折现），结果价值随 N 反而下降。
+    """
+    base = mid_cycle * terminal_pe
+    excess = max(0.0, run_rate - mid_cycle)
+    return base + sum(excess / (1 + rate) ** t for t in range(1, years + 1))
+
+
+def implied_excess_years(market_cap: float, run_rate: float, mid_cycle: float,
+                         rate: float, terminal_pe: float, ladder_max: int = 20) -> float | None:
+    """从现价**反解**市场隐含的超额利润年数。
+
+    这比「模型说贵/便宜」有用得多：它把结论翻译成一句可以被供给侧证据检验的话——
+    「市场在为 N 年的超额利润定价」，而 N 能不能成立取决于扩产周期、技术门槛、
+    新进入者（长鑫/长江存储一类）的产能规划，那是可以去查证的事实。
+    """
+    if run_rate <= 0 or mid_cycle <= 0 or terminal_pe <= 0 or run_rate <= mid_cycle:
+        return None
+    low = excess_profit_value(run_rate, mid_cycle, 0, rate, terminal_pe)
+    if market_cap <= low:
+        return 0.0
+    prior = low
+    for n in range(1, ladder_max + 1):
+        value = excess_profit_value(run_rate, mid_cycle, n, rate, terminal_pe)
+        if market_cap <= value:
+            span = value - prior
+            return round(n - 1 + (market_cap - prior) / span, 1) if span > 0 else float(n)
+        prior = value
+    return None      # 即使 ladder_max 年超额也接不上现价 → 分歧不在持续年数，在中枢水平本身
 
 
 def latest_quarter_annualized(periods: list[dict], field: str = "PARENTNETPROFIT") -> tuple[float | None, str]:
@@ -421,6 +468,9 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         "scenario_band_low": "",
         "scenario_band_high": "",
         "cycle_note": "",
+        "implied_excess_years": "",
+        "excess_years_ladder": "",
+        "cycle_gap_kind": "",
         "band_sensitivity": "",
         "band_fragile": "false",
         "fair_price_low": "",
@@ -516,6 +566,21 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         revenue = ttm(periods, "TOTALOPERATEREVE")
         if len(margins) < 5 or not revenue:
             return None, ""
+        # OI-010：营收本身强周期时，规模基准改用跨周期营收中位
+        annual_rev = [float(r["TOTALOPERATEREVE"]) for r in annuals[:10]
+                      if r.get("TOTALOPERATEREVE") is not None]
+        scale_note = "当期 TTM 营收"
+        if len(annual_rev) >= 6:
+            downs = sum(1 for i in range(len(annual_rev) - 1) if annual_rev[i] < annual_rev[i + 1])
+            down_ratio = downs / (len(annual_rev) - 1)
+            rev_median = statistics.median(annual_rev)
+            if down_ratio >= REVENUE_CYCLE_MIN_DOWN:
+                revenue, scale_note = rev_median, f"跨周期营收中位（营收下降年占比 {down_ratio:.0%} ≥30%，判周期摆动）"
+            elif down_ratio > REVENUE_GROWTH_MAX_DOWN:
+                revenue = (revenue + rev_median) / 2
+                scale_note = f"当期与跨周期营收中位取均值（下降年占比 {down_ratio:.0%}，判混合）"
+            else:
+                scale_note = f"当期 TTM 营收（营收下降年占比 {down_ratio:.0%} ≤20%，判结构性成长）"
         recent = statistics.median(margins[:5])
         window, label = margins[:10], "近 10 年"
         if len(margins) >= 10:
@@ -526,7 +591,7 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         if margin <= 0:
             return None, ""
         return revenue * margin / 100, (
-            f"TTM 营收 {revenue/1e8:.2f}亿 × {label}净利率中位 {margin:.2f}%")
+            f"{scale_note} {revenue/1e8:.2f}亿 × {label}净利率中位 {margin:.2f}%")
 
     def cyclical_fallback(label: str) -> None:
         """F-2 / H-2：中枢归母 × 终值 PE 与 BVPS × 自身 PB 中位，取孰低（§6.5.5.1）。"""
@@ -905,8 +970,35 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                 card["cycle_assumption"] = "mean_reversion_assumed"
                 card["scenario_band_low"], card["scenario_band_high"] = f"{scen_low:.4g}", f"{scen_high:.4g}"
                 card["band_fragile"] = "true"
+                # OI-011：反解市场隐含的超额利润年数 + 输出年数阶梯
+                cap_now = float(quote.get("total_market_cap") or 0)
+                t_rate = terminal_rate or 0.10
+                # 阶梯必须与带用**同一个倍数**，否则 N=0 不还原本行的带、两者不可比。
+                # 首版阶梯用终值 PE 而带用自身 PE 中位，神火股份 N=0 得 28.81 而带顶仅 20.99。
+                t_pe = float(multiple) * (low_coef + high_coef) / 2
+                # 超额用 TTM（稳定）而非 max(TTM, 单季年化)——单季年化用于情景带、不用于反解
+                implied = implied_excess_years(cap_now, run_rate, anchor_abs, t_rate, t_pe) if cap_now else None
+                ladder = "；".join(
+                    f"N={n}年→{excess_profit_value(run_rate, anchor_abs, n, t_rate, t_pe)/1e8/shares:.4g}"
+                    for n in EXCESS_YEARS_LADDER) if shares else ""
+                excess_now = run_rate - anchor_abs
+                if implied is not None:
+                    card["implied_excess_years"] = f"{implied}"
+                elif cap_now and excess_now > 0:
+                    card["implied_excess_years"] = ">20"
+                    card["cycle_gap_kind"] = "中枢水平分歧"
+                else:
+                    card["cycle_gap_kind"] = "运行率未超中枢"
+                card["excess_years_ladder"] = ladder
                 card["cycle_note"] = (
-                    f"⚠周期假设显式化：锚 {anchor_abs/1e8:.1f}亿 仅为 TTM 归母 {run_rate/1e8:.1f}亿 的 "
+                    (f"市场隐含超额利润年数 **N≈{implied} 年**（现价反解）；每股价值阶梯：{ladder}。"
+                     f"N 能否成立取决于扩产周期、技术门槛与新进入者产能规划——**可查证的事实**，"
+                     f"不是估值参数。 ‖ " if implied is not None else
+                     (f"⚑ 即使超额利润持续 20 年也接不上现价（阶梯：{ladder}）——**分歧不在持续年数，"
+                      f"在中枢水平本身**：市场认为的正常盈利能力显著高于历史 10 年可支持的水平。"
+                      f"应先复核中枢口径（营收基准、净利率窗口）而非讨论周期长度。 ‖ "
+                      if card.get("cycle_gap_kind") == "中枢水平分歧" else ""))
+                    + f"⚠周期假设显式化：锚 {anchor_abs/1e8:.1f}亿 仅为 TTM 归母 {run_rate/1e8:.1f}亿 的 "
                     f"{ratio:.2f} 倍（最近季年化 {(quarter_rate or 0)/1e8:.1f}亿，{run_date}）"
                     f"——本带**假设均值回归**。"
                     f"若为结构性变化（供给纪律、格局重构、需求台阶），运行率延续情景的带为 "

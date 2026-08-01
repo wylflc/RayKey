@@ -679,6 +679,7 @@ def classify_signal(
 
     signals: list[str] = []
     wait_reasons: list[str] = []
+    limit_up_tag = ""
     if break_periods and effective_volume and close_location >= 0.6:
         signals.append(f"8.7.1 放量突破前高({','.join(break_periods)}日)")
     elif break_periods and effective_volume:
@@ -695,8 +696,12 @@ def classify_signal(
     shrink_volume = float(row["volume"]) <= vol_ma20 * 1.2 or (
         prev_vol_ma20 > 0 and prev_vol >= prev_vol_ma20 * 1.5 and float(row["volume"]) <= prev_vol * 0.85
     )
+    # §8.7.3 v1.38（结 OI-012）：降为**提醒信号**，不作买入触发。
+    # 估值合格样本（70 家 / 约 2 年）重测：仅 25 次触发，涨停日买入 20 日中位 −6.0%/胜率 28%，
+    # 次日买入 −9.2%/16%，用户提议的「次日涨幅 ≤3% 才买」仅 5 个样本、−9.6%/20%——三种口径
+    # 全负。形态本身有识别价值（5 日中位曾达 +3.7%），但持有到 20 日为负期望。
     if float(row["pct_chg"]) >= limit_up_pct and shrink_volume:
-        signals.append("8.7.3 缩量涨停")
+        limit_up_tag = "8.7.3 缩量涨停[提醒·历史20日期望为负(-6%/胜率28%)]"
 
     up_days = sum(1 for item in rows[index - 4 : index + 1] if float(item["close"]) > float(item["open"]))
     if up_days >= 4 and 0.08 <= ret_5d <= 0.25 and daily_bull and not (close_location < 0.4 and day_vol_ratio >= 1.8):
@@ -717,6 +722,8 @@ def classify_signal(
     # §8.7.10-8.7.12 回撤承接型（v1.37）：现有信号全是向上穿越触发，本组补「先涨后回、
     # 在关键位置获得支撑再走」这一类——用户点名的三种形态，缺一不可脚本化。
     observation_tags: list[str] = []
+    if limit_up_tag:
+        observation_tags.append(limit_up_tag)
     # 8.7.11 通过 §12 回放（77 次触发，20 日中位 +1.4%、胜率 51%，达到全信号基准），作正式信号。
     pullback_bo = pullback_after_breakout(rows, index, breakout_days)
     if pullback_bo:
