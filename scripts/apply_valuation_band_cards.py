@@ -59,6 +59,7 @@ CARD_FIELDS = [
     "growth_option_value", "growth_option_share", "growth_option_evidence_level",
     "growth_option_probability", "growth_option_milestones",
     "base_band_low", "base_band_high",
+    "anchor_quality", "upgrade_path", "band_is_floor",
 ]
 
 

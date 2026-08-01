@@ -163,6 +163,16 @@ def build_pool(
         # 但不触发 §14 提醒卖出（反推带的偏差双向，只切买入侧是唯一不制造新错误动作的过渡态）。
         # backfill（模型带、仅建带卡未回填）→ 限期登记义务，买入资格不变（同 §10.4 研究档案项）。
         band_problems, band_severity = check_band_card(row)
+        # §6.5.5.1 第 3 条：下限性质的兜底带（M-2/P-2/D≤1家覆盖，明确不含管线/订单/成长）
+        # 只在「连下限都便宜」时有信息量；反向读作「贵」不成立，故不触发提醒卖出。
+        if str(row.get("band_is_floor", "")).strip().lower() == "true" and state == "trim_alert":
+            state = "holdable"
+        # OI-006 过渡口径：倍数来自未校准的终值 PE = 1/(r−g) 时不触发提醒卖出。
+        # 该参数对全类型给同一倍数、量级未经回放校准（换口径前后 D 类分布整片翻转），
+        # 用它发卖出提醒等于用一个未证参数处置真实仓位。买入侧不放宽——终值倍数偏保守，
+        # 「连保守口径都便宜」是有信息量的；反向读作「贵」不成立。校准落地后删除本段。
+        if row.get("multiple_source") == "required_return" and state == "trim_alert":
+            state = "holdable"
         if not band_problems:
             band_status = "ok"
         elif band_severity == "blocking":
@@ -189,6 +199,9 @@ def build_pool(
                 "matrix_state": state,
                 "band_derivation": row.get("band_derivation", "") or ("fallback" if band_status == "rebuild_required" else ""),
                 "band_status": band_status,
+                "anchor_quality": row.get("anchor_quality", ""),
+                "band_is_floor": row.get("band_is_floor", ""),
+                "upgrade_path": row.get("upgrade_path", ""),
                 "strategy_tag": row.get("strategy_tag", ""),
                 "valuation_tier": valuation_tier or "（空）",
                 "valuation_batch_id": row.get("valuation_batch_id", ""),
@@ -765,6 +778,9 @@ def main() -> None:
         "matrix_state",
         "band_derivation",
         "band_status",
+        "anchor_quality",
+        "band_is_floor",
+        "upgrade_path",
         "strategy_tag",
         "valuation_tier",
         "valuation_batch_id",

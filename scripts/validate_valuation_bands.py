@@ -70,29 +70,29 @@ TYPE_TABLE: dict[str, dict] = {
     },
     "C": {
         "name": "GARP成长型",
-        "anchors": {"forward_normalized_profit": 1},
-        "coefs": {"forward_normalized_profit": (1.0, 1.5)},  # 带系数即 PEG 带
+        "anchors": {"normalized_profit": 1, "realized_growth_profit": 1, "repaired_normalized_profit": 1, "bvps": 1, "forward_normalized_profit": 1},
+        "coefs": {"normalized_profit": {"L1": (0.90, 1.15), "L2": (0.85, 1.05), "L3": (0.80, 1.00)}, "realized_growth_profit": (1.0, 1.5), "repaired_normalized_profit": (0.85, 1.00), "bvps": (0.85, 1.00), "forward_normalized_profit": (1.0, 1.5)},  # 带系数即 PEG 带
     },
     "D": {
         "name": "产业链爆发/关键瓶颈型",
-        "anchors": {"normalized_profit_2_3y": 1},
-        "coefs": {"normalized_profit_2_3y": (0.80, 1.00)},
+        "anchors": {"normalized_profit": 1, "bvps": 1, "normalized_profit_2_3y": 1},
+        "coefs": {"normalized_profit": (0.80, 1.00), "bvps": (0.85, 1.00), "normalized_profit_2_3y": (0.80, 1.00)},
     },
     "E": {
         "name": "落难白马型",
-        "anchors": {"repaired_normalized_profit": 1},
-        "coefs": {"repaired_normalized_profit": (0.85, 1.00)},
+        "anchors": {"bvps": 1, "repaired_normalized_profit": 1},
+        "coefs": {"bvps": (0.85, 1.00), "repaired_normalized_profit": (0.85, 1.00)},
     },
     "F": {
         "name": "资源NAV型",
-        "anchors": {"resource_nav": 1},
-        "coefs": {"resource_nav": (0.85, 1.00)},
+        "anchors": {"mid_cycle_profit": 1, "bvps": 1, "resource_nav": 1},
+        "coefs": {"mid_cycle_profit": (0.85, 1.00), "bvps": (0.85, 1.00), "resource_nav": (0.85, 1.00)},
     },
     "H": {
         "name": "成本曲线周期型",
-        "anchors": {"mid_cycle_ebitda": 1, "mid_cycle_profit": 1},
+        "anchors": {"bvps": 1, "mid_cycle_ebitda": 1, "mid_cycle_profit": 1},
         # 成本曲线分位前 25% 可取 (0.90, 1.05)；两组均合法，见 §6.5.2
-        "coefs": {"mid_cycle_ebitda": [(0.85, 1.00), (0.90, 1.05)],
+        "coefs": {"bvps": (0.85, 1.00), "mid_cycle_ebitda": [(0.85, 1.00), (0.90, 1.05)],
                   "mid_cycle_profit": [(0.85, 1.00), (0.90, 1.05)]},
     },
     "J": {
@@ -102,23 +102,23 @@ TYPE_TABLE: dict[str, dict] = {
     },
     "K": {
         "name": "稳态现金分配型",
-        "anchors": {"dps": 2},
-        "coefs": {},
+        "anchors": {"normalized_profit": 1, "bvps": 1, "dps": 2},
+        "coefs": {"normalized_profit": {"L1": (0.90, 1.15), "L2": (0.85, 1.05), "L3": (0.80, 1.00)}, "bvps": (0.85, 1.00), },
     },
     "M": {
         "name": "管线/研发资产型",
-        "anchors": {"sotp_value": 1},
-        "coefs": {"sotp_value": (0.80, 1.00)},
+        "anchors": {"forward_normalized_profit": 1, "bvps": 1, "sotp_value": 1},
+        "coefs": {"forward_normalized_profit": (0.80, 1.00), "bvps": (0.85, 1.00), "sotp_value": (0.80, 1.00)},
     },
     "N": {
         "name": "订阅/递延收入型",
-        "anchors": {"epv_profit": 1},
-        "coefs": {"epv_profit": (0.85, 1.00)},
+        "anchors": {"bvps": 1, "epv_profit": 1},
+        "coefs": {"bvps": (0.85, 1.00), "epv_profit": (0.85, 1.00)},
     },
     "P": {
         "name": "在手订单兑现型",
-        "anchors": {"backlog_annual_profit": 1},
-        "coefs": {"backlog_annual_profit": (0.80, 1.00)},
+        "anchors": {"forward_normalized_profit": 1, "bvps": 1, "backlog_annual_profit": 1},
+        "coefs": {"forward_normalized_profit": (0.80, 1.00), "bvps": (0.85, 1.00), "backlog_annual_profit": (0.80, 1.00)},
     },
 }
 
