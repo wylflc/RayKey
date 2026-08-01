@@ -66,7 +66,7 @@
 
 ## v1.27（2026-08-01）质量分层与准入矩阵重构
 
-设计与证据：`docs/000_Ashare_tiering_v2_design.md`、`docs/000_Ashare_moat_strength_rubric.md`；复核日志 `data/interim/evidence_review_log.md`。
+设计与证据：`docs/Ashare_tiering_v2_design.md`、`docs/Ashare_moat_strength_rubric.md`；复核日志 `data/interim/evidence_review_log.md`。
 
 **改动**：五档→三档（L1 强/L2 中/L3 弱护城河，由 Q1×Q2 定性规则判定）｜分层不再改变名单归属｜金字塔要求退役｜准入矩阵改三态（可买/可持有/提醒卖出）｜§8.10 B、D 档删除｜watch_only 层退役｜估值卖出改按档分级+减仓梯、废止「留底≥建仓金额」｜个人体系 §12 整节废止（含十倍股保护），R7 评估见其 §17.9｜§8.13 锚点按新档语义重述。
 

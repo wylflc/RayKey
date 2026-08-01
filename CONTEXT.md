@@ -22,7 +22,7 @@ AShareQuant models listed-company research for mainland China, Hong Kong, and U.
 
 **Watchlist** — the set of listed companies retained for ongoing attention after business-quality screening. Not a buy list: watchlist membership says the business deserves attention, not that the security is worth owning.
 
-**Quality Tier** — a business-quality rank assigned only to worth-attention companies, ignoring current price. Current price belongs to **Valuation Assessment** and must never move a tier. Permanent removal from research is expressed through **Attention Class**, not through a tier. Tier definitions and the tier's exact relationship to watchlist membership are governed by workflow §5.7/§5.8; a scored redesign is in progress in `docs/000_Ashare_tiering_v2_design.md` and is not yet live.
+**Quality Tier** — a business-quality rank assigned only to worth-attention companies, ignoring current price. Current price belongs to **Valuation Assessment** and must never move a tier. Permanent removal from research is expressed through **Attention Class**, not through a tier. Tier definitions and the tier's exact relationship to watchlist membership are governed by workflow §5.7/§5.8; a scored redesign is in progress in `docs/Ashare_tiering_v2_design.md` and is not yet live.
 
 **Insufficient Disclosure** — a narrow status for a company too newly listed to have enough periodic reports *and* lacking authoritative public business descriptions. It does not mean "not yet reviewed".
 
