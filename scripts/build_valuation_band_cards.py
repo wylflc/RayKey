@@ -41,15 +41,15 @@ EVIDENCE_DIR = ROOT / "data/interim/valuation_evidence"
 TYPE_SPEC = {
     "A": ("normalized_profit", 1, None, True),                # A-2；系数按分层，见 A2_COEFS
     "C": ("forward_normalized_profit", 1, (1.0, 1.5), True),  # 系数即 PEG 带
-    "D": ("normalized_profit_2_3y", 1, (0.80, 1.00), True),
+    "D": ("normalized_profit_2_3y", 1, (0.90, 1.10), True),   # 锚已是保守现值，带围绕它而非再打折
     "E": ("repaired_normalized_profit", 1, (0.85, 1.00), True),
     "F": ("resource_nav", 1, (0.85, 1.00), True),             # primary 需储量；F-2 兜底本地可算
     "H": ("mid_cycle_profit", 1, (0.85, 1.00), True),
     "J": ("bvps", 1, (0.90, 1.10), True),
     "K": ("dps", 2, (1.0, 1.0), True),                        # primary 需分红率；K-2 兜底同 A-2
-    "M": ("sotp_value", 1, (0.80, 1.00), True),               # primary 需管线；M-2 为不含管线的下限带
+    "M": ("sotp_value", 1, (0.90, 1.10), True),               # primary 需管线；M-2 为不含管线的下限带
     "N": ("epv_profit", 1, (0.85, 1.00), True),               # primary 需同业利润率；N-2 用自身峰值
-    "P": ("backlog_annual_profit", 1, (0.80, 1.00), True),    # primary 需订单；P-2 为不含订单的下限带
+    "P": ("backlog_annual_profit", 1, (0.90, 1.10), True),    # primary 需订单；P-2 为不含订单的下限带
 }
 
 # §6.5.2 A-2 带系数按质量分层分档（v1.30，OI-004）
@@ -105,6 +105,30 @@ def _peer_universe() -> tuple[dict[str, str], dict[str, float]]:
             medians[path.stem] = float(value)
     _PEER_CACHE["data"] = (industries, medians)
     return _PEER_CACHE["data"]
+
+
+def deducted_pe_median(evidence: dict, pe_median: float | None) -> tuple[float | None, str]:
+    """把**归母口径**的 PE 中位换算成**扣非口径**（v1.33）。
+
+    数据源的 `pe_ttm_median` = 市值 ÷ 归母TTM，而 A-2/E/K-2 的锚是**扣非归母**。
+    两者口径不同，直接相乘会系统性低估：扣非 < 归母，低估幅度即 (1 − 扣非/归母)。
+    实测美的集团 6.1%、宁德时代 11.0%、东阿阿胶 8.1%（茅台 1.00 无影响）。
+
+    换算：`PE扣非中位 = PE归母中位 ÷ 历史(扣非/归母)中位`。
+    """
+    if not pe_median:
+        return None, ""
+    ratios = []
+    for row in annual_rows(evidence.get("finance_periods") or [])[:8]:
+        deducted, parent = row.get("KCFJCXSYJLR"), row.get("PARENTNETPROFIT")
+        if deducted and parent and float(parent) > 0:
+            ratios.append(float(deducted) / float(parent))
+    if not ratios:
+        return pe_median, "（无扣非/归母历史，未作口径换算）"
+    ratio = statistics.median(ratios)
+    if not 0.3 < ratio < 1.5:
+        return pe_median, f"（扣非/归母中位 {ratio:.3f} 异常，未换算）"
+    return round(pe_median / ratio, 2), f"（已按历史扣非/归母中位 {ratio:.3f} 换算为扣非口径）"
 
 
 def peer_multiple(code: str) -> tuple[float | None, str]:
@@ -424,10 +448,11 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
 
     if tag_letter == "A":
         anchor = ttm(periods, "KCFJCXSYJLR")
-        multiple = band.get("pe_ttm_median")
+        multiple, conv = deducted_pe_median(evidence, band.get("pe_ttm_median"))
         source = "own_history_median"
         basis = (f"扣非归母 TTM（四单季差分）{anchor/1e8:.2f}亿；"
-                 f"5年 PE 中位 {multiple}（窗口 {band.get('window_start','')[:10]}~{band.get('window_end','')[:10]}，"
+                 f"5年 PE 中位 {band.get('pe_ttm_median')} → {multiple}{conv}"
+                 f"（窗口 {band.get('window_start','')[:10]}~{band.get('window_end','')[:10]}，"
                  f"现分位 {band.get('pe_ttm_pct_rank')}%）") if anchor and multiple else ""
     elif tag_letter == "C":
         value, count, year = best_consensus(evidence, (0, 1), min_coverage=2)
@@ -553,10 +578,11 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         source = "own_history_median"
         card["anchor_quality"] = "fallback"
         card["anchor_metric"] = "normalized_profit"
+        multiple, conv = deducted_pe_median(evidence, multiple)
         low_coef, high_coef = A2_COEFS.get(tier_key, (0.85, 1.05))
         card["band_low_coef"], card["band_high_coef"] = low_coef, high_coef
         card["upgrade_path"] = "可持续分红率（分红预案/章程承诺/近三年实际）→ Gordon DPS/(r−g)"
-        basis = (f"K-2 兜底：扣非归母 TTM {anchor/1e8:.2f}亿 × 自身 5 年 PE 中位 {multiple}"
+        basis = (f"K-2 兜底：扣非归母 TTM {anchor/1e8:.2f}亿 × 自身 5 年 PE 中位 {multiple}{conv}"
                  f"（稳态公司的 PE 中枢回归；primary 的 DDM 待补分红率）") if anchor and multiple else ""
     elif tag_letter == "N":
         revenue = ttm(periods, "TOTALOPERATEREVE")

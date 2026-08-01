@@ -76,7 +76,7 @@ TYPE_TABLE: dict[str, dict] = {
     "D": {
         "name": "产业链爆发/关键瓶颈型",
         "anchors": {"normalized_profit": 1, "bvps": 1, "normalized_profit_2_3y": 1},
-        "coefs": {"normalized_profit": (0.80, 1.00), "bvps": (0.85, 1.00), "normalized_profit_2_3y": (0.80, 1.00)},
+        "coefs": {"normalized_profit": (0.90, 1.10), "bvps": (0.85, 1.00), "normalized_profit_2_3y": (0.90, 1.10)},
     },
     "E": {
         "name": "落难白马型",
@@ -108,7 +108,7 @@ TYPE_TABLE: dict[str, dict] = {
     "M": {
         "name": "管线/研发资产型",
         "anchors": {"forward_normalized_profit": 1, "bvps": 1, "sotp_value": 1},
-        "coefs": {"forward_normalized_profit": (0.80, 1.00), "bvps": (0.85, 1.00), "sotp_value": (0.80, 1.00)},
+        "coefs": {"forward_normalized_profit": (0.90, 1.10), "bvps": (0.85, 1.00), "sotp_value": (0.90, 1.10)},
     },
     "N": {
         "name": "订阅/递延收入型",
@@ -118,7 +118,7 @@ TYPE_TABLE: dict[str, dict] = {
     "P": {
         "name": "在手订单兑现型",
         "anchors": {"forward_normalized_profit": 1, "bvps": 1, "backlog_annual_profit": 1},
-        "coefs": {"forward_normalized_profit": (0.80, 1.00), "bvps": (0.85, 1.00), "backlog_annual_profit": (0.80, 1.00)},
+        "coefs": {"forward_normalized_profit": (0.90, 1.10), "bvps": (0.85, 1.00), "backlog_annual_profit": (0.90, 1.10)},
     },
 }
 
