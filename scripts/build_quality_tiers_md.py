@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Render the reading-version quality tier file from the tier CSV (工作流 §5.7).
+"""Render the quality tier detail file from the tier CSV (工作流 §5.7).
+
+**不再是 000_ 用户必读文件（2026-08-01）**：池阅读版自 v1.39 起已带质量档与参考分，
+本文件唯一的独有内容是 `tier_reason`（平均 25 字，多为模板句）。保留为分层明细的
+可查文件，去掉 000_ 前缀——该前缀按 CLAUDE.md 专留给用户直接打开阅读的文件。
 
 The MD used to be maintained by hand and drifted badly — it still described the
 v17 five-tier ladder (L1-L5) months after v1.27 replaced it with three tiers,
@@ -24,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 TAGS = ROOT / "data/interim/strategy_tag_map.csv"
 POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
-OUT = ROOT / "data/processed/000_a_share_watchlist_quality_tiers.md"
+OUT = ROOT / "data/processed/a_share_watchlist_quality_tiers.md"
 
 TIER_HEADS = {
     "L1": ("L1 强护城河", "门槛由买不到的要素与压不掉的时间构成，未来 2-3 年无可见侵蚀路径，且生意模式本身不塌陷。允许最低的安全边际要求。"),

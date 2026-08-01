@@ -44,7 +44,7 @@
 | `data/raw/snapshots/a_share_securities_YYYYMMDD.csv` | 证券名单的带日期不可变快照（每次更新时自动另存，ADR-0001）；主路径仅保留最新版 |
 | `data/processed/a_share_attention_triage.csv` | A股第一轮三类初筛结果：值得关注公司、临界待定公司、垃圾公司 |
 | `data/processed/a_share_watchlist_quality_tiers.csv` | A股值得关注公司质量分层结构化结果 |
-| `data/processed/000_a_share_watchlist_quality_tiers.md` | A股值得关注公司质量分层阅读版 |
+| `data/processed/a_share_watchlist_quality_tiers.md` | A股质量分层明细（含定档理由；**非 000_ 必读文件**，池阅读版已带质量档与参考分） |
 | `data/processed/a_share_core_valuation_pool.csv` | L1-L3 估值合格池机器口径（§6.2.1 矩阵物化，含 `pool_layer` 与 `total_market_cap_bn`） |
 | `data/processed/000_a_share_core_valuation_pool.md` | L1-L3 全量 worth_attention 单一列表阅读版（v1.05）：每日扫描时按行情快照刷新 现价/空间/PE/PB，档位按 §6.2.1.6 价格自动定档（与审定档不同显示 `审定档→现档`），尾列 估值时间/估值事件（v1.08-v1.09，业绩预告不入表）；可买资格由质量×当日档位按 §6.2.1 判定；文末附**海外关注清单**（非A股观察口径，§6.8，不可买） |
 | `data/interim/pool_effective_tiers.csv` | 当日有效档位快照（价格自动定档结果），供次日刷新差分出档位变化名单（§6.7.7） |

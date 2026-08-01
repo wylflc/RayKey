@@ -198,6 +198,7 @@ def build_pool(
                 "exchange": infer_exchange(code, tier_row),
                 "quality_tier": quality_tier,
                 "quality_tier_label": row.get("quality_tier") or (tier_row or {}).get("quality_tier_label", ""),
+                "quality_score": (tier_row or {}).get("quality_score", ""),
                 "pool_layer": pool_layer,
                 "matrix_state": state,
                 "band_derivation": row.get("band_derivation", "") or ("fallback" if band_status == "rebuild_required" else ""),
@@ -389,7 +390,14 @@ def build_overseas_section(
     body: list[str] = []
     # 与 A 股主表一致按质量档 L1→L3 排序；稳定排序使同档内保持清单原序（港股→美股→韩股）。
     tier_rank = {tier: index for index, tier in enumerate(("L1", "L2", "L3"))}
-    rows = sorted(rows, key=lambda row: tier_rank.get(normalize_quality_tier(str(row.get("quality_tier", ""))), 99))
+    # v1.39：档内按**参考分**降序（§5.7 参考分只作档内排序展示，不改变矩阵资格）。
+    rows = sorted(
+        rows,
+        key=lambda row: (
+            tier_rank.get(normalize_quality_tier(str(row.get("quality_tier", ""))), 99),
+            -(_to_float(row.get("quality_score")) or 0.0),
+        ),
+    )
     for row in rows:
         market = str(row.get("market_type", "")).upper()
         code = row["security_code"]
@@ -460,6 +468,17 @@ def write_markdown(
     quotes = quotes or {}
     forecasts = forecasts or {}
     prev_tiers = prev_tiers or {}
+    # v1.39：阅读版按 **质量档 L1→L3，档内按参考分降序** 排列（§5.7：参考分只作档内排序
+    # 展示，不改变矩阵资格、不代为定仓位档）。此前按估值表原序，读者无法一眼看出质量梯度。
+    _tier_rank = {tier: index for index, tier in enumerate(("L1", "L2", "L3"))}
+    rows = sorted(
+        rows,
+        key=lambda row: (
+            _tier_rank.get(normalize_quality_tier(str(row.get("quality_tier", ""))), 99),
+            -(_to_float(row.get("quality_score")) or 0.0),
+            str(row.get("security_code", "")),
+        ),
+    )
     disclosures = disclosures or {}
     quote_line = (
         f"现价更新：{format_quote_time(quotes)}（腾讯行情快照，{len(quotes)}/{len(rows)} 只成功）"
@@ -506,7 +525,7 @@ def write_markdown(
             if latest and latest[0] > reviewed:
                 forecast_pending.append(f"{code}{row['security_name']}({latest[0]}·{latest[1]})")
         body.append(
-            "| {security_code} | {security_name} | {quality_tier_label} | ".format(**row)
+            "| {security_code} | {security_name} | {quality_tier_label} | {quality_score} | ".format(**row)
             + str(cells["valuation_cell"])
             + " | {strategy_tag} | ".format(**row)
             + f"{cells['price']} | "
@@ -536,8 +555,8 @@ def write_markdown(
             else []
         ),
         "",
-        "| 代码 | 名称 | 质量 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
-        "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+        "| 代码 | 名称 | 质量 | 参考分 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
+        "| --- | --- | --- | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
         *body,
         *(extra_sections or []),
     ]
@@ -783,6 +802,7 @@ def main() -> None:
         "exchange",
         "quality_tier",
         "quality_tier_label",
+        "quality_score",
         "pool_layer",
         "matrix_state",
         "band_derivation",
