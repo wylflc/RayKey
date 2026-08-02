@@ -146,14 +146,28 @@ def secid(code: str) -> str:
     raise FetchError(f"cannot infer exchange for {code}")
 
 
+def em_market_suffix(code: str) -> str:
+    """SH / SZ / **BJ**——北交所（43/83/87/92 开头）必须用 BJ。
+
+    v1.57 修复：原实现只在 SH/SZ 二选一，北交所被归到 SZ，导致
+    `SECUCODE="920982.SZ"` 查不到任何财务期数而接口**不报错、只返回空**——
+    全池三只北交所股票（锦波生物 920982、民士达 920394、中科仪 920186）
+    的 `finance_periods` 长期为 0，而建带流程对此毫无提示（§15.2 第 3 条静默失效）。
+    实测 `.BJ` 立即返回 8 期。
+    """
+    if code.startswith(("43", "83", "87", "92")):
+        return "BJ"
+    return "SH" if secid(code).startswith("1.") else "SZ"
+
+
 def em_secucode(code: str) -> str:
-    """Eastmoney SECUCODE filter format, e.g. 600519.SH."""
-    return f"{code}.{'SH' if secid(code).startswith('1.') else 'SZ'}"
+    """Eastmoney SECUCODE filter format, e.g. 600519.SH / 920982.BJ."""
+    return f"{code}.{em_market_suffix(code)}"
 
 
 def em_pageajax_code(code: str) -> str:
-    """PC_HSF10 PageAjax code format, e.g. SH600519."""
-    return f"{'SH' if secid(code).startswith('1.') else 'SZ'}{code}"
+    """PC_HSF10 PageAjax code format, e.g. SH600519 / BJ920982."""
+    return f"{em_market_suffix(code)}{code}"
 
 
 def request_json(url: str, timeout: int = 20, retries: int = 2) -> Any:
