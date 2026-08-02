@@ -373,6 +373,12 @@ def classify_holding(
     result.update(
         {
             "as_of": as_of.isoformat(),
+            # v2.01：层级以池为准，持仓清单只在池外时兜底。判定侧本就取 `tier_key`（池优先），
+            # 但输出列此前直接回显手工维护的持仓清单，两者会长期不一致而无告警——实测 17 只
+            # 持仓有 7 只对不上（美的/紫金/迈瑞/招行/公牛 清单 L1 而池 L2，小商品城/五粮液 反向）。
+            # 今日无动作差异（都不在提醒卖出档），但真·L2 被显示成 L1 会在它涨到较高估时漏掉
+            # 卖出提醒——§15.2 第 3 条「两个源、一个陈旧、无人察觉」。
+            "quality_tier": (pool_row or {}).get("quality_tier") or row.get("quality_tier", ""),
             "close": round(close, 3),
             "cost_basis": cost if cost is not None else "",
             "profit_pct": round(profit_pct, 4) if profit_pct is not None else "",
