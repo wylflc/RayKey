@@ -114,6 +114,26 @@ DIVIDENDS_PATH = ROOT / "data/interim/a_share_dividends.csv"
 # 结论落在此文件，供建带引擎读取，使人工判断可复算、可审计，而不是散在正文里。
 MANUAL_REVALUATION = ROOT / "data/interim/manual_revaluation_2026-08-01.csv"
 
+# §6.5.7 逐票估值档案（v1.47，用户决定）：通用十类只作粗估，逐票精算落在档案里。
+# `bespoke = true` 的行**完全脱离通用模型**——不跑 A/C/D/F/H/… 任何一条口径，
+# 带只由档案给出。设立理由：紫金矿业在 F-2「取孰低」的 PE 腿与 PB 腿之间反复翻转，
+# 连改五版仍不稳定；对这类公司继续套通用公式，只会按下葫芦起了瓢。
+DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
+_DOSSIER_CACHE: dict[str, dict] | None = None
+
+
+def dossier(code: str) -> dict | None:
+    """逐票估值档案；`dossier_status != active` 的不生效。"""
+    global _DOSSIER_CACHE
+    if _DOSSIER_CACHE is None:
+        _DOSSIER_CACHE = {}
+        if DOSSIERS.exists():
+            with DOSSIERS.open(encoding="utf-8-sig") as handle:
+                for row in csv.DictReader(handle):
+                    if (row.get("dossier_status") or "").strip() == "active":
+                        _DOSSIER_CACHE[row["security_code"].zfill(6)] = row
+    return _DOSSIER_CACHE.get(code)
+
 # §6.5.4 运行率硬校验（v1.36，OI-001 的原始第 5 条，此前只写在文档、引擎实现 0 次）
 RUN_RATE_FLOOR = 0.85            # 锚 < TTM 归母 × 0.85 即触发周期假设标记
 # §6.5.4 超额利润持续年数（v1.38，结 OI-011）：把「周期顶 vs 结构性变化」的二选一，
@@ -766,6 +786,23 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         "needs_external": "",
         "note": "",
     }
+    # §6.5.7（v1.47）：bespoke 档案**完全脱离通用模型**——在标签分派之前就返回，
+    # 通用口径一条都不跑。用户决定：「对于反复处理不好的公司，标记为特殊公司，
+    # 逐案例分析，不再使用相关行业的共用估值方法。」
+    doc = dossier(code)
+    if doc and str(doc.get("bespoke", "")).strip().lower() == "true":
+        card.update(
+            anchor_metric="dossier", anchor_scope="per_share", band_derivation="dossier",
+            anchor_quality="primary", multiple_source="dossier",
+            fair_price_low=doc.get("band_low", ""), fair_price_high=doc.get("band_high", ""),
+            anchor_basis=f"逐票档案（§6.5.7，脱离通用模型）：{doc.get('band_method','')}。"
+                         f"{doc.get('band_derivation','')}"[:1200],
+            band_sensitivity=f"跟踪指标：{doc.get('key_metrics','')}｜复核触发：{doc.get('review_triggers','')}"
+                             f"｜定案：{doc.get('decided_by','')}（{doc.get('reviewed_at','')}）",
+            upgrade_path=doc.get("notes", "")[:400],
+        )
+        return card
+
     spec = TYPE_SPEC.get(tag_letter)
     if spec is None:
         card["note"] = f"未知标签 {tag_letter}"
@@ -1041,7 +1078,13 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                 f"{sr['cancel_rate']:.2%} = 可分配现金 {distributable/1e8:.1f}亿；g={growth:.2%}"
                 f"（分红率 {payout:.0%}，{gate}）→ 带 {a1_low:.4g}~{a1_high:.4g}；A-2 带中值 {a2_mid:.4g}。"
                 f"｜{dcf_note}")
-            if a2_mid and abs(a1_mid / a2_mid - 1) > A1_A2_DIVERGENCE:
+            # v1.47：**背离只在两法都通过适用性门槛时才成立**。A-1 被 §6.5.3 的两条
+            # 前置（分红率 ≥60%、可持续内生增长 ≤2.5%）挡在定带之外时，我们已经判定
+            # 它的模型假设对这家公司不成立——一个**已被判定不适用**的方法给出不同的数，
+            # 是预期之中的事，不含任何信息。v1.45 据此建的 `method_divergence` 卖出抑制
+            # 因此建在一个空信号上：全池 23 个背离行**无一例外**都是 A-1 被门槛挡掉的，
+            # 「两法失效方式不同」的说法在这 23 行上根本不适用（它们只有一法在用）。
+            if a1_eligible and a2_mid and abs(a1_mid / a2_mid - 1) > A1_A2_DIVERGENCE:
                 card["band_fragile"] = "true"
                 # §6.5.3（v1.41 定，v1.45 落地为字段，结 OI-016）：两法背离 >25% 时
                 # **不得据较低的那条发卖出提醒**——A-2 是相对法、有「看不见系统性错价」

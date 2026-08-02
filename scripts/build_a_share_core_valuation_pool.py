@@ -46,9 +46,6 @@ DEFAULT_TIER_SNAPSHOT = ROOT / "data/interim/pool_effective_tiers.csv"
 DEFAULT_OVERSEAS = ROOT / "data/processed/overseas_watchlist_valuation.csv"
 DEFAULT_OVERSEAS_TIER_SNAPSHOT = ROOT / "data/interim/overseas_effective_tiers.csv"
 MARKET_LABELS = {"HK": "港股", "US": "美股", "KR": "韩股"}
-# §6.5.3 第 4 条（结 OI-016）：与建带脚本的 A1_A2_DIVERGENCE 同值——超过它即认为
-# 两法分歧到「不能据较低的一条判贵」的程度，抑制提醒卖出（不抬带、不放宽买入）。
-METHOD_DIVERGENCE_SUPPRESS = 0.25
 
 # §6.2.1 分层×估值三态矩阵（v1.27 三档重构）：可买 / 可持有 / 提醒卖出。
 TIER_ELIGIBLE_VALUATIONS = {
@@ -171,25 +168,25 @@ def build_pool(
         # 但不触发 §14 提醒卖出（反推带的偏差双向，只切买入侧是唯一不制造新错误动作的过渡态）。
         # backfill（模型带、仅建带卡未回填）→ 限期登记义务，买入资格不变（同 §10.4 研究档案项）。
         band_problems, band_severity = check_band_card(row)
-        # §6.5.5.1 第 3 条：下限性质的兜底带（M-2/P-2/D≤1家覆盖，明确不含管线/订单/成长）
-        # 只在「连下限都便宜」时有信息量；反向读作「贵」不成立，故不触发提醒卖出。
-        if str(row.get("band_is_floor", "")).strip().lower() == "true" and state == "trim_alert":
-            state = "holdable"
-        # §6.5.4（v1.36）：锚假设均值回归、而当前运行率显著更高的行，「贵」的结论取决于
-        # 未取得的供给侧证据，不得据以发卖出提醒（同下限带处理）。
-        if row.get("cycle_assumption") == "mean_reversion_assumed" and state == "trim_alert":
-            state = "holdable"
-        # §6.5.3 第 4 条（v1.45，结 OI-016）：两法中值背离 >25% 时，取孰低对**买入侧**
-        # 是保守的（正确），但把较低的那条当「贵」的证据不成立——两法失效方式不同，
-        # 分歧是置信度问题、不是水平问题。该规则自 v1.41 起只存在于建带脚本的注释里，
-        # 池物化从不读 `band_fragile`，直接后果是美的集团（背离 47%、`implied_return_tier`
-        # 为较低估）成为全池 22 个背离行中唯一发出减仓提醒的一行。
-        try:
-            divergence = float(row.get("method_divergence") or 0)
-        except ValueError:
-            divergence = 0.0
-        if divergence > METHOD_DIVERGENCE_SUPPRESS and state == "trim_alert":
-            state = "holdable"
+        # §6.5.5.1 第 3 条（v1.47 重写，用户决定）：**「不发卖出」这种状态不再允许存在**。
+        # 一条只能回答「便宜」不能回答「贵」的带，不是一条偏保守的带，是一条**没算完的带**；
+        # 把它当估值挂在池里、再在卖出侧打补丁，等于用标注掩盖模型缺口。凡带按定义不能
+        # 双向使用（下限带／周期假设未决）且**无逐票档案**的，一律判「无法估值」——
+        # 可见、随扫、不可买、不自动定档，并进入 §6.5.7 建档队列。
+        undecidable = []
+        if str(row.get("band_is_floor", "")).strip().lower() == "true":
+            undecidable.append("下限带")
+        if row.get("cycle_assumption") == "mean_reversion_assumed":
+            undecidable.append("周期假设未决")
+        if undecidable and row.get("band_derivation") != "dossier":
+            valuation_tier = "无法估值"
+            # 带必须一并清空，否则下游（持仓卖出扫描、§6.2.1.6 自动定档）会照旧用它
+            # 反算档位，「无法估值」就只是个标签而不是状态。原值留在理由里供建档参考。
+            ref = f"{row.get('fair_price_low','')}-{row.get('fair_price_high','')}"
+            row["valuation_unvaluable_reason"] = (
+                "＋".join(undecidable) + f"（§6.5.7 待建档；原口径参考带 {ref}，按定义只能回答便宜、不能回答贵）")
+            row["fair_price_low"] = row["fair_price_high"] = ""
+            state = matrix_state(quality_tier, valuation_tier)
         if not band_problems:
             band_status = "ok"
         elif band_severity == "blocking":
@@ -219,6 +216,7 @@ def build_pool(
                 "band_status": band_status,
                 "anchor_quality": row.get("anchor_quality", ""),
                 "band_is_floor": row.get("band_is_floor", ""),
+                "valuation_unvaluable_reason": row.get("valuation_unvaluable_reason", ""),
                 "anchor_vintage": row.get("anchor_vintage", ""),
                 "method_divergence": row.get("method_divergence", ""),
                 "cycle_assumption": row.get("cycle_assumption", ""),
@@ -317,25 +315,18 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     spot = _to_float(quote.get("price")) if quote else None
     ref_price = spot if spot else val_price
 
-    # §6.5.5.1 第 3 条（v1.45，结 OI-015 第 3 条）：下限性质的带按定义不含成长/管线/订单，
-    # 「区间中值＝公允中枢」对它不成立。此前阅读版对此毫无标注，把按定义的下限当公允中枢
-    # 呈现——全池 88 行是下限带、其中 71 行显示为「高估」，最差 −90%。
-    is_floor = str(row.get("band_is_floor", "")).strip().lower() == "true"
-    try:
-        divergence = float(row.get("method_divergence") or 0)
-    except ValueError:
-        divergence = 0.0
-    sell_suppressed = (is_floor or divergence > METHOD_DIVERGENCE_SUPPRESS
-                       or row.get("cycle_assumption") == "mean_reversion_assumed")
-
-    if low is None or high is None:
+    # v1.47：判不了的行已在物化阶段改判「无法估值」，阅读版不再出现「高估但不发卖出」
+    # 这类自相矛盾的格子，故 `（下限）`/`·不发卖出` 两个标记一并删除。留下的每一条带
+    # 都是可双向使用的带。逐票档案定的带标 `档`，提示它不走通用模型（§6.5.7）。
+    unvaluable = str(row.get("valuation_tier", "")) == "无法估值"
+    if low is None or high is None or unvaluable:
         band = "—"
     else:
         band = row["fair_price_low"] if row["fair_price_low"] == row["fair_price_high"] else f"{row['fair_price_low']}-{row['fair_price_high']}"
-        if is_floor:
-            band += "（下限）"
+        if row.get("band_derivation") == "dossier":
+            band += "（档）"
 
-    if low is None or high is None or not ref_price:
+    if low is None or high is None or not ref_price or unvaluable:
         upside = "—"
     else:
         pct = round(((low + high) / 2 / ref_price - 1) * 100)
@@ -348,11 +339,6 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     spot_pe = _to_float(quote.get("pe_ttm")) if quote else None
     spot_pb = _to_float(quote.get("pb")) if quote else None
     cell = effective if effective == stored else f"{stored}→{effective}"
-    # 「贵」的结论不成立的三种情形（下限带 / 双口径背离 / 周期假设未决），在读的人
-    # 看得见的地方标出来——池物化已按 §6.2.1 把这些行的 trim_alert 降为 holdable，
-    # 但阅读版此前只显示「高估」，与实际状态相反。
-    if sell_suppressed and effective in ("高估", "较高估"):
-        cell += "·不发卖出"
     return {
         "price": f"{spot:.2f}" if spot else "—",
         "band": band,
@@ -600,8 +586,9 @@ def write_markdown(
         "",
         "- **档位按现价自动定档（§6.2.1.6，无人工复核，双向不限幅）**：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`——**箭头左端是审定档（最近一次证据复核的结论），不是昨日档**，可能是多日累计漂移；当日发生的变化另见扫描报告与刷新日志。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
         "- 现价/PE/PB 为每日扫描时的行情快照（PE 为 TTM 口径）；现价缺失（停牌/请求失败）的行沿用估值时点值。",
-        "- 空间 = 区间中值相对现价的涨跌幅，正数代表上行空间、负数代表现价已高于中值；原带位列与空间重复，已移除（v1.10）。**标「（下限）」的行例外**：其区间按定义是下限、不是公允中枢，空间只说明「现价高于下限多少」，不构成「贵」的证据（§6.5.4）。",
-        "- **两个标记（v1.45，结 OI-015/OI-016）**：合理价区间标 `（下限）` = 该带按定义不含成长/管线/在手订单（D 覆盖≤1家、M-2/P-2、N-2 EPV），完整价值须经 §6.5.6 成长期权或补齐覆盖后上修；估值标 `·不发卖出` = 该行虽处高估/较高估但按 §6.2.1 不触发提醒卖出，三种成因——下限带、双口径中值背离 >25%（§6.5.3，取孰低只对买入侧保守，反读为「贵」不成立）、周期假设未决（§6.5.4 锚假设均值回归而运行率显著更高）。**两个标记都只关卖出侧与解读，不放宽买入资格。**",
+        "- 空间 = 区间中值相对现价的涨跌幅，正数代表上行空间、负数代表现价已高于中值；原带位列与空间重复，已移除（v1.10）。",
+        "- **本表每一条带都可双向使用（v1.47）**：「高估但不发卖出」这类自相矛盾的状态不再存在。只能回答「便宜」不能回答「贵」的带（下限带、周期假设未决）不是偏保守的带，是**没算完的带**——一律判「无法估值」并进入 §6.5.7 建档队列，可见、随扫、不可买、不自动定档。",
+        "- **合理价区间标「（档）」= 逐票估值档案（§6.5.7）**：该股已脱离通用十类模型，带由单独设计的方法给出，并约定了跟踪指标与复核触发条件（见 `data/processed/a_share_valuation_dossiers.csv`）。通用十类只作**粗估与排序**，逐票精算以档案为准。",
         "- 业绩预告不在本表展示（v1.09）：预告物化文件（§6.7.8）只作 §7.5.5 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
         "- 合理价区间为该股按其策略模型处于「中性」档的价格带，是估值的唯一输出锚（换算依据见池 CSV `fair_price_basis`；模型认可的公允中枢≈区间中值，空间列即按中值/现价计算）。",
         "- 估值时间 = 最近一次估值复核日（合理价区间的推导日）；估值事件 = 该次复核所依据的最新披露（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件）。档位每日按现价自动重算，带只在 §7 复核时更新——「价格改档、证据改带」。审定档、核心理由与复核时点价（`valuation_price`）见池 CSV。",
@@ -865,6 +852,7 @@ def main() -> None:
         "band_status",
         "anchor_quality",
         "band_is_floor",
+        "valuation_unvaluable_reason",
         "anchor_vintage",
         "method_divergence",
         "cycle_assumption",

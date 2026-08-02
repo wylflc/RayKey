@@ -195,7 +195,9 @@ def main() -> int:
                     row[field] = card[field]
             row["fair_price_low"], row["fair_price_high"] = low, high
             row["base_band_low"], row["base_band_high"] = low, high   # 本轮未计入成长期权
-            row["band_derivation"] = "model"
+            # 建带卡自报口径优先（§6.5.7 的 `dossier` 必须保留到下游，否则阅读版的
+            # 「（档）」标记与池的档案识别都拿不到它）；仅在卡未标注时兜底为 model。
+            row["band_derivation"] = card.get("band_derivation") or "model"
             row["fair_price_basis"] = (card.get("anchor_basis") or "")[:400]
             previous = row.get("valuation_tier", "")
             tier = effective_valuation_tier(price, float(low), float(high)) or previous

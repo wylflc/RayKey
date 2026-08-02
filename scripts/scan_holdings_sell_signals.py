@@ -329,24 +329,12 @@ def classify_holding(
     # 卖出提醒——下限带（明确不含成长/管线/订单价值）与周期假设未决（「贵」取决于
     # 未取得的供给侧证据）——本处此前独立重算，导致同一只票池判可持有、卖出扫描判
     # 可卖（判例：紫金矿业、神火股份 2026-08-01）。
+    # v1.47：卖出侧的三条抑制分支全部退役（用户决定「不发卖出」不允许存在）。判不了的带
+    # 已在池物化阶段改判「无法估值」——`eff_tier` 因此不会落进 VALUATION_SELL_TIERS，
+    # 无须在此二次判断；能走到这里的每一条带都是可双向使用的带。双口径背离那条另有问题：
+    # 全池 23 个背离行**无一例外**都是 A-1 被适用性门槛挡掉的，一个已判定不适用的方法
+    # 给出不同的数不含任何信息，v1.45 据此建的抑制建在空信号上。
     suppress_reason = ""
-    if valuation_sell and pool_row:
-        try:
-            divergence = float(pool_row.get("method_divergence") or 0)
-        except ValueError:
-            divergence = 0.0
-        if str(pool_row.get("band_is_floor", "")).strip().lower() == "true":
-            suppress_reason = "下限带（§6.5.5.1：明确不含未兑现价值，反向读作『贵』不成立）"
-        elif pool_row.get("cycle_assumption") == "mean_reversion_assumed":
-            suppress_reason = "周期假设未决（§6.5.4：中枢锚假设均值回归，运行率显著更高）"
-        elif divergence > 0.25:
-            # §6.5.3 第 4 条（v1.45，结 OI-016）：两法中值背离 >25%，取孰低只对买入侧
-            # 保守，把较低的一条当「贵」的证据不成立。判例：美的集团背离 47%、DCF 隐含
-            # 折现率读作较低估，却是全池唯一据 A-2 相对法发出减仓提醒的行。
-            suppress_reason = (f"双口径背离 {divergence:.0%}（§6.5.3：两法失效方式不同，"
-                               f"取孰低只对买入侧保守，反向读作『贵』不成立）")
-    if suppress_reason:
-        valuation_sell = False
     # §14 v1.27 减仓梯（v1.39 落地）：原「留底原则（剩余市值 ≥ 建仓金额）」已于 v1.27
     # 废止——它是卖出规则最后一个成本锚，与「卖出只由估值决定、与盈亏无关」抵触。
     # 脚本此前仍按旧口径算，两只可卖持仓均得出「可卖约 0」。现改为按档分级的减仓梯：
