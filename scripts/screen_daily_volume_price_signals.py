@@ -336,6 +336,14 @@ PERSIST_WINDOW_DAYS = 10  # §8.11.1 持续候选回溯窗（交易日），同�
 PERSIST_STAGE_MET_DAYS = 8  # §8.11.1 窗内段位达标日数门槛：持续可买而非一日达标
 PERSIST_TRIGGER_DAYS = 4  # §8.11.1 窗内新触发日数门槛：反复自我确认而非挂在一次旧触发上延续
 
+# §9.6 深度低估重点关注（v2.01）：安全边际越厚，进入关注列表所需的信号越弱。
+# 只解决可见性——不改分级、不改 §8.10 优先级、不改 §8.13 所需段位、不改 §6.2.1 买入资格。
+# 门槛按质量档分档：§6.2.1.6 的「低估」本就要求空间 ≥40%，L1 不再加码（矩阵里 L1 中性即可买，
+# 是对安全边际要求最低的一档，再加码等于自相矛盾，且实测 L1 极少触及 50%——那会是一条永不触发
+# 的规则，§15.2 第 4 条）；L2 加 20pp，与矩阵中 L2 处处比 L1 严一档保持一致。
+# L3 一律不适用：弱护城河 × 深跌正是最典型的价值陷阱，战术层不设低门槛关注通道。
+DEEP_VALUE_SPACE = {"L1": 0.40, "L2": 0.60}
+
 
 def _bull_at(rows: list[dict[str, float | str]], j: int) -> tuple[bool, bool]:
     row = rows[j]
@@ -852,6 +860,10 @@ def classify_signal(
         "stage_trigger_days": stage_trigger_days,
         "megacap_volume": bool(conds["megacap"]),
         "market_cap_now_yi": megacap_yi or "",
+        # §9.6：止跌企稳的最弱可接受证据——§8.7.9 的两个前置状态（平台企稳 / V 反语境）本身，
+        # 即使 a-d 四个形态一个都没触发。它们是「跌势已经停住」而非「已经开始涨」，
+        # 正是深度低估票需要的那一档信号。
+        "stabilizing": bool(platform_stable_state(rows, index) or v_reversal_context(rows, index)),
     }
 
 
@@ -986,6 +998,12 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = 
     signal["band_position"] = band_position
     signal["valuation_tier_effective"] = effective_tier
     signal["valuation_tier_changed"] = effective_tier != stored_tier
+    # §9.6 安全边际：合理价区间中值 ÷ 现价 − 1，与 §6.2.1.6 判「低估」所用的「空间」同一个量。
+    # 只在现价低于带底时有意义（带内及以上不是安全边际问题），其余留空。
+    signal["margin_of_safety"] = (
+        round((fair_low + fair_high) / 2 / close - 1, 4)
+        if close and fair_low and fair_high and close < fair_low else ""
+    )
     eligible = effective_tier in TIER_ELIGIBLE_VALUATIONS.get(pool_row.get("quality_tier", ""), set())
     signal["stage_required"] = (
         STAGE_REQUIRED.get((pool_row.get("quality_tier", ""), effective_tier), "") if eligible else ""
@@ -1157,6 +1175,21 @@ def main() -> None:
             and row.get("stage_trigger_days", 0) >= PERSIST_TRIGGER_DAYS
             and row.get("trend_strength") != "weakening"
         )
+        # §9.6 深度低估重点关注（v2.01）。与 §8.11.1 同型：只解决可见性，不改任何判定。
+        # 三个条件——①档位=低估 且 空间过该质量档门槛；②有止跌企稳证据（任一 §8.7 信号，
+        # 含弱级；或 §8.7.9 前置状态；或 §8.7.10/§8.7.12 观察标记）；③未在放量下跌/缩量阴跌中。
+        # 第③条是必要的：深度低估 + 仍在下跌 = 尚未止跌，那是「继续等」不是「可以关注了」。
+        stab = row.pop("stabilizing", False)
+        mos = row.get("margin_of_safety")
+        floor = DEEP_VALUE_SPACE.get(str(row.get("quality_tier", "")).strip()[:2])
+        row["deep_value_watch"] = bool(
+            floor is not None
+            and row.get("valuation_tier_effective") == "低估"
+            and isinstance(mos, float)
+            and mos >= floor
+            and (stab or row.get("signals") or row.get("observation_tags"))
+            and row.get("trend_strength") != "weakening"
+        )
     fieldnames = [
         "trade_date",
         "security_code",
@@ -1169,6 +1202,8 @@ def main() -> None:
         "valuation_tier_effective",
         "valuation_tier_changed",
         "band_position",
+        "margin_of_safety",
+        "deep_value_watch",
         "strategy_tag",
         "total_market_cap_bn",
         "market_cap_now_yi",
@@ -1234,6 +1269,22 @@ def main() -> None:
     )
     log_scan_decisions(args.log_file, rows, args.as_of, args.input, args.output_csv)
     print(f"scanned {len(rows)} rows from {args.input}; market_state={market_state}; {review_note}")
+
+    # §9.6 落地校验（§15.2 第 2 条：新规则须同时给出跑批时可见的命中数，否则又是一条空文）。
+    # 同时打印「够便宜但没止跌」的只数——那是本规则**有意排除**的一类，不打印就看不出第③条在起作用。
+    deep = [r for r in rows if r.get("deep_value_watch")]
+    cheap = [r for r in rows
+             if r.get("valuation_tier_effective") == "低估"
+             and isinstance(r.get("margin_of_safety"), float)
+             and r["margin_of_safety"] >= (DEEP_VALUE_SPACE.get(str(r.get("quality_tier", "")).strip()[:2]) or 9.9)]
+    weak_only = [r for r in cheap if not r.get("deep_value_watch")]
+    print(f"§9.6 深度低估重点关注：命中 {len(deep)} 只"
+          f"（空间过门槛 {len(cheap)} 只，其中 {len(weak_only)} 只未见止跌/仍在下跌被排除）")
+    for r in sorted(deep, key=lambda x: -x["margin_of_safety"]):
+        grade = r.get("signal_grade") or "无级"
+        print(f"    {r.get('quality_tier','')[:2]} {r.get('security_name','')}"
+              f"｜空间 {r['margin_of_safety'] * 100:.0f}%｜{grade}｜{r.get('trend_strength','')}"
+              f"｜{(r.get('signals') or r.get('observation_tags') or '仅 §8.7.9 前置企稳')[:46]}")
 
 
 if __name__ == "__main__":
