@@ -219,6 +219,7 @@ def build_pool(
                 "valuation_unvaluable_reason": row.get("valuation_unvaluable_reason", ""),
                 "anchor_vintage": row.get("anchor_vintage", ""),
                 "method_divergence": row.get("method_divergence", ""),
+                "runrate_check": row.get("runrate_check", ""),   # §6.5.4 不变量结论须可见（§15.2 第 3 条）
                 "cycle_assumption": row.get("cycle_assumption", ""),
                 "scenario_band_low": row.get("scenario_band_low", ""),
                 "scenario_band_high": row.get("scenario_band_high", ""),
@@ -855,6 +856,7 @@ def main() -> None:
         "valuation_unvaluable_reason",
         "anchor_vintage",
         "method_divergence",
+        "runrate_check",
         "cycle_assumption",
         "scenario_band_low",
         "scenario_band_high",
