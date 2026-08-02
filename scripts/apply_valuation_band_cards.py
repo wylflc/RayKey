@@ -64,6 +64,14 @@ CARD_FIELDS = [
     "anchor_quality", "upgrade_path", "band_is_floor", "anchor_vintage", "method_divergence", "cycle_assumption", "scenario_band_low", "scenario_band_high", "cycle_note", "implied_excess_years", "multiple_regime_flag", "implied_return", "implied_return_tier", "manual_verdict",
 ]
 
+# §6.5.6 的成长期权是 §7 复核逐票填的人工判断，建带卡不产出这几列（v1.46，OI-017）。
+# 它们必须排除在「整列覆盖」之外，否则每轮 apply 都会把人工填的期权清空。
+HUMAN_CURATED_FIELDS = [
+    "growth_option_value", "growth_option_share", "growth_option_evidence_level",
+    "growth_option_probability", "growth_option_milestones",
+]
+CARD_OWNED_FIELDS = [f for f in CARD_FIELDS if f not in HUMAN_CURATED_FIELDS]
+
 
 def read(path: Path) -> list[dict]:
     with path.open(encoding="utf-8-sig") as handle:
@@ -171,7 +179,18 @@ def main() -> int:
 
         low, high = card.get("fair_price_low"), card.get("fair_price_high")
         if low and high:
-            for field in CARD_FIELDS:
+            # v1.46：建带卡自有的列**整列覆盖，包括清空**。原写法是 `if card.get(field)`
+            # ——只写非空值，于是建带卡把某个标记**去掉**时下游永远清不掉。判例（OI-017）：
+            # v1.46 把 D primary 的 `band_is_floor` 正确移除后，建带卡 88→23，而估值表与池
+            # 仍是 88，65 行继续免除提醒卖出，改动等于没生效；同批还清出紫金矿业一条
+            # v1.38 era 的 `mean_reversion_assumed` 残留——它的带早已改走 F-2 的 PB 口径
+            # （锚是每股净资产，运行率校验按定义不适用），标记却一直留着抑制卖出提醒。
+            # 带每轮全量重算，卡即这些列的唯一真值来源。
+            for field in CARD_OWNED_FIELDS:
+                row[field] = card.get(field, "")
+            # 人工策展列（§6.5.6 成长期权）不由建带卡产出，只在卡确有值时覆盖——
+            # 否则每轮 apply 都会把 §7 复核逐票填进去的期权抹掉。
+            for field in HUMAN_CURATED_FIELDS:
                 if card.get(field):
                     row[field] = card[field]
             row["fair_price_low"], row["fair_price_high"] = low, high

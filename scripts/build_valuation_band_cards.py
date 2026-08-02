@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime
 import json
 import statistics
 from pathlib import Path
@@ -413,63 +414,104 @@ def annual_rows(periods: list[dict]) -> list[dict]:
     return [p for p in periods if p.get("REPORT_TYPE") == "年报"]
 
 
-# §6.5.2.2（v1.45，结 OI-015 第 1 条，用户指令「对所有公司，都将业绩预告包含在业绩报告的范畴中」）
+# §6.5.2.2（v1.46，结 OI-015 第 1 条，用户指令「对所有公司，都将业绩预告包含在业绩报告的范畴中」）
 FORECAST_FIELD_BY_CODE = {"004": "PARENTNETPROFIT", "005": "KCFJCXSYJLR", "008": "TOTALOPERATEREVE"}
 FORECAST_GROWTH_CODES = {"001": "TOTALOPERATEREVE", "006": "TOTALOPERATEREVE"}
+FORECAST_MIN_ELAPSED = 0.5       # 公告日时报告期至少走完一半，否则算预测不算业绩
+
+
+def _period_start(period_end: str) -> str:
+    """报告期起点：A 股定期报告一律自然年内累计，故起点恒为当年 1 月 1 日。"""
+    return f"{period_end[:4]}-01-01"
+
+
+def _elapsed_fraction(period_end: str, notice: str) -> float:
+    """公告日时该报告期已走完的比例。>1 表示期末之后才公告（绝大多数情形）。"""
+    start, end, nd = _period_start(period_end), datetime.date.fromisoformat(period_end), None
+    try:
+        nd = datetime.date.fromisoformat(notice)
+    except ValueError:
+        return 0.0
+    s = datetime.date.fromisoformat(start)
+    span = (end - s).days or 1
+    return (nd - s).days / span
 
 
 def forecast_periods(evidence: dict, as_of: str) -> list[dict]:
-    """把**已结束但尚未正式披露**的报告期，按业绩快报/业绩预告合成为期数行。
+    """把**尚无定期报告**的报告期，按业绩快报/业绩预告合成为期数行。
 
     §6.5.4 的运行率硬校验与各类 TTM 锚此前只读 `finance_periods`，预告与快报从不入参。
     直接后果（OI-015 判例高德红外）：锚为 2026Q1 口径 TTM 扣非 9.04 亿，而 7/9 预告的
-    H1'26 扣非已达 12.35 亿——单个半年即超过全部 TTM——运行率比值按 0.93 通过 0.85
-    阈值，真实比值 0.48。**一个已经结束的报告期的预告是已兑现盈利，不是成长预期**；
-    未结束报告期的预告不合成（`REPORT_DATE > as_of` 一律跳过）。
+    H1'26 扣非已达 12.35-14.15 亿——单个半年即超过全部 TTM——运行率比值按 0.93 通过
+    0.85 阈值，真实比值 0.48。
 
-    口径：①只合成比最新已披露期更新的期；②快报优先于预告（数值更接近终值）；
-    ③预告区间取**下限**（保守，且下限带按定义就该用下限）；④累计口径与
-    `finance_periods` 一致，交给 `ttm()` 差分；⑤只填源数据真给的字段，
-    不足的留空由 `ttm()` 的同口径保护处理。
+    **取舍的分界线是「有没有对应的定期报告」，不是「报告期结不结束」**（v1.46 修订）：
+    定期报告一旦披露，同期预告/快报即刻作废、直接丢弃（实测全池 1005 行预告属此类）；
+    真正有价值的恰恰是**还没有定期报告的那一期**（实测 155 行）。报告期是否已过期末
+    只是个次要的可靠性指标——A 股预告最早可提前 77 天发布（中位提前 36 天），届时
+    报告期已走完大半，把它一律当「预测」丢掉会让锚白白落后一整期。
+
+    三道门（须全部满足）：
+      ① **未被定期报告取代**：`REPORT_DATE` 必须晚于最新已披露定期报告期；
+      ② **披露已发生**：`NOTICE_DATE ≤ as_of`——回放口径，不得使用当日尚未公告的信息
+         （此前误用 `REPORT_DATE ≤ as_of`，会把「期未结束但已公告」的预告错误排除）；
+      ③ **报告期已实质走完**：公告日时该期已过 ≥50%，否则属真预测，走一致预期口径。
+
+    取值：**区间中值**（v1.46 改，原取下限）。实测全池 1063 条盈利预告的相对区间宽度
+    中位仅 **9.8%**、P90 22.2%、>50% 的仅 1 条——区间很窄，参考价值高；取下限等于给
+    锚加一道约 5% 的**系统性下偏**，而安全边际本就由带系数承担（v1.33 已否决过同类
+    二次保守）。这与一致预期取中位数是同一原则。
     """
     periods = evidence.get("finance_periods") or []
     latest = max((p["REPORT_DATE"][:10] for p in periods
                   if p.get("PARENTNETPROFIT") is not None), default="")
     rows: dict[str, dict] = {}
 
+    def admissible(date: str, notice: str) -> bool:
+        return bool(date) and date > latest and bool(notice) and notice <= as_of \
+            and _elapsed_fraction(date, notice) >= FORECAST_MIN_ELAPSED
+
+    def mid(lo, hi):
+        """区间中值；单边给出时取给出的那一边。"""
+        vals = [float(v) for v in (lo, hi) if v is not None]
+        return sum(vals) / len(vals) if vals else None
+
     for item in (evidence.get("performance_predicts") or []):
-        date = str(item.get("REPORT_DATE") or "")[:10]
-        if not date or date <= latest or date > as_of:
+        date, notice = str(item.get("REPORT_DATE") or "")[:10], str(item.get("NOTICE_DATE") or "")[:10]
+        if not admissible(date, notice):
             continue
-        amount, code = item.get("PREDICT_AMT_LOWER"), item.get("PREDICT_FINANCE_CODE")
+        code = item.get("PREDICT_FINANCE_CODE")
         row = rows.setdefault(date, {"REPORT_DATE": date, "REPORT_TYPE": "业绩预告",
-                                     "_forecast_notice": str(item.get("NOTICE_DATE") or "")[:10]})
-        if amount is not None and code in FORECAST_FIELD_BY_CODE:
-            row[FORECAST_FIELD_BY_CODE[code]] = float(amount)
-        elif code in FORECAST_GROWTH_CODES and item.get("ADD_AMP_LOWER") is not None:
-            # 营收类预告多数只给增速，按同期上年累计还原绝对额
-            field = FORECAST_GROWTH_CODES[code]
-            prior = next((p.get(field) for p in periods
+                                     "_forecast_notice": notice,
+                                     "_forecast_elapsed": _elapsed_fraction(date, notice)})
+        if code in FORECAST_FIELD_BY_CODE:
+            value = mid(item.get("PREDICT_AMT_LOWER"), item.get("PREDICT_AMT_UPPER"))
+            if value is not None:
+                row[FORECAST_FIELD_BY_CODE[code]] = value
+        elif code in FORECAST_GROWTH_CODES:
+            # 营收类预告多数只给增速（全池 134 条营收预告中 129 条是 006 增速式），
+            # 按同期上年累计还原绝对额；增速同样取区间中值。
+            rate = mid(item.get("ADD_AMP_LOWER"), item.get("ADD_AMP_UPPER"))
+            prior = next((p.get(FORECAST_GROWTH_CODES[code]) for p in periods
                           if p["REPORT_DATE"][:10] == f"{int(date[:4]) - 1}{date[4:]}"), None)
-            if prior:
-                row[field] = float(prior) * (1 + float(item["ADD_AMP_LOWER"]) / 100)
+            if rate is not None and prior:
+                row[FORECAST_GROWTH_CODES[code]] = float(prior) * (1 + rate / 100)
 
     for item in (evidence.get("performance_express") or []):
-        date = str(item.get("REPORT_DATE") or "")[:10]
-        if not date or date <= latest or date > as_of:
+        date, notice = str(item.get("REPORT_DATE") or "")[:10], str(item.get("NOTICE_DATE") or "")[:10]
+        if not admissible(date, notice):
             continue
-        # 快报覆盖同期预告：数值更接近终值。快报无扣非，该字段留空。
-        row = {"REPORT_DATE": date, "REPORT_TYPE": "业绩快报",
-               "_forecast_notice": str(item.get("NOTICE_DATE") or "")[:10]}
+        # 快报覆盖同期预告：数值更接近终值。快报无扣非，该字段由同期预告补。
+        row = {"REPORT_DATE": date, "REPORT_TYPE": "业绩快报", "_forecast_notice": notice,
+               "_forecast_elapsed": _elapsed_fraction(date, notice)}
         if item.get("PARENT_NETPROFIT") is not None:
             row["PARENTNETPROFIT"] = float(item["PARENT_NETPROFIT"])
         if item.get("TOTAL_OPERATE_INCOME") is not None:
             row["TOTALOPERATEREVE"] = float(item["TOTAL_OPERATE_INCOME"])
-        if len(row) > 3:
+        if len(row) > 4:
             prior = rows.get(date) or {}
-            for key in ("KCFJCXSYJLR",):        # 预告给了扣非、快报没给时保留预告值
-                if prior.get(key) is not None:
-                    row[key] = prior[key]
+            if prior.get("KCFJCXSYJLR") is not None:
+                row["KCFJCXSYJLR"] = prior["KCFJCXSYJLR"]
             rows[date] = row
 
     return sorted(rows.values(), key=lambda r: r["REPORT_DATE"], reverse=True)
@@ -488,8 +530,10 @@ def forecast_note(periods: list[dict], field: str) -> str:
     newest = max(rows, key=lambda p: p["REPORT_DATE"])
     if not newest.get("_forecast_notice"):
         return ""
+    elapsed = newest.get("_forecast_elapsed") or 0
+    basis = "取区间中值" if newest.get("REPORT_TYPE") == "业绩预告" else "快报值"
     return (f"（含 {newest['REPORT_DATE'][:10]} {newest.get('REPORT_TYPE')}，"
-            f"公告 {newest['_forecast_notice']}，取区间下限）")
+            f"公告 {newest['_forecast_notice']}，公告时该期已过 {min(elapsed, 1):.0%}，{basis}）")
 
 
 def ttm(periods: list[dict], field: str) -> float | None:
@@ -1117,9 +1161,15 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
             years = max(1, (year or AS_OF_YEAR) - AS_OF_YEAR)
             anchor, source = value, "required_return"
             multiple = round(terminal_pe / (1 + rate) ** years, 4)   # 倍数含折现，保证可复算
-            card["band_is_floor"] = "true"   # 窗口后增长不入 base 带，按 §6.5.6 期权补
+            # v1.46（结 OI-017）：**这一支不再置 `band_is_floor`**。终值倍数是
+            # `1/(r − TERMINAL_G)`，TERMINAL_G=3% 即已把窗口后的永续增长计入带内；
+            # 它缺的只是「高于 3% 的超额增长」，而任何 DCF 都缺这个。把它当下限，
+            # 等于对 65 家（全池 88 个下限带的 74%）永久免除提醒卖出。§6.5.5.1 第 3 条
+            # 本来也只点名「D 的 **≤1 家覆盖**口径不含成长」，从未把 D primary 算进去
+            # ——v1.32 的实现比它自己的规则宽。
             basis = (f"{year}E 正常化归母中位数 {anchor/1e8:.2f}亿（{count} 家覆盖）× {multiple} "
-                     f"= 现值口径；{pv_note}。**窗口后增长不计入 base 带**，为下限")
+                     f"= 现值口径；{pv_note}。终值倍数 1/(r−{TERMINAL_G:.0%}) **已含永续增长**，"
+                     f"缺的只是高于 {TERMINAL_G:.0%} 的超额增长（按 §6.5.6 成长期权补）")
         elif rate:
             # 覆盖 ≤1 家：base 带只按已兑现盈利建，成长部分走 §6.5.6 成长期权
             profit_ttm = ttm(periods, "KCFJCXSYJLR")
@@ -1444,6 +1494,19 @@ def main() -> int:
     print(f"  带已算出           {computed}")
     print(f"  待外部取证         {external}")
     print(f"  取数失败/须人工补  {failed}")
+    vintage = sum(1 for c in cards if c.get("anchor_vintage"))
+    print(f"  锚含预告/快报      {vintage}（§6.5.2.2）")
+    # §6.5.6 落地校验（v1.46，结 OI-017）：真·下限带（按定义完全不含成长/管线/订单）
+    # 必须有成长期权，否则它的完整价值永远缺一块。此前 §6.5.6 成文而**全池执行 0 次**，
+    # 且没有任何环节报告过这件事——「成文即视为落地」正是 OI-002 与 OI-017 同型的病根。
+    # 故此处强制计数并打印：缺口可以存在，但不许再无声无息。
+    floors = [c for c in cards if str(c.get("band_is_floor", "")).lower() == "true"]
+    missing = [c for c in floors if not (c.get("growth_option_value") or "").strip()]
+    print(f"  真·下限带          {len(floors)}；其中缺 §6.5.6 成长期权 {len(missing)}")
+    if missing:
+        print(f"    ⚠ 缺口清单（须由 §7 复核逐票补证据等级/实现概率/里程碑）："
+              + "、".join(f"{c['security_code']}{c.get('security_name','')}" for c in missing[:30])
+              + ("…" if len(missing) > 30 else ""))
     print(f"  输出：{args.out}")
     return 0
 
