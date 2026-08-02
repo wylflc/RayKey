@@ -1627,7 +1627,8 @@ def main() -> int:
     GENERIC_ONLY = {"band_is_floor", "cycle_assumption", "scenario_band_low", "scenario_band_high",
                     "cycle_note", "implied_excess_years", "excess_years_ladder", "cycle_gap_kind",
                     "method_divergence", "multiple_regime_flag", "implied_return", "implied_return_tier",
-                    "manual_verdict", "band_fragile", "upgrade_path", "anchor_vintage"}
+                    "manual_verdict", "band_fragile", "upgrade_path", "anchor_vintage",
+                    "anchor_value", "multiple_or_rate", "band_low_coef", "band_high_coef", "shares_out"}
     OPTIONAL = {"note", "needs_external", "runrate_override_reason"}
     alarms = []
     for k in cards[0]:
@@ -1657,8 +1658,22 @@ def main() -> int:
         print(f"    ⚠无 TTM 归母（财务期数缺失或为负）{len(noperiod)} 行："
               + "、".join(f"{c['security_code']}{c.get('security_name','')}" for c in noperiod[:12])
               + ("…" if len(noperiod) > 12 else ""))
+    # 全池建档后，上面这套列覆盖自检的**对象会消失**（通用行归零）——这正是 OI-018 的同型问题：
+    # 校验挂在「路径」上，路径退场校验就失效。故在此把自检切换到档案侧的 §6.5.7 必填列上。
+    dossiers = [c for c in cards if c.get("band_derivation") == "dossier"]
+    if not generic:
+        REQUIRED = ("fair_price_low", "fair_price_high", "anchor_basis", "band_sensitivity")
+        incomplete = [(c, k) for c in dossiers for k in REQUIRED if not str(c.get(k, "")).strip()]
+        print(f"    ⓘ通用路径已归零（全池 {len(dossiers)} 家全部建档），列覆盖自检改挂档案必填列："
+              f"{len(REQUIRED)} 项 × {len(dossiers)} 家，缺项 {len(incomplete)}")
+        if incomplete:
+            print("    ❌**档案必填列缺项**："
+                  + "、".join(f"{c['security_code']}{c.get('security_name','')}:{k}" for c, k in incomplete[:10])
+                  + ("…" if len(incomplete) > 10 else ""))
     vintage = sum(1 for c in cards if c.get("anchor_vintage"))
-    print(f"  锚含预告/快报      {vintage}（§6.5.2.2）")
+    # 通用路径的 anchor_vintage 会随建档归零，故同时统计档案推导里显式引用预告/快报的家数。
+    fc_dossier = sum(1 for c in dossiers if "预告" in (c.get("anchor_basis") or "") or "快报" in (c.get("anchor_basis") or ""))
+    print(f"  锚含预告/快报      通用 {vintage}｜档案 {fc_dossier}（§6.5.2.2）")
     # §6.5.6 落地校验（v1.46，结 OI-017）：真·下限带（按定义完全不含成长/管线/订单）
     # 必须有成长期权，否则它的完整价值永远缺一块。此前 §6.5.6 成文而**全池执行 0 次**，
     # 且没有任何环节报告过这件事——「成文即视为落地」正是 OI-002 与 OI-017 同型的病根。
