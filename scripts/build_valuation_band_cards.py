@@ -82,6 +82,7 @@ REVENUE_CYCLE_MIN_DOWN = 0.30      # 下降年占比 ≥30% → 周期摆动，�
 PEER_MULTIPLE_MIN_GROUP = 3      # 同业组最少家数
 PEER_MULTIPLE_LEVELS = (3, 2)    # 只用三级/二级行业；退到一级会把整个板块当同业
 AS_OF_YEAR = 2026                # 折现基准年（现值口径的 T0）
+AS_OF_DATE = f"{AS_OF_YEAR}-12-31"   # 由 main() 按 --as-of 覆盖；决定哪些报告期算「已结束」
 
 # §6.5.3 A-1 / K primary / 通用校验二（v1.34，结 OI-008）
 # v1.35（结 OI-009）：单点要求回报 + 固定带系数，带宽交回带系数控制。
@@ -408,15 +409,102 @@ def load_evidence(code: str) -> dict | None:
 
 
 def annual_rows(periods: list[dict]) -> list[dict]:
-    """年报行，按报告期倒序。"""
+    """年报行，按报告期倒序。合成的预告/快报行不带 `年报` 标签，天然不入本函数。"""
     return [p for p in periods if p.get("REPORT_TYPE") == "年报"]
+
+
+# §6.5.2.2（v1.45，结 OI-015 第 1 条，用户指令「对所有公司，都将业绩预告包含在业绩报告的范畴中」）
+FORECAST_FIELD_BY_CODE = {"004": "PARENTNETPROFIT", "005": "KCFJCXSYJLR", "008": "TOTALOPERATEREVE"}
+FORECAST_GROWTH_CODES = {"001": "TOTALOPERATEREVE", "006": "TOTALOPERATEREVE"}
+
+
+def forecast_periods(evidence: dict, as_of: str) -> list[dict]:
+    """把**已结束但尚未正式披露**的报告期，按业绩快报/业绩预告合成为期数行。
+
+    §6.5.4 的运行率硬校验与各类 TTM 锚此前只读 `finance_periods`，预告与快报从不入参。
+    直接后果（OI-015 判例高德红外）：锚为 2026Q1 口径 TTM 扣非 9.04 亿，而 7/9 预告的
+    H1'26 扣非已达 12.35 亿——单个半年即超过全部 TTM——运行率比值按 0.93 通过 0.85
+    阈值，真实比值 0.48。**一个已经结束的报告期的预告是已兑现盈利，不是成长预期**；
+    未结束报告期的预告不合成（`REPORT_DATE > as_of` 一律跳过）。
+
+    口径：①只合成比最新已披露期更新的期；②快报优先于预告（数值更接近终值）；
+    ③预告区间取**下限**（保守，且下限带按定义就该用下限）；④累计口径与
+    `finance_periods` 一致，交给 `ttm()` 差分；⑤只填源数据真给的字段，
+    不足的留空由 `ttm()` 的同口径保护处理。
+    """
+    periods = evidence.get("finance_periods") or []
+    latest = max((p["REPORT_DATE"][:10] for p in periods
+                  if p.get("PARENTNETPROFIT") is not None), default="")
+    rows: dict[str, dict] = {}
+
+    for item in (evidence.get("performance_predicts") or []):
+        date = str(item.get("REPORT_DATE") or "")[:10]
+        if not date or date <= latest or date > as_of:
+            continue
+        amount, code = item.get("PREDICT_AMT_LOWER"), item.get("PREDICT_FINANCE_CODE")
+        row = rows.setdefault(date, {"REPORT_DATE": date, "REPORT_TYPE": "业绩预告",
+                                     "_forecast_notice": str(item.get("NOTICE_DATE") or "")[:10]})
+        if amount is not None and code in FORECAST_FIELD_BY_CODE:
+            row[FORECAST_FIELD_BY_CODE[code]] = float(amount)
+        elif code in FORECAST_GROWTH_CODES and item.get("ADD_AMP_LOWER") is not None:
+            # 营收类预告多数只给增速，按同期上年累计还原绝对额
+            field = FORECAST_GROWTH_CODES[code]
+            prior = next((p.get(field) for p in periods
+                          if p["REPORT_DATE"][:10] == f"{int(date[:4]) - 1}{date[4:]}"), None)
+            if prior:
+                row[field] = float(prior) * (1 + float(item["ADD_AMP_LOWER"]) / 100)
+
+    for item in (evidence.get("performance_express") or []):
+        date = str(item.get("REPORT_DATE") or "")[:10]
+        if not date or date <= latest or date > as_of:
+            continue
+        # 快报覆盖同期预告：数值更接近终值。快报无扣非，该字段留空。
+        row = {"REPORT_DATE": date, "REPORT_TYPE": "业绩快报",
+               "_forecast_notice": str(item.get("NOTICE_DATE") or "")[:10]}
+        if item.get("PARENT_NETPROFIT") is not None:
+            row["PARENTNETPROFIT"] = float(item["PARENT_NETPROFIT"])
+        if item.get("TOTAL_OPERATE_INCOME") is not None:
+            row["TOTALOPERATEREVE"] = float(item["TOTAL_OPERATE_INCOME"])
+        if len(row) > 3:
+            prior = rows.get(date) or {}
+            for key in ("KCFJCXSYJLR",):        # 预告给了扣非、快报没给时保留预告值
+                if prior.get(key) is not None:
+                    row[key] = prior[key]
+            rows[date] = row
+
+    return sorted(rows.values(), key=lambda r: r["REPORT_DATE"], reverse=True)
+
+
+def augmented_periods(evidence: dict, as_of: str) -> list[dict]:
+    """已披露期数 + 合成的预告/快报期数（§6.5.2.2）。"""
+    return forecast_periods(evidence, as_of) + (evidence.get("finance_periods") or [])
+
+
+def forecast_note(periods: list[dict], field: str) -> str:
+    """本字段的 TTM 若用到了预告/快报期，返回可审计的说明；否则空串。"""
+    rows = [p for p in periods if p.get(field) is not None]
+    if not rows:
+        return ""
+    newest = max(rows, key=lambda p: p["REPORT_DATE"])
+    if not newest.get("_forecast_notice"):
+        return ""
+    return (f"（含 {newest['REPORT_DATE'][:10]} {newest.get('REPORT_TYPE')}，"
+            f"公告 {newest['_forecast_notice']}，取区间下限）")
 
 
 def ttm(periods: list[dict], field: str) -> float | None:
     """§6.5.2.1 取数陷阱一：finance_periods 是累计口径，须差分成单季再求 TTM。
 
     单季 = 本期累计 − 同年上期累计（一季报本身即单季）。TTM = 最近四个单季之和。
+
+    §6.5.2.2 同口径保护：预告只给利润、不给营收是常态（实测 74 家有预告、仅 11 家
+    带营收）。若最新的合成期缺本字段，则本次调用**整体退回已披露期数**——同一个
+    字段的 TTM 绝不半新半旧。跨字段的同口径由 `ttm_same_vintage()` 单独保证。
     """
+    if any(p.get("_forecast_notice") for p in periods):
+        newest = max(periods, key=lambda p: p["REPORT_DATE"])
+        if newest.get("_forecast_notice") and newest.get(field) is None:
+            periods = [p for p in periods if not p.get("_forecast_notice")]
     rows = [p for p in periods if p.get(field) is not None]
     rows.sort(key=lambda p: p["REPORT_DATE"], reverse=True)
     by_date = {p["REPORT_DATE"][:10]: p for p in rows}
@@ -446,6 +534,27 @@ def ttm(periods: list[dict], field: str) -> float | None:
         if len(quarters) == 4:
             return sum(quarters)
     return None
+
+
+def reported_only(periods: list[dict]) -> list[dict]:
+    """剔除合成的预告/快报期。分红率一类以**已披露年度**为分子的比值必须用它当分母，
+    否则分子停在上一年报、分母已滚入预告，分红率会被机械压低（§6.5.2.2）。"""
+    return [p for p in periods if not p.get("_forecast_notice")]
+
+
+def ttm_same_vintage(periods: list[dict], *fields: str) -> tuple[float | None, ...]:
+    """多个字段的 TTM，强制**同一口径批次**（§6.5.2.2）。
+
+    专供跨字段相除的场合——净利率 = 利润 ÷ 营收、现金转化 = 经营现金 ÷ 利润。
+    预告普遍只给利润不给营收（74 家有预告、仅 11 家带营收），若利润取到预告口径
+    而营收停在已披露口径，得到的净利率会被机械抬高，再乘回营收就放大成带的虚高。
+    故只要有任一字段在最新合成期缺失，全部字段一起退回已披露期数。
+    """
+    if any(p.get("_forecast_notice") for p in periods):
+        newest = max(periods, key=lambda p: p["REPORT_DATE"])
+        if newest.get("_forecast_notice") and any(newest.get(f) is None for f in fields):
+            periods = [p for p in periods if not p.get("_forecast_notice")]
+    return tuple(ttm(periods, f) for f in fields)
 
 
 def consensus_median(evidence: dict, year_offset: int = 0) -> tuple[float | None, int, int | None]:
@@ -520,11 +629,12 @@ def c_to_a_signal(evidence: dict) -> tuple[bool, str]:
 
     rows = annual_rows(evidence.get("finance_periods") or [])[:3]
     roes = [float(r["ROEJQ"]) for r in rows if r.get("ROEJQ") is not None]
-    revenue = ttm(evidence.get("finance_periods") or [], "TOTALOPERATEREVE")
     # §6.5.2.1 取数陷阱三：JYXJLYYSR 是**小数比率**（0.3644 = 36.44%），
     # 与同记录内的 XSJLL/ROEJQ（百分数）单位不同，不得再除以 100。
     ratios = [float(r["JYXJLYYSR"]) for r in rows if r.get("JYXJLYYSR") is not None]
-    profit_ttm = ttm(evidence.get("finance_periods") or [], "PARENTNETPROFIT")
+    # 现金转化是跨字段相除，须同口径（§6.5.2.2）
+    revenue, profit_ttm = ttm_same_vintage(
+        augmented_periods(evidence, AS_OF_DATE), "TOTALOPERATEREVE", "PARENTNETPROFIT")
     cash_conv = None
     if ratios and revenue and profit_ttm and profit_ttm > 0:
         cash_conv = (statistics.median(ratios) * revenue) / profit_ttm
@@ -592,6 +702,8 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         "anchor_quality": "primary",
         "upgrade_path": "",
         "band_is_floor": "",
+        "anchor_vintage": "",        # §6.5.2.2：锚是否用到已结束报告期的预告/快报
+        "method_divergence": "",     # §6.5.3：双口径中值背离比例（OI-016 的卖出抑制依据）
         "cycle_assumption": "",
         "scenario_band_low": "",
         "scenario_band_high": "",
@@ -634,7 +746,9 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
     if shares:
         card["shares_out"] = f"{shares:.4f}"
 
-    periods = evidence.get("finance_periods") or []
+    # §6.5.2.2（v1.45，结 OI-015）：已披露期数 + 已结束报告期的预告/快报。
+    # 「业绩预告属于业绩报告」——一个已经结束的报告期的预告是已兑现盈利。
+    periods = augmented_periods(evidence, AS_OF_DATE)
     band = evidence.get("valuation_band") or {}
 
     anchor = None
@@ -659,7 +773,8 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         distributable = sr_data["cash"] + sr_data["cancel_rate"] * (quote.get("total_market_cap") or 0)
         if distributable <= 0:
             return low, high, ""
-        profit = ttm(periods, "PARENTNETPROFIT")
+        # 分红为已披露年度口径，分母同口径（§6.5.2.2）
+        profit = ttm(reported_only(periods), "PARENTNETPROFIT")
         payout = (sr_data["cash"] / profit) if (profit and profit > 0) else None
         roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
         growth = 0.0
@@ -695,9 +810,10 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         使均值为负）。中位数天然抗离群年，营收缩放天然吸收规模变化。
         """
         margins = [float(r["XSJLL"]) for r in annuals if r.get("XSJLL") is not None]
-        revenue = ttm(periods, "TOTALOPERATEREVE")
+        # 净利率 = 利润 ÷ 营收，跨字段相除须同口径（§6.5.2.2）：预告普遍只给利润不给营收，
+        # 若利润取预告口径而营收停在已披露口径，净利率会被机械抬高、再乘回营收放大成虚高的带。
+        revenue, profit_ttm = ttm_same_vintage(periods, "TOTALOPERATEREVE", "PARENTNETPROFIT")
         revenue_ttm = revenue
-        profit_ttm = ttm(periods, "PARENTNETPROFIT")
         if len(margins) < 5 or not revenue:
             return None, ""
         # OI-010：营收本身强周期时，规模基准改用跨周期营收中位
@@ -832,7 +948,8 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         # A-1（§6.5.3 双口径强制，v1.34 结 OI-008）：股东回报 Gordon 口径
         if sr and anchor and multiple and shares:
             roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
-            profit = ttm(periods, "PARENTNETPROFIT")
+            # 分红为已披露年度口径，分母同口径（§6.5.2.2）
+            profit = ttm(reported_only(periods), "PARENTNETPROFIT")
             payout = (sr["cash"] / profit) if (profit and profit > 0) else None
             growth_raw = (statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0))
                           if (roe_rows and payout is not None) else PERPETUAL_G_CAP)
@@ -882,12 +999,19 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                 f"｜{dcf_note}")
             if a2_mid and abs(a1_mid / a2_mid - 1) > A1_A2_DIVERGENCE:
                 card["band_fragile"] = "true"
-                # v1.41：两法背离 >25% 时**不得据较低的那条发卖出提醒**——A-2 是相对法、
-                # 有「看不见系统性错价」的构造性盲区，A-1 是绝对法、有参数敏感性，二者
-                # 失效方式不同。取孰低对买入侧是保守的（正确），但反过来当「贵」的证据
-                # 不成立。同下限带与周期假设未决的处置。
+                # §6.5.3（v1.41 定，v1.45 落地为字段，结 OI-016）：两法背离 >25% 时
+                # **不得据较低的那条发卖出提醒**——A-2 是相对法、有「看不见系统性错价」
+                # 的构造性盲区，A-1 是绝对法、有参数敏感性，二者失效方式不同。取孰低对
+                # 买入侧是保守的（正确），反过来当「贵」的证据不成立。同下限带与周期假设
+                # 未决的处置。此前该规则只存在于本注释里：池物化不读 `band_fragile`，
+                # 全池 22 个背离行中唯一落在 trim_alert 的美的集团照发减仓提醒。
+                card["method_divergence"] = f"{abs(a1_mid / a2_mid - 1):.4f}"
+                # v1.45 更名：`a1_mid` 是 **A-1 Gordon 带中值**，不是两阶段 DCF 每股值
+                # （美的：Gordon 中值 102.7 vs 两阶段 DCF 108.1），旧标签把两个量混称。
                 card["cycle_note"] = ((card.get("cycle_note") or "")
-                    + f"⚑A-1/A-2 背离 {abs(a1_mid/a2_mid-1):.0%}（DCF 每股 {a1_mid:.4g} vs 相对法 {a2_mid:.4g}）。")
+                    + f"⚑A-1/A-2 背离 {abs(a1_mid/a2_mid-1):.0%}"
+                      f"（A-1 股东回报口径带中值 {a1_mid:.4g} vs A-2 相对法带中值 {a2_mid:.4g}）"
+                      f"——按 §6.5.3 不得据较低的一条发卖出提醒。")
             # §6.5.3 取孰低——A-1 参与定带须**同时**满足两条：
             #   ① 分红率 ≥60%（现金分配是主要价值实现途径）
             #   ② **可持续内生增长 ≤ 永续上限**（ROE × 留存率 ≤ 2.5%）
@@ -947,9 +1071,10 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                     # 否则=无增长但盈利稳定(A-2 口径)。两者都不要求增长。
                     anchor = multiple = None
                     margins = [float(r["XSJLL"]) for r in annuals if r.get("XSJLL") is not None]
-                    revenue = ttm(periods, "TOTALOPERATEREVE")
+                    # 现净利率是跨字段相除，须同口径（§6.5.2.2）
+                    margin_profit, revenue = ttm_same_vintage(periods, "KCFJCXSYJLR", "TOTALOPERATEREVE")
                     pe_med = band.get("pe_ttm_median")
-                    current_margin = (profit_ttm / revenue * 100) if revenue else None
+                    current_margin = (margin_profit / revenue * 100) if (revenue and margin_profit) else None
                     mid_margin = statistics.median(margins) if margins else None
                     if mid_margin and current_margin is not None and pe_med and revenue:
                         if current_margin < mid_margin * 0.8:
@@ -1031,7 +1156,8 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         if sr and shares and sr["cash"] > 0:
             # K primary（v1.34 恢复）：Gordon DPS/(r−g)
             dps = sr["cash"] / 1e8 / shares
-            profit = ttm(periods, "PARENTNETPROFIT")
+            # 分红为已披露年度口径，分母同口径（§6.5.2.2）
+            profit = ttm(reported_only(periods), "PARENTNETPROFIT")
             payout = (sr["cash"] / profit) if (profit and profit > 0) else 1.0
             roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
             growth = min(PERPETUAL_G_CAP, max(0.0, (statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0)))
@@ -1073,8 +1199,14 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                     f"g={growth:.2%}）**高于 K-2，未采用**；"
                     f"K-2：扣非归母 TTM {k2_profit/1e8:.2f}亿 × PE 中位 {k2_pe}{k2_conv}")
                 basis = card["band_sensitivity"]
-                if abs((low + high) / 2 / ((k2_profit / 1e8 * k2_pe * (k2_lo + k2_hi) / 2 / shares)) - 1) > A1_A2_DIVERGENCE:
+                k2_div = abs((low + high) / 2 / ((k2_profit / 1e8 * k2_pe * (k2_lo + k2_hi) / 2 / shares)) - 1)
+                if k2_div > A1_A2_DIVERGENCE:
                     card["band_fragile"] = "true"
+                    # 同 A-1/A-2：K primary Gordon 与 K-2 相对法失效方式不同，取孰低
+                    # 只对买入侧保守，不构成「贵」的证据（§6.5.3，结 OI-016）
+                    card["method_divergence"] = f"{k2_div:.4f}"
+                    card["cycle_note"] = ((card.get("cycle_note") or "")
+                        + f"⚑K/K-2 背离 {k2_div:.0%}——按 §6.5.3 不得据较低的一条发卖出提醒。")
             else:
                 card["anchor_value"] = f"{dps:.4f}"
                 card["multiple_or_rate"] = multiple
@@ -1255,6 +1387,12 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                     f"二者取舍是**供给侧判断**（在建产能、资本开支纪律、格局集中度），非财务数据可定；"
                     f"取得该证据前本行不触发 §14 提醒卖出（OI-011）。")
             card["fair_price_low"], card["fair_price_high"] = f"{low:.4g}", f"{high:.4g}"
+            # §6.5.2.2：锚若用到已结束报告期的预告/快报，必须一眼可见——这是 OI-015
+            # 的核心，锚的口径新旧决定了「贵」这个结论成不成立。
+            anchor_field = ("KCFJCXSYJLR" if "扣非" in (basis or "") else "PARENTNETPROFIT")
+            fc_note = forecast_note(periods, anchor_field) or forecast_note(periods, "TOTALOPERATEREVE")
+            if fc_note:
+                card["anchor_vintage"] = f"含已结束期预告/快报{fc_note}"
             extra = card.get("band_sensitivity") or ""
             card["band_sensitivity"] = (f"锚±15% → 带 {sens_low:.4g}~{sens_high:.4g}"
                                         f"（基准 {low:.4g}~{high:.4g}）；"
@@ -1276,6 +1414,9 @@ def main() -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--as-of", required=True)
     args = parser.parse_args()
+
+    global AS_OF_DATE
+    AS_OF_DATE = args.as_of          # §6.5.2.2：只有 REPORT_DATE ≤ as_of 的预告/快报才合成
 
     with args.tags.open(encoding="utf-8-sig") as handle:
         tags = list(csv.DictReader(handle))

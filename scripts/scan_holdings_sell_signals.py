@@ -331,10 +331,20 @@ def classify_holding(
     # 可卖（判例：紫金矿业、神火股份 2026-08-01）。
     suppress_reason = ""
     if valuation_sell and pool_row:
+        try:
+            divergence = float(pool_row.get("method_divergence") or 0)
+        except ValueError:
+            divergence = 0.0
         if str(pool_row.get("band_is_floor", "")).strip().lower() == "true":
             suppress_reason = "下限带（§6.5.5.1：明确不含未兑现价值，反向读作『贵』不成立）"
         elif pool_row.get("cycle_assumption") == "mean_reversion_assumed":
             suppress_reason = "周期假设未决（§6.5.4：中枢锚假设均值回归，运行率显著更高）"
+        elif divergence > 0.25:
+            # §6.5.3 第 4 条（v1.45，结 OI-016）：两法中值背离 >25%，取孰低只对买入侧
+            # 保守，把较低的一条当「贵」的证据不成立。判例：美的集团背离 47%、DCF 隐含
+            # 折现率读作较低估，却是全池唯一据 A-2 相对法发出减仓提醒的行。
+            suppress_reason = (f"双口径背离 {divergence:.0%}（§6.5.3：两法失效方式不同，"
+                               f"取孰低只对买入侧保守，反向读作『贵』不成立）")
     if suppress_reason:
         valuation_sell = False
     # §14 v1.27 减仓梯（v1.39 落地）：原「留底原则（剩余市值 ≥ 建仓金额）」已于 v1.27
