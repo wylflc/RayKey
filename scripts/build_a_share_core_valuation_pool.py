@@ -446,11 +446,14 @@ def build_overseas_section(
             # 与 A 股主表一致：带原样透传估值表字符串，不重新格式化位数。
             band_cell = f"{row['fair_price_low']}-{row['fair_price_high']}"
         body.append(
-            "| {market} | {code} | {name} | {tier} | ".format(
+            # 参考分（§5.7.4）与 A 股主表同列位：质量档之后、估值档之前。海外清单
+            # 2026-08-03 起逐票打分，此前该列不存在（附表只有质量档、无档内序位）。
+            "| {market} | {code} | {name} | {tier} | {score} | ".format(
                 market=f"{MARKET_LABELS.get(market, market)}·{currency}" if currency else MARKET_LABELS.get(market, market),
                 code=code,
                 name=row["security_name"],
                 tier=row.get("quality_tier", "—"),
+                score=row.get("quality_score") or "—",
             )
             + f"{cells['valuation_cell']} | {row.get('strategy_tag', '—')} | "
             + f"{price_cell} | {band_cell} | {cells['upside']} | {cells['pe']} | {cells['pb']} | "
@@ -468,9 +471,10 @@ def build_overseas_section(
         "- 档位同样按 §6.2.1.6 现价自动定档（>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估），与审定档不同的行显示 `审定档→现档`。带只由证据复核修改。",
         "- 现价/合理价区间/空间均为各自**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较；行情同源腾讯快照（`scripts/overseas_quotes.py`）。",
         "- PE 为行情快照 TTM 口径：美股线不提供 PB、韩股线不提供 PE/PB，缺失列显示 —，判档依据见 CSV `fair_price_basis`（多数标的以归一化/中枢利润为锚，表观 PE 不作定档依据）。",
+        "- **参考分（§5.7.4）与合理价区间自 2026-08-03 起逐票建档产出**：参考分 = Q1×0.25+Q2×0.40+Q3×0.20+Q4×0.15−可信度扣分，**仅供同档内排序**，不改变任何资格、不构成买卖指令。每一条带由 `scripts/build_overseas_dossiers.py` 按 §6.5.7 v1.54 三条路径之一算出（派息折现隐含PE／三阶段DDM／PEG×ROE修正），输入与计算分离，逐票正文在 `data/companies/<代码>_<名称>/README.md`。**改带只能改输入**。",
         "",
-        "| 市场 | 代码 | 名称 | 质量 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
-        "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+        "| 市场 | 代码 | 名称 | 质量 | 参考分 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
+        "| --- | --- | --- | --- | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
         *body,
     ]
     return lines, {"changes": changes, "current_tiers": current_tiers}
