@@ -597,6 +597,20 @@ def ttm(periods: list[dict], field: str) -> float | None:
             quarters.append(value)
         if len(quarters) == 4:
             return sum(quarters)
+    # 兜底：**年报 + 本年累计 − 上年同期累计**（v1.58）。
+    # 四单季差分要求四个季度连续可得，中间缺任一期即整体失败——次新股尤其常见：
+    # 盛合晶微 2025 年上市，`finance_periods` 无 2025 三季报，TTM 因此返回 None，
+    # 而它 FY2025 归母 9.21亿、Q1'26 1.91亿，TTM 明明可算（9.21+1.91−1.26 = 9.86亿）。
+    # 该判例由 §15.2 第 3 条的列覆盖自检（无 TTM 行清单）抓出。
+    annual = {p["REPORT_DATE"][:10]: p for p in rows if p["REPORT_DATE"][5:10] == "12-31"}
+    ytd = [p for p in rows if p["REPORT_DATE"][5:10] != "12-31"]
+    if annual and ytd:
+        latest = max(ytd, key=lambda p: p["REPORT_DATE"])
+        year, mmdd = latest["REPORT_DATE"][:4], latest["REPORT_DATE"][5:10]
+        prior_annual = annual.get(f"{int(year) - 1}-12-31")
+        prior_ytd = by_date.get(f"{int(year) - 1}-{mmdd}")
+        if prior_annual and prior_ytd and prior_annual.get(field) is not None and prior_ytd.get(field) is not None:
+            return float(prior_annual[field]) + float(latest[field]) - float(prior_ytd[field])
     return None
 
 
@@ -1602,6 +1616,47 @@ def main() -> int:
     print(f"  带已算出           {computed}")
     print(f"  待外部取证         {external}")
     print(f"  取数失败/须人工补  {failed}")
+    # §15.2 第 3 条强制自检（v1.58）：**凡新增数据源或新增列，跑完必须核对非空行数**。
+    # 四次静默失效的共同签名都是「某列/某源整体为空而无人察觉」——apply 只写非空值、
+    # `band_derivation` 被硬写、`runrate_check` 没进 CARD_FIELDS、北交所后缀查不到财务。
+    # 全空列几乎一定是接线错误而不是业务事实，故一律高声报出。
+    total = len(cards)
+    generic = [c for c in cards if c.get("band_derivation") != "dossier"]
+    # 只由通用路径产出的列，分母用通用行而非全池——否则逐票档案位移会把正常列报成「全空」，
+    # 告警一旦常态化就会被忽略，等于自检失效。
+    GENERIC_ONLY = {"band_is_floor", "cycle_assumption", "scenario_band_low", "scenario_band_high",
+                    "cycle_note", "implied_excess_years", "excess_years_ladder", "cycle_gap_kind",
+                    "method_divergence", "multiple_regime_flag", "implied_return", "implied_return_tier",
+                    "manual_verdict", "band_fragile", "upgrade_path", "anchor_vintage"}
+    OPTIONAL = {"note", "needs_external", "runrate_override_reason"}
+    alarms = []
+    for k in cards[0]:
+        if k in OPTIONAL:
+            continue
+        pop = generic if k in GENERIC_ONLY else cards
+        if not pop:
+            continue
+        n = sum(1 for c in pop if str(c.get(k, "")).strip())
+        if n == 0:
+            alarms.append(f"{k}（0/{len(pop)}）")
+    # 全空 ≠ 坏。真正的告警是「**本该命中却没写**」：用同一轮已算出的 `runrate_check`
+    # 做一致性断言——通用 market_cap 行里凡 below_runrate 的，必须同时置 cycle_assumption。
+    should = [c for c in generic
+              if c.get("anchor_scope") == "market_cap" and c.get("runrate_check") == "below_runrate"]
+    missing = [c for c in should if not str(c.get("cycle_assumption", "")).strip()]
+    print(f"  列覆盖自检        全池 {total} 行、通用路径 {len(generic)} 行；全空列 {len(alarms)}")
+    if missing:
+        print(f"    ❌**一致性断言失败**：{len(missing)} 行 runrate_check=below_runrate 却未置 cycle_assumption —— "
+              + "、".join(f"{c['security_code']}{c.get('security_name','')}" for c in missing[:10]))
+    if alarms:
+        print(f"    ⓘ全空列（§15.2 第 3 条须逐列确认是否有行本该命中；本轮 below_runrate 命中 {len(should)} 行）："
+              + "、".join(alarms))
+    # 数据源自检：财务期数为 0 的行——北交所判例正是全体为 0 而无提示
+    noperiod = [c for c in cards if c.get("runrate_check") == "na_no_ttm"]
+    if noperiod:
+        print(f"    ⚠无 TTM 归母（财务期数缺失或为负）{len(noperiod)} 行："
+              + "、".join(f"{c['security_code']}{c.get('security_name','')}" for c in noperiod[:12])
+              + ("…" if len(noperiod) > 12 else ""))
     vintage = sum(1 for c in cards if c.get("anchor_vintage"))
     print(f"  锚含预告/快报      {vintage}（§6.5.2.2）")
     # §6.5.6 落地校验（v1.46，结 OI-017）：真·下限带（按定义完全不含成长/管线/订单）
