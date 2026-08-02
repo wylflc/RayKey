@@ -22,7 +22,7 @@ AShareQuant models listed-company research for mainland China, Hong Kong, and U.
 
 **Watchlist** — the set of listed companies retained for ongoing attention after business-quality screening. Not a buy list: watchlist membership says the business deserves attention, not that the security is worth owning.
 
-**Quality Tier** — a business-quality rank assigned only to worth-attention companies, ignoring current price. Current price belongs to **Valuation Assessment** and must never move a tier. Permanent removal from research is expressed through **Attention Class**, not through a tier. Tier definitions and the tier's exact relationship to watchlist membership are governed by workflow §5.7/§5.8; a scored redesign is in progress in `docs/Ashare_tiering_v2_design.md` and is not yet live.
+**Quality Tier** — a business-quality rank assigned only to worth-attention companies, ignoring current price. Current price belongs to **Valuation Assessment** and must never move a tier. Permanent removal from research is expressed through **Attention Class**, not through a tier. Tier definitions and the tier's exact relationship to watchlist membership are governed by workflow §5.7/§5.8. The scored three-tier redesign went live on 2026-08-01 (workflow v1.27); its design trail is archived at `docs/archive/Ashare_tiering_v2_design.md`.
 
 **Insufficient Disclosure** — a narrow status for a company too newly listed to have enough periodic reports *and* lacking authoritative public business descriptions. It does not mean "not yet reviewed".
 
@@ -88,8 +88,8 @@ AShareQuant models listed-company research for mainland China, Hong Kong, and U.
 
 ## Retired Vocabulary
 
-These terms appear in older documents under `docs/peer-group-calibration/` and in `docs/moat-scoring-rubric.md`. They are no longer part of the operative A-share model — treat them as historical:
+These terms appear in older documents under `docs/peer-group-calibration/` and in `docs/archive/moat-scoring-rubric.md`. They are no longer part of the operative A-share model — treat them as historical:
 
-- **Two-Layer Company Review**, **Triage Review**, **Deep Company Review**, **Full-Coverage Screening Run**, **Dimensional Score**, **Special Dimension**, **Moat Score** — the score-driven two-layer review, de-scoped from A-shares by ADR-0006. `docs/moat-scoring-rubric.md` now serves the Hong Kong and U.S. coverage scorers only. Do not confuse the old `Moat Score` with the tiering-v2 `quality_score`.
+- **Two-Layer Company Review**, **Triage Review**, **Deep Company Review**, **Full-Coverage Screening Run**, **Dimensional Score**, **Special Dimension**, **Moat Score** — the score-driven two-layer review, de-scoped from A-shares by ADR-0006. `docs/archive/moat-scoring-rubric.md` served the Hong Kong and U.S. coverage scorers until those were retired in v2.00; nothing references it now. Do not confuse the old `Moat Score` with the tiering-v2 `quality_score`.
 - **Final Screening Result**, **Watch Selection Route** — pointed at `a_share_final_screening_results.csv`, which no longer exists. Current structured sources of truth are `a_share_attention_triage.csv` and `a_share_watchlist_quality_tiers.csv`.
 - **Cross-Market Calibration**, **Market-Staged Calibration** — belong to the Hong Kong/U.S. scoring path, not the A-share pipeline.

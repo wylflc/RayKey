@@ -22,10 +22,10 @@ The personal investment system in `docs/000_personal-investment-system-v1.zh.md`
 
 - `docs/000_Ashare_workflow.md` — main A-share workflow specification.
 - `docs/000_personal-investment-system-v1.zh.md` — personal investment rulebook.
-- `docs/Ashare_quality_rubric.md` — the Q1/Q2 scoring detail behind workflow §5.7 tier assignment.
-- `docs/archive/` — completed process logs and one-off audits (round-1 rescan handoff, 2026-07-14 workflow diagnostic, 2026-07-31 instruction audit). Not inputs to any live flow.
+- `docs/Ashare_quality_rubric.md` — the Q1/Q2 scoring detail behind workflow §5.7 tier assignment. Rule-bearing content was hoisted into workflow §5.7.4 in v2.00; this file keeps the scoring recipe and the decided cases.
+- `docs/Ashare_workflow_changelog.md` — per-version workflow history; `docs/Ashare_workflow_open_issues.md` — confirmed-but-unfixed defects.
+- `docs/archive/` — completed process logs, one-off audits, and implemented design docs. Not inputs to any live flow.
 - `docs/peer-group-calibration/` — per-industry calibration narratives; the audit trail of how the round-1 rules were formed.
-- `docs/moat-scoring-rubric.md` — dimensional triage rubric, still the standard for the Hong Kong / U.S. full-coverage scorers.
 - `docs/adr/` — architecture decision records; ADR-0006 defines the current round-1 triage standard.
 - `data/raw/` — immutable universe snapshots (ADR-0001).
 - `data/interim/` — resumable work queues and fetched evidence.
@@ -49,15 +49,17 @@ Universe and queues:
 
 ```bash
 python3 scripts/fetch_a_share_universe.py --output data/raw/a_share_securities.csv
-python3 scripts/build_a_share_full_rescan_queue.py        # round-1 rescan worklist
 python3 scripts/build_quarterly_quality_review_queue.py   # quarterly review queue
 python3 scripts/build_report_update_queue.py              # post-disclosure update queue
 ```
 
-Evidence (resumable interim CSVs used during triage and tiering):
+Valuation evidence and per-company dossiers (workflow §6.5.7 — the only path that produces a tradable band):
 
 ```bash
-python3 scripts/fetch_a_share_research_evidence.py
+python3 scripts/fetch_a_share_valuation_evidence.py       # consensus, financials, coverage counts
+python3 scripts/build_company_dossier_readmes.py --check   # dossier CSV -> README, diff only
+python3 scripts/build_valuation_band_cards.py             # dossier -> band cards + column self-check
+python3 scripts/validate_valuation_bands.py               # gate before pool materialization
 ```
 
 Valuation pool materialization and daily scans (see workflow §6.7, §8.3, §14):
@@ -69,20 +71,14 @@ python3 scripts/scan_holdings_sell_signals.py --as-of YYYY-MM-DD
 python3 scripts/backtest_signal_replay.py --as-of YYYY-MM-DD --symbols CODE1,CODE2
 ```
 
-`scripts/workflow_decision_log.py` is the shared decision-log helper imported by the scan/pool scripts.
+`scripts/workflow_decision_log.py` is the shared decision-log helper imported by the scan/pool scripts; it parses the workflow version from the spec's title line rather than hard-coding it.
 
-## Hong Kong / U.S. Pipelines (retained)
+## Hong Kong / U.S. Pipelines (retired in v2.00)
 
-```bash
-python3 scripts/fetch_hong_kong_universe.py --output data/raw/hong_kong_securities.csv
-python3 scripts/fetch_us_universe.py --output data/raw/us_securities.csv
-python3 scripts/fetch_hong_kong_research_evidence.py
-python3 scripts/fetch_us_research_evidence.py
-python3 scripts/run_hong_kong_full_coverage_scoring.py
-python3 scripts/run_us_full_coverage_scoring.py
-```
-
-The fetchers write research queues, company profiles, and financial indicators into `data/interim/`. The scorers apply the rubric in `docs/moat-scoring-rubric.md` as a baseline triage aid; scoring output is not a final watchlist decision (ADR-0002/0003/0004). The U.S. pipeline keeps ETF/ETN/unit/warrant/preferred instruments with an explicit not-applicable status instead of scoring them as listed companies.
+The full-coverage Hong Kong and U.S. scorers and their fetchers now live in `scripts/archive/`, and their rubric
+`docs/moat-scoring-rubric.md` in `docs/archive/`. Overseas coverage runs through workflow §6.8 instead: only
+user-named companies are tiered and banded, into `data/processed/overseas_watchlist_valuation.csv`, rendered as
+an appendix to the pool reading view and never buyable. See `scripts/archive/README.md` to restore them.
 
 ## Archived: 2026-06 Two-Layer Review Round
 
@@ -92,7 +88,7 @@ The first A-share full-coverage round (two-layer review, peer-group calibration,
 - `data/processed/a_share_watchlist_quality_tiers.csv` / `.md` — deep-review L1-L5 tiers (1,661 companies).
 - `data/processed/a_share_focus_watchlist_l1_l2_valuation.csv` — L1/L2 valuation results.
 
-Per workflow §5.4.6, these prior-round files remain transition references (the core valuation pool and daily scans still read the tier/valuation files) until the round-1 rescan finishes, after which tiering, valuation, and the core pool must be rebuilt. The cross-round index above is the convenient merged view of prior and current conclusions. The narrative record of how calibration rules evolved stays in `docs/peer-group-calibration/`.
+The round-1 rescan finished on 2026-07-09 and tiering, valuation, and the core pool were all rebuilt on top of it (workflow v1.27/v1.28), so these files are now closed-round records rather than transition references. The cross-round index above is the convenient merged view of prior and current conclusions. The narrative record of how calibration rules evolved stays in `docs/peer-group-calibration/`.
 
 ## Principles
 

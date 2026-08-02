@@ -4,13 +4,35 @@
 from __future__ import annotations
 
 import csv
+import re
 import uuid
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
-WORKFLOW_VERSION = "a-share-selection-operation-v1.43"
+WORKFLOW_SPEC = ROOT / "docs/000_Ashare_workflow.md"
+
+
+def _read_workflow_version() -> str:
+    """Single-source the version from the spec's own title line.
+
+    Hard-coding it here let the constant drift 19 versions behind the changelog
+    (stuck at v1.43 while the spec was at v1.62), and every decision-log row
+    written in between carries the wrong version. The title line is the one
+    place a reader looks, so it is the truth; this parses it (§15.2 第 3 条).
+    """
+    try:
+        head = WORKFLOW_SPEC.read_text(encoding="utf-8").split("\n", 1)[0]
+    except OSError:
+        return "a-share-selection-operation-unknown"
+    match = re.search(r"v(\d+\.\d+)", head)
+    return f"a-share-selection-operation-v{match.group(1)}" if match else (
+        "a-share-selection-operation-unknown"
+    )
+
+
+WORKFLOW_VERSION = _read_workflow_version()
 
 DECISION_LOG_FIELDS = [
     "logged_at_utc",
