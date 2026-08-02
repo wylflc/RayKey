@@ -2432,4 +2432,4 @@ python3 scripts/scan_holdings_sell_signals.py \
 
 版本记录自 v1.00 起全部移至 **`docs/Ashare_workflow_changelog.md`**，本节只留指针，**不再逐版累积正文**。
 
-当前版本：**v1.60**（2026-08-02）。
+当前版本：**v1.61**（2026-08-02）。
