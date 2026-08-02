@@ -564,6 +564,30 @@ def main() -> None:
         f"leverage={account['leverage']:.2f}x; guarantee={account['guarantee_pct']:.0f}%"
     )
 
+    # v2.01 派生列漂移自检：持仓清单是手工维护的，但 quality_tier / valuation_tier /
+    # strategy_tag 三列是**池的派生量**，不是持仓事实。它们曾无声过时到 quality_tier 7/17、
+    # valuation_tier 17/17、strategy_tag 14/17 不一致，其中 strategy_tag 还留着 v1.28 已
+    # 废止的标签（G-股东回报型／F-垄断资源型）。判定侧一律以池为准，故不阻断扫描；
+    # 但必须每轮可见，否则又是 §15.2 第 3 条「两个源、一个陈旧、无人察觉」。
+    # 必须比对 `holdings`（清单原始行）而非 `rows`（输出行）——输出行的 quality_tier 已按池
+    # 回填，拿它比对等于池跟自己比，会恒为 0 处，是一条假校验。
+    drift = []
+    for row in holdings:
+        pool_row = (pool or {}).get(str(row.get("security_code", "")).zfill(6))
+        if not pool_row:
+            continue
+        for field in ("quality_tier", "valuation_tier", "strategy_tag"):
+            held = (row.get(field) or "").strip()
+            live = (pool_row.get(field) or "").strip()
+            if live and held and held != live:
+                drift.append(f"{row.get('security_name','')} {field} 清单[{held}]≠池[{live}]")
+    if drift:
+        print(f"  ⚠持仓清单派生列与池不一致 {len(drift)} 处（判定已按池执行，请同步清单）：")
+        for item in drift[:12]:
+            print(f"      {item}")
+    else:
+        print("  派生列自检：quality_tier／valuation_tier／strategy_tag 与池一致（0 处漂移）")
+
 
 if __name__ == "__main__":
     main()

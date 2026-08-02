@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v2.01
+# A股选股-估值-量价操作流程 v2.02
 
 > **本行的版本号是唯一版本真值**：`scripts/workflow_decision_log.py` 在导入时解析它写入决策日志的 `workflow_version` 列，改版时改这里即可，不得在别处另存一份（v1.43 曾在脚本里硬编码并落后正文 19 个版本）。逐版内容见 `docs/Ashare_workflow_changelog.md`。
 
@@ -2337,6 +2337,12 @@ current_shares, stop_loss_price, cumulative_trim_pct,
 launch_platform_price, thesis_summary, bear_case,
 add_conditions, exit_conditions, last_review_date, notes
 ```
+
+**三列是派生量，不是持仓事实（v2.01）**：`quality_tier`、`valuation_tier`、`strategy_tag` 的真值源是核心估值合格池，清单里只是**一份便于人读的副本**。
+
+- **判定一律以池为准**，清单值只在该股不在池内时兜底；`daily_holdings_actions.csv` 的同名列也一律回填池值。
+- **每轮扫描打印漂移自检**（`scan_holdings_sell_signals.py` 末尾）：清单与池不一致即逐条列出，不阻断扫描但必须可见。
+- **改动分层或估值档后须同步清单**。判例：2026-08-02 实测清单已无声过时到 `quality_tier` **7/17**、`valuation_tier` **17/17**、`strategy_tag` **14/17** 不一致，其中 `strategy_tag` 还留着 v1.28 已废止的标签（`G-股东回报型低估`、`F-垄断资源型`）；`valuation_tier` 更是长期使用 `低估(审定=现档)` 这种非池口径的写法，使本节的档位变化提示 **13/17 恒亮**、退化为噪音。同步后归零，该提示恢复为真告警。这是 §15.2 第 3 条「两个源、一个陈旧、无人察觉」的又一例。
 
 字段说明：
 
