@@ -79,7 +79,11 @@ def main() -> int:
             tag = pool.get(code, {}).get("strategy_tag") or tags.get(code, {}).get("strategy_tag_letter", "")
             tier_now = pool.get(code, {}).get("valuation_tier", "—")
             reason = (row.get("tier_reason") or row.get("moat_summary") or "").replace("\n", " ").replace("|", "／")
-            lines.append(f"| {code} | {row.get('security_name','')} | {tag} | {tier_now} | {reason[:150]} |")
+            # §5.7.3 起 `tier_reason` 要装四条判据的逐条对照，会超出表格可读宽度。
+            # 截断保留，但必须**可见**——静默截断会让 MD 声称汇总了它其实没显示的依据。
+            if len(reason) > 150:
+                reason = reason[:150] + "…（全文见 CSV `tier_reason`）"
+            lines.append(f"| {code} | {row.get('security_name','')} | {tag} | {tier_now} | {reason} |")
         lines.append("")
 
     args.out.write_text("\n".join(lines), encoding="utf-8")
