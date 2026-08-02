@@ -746,6 +746,38 @@ def forward_present_value(code: str, anchor: float, year: int | None, as_of_year
     return present, note
 
 
+
+def ttm_augmented_profit(evidence: dict, as_of: str) -> float | None:
+    """已披露口径的 TTM 归母（含已结束报告期的预告/快报，§6.5.2.2）。"""
+    return ttm(augmented_periods(evidence, as_of), "PARENTNETPROFIT")
+
+
+def runrate_invariant(evidence: dict, as_of: str, anchor_earnings_yi: float | None) -> tuple[str, str]:
+    """§6.5.4 运行率不变量（v1.52，结 OI-018）——**对每一条带生效，与锚的口径无关**。
+
+    原实现把校验挂在 `anchor_scope == "market_cap"` 上，于是走 PB / DPS 路径的行
+    从不进入校验；而逐票档案一律置 `per_share`，**每建一份档案就多一行脱离校验**
+    ——OI-018 登记时 37 行，建档 31 家后升至 67 行，覆盖不增反减。校验本该挂在
+    **事实**（带所依据的盈利 vs 已披露盈利）上，而不是挂在带由哪条路径产生上。
+
+    锚不是盈利口径的（净资产锚、市销率锚）显式返回「不适用」而非静默跳过——
+    静默跳过正是 §15.2 第 3 条点名的病。
+    """
+    t = ttm_augmented_profit(evidence, as_of)
+    if not t or t <= 0:
+        return "na_no_ttm", "运行率不变量：TTM 归母 ≤0 或不可算，不适用"
+    ttm_yi = t / 1e8
+    if anchor_earnings_yi is None:
+        return "na_not_earnings", (f"运行率不变量：本档锚非盈利口径（净资产/市销率等），不适用；"
+                                   f"对照已披露 TTM 归母 {ttm_yi:.2f}亿")
+    ratio = anchor_earnings_yi / ttm_yi
+    if ratio < RUN_RATE_FLOOR:
+        return "below_runrate", (f"⚠运行率不变量触发：盈利锚 {anchor_earnings_yi:.2f}亿 仅为已披露 TTM 归母 "
+                                 f"{ttm_yi:.2f}亿 的 {ratio:.2f} 倍（阈值 {RUN_RATE_FLOOR}）——"
+                                 f"锚低于运行率须有明写理由（周期均值回归／一次性收益剔除），否则应上修")
+    return "ok", f"运行率不变量：盈利锚 {anchor_earnings_yi:.2f}亿 ÷ 已披露 TTM 归母 {ttm_yi:.2f}亿 = {ratio:.2f}"
+
+
 def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict:
     evidence = load_evidence(code)
     card = {
@@ -768,6 +800,7 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
         "band_is_floor": "",
         "anchor_vintage": "",        # §6.5.2.2：锚是否用到已结束报告期的预告/快报
         "method_divergence": "",     # §6.5.3：双口径中值背离比例（OI-016 的卖出抑制依据）
+        "runrate_check": "",         # §6.5.4 运行率不变量（v1.52，OI-018）
         "cycle_assumption": "",
         "scenario_band_low": "",
         "scenario_band_high": "",
@@ -801,6 +834,14 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                              f"｜定案：{doc.get('decided_by','')}（{doc.get('reviewed_at','')}）",
             upgrade_path=doc.get("notes", "")[:400],
         )
+        try:
+            ae = float(doc.get("anchor_earnings_yi") or "")
+        except ValueError:
+            ae = None
+        if evidence is not None:
+            flag, note = runrate_invariant(evidence, AS_OF_DATE, ae)
+            card["runrate_check"] = flag
+            card["band_sensitivity"] = (card["band_sensitivity"] + "｜" + note)[:1600]
         return card
 
     spec = TYPE_SPEC.get(tag_letter)
@@ -1480,6 +1521,9 @@ def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict
                     f"二者取舍是**供给侧判断**（在建产能、资本开支纪律、格局集中度），非财务数据可定；"
                     f"取得该证据前本行不触发 §14 提醒卖出（OI-011）。")
             card["fair_price_low"], card["fair_price_high"] = f"{low:.4g}", f"{high:.4g}"
+            # §6.5.4 运行率不变量（v1.52，OI-018）：对每条带生效，与 anchor_scope 无关
+            _ae = anchor_abs / 1e8 if card["anchor_scope"] == "market_cap" else None
+            card["runrate_check"], _rrn = runrate_invariant(evidence, AS_OF_DATE, _ae)
             # §6.5.2.2：锚若用到已结束报告期的预告/快报，必须一眼可见——这是 OI-015
             # 的核心，锚的口径新旧决定了「贵」这个结论成不成立。
             anchor_field = ("KCFJCXSYJLR" if "扣非" in (basis or "") else "PARENTNETPROFIT")
