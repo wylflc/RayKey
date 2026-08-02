@@ -779,6 +779,27 @@ def runrate_invariant(evidence: dict, as_of: str, anchor_earnings_yi: float | No
 
 
 def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict:
+    """建带卡。**运行率不变量在此统一兜底**（v1.53）——`_build_card` 有多个 return 分支，
+    逐个挂校验必然漏（v1.52 首版即漏掉 K primary Gordon 分支的 4 行，苏泊尔/杭氧股份/
+    长江电力/养元饮品 产出空的 `runrate_check`，属 §15.2 第 3 条的静默缺口）。
+    改为在唯一出口统一补：任何分支未给出结论的，在这里按盈利锚重算一次。
+    """
+    card = _build_card(code, name, tag_letter, quality_tier)
+    if not card.get("runrate_check"):
+        evidence = load_evidence(code)
+        if evidence is None:
+            card["runrate_check"] = "na_no_evidence"
+        else:
+            scope = card.get("anchor_scope")
+            try:
+                anchor_yi = float(card.get("anchor_value") or "") if scope == "market_cap" else None
+            except ValueError:
+                anchor_yi = None
+            card["runrate_check"], _ = runrate_invariant(evidence, AS_OF_DATE, anchor_yi)
+    return card
+
+
+def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict:
     evidence = load_evidence(code)
     card = {
         "security_code": code,
