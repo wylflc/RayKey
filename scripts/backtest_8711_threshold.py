@@ -67,6 +67,10 @@ def describe(returns: list[float]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="§8.7.11 门槛校准与流程口径复核（§12 回放）")
     parser.add_argument("--as-of", required=True, help="回放截止交易日 YYYY-MM-DD")
+    parser.add_argument("--since", default="2022-07-01",
+                        help="评估窗起始日（含）。**固定它是可复现的前提**——行情源返回的历史长度"
+                             "不稳定（东财 lmt=1000，失败时回落腾讯，两者区间不同），不锁窗则每次跑批"
+                             "的样本都不一样。窗前的 K 线仍用于指标预热，只是不参与评估。")
     parser.add_argument("--pool", type=Path, default=DEFAULT_POOL, help="universe（核心估值合格池 CSV）")
     parser.add_argument("--thresholds", default="0,0.5,1,1.5,2,3", help="逗号分隔的突破日涨幅门槛（百分数）")
     parser.add_argument("--forwards", default="20,60,120", help="逗号分隔的前瞻交易日数")
@@ -91,7 +95,7 @@ def main() -> int:
     # hits[gate][threshold][horizon] = [(code, date, forward_return), ...]
     hits = {g: {t: {f: [] for f in forwards} for t in thresholds} for g in gates}
     base = {g: {f: [] for f in forwards} for g in gates}
-    failed, spans, max_fwd = 0, [], max(forwards)
+    failed, spans, evaluated, first_day = 0, [], 0, {}
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         for payload in pool.map(load_history, targets):
@@ -125,6 +129,10 @@ def main() -> int:
 
             for i in range(80, n - min(forwards)):
                 row_i = rows[i]
+                if str(row_i["date"]) < args.since:      # 窗前只作指标预热，不参与评估
+                    continue
+                evaluated += 1
+                first_day.setdefault(code, str(row_i["date"]))
                 close_i = float(row_i["close"])
                 fwd = {f: (float(rows[i + f]["close"]) / close_i - 1.0) for f in forwards if i + f < n}
 
@@ -160,11 +168,19 @@ def main() -> int:
     if not spans:
         print("没有可评估的交易日——检查行情源与 universe")
         return 1
-    print(f"行情失败 {failed} 只｜窗口 {min(s[0] for s in spans)} → {max(s[1] for s in spans)}")
+    # 报**实际评估到的**首日，而不是 --since：K 线不足 80 根的预热期会把窗口往后推，
+    # 两者可以差几个月；只报参数等于报了一个没发生的窗口。
+    真实首日 = min(first_day.values()) if first_day else "—"
+    print(f"行情失败 {failed} 只｜取回区间 {min(s[0] for s in spans)} → {max(s[1] for s in spans)}"
+          f"｜--since {args.since}｜**实际评估窗 {真实首日} → {args.as_of}**｜评估股票日 {evaluated:,}")
+    late = sorted(c for c, d in first_day.items() if d > 真实首日)
+    if late:
+        print(f"  其中 {len(late)} 只晚于该首日才进入评估（上市晚/停牌/预热不足），最晚 "
+              f"{max(first_day[c] for c in late)}")
 
     for g in gates:
-        label = ("只判形态（无估值/过度延伸/流动性闸门）" if g == "price"
-                 else "严格按选股流程（矩阵资格 + §8.8 + §11.8）⚠含前视偏差，见文件头")
+        label = ("**对照口径**：只判形态（无估值/过度延伸/流动性闸门）。§12.7 规定信号取舍不看这组数字" if g == "price"
+                 else "**判定口径（§12.7）**：严格按选股流程（矩阵资格 + §8.8 + §11.8）⚠含前视偏差，读超额不读水平")
         print(f"\n{'=' * 78}\n口径 {g}：{label}")
         for f in forwards:
             b = [x[1] for x in base[g][f]]
