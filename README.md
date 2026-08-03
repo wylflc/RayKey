@@ -12,7 +12,7 @@ The project supports a reproducible equity-research workflow: build an investabl
 2. Valuation screening across the worth-attention set, materialized into the core valuation pool (core layer = L1/L2, tactical = L3).
 3. Rolling updates after financial-report disclosures.
 4. Daily volume-price scan producing buy candidates from the core valuation pool.
-5. Daily holdings monitoring and sell scan.
+5. Daily holdings tracking: per-holding announcement/news search plus a valuation refresh (workflow v2.05 reduced this stage from a sell-decision engine to plain tracking; the stop price is the only mechanical rule left, and the buy-side §10 gate retired in the same revision — the pipeline now ends at candidates).
 
 The full-universe round-1 rescan is complete (5,653 companies triaged as of 2026-07-09: 261 worth_attention / 5,332 boundary_pending / 60 garbage); `docs/archive/round1-rescan-progress.md` holds the final snapshot. Tiering over that set was rebuilt on 2026-08-01 under workflow v1.27 (L1 21 / L2 231 / L3 9, all evidence-reviewed). Every reviewed conclusion is appended to `data/processed/a_share_workflow_decision_log.csv`.
 
@@ -67,7 +67,7 @@ Valuation pool materialization and daily scans (see workflow §6.7, §8.3, §14)
 ```bash
 python3 scripts/build_a_share_core_valuation_pool.py --as-of YYYY-MM-DD
 python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD
-python3 scripts/scan_holdings_sell_signals.py --as-of YYYY-MM-DD
+python3 scripts/track_holdings_daily.py --as-of YYYY-MM-DD
 python3 scripts/backtest_signal_replay.py --as-of YYYY-MM-DD --symbols CODE1,CODE2
 ```
 
