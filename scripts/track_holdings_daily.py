@@ -46,7 +46,7 @@ FIELDNAMES = [
     "effective_valuation_tier",
     "fair_price_low",
     "fair_price_high",
-    "band_position",
+    "upside",
     "stop_hit",
     "action",
     "note",
@@ -69,20 +69,23 @@ def load_pool(path: Path) -> dict[str, dict[str, str]]:
 
 
 def effective_tier(close: float, low: float | None, high: float | None) -> tuple[str, str]:
-    """§6.2.1.6 价格自动定档 + 带内位置。带缺失时返回空档与空带位。"""
-    if low is None or high is None or high <= 0:
+    """§6.2.1.6 价格自动定档 + 空间（区间中值/现价 − 1）。带缺失时返回空档与空空间。
+
+    v2.11（用户指令）：第五列由「带位」改为「空间」。带位（带内X%／低于带底-X%／越带顶+X%）
+    与空间是同一件事的两种写法，而空间与池阅读版、§9.6 名单同口径且可直接比较——池 MD 早在
+    v1.10 就以同样理由删掉了带位列，持仓表此前一直没跟上。
+    """
+    if low is None or high is None or high <= 0 or close <= 0:
         return "", ""
+    pct = round(((low + high) / 2 / close - 1) * 100)
+    upside = "0%" if pct == 0 else f"{pct:+d}%"
     if close > 1.2 * high:
-        return "高估", f"越带顶+{(close / high - 1) * 100:.0f}%"
+        return "高估", upside
     if close > high:
-        return "较高估", f"越带顶+{(close / high - 1) * 100:.0f}%"
+        return "较高估", upside
     if close >= low:
-        span = high - low
-        pos = (close - low) / span * 100 if span > 0 else 0.0
-        return "中性", f"带内{pos:.0f}%"
-    margin = (low + high) / 2 / close - 1
-    tier = "低估" if margin >= 0.40 else "较低估"
-    return tier, f"低于带底{(close / low - 1) * 100:.0f}%"
+        return "中性", upside
+    return ("低估" if (low + high) / 2 / close - 1 >= 0.40 else "较低估"), upside
 
 
 def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeout: float) -> list[dict[str, object]]:
@@ -106,9 +109,9 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         low = to_float(pool_row.get("fair_price_low")) if pool_row else None
         high = to_float(pool_row.get("fair_price_high")) if pool_row else None
 
-        tier, band_pos = ("", "")
+        tier, upside = ("", "")
         if close is not None:
-            tier, band_pos = effective_tier(close, low, high)
+            tier, upside = effective_tier(close, low, high)
 
         notes: list[str] = []
         if close is None:
@@ -145,7 +148,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
                 "effective_valuation_tier": tier,
                 "fair_price_low": "" if low is None else f"{low:g}",
                 "fair_price_high": "" if high is None else f"{high:g}",
-                "band_position": band_pos,
+                "upside": upside,
                 "stop_hit": stop_hit,
                 "action": action,
                 "note": "；".join(notes),
@@ -176,7 +179,7 @@ def log_decisions(
             "decision_result": row["action"],
             "summary_reason": (
                 f"现价 {row['close'] or 'NA'}｜{row['quality_tier'] or 'NA'}×{row['effective_valuation_tier'] or 'NA'}"
-                f"｜带 {row['fair_price_low'] or 'NA'}-{row['fair_price_high'] or 'NA'}｜{row['band_position'] or 'NA'}"
+                f"｜带 {row['fair_price_low'] or 'NA'}-{row['fair_price_high'] or 'NA'}｜空间 {row['upside'] or 'NA'}"
                 f"｜割肉价 {row['stop_loss_price'] or '未设定'}"
                 + (f"｜{row['note']}" if row["note"] else "")
             ),

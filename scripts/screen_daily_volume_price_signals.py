@@ -337,13 +337,29 @@ PERSIST_WINDOW_DAYS = 10  # §8.11.1 持续候选回溯窗（交易日），同�
 PERSIST_STAGE_MET_DAYS = 8  # §8.11.1 窗内段位达标日数门槛：持续可买而非一日达标
 PERSIST_TRIGGER_DAYS = 4  # §8.11.1 窗内新触发日数门槛：反复自我确认而非挂在一次旧触发上延续
 
-# §9.6 深度低估重点关注（v2.01）：安全边际越厚，进入关注列表所需的信号越弱。
+# §9.6 深度低估重点关注（v2.11 重定门槛，用户裁定）：安全边际越厚，进入关注列表所需的信号越弱。
 # 只解决可见性——不改分级、不改 §8.10 优先级、不改 §8.13 所需段位、不改 §6.2.1 买入资格。
-# 门槛按质量档分档：§6.2.1.6 的「低估」本就要求空间 ≥40%，L1 不再加码（矩阵里 L1 中性即可买，
-# 是对安全边际要求最低的一档，再加码等于自相矛盾，且实测 L1 极少触及 50%——那会是一条永不触发
-# 的规则，§15.2 第 4 条）；L2 加 20pp，与矩阵中 L2 处处比 L1 严一档保持一致。
-# L3 一律不适用：弱护城河 × 深跌正是最典型的价值陷阱，战术层不设低门槛关注通道。
-DEEP_VALUE_SPACE = {"L1": 0.40, "L2": 0.60}
+# 两层的门槛口径不同，不是同一条规则的两个数：
+#   L1 只有空间一个条件（≥30%），**不再区分低估/较低估**。这是安全的，因为 `margin_of_safety`
+#      只在现价低于带底时才计算（带内及以上留空），所以这一条天然限定在 低估∪较低估 之内；
+#      而 30% 横跨 §6.2.1.6 分开两档的那条 40% 线，再按档切一刀只会把同一区间劈成两半。
+#      v2.01 曾写「L1 ≥40%」，那是把「低估」的定义重述了一遍——恒真条件，降到 30% 才真正放宽。
+#   L2 仍要求当日档位=低估（现价低于带底 **且** 空间 ≥40%），并另加空间 ≥50%。
+#   L3 不适用：弱护城河 × 深跌正是最典型的价值陷阱，战术层不设低门槛关注通道。
+DEEP_VALUE_SPACE = {"L1": 0.30, "L2": 0.50}
+DEEP_VALUE_REQUIRE_UNDERVALUED = {"L2"}  # 需在空间门槛之外另require当日档位=低估的层
+
+
+def deep_value_cheap(row: dict) -> bool:
+    """§9.6 条件①「足够便宜」。判定与跑批摘要共用一份实现，避免门槛写两处后漂移。"""
+    tier = str(row.get("quality_tier", "")).strip()[:2]
+    floor = DEEP_VALUE_SPACE.get(tier)
+    mos = row.get("margin_of_safety")
+    if floor is None or not isinstance(mos, float) or mos < floor:
+        return False
+    if tier in DEEP_VALUE_REQUIRE_UNDERVALUED:
+        return row.get("valuation_tier_effective") == "低估"
+    return True
 
 
 def _bull_at(rows: list[dict[str, float | str]], j: int) -> tuple[bool, bool]:
@@ -1176,18 +1192,14 @@ def main() -> int:
             and row.get("stage_trigger_days", 0) >= PERSIST_TRIGGER_DAYS
             and row.get("trend_strength") != "weakening"
         )
-        # §9.6 深度低估重点关注（v2.01）。与 §8.11.1 同型：只解决可见性，不改任何判定。
-        # 三个条件——①档位=低估 且 空间过该质量档门槛；②有止跌企稳证据（任一 §8.7 信号，
-        # 含弱级；或 §8.7.9 前置状态；或 §8.7.10/§8.7.12 观察标记）；③未在放量下跌/缩量阴跌中。
-        # 第③条是必要的：深度低估 + 仍在下跌 = 尚未止跌，那是「继续等」不是「可以关注了」。
+        # §9.6 深度低估重点关注（v2.01 立，v2.11 重定门槛）。与 §8.11.1 同型：只解决可见性，
+        # 不改任何判定。三个条件——①足够便宜（`deep_value_cheap`，两层口径不同见其定义）；
+        # ②有止跌企稳证据（任一 §8.7 信号，含弱级；或 §8.7.9 前置状态；或 §8.7.10/§8.7.12
+        # 观察标记）；③未在放量下跌/缩量阴跌中。第③条是必要的：深度低估 + 仍在下跌 = 尚未
+        # 止跌，那是「继续等」不是「可以关注了」。
         stab = row.pop("stabilizing", False)
-        mos = row.get("margin_of_safety")
-        floor = DEEP_VALUE_SPACE.get(str(row.get("quality_tier", "")).strip()[:2])
         row["deep_value_watch"] = bool(
-            floor is not None
-            and row.get("valuation_tier_effective") == "低估"
-            and isinstance(mos, float)
-            and mos >= floor
+            deep_value_cheap(row)
             and (stab or row.get("signals") or row.get("observation_tags"))
             and row.get("trend_strength") != "weakening"
         )
@@ -1202,6 +1214,10 @@ def main() -> int:
         "valuation_tier",
         "valuation_tier_effective",
         "valuation_tier_changed",
+        # 合理价区间随行透出（v2.11）：§9.6 的完整名单必须列出「合理价区间」，
+        # 缺这两列就得回头再拼一次池 CSV，组稿时容易拼错行。
+        "fair_price_low",
+        "fair_price_high",
         "band_position",
         "margin_of_safety",
         "deep_value_watch",
@@ -1274,17 +1290,25 @@ def main() -> int:
     # §9.6 落地校验（§15.2 第 2 条：新规则须同时给出跑批时可见的命中数，否则又是一条空文）。
     # 同时打印「够便宜但没止跌」的只数——那是本规则**有意排除**的一类，不打印就看不出第③条在起作用。
     deep = [r for r in rows if r.get("deep_value_watch")]
-    cheap = [r for r in rows
-             if r.get("valuation_tier_effective") == "低估"
-             and isinstance(r.get("margin_of_safety"), float)
-             and r["margin_of_safety"] >= (DEEP_VALUE_SPACE.get(str(r.get("quality_tier", "")).strip()[:2]) or 9.9)]
+    cheap = [r for r in rows if deep_value_cheap(r)]
     weak_only = [r for r in cheap if not r.get("deep_value_watch")]
     print(f"§9.6 深度低估重点关注：命中 {len(deep)} 只"
           f"（空间过门槛 {len(cheap)} 只，其中 {len(weak_only)} 只未见止跌/仍在下跌被排除）")
+    # 全量打印，不截断（v2.11）：§9.2 第二节要求给出完整名单与逐只信息，
+    # 这里少打一只，组稿时就无从知道它存在过。
     for r in sorted(deep, key=lambda x: -x["margin_of_safety"]):
         grade = r.get("signal_grade") or "无级"
-        print(f"    {r.get('quality_tier','')[:2]} {r.get('security_name','')}"
-              f"｜空间 {r['margin_of_safety'] * 100:.0f}%｜{grade}｜{r.get('trend_strength','')}"
+        low, high = r.get("fair_price_low") or "—", r.get("fair_price_high") or "—"
+        # `pct_chg` 已是百分数（+3% 存为 3.0），`ret_5d` 是比率（+3% 存为 0.03）——两列单位不同，
+        # 同一行并排打印必须先归一，否则 5 日涨幅会显示成 1/100。
+        pct, ret5 = r.get("pct_chg"), r.get("ret_5d")
+        pct_s = f"{float(pct):+.2f}%" if isinstance(pct, (int, float)) else "—"
+        ret5_s = f"{float(ret5) * 100:+.2f}%" if isinstance(ret5, (int, float)) else "—"
+        print(f"    {r.get('quality_tier','')[:2]}×{r.get('valuation_tier_effective','')}"
+              f" {r.get('security_name','')}"
+              f"｜现价 {r.get('close','—')}｜带 {low}-{high}｜空间 {r['margin_of_safety'] * 100:.0f}%"
+              f"｜当日 {pct_s}｜5日 {ret5_s}"
+              f"｜{grade}｜{r.get('trend_strength','')}"
               f"｜{(r.get('signals') or r.get('observation_tags') or '仅 §8.7.9 前置企稳')[:46]}")
 
     return data_error_exit_code(rows)
