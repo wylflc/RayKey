@@ -26,7 +26,19 @@
 * ``ddm3``        分红率 ≥60%，或 g ≥ r 使戈登失效：三阶段股利折现
                   n1 年 g1（= 一致预期窗口长度，不外推）→ n2 年线性衰减 → 永续 g∞
 * ``peg``         成长可见且分红率低：``PE = PEG × g``，PEG 按 ROE 上移（OI-005）
-* ``unvaluable``  输入不可得或带不可双向使用 → 判无法估值、清空带
+* ``mid_cycle``   周期股处在周期极值：中枢利润 × 戈登稳态 PE（v2.10 新增，见下）
+* ``unvaluable``  **仅表示建档未完成**（§6.5.5.2）。已建档的公司不得取此路径——
+                  通用模型失效是转入逐票差异化推导的触发条件，不是终止条件
+
+v2.10：为什么删掉了「周期假设未决 → 无法估值」
+---------------------------------------------
+存储三家（美光/三星/SK海力士）原先都判无法估值，理由是「两情景相差 12-18 倍」。
+但那两个情景一个假设 AI 需求完全不存在（FY2025 营收 × 10 年净利率中位），一个假设
+峰值利润永续（单季净利年化）——**中间地带从未被算过**。``mid_cycle`` 就是把中间地带
+算出来：中枢利润 = 中枢营收 × 自身 10 年净利率中位，倍数 = 戈登稳态 PE（用中枢 ROE
+推出，g 取永续 3%——商品没有真实的结构性成长）。周期位置这个判断被压缩成**一个**具名
+输入 ``mid_cycle_uplift``（中枢营收相对上一轮常态营收的结构性倍数），用户改一个数即可
+覆盖全部结论，而不是面对一条没有带的行自己从头判断。
 
 口径约定（与 A 股同尺，理由见 §6.8）
 ----------------------------------
@@ -41,8 +53,13 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+# §6.2.1.6 定档阈值只有一处实现，海外清单不另写一份（CLAUDE.md：标准不得重述）。
+from build_a_share_core_valuation_pool import effective_valuation_tier  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 OVERSEAS_CSV = ROOT / "data/processed/overseas_watchlist_valuation.csv"
@@ -61,6 +78,25 @@ TIER_COEF = {
     "L3": (0.80, 1.00),
     "L4": (0.75, 0.95),
 }
+
+
+def to_float(value: object) -> float | None:
+    try:
+        return float(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def band_position(price: float | None, lo: float | None, hi: float | None) -> str:
+    """§6.2.1.6 带位表述：带内X%／低于带底-X%／越带顶+X%。"""
+    if price is None or lo is None or hi is None or hi <= lo:
+        return "带位不可算"
+    if price > hi:
+        return f"越带顶+{(price / hi - 1) * 100:.1f}%"
+    if price < lo:
+        mid = (lo + hi) / 2
+        return f"低于带底{(price / lo - 1) * 100:.1f}%（对带中值空间 +{(mid / price - 1) * 100:.1f}%）"
+    return f"带内{(price - lo) / (hi - lo) * 100:.0f}%"
 
 
 def peg_from_roe(roe: float) -> tuple[float, str]:
@@ -136,6 +172,16 @@ class Company:
     key_metrics: str = ""
     review_triggers: str = ""
     cross_check: str = ""
+    # 证据（事实，不含带算术）。`valuation_reason` 由它 + 本次计算结果拼出，见 materialize()：
+    # 旧版把带算术手写进 valuation_reason，重建带时不刷新，21 家里 10 家因此一行两个带。
+    evidence: str = ""
+    sensitivity: str = ""            # §6.5.5 强制：锚±15% 或关键假设区间对应的档位
+    # mid_cycle 专用
+    base_revenue: float = 0.0        # 上一轮周期的常态营收（本币十亿/兆，与 mid_margin 同口径）
+    mid_cycle_uplift: float = 0.0    # 中枢营收 = base_revenue × 本值（结构性增量，非价格）
+    mid_margin: float = 0.0          # 自身 10 年净利率中位
+    shares: float = 0.0              # 摊薄股本（与 base_revenue 同单位口径）
+    cycle_note: str = ""
     # 参考分（§5.7.4）
     q1: int = 0
     q2: int = 0
@@ -205,8 +251,40 @@ class Company:
                 f"× [{lo_c}, {hi_c}]（现值锚不叠加安全边际）= {fair * lo_c:.2f}~{fair * hi_c:.2f}。"
                 f"**通用口径为何不成立**：{self.why_generic_fails}。{self.cross_check}"
             )
+        elif self.path == "mid_cycle":
+            # 周期股（H）在周期极值：表观 PE 的分母是峰值利润，PEG/DCF 都失效。
+            # 锚 = 中枢利润（中枢营收 × 自身 10 年净利率中位），倍数 = 戈登稳态 PE
+            # （用中枢 ROE 推出，g = 永续 3%：商品没有真实的结构性成长）。
+            # 倍数被推导而非指定（§6.5.7 v1.54）；带宽仍只由分层系数承担（v1.62）。
+            payout = 1 - G_TERMINAL / self.roe
+            pe = payout / (self.r - G_TERMINAL)
+            if self.base_revenue:
+                mid_rev = self.base_revenue * self.mid_cycle_uplift
+                mid_profit = mid_rev * self.mid_margin
+                eps = mid_profit / self.shares
+                anchor_txt = (
+                    f"中枢营收 = 上轮常态营收 {self.base_revenue:,.4g} × 结构性增量 "
+                    f"{self.mid_cycle_uplift:.2f}x = {mid_rev:,.4g}（{self.cycle_note}）；"
+                    f"× 自身 10 年净利率中位 {self.mid_margin:.1%} = 中枢利润 {mid_profit:,.4g}；"
+                    f"÷ 摊薄股本 {self.shares:,.4g} = 中枢 EPS {eps:,.2f}"
+                )
+            else:
+                eps = self.anchor_eps
+                anchor_txt = f"中枢 EPS {eps:,.2f}（{self.anchor_note}）"
+            fair = eps * pe
+            method = f"中枢利润×戈登稳态PE：中枢EPS {eps:,.2f} × PE {pe:.2f}x"
+            deriv = (
+                f"{anchor_txt}；中枢 ROE {self.roe:.2%}（{self.roe_note}）→ "
+                f"可持续分红率 = 1 − {G_TERMINAL:.0%}/{self.roe:.2%} = {payout:.1%}，"
+                f"稳态 PE = {payout:.3f}/({self.r:.1%}−{G_TERMINAL:.0%}) = {pe:.2f}x；"
+                f"合理价 = {eps:,.2f} × {pe:.2f} = {fair:,.2f}，"
+                f"× 分层系数 [{lo_c}, {hi_c}]（{self.tier}）= {fair * lo_c:,.2f}~{fair * hi_c:,.2f}。"
+                f"**通用口径为何不成立**：{self.why_generic_fails}。{self.cross_check}"
+            )
         else:
             raise ValueError(f"未知路径 {self.path}")
+        if self.sensitivity:
+            deriv += f" **敏感度（§6.5.5）**：{self.sensitivity}"
         return round(fair * lo_c, 2), round(fair * hi_c, 2), method, deriv
 
     def score(self) -> float:
@@ -267,7 +345,20 @@ def materialize(as_of: str) -> None:
         unval = lo is None
         row["fair_price_low"] = "" if unval else f"{lo}"
         row["fair_price_high"] = "" if unval else f"{hi}"
-        row["valuation_tier"] = "无法估值" if unval else row["valuation_tier"]
+        # 审定档由本次的带与复核时点价重算（§6.2.1.6），不沿用旧值：带一改而档不改，
+        # 读表的人会拿新带去核对一个用旧带算出来的档。
+        price = to_float(row.get("valuation_price"))
+        row["valuation_tier"] = "无法估值" if unval else (
+            effective_valuation_tier(price, lo, hi) or row["valuation_tier"])
+        # `valuation_reason` = 证据（输入）+ 本次定档（生成）。带算术只在这里出现一次，
+        # 因此不可能与 fair_price_low/high 脱节——旧版手写带，10/21 行已脱节。
+        row["valuation_reason"] = (
+            c.evidence + f"｜**本次定档（{as_of}）**：{method}；带 "
+            + ("—（建档未完成）" if unval else f"{lo:,.2f}~{hi:,.2f}")
+            + f"；复核时点价 {row.get('valuation_price') or 'NA'}"
+            f"（{row.get('valuation_price_as_of') or 'NA'}）→ **{row['valuation_tier']}**"
+            + (f"，{band_position(price, lo, hi)}" if not unval else "") + "。"
+        )
         row["fair_price_basis"] = deriv
         row["valuation_method"] = method
         row["band_derivation"] = "unvaluable" if unval else "dossier"

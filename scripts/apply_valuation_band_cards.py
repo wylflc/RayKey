@@ -212,7 +212,9 @@ def main() -> int:
             row["base_band_low"] = row["base_band_high"] = ""
             row["band_derivation"] = ""
             row["anchor_metric"] = card.get("anchor_metric", "")
-            row["fair_price_basis"] = f"§6.5.2.1 锚定量不可得，判无法估值：{reason}"
+            # v2.10：这条分支的语义是**建档未完成**（§6.5.5.2），不是「这家公司估不出来」。
+            # 已建档的行不会走到这里——建带卡有锚就一定进上面的分支。
+            row["fair_price_basis"] = f"§6.5.2.1 锚定量不可得，本票建档未完成（§6.5.5.2）：{reason}"
             stats["unvaluable"] += 1
 
         cutoff_date, cutoff_event = evidence_cutoff(code)
