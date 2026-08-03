@@ -1,6 +1,6 @@
 {
  "security_code": "603259",
- "retrieved_at_utc": "2026-08-03T10:31:59+00:00",
+ "retrieved_at_utc": "2026-08-03T11:15:30+00:00",
  "quote": {
   "price": 128.5,
   "change_pct": 0.05,
@@ -2122,5 +2122,43 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-08-03",
+   "type": "公司指引",
+   "period": "FY2026",
+   "title": "2026 中报同步上调全年收入指引：51.3-53.0亿 → 58.5-60.5亿元人民币",
+   "source_url": "https://www.manilatimes.net/2026/08/03/tmt-newswire/pr-newswire/wuxi-apptec-delivers-strong-h1-2026-results-and-raises-full-year-guidance1-driven-by-greater-success-of-multiple-customers-products-and-crdmo-model/2396868",
+   "summary": "全年收入指引由 RMB 513-530亿 上调至 RMB 585-605亿；持续经营收入同比增速指引由 +18~22% 上调至 +35~39%。公司同时表示「有信心在 2026 年维持稳定且有韧性的 adjusted non-IFRS 净利率」。2026 资本开支指引上调至 RMB 75-85亿（含常州新基地提前启动）。",
+   "used_for": "盈利锚：指引隐含 FY2026 扣非 ≈ 214-221亿（收指引中值 595亿 × H1 non-IFRS 净利率 40.0% × 扣非/non-IFRS 0.914），显著高于建带所用 TTM 扣非 182.31亿 与一致预期 2026E 175.95亿"
+  },
+  {
+   "recorded_at": "2026-08-03",
+   "type": "高频经营数据",
+   "period": "2026-06-30",
+   "title": "持续经营业务在手订单 RMB 664.3亿，同比 +25.2%",
+   "source_url": "https://www.manilatimes.net/2026/08/03/tmt-newswire/pr-newswire/wuxi-apptec-delivers-strong-h1-2026-results-and-raises-full-year-guidance1-driven-by-greater-success-of-multiple-customers-products-and-crdmo-model/2396868",
+   "summary": "截至 2026-06-30 持续经营在手订单 664.3亿元、同比 +25.2%（2025 年末为 580亿、同比 +28.8%；2026Q1 近 600亿、同比 +23.6%）。在手订单/全年收入指引中值 = 1.12x。",
+   "used_for": "档案 key_metrics 与 hf_indicators 的「在手订单（CXO 领先指标，同比转负即重算）」——本期同比 +25.2%，未触发复核阈值"
+  },
+  {
+   "recorded_at": "2026-08-03",
+   "type": "盈利质量",
+   "period": "2026H1",
+   "title": "H1 adjusted non-IFRS 归母 115.7亿（+83.2%），non-IFRS 净利率 40.0%（+9.7pp），non-IFRS 毛利率 53.9%（+9.4pp）",
+   "source_url": "https://www.manilatimes.net/2026/08/03/tmt-newswire/pr-newswire/wuxi-apptec-delivers-strong-h1-2026-results-and-raises-full-year-guidance1-driven-by-greater-success-of-multiple-customers-products-and-crdmo-model/2396868",
+   "summary": "公司口径 adjusted non-IFRS 归母 115.7亿 vs CAS 扣非 105.72亿（比值 1.094）；non-IFRS 净利率 40.0%，公司称 2026 全年将维持稳定。CAS 归母 110.8亿（+29.4%）低于 non-IFRS，与去年同期含大额一次性收益有关。",
+   "used_for": "口径换算：由收入指引推 FY2026 扣非时的 non-IFRS→扣非 折算系数 0.914；并佐证 H1 利润的经营属性（非经常仅占 CAS 归母 4.6%）"
+  },
+  {
+   "recorded_at": "2026-08-03",
+   "type": "TIDES/分部",
+   "period": "FY2025",
+   "title": "TIDES（多肽/寡核苷酸）2025 收入 113.7亿、+96.0%；TIDES 在手订单 +20.2%",
+   "source_url": "https://www.vbdata.cn/newsDetail/575c15942abc11f1880400163e034e34",
+   "summary": "2025 年 TIDES 收入 113.7亿元、同比 +96.0%；TIDES 在手订单同比 +20.2%，D&M 客户数 +25%、服务分子数 +45%。**2026H1 分部数据本次未取到**，属待补项。",
+   "used_for": "档案 hf_indicators 的「TIDES 业务收入与产能（季）」；毛利率 10 个季度单向上行（38.13%→53.91%）的结构性解释"
+  }
+ ]
 }

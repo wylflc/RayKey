@@ -446,6 +446,29 @@ def summarize(code: str, evidence: dict[str, Any]) -> dict[str, str]:
     }
 
 
+MANUAL_FIELDS = ("recorded_at", "type", "period", "title", "source_url", "summary", "used_for")
+
+
+def load_manual_evidence(path: Path) -> list[dict[str, Any]]:
+    """读回上一版 JSON 里的 ``manual_evidence``（§6.5.7，v2.07）。
+
+    东财接口不提供原件下载，外部取证（储量/在手订单/管线/分红预案/高频经营数据）
+    由模型检索后**逐条写入本 key**，与接口抓取的结构化证据同处一份文件、同受
+    ``retrieved_at_utc`` 新鲜度检查。抓取整体覆写文件，故必须显式结转——否则
+    每日抓取都会静默清空人工证据。
+
+    每条至少含 ``MANUAL_FIELDS``：录入日 / 类型 / 期间 / 标题 / 来源URL / 摘要 / 用途。
+    """
+    if not path.exists():
+        return []
+    try:
+        prior = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    manual = prior.get("manual_evidence")
+    return manual if isinstance(manual, list) else []
+
+
 def fetch_one(code: str, quote: dict[str, Any]) -> dict[str, Any]:
     retrieved_at = utc_now()
     evidence: dict[str, Any] = {
@@ -526,6 +549,7 @@ def main(argv: list[str] | None = None) -> int:
     quotes = fetch_quotes(codes)
 
     summaries: list[dict[str, str]] = []
+    carried = 0
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
         futures = {executor.submit(fetch_one, code, quotes.get(code, {})): code for code in codes}
         for future in as_completed(futures):
@@ -533,13 +557,19 @@ def main(argv: list[str] | None = None) -> int:
             evidence = future.result()
             args.evidence_dir.mkdir(parents=True, exist_ok=True)
             out_path = args.evidence_dir / f"{code}.json"
+            manual = load_manual_evidence(out_path)
+            if manual:
+                evidence["manual_evidence"] = manual
+                carried += len(manual)
             out_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=1), encoding="utf-8")
             summary = summarize(code, evidence)
             summaries.append(summary)
             print(f"{code} {summary['security_name']}: {summary['fetch_status']} price={summary['quote_price']} peTTM={summary['pe_ttm_provider']}", file=sys.stderr)
 
     upsert_summary(args.summary, summaries)
-    print(f"Fetched {len(summaries)} securities; summary -> {args.summary}")
+    # §6.5.7 落地校验：人工取证条目每轮打印结转数。抓取整体覆写 JSON，不结转即等于
+    # 每次抓取都静默删除人工录入的外部证据（§15.2 第 3 条的典型形态）。
+    print(f"Fetched {len(summaries)} securities; manual_evidence 结转 {carried} 条; summary -> {args.summary}")
     return 0
 
 
