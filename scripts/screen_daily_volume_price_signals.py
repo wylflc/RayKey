@@ -349,6 +349,11 @@ PERSIST_TRIGGER_DAYS = 4  # §8.11.1 窗内新触发日数门槛：反复自我�
 DEEP_VALUE_SPACE = {"L1": 0.30, "L2": 0.50}
 DEEP_VALUE_REQUIRE_UNDERVALUED = {"L2"}  # 需在空间门槛之外另require当日档位=低估的层
 
+# §8.7.11 突破日的当日涨幅门槛，**单位是百分数**（+1% 写作 1.0，与 `pct_chg` 同口径）。
+# 这里必须写成有单位注释的具名常量：v1.37-v2.11 期间这个值以字面量 `0.03` 写在判据里，
+# 而正文声称的是「≥3%」——单位差 100 倍，条件退化成「当日收红」且无人察觉（OI-027）。
+BREAKOUT_DAY_MIN_PCT = 1.0
+
 
 def deep_value_cheap(row: dict) -> bool:
     """§9.6 条件①「足够便宜」。判定与跑批摘要共用一份实现，避免门槛写两处后漂移。"""
@@ -464,6 +469,33 @@ def pullback_to_ma_support(rows: list[dict[str, float | str]], index: int,
     if float(row["volume"]) < max(float(rows[index - 1]["volume"]) * 1.2, vol_ma20 * 0.9):
         return None
     return f"8.7.10 回踩{touched}企稳(回撤{drawdown:.0%})"
+
+
+def breakout_days_in_window(rows: list[dict[str, float | str]], index: int,
+                            megacap_yi: float | None,
+                            min_pct: float = BREAKOUT_DAY_MIN_PCT) -> list[int]:
+    """§8.7.11 的输入：回看 20 日，找出哪几日构成 8.7.1/8.7.2 式的**创新高式突破日**。
+
+    只认创新高式突破：单纯站上均线太宽松，回放实测导致 8.7.11 触发 534 次、20 日中位 −1.6%。
+
+    `min_pct` 是**当日涨幅**门槛，单位为百分数。它取 `max(breakout_days)` 作锚，因此提高门槛
+    会剔掉近的突破日、让更早的那个落进 2-15 日窗口——**它是锚点选择器而不是过滤器**，实测在
+    0%~3% 之间不产生鉴别力（详见 §8.7.11 校准表）。参数化是为了让 §12 回放能按不同门槛重算。
+    """
+    days: list[int] = []
+    for j in range(max(60, index - 20), index):
+        rj = rows[j]
+        cj = float(rj["close"])
+        cond_j = volume_conditions(rows, j, megacap_yi)
+        if cond_j is None or not bool(cond_j["effective"]):
+            continue
+        if float(rj["close_location"]) < 0.6:
+            continue
+        broke_high = any(rj.get(f"prev_high_{w}") is not None and cj > float(rj[f"prev_high_{w}"]) * 1.005
+                         for w in (60, 120, 250))
+        if broke_high and float(rj["pct_chg"]) >= min_pct:
+            days.append(j)
+    return days
 
 
 def pullback_after_breakout(rows: list[dict[str, float | str]], index: int,
@@ -684,23 +716,7 @@ def classify_signal(
         if previous_high is not None and close > float(previous_high) * 1.005:
             break_periods.append(str(window))
 
-    # §8.7.11 需要「近期突破日」：回看 20 日，重算哪几日构成 8.7.1/8.7.2 式突破
-    breakout_days: list[int] = []
-    for j in range(max(60, index - 20), index):
-        rj = rows[j]
-        cj = float(rj["close"])
-        cond_j = volume_conditions(rows, j, megacap_yi)
-        if cond_j is None or not bool(cond_j["effective"]):
-            continue
-        loc_j = float(rj["close_location"])
-        if loc_j < 0.6:
-            continue
-        # 只认**创新高式**突破：单纯站上均线太宽松，回放实测导致 8.7.11 触发 534 次、
-        # 20 日中位 −1.6%。突破日还须当日显著上涨，排除横盘蹭线。
-        broke_high = any(rj.get(f"prev_high_{w}") is not None and cj > float(rj[f"prev_high_{w}"]) * 1.005
-                         for w in (60, 120, 250))
-        if broke_high and float(rj["pct_chg"]) >= 0.03:
-            breakout_days.append(j)
+    breakout_days = breakout_days_in_window(rows, index, megacap_yi)
 
     signals: list[str] = []
     wait_reasons: list[str] = []
@@ -749,7 +765,9 @@ def classify_signal(
     observation_tags: list[str] = []
     if limit_up_tag:
         observation_tags.append(limit_up_tag)
-    # 8.7.11 通过 §12 回放（77 次触发，20 日中位 +1.4%、胜率 51%，达到全信号基准），作正式信号。
+    # 8.7.11 仍作正式信号，但其「通过 §12 回放」的原始依据（77 次 / +1.4% / 51%）**已不可复现**：
+    # v2.12 重跑（259 只 × 2022-06→2026-08）得 1034 次 / −0.85% / 47.3%，逐年跑输同窗基准。
+    # 是否按 §12.5 降为观察标记待用户裁定（OI-028）——在裁定前不擅自改变它的身份。
     pullback_bo = pullback_after_breakout(rows, index, breakout_days)
     if pullback_bo:
         signals.append(pullback_bo)
