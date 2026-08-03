@@ -59,7 +59,10 @@ TIER_HOLDABLE_VALUATIONS = {
     "L2": {"中性"},
     "L3": {"较低估"},
 }
-# 提醒卖出起点（该档及以上触发 §14 估值卖出减仓梯）。
+# 「提醒卖出」档的起点（该档及以上）。
+# v2.05 起本档是**纯标签**，不产生任何卖出提醒：§14 的估值卖出减仓梯已随该版退役
+# （§6.2.1 执行说明 1、§14.6 退役清单）。它只表示"现价已高到该档"，用途仅剩买入端
+# 判定与池 MD 展示。列名 trim_alert 是 v1.27 的历史命名，改名会动池 CSV 契约，故保留。
 TIER_TRIM_ALERT_FROM = {"L1": "高估", "L2": "较高估", "L3": "中性"}
 VALUATION_ORDER = ["低估", "较低估", "中性", "较高估", "高估"]
 CORE_LAYER_TIERS = {"L1", "L2"}
@@ -127,6 +130,18 @@ def infer_exchange(code: str, tier_row: dict[str, str] | None) -> str:
     return ""
 
 
+def _rel(path: Path) -> str:
+    """溯源列写**实际用到的**路径，不写模块默认常量。
+
+    旧版此处硬写 ``DEFAULT_VALUATION``，于是 ``--valuation`` 指向别的文件时，池 CSV 的
+    ``source_file`` 仍然记着默认路径——溯源列指向一个本次根本没读过的文件，比留空更糟。
+    """
+    try:
+        return str(Path(path).resolve().relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def normalize_quality_tier(value: str) -> str:
     for tier in ("L1", "L2", "L3"):
         if value.startswith(tier):
@@ -138,6 +153,7 @@ def build_pool(
     valuation_rows: list[dict[str, str]],
     tier_rows: list[dict[str, str]],
     as_of: str,
+    source_file: Path = DEFAULT_VALUATION,
 ) -> list[dict[str, str]]:
     """物化全量 worth_attention 为单一列表（v1.05）。v1.27 三档重构：
     pool_layer 仅 core（L1/L2）/ tactical（L3）/ excluded（无法估值）——**watch_only 已退役**，
@@ -242,7 +258,7 @@ def build_pool(
                 "valuation_price_as_of": row.get("valuation_price_as_of", ""),
                 "evidence_available_at": row.get("evidence_available_at", ""),
                 "pool_as_of": as_of,
-                "source_file": str(DEFAULT_VALUATION.relative_to(ROOT)),
+                "source_file": _rel(source_file),
             }
         )
 
@@ -733,6 +749,7 @@ def log_price_refresh(
     output_md: Path,
     disclosure_retrieved: str = "",
     overseas_flags: dict[str, object] | None = None,
+    input_files: str = "",
 ) -> None:
     """--md-only 现价刷新只写一行汇总日志：当日档位变化 + 披露覆盖与 §7.5.5 待复核名单。"""
     changes = list(flags.get("changes") or [])
@@ -766,7 +783,7 @@ def log_price_refresh(
                     f"forecast_pending {len(pending)}"
                 ),
                 "summary_reason": "；".join(summary_parts),
-                "input_files": "",
+                "input_files": input_files,
                 "source_urls": "https://qt.gtimg.cn/;https://datacenter-web.eastmoney.com/",
                 "output_file": str(output_md),
                 "operator_or_script": "scripts/build_a_share_core_valuation_pool.py",
@@ -831,7 +848,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of)
+    rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of, args.valuation)
     overseas_rows = load_overseas(args.overseas)
     quotes: dict[str, dict] = {}
     overseas_quotes: dict[str, dict] = {}
@@ -914,6 +931,10 @@ def main() -> None:
         log_price_refresh(
             args.log_file, args.as_of, len(quotes), len(rows), flags, forecast_retrieved,
             args.output_md, disclosure_retrieved, overseas_flags,
+            # 溯源：旧版此处写空串，刷新行看不出读了哪些文件（§15.2 第 3 条同型）。
+            input_files=";".join(_rel(p) for p in (
+                args.valuation, args.tiers, args.tier_snapshot, args.forecasts, args.disclosures
+            )),
         )
         print(f"refreshed {args.output_md} with {len(quotes)}/{len(rows)} quotes; {summary}")
     else:

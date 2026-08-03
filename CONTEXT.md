@@ -64,7 +64,9 @@ AShareQuant models listed-company research for mainland China, Hong Kong, and U.
 
 **Scenario Valuation** — a valuation assessment expressed as bear, base, and bull cases with explicit assumptions about demand, margins, capital intensity, multiple, asset value, or cycle position. A target price without stated assumptions is not one.
 
-**Pretrade Decision** — the structured buy gate between a buy candidate and an actual position: one row per decision covering thesis, scenarios, position tier, exposure checks, and the single-trade risk check. Governed by workflow §10.
+**Buy Candidate** — the pipeline's terminal buy-side output: a pool name whose right-side volume/price signal fired on a given trading day, carrying the facts behind it (signal grade, entry stage vs. stage required, effective valuation tier, band position, over-extension). Governed by workflow §8–§11. It is **not** an instruction to buy; the pipeline emits no buy or sell recommendation, and position sizing is outside it.
+
+**Pretrade Decision** *(retired v2.05)* — the former structured buy gate between a buy candidate and an actual position. The 15-item gate and its `approved`/`compliant`/`off_system`/`hold_off` verdicts were retired on 2026-08-03; `data/processed/pretrade_decisions.csv` is a closed historical record. Retained here only so the term is recognizable in old decision-log rows and archived docs — **do not apply it.**
 
 **Position Plan** — non-binding portfolio guidance downstream of both moat screening and valuation assessment. It belongs to a security, and is never evidence that the underlying company has a stronger moat.
 

@@ -112,7 +112,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
 
         notes: list[str] = []
         if close is None:
-            notes.append("未取到行情（停牌或接口缺失），沿用上一交易日结论")
+            notes.append("**未取到当日行情**（停牌或接口失败）：割肉价未判定，请人工核对（§14.5）")
         if pool_row is None:
             notes.append("不在核心估值合格池内，无带")
         elif low is None or high is None:
@@ -121,7 +121,16 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
             notes.append("**未设定割肉价**：该仓无机械提醒，请尽快补定（§14.3 第 3 条）")
 
         stop_hit = bool(close is not None and stop is not None and close <= stop)
-        action = "割肉提醒" if stop_hit else "持有"
+        # §14.5 四取值。无行情时必须落 `数据缺失` 而非 `持有`：`持有` 是唯一读起来像
+        # "已检查、没事" 的取值，而没有现价恰恰意味着割肉价没判过。旧版在此落 `持有`
+        # 并写 "沿用上一交易日结论"，但脚本从不读上一日文件——一只已破割肉价的停牌股
+        # 会显示为持有，在 Tier-0 规则上制造静默失效（§15.2 第 3 条）。
+        if stop_hit:
+            action = "割肉提醒"
+        elif close is None:
+            action = "数据缺失"
+        else:
+            action = "持有"
 
         rows.append(
             {
@@ -146,7 +155,14 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
     return rows
 
 
-def log_decisions(log_file: Path, rows: list[dict[str, object]], as_of: date, holdings_file: Path, output_csv: Path) -> None:
+def log_decisions(
+    log_file: Path,
+    rows: list[dict[str, object]],
+    as_of: date,
+    holdings_file: Path,
+    output_csv: Path,
+    pool_file: Path = DEFAULT_VALUATION_POOL,
+) -> None:
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     records = [
         {
@@ -164,7 +180,9 @@ def log_decisions(log_file: Path, rows: list[dict[str, object]], as_of: date, ho
                 f"｜割肉价 {row['stop_loss_price'] or '未设定'}"
                 + (f"｜{row['note']}" if row["note"] else "")
             ),
-            "input_files": f"{holdings_file}; {DEFAULT_VALUATION_POOL}",
+            # 溯源写实际用到的池文件；旧版硬写 DEFAULT_VALUATION_POOL，`--valuation-pool`
+            # 指向别处时日志会记下一个本次没读过的路径。
+            "input_files": f"{holdings_file}; {pool_file}",
             "source_urls": "",
             "output_file": str(output_csv),
             "operator_or_script": "track_holdings_daily.py",
@@ -199,7 +217,7 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=FIELDNAMES)
         writer.writeheader()
         writer.writerows(rows)
-    log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv)
+    log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv, args.valuation_pool)
 
     hit = [r for r in rows if r["stop_hit"]]
     no_stop = [r for r in rows if not str(r["stop_loss_price"]).strip()]

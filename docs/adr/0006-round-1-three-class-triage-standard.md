@@ -6,7 +6,7 @@ Accepted.
 
 ## Context
 
-Round-1 triage assigns every A-share an attention class (worth_attention / boundary_pending / garbage) before any L1–L5 tiering. The earlier §5.4 wording let "no moat / homogeneous" and "low-barrier business" send a company to garbage, which ADR-0005 makes a permanent, never-re-reviewed exclusion. That conflated company-level current weakness with permanent structural exclusion, and the worth_attention bar ("some degree of moat") was too loose for a watchlist that had grown to roughly 1000 names.
+Round-1 triage assigns every A-share an attention class (worth_attention / boundary_pending / garbage) before any quality tiering. The earlier §5.4 wording let "no moat / homogeneous" and "low-barrier business" send a company to garbage, which at the time meant permanent, never-re-reviewed exclusion. That conflated company-level current weakness with permanent structural exclusion, and the worth_attention bar ("some degree of moat") was too loose for a watchlist that had grown to roughly 1000 names.
 
 ## Decision
 
@@ -15,7 +15,7 @@ Round-1 triage assigns every A-share an attention class (worth_attention / bound
 3. **worth_attention is strict and gated by the capital-replicability test**: the advantage must be durable enough that a well-funded entrant cannot quickly replicate it and erode returns. There is no numeric target; the count follows from the standard.
 4. **garbage is narrow and permanent — only** governance/fraud disasters or structurally hopeless low-barrier industries where no company can build a durable advantage. Company-level current weakness in a non-hopeless industry goes to boundary_pending, which is reversible.
 5. **boundary_pending covers two cases**: insufficient reliable evidence to judge (including new listings without an annual report), or judgeable-but-currently-weak in a non-hopeless industry. It is re-reviewed when reliable evidence appears or a hard trigger occurs.
-6. **Round-1 is a light triage**: business model + obvious durable advantage or its absence + obvious negatives. It does not require reading each annual report; obvious garbage can be decided quickly. Deep annual-report and research reading is deferred to L1–L5 tiering and the authoritative deep review.
+6. **Round-1 is a light triage**: business model + obvious durable advantage or its absence + obvious negatives. It does not require reading each annual report; obvious garbage can be decided quickly. Deep annual-report and research reading is deferred to quality tiering (workflow §5.7, currently L1–L3).
 
 ## Implications
 

@@ -2,8 +2,9 @@
 
 - **状态**：**已生效**（2026-08-01 随工作流 v1.27 并档）。本文件是 §5.7 的**打分细则与判例证据**——Q1/Q2 口径与 1 分粒度载体硬度阶梯以本文件为准。
 - **v2.00 边界收紧**：**规则性内容已上收至工作流 §5.7.4**（参考分公式、旗标表、评分硬约束、输出字段）。标准只存在于 `docs/000_Ashare_workflow.md`；本文件保留同一内容的展开说明与判例，**两处冲突时以工作流为准**。
-- **内部版本**：v0.6（2026-08-02，规则上收）。
-- **配套**：档位定义与三态准入矩阵见工作流 §5.7/§6.2.1；打分产物 `data/processed/a_share_quality_scores_v2.csv`。方案设计轨迹见 `docs/archive/Ashare_tiering_v2_design.md`（已归档）。
+- **内部版本**：v0.7（2026-08-03，分层表并为唯一真值源）。
+- **配套**：档位定义与三态准入矩阵见工作流 §5.7/§6.2.1；**打分产物即 `data/processed/a_share_watchlist_quality_tiers.csv`（唯一结构化真值源）**。方案设计轨迹见 `docs/archive/Ashare_tiering_v2_design.md`（已归档）。
+- **`a_share_quality_scores_v2.csv` 已于 2026-08-03 退役归档**至 `data/archive/quality-scores-v2/`。退役理由：两张表并存后必然漂移——实测两表各 261 行却在宁德时代上给出 L1 与 L2 两个结论，而全部脚本读的是分层表、本文件旧 §10.4 却写着"由 scores_v2 覆盖分层表"，方向正好相反。Q3/Q4/`credibility_deduction`/`flags`/`score_version`/`scored_at`/`prior_tier` 等 12 列已并入分层表。
 
 ---
 
@@ -70,7 +71,9 @@
 
 **Q1 作地板而非权重**：护城河再强，生意模式不足则不入 L1。判例——盐湖股份 Q2=84 但 Q1=64、北方稀土 Q2=86 但 Q1=60、中芯国际 Q2=84 但 Q1=55。
 
-**旗标是第三个输入**：定档用 Q1、Q2、旗标三者，而二维散点图只能显示前两个。宁德时代（Q1=74, Q2=82）落在通道A 区域内却判 L2，原因是 `erosion_path(中)`——固态路线与客户二供。读图时须记得这一维不可见（notebook 图⑥ 已用橙圈标出）。侵蚀概率按 `erosion_path(...)` 内的标注解析，**只有中/高概率排除 L1**；注意 `erosion_path(低端,中)` 这类标注中「低端」指市场档次而非概率。
+**旗标是第三个输入**：定档用 Q1、Q2、旗标三者，而二维散点图只能显示前两个。读图时须记得这一维不可见（notebook 图⑥ 已用橙圈标出）。侵蚀概率按 `erosion_path(...)` 内的标注解析，**只有中/高概率排除 L1**；注意 `erosion_path(低端,中)` 这类标注中「低端」指市场档次而非概率。
+
+**概率标注本身要有判据（宁德时代判例，v1.40 后已改判）**：本处原以宁德时代（Q1=74, Q2=82）为例说明"落在通道A 内却因 `erosion_path(中)` 判 L2"。该否决**已被工作流 §5.7.2 的四条判据推翻、现为 L1**——固态路线切换尚未发生且公司自身在该路线领跑，不构成「中」概率（判据3）。**留下这条判例的价值恰在于此**：旗标是第三个输入没错，但"中概率"三个字必须有可指的事实（已发生的份额流失／已公布的竞品时间表／已落地的政策文本），否则旗标就成了绕过分数门槛的自由变量。写 `erosion_path(中)` 前先对照 §5.7.2 四条。
 
 ### 3.2 为什么 Q2 主导、Q3/Q4 移出定档
 
@@ -180,13 +183,15 @@ score_version / scored_at / evidence_status
 
 ## 9. 全池 261 家结果（复核完成，2026-08-01）
 
-**261 家全部完成复核。** 产物 `data/processed/a_share_quality_scores_v2.csv`，逐批日志 `data/interim/evidence_review_log.md`。
+**261 家全部完成复核。** 产物 `data/processed/a_share_watchlist_quality_tiers.csv`，逐批日志 `data/interim/evidence_review_log.md`。
 
 | 档 | 家数 | 占比 | 复核前 |
 | --- | ---: | ---: | ---: |
-| **L1 强护城河** | 21 | 8.0% | 16 |
-| **L2 中护城河** | 231 | 88.5% | 209 |
+| **L1 强护城河** | 22 | 8.4% | 16 |
+| **L2 中护城河** | 230 | 88.1% | 209 |
 | **L3 弱护城河** | 9 | 3.4% | 36 |
+
+本表为**当前实际分布**。相对 2026-08-01 复核当日的 21/231/9，差异仅宁德时代一家：v1.40 立 §5.7.2 侵蚀路径否决四判据后按新判据重裁为 L1（判例见工作流 §5.7.2）。
 
 **复核口径分两级**（`evidence_status` 字段区分，不可混为一谈）：
 
@@ -272,7 +277,7 @@ cd notebooks && ../.venv/bin/jupyter nbconvert --to notebook --execute --inplace
 
 ### 10.3 数据写入必须原子
 
-改写 `a_share_quality_scores_v2.csv` 一律**先写临时文件再 `os.replace`**。判例：2026-07-31 一个脚本用 `open(p,'w')` 打开、`writeheader()` 成功后 `writerows()` 因字段缺失抛错，文件被截断到 3 行（已由 git 恢复）。`'w'` 模式先截断后写，中途失败即毁原文件。
+改写 `a_share_watchlist_quality_tiers.csv` 一律**先写临时文件再 `os.replace`**。判例：2026-07-31 一个脚本用 `open(p,'w')` 打开、`writeheader()` 成功后 `writerows()` 因字段缺失抛错，文件被截断到 3 行（已由 git 恢复）。`'w'` 模式先截断后写，中途失败即毁原文件。
 
 ```python
 fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), suffix='.csv'); os.close(fd)
@@ -298,7 +303,7 @@ os.replace(tmp, p)
 | `build_a_share_core_valuation_pool.py` | `TIER_ELIGIBILITY` 四档、档序含 L4/L5 | 改三档三态；`CORE_LAYER_TIERS={"L1","L2"}` **恰好不用改** |
 | `screen_daily_volume_price_signals.py` | 段位映射与优先级按五档 | 按三档重写，新增卖出提醒输出 |
 | `build_report_update_queue.py` | `startswith(("L1","L2","L3","L4"))` | 改三档 |
-| `a_share_watchlist_quality_tiers.csv` | `quality_tier` 为旧五档值 | 由 `a_share_quality_scores_v2.csv` 的 `quality_tier` 覆盖（须先完成证据复核） |
+| `a_share_watchlist_quality_tiers.csv` | `quality_tier` 为旧五档值 | 已于 2026-08-01 覆盖为三档。**此后本表即唯一真值源**——`a_share_quality_scores_v2.csv` 已于 2026-08-03 退役归档，其 12 列并入本表；本行是当时的迁移记录，**不是"每次都从 scores_v2 覆盖"的常设指令** |
 
 **并档前置**：证据复核完成（§10.5）→ 用户确认档位线与矩阵 → 改工作流 §15 → 改脚本 → 回归验证（切换前后各跑一次池物化与每日扫描，逐条解释可买名单差异）。
 

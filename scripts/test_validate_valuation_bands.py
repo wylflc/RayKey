@@ -4,11 +4,16 @@
 Run: ``python3 scripts/test_validate_valuation_bands.py``
 
 These lock down the rules that a future model or agent could quietly relax:
-the band must be recomputable from declared inputs, a tier-back-solved band
-must never pass, and the §6.5.6 growth option must stay inside its five hard
-constraints. Two of them exist because the first self-test caught real bugs —
-a market-cap/per-share unit mismatch in ``growth_option_value`` and a
-misleading severity on passing rows.
+the band must be recomputable from declared inputs, and a tier-back-solved
+band must never pass. One case exists because the first self-test caught a
+real bug — a misleading severity on passing rows.
+
+The nine §6.5.6 growth-option cases were deleted on 2026-08-03 along with the
+mechanism itself (retired and *forbidden* since v2.00; all five
+``growth_option_*`` columns empty across all 261 rows, so the guard had never
+fired). They were 9 of 21 cases — 43% of the suite defending a banned branch
+while no case covered the failures that actually happen. See
+``test_failure_semantics.py`` for those.
 """
 
 from __future__ import annotations
@@ -18,7 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from validate_valuation_bands import check_growth_option, check_row  # noqa: E402
+from validate_valuation_bands import check_row  # noqa: E402
 
 
 ANCHOR, MULT, SHARES = 600.0, 20.0, 44.0          # 归母 600亿 × PE20 ÷ 44亿股
@@ -55,17 +60,6 @@ def model_row(**overrides) -> dict:
     row.update(overrides)
     return row
 
-
-def option_row(**overrides) -> dict:
-    defaults = {
-        "growth_option_value": str(BASE_MID * 0.40),
-        "growth_option_share": "0.40",
-        "growth_option_evidence_level": "3",
-        "growth_option_probability": "0.35",
-        "growth_option_milestones": "H2 产能投产 / 大客户定点 / 渗透率过 20%",
-    }
-    defaults.update(overrides)
-    return model_row(**defaults)
 
 
 def a2_row(tier: str, low: float, high: float) -> dict:
@@ -111,24 +105,6 @@ CASES: list[tuple[str, callable, str | None]] = [
     ("缺建带卡 → backfill 而非 blocking",
      lambda: [] if check_row({k: ("" if k in {"anchor_metric", "anchor_value"} else v)
                               for k, v in model_row().items()})[1] == "backfill" else ["应判 backfill"], None),
-    ("合规成长期权通过", lambda: check_growth_option(option_row()), None),
-    ("期权占比 >50% 未标 fragile 被拦",
-     lambda: check_growth_option(option_row(growth_option_value=str(BASE_MID * 0.60),
-                                            growth_option_share="0.60")), "50% 上限"),
-    ("期权占比 >50% 已标 fragile 放行",
-     lambda: check_growth_option(option_row(growth_option_value=str(BASE_MID * 0.60),
-                                            growth_option_share="0.60", band_fragile="true")), None),
-    ("L3 不得计入期权", lambda: check_growth_option(option_row(quality_tier="L3")), "仅 L1/L2"),
-    ("实现概率超证据等级上限被拦",
-     lambda: check_growth_option(option_row(growth_option_evidence_level="1")), "超过证据等级"),
-    ("证据等级 0 不得计入期权",
-     lambda: check_growth_option(option_row(growth_option_evidence_level="0",
-                                            growth_option_probability="0")), "不得计入期权"),
-    ("缺里程碑被拦", lambda: check_growth_option(option_row(growth_option_milestones="")), "milestones"),
-    ("缺 base 带被拦", lambda: check_growth_option(option_row(base_band_low="", base_band_high="")), "base_band"),
-    # 单位回归：期权按市值口径入库（未除股本）会被 share 复算不符抓住
-    ("期权误用市值口径被拦",
-     lambda: check_growth_option(option_row(growth_option_value=str(BASE_MID * 0.40 * SHARES))), "不符"),
 ]
 
 

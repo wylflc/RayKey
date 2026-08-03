@@ -142,11 +142,6 @@ RATE_LIMITS = {
 }
 MAX_PERPETUAL_G = 0.035
 
-# --- §6.5.6 成长期权：证据等级 → 实现概率上限 -------------------------------
-GROWTH_OPTION_PROB_CAP = {0: 0.00, 1: 0.10, 2: 0.20, 3: 0.35, 4: 0.50, 5: 0.60}
-GROWTH_OPTION_MAX_SHARE = 0.50          # 期权价值 ÷ base 带中值
-GROWTH_OPTION_TIERS = {"L1", "L2"}      # 仅 L1/L2 可计入
-
 CARD_SLOTS = [
     "anchor_metric",
     "anchor_value",
@@ -249,57 +244,6 @@ def recompute_band(row: dict, shape: int) -> tuple[float, float] | None:
     fair = anchor * multiple
     return fair * coef_low / divisor, fair * coef_high / divisor
 
-
-def check_growth_option(row: dict) -> list[str]:
-    """§6.5.6 成长期权的硬约束。未计入期权（值为空或 0）时返回空。
-
-    单位约定：``growth_option_value`` 与 ``base_band_low/high``、``fair_price_low/high``
-    同为**每股口径（元/股）**。期权按市值算出后须除以 ``shares_out`` 再入库，
-    否则 ``growth_option_share`` 会把市值除以股价、量纲不一致（自测已命中该错）。
-    """
-    problems: list[str] = []
-    value = to_float(row.get("growth_option_value"))
-    if not value:
-        return problems
-
-    quality = str(row.get("quality_tier", "") or "").strip().upper()
-    if quality and quality not in GROWTH_OPTION_TIERS:
-        problems.append(f"检查7 成长期权仅 L1/L2 可用，本行为 {quality}（§6.5.6 硬约束 1）")
-
-    level = to_float(row.get("growth_option_evidence_level"))
-    prob = to_float(row.get("growth_option_probability"))
-    if level is None:
-        problems.append("检查7 计入期权但缺 growth_option_evidence_level")
-    else:
-        cap = GROWTH_OPTION_PROB_CAP.get(int(level))
-        if cap is None:
-            problems.append(f"检查7 证据等级 {level} 不在 §5.4-D 的 0-5 范围")
-        elif cap == 0:
-            problems.append("检查7 证据等级 0（传闻/概念）不得计入期权（§6.5.6 概率表）")
-        elif prob is None:
-            problems.append("检查7 计入期权但缺 growth_option_probability")
-        elif prob > cap + 1e-9:
-            problems.append(f"检查7 实现概率 {prob:.0%} 超过证据等级 {int(level)} 的上限 {cap:.0%}")
-
-    base_low, base_high = to_float(row.get("base_band_low")), to_float(row.get("base_band_high"))
-    if None in (base_low, base_high):
-        problems.append("检查7 计入期权但缺 base_band_low/base_band_high（§6.5.6 硬约束 3：两条带都必须展示）")
-    else:
-        base_mid = (base_low + base_high) / 2
-        share = to_float(row.get("growth_option_share"))
-        if base_mid > 0:
-            implied = value / base_mid
-            if share is not None and abs(share - implied) > 0.02:
-                problems.append(f"检查7 growth_option_share {share:.2f} 与复算值 {implied:.2f} 不符")
-            if implied > GROWTH_OPTION_MAX_SHARE and str(row.get("band_fragile", "")).strip().lower() not in {"true", "1", "yes"}:
-                problems.append(
-                    f"检查7 期权占比 {implied:.0%} > 50% 上限，须置 band_fragile=true 并按 §6.5.5 降一档"
-                )
-
-    if not str(row.get("growth_option_milestones", "") or "").strip():
-        problems.append("检查7 计入期权但缺 growth_option_milestones（§6.5.6 硬约束 4：衰减机制的判据）")
-
-    return problems
 
 
 def check_row(row: dict) -> tuple[list[str], str]:
@@ -411,8 +355,10 @@ def check_row(row: dict) -> tuple[list[str], str]:
             if g_value is not None and g_value > MAX_PERPETUAL_G:
                 problems.append(f"检查5 永续增长 g={g_value:.3f} > 3.5% 上限（硬拦截）")
 
-    # 检查 7：成长期权硬约束（§6.5.6）
-    problems.extend(check_growth_option(row))
+    # 检查 7（§6.5.6 成长期权硬约束）已于 2026-08-03 随该机制删除：§6.5.6 自 v2.00
+    # 起「退役、禁止再用」，全池五个 growth_option_* 列 261 行全空，此校验从未触发过一次。
+    # 保留一个永不触发的守卫，代价是 9/21 的测试覆盖挂在禁用分支上，而真实故障
+    # （全市场无行情、抓取挂起、重复运行）当时一个测试都没有——那才是覆盖该去的地方。
 
     if not problems:
         return problems, "ok"

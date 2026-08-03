@@ -7,6 +7,7 @@ import argparse
 import csv
 import json
 import math
+import sys
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -766,7 +767,7 @@ def classify_signal(
         action_bias = "等回踩"
     elif signals:
         signal_state = "buy_candidate"
-        action_bias = "可建目标仓位1/3"
+        action_bias = "信号成立"
     elif entry_stage >= 1:
         # §8.13.5 阶段延续（v1.06）：触发后的缩量整理日属于信号延续而非转弱，延续窗口内视同候选可按有效段位执行。
         signals.append(f"8.13 阶段延续({entry_stage}段)")
@@ -801,9 +802,9 @@ def classify_signal(
     if signal_state == "buy_candidate":
         breakout_confirm = any(sig.startswith(("8.7.1", "8.7.2")) for sig in signals)
         if (daily_bull or quasi_bull) and breakout_confirm and not percentile_only_volume:
-            signal_grade, action_bias = "强", "可建目标仓位1/3"
+            signal_grade, action_bias = "强", "信号成立"
         elif daily_bull or quasi_bull:
-            signal_grade, action_bias = "中", "可小仓试探或等确认"
+            signal_grade, action_bias = "中", "信号成立待确认"
         else:
             signal_grade, action_bias = "弱", "等确认"
     else:
@@ -1117,7 +1118,7 @@ def load_blocked_codes(path: Path) -> set[str] | None:
     }
 
 
-def main() -> None:
+def main() -> int:
     args = parse_args()
     symbols = {item.strip().zfill(6) for item in args.symbols.split(",") if item.strip()} or None
     input_rows = load_csv(args.input)
@@ -1135,7 +1136,7 @@ def main() -> None:
         row["market_state"] = market_state
         # §8.12：弱势市场下各信号分级的操作偏向下调一档。
         if market_state == "弱势" and row.get("signal_state") == "buy_candidate":
-            row["action_bias"] = "可小仓试探或等确认" if row.get("signal_grade") == "强" else "等确认"
+            row["action_bias"] = "信号成立待确认" if row.get("signal_grade") == "强" else "等确认"
         # §8.13 入场阶段判定：弱势市场所需阶段整体上调一段；未达段位的候选只等不买。
         required = row.get("stage_required")
         if isinstance(required, int) and market_state == "弱势":
@@ -1286,6 +1287,35 @@ def main() -> None:
               f"｜空间 {r['margin_of_safety'] * 100:.0f}%｜{grade}｜{r.get('trend_strength','')}"
               f"｜{(r.get('signals') or r.get('observation_tags') or '仅 §8.7.9 前置企稳')[:46]}")
 
+    return data_error_exit_code(rows)
+
+
+DATA_ERROR_ABORT_RATIO = 0.5
+
+
+def data_error_exit_code(rows: list[dict]) -> int:
+    """行情整体取不到时必须非 0 退出（§15.2 第 3 条「静默失效」）。
+
+    逐票 `except` 把取数失败降级为一行 `data_error` 是对的——一只票挂了不该中断整批。
+    但把**每一票都失败**也当成成功就不对了：全市场接口宕机时脚本照样退出 0、照样写出
+    一份完整 CSV，只是每行都是 data_error，下游与调度器都看不出今天其实没扫成。
+
+    阈值取 50%：正常交易日的 data_error 是个位数（停牌/退市/代码变更），过半必是系统性故障。
+    """
+    if not rows:
+        print("⚠️ 扫描 0 行——输入池为空或过滤条件把全部标的排除了", file=sys.stderr)
+        return 2
+    failed = [r for r in rows if r.get("signal_state") == "data_error"]
+    ratio = len(failed) / len(rows)
+    if ratio >= DATA_ERROR_ABORT_RATIO:
+        sample = "; ".join(str(r.get("wait_reasons", ""))[:80] for r in failed[:3])
+        print(f"⚠️ {len(failed)}/{len(rows)} 行取数失败（{ratio:.0%} ≥ {DATA_ERROR_ABORT_RATIO:.0%}）"
+              f"——判定为系统性行情故障，本次扫描结果不可用。样例：{sample}", file=sys.stderr)
+        return 1
+    if failed:
+        print(f"注意：{len(failed)}/{len(rows)} 行取数失败（低于 {DATA_ERROR_ABORT_RATIO:.0%} 阈值，按个别停牌处理）")
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

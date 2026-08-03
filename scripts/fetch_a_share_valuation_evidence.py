@@ -546,7 +546,15 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     codes = [code.strip().zfill(6) for code in args.codes.split(",") if code.strip()]
-    quotes = fetch_quotes(codes)
+    try:
+        quotes = fetch_quotes(codes)
+    except FetchError as exc:
+        # 行情批量接口挂了就没有可用的取证基线。旧版让 FetchError 一路抛到顶层，
+        # 用户看到的是一段 traceback；退出码虽是 1，但读起来像脚本坏了而不是数据源坏了
+        # （实测 2026-08-03 东财返回 HTTP 502）。这里给出可判读的失败与明确的后续动作。
+        print(f"取证失败：行情接口不可用（{exc}）。数据源故障，非脚本缺陷——"
+              f"稍后重试；本次未写入任何证据文件，既有证据保持不变。", file=sys.stderr)
+        return 3
 
     summaries: list[dict[str, str]] = []
     carried = 0

@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v2.07
+# A股选股-估值-量价操作流程 v2.08
 
 > **本行的版本号是唯一版本真值**：`scripts/workflow_decision_log.py` 在导入时解析它写入决策日志的 `workflow_version` 列，改版时改这里即可，不得在别处另存一份（v1.43 曾在脚本里硬编码并落后正文 19 个版本）。逐版内容见 `docs/Ashare_workflow_changelog.md`。
 
@@ -14,7 +14,7 @@
 | 今日持仓的公告与估值跟踪 | §14 阶段五（v2.05 重写） | `track_holdings_daily.py --as-of` | `a_share_holdings.csv`（五列）+ 估值池 → `daily_holdings_tracking.csv` + 扫描日志条目 | **逐票公告/新闻检索 + 估值跟踪**（现档、带位、是否命中 §7.4.1 需重算带）；`动作` 只有 持有/割肉提醒/重大事项，**不给买卖建议、不算盈亏与权重** |
 | 季度全市场质量审查 / 三类初筛 | §5（§5.4） | `build_quarterly_quality_review_queue.py`；全量重扫按 §5.4.6 | 队列 → `a_share_attention_triage.csv` | 逐家判定 attention_class |
 | 对 worth_attention 公司做 L1-L3 分层 | §5.7-§5.8 | 无（模型判断） | triage → `a_share_watchlist_quality_tiers.csv` | 逐家分层与理由 |
-| 估值排雷 / 更新核心估值合格池 | §6 | `build_valuation_band_cards.py` → `validate_valuation_bands.py` → `build_a_share_core_valuation_pool.py` | 逐票档案 + L1-L3 → `a_share_core_valuation_pool.csv`（分层×估值准入矩阵 §6.2.1） | **带只来自 §6.5.7 逐票档案**（v2.00）；§6.5.0 的 A/C/D/E/F/H/J/K/M/N/P 只作分类与同族比较，不参与建带 |
+| 估值排雷 / 更新核心估值合格池 | §6 | `build_valuation_band_cards.py` → **`apply_valuation_band_cards.py`** → `validate_valuation_bands.py` → `build_a_share_core_valuation_pool.py`（**四步缺一不可，见 §6.7 要求 10**） | 逐票档案 + L1-L3 → `a_share_core_valuation_pool.csv`（分层×估值准入矩阵 §6.2.1） | **带只来自 §6.5.7 逐票档案**（v2.00）；§6.5.0 的 A/C/D/E/F/H/J/K/M/N/P 只作分类与同族比较，不参与建带 |
 | 给新入池公司定合理价区间 | **§6.5.7 建档**（唯一建带路径） | `build_company_dossier_readmes.py` | 一致预期/财报证据 → `a_share_valuation_dossiers.csv` 一行 + `data/companies/<代码>_<名称>/` | 选方法并写明为何该方法成立、填全 §6.5.7 必填列；**建档前一律 `无法估值`**，不得用通用公式先给一条带顶上 |
 | 财报披露后的滚动更新 | §7 | `build_report_update_queue.py` | triage/tiers/pool → 更新队列 | 触发复核的质量/估值判断 |
 | 单家公司值不值得关注 | §5.4 + 防过度纳入清单 + 边缘判例集 | 无 | → triage 行 + 决策日志 | 独立判断（轻量初筛） |
@@ -60,7 +60,7 @@
 | `data/processed/pretrade_decisions.csv` | **（v2.05 停止写入）** 历史买入前闸门记录；闸门与合规四取值已随 §10 退役，历史行保留供 §12 回放与 §12.6 台账使用 |
 | `data/processed/a_share_holdings.csv` | 当前真实持仓清单，手工维护，**v2.05 起只有五列**：`security_code, security_name, current_shares, cost_basis, stop_loss_price`（§14.2） |
 | `data/processed/portfolio_account_snapshot.csv` | 账户级快照（追加式，手工维护）。**处于 §17.3 R7 冷静期（2026-08-03 → 2026-08-10）**：照常记录但已移出每日报告，仅在触及回撤梯/包络阈值当日提示一行；用户 08-10 书面确认后删除（依据见 §14.7） |
-| `data/processed/daily_holdings_tracking.csv` | 每日持仓跟踪结果（v2.05 取代 `daily_holdings_actions.csv`）：逐票现价、现档、带与带位、割肉价、是否触及、`动作` 三取值 |
+| `data/processed/daily_holdings_tracking.csv` | 每日持仓跟踪结果（v2.05 取代 `daily_holdings_actions.csv`）：逐票现价、现档、带与带位、割肉价、是否触及、`动作` 四取值 |
 | `data/processed/000_daily_scan_log.md` | **唯一的每日阅读输出**（v25 简并：原量价/持仓两份 tracker 阅读版退役）：§9.2 格式条目，最新在最上；逐股机器明细以两张每日 CSV 与决策日志为准 |
 | `data/processed/a_share_workflow_decision_log.csv` | 全流程结论日志，用于后续溯源、复核和纠错 |
 | `data/processed/fundamentals/<代码>_<名称>.md` | 单票季度财务台账（§6.6.1）：报告期主要财务数据+业绩预告/兑现对照，带来源与公告日，估值复核第一输入 |
@@ -74,7 +74,7 @@
 | 字段 | 含义 |
 | --- | --- |
 | `logged_at_utc` | 写入日志的UTC时间 |
-| `workflow_stage` | 阶段：`attention_triage`、`quality_tier_review`、`valuation_review`、`core_valuation_pool`、`daily_volume_price_scan`、`manual_buy_check`、`execution_record`、`holdings_tracking`（每日持仓跟踪，§14，v2.05 取代 `holdings_sell_scan`）、`garbage_review`、`discipline_intervention`（重蹈覆辙拦截，§15.1）、`system_revision`（体系规则修订）、`overseas_watchlist`（非A股关注清单结论，§6.8）等；**v2.05 停止写入**：`pretrade_decision`、`position_status_review`、`holdings_sell_scan`、`manual_sell_check`（历史行保留） |
+| `workflow_stage` | 阶段：`attention_triage`、`quality_tier_review`、`valuation_review`、`core_valuation_pool`、`daily_volume_price_scan`、`execution_record`、`holdings_tracking`（每日持仓跟踪，§14，v2.05 取代 `holdings_sell_scan`）、`garbage_review`、`discipline_intervention`（重蹈覆辙拦截，§15.1）、`system_revision`（体系规则修订）、`overseas_watchlist`（非A股关注清单结论，§6.8）等；**v2.05 停止写入**：`pretrade_decision`、`position_status_review`、`holdings_sell_scan`、`manual_sell_check`、`manual_buy_check`（历史行保留；`manual_buy_check` 的产出步骤即 §10 闸门，闸门退役后它已无生产者，v2.08 补入本清单） |
 | `run_id` | 批次标识，例如 `2026Q2_quality_review_batch_01` |
 | `as_of` | 结论对应日期 |
 | `security_code` | 股票代码 |
@@ -89,6 +89,14 @@
 | `workflow_version` | 本流程版本 |
 | `decision_id` | 本条结论的唯一标识（`阶段:日期:代码:序号` 或脚本生成）；旧行可为空 |
 | `supersedes_decision_id` | 本条结论所替代/推翻的先前结论 `decision_id`；改判、纠错、复核更新时必填 |
+
+**业务键与改判链（v2.08）**：一条结论的业务身份是 **`as_of` + `workflow_stage` + `security_code` + `decision_type`**。
+
+**同一业务键出现多行本身不是缺陷**——日志是 append-only 审计流：§9.1 明确支持同一交易日盘中一次、收盘一次，池物化每跑一次就为每家写一行，这些都该逐行留下。区分「正常重跑」与「改判没留痕」的**唯一**依据是 `supersedes_decision_id`：它把后一行接到被它取代的那一行上。
+
+**没接上这根线的代价，是给定一个业务键无法判定哪一行是当前结论**——不是行数多。实测 2026-08-03：31,004 行中同业务键的后续行 20,670 行，接上改判链的只有 **5 行**。跑 `python3 scripts/workflow_decision_log.py` 可随时打印该自检。
+
+因此：**结论发生变化时必须填 `supersedes_decision_id`**（复核改带、改档、改分层、纠错改判）；结论未变的例行重跑照常追加、不必填。
 
 ### 2.2 跨轮次公司分析索引
 
@@ -389,7 +397,11 @@ Q1（生意模式质量）、Q2（护城河强度与持久性）的**打分口�
 5. 每个维度、每项扣分、每个旗标、每次定档都必须写理由与来源。
 6. **档与分数只在质量复核时凭新证据变更**，不得随价格或买入意愿变动。「无新证据的调分/调档」纳入 §15.1 拦截清单。
 
-**输出字段**（`a_share_watchlist_quality_tiers.csv`）：`quality_tier`／`tier_reason`／`quality_score`／`q1_business_model_score`+`q1_reason`／`q2_moat_score`+`q2_reason`+`q2_moat_type`+`q2_erosion_paths`／`q3_capital_allocation_score`+`q3_reason`（注明再投资/返还/混合路径）／`q4_management_score`+`q4_reason`／`credibility_deduction`（0~−15 及红旗清单）／`flags`（含强制的 `special_advantage_check`）／`tactical_thesis`（L3 买入前置）／`score_version`／`scored_at`／`evidence_status`。
+**输出字段**（`a_share_watchlist_quality_tiers.csv`，**分层的唯一结构化真值源**）：`quality_tier`／`tier_reason`／`quality_score`／`q1_business_model_score`+`q1_reason`／`q2_moat_score`+`q2_reason`+`q2_moat_type`+`q2_erosion_paths`／`q3_capital_allocation_score`+`q3_reason`（注明再投资/返还/混合路径）／`q4_management_score`+`q4_reason`／`credibility_deduction`（0~−15 及红旗清单）／`flags`（含强制的 `special_advantage_check`）／`tactical_thesis`（L3 买入前置）／`score_version`／`scored_at`／`evidence_status`。
+
+**唯一真值源（v2.08，用户裁定）**：分层结论此前分散在本表与 `a_share_quality_scores_v2.csv` 两处，实测各 261 行却在宁德时代上一个判 L1、一个判 L2（本表 L1 为准，理由见 §5.7.2）。**scores_v2 已退役归档**至 `data/archive/quality-scores-v2/`，其 Q3/Q4/`credibility_deduction`/`flags`/`score_version`/`scored_at`/`prior_tier` 等 12 列并入本表。此后**任何分层字段只写本表**，不得再另开一张打分表——两张表并存的必然结局就是漂移，而全部脚本读的是本表，另一张的漂移不会被任何校验发现。
+
+**当前尚未落列的字段（v2.08 如实登记，OI-024）**：`q1_reason`／`q2_moat_type`／`q2_erosion_paths`／`q3_reason`／`q4_reason`／`tactical_thesis` 六列在 261 行中**尚未建列**（其内容目前混写在 `tier_reason`/`score_reason` 自由文本里）。**不得因此把它们从本清单删掉**——按 §15.2 第 2 条，成文未落地要么补落地、要么明写未落地，不能靠删规则消灭差距。补列在下一次季度质量复核（§5.1）时完成。
 
 ### 5.7.2 侵蚀路径否决的判据（v1.40，结 OI-013）
 
@@ -643,7 +655,7 @@ divisor = shares_out（当 anchor_scope = market_cap，anchor 单位亿元、股
 
 | 代码 | 类型 | 锚定量 `anchor_metric` | 形态 | `multiple_or_rate` | 带系数 |
 | --- | --- | --- | :---: | --- | --- |
-| **A** | 现金流复利型 | A-1：`annual_distributable_cash` 年度归一化可分配现金（自由现金流+分红回购，亿元）<br>A-2：`normalized_profit` 归一化归母（亿元） | 2<br>1 | A-1：`rate = [6%−g, 8%−g]`，g = 保守利润增长 + 估值修复年化，须 g ≤ 4%<br>A-2：自身 5 年 PE 中位 | —<br>**按质量分层分档**（v1.30）：<br>L1 [0.90, 1.15]<br>L2 [0.85, 1.05]<br>L3 [0.80, 1.00] |
+| **A** | 现金流复利型 | A-1：`annual_distributable_cash` 年度归一化可分配现金（自由现金流+分红回购，亿元）<br>A-2：`normalized_profit` 归一化归母（亿元） | 2<br>1 | A-1：`rate = r − g`，**r = 8.5% 单点**（v1.35 改单点、v1.41 定 8.5%），g = 永续增长，须 g ≤ 2.5%<br>A-2：自身 5 年 PE 中位 | —<br>**按质量分层分档**（v1.30）：<br>L1 [0.90, 1.15]<br>L2 [0.85, 1.05]<br>L3 [0.80, 1.00] |
 | **C** | GARP 成长型 | `forward_normalized_profit` 前瞻 12 个月归一化归母（亿元） | 1 | `g` = 未来 3 年归一化归母 CAGR（百分数取值，如 15） | [1.0, 1.5]（**即 PEG 带**） |
 | **D** | 产业链爆发/关键瓶颈型 | `normalized_profit_2_3y` 未来 2-3 年正常化归母（亿元） | 1 | 合理 PE | [0.80, 1.00] |
 | **E** | 落难白马型 | `repaired_normalized_profit` 修复后正常化归母（亿元） | 1 | 历史中枢 PE × 修复折扣（折扣限 [70%, 100%]） | [0.85, 1.00] |
@@ -827,7 +839,7 @@ divisor = shares_out（当 anchor_scope = market_cap，anchor 单位亿元、股
 | **远期利润锚的现值折算（D/M/P，v1.32 硬规则）** | `PV = E(T+n) × PE终值 ÷ (1+r)^n`，`PE终值 = 1/(r − g终值)` | r 按分层 9%/10%/11%，g终值 ≤3%，n = 预测年 − 当年 | 未折现即把 T+n 时点的价格当成今天该付的价格 |
 | 峰值盈利输入 | — | **不得低于最近一个已披露季度的年化运行率** | 硬拦截，须重取（判例见 `Ashare_workflow_open_issues.md` OI-001：美光、SK 海力士） |
 | COE（J 用） | ① **同业隐含 COE 中位数**（由 ≥3 家可比同业以 `PB = (ROE−g)/(COE−g)` 反解后取中位）② 10Y 国债 + 行业股权风险溢价 | 银行 8.0%-11.0%、非银金融 7.0%-10.0%（**初始校准，按 §12 回放修订**）。同业隐含法优先——A 股银行长期以 PB<1 交易，隐含 COE 显著高于教科书 ERP，用低 ERP 会系统性地把银行判成低估 | 越界须写理由；并须反解当前隐含 COE 写入 `band_sensitivity` |
-| **要求回报 r（A-1 / K，v1.35 改单点）** | 10Y 国债 + 风险溢价 | **A-1 = 7.0%**（1.8% + 成熟股权溢价 5.2%）；**K = 6.5%**（1.8% + 受监管长久期资产溢价 4.7%） | 越界须写理由 |
+| **要求回报 r（A-1 / K，v1.35 改单点，v1.41 定 A-1=8.5%）** | 10Y 国债 + 风险溢价 | **A-1 = 8.5%**（1.8% + 股权风险溢价 6.7%，与 `build_valuation_band_cards.py` 的 `A1_REQUIRED_RETURN` 同值）；**K = 6.5%**（1.8% + 受监管长久期资产溢价 4.7%） | 越界须写理由 |
 | **永续增长 g（A-1 / K，v1.35）** | `g = min(2.5%, ROE × 留存率)` | **上限 2.5%** —— 对应「长期通胀 + 极低实际增长」，即公司长期存在但不再扩张。**它不是收益率目标**：Gordon 的 g 是终局假设，取高会让分母塌陷（r−g 从 4.5% 变 3.0% 估值就差 50%） | 硬拦截 |
 | 永续增长 g（其余口径） | 不得高于名义 GDP 增速假设 | ≤ 3.5% | 硬拦截 |
 | **Gordon 分母下限** | — | `g ≤ r − 1.5pp` | 硬拦截（长江电力曾因 g=3.5% ≥ r_low=3.0% 得出负带） |
@@ -852,7 +864,7 @@ v1.30 全量重建暴露一个规范缺陷：§6.5.2 只写了**最精确的那�
 
 | 标签 | primary 口径（更精确，需外部输入时保留为升级路径） | **fallback 口径（本地可算）** |
 | --- | --- | --- |
-| **A** | A-1 年度归一化可分配现金 ÷ [8%−g, 6%−g] | A-2 归一化归母 × 自身 5 年 PE 中位 × 分层系数 |
+| **A** | A-1 年度归一化可分配现金 ÷ (8.5% − g) | A-2 归一化归母 × 自身 5 年 PE 中位 × 分层系数 |
 | **C** | 前瞻归母中位数（覆盖 ≥3 家）× g × PEG 带 | 覆盖 2 家：同口径 + `band_fragile`；覆盖 ≤1 家：**TTM 扣非归母 × 历史实现 3 年 CAGR × PEG 带** |
 | **D** | 2-3 年正常化归母（≥3 家）× 终值 PE × [0.80, 1.00] | 覆盖 2 家：同口径 + `band_fragile`；覆盖 ≤1 家：**TTM 扣非归母 × 终值 PE × [0.80, 1.00]**（成长部分不计入带） |
 | **E** | 修复后正常化归母 × 历史中枢 PE × 修复折扣 | — |
@@ -895,14 +907,16 @@ v1.30 全量重建暴露一个规范缺陷：§6.5.2 只写了**最精确的那�
 
 设立理由是一条实证：全池不到 300 家，而通用模型对不合身的公司**改一版翻一版**——紫金矿业在 F-2「取孰低」的 PE 腿（PE-TTM 14.2，5 年 25.3% 分位＝便宜）与 PB 腿（4.62，82.8% 分位＝贵）之间反复翻转，v1.32／v1.38／v1.41／v1.42／v1.46 连改五版仍不稳定。对这类公司继续套通用公式，只会按下葫芦起了瓢。
 
-**两层分工**：
+**两层分工（v1.62 全池建档后的现状口径，v2.08 修订）**：
 
 | 层 | 覆盖 | 输出 | 用途 |
 | --- | --- | --- | --- |
-| **通用十类（粗估层）** | 全池 261 家 | 合理价区间 + 档位 | 排序、筛查、日常三态判定 |
-| **逐票档案（精算层）** | 按需建档 | 权威带 + 跟踪指标 + 复核触发 | 覆盖粗估层；`bespoke` 者完全取代之 |
+| **通用十一类（分类层）** | 全池 261 家 | **策略标签，不产出带** | 分类、排序、同族比较（"同一把尺子"） |
+| **逐票档案（唯一建带层）** | **全池 261/261 已建档** | 合理价区间 + 档位 + 跟踪指标 + 复核触发 | 全部三态判定的唯一带来源 |
 
-**`bespoke = true` 的行完全脱离通用模型**：不跑 A/C/D/F/H/… 任何一条口径，带只由档案给出，在标签分派之前就返回。这是与「人工覆盖值」的关键区别——不保留两套并存的数，避免「档案说便宜、通用说贵」的解释负担。
+**本表原为「按需建档」时期所写，v1.62 全池建档后已与现状不符，v2.08 改正**：彼时通用层确实为未建档公司算带、档案层只覆盖一部分；现在 `band_derivation` 全池 261 行皆为 `dossier`，**通用路径产出的带为零**（详见下方 v1.62 里程碑三条后果）。未建档一律判 `无法估值` 并清空带，故「带非空 ⇔ 档案带」恒成立。
+
+**因此不存在「两套并存的数」**：不跑 A/C/D/F/H/… 任何一条口径算带，带只由档案给出，在标签分派之前就返回——「档案说便宜、通用说贵」的解释负担从根上不会出现。
 
 **档案必填列**（缺任一列即档案不生效，`data/processed/a_share_valuation_dossiers.csv`）：
 
@@ -1175,14 +1189,28 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 7. 现价刷新与档位差分（v1.03/v1.05）：`--quotes fetch` 经 `scripts/a_share_quotes.py` 拉取腾讯批量行情快照；`--md-only` 供每日扫描调用——只重渲染 MD 并写一行 `pool_price_refresh` 汇总日志，不重写池 CSV、不逐股重写池结论。每次渲染把当日有效档位写入快照 `data/interim/pool_effective_tiers.csv`，与上一快照差分得出**当日档位变化名单**（进汇总日志与扫描报告第二节）；现价缺失（停牌/请求失败）的行沿用估值时点值定档。
 8. 业绩预告物化（v1.04；v1.09 起不在 MD 展示；v1.16 起每日刷新）：`scripts/fetch_a_share_earnings_forecasts.py` 将东财业绩预告接口物化为 `data/interim/a_share_earnings_forecasts.csv`（`--report-date` 缺省自动取最近一个已结束的季度报告期末，可显式指定，适用一季报/中报/三季报/年度各预告季；字段含代码、报告期、公告日、指标口径 004归母/005扣非/006营收、预告区间、同比增幅、去年同期、预告类型、检索时间与来源）。该文件**不是一次性物化，而是每个扫描日经 §9.1 第一步 1a 重抓**——预告披露是逐日到达的事件流，停更的文件等于关闭 §7.4/§7.5.5 的事件入口（判例：睿创微纳 2026-07-20 盘后预告，7/17 的旧文件使其三个交易日不可见）。该文件**只作 §7.5.5 express 复核队列的输入**，且刷新汇总**不得只报覆盖数**：必须列出**待复核名单本身**（代码+名称+公告日+披露类型；判定=预告/快报/正式报告公告日的最大者晚于 max(`valuation_reviewed_at`, `evidence_available_at`)，缺失时回退 `pool_as_of`，v1.18 起为三类披露并集口径），并标注披露文件检索时间——检索日早于扫描日时加"⚠️数据过期"警告并按 §9.1 第一步 1a 当场重抓。待复核名单逐票按 §7.5.5 express 复核闭环（复核更新 `valuation_reviewed_at`/`valuation_evidence_event` 后自动移出名单）；名单非空时写入扫描报告第二节与第三节待办。复核完成后其影响体现为 估值时间/估值事件 两列与合理价区间的更新，预告具体数字不进入池 MD。
 9. 定期报告与业绩快报披露物化（v1.18）：`scripts/fetch_a_share_report_disclosures.py` 将东财**正式定期报告披露**（RPT_LICO_FN_CPD，公告日=实际披露日，含归母/营收实际数与同比）与**业绩快报**（RPT_FCI_PERFORMANCEE）物化为 `data/interim/a_share_report_disclosures.csv`（`disclosure_type` 区分 periodic_report/express_report；`--report-date` 缺省口径同预告脚本）。与预告文件同为**每个扫描日经 §9.1 第一步 1a 重抓**的事件流入口：仅抓预告等于对快报与正式报告闭眼（判例：华润三九 7/15、大族激光 7/21（归母 +163%）H1 快报在仅预告机制下持续不可见，直至 2026-07-22 本文件增设才被发现，两只均已超期）。该文件供 报告更新队列（§7.2/§7.3 公告日触发）与 待复核名单（要求 8 并集口径）使用；同一披露季内正式报告公告日晚于快报/预告的，正式报告构成新一次复核触发（快报/预告先行复核不豁免正式报告复核，实际数与预告的兑现偏差按 §6.6.1.3 回填台账）。
-10. **建带校验前置（v1.28）**：池物化前必须先运行
+10. **建带四步链（v1.28 立校验前置，v2.08 补回 `apply` 步）**：从逐票档案到池，**四步缺一不可、顺序不可换**——
 
     ```bash
+    # ① 档案 → 建带卡（只写 data/interim/valuation_band_cards.csv，不动估值表）
+    python3 scripts/build_valuation_band_cards.py \
+      --tags data/interim/strategy_tag_map.csv \
+      --out data/interim/valuation_band_cards.csv \
+      --as-of YYYY-MM-DD
+
+    # ② 建带卡 → 估值表（唯一把新带搬进 a_share_focus_watchlist_l1_l2_valuation.csv 的一步）
+    python3 scripts/apply_valuation_band_cards.py --as-of YYYY-MM-DD --quotes fetch
+
+    # ③ 校验估值表
     python3 scripts/validate_valuation_bands.py \
       --valuation data/processed/a_share_focus_watchlist_l1_l2_valuation.csv \
       --queue-out data/interim/valuation_rebuild_queue.csv \
       --as-of YYYY-MM-DD
+
+    # ④ 物化池（命令见本节开头）
     ```
+
+    **为什么第 ② 步不能省（v2.08，本条即为修补而写）**：①只写建带卡，③与④读的都是**估值表**。省掉②时当日改的带不会进入估值表，池照旧用旧带，而③还会对旧表报"校验通过"——**一个假绿灯，正是 §15.2 第 3 条「静默失效」的第五次复发**。判据：改带后核对估值表的 `fair_price_low/high` 与 `valuation_reviewed_at` 是否真的变了，只看③的通过行数不算核对。
 
     **`band_derivation = dossier` 的行（当前全池 261/261）只校验 §6.5.7 四个必填列**（`fair_price_low`/`fair_price_high`/`anchor_basis`/`band_sensitivity`），不套通用类型表——用 F 的白名单去校验一条按定义不走 F 的带是循环要求（§6.5.7）。**通用行（`model`）校验六项**：①建带卡五槽非空；②`anchor_metric` 与 `strategy_tag` 的映射合法（§6.5.2 类型表唯一对应）；③`band_low_coef`/`band_high_coef` 等于类型表规定值；④按 §6.5.1 复算的带与入库带偏差 ≤2%；⑤`multiple_or_rate` 落在 §6.5.4 允许区间；⑥`band_derivation` 非 `fallback`。任一不过即写入 `valuation_rebuild_queue.csv`；校验汇总写入决策日志（`decision_type = band_validation`）。
 
@@ -1364,9 +1392,19 @@ quality_cutoff = max(last_quality_review_date, 质量复核所用证据的 evide
 
 1. 队列脚本对 `valuation_review_needed` 的股票输出 `buy_blocked = review_pending`。
 2. 每日量价扫描读取更新队列（`--review-queue`），对池内处于冻结状态的股票即使出现有效信号也只输出 `buy_blocked_review_pending`，不列买入候选（§8.9/§11）。
-3. 冻结不影响已有持仓的卖出扫描与风险监控。
+3. 冻结只关买入，不影响 §14 的每日持仓跟踪。
 4. 解除条件：完成质量/估值复核并更新 `valuation_reviewed_at` 与 `valuation_evidence_event` 后，重新生成更新队列即自动解除；复核结论若为高估/无法估值或降档，则按正常规则移出核心池。
-5. 预告季时效（v20）：名单内公司披露业绩预告/快报当晚，须在下一交易日开盘前完成单票 express 估值增量更新（含策略标签复检，如 GARP 拐点确认改挂 D 口径、订阅转型完成改挂 N 口径），使买入冻结不横跨信号日；boundary_pending 公司命中复核触发的，当日写入复核队列。**超期补做（v1.16）**：披露未被当晚发现的（漏检、非交易时段发起等），§9.1 第一步 1a 检测到之时必须当场补做 express 复核，并在决策日志 `summary_reason` 注明超期原因；补做完成前该股保持 `review_pending` 冻结。复核义务与池内层无关——`excluded`（高估/无法估值）行同样必须复核（冻结只关买入，带的时效性关系到档位与持仓跟踪的估值结论）。
+5. express 复核时效见 §7.5.5。
+
+#### 7.5.5 express 复核时效（v20 立，v2.08 由「§7.5 第 5 条」升格为子节）
+
+**升格理由**：全文 20 余处按 `§7.5.5` 引用本规则，而它此前只是 §7.5 下的第 5 个列表项，没有对应标题——按标题定位的读者与 agent 找不到它，属编号型路由缺陷。规则内容一字未改。
+
+名单内公司披露业绩预告/快报当晚，须在下一交易日开盘前完成单票 express 估值增量更新（含策略标签复检，如 GARP 拐点确认改挂 D 口径、订阅转型完成改挂 N 口径），使买入冻结不横跨信号日；boundary_pending 公司命中复核触发的，当日写入复核队列。
+
+**超期补做（v1.16）**：披露未被当晚发现的（漏检、非交易时段发起等），§9.1 第一步 1a 检测到之时必须当场补做 express 复核，并在决策日志 `summary_reason` 注明超期原因；补做完成前该股保持 `review_pending` 冻结。
+
+复核义务与池内层无关——`excluded`（高估/无法估值）行同样必须复核（冻结只关买入，带的时效性关系到档位与持仓跟踪的估值结论）。
 
 ## 8. 阶段四：每日量价扫描
 
@@ -1513,8 +1551,8 @@ close > MA120 > MA250
 
 | 信号分级 | 条件 | 默认操作偏向 |
 | --- | --- | --- |
-| 强 | 有效放量上涨 + 短期多头（§8.6 日线多头或准多头） + 突破确认（§8.7.1/8.7.2/8.7.6 之一或 §8.7.7 相对强度确认） | 可建目标仓位1/3 |
-| 中 | 有效放量上涨 + 短期多头，暂无突破确认 | 可小仓试探或等确认 |
+| 强 | 有效放量上涨 + 短期多头（§8.6 日线多头或准多头） + 突破确认（§8.7.1/8.7.2/8.7.6 之一或 §8.7.7 相对强度确认） | 信号成立 |
+| 中 | 有效放量上涨 + 短期多头，暂无突破确认 | 信号成立待确认 |
 | 弱 | 有效放量上涨，短期趋势未转多 | 等确认 |
 
 三档均保留 `buy_candidate` 状态；分级只决定推荐强度与仓位偏向，弱势市场（§8.12）下各档偏向再下调一档。**买入资格另由 §8.13 入场阶段判定**（v1.02）：强/中/弱描述当日信号质量，入场阶段描述该层级×估值组合允许买入的最低右侧进度，两者正交。**封顶规则（v31）**：当有效放量仅由 §8.5 第 5 条「高分位放量」单独认定（其余 §8.5 条件均未命中）时，信号分级封顶「中」——低波动巨盘股的成交量分位容易越过 80 分位而无真实资金爆量（判例：长江电力 2026-07-10/13/14 量比始终 1.2-1.5 却三连输出"强"）；§8.5 第 6 条巨盘温和放量命中即属真实量能，不触发本封顶（v1.02）。
@@ -1802,7 +1840,7 @@ close / MA20 - 1 > 25%
 震荡 = 其余情形
 ```
 
-市场状态不改变信号分级本身，只调整默认操作偏向：弱势市场下各档偏向下调一档（强→可小仓试探或等确认，中/弱→等确认）。总仓位控制遵循个人投资体系 §3。
+市场状态不改变信号分级本身，只调整默认操作偏向：弱势市场下各档偏向下调一档（强→信号成立待确认，中/弱→等确认）。总仓位控制遵循个人投资体系 §3。
 
 ### 8.13 分层×估值的右侧入场阶段（v1.02）
 
@@ -1854,7 +1892,7 @@ close / MA20 - 1 > 25%
 
    **明确的取舍**：全池 261 家逐日搜新闻不可执行，故本范围只覆盖**当天可能改变决策的那部分**（实测约 30-50 只/日）。代价是范围外公司的非披露类事件，要等到它下一次触发信号、下一次定期披露或用户点名时才被发现——**这是已知盲区，不是遗漏**；缩小它的办法是把公司纳入持仓或让它触发信号，而不是假装做了全池检索。
 
-1c. **命中即当日更新估值**：任一股票命中 §7.4.1 触发表的，按 §7.4.1 的两半动作**先更新逐票档案、再重算合理价区间**（`reviewed_at` 改当日，README 由 CSV 重渲染），并按 §7.5.5 完成 express 复核。**只要当日有任何一条带被改动，必须重跑建带与池物化**：`build_valuation_band_cards.py` → `validate_valuation_bands.py` → `build_a_share_core_valuation_pool.py --as-of 当日`。**不重跑就等于本日全部扫描仍用旧带**——这是顺序被排在第一位的全部理由。
+1c. **命中即当日更新估值**：任一股票命中 §7.4.1 触发表的，按 §7.4.1 的两半动作**先更新逐票档案、再重算合理价区间**（`reviewed_at` 改当日，README 由 CSV 重渲染），并按 §7.5.5 完成 express 复核。**只要当日有任何一条带被改动，必须按 §6.7 要求 10 的四步重跑建带与池物化**：`build_valuation_band_cards.py` → **`apply_valuation_band_cards.py`** → `validate_valuation_bands.py` → `build_a_share_core_valuation_pool.py --as-of 当日`。**不重跑就等于本日全部扫描仍用旧带**——这是顺序被排在第一位的全部理由。**漏掉第二步 `apply` 与不重跑等价**（v2.08 修）：建带脚本只写建带卡，估值表不会自己更新，而校验与池物化读的都是估值表——漏 apply 时当日改的带既不进池、校验还会给出"通过"的假绿灯。
 
 **第二步 全池定档（价格对区间）**
 
@@ -1870,7 +1908,7 @@ close / MA20 - 1 > 25%
 
 **第四步 持仓跟踪（v2.05 简化）**
 
-运行 `python3 scripts/track_holdings_daily.py --as-of 当日`，按 §14.5 输出七列跟踪表（名称｜层级×现档｜现价｜合理价区间｜带位｜割肉价｜动作）与逐股详情。逐票两项必做：**当日公告与新闻检索**（与第一步 1b 的「全部持仓」行同源，结论在此展开）与**估值跟踪**（现档、带位、当日事件是否命中 §7.4.1 触发需重算带；未命中须明写「带未变动」）。`动作` 只有 `持有`/`割肉提醒`/`重大事项` 三取值，**均非操作建议**。本步排在第四是因为它消费第一、二步的带与档——持仓的现档必须与池同源（§6.5.3 判例）。**不再输出**：盈亏、权重、单笔风险、加仓资格、估值卖出资格、趋势走坏判定、红黄绿健康度分组（§14.6 退役清单）。
+运行 `python3 scripts/track_holdings_daily.py --as-of 当日`，按 §14.5 输出七列跟踪表（名称｜层级×现档｜现价｜合理价区间｜带位｜割肉价｜动作）与逐股详情。逐票两项必做：**当日公告与新闻检索**（与第一步 1b 的「全部持仓」行同源，结论在此展开）与**估值跟踪**（现档、带位、当日事件是否命中 §7.4.1 触发需重算带；未命中须明写「带未变动」）。`动作` 只有 `持有`/`割肉提醒`/`重大事项`/`数据缺失` 四取值，**均非操作建议**。本步排在第四是因为它消费第一、二步的带与档——持仓的现档必须与池同源（§6.5.3 判例）。**不再输出**：盈亏、权重、单笔风险、加仓资格、估值卖出资格、趋势走坏判定、红黄绿健康度分组（§14.6 退役清单）。
 
 **第五步 输出**
 
@@ -2123,7 +2161,7 @@ python3 scripts/backtest_signal_replay.py \
 
 | 退役项 | 退役理由 |
 | --- | --- |
-| 操作偏向五取值（可建目标仓位1/3、等回踩、等确认、仅观察、放弃）作为**仓位动作** | 保留为候选行的 `action_bias` 事实标注，但不再是"固定仓位动作" |
+| 操作偏向五取值（可建目标仓位1/3、等回踩、等确认、仅观察、放弃）作为**仓位动作** | 保留为候选行的 `action_bias` 事实标注，但不再是"固定仓位动作"。**v2.08 进一步去掉措辞里的仓位祈使**：`可建目标仓位1/3`→`信号成立`、`可小仓试探或等确认`→`信号成立待确认`——退役了"多少仓位"却把它留在字面上，等于用措辞把已退役的动作再说一遍 |
 | 加仓条件四项（趋势继续成立、回踩不破平台、基本面继续验证、未入高估） | 属买卖时点建议，用户明确不要（§14.1） |
 | 第 6 条建仓时单笔风险 ≤1.5%N 校验 | 执行点在 §10 闸门，闸门已退役 |
 | 「一笔建仓、原则上不持有现金」 | 归用户自管 |
@@ -2197,13 +2235,16 @@ security_code, security_name, current_shares, cost_basis, stop_loss_price
 
 **输出格式（用户 2026-08-03 指定，七列固定表格 + 逐股详情）：格式块只写在 §9.2 第一节，本节不复述。**
 
-`动作` 列只有三个取值，**都不是操作建议**：
+`动作` 列只有四个取值，**都不是操作建议**：
 
 | 取值 | 含义 |
 | --- | --- |
-| `持有` | 默认。无割肉触及、当日无需要点名的事件 |
+| `持有` | 默认。**已取到当日行情**、无割肉触及、当日无需要点名的事件 |
 | `割肉提醒` | 现价 <= 割肉价（§14.3） |
 | `重大事项` | 当日检索到可能改变估值或 thesis 的公告/事件，详情见逐股段。**这是把事实说出来，不含任何买卖建议**——是否动手由用户决定 |
+| `数据缺失` | **当日未取到行情**（停牌、接口失败），割肉价无法判定。详情列在逐股段并进第三节待办 |
+
+**`数据缺失` 为什么必须独立成一档（v2.08，修实测缺陷）**：v2.05-v2.07 的脚本在取不到行情时把 `动作` 落为 `持有`、并在备注写"沿用上一交易日结论"——但脚本从未读过上一交易日的文件，那句话是空的；而 `持有` 是**四个取值里唯一读起来像"已检查、没事"的那个**。一只已跌破割肉价的停牌股会因此显示为"持有"，**恰好在 Tier-0 规则上制造静默失效**（§15.2 第 3 条）。取不到行情时唯一诚实的输出是"没数据、没判"，不是"持有"。
 
 ### 14.6 v2.05 退役清单（写出来才不会静默复活）
 
@@ -2215,7 +2256,7 @@ security_code, security_name, current_shares, cost_basis, stop_loss_price
 | 卖出许可四类中的**估值卖出**（现档提醒卖出 → 减仓梯 20%/40%） | §14 卖出许可第 3 类（v1.27） | 属买卖时点建议 |
 | 卖出许可四类中的**趋势卖出**与全套大趋势走坏判定（趋势/反转分态、MA60/MA120、启动结构锚、MA20、毕业口径） | §14 大趋势走坏（v1.19/v1.21） | 同上；`launch_platform_price` 随之删除 |
 | **硬证伪清仓**（`forced_exit`）作为一个动作状态 | §14 卖出许可第 2 类 | 事实本身改由 §14.5 第 1 项检索并以 `重大事项` 呈现，但**不再由模型判定"立即清仓"** |
-| 持仓动作七状态（`hold`/`add_eligible`/`stop_loss_sell`/`forced_exit`/`valuation_sell_eligible`/`trend_sell_allowed`/`risk_alert`） | §14 持仓动作状态 | 由 §14.5 的三取值取代 |
+| 持仓动作七状态（`hold`/`add_eligible`/`stop_loss_sell`/`forced_exit`/`valuation_sell_eligible`/`trend_sell_allowed`/`risk_alert`） | §14 持仓动作状态 | 由 §14.5 的四取值取代 |
 | 浮盈、已实现盈亏、`profit_pct`、留底原则、`build_amount_cny` 基准 | §14 各处 | 用户明确不追踪盈亏 |
 | 权重、`current_weight_pct`、`single_trade_risk_pct`、`weight_over_limit` | §14 风险预警 1/4 | 用户明确不要仓位计算 |
 | §9.2 持仓健康度红黄绿分组 | §9.2 | 分组是 §14 状态字的展示映射，状态字已退役 |
