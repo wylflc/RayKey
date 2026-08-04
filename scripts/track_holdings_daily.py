@@ -43,6 +43,9 @@ FIELDNAMES = [
     "stop_loss_price",
     "close",
     "quality_tier",
+    # §9.2.1 参考分（v2.14）：只透传分层表经池 CSV 带过来的 quality_score，供报告显示同档内排序；
+    # 不参与任何判定，也不在此重算。
+    "quality_score",
     "effective_valuation_tier",
     "fair_price_low",
     "fair_price_high",
@@ -145,6 +148,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
                 "stop_loss_price": h.get("stop_loss_price", ""),
                 "close": "" if close is None else f"{close:g}",
                 "quality_tier": (pool_row or {}).get("quality_tier", ""),
+                "quality_score": (pool_row or {}).get("quality_score", ""),
                 "effective_valuation_tier": tier,
                 "fair_price_low": "" if low is None else f"{low:g}",
                 "fair_price_high": "" if high is None else f"{high:g}",
@@ -231,6 +235,11 @@ def main() -> None:
         print(f"  **未设定割肉价 {len(no_stop)} 只**：{'、'.join(str(r['security_name']) for r in no_stop)}（§14.3 第 3 条，置顶提示）")
     if no_band:
         print(f"  无带（出池或无法估值）{len(no_band)} 只：{'、'.join(str(r['security_name']) for r in no_band)}")
+    # §9.2.1 落地校验：新增列必须核对非空行数（§15.2 第 3 条已复发四次的静默失效签名就是「整列为空而无人察觉」）。
+    scored = [r for r in rows if str(r["quality_score"]).strip()]
+    print(f"  参考分（§9.2.1）非空 {len(scored)}/{len(rows)} 行")
+    if rows and not scored:
+        print("  **告警：quality_score 整列为空** —— 池 CSV 未透传参考分，报告不得手填，先修脚本/池物化")
 
 
 if __name__ == "__main__":

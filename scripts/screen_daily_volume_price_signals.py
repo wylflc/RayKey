@@ -1228,6 +1228,9 @@ def main() -> int:
         "exchange",
         "quality_tier",
         "quality_tier_label",
+        # §9.2.1 参考分（v2.14）：池 CSV 已随 signal.update(pool_row) 带进来，这里只是把它写出去。
+        # 仅供报告显示同档内排序，不参与矩阵资格、段位与优先级的任何判定。
+        "quality_score",
         "pool_layer",
         "valuation_tier",
         "valuation_tier_effective",
@@ -1328,6 +1331,13 @@ def main() -> int:
               f"｜当日 {pct_s}｜5日 {ret5_s}"
               f"｜{grade}｜{r.get('trend_strength','')}"
               f"｜{(r.get('signals') or r.get('observation_tags') or '仅 §8.7.9 前置企稳')[:46]}")
+
+    # §9.2.1 落地校验：新增列跑完必须核对非空行数——§15.2 第 3 条四次复发的共同签名
+    # 就是「某列整体为空而无人察觉」，而报告一旦改用手填值就再也发现不了。
+    scored = [r for r in rows if str(r.get("quality_score", "")).strip()]
+    print(f"参考分（§9.2.1）非空 {len(scored)}/{len(rows)} 行")
+    if rows and not scored:
+        print("**告警：quality_score 整列为空** —— 池 CSV 未透传参考分，报告不得手填，先修池物化")
 
     return data_error_exit_code(rows)
 
