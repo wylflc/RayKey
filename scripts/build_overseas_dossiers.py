@@ -18,15 +18,17 @@
    按定义不可双向使用的带一律判「无法估值」并清空带。
 
 本脚本把这 21 家改成**输入 → 计算 → 带**的可复算形式：每个输入都带出处，每条带都由
-下面四条路径之一算出，不再有「先有档位、后凑带」的空间。
+下面各条推导路径之一算出，不再有「先有档位、后凑带」的空间。
 
-方法路径（§6.5.7 v1.54 三选一，外加不可估值）
---------------------------------------------
+方法路径（每条都由 §6.5 的既有标签映射而来，脚本只是实现它们）
+------------------------------------------------
 * ``implied_pe``  稳态、g < r：``PE = 分红率/(r − g)``（戈登）
 * ``ddm3``        分红率 ≥60%，或 g ≥ r 使戈登失效：三阶段股利折现
                   n1 年 g1（= 一致预期窗口长度，不外推）→ n2 年线性衰减 → 永续 g∞
 * ``peg``         成长可见且分红率低：``PE = PEG × g``，PEG 按 ROE 上移（OI-005）
 * ``mid_cycle``   周期股处在周期极值：中枢利润 × 戈登稳态 PE（v2.10 新增，见下）
+* ``justified_pb`` §6.5.2 J 金融资本型：``PB = (ROE − g)/(COE − g)``，与自身 PB 中位取孰低
+                  （v2.15 新增，见下）
 * ``unvaluable``  **仅表示建档未完成**（§6.5.5.2）。已建档的公司不得取此路径——
                   通用模型失效是转入逐票差异化推导的触发条件，不是终止条件
 
@@ -39,6 +41,18 @@ v2.10：为什么删掉了「周期假设未决 → 无法估值」
 推出，g 取永续 3%——商品没有真实的结构性成长）。周期位置这个判断被压缩成**一个**具名
 输入 ``mid_cycle_uplift``（中枢营收相对上一轮常态营收的结构性倍数），用户改一个数即可
 覆盖全部结论，而不是面对一条没有带的行自己从头判断。
+
+v2.15：为什么加了 justified_pb
+------------------------------
+海外清单 2026-08-06 新增伯克希尔，是本清单第一家**保险/金融控股**公司。§6.5.0 判定顺序
+第 1 条把金融机构一律定为 J（资产负债表本身即经营主体），§6.5.2 J 行的口径是
+``bvps × (ROE − g)/(COE − g) × [0.90, 1.10]``，与自身 PB 中位取孰低。此前清单里没有
+金融股，脚本因此没有这条路径；加它是**实现一条既有标准**，不是新立标准。
+
+数学上它与 ``implied_pe`` 同源：``PE = (1 − g/ROE)/(r − g)``，两边乘 ``EPS = ROE × BVPS``
+即得 ``BVPS × (ROE − g)/(r − g)``。分开写有两个理由：①锚换成 BVPS 后不必先估一个
+「归一化 EPS」——伯克希尔的 GAAP 净利含股票组合市值变动，是本清单里噪音最大的一个分子；
+②J 的带系数是 [0.90, 1.10]（§6.5.2 J 行），不是分层系数。
 
 口径约定（与 A 股同尺，理由见 §6.8）
 ----------------------------------
@@ -157,7 +171,7 @@ class Company:
     code: str
     name: str
     tier: str
-    path: str                       # implied_pe | ddm3 | peg | unvaluable
+    path: str                       # implied_pe | ddm3 | peg | mid_cycle | justified_pb | unvaluable
     anchor_eps: float = 0.0         # 每股锚（交易货币）
     anchor_note: str = ""
     g: float = 0.0                  # 一致预期增速
@@ -182,6 +196,11 @@ class Company:
     mid_margin: float = 0.0          # 自身 10 年净利率中位
     shares: float = 0.0              # 摊薄股本（与 base_revenue 同单位口径）
     cycle_note: str = ""
+    # justified_pb 专用（§6.5.2 J）
+    bvps: float = 0.0                # 每股净资产（交易货币）
+    bvps_note: str = ""
+    pb_median: float = 0.0           # 自身 PB 中位（J primary「取孰低」的另一腿）
+    pb_median_note: str = ""
     # 参考分（§5.7.4）
     q1: int = 0
     q2: int = 0
@@ -281,6 +300,28 @@ class Company:
                 f"× 分层系数 [{lo_c}, {hi_c}]（{self.tier}）= {fair * lo_c:,.2f}~{fair * hi_c:,.2f}。"
                 f"**通用口径为何不成立**：{self.why_generic_fails}。{self.cross_check}"
             )
+        elif self.path == "justified_pb":
+            # §6.5.2 J：锚 = 每股净资产，倍数 = 隐含 PB (ROE − g)/(COE − g)，COE 取账户级 r。
+            # J primary 明文「与自身 PB 中位取孰低」——这条不是保守裁量，是防止公式在
+            # ROE 逼近 r 时把倍数推到与该公司历史区间脱节的位置。
+            lo_c, hi_c = (0.90, 1.10)          # §6.5.2 J 行带系数，不用分层系数
+            if self.roe <= G_TERMINAL and self.roe <= self.g:
+                raise ValueError(f"ROE={self.roe:.2%} ≤ g={self.g:.2%}，隐含 PB 无意义")
+            pb_model = (self.roe - self.g) / (self.r - self.g)
+            pb = min(pb_model, self.pb_median) if self.pb_median else pb_model
+            taken = "模型隐含" if pb == pb_model else f"自身 PB 中位 {self.pb_median}"
+            fair = self.bvps * pb
+            method = f"隐含PB：(ROE−g)/(COE−g) = ({self.roe:.2%}−{self.g:.1%})/({self.r:.1%}−{self.g:.1%}) = {pb_model:.3f}x，取孰低后 {pb:.3f}x"
+            deriv = (
+                f"锚 = 每股净资产 {self.bvps:,.2f}（{self.bvps_note}）；"
+                f"ROE {self.roe:.2%}（{self.roe_note}）；可持续增长 {self.g:.1%}（{self.g_note}）；"
+                f"COE = r = {self.r:.1%}（账户级要求回报，§6.8 口径1）→ "
+                f"隐含 PB = ({self.roe:.4f}−{self.g:.3f})/({self.r:.3f}−{self.g:.3f}) = {pb_model:.3f}x；"
+                f"自身 PB 中位 {self.pb_median}（{self.pb_median_note}）→ §6.5.2 J「取孰低」得 {pb:.3f}x（{taken}）；"
+                f"合理价 = {self.bvps:,.2f} × {pb:.3f} = {fair:,.2f}，"
+                f"× [{lo_c}, {hi_c}]（§6.5.2 J 行带系数）= {fair * lo_c:,.2f}~{fair * hi_c:,.2f}。"
+                f"**通用口径为何不成立**：{self.why_generic_fails}。{self.cross_check}"
+            )
         else:
             raise ValueError(f"未知路径 {self.path}")
         if self.sensitivity:
@@ -339,21 +380,35 @@ def materialize(as_of: str) -> None:
     assert set(by_code) == {r["security_code"] for r in rows}, "清单与输入不同集"
 
     fields = list(rows[0].keys()) + [c for c in NEW_COLS if c not in rows[0]]
+    reviewed: dict[str, str] = {}
     for row in rows:
         c = by_code[row["security_code"]]
         lo, hi, method, deriv = c.band()
         unval = lo is None
-        row["fair_price_low"] = "" if unval else f"{lo}"
-        row["fair_price_high"] = "" if unval else f"{hi}"
+        # 重跑不等于复核（v2.15）：脚本每次运行都会把全清单重算一遍，但只有**结论真的变了**
+        # 的行才算当日做过一次复核。旧版对每一行无条件写 `valuation_reviewed_at = as_of`，
+        # 于是「今天只加了 5 家」会被记成「26 家全部于今天复核」——既是对复核日的虚报，
+        # 又让 §6.8 的日志门槛（只记 valuation_reviewed_at == as_of 的行）一次性放行全表。
+        before = (row.get("fair_price_low", ""), row.get("fair_price_high", ""),
+                  row.get("valuation_tier", ""), row.get("quality_score", ""))
+        after = ("" if unval else f"{lo}", "" if unval else f"{hi}",
+                 "无法估值" if unval else (
+                     effective_valuation_tier(to_float(row.get("valuation_price")), lo, hi)
+                     or row.get("valuation_tier", "")),
+                 f"{c.score():.2f}")
+        changed = before != after
+        reviewed_at = as_of if changed else (row.get("valuation_reviewed_at") or as_of)
+        reviewed[c.code] = reviewed_at
+
+        row["fair_price_low"], row["fair_price_high"] = after[0], after[1]
         # 审定档由本次的带与复核时点价重算（§6.2.1.6），不沿用旧值：带一改而档不改，
         # 读表的人会拿新带去核对一个用旧带算出来的档。
         price = to_float(row.get("valuation_price"))
-        row["valuation_tier"] = "无法估值" if unval else (
-            effective_valuation_tier(price, lo, hi) or row["valuation_tier"])
+        row["valuation_tier"] = after[2]
         # `valuation_reason` = 证据（输入）+ 本次定档（生成）。带算术只在这里出现一次，
         # 因此不可能与 fair_price_low/high 脱节——旧版手写带，10/21 行已脱节。
         row["valuation_reason"] = (
-            c.evidence + f"｜**本次定档（{as_of}）**：{method}；带 "
+            c.evidence + f"｜**本次定档（{reviewed_at}）**：{method}；带 "
             + ("—（建档未完成）" if unval else f"{lo:,.2f}~{hi:,.2f}")
             + f"；复核时点价 {row.get('valuation_price') or 'NA'}"
             f"（{row.get('valuation_price_as_of') or 'NA'}）→ **{row['valuation_tier']}**"
@@ -370,7 +425,7 @@ def materialize(as_of: str) -> None:
         row["dossier_status"] = "unvaluable_pending_input" if unval else "active"
         row["dossier_dir"] = f"data/companies/{c.code}_{c.name}"
         row["decided_by"] = "模型推导（用户可覆盖）"
-        row["valuation_reviewed_at"] = as_of
+        row["valuation_reviewed_at"] = reviewed_at
         row["q1_business_model_score"] = c.q1
         row["q2_moat_score"] = c.q2
         row["q3_capital_allocation_score"] = c.q3
@@ -380,7 +435,7 @@ def materialize(as_of: str) -> None:
         row["flags"] = c.flags
         row["score_reason"] = c.q_reason
         row["score_version"] = "v0.1-overseas"
-        row["scored_at"] = as_of
+        row["scored_at"] = reviewed_at
 
     with OVERSEAS_CSV.open("w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields)
@@ -402,7 +457,7 @@ def materialize(as_of: str) -> None:
             f"**方法**：{method}\n\n**推导**：{deriv}\n\n"
             f"## 参考分理由（§5.7.4）\n\n{c.q_reason}\n\n"
             f"## 跟踪指标\n\n{c.key_metrics}\n\n## 复核触发\n\n{c.review_triggers}\n\n"
-            f"---\n定档人：模型推导（用户可覆盖）｜复核日：{as_of}\n",
+            f"---\n定档人：模型推导（用户可覆盖）｜复核日：{reviewed.get(c.code, as_of)}\n",
             encoding="utf-8")
     print(f"已写入 {OVERSEAS_CSV.name}（{len(rows)} 行，新增 {len(NEW_COLS)} 列）"
           f"，建目录 {len(INPUTS)} 个")

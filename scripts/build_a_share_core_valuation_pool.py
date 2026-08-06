@@ -45,7 +45,6 @@ DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_TIER_SNAPSHOT = ROOT / "data/interim/pool_effective_tiers.csv"
 DEFAULT_OVERSEAS = ROOT / "data/processed/overseas_watchlist_valuation.csv"
 DEFAULT_OVERSEAS_TIER_SNAPSHOT = ROOT / "data/interim/overseas_effective_tiers.csv"
-MARKET_LABELS = {"HK": "港股", "US": "美股", "KR": "韩股"}
 
 # §6.2.1 分层×估值三态矩阵（v1.27 三档重构）：可买 / 可持有 / 提醒卖出。
 TIER_ELIGIBLE_VALUATIONS = {
@@ -429,8 +428,8 @@ def build_overseas_section(
     changes: list[str] = []
     current_tiers: dict[str, tuple[str, str]] = {}
     body: list[str] = []
-    # 与 A 股主表一致按质量档 L1→L3 排序；稳定排序使同档内保持清单原序（港股→美股→韩股）。
-    tier_rank = {tier: index for index, tier in enumerate(("L1", "L2", "L3"))}
+    # 与 A 股主表一致按质量档 L1→L4 排序（A 股池无 L4 行，海外清单有）。
+    tier_rank = {tier: index for index, tier in enumerate(("L1", "L2", "L3", "L4"))}
     # v1.39：档内按**参考分**降序（§5.7 参考分只作档内排序展示，不改变矩阵资格）。
     rows = sorted(
         rows,
@@ -464,9 +463,9 @@ def build_overseas_section(
         body.append(
             # 参考分（§5.7.4）与 A 股主表同列位：质量档之后、估值档之前。海外清单
             # 2026-08-03 起逐票打分，此前该列不存在（附表只有质量档、无档内序位）。
-            "| {market} | {code} | {name} | {tier} | {score} | ".format(
-                market=f"{MARKET_LABELS.get(market, market)}·{currency}" if currency else MARKET_LABELS.get(market, market),
-                code=code,
+            # 市场 / 代码 两列于 2026-08-06 按用户指令删除（§6.8 第 4 条）；两者仍在
+            # CSV 里，只是不进阅读版。`market`/`code` 仍用于行情键与档位快照键。
+            "| {name} | {tier} | {score} | ".format(
                 name=row["security_name"],
                 tier=row.get("quality_tier", "—"),
                 score=row.get("quality_score") or "—",
@@ -483,14 +482,15 @@ def build_overseas_section(
         "",
         "- **一律不可买、不构成买入候选**：本清单不入 `a_share_core_valuation_pool.csv`、不进每日量价扫描（§8）、不走买入前闸门（§10），§6.2.1 分层×估值准入矩阵不适用。它只回答「质量几档、该用什么模型、现价贵不贵」。",
         "- 质量分层（§5.7）与策略标签（§6.5）口径与 A 股完全一致，不降低门槛；本清单是用户点名的自选名单而非全市场筛选结果，故层级分布天然偏上，不适用 §5.7.1 的金字塔校准。",
-        "- 行序与 A 股主表一致按**质量档 L1→L4**排列，同档内保持 港股→美股→韩股 顺序。",
+        "- 行序与 A 股主表一致按**质量档 L1→L4**排列，同档内按**参考分降序**。",
         "- 档位同样按 §6.2.1.6 现价自动定档（>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估），与审定档不同的行显示 `审定档→现档`。带只由证据复核修改。",
-        "- 现价/合理价区间/空间均为各自**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较；行情同源腾讯快照（`scripts/overseas_quotes.py`）。",
+        "- **市场与代码两列已按用户指令删除（2026-08-06）**：两者仍在 `overseas_watchlist_valuation.csv` 的 `market_type`/`security_code` 里，只是不进阅读版。**代价须知**：现价/合理价区间/空间均为各自**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较，而本表已不再逐行标出是哪个市场——数量级明显不同的行（如韩股六位数报价）靠公司名识别。行情同源腾讯快照（`scripts/overseas_quotes.py`）。",
         "- PE 为行情快照 TTM 口径：美股线不提供 PB、韩股线不提供 PE/PB，缺失列显示 —，判档依据见 CSV `fair_price_basis`（多数标的以归一化/中枢利润为锚，表观 PE 不作定档依据）。",
-        "- **参考分（§5.7.4）与合理价区间自 2026-08-03 起逐票建档产出**：参考分 = Q1×0.25+Q2×0.40+Q3×0.20+Q4×0.15−可信度扣分，**仅供同档内排序**，不改变任何资格、不构成买卖指令。每一条带由 `scripts/build_overseas_dossiers.py` 按 §6.5.7 v1.54 三条路径之一算出（派息折现隐含PE／三阶段DDM／PEG×ROE修正），输入与计算分离，逐票正文在 `data/companies/<代码>_<名称>/README.md`。**改带只能改输入**。",
+        "- **参考分（§5.7.4）与合理价区间自 2026-08-03 起逐票建档产出**：参考分 = Q1×0.25+Q2×0.40+Q3×0.20+Q4×0.15−可信度扣分，**仅供同档内排序**，不改变任何资格、不构成买卖指令。每一条带由 `scripts/build_overseas_dossiers.py` 按 §6.5.7 的推导路径之一算出（派息折现隐含PE／三阶段DDM／PEG×ROE修正／中枢利润×戈登稳态PE／§6.5.2 J 隐含PB），输入与计算分离，逐票正文在 `data/companies/<代码>_<名称>/README.md`。**改带只能改输入**。",
+        "- 估值列为**无法估值**的行是 §6.5.5.2 的**建档未完成**（流程状态，不是估值结论）：其锚或兜底口径按定义不可算，档案已写明缺哪一个输入、以及什么条件下解锁建带。这类行不自动定档，合理价区间/空间/PE 均显示 —。",
         "",
-        "| 市场 | 代码 | 名称 | 质量 | 参考分 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
-        "| --- | --- | --- | --- | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+        "| 名称 | 质量 | 参考分 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
+        "| --- | --- | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
         *body,
     ]
     return lines, {"changes": changes, "current_tiers": current_tiers}
