@@ -49,6 +49,10 @@ def main() -> int:
     args = parser.parse_args()
 
     tiers = read(TIERS)
+    # §5.7.4 六列的填充率自检（OI-024）：渲染分层阅读版是分层表的常规消费点，把缺口摆在这里
+    # 才会被看见。§15.2 第 3 条硬自检——凡新增列，跑完必须核对非空行数。
+    from backfill_quality_tier_columns import report_fill_rates
+    report_fill_rates(tiers)
     tags = {r["security_code"].zfill(6): r for r in read(TAGS)}
     pool = {r["security_code"].zfill(6): r for r in read(POOL)} if POOL.exists() else {}
     counts = Counter(r.get("quality_tier", "") for r in tiers)
