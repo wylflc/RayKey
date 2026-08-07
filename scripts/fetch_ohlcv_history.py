@@ -237,6 +237,23 @@ def main() -> int:
     ACTIONS_CSV.parent.mkdir(parents=True, exist_ok=True)
     print(f"universe {len(targets)} 只（池 + 持仓）｜截止 {until}｜不复权原始价 + 除权事件")
 
+    def flush_actions(actions: list[dict[str, str]]) -> int:
+        """把除权事件并进磁盘文件并返回总行数。
+
+        **必须增量落盘**：首版只在跑完时写一次，结果 2026-08-07 首轮跑到 177/261 被中断，
+        已抓到的除权事件**全部丢失**（文件里只剩冒烟测试那 3 只的 73 行），而日线因为是逐票
+        写盘所以一根没丢。同一次运行里两种写法、两种结局，正是 §15.2 第 3 条那类「丢了数据
+        不报警」的成因——故这里改为每批落盘。
+        """
+        merged = {(a["security_code"], a["ex_dividend_date"]): a for a in load_csv(ACTIONS_CSV)
+                  if a.get("security_code")}
+        merged.update({(a["security_code"], a["ex_dividend_date"]): a for a in actions})
+        with ACTIONS_CSV.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=ACTION_FIELDS)
+            writer.writeheader()
+            writer.writerows([merged[k] for k in sorted(merged)])
+        return len(merged)
+
     all_actions: list[dict[str, str]] = []
     bar_counts, failed, skipped = [], [], 0
     for index, (code, name, exchange) in enumerate(targets, 1):
@@ -255,6 +272,10 @@ def main() -> int:
             time.sleep(args.pause)
         except Exception as exc:                               # noqa: BLE001
             failed.append(f"{code} 除权({type(exc).__name__})")
+
+        if len(all_actions) >= 200:                            # 每约 10-20 只落一次盘
+            flush_actions(all_actions)
+            all_actions = []
 
         if args.actions_only:
             continue
@@ -278,15 +299,9 @@ def main() -> int:
         if index % 25 == 0 or index == len(targets):
             print(f"  [{index}/{len(targets)}] {name}({code}) 累计 {len(rows)} 根")
 
-    if all_actions:
-        merged_actions = {(a["security_code"], a["ex_dividend_date"]): a for a in load_csv(ACTIONS_CSV)
-                          if a.get("security_code")}
-        merged_actions.update({(a["security_code"], a["ex_dividend_date"]): a for a in all_actions})
-        with ACTIONS_CSV.open("w", newline="", encoding="utf-8") as handle:
-            writer = csv.DictWriter(handle, fieldnames=ACTION_FIELDS)
-            writer.writeheader()
-            writer.writerows([merged_actions[k] for k in sorted(merged_actions)])
-        print(f"除权除息事件 {len(merged_actions)} 行 → {ACTIONS_CSV.relative_to(ROOT)}")
+    total_actions = flush_actions(all_actions)
+    covered = len({a["security_code"] for a in load_csv(ACTIONS_CSV) if a.get("security_code")})
+    print(f"除权除息事件 {total_actions} 行、覆盖 {covered}/{len(targets)} 只 → {ACTIONS_CSV.relative_to(ROOT)}")
 
     # §15.2 第 3 条硬自检：新增数据源必须核对非空行数与覆盖面。
     if bar_counts:
