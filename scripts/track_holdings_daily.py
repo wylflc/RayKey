@@ -50,7 +50,11 @@ FIELDNAMES = [
     "fair_price_low",
     "fair_price_high",
     "upside",
+    "day_low",
     "stop_hit",
+    # §14.3 第 1 条判定依据：`盘中` = 当日最低价触及、收盘收回；`收盘` = 收盘价本身在割肉价之下。
+    # 两者都是命中，区分只为让报告说清楚是哪一种，不改变动作。
+    "stop_hit_basis",
     "action",
     "note",
     "scanned_at_utc",
@@ -126,7 +130,16 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         if stop is None:
             notes.append("**未设定割肉价**：该仓无机械提醒，请尽快补定（§14.3 第 3 条）")
 
-        stop_hit = bool(close is not None and stop is not None and close <= stop)
+        # §14.3 第 1 条：「当日价 <= stop_loss_price 时提醒卖出……**盘中触及即为最终信号，不等收盘**」。
+        # 只比收盘价会漏掉「盘中破位、尾盘收回」的一天，而 Tier-0 规则恰恰要抓的就是那一天——
+        # 属 §15.2 第 3 条静默失效（判例：九号公司 2026-08-07 除权后割肉价 39.78，最低 39.39
+        # 触及、收盘 40.09 收回；只比收盘会输出「持有」，把已经成立的 Tier-0 信号抹掉）。
+        day_low = to_float(quote.get("day_low"))
+        touched = [p for p in (close, day_low) if p is not None]
+        stop_hit = bool(touched and stop is not None and min(touched) <= stop)
+        stop_hit_basis = ""
+        if stop_hit:
+            stop_hit_basis = "收盘" if close is not None and close <= stop else "盘中"
         # §14.5 四取值。无行情时必须落 `数据缺失` 而非 `持有`：`持有` 是唯一读起来像
         # "已检查、没事" 的取值，而没有现价恰恰意味着割肉价没判过。旧版在此落 `持有`
         # 并写 "沿用上一交易日结论"，但脚本从不读上一日文件——一只已破割肉价的停牌股
@@ -153,7 +166,9 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
                 "fair_price_low": "" if low is None else f"{low:g}",
                 "fair_price_high": "" if high is None else f"{high:g}",
                 "upside": upside,
+                "day_low": "" if day_low is None else f"{day_low:g}",
                 "stop_hit": stop_hit,
+                "stop_hit_basis": stop_hit_basis,
                 "action": action,
                 "note": "；".join(notes),
                 "scanned_at_utc": now,
@@ -230,7 +245,8 @@ def main() -> None:
     no_stop = [r for r in rows if not str(r["stop_loss_price"]).strip()]
     no_band = [r for r in rows if not r["fair_price_low"]]
     print(f"tracked {len(rows)} holdings as of {as_of}")
-    print(f"  割肉提醒 {len(hit)} 只" + (f"：{'、'.join(str(r['security_name']) for r in hit)}" if hit else ""))
+    hit_names = "、".join(f"{r['security_name']}（{r['stop_hit_basis']}触及）" for r in hit)
+    print(f"  割肉提醒 {len(hit)} 只" + (f"：{hit_names}" if hit else ""))
     if no_stop:
         print(f"  **未设定割肉价 {len(no_stop)} 只**：{'、'.join(str(r['security_name']) for r in no_stop)}（§14.3 第 3 条，置顶提示）")
     if no_band:
