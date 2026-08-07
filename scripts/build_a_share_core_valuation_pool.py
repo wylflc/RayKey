@@ -26,10 +26,11 @@ from __future__ import annotations
 
 import argparse
 import csv
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from a_share_quotes import fetch_spot_quotes
+from fetch_overseas_earnings_calendar import print_overdue_report
 from overseas_quotes import fetch_overseas_quotes
 from validate_valuation_bands import check_row as check_band_card
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
@@ -850,6 +851,15 @@ def main() -> None:
     args = parse_args()
     rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of, args.valuation)
     overseas_rows = load_overseas(args.overseas)
+    # §6.8 复核触发① 的落地校验（OI-039）：财报已披露而带还建在披露前的证据上，当天就喊出来。
+    # 放在这里是因为本脚本是 §9.1 第二步**每日必跑**的那一个，而海外行不进 §9.1 1a 的机械覆盖；
+    # 检查只读清单里已存的日期列，不联网，故不增加每日跑批的耗时。日期源由
+    # `fetch_overseas_earnings_calendar.py` 定期刷新。
+    if overseas_rows:
+        try:
+            print_overdue_report(overseas_rows, date.fromisoformat(args.as_of))
+        except ValueError:
+            print("  §6.8 复核触发① 自检跳过：--as-of 非合法日期")
     quotes: dict[str, dict] = {}
     overseas_quotes: dict[str, dict] = {}
     if args.quotes == "fetch":

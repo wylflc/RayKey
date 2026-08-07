@@ -26,6 +26,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from a_share_quotes import fetch_spot_quotes
+from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -210,6 +211,50 @@ def log_decisions(
     append_decision_log(log_file, records)
 
 
+def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: float) -> None:
+    """§14.4 除权除息检出（结 OI-030）：**每日固定输出一行**，无事也要说「无」。
+
+    固定输出而非只在命中时打印，是本条的要点：不出声时，「今天查过了、没有」与「今天忘了查」
+    在报告上长得一模一样——而 OI-030 登记的正是后者（规则预见了失效形态，却没有人负责触发它）。
+
+    只提示、不写回：`stop_loss_price` 是 Tier-0 字段，§14.4 明文「调整由维护者完成」。
+    建议值一律标为**须人工核对**——差异化分派（判例即九号公司 2026-08-07）的价格口径与
+    公告的每股派息不等，机械换算会算错。
+    """
+    codes = {str(row["security_code"]) for row in rows}
+    try:
+        events = fetch_ex_dividend_events(as_of.isoformat(), timeout=timeout)
+    except Exception as exc:                                   # noqa: BLE001
+        print(f"  **当日持仓除权除息：查询失败**（{type(exc).__name__}）——须人工核对，不得当作「无」")
+        return
+
+    hits = {code: event for code, event in events.items() if code in codes}
+    if not hits:
+        print(f"  当日持仓除权除息：无（全市场 {len(events)} 家除权，均不在持仓内）")
+        return
+
+    print(f"  **当日持仓除权除息 {len(hits)} 只**（§14.4：须在当日跟踪前调整 `stop_loss_price` 与 `cost_basis`）：")
+    by_code = {str(row["security_code"]): row for row in rows}
+    for code, event in hits.items():
+        row = by_code[code]
+        cash, ratio = float(event["cash_per_share"]), float(event["share_ratio"])  # type: ignore[arg-type]
+        print(f"    - {row['security_name']}（{code}）{event['plan']}")
+        for label, field in (("割肉价", "stop_loss_price"), ("成本价", "cost_basis")):
+            value = to_float(row.get(field))
+            if value is None:
+                print(f"        {label}：未设定，无需调整")
+                continue
+            print(f"        {label} {value:g} → **建议 {adjust_for_ex_dividend(value, cash, ratio):.2f}**"
+                  f"（(原价 − {cash:g}) ÷ (1 + {ratio:g})）")
+        if ratio:
+            print(f"        送转比例 {ratio:g}/股：`current_shares` 同须按 §14.4 调整")
+        print("        ⚠ 建议值须人工核对后写回，两条都要核："
+              "①**本检出不知道你调过没有**——清单里没有记录调整状态的字段，若本日已按 §14.4 调过，"
+              "忽略本行，再调一次就是重复除权；"
+              "②差异化分派的价格口径与公告每股派息不等（判例：九号公司 2026-08-07 公告 10派12.3852，"
+              "价格口径每份 1.22）")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="每日持仓跟踪（§14，v2.05）")
     parser.add_argument("--as-of", required=True, help="交易日 YYYY-MM-DD")
@@ -238,6 +283,8 @@ def main() -> None:
     no_stop = [r for r in rows if not str(r["stop_loss_price"]).strip()]
     no_band = [r for r in rows if not r["fair_price_low"]]
     print(f"tracked {len(rows)} holdings as of {as_of}")
+    # §14.4 检出排在割肉判定之前打印：调整未做时，下面那行割肉结论就是不可信的（OI-030 判例）。
+    report_ex_dividend(rows, as_of, args.timeout)
     hit_names = "、".join(str(r["security_name"]) for r in hit)
     print(f"  割肉提醒 {len(hit)} 只" + (f"：{hit_names}" if hit else ""))
     if no_stop:

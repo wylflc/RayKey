@@ -55,6 +55,71 @@ def fetch_one(code: str, timeout: float = 15.0) -> list[dict]:
     return ((payload.get("result") or {}).get("data")) or []
 
 
+# --------------------------------------------------------------- 除权除息日检出（§14.4，结 OI-030）
+#
+# §14.4 要求「除权除息日**必须在当日跟踪前**按除权除息因子机械调整 `stop_loss_price` 与
+# `cost_basis`」，但全流程原先没有任何一处会去发现「今天是某只持仓的除权除息日」——清单
+# 手工维护、§9.1 五步里没有这一步、`track_holdings_daily.py` 也不读除权数据。
+#
+# 实测判例（2026-08-07）：九号公司当日除权除息，两次跑批都拿未调整的割肉价 41.00 与除权后
+# 价格比较，输出「跌破 41.00」的**假触及**，并把除权造成的价格下跳读成「当日跌幅居持仓之首」。
+# 代价是双向的：现金分红当日产生假警报，而送转/配股（因子远大于分红）当日会反向产生**假安全**
+# ——调整后的割肉价本应大幅下移，未调整则显示为「远未触及」。
+#
+# 用户 2026-08-07 裁定按「检出 + 提示，不自动改」修：脚本负责发现并算出建议值，
+# **写回仍由维护者完成**（§14.4 原文即「调整由维护者完成」，且 `stop_loss_price` 是
+# Tier-0 字段，自动改写的风险高于它消除的风险）。
+
+EX_DIV_COLUMNS = (
+    "SECURITY_CODE,SECURITY_NAME_ABBR,EX_DIVIDEND_DATE,IMPL_PLAN_PROFILE,"
+    "PRETAX_BONUS_RMB,BONUS_RATIO,IT_RATIO,ASSIGN_PROGRESS"
+)
+
+
+def fetch_ex_dividend_events(as_of: str, timeout: float = 15.0) -> dict[str, dict[str, object]]:
+    """取 `as_of` 当日全市场除权除息事件，返回 {代码: {计划文本, 每股现金, 每股送转}}。
+
+    按日过滤而非逐票查询：一次请求即可拿到当日全市场（实测 2026-08-07 共 15 家），
+    与持仓取交集在本地做，故每日只多一次网络往返。
+    """
+    query = urllib.parse.urlencode({
+        "reportName": "RPT_SHAREBONUS_DET",
+        "columns": EX_DIV_COLUMNS,
+        "pageSize": "500",
+        "sortColumns": "SECURITY_CODE",
+        "sortTypes": "1",
+        "filter": f"(EX_DIVIDEND_DATE='{as_of}')",
+    })
+    request = urllib.request.Request(f"{API}?{query}", headers=HEADERS)
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    rows = ((payload.get("result") or {}).get("data")) or []
+
+    events: dict[str, dict[str, object]] = {}
+    for row in rows:
+        code = str(row.get("SECURITY_CODE") or "").zfill(6)
+        if not code:
+            continue
+        cash_per_ten = float(row.get("PRETAX_BONUS_RMB") or 0)
+        share_per_ten = float(row.get("BONUS_RATIO") or 0) + float(row.get("IT_RATIO") or 0)
+        events[code] = {
+            "name": row.get("SECURITY_NAME_ABBR", ""),
+            "plan": row.get("IMPL_PLAN_PROFILE", ""),
+            "cash_per_share": cash_per_ten / 10,
+            "share_ratio": share_per_ten / 10,
+            "progress": row.get("ASSIGN_PROGRESS", ""),
+        }
+    return events
+
+
+def adjust_for_ex_dividend(price: float, cash_per_share: float, share_ratio: float) -> float:
+    """除权除息价格换算：`(原价 − 每股现金红利) ÷ (1 + 每股送转比例)`。
+
+    该换算是**价格口径换算**，不属于"下调割肉价"（§14.4 明文，不触发 R4）。
+    """
+    return (price - cash_per_share) / (1 + share_ratio)
+
+
 def summarise(code: str, rows: list[dict]) -> list[dict]:
     """按报告年汇总：现金分红总额、期末股本、回购注销率。"""
     by_year: dict[str, list[dict]] = defaultdict(list)
