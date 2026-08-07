@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A 股财报日「价格与带背离 → 强制复带」检出（§7.5.5，结 OI-026）。
+"""A 股财报日「价格与带背离 → 强制复带」检出（§7.5.6，结 OI-026）。
 
 登记的不对称
 ------------
@@ -176,7 +176,7 @@ def run(as_of: date, lookback: int, timeout: float, universe: str = "subset") ->
 
     scope = (f"全池 {len(subset)} 只（**校准口径，非生效范围**）" if universe == "pool"
              else f"子集 {len(subset)} 只（持仓 {len(holdings)} + 当日可买 {len(buyable)}，去重后）")
-    print(f"§7.5.5 财报日价格背离检出（{as_of}，OI-026）｜{scope}"
+    print(f"§7.5.6 财报日价格背离检出（{as_of}，OI-026）｜{scope}"
           f"｜其中 {lookback} 日内有披露且有带的 {checked} 只")
     if not hits:
         print(f"  无命中（阈值 |Δ| ≥ {DIVERGENCE_THRESHOLD_PCT:g}% 且被推出带）")
@@ -194,7 +194,7 @@ def run(as_of: date, lookback: int, timeout: float, universe: str = "subset") ->
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="A 股财报日价格背离强制复带检出（§7.5.5，OI-026）")
+    parser = argparse.ArgumentParser(description="A 股财报日价格背离强制复带检出（§7.5.6，OI-026）")
     parser.add_argument("--as-of", required=True, help="交易日 YYYY-MM-DD")
     parser.add_argument("--lookback", type=int, default=10, help="披露回溯窗口（自然日，缺省 10）")
     parser.add_argument("--timeout", type=float, default=8.0)
