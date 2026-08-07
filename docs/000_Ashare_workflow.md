@@ -2370,6 +2370,28 @@ python3 scripts/fetch_ohlcv_history.py --as-of YYYY-MM-DD            # 池+持�
 python3 scripts/fetch_ohlcv_history.py --as-of YYYY-MM-DD --actions-only
 ```
 
+### 12.4.2 逐季度历史财务数据（v2.17 立，OI-034 前置，用户指令）
+
+**为什么要它**：OI-034 的回测方案第 1 步是「按每次定期报告为每个股票计算一个估值带」，而本仓库此前**只有最新一期**估值证据——`a_share_valuation_dossiers.csv` 只存当前带，历史带从未存在过。
+
+**它的价值大于那次回测**：有了逐季历史财务，历史带可以按**当时已披露的数据**重建，**§12.4 的估值闸门前视豁免就不必再吃**——此后回放的绝对收益不再只能当上界读（§12.7 第 2 条读数义务随之可以放宽）。
+
+| 项 | 口径 |
+| --- | --- |
+| **落点** | `data/raw/financials/<报告期末>.csv`，一期一文件（便于增量：已存在的期直接跳过） |
+| **范围** | **全市场**（非仅池内），2016-03-31 起共 42 个报告期 |
+| **数据源** | 东财 `RPT_LICO_FN_CPD`，与 `fetch_a_share_report_disclosures.py` 同源同键名约定（报告期列名为 `REPORTDATE`，无下划线） |
+| **字段** | `notice_date` 公告日、`parent_netprofit`、`total_operate_income`、`basic_eps`、`deduct_basic_eps`、`bps`、**`weightavg_roe`**（§6.5.7.1 的核心输入）、`gross_margin`、`op_cashflow_ps`、同比与环比 |
+| **`notice_date` 是本表存在的理由** | §12.4 硬约束要求 `available_at <= 回放日`，而 `available_at` 是**公告日不是报告期末**：2026Q1 期末 03-31、公告日可能在 04-28，**4 月中旬用 Q1 数据建带就是前视**。下游按公告日决定某个带从哪天起生效；**无公告日的行不可用于历史建带，须显式排除而不是按期末凑** |
+| **顺带缓解幸存者偏差** | 按报告期取全市场 = 取到**当时在市**的公司，含此后已退市者。实测 2022-03-31 有 **5,921** 行而 2026-03-31 只有 5,893 行，差额正是那批已退市/更名的公司。**但只解决了基本面这一半**——`data/raw/ohlcv/` 行情仍只覆盖当前池与持仓，完整解决须另取退市股行情 |
+
+`data/raw/financials/` 与 `data/raw/ohlcv/` 同样入 `.gitignore`（约 56MB、完全可重建）。
+
+```bash
+python3 scripts/fetch_a_share_quarterly_financials.py --as-of YYYY-MM-DD                # 缺省 2016 起
+python3 scripts/fetch_a_share_quarterly_financials.py --as-of YYYY-MM-DD --since 2020-03-31
+```
+
 ### 12.5 回放失败后的固定调整
 
 如果任一外部回放案例失败，按以下规则调整流程：

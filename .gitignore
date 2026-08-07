@@ -13,3 +13,7 @@ notebooks/.ipynb_checkpoints/
 # 逐票历史日线（OI-035）：约 73MB、每日新增、且由 scripts/fetch_ohlcv_history.py 完全可重建。
 # 除权除息事件不在此列——它体量小、变动慢，且是「事实」的那一半，照常入库。
 data/raw/ohlcv/
+
+# 逐季度全市场财务数据（OI-034 前置）：约 56MB、全市场 × 42 个报告期，
+# 由 scripts/fetch_a_share_quarterly_financials.py 完全可重建。
+data/raw/financials/
