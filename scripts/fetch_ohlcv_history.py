@@ -54,7 +54,13 @@ HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
 OHLCV_DIR = ROOT / "data/raw/ohlcv"
 ACTIONS_CSV = ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv"
 
-KLINE_API = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={secid},day,{start},{end},{count},"
+# 用 `proxy.finance.qq.com/.../**newfqkline**/get` 而不是 `web.ifzq.gtimg.cn/.../fqkline/get`：
+# 后者**完全不服务北交所**（实测 bj920982／bj430047／bj873223 一律返回 0 根，且**不报错**），
+# 前者对北交所与沪深都正常。首版用了后者，3 只北交所票因此拿到 0 根空文件。
+# 这个 endpoint 也是 `screen_daily_volume_price_signals.fetch_daily_rows` 在用的那个——
+# 生产路径早就是对的，是本脚本另挑了一个。
+KLINE_API = ("https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
+             "?param={secid},day,{start},{end},{count},")
 EM_API = "https://datacenter-web.eastmoney.com/api/data/v1/get"
 HEADERS = {"User-Agent": "Mozilla/5.0", "Referer": "https://data.eastmoney.com/"}
 
@@ -64,11 +70,24 @@ ACTION_FIELDS = ["security_code", "security_name", "ex_dividend_date",
                  "cash_per_share", "share_ratio", "plan", "report_date"]
 
 
+# 北交所代码段：430/83x/87x/88x 是老三板转来的，**920 是 2023 年后新发的**。
+# 首版只认 `4`/`8` 开头，把 920xxx 判成了深市 `sz920982`，腾讯对该 secid **不报错、只返回空**
+# ——3 只北交所票因此拿到 0 根 K 线。这正是 §15.2 第 3 条点名过的同一个失效
+# （「北交所 SECUCODE 后缀写成 .SZ 导致财务接口不报错只返回空」）的**第五次复发**，
+# 只是这次换成了行情接口。故这里既认 `exchange` 字段也认代码段，两条都不依赖对方。
+BSE_PREFIXES = ("43", "83", "87", "88", "92")
+
+
 def secid(code: str, exchange: str) -> str:
     code = code.zfill(6)
-    if exchange:
-        return ("sh" if exchange.upper().startswith("SS") or exchange.upper() == "SSE" else "sz") + code
-    return ("sh" if code[0] == "6" else ("bj" if code[0] in "48" else "sz")) + code
+    market = (exchange or "").upper()
+    if market.startswith("BS") or market == "BJSE" or code[:2] in BSE_PREFIXES:
+        return "bj" + code
+    if market.startswith("SS") or market == "SSE":
+        return "sh" + code
+    if market.startswith("SZ"):
+        return "sz" + code
+    return ("sh" if code[0] == "6" else "sz") + code
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -308,6 +327,15 @@ def main() -> int:
         print(f"日线覆盖 {len(bar_counts)}/{len(targets)} 只｜合计 {sum(bar_counts):,} 根"
               f"｜单票中位 {sorted(bar_counts)[len(bar_counts) // 2]:,} 根"
               f"｜最短 {min(bar_counts):,}｜最长 {max(bar_counts):,}")
+
+    # **零根必须显式告警**：首轮 3 只北交所票拿到 0 根而整批报告「覆盖 261/261」，
+    # 因为覆盖数只数了文件个数、没数内容——「有文件」与「有数据」被当成了一回事。
+    empty = [(code, name) for code, name, _ in targets
+             if (OHLCV_DIR / f"{code}.csv").exists()
+             and sum(1 for _ in (OHLCV_DIR / f"{code}.csv").open(encoding="utf-8")) <= 1]
+    if empty:
+        print(f"  **零根 {len(empty)} 只（有文件但无数据，按失败处理）**："
+              + "、".join(f"{name}({code})" for code, name in empty))
     if skipped:
         print(f"  已是最新、未重取 {skipped} 只")
     if failed:
