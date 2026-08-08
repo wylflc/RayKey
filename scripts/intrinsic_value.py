@@ -138,6 +138,7 @@ def intrinsic_value(
     consistent: bool = True,
     g_for_peg: float | None = None,
     max_retention: float | None = 1.0,
+    min_retention: float | None = 0.0,
 ) -> ValuationResult:
     """每股内在价值 P0*（原式第 6 节主公式 + 本模块的留存率修正）。
 
@@ -180,6 +181,15 @@ def intrinsic_value(
             # 留存率超过上限 = 该增速须靠外部融资才能实现。**增长受 ROE 约束、不是自由参数**，
             # 故把 g 压到内生可支撑的水平，而不是照发一个需要增发才成立的现金流。
             b_prev = max_retention
+            g_t = _supportable_growth(b_prev, roe_prev, roe_t, consistent)
+            clamped_years += 1
+        elif min_retention is not None and b_prev < min_retention:
+            # 反向越界：`ROE_T > ROE_0` 时（低谷公司被假设回升到行业均值）留存率会变成**负数**，
+            # 即模型一边让利润增长、一边派息超过利润把净资产派小。这是从假设里凭空生出价值。
+            # 实测中国船舶 2019 各期 ROE0 仅 0.24%、终值被设为 r+3%≈10%，隐含 PE 高达 **391**。
+            # 与 max_retention 对称处理：把派息压到 100%，增速改由 ROE 回升本身支撑
+            # （b=0 时 `g = ROE_{t+1}/ROE_t − 1`，即「利润率修复驱动增长、不靠再投资」）。
+            b_prev = min_retention
             g_t = _supportable_growth(b_prev, roe_prev, roe_t, consistent)
             clamped_years += 1
         payout = 1 - b_prev

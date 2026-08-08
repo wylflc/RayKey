@@ -17,3 +17,6 @@ data/raw/ohlcv/
 # 逐季度全市场财务数据（OI-034 前置）：约 56MB、全市场 × 42 个报告期，
 # 由 scripts/fetch_a_share_quarterly_financials.py 完全可重建。
 data/raw/financials/
+
+# 历史估值状态逐日表（67MB，由 build_historical_valuation_bands.py 完全可重建）
+data/processed/a_share_historical_valuation_daily.csv

@@ -17,7 +17,7 @@
 **这一步的价值大于回测本身**：它是消除 §12.4 估值闸门前视豁免的前提——历史带从此可按
 「当时已披露的数据」重建，而不必再借用当前的带去还原历史某天的矩阵资格。
 
-四个已实测到的坑（都不是假想，样本里全部真实出现过）
+五个已实测到的坑（都不是假想，全池里全部真实出现过）
 --------------------------------------------------
 1. **公告日不单调**。九号公司 2019 年各期是上市时补披露的：`2019-12-31` 公告于
    2020-06-03，却早于 `2019-06-30` 的 2020-09-30。故「某天该用哪条带」**不能**按报告期
@@ -30,8 +30,13 @@
 3. **`weightavg_roe = 0` 是缺失值伪装成数字**。九号公司 2019 年报净利 −4.5 亿、ROE 却
    写 0。凡净利非零而 ROE 恰为 0 一律当缺失（§15.2 第 3 条：静默失效已复发五次）。
 
-4. **不复权价 × 送转 = 带与价不同基**。带由报告期的每股口径算出，其后若发生 10 转 10，
-   原始价格腰斩而带不动，估值状态凭空腰斩。故按 `share_ratio` 逐日折算带的股本基准。
+4. **不复权价 × 送转 = 带与价不同基**，且基准日是**公告日不是报告期末**。亿联网络
+   `2019-06-30` 报告公告于除权之后、BPS 由 12.46 直降 6.25，按期末起算会再除一次。
+
+5. **报告期早于首个交易日的带，其每股口径是上市前的**。IPO 发行同时抬高净资产与股本，
+   而这笔发行**不在除权除息表里**，`split_factor` 抓不到。实测柏楚电子上市首段用
+   `2019-06-30` 报告（发行前 BPS 5.45）对上市后价格，P/V 报 3.49，待首个上市后报告落地
+   立刻变 0.47——**3.85 倍的假跳空**。故这类带一律不许参与定价。
 
 口径选择（**这些是判断，不是数据，需用户确认**）
 ----------------------------------------------
@@ -41,8 +46,8 @@
 * `--r-mode market`：`r = R_f + β·ERP` 逐期取值，`ROE_T = r + 永续超额`，
   **且 `g_T` 被 `R_f` 封顶**。风险惩罚移交决策层 `MOS_BY_TIER`。
   **`g_T ≤ R_f` 必须与降 r 同时生效**：实测只降 r 不动 g_T 会使 P0* +109%，捆绑后 +75%。
-  **当前 `data/reference/cost_of_equity_inputs.csv` 只有一个观测点且未经核验**，故本模式
-  跑历史带会逐条拒绝——这是有意的，用今天的利率回测七年前属 §12.4 前视。
+  利率序列见 §12.4.4（200 行月末观测，2010-2026）。**某期无当时可观测的利率即拒绝该带，
+  不外推、不借用后来的利率**——用今天的利率回测七年前属 §12.4 前视。
 * `g_T` 缺省 3%（market 模式下再取 `min(3%, R_f)`），`N` = 10 年线性 fade。
 * **`N=10` 是衰减期不是高增长期**：§6.5.7.1 v1.56 硬规则限制的 `n1` 是「增速维持不变的
   年数」，本模型 g 自第 1 年即开始衰减，`n1` 实为 0，故不与该规则冲突。
@@ -51,8 +56,14 @@
   - `trailing`：归母净利 TTM 的三年 CAGR。**是外推**（§15.2 第 6 条的形态之一）。
   - `sustainable`：`roe0 × (1 − 近三年派息率均值)`，即可内生维持的增长。**不外推**，
     且与模型的再投资关系自洽。
-* `incremental_roe = ΔEPS/ΔBPS` **只报不用**：实测 54% 的带其增量回报低于建模 ROE
-  （中位低 2.8pp），即 `g = ROE×b` 多数情况下高估增长。是否接入模型待裁定。
+* `incremental_roe = ΔEPS/ΔBPS` **只报不用**：全池实测 **56%** 的带其增量回报低于建模
+  ROE（中位低 2.0pp），即 `g = ROE×b` 多数情况下高估增长。是否接入模型待裁定。
+* **两条终值护栏（全池铺开时才暴露，样本里看不到）**：①`ROE_T` 不得高于 `ROE0`——本模型的
+  fade 是「竞争侵蚀」不是「困境反转」，把 `ROE_T=r+超额` 套到低谷公司等于凭空假设复苏
+  （中国船舶 2019 各期 ROE0 仅 0.24%，曾据此算出隐含 PE **391**）；②`ROE_T` 须高出 `g_T`
+  至少 `--min-terminal-spread`（缺省 2pp）——逼近时派息率 `1−g_T/ROE_T` 趋零、估值对分母
+  任意敏感（芒果超媒 2017-09-30 算出 0.60，下期资产注入后变 27.32，**45 倍跳变**）。
+  两条都命中的公司会被拒，**正确地转去 §6.5.5.2 逐票建档**。
 
 用法::
 
@@ -611,6 +622,26 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         roe0, eps0 = roe.value, eps.value
     band.roe0, band.eps0 = roe0, eps0
 
+    # **终值 ROE 不得高于起始 ROE**：本模型的 fade 是「竞争侵蚀超额回报」的衰减机制，
+    # 不是「困境反转」的复苏机制。把 `ROE_T = r + 超额` 硬套到低谷公司上，等于凭空假设它
+    # 回升到行业均值——实测中国船舶 2019 各期 ROE0 仅 **0.24%**、终值被设为约 10%，
+    # 模型据此算出隐含 PE **391**，价值全部来自那个没有证据的复苏假设。
+    # 压到 `min(ROE_T, ROE0)` 后，这类公司多半会被下面的 `ROE_T > g_T` 护栏拦掉，
+    # **正确地转去 §6.5.5.2 逐票建档**——低谷反转本就不该由批量模型定价。
+    roe_t = min(roe_t, roe0) if roe0 > 0 else roe_t
+    band.roe_terminal = roe_t
+
+    # 终值 ROE 逼近 g_T 时派息率 `1 − g_T/ROE_T` 趋于 0，价值对分母**任意敏感**——不是
+    # 「便宜」而是「算不出」。现有护栏只拦 `ROE_T ≤ g_T`，差一点点却照算，实测芒果超媒
+    # 2017-09-30（roe0 3.80%、g_T 3.00%）算出内在值 0.60，下一期 ROE 因资产注入跳到
+    # 18.33%、内在值变 27.32——**45 倍的换带跳变**。故要求留出实打实的利差。
+    if roe0 > 0 and roe_t < g_terminal + args.min_terminal_spread:
+        band.status = "rejected"
+        band.reason = (f"ROE_T={roe_t:.2%} 距 g_T={g_terminal:.2%} 不足 "
+                       f"{args.min_terminal_spread:.1%}：可分配现金趋零、估值对分母任意敏感，"
+                       f"须走 §6.5.5.2 逐票建档")
+        return band
+
     # 亏损与负 ROE 是**经济学上的拒绝**，不是数据缺失——先判，免得混进「输入不全」把
     # 护栏拒绝率算低了（用户要量的正是这个比例）。
     if eps0 <= 0 or roe0 <= 0:
@@ -678,6 +709,14 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
                  actions: list[dict]) -> list[dict]:
     usable = applicable_bands(bands)
     if not usable or not prices:
+        return []
+    # 坑 5：**报告期早于首个交易日的带，其每股口径是上市前的**（IPO 发行使净资产与股本
+    # 同时跳升，而这笔发行不在除权除息表里，故 `split_factor` 抓不到）。实测柏楚电子
+    # 上市首段用 `2019-06-30` 报告（发行前 BPS 5.45）对上市后价格，P/V 报 3.49；
+    # 待首个上市后报告落地立刻变 0.47——**3.85 倍的假跳空**。故直接不许这类带参与定价。
+    first_traded = prices[0][0]
+    usable = [b for b in usable if b.report_date >= first_traded]
+    if not usable:
         return []
     keys = [b.available_at for b in usable]
     out = []
@@ -837,19 +876,40 @@ def report(all_bands: list[tuple[str, Band]], daily_counts: dict[str, int],
 
     # 覆盖率的分母必须是**首条带生效后**的交易日：早于首条带的日子本就不该有估值状态，
     # 拿全history当分母会把 2016 年才起算的带说成「只覆盖 38%」。
-    print("\n逐股覆盖（成功带数 / 报告期数 → 首带生效后有状态交易日 / 该区间交易日）：")
     per_stock: dict[str, list[Band]] = defaultdict(list)
     names: dict[str, str] = {}
     for code, band in all_bands:
         per_stock[code].append(band)
         names[code] = band.name
-    for code in sorted(per_stock):
+
+    def line(code: str) -> str:
         group = per_stock[code]
         good = sum(1 for b in group if b.status == "ok")
         days, in_scope = daily_counts.get(code, 0), price_counts.get(code, 0)
         cover = f"{days}/{in_scope}（{days/in_scope:.0%}）" if in_scope else "无可用区间"
         mark = "" if good else "   ← **一条带都没建成**"
-        print(f"  {code} {names[code]:<8} {good:>2}/{len(group):<3} → {cover}{mark}")
+        return f"  {code} {names[code]:<8} {good:>2}/{len(group):<3} → {cover}{mark}"
+
+    # 261 只时逐股列 261 行没人会看，只列**有问题的**；全通过也要明说，否则「查过了没问题」
+    # 与「压根没查」在报告上长得一样（§15.2 第 3 条）。
+    def broken(code: str) -> bool:
+        group = per_stock[code]
+        good = sum(1 for b in group if b.status == "ok")
+        days, in_scope = daily_counts.get(code, 0), price_counts.get(code, 0)
+        return good == 0 or good < 0.6 * len(group) or (in_scope and days < in_scope)
+
+    problems = [c for c in sorted(per_stock) if broken(c)]
+    if len(per_stock) > 30:
+        print(f"\n逐股覆盖：{len(per_stock)} 只中 **{len(per_stock) - len(problems)} 只无异常**"
+              f"（建带率 ≥60% 且生效后逐日 100% 有状态）")
+        if problems:
+            print(f"以下 {len(problems)} 只须看（成功带数/报告期数 → 首带生效后有状态交易日/该区间交易日）：")
+            for code in problems:
+                print(line(code))
+    else:
+        print("\n逐股覆盖（成功带数 / 报告期数 → 首带生效后有状态交易日 / 该区间交易日）：")
+        for code in sorted(per_stock):
+            print(line(code))
 
 
 def main() -> int:
@@ -868,6 +928,8 @@ def main() -> int:
     parser.add_argument("--roe-stat", choices=("median", "mean"), default="median")
     parser.add_argument("--min-roe-years", type=int, default=3,
                         help="归一化 ROE 至少需要几个已披露财年，缺省 3")
+    parser.add_argument("--min-terminal-spread", type=float, default=0.02,
+                        help="ROE_T 须高出 g_T 的最小利差，缺省 2pp（低于此估值对分母任意敏感）")
     parser.add_argument("--g0-cap", type=float, default=0.25, help="g0 上限，缺省 25%%")
     parser.add_argument("--g0-floor", type=float, default=0.0)
     parser.add_argument("--g-terminal", type=float, default=DEFAULT_G_TERMINAL)
@@ -913,7 +975,9 @@ def main() -> int:
         prices = load_ohlcv(code)
         states = daily_states(code, bands, prices, actions.get(code, []))
         daily_counts[code] = len(states)
-        usable = applicable_bands(bands)
+        # 分母须与 `daily_states` 用**同一套**可用带（含坑 5 的上市前口径剔除），否则上市前
+        # 那几期被正确剔掉后，覆盖率会被算成「缺了一截」而不是「本就不该有」。
+        usable = [b for b in applicable_bands(bands) if prices and b.report_date >= prices[0][0]]
         first = usable[0].available_at if usable else None
         price_counts[code] = sum(1 for d, _ in prices if first and d >= first)
         daily_rows.extend(states)
