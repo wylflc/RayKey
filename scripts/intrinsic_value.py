@@ -33,6 +33,18 @@
 （终值留存率 >100%）这些情形怎么办。批量跑 261 只 × 42 个报告期时它们**一定会出现**，
 静默产出一个数比报错危险得多（§15.2 第 3 条）。本模块一律显式拒绝并给出原因。
 
+**修正三：增长受 ROE 约束，`max_retention` 缺省 1.0（2026-08-08 批量实测后加）**
+原式让 `ROE_t` 与 `g_t` 各自 fade，两条路径在尾部会打架：ROE 快速下行时，维持既定 g 所需
+的留存率会突破 100%——即**要靠增发才能实现的增长**，而模型仍把它当自有现金流折现。实测
+后果是显式期现值变**负**：景嘉微 2016 年报（ROE0 46.3%→终值 10%、g0 25%）算出
+`min_payout = −196%`、**终值占比 152%**，整条带是伪造的。10 只样本 345 条带里
+**26% 出现负派息率**，不是边缘情形。
+
+故缺省 `max_retention=1.0`：留存率触顶时把**增速压到内生可支撑的水平**
+（`g = (ROE_{t+1}/ROE_t)(1+ROE_t·b) − 1`），而不是照发一个需要外部融资的现金流。
+这不是打补丁——**增长本就由 ROE 与再投资决定，不是自由参数**，原式第 1 节自己也是这么说的。
+`max_retention=None` 可关掉，回到原式的无约束行为。
+
 **边界（照原式，写明不做什么）**
 原式第 11 节末尾指出：非金融企业更严谨应换 ROIC/NOPAT/FCFF/WACC，金融股才用 ROE+CoE。
 **本模块只实现 ROE+CoE 这一支**——批量估值拿不到逐季的 NOPAT、投入资本与债务口径，
@@ -70,6 +82,7 @@ class ValuationResult:
     implied_peg: float | None       # implied_pe / (100 g)
     terminal_share: float           # 终值占比——终值占太高说明结论几乎全靠 g_T/ROE_T
     min_payout: float               # 显式期最低派息率，<0 即某年需外部融资
+    clamped_years: int              # 因留存率触顶被压低增速的年数（见 max_retention）
     eps_path: list[float]
     roe_path: list[float]
     g_path: list[float]
@@ -98,6 +111,13 @@ def _required_retention(g_next: float, roe_t: float, roe_next: float, consistent
     return g_next / roe_t
 
 
+def _supportable_growth(retention: float, roe_t: float, roe_next: float, consistent: bool) -> float:
+    """`_required_retention` 的反函数：给定留存率，内生能支撑的下一年增长。"""
+    if consistent:
+        return (roe_next / roe_t) * (1 + roe_t * retention) - 1
+    return retention * roe_t
+
+
 def intrinsic_value(
     eps0: float,
     roe0: float,
@@ -109,6 +129,7 @@ def intrinsic_value(
     lam: float | None = None,
     consistent: bool = True,
     g_for_peg: float | None = None,
+    max_retention: float | None = 1.0,
 ) -> ValuationResult:
     """每股内在价值 P0*（原式第 6 节主公式 + 本模块的留存率修正）。
 
@@ -140,18 +161,28 @@ def intrinsic_value(
 
     eps_path: list[float] = []
     payout_path: list[float] = []
+    realized_g: list[float] = []
+    clamped_years = 0
     explicit_pv = 0.0
     eps_prev, roe_prev = eps0, roe0
     for index, (roe_t, g_t) in enumerate(zip(roe_path, g_path), start=1):
         # 本年利润：由「上一年的留存」决定，故先算达成 g_t 所需的上年留存率
         b_prev = _required_retention(g_t, roe_prev, roe_t, consistent)
+        if max_retention is not None and b_prev > max_retention:
+            # 留存率超过上限 = 该增速须靠外部融资才能实现。**增长受 ROE 约束、不是自由参数**，
+            # 故把 g 压到内生可支撑的水平，而不是照发一个需要增发才成立的现金流。
+            b_prev = max_retention
+            g_t = _supportable_growth(b_prev, roe_prev, roe_t, consistent)
+            clamped_years += 1
         payout = 1 - b_prev
         eps_t = eps_prev * (1 + g_t)
         pv = eps_t * payout / (1 + r) ** index
         explicit_pv += pv
         eps_path.append(eps_t)
         payout_path.append(payout)
+        realized_g.append(g_t)
         eps_prev, roe_prev = eps_t, roe_t
+    g_path = realized_g
 
     # 终值：第 N 年后进入稳态（ROE_T、g_T 恒定），此时 b = g_T/ROE_T 正确无需修正
     payout_terminal = 1 - g_terminal / roe_terminal
@@ -172,6 +203,7 @@ def intrinsic_value(
         roe_path=roe_path,
         g_path=g_path,
         payout_path=payout_path,
+        clamped_years=clamped_years,
     )
 
 
@@ -269,6 +301,27 @@ def self_test() -> int:
     cheap = intrinsic_value(1.0, 0.20, 0.08, 0.12, roe_terminal=0.15).intrinsic_value
     dear = intrinsic_value(1.0, 0.20, 0.08, 0.08, roe_terminal=0.15).intrinsic_value
     checks.append(("r 越高价值越低", dear > cheap))
+
+    # 3b. 修正三：留存率上限。参数取自实测出负现值的那条真实带（景嘉微 2016 年报）。
+    unbounded = intrinsic_value(1.0, 0.463, 0.25, 0.13, roe_terminal=0.10, max_retention=None)
+    bounded = intrinsic_value(1.0, 0.463, 0.25, 0.13, roe_terminal=0.10)
+    checks.append(("无上限时确会出现负派息率（复现实测缺陷）", unbounded.min_payout < 0))
+    checks.append(("无上限时显式期现值可为负 → 终值占比 >100%", unbounded.terminal_share > 1.0))
+    checks.append(("加上限后派息率恒非负", bounded.min_payout >= -1e-12))
+    checks.append(("加上限后终值占比落回 (0,1]", 0 < bounded.terminal_share <= 1.0))
+    checks.append(("上限确实生效并记录了受限年数", bounded.clamped_years > 0))
+    # 方向是**上限后价值更高**（实测 4.614 → 5.703），且这是对的：无上限那版把「需要增发才
+    # 能实现的增长」当成股东掏出的现金逐年折现（显式期现值 −2.421），等于对股东罚了一笔他们
+    # 本会换到股份的钱。上限去掉的是这个虚假罚项，不是把负值粉饰掉——终值同时由 7.035 降到
+    # 4.505（增速被压低，EPS_N 由 3.312 降到 2.121），两侧都动了才是真修正。
+    checks.append(("上限去掉的是虚假罚项：显式期由负转正", unbounded.explicit_pv < 0 < bounded.explicit_pv))
+    checks.append(("同时终值被压低（增速确实降了，不是单边抬价）",
+                   bounded.terminal_pv < unbounded.terminal_pv))
+    # 不触顶的常规参数下，上限必须**完全不改变**结果——否则就是默默改了所有带
+    for kwargs in ({"roe_terminal": 0.20, "g_terminal": 0.05}, {"roe_terminal": 0.15}):
+        with_cap = intrinsic_value(1.0, 0.20, 0.05, 0.10, **kwargs).intrinsic_value
+        without = intrinsic_value(1.0, 0.20, 0.05, 0.10, max_retention=None, **kwargs).intrinsic_value
+        checks.append((f"未触顶时上限不改变结果 {kwargs}", abs(with_cap - without) < 1e-12))
 
     # 4. 护栏必须报错而不是给个数
     def raises(fn) -> bool:
