@@ -354,7 +354,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         lump_sum: float = 0.0, swap: bool = False, swap_margin: float = 0.10,
         max_positions: int = MAX_POSITIONS, lows=None, day_index=None,
         max_corr: float = 0.0, corr=None, tier_mode: str = "none",
-        scan_depth: int = 40) -> dict:
+        scan_depth: int = 40, min_upside: dict[str, float] | None = None,
+        position_cap: float = 0.0, only_tiers: set[str] | None = None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -455,6 +456,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
         # ---- 买入：合格集为空则持币（用户 2026-08-08 裁定），**不硬凑前十**
         eligible = sorted((r for r in states[day] if r[3] <= buy_line(r[0])), key=lambda r: r[3])
+        # 分档最低空间门槛（用户 2026-08-08：L1 >30%、L2 >40%；**L3 未指定，本脚本按 L2 取 40%**
+        # ——L3 风险更高，门槛不该比 L2 松）。空间 = V/P − 1 = 1/(P/V) − 1。
+        if min_upside:
+            eligible = [r for r in eligible
+                        if (1.0 / r[3] - 1.0) >= min_upside.get(tiers.get(r[0], DEFAULT_TIER), 0.0)]
+        if only_tiers:
+            eligible = [r for r in eligible if tiers.get(r[0], DEFAULT_TIER) in only_tiers]
         if strategy == "trend":
             eligible = [r for r in eligible
                         if (ma := mas.get(r[0], {}).get(day)) and 20 in ma and 60 in ma
@@ -527,6 +535,14 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                              portfolio.cash)
             if amount <= 0 or code not in portfolio.lots and len(portfolio.lots) >= max_positions:
                 continue
+            # 单票上限：**只挡加仓、不强制减持**——已有仓位因上涨超限是「买入上限」管不着的，
+            # 强行削回去等于给策略偷加了一条止盈规则。
+            if position_cap:
+                held_value = portfolio.lots[code].shares * close if code in portfolio.lots else 0.0
+                room = equity * position_cap - held_value
+                if room <= 0:
+                    continue
+                amount = min(amount, room)
             shares = amount / close
             lot = portfolio.lots.get(code)
             if lot is None:
@@ -723,6 +739,11 @@ def main() -> int:
     parser.add_argument("--scan-depth", type=int, default=40, help="相关性过滤时最多往下扫多少名")
     parser.add_argument("--tier-mode", choices=("none", "bonus", "quota"), default="none",
                         help="bonus=L1空间+20pp/L2+10pp 后再排序；quota=各档位分别排序并给买入额度")
+    parser.add_argument("--min-upside", nargs=3, type=float, metavar=("L1", "L2", "L3"),
+                        default=None, help="分档最低空间门槛，如 0.30 0.40 0.40")
+    parser.add_argument("--position-cap", type=float, default=0.0,
+                        help="单票买入上限占总资产比例，如 0.10；只挡加仓不强制减持")
+    parser.add_argument("--only-tiers", default="", help="只买这些档位，逗号分隔，如 L1")
     parser.add_argument("--label-suffix", default="")
     args = parser.parse_args()
 
@@ -758,6 +779,9 @@ def main() -> int:
                      + ("" if args.trend_stop else "_nostop")
                      + (f"_corr{args.max_corr:g}" if args.max_corr else "")
                      + (f"_{args.tier_mode}" if args.tier_mode != "none" else "")
+                     + ("_minup" if args.min_upside else "")
+                     + (f"_cap{args.position_cap:g}" if args.position_cap else "")
+                     + (f"_only{args.only_tiers}" if args.only_tiers else "")
                      + args.label_suffix)
             result = run(strategy, x / 100.0, states, prices, actions, mas,
                          args.since, args.until, args.capital, width=width, tiers=tiers,
@@ -768,7 +792,11 @@ def main() -> int:
                          swap_margin=args.swap_margin, max_positions=args.max_positions,
                          lows=lows, day_index=(day_lists, day_pos),
                          max_corr=args.max_corr, corr=corr, tier_mode=args.tier_mode,
-                         scan_depth=args.scan_depth)
+                         scan_depth=args.scan_depth,
+                         min_upside=(dict(zip(("L1", "L2", "L3"), args.min_upside))
+                                     if args.min_upside else None),
+                         position_cap=args.position_cap,
+                         only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
