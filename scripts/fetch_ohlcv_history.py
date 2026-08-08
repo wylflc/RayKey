@@ -246,6 +246,8 @@ def main() -> int:
     parser.add_argument("--pause", type=float, default=0.12)
     parser.add_argument("--actions-only", action="store_true", help="只刷除权事件，不动日线")
     parser.add_argument("--full", action="store_true", help="忽略已有文件，重下全历史")
+    parser.add_argument("--since", help="只取该日之后的日线（缺省全历史）。回测只需 2006 起时可大幅提速")
+    parser.add_argument("--out-suffix", default="", help="并行分片时避免除权事件文件互相覆盖")
     parser.add_argument("--codes-file", type=Path,
                         help="改用文件里的代码清单（每行一个），用于补取**当前池外**的历史标的"
                              "——这正是解幸存者偏差所需（§12.4 登记的那一半）")
@@ -278,6 +280,10 @@ def main() -> int:
     ACTIONS_CSV.parent.mkdir(parents=True, exist_ok=True)
     print(f"universe {len(targets)} 只（池 + 持仓）｜截止 {until}｜不复权原始价 + 除权事件")
 
+    # 并行分片时各写各的除权文件，跑完再合并——否则 6 个进程会互相覆盖对方已抓到的事件
+    actions_path = (ACTIONS_CSV.with_name(ACTIONS_CSV.stem + args.out_suffix + ACTIONS_CSV.suffix)
+                    if args.out_suffix else ACTIONS_CSV)
+
     def flush_actions(actions: list[dict[str, str]]) -> int:
         """把除权事件并进磁盘文件并返回总行数。
 
@@ -286,10 +292,10 @@ def main() -> int:
         写盘所以一根没丢。同一次运行里两种写法、两种结局，正是 §15.2 第 3 条那类「丢了数据
         不报警」的成因——故这里改为每批落盘。
         """
-        merged = {(a["security_code"], a["ex_dividend_date"]): a for a in load_csv(ACTIONS_CSV)
+        merged = {(a["security_code"], a["ex_dividend_date"]): a for a in load_csv(actions_path)
                   if a.get("security_code")}
         merged.update({(a["security_code"], a["ex_dividend_date"]): a for a in actions})
-        with ACTIONS_CSV.open("w", newline="", encoding="utf-8") as handle:
+        with actions_path.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=ACTION_FIELDS)
             writer.writeheader()
             writer.writerows([merged[k] for k in sorted(merged)])
@@ -300,7 +306,7 @@ def main() -> int:
     for index, (code, name, exchange) in enumerate(targets, 1):
         path = OHLCV_DIR / f"{code}.csv"
         existing = load_csv(path) if not args.full else []
-        since = None
+        since = date.fromisoformat(args.since) if args.since else None
         if existing:
             last = max(row["date"] for row in existing)
             if last >= args.as_of:
