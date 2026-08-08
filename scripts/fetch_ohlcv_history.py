@@ -246,10 +246,30 @@ def main() -> int:
     parser.add_argument("--pause", type=float, default=0.12)
     parser.add_argument("--actions-only", action="store_true", help="只刷除权事件，不动日线")
     parser.add_argument("--full", action="store_true", help="忽略已有文件，重下全历史")
+    parser.add_argument("--codes-file", type=Path,
+                        help="改用文件里的代码清单（每行一个），用于补取**当前池外**的历史标的"
+                             "——这正是解幸存者偏差所需（§12.4 登记的那一半）")
     args = parser.parse_args()
 
     until = date.fromisoformat(args.as_of)
     targets = universe()
+    if args.codes_file:
+        wanted = {line.strip().zfill(6) for line in args.codes_file.read_text().split() if line.strip()}
+        known = {t["security_code"]: t for t in targets}
+        # 池外代码在 a_share_securities.csv 里查交易所；查不到的按代码段兜底（见 secid）
+        extra = []
+        with (ROOT / "data/raw/a_share_securities.csv").open(newline="", encoding="utf-8") as handle:
+            for row in csv.DictReader(handle):
+                code = (row.get("security_code") or row.get("\ufeffsecurity_code") or "").zfill(6)
+                if code in wanted and code not in known:
+                    extra.append({"security_code": code,
+                                  "security_name": row.get("security_name", ""),
+                                  "exchange": row.get("exchange", "")})
+        found = {e["security_code"] for e in extra} | (wanted & set(known))
+        missing = wanted - found
+        targets = [known[c] for c in wanted if c in known] + extra
+        print(f"按清单取数：请求 {len(wanted)} 只｜命中 {len(targets)} 只"
+              + (f"｜**证券主表查无 {len(missing)} 只**（多为已退市，行情可能也取不到）" if missing else ""))
     if args.limit:
         targets = targets[:args.limit]
     OHLCV_DIR.mkdir(parents=True, exist_ok=True)
