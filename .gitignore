@@ -20,3 +20,6 @@ data/raw/financials/
 
 # 历史估值状态逐日表（67MB，由 build_historical_valuation_bands.py 完全可重建）
 data/processed/a_share_historical_valuation_daily.csv
+
+# 回测逐日净值与逐周期明细（由 backtest_valuation_strategy.py 完全可重建）
+data/processed/backtest/*_equity.csv
