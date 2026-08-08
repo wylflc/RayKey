@@ -381,7 +381,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         max_corr: float = 0.0, corr=None, tier_mode: str = "none",
         scan_depth: int = 40, min_upside: dict[str, float] | None = None,
         position_cap: float = 0.0, only_tiers: set[str] | None = None,
-        universe: list[tuple[str, set[str]]] | None = None) -> dict:
+        universe: list[tuple[str, set[str]]] | None = None,
+        trend_tranche: bool = False) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -577,13 +578,17 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         for code, close, value, ratio in eligible[:max_positions]:
             if portfolio.cash <= 0:
                 break
-            if (strategy == "trend" or lump_sum) and code in portfolio.lots:
+            # 走势组默认一笔建仓（总资产 ÷ 持仓上限）且不加仓；`trend_tranche` 打开后改为
+            # **与估值组同一套定投**——只要当日仍满足「P/V 合格 且 收盘>MA20>MA60」就继续买入
+            # 总资产 × x%。用户 2026-08-09：「走势满足要求的情况下分批进行建仓」。
+            tranche = trend_tranche and strategy == "trend"
+            if ((strategy == "trend" and not tranche) or lump_sum) and code in portfolio.lots:
                 continue                      # 一笔建仓：不加仓
             if lump_sum:
                 amount = min(equity * lump_sum, portfolio.cash)
             else:
-                amount = min(budget if strategy == "valuation" else equity / max_positions,
-                             portfolio.cash)
+                amount = min(budget if (strategy == "valuation" or tranche)
+                             else equity / max_positions, portfolio.cash)
             if amount <= 0 or code not in portfolio.lots and len(portfolio.lots) >= max_positions:
                 continue
             # 单票上限：**只挡加仓、不强制减持**——已有仓位因上涨超限是「买入上限」管不着的，
@@ -835,6 +840,8 @@ def main() -> int:
     parser.add_argument("--universe-file", type=Path,
                         help="时点股票库（build_point_in_time_universe.py 的产出）。"
                              "给了它就只在当期成员里选股，移出的持仓逐步清仓")
+    parser.add_argument("--trend-tranche", action="store_true",
+                        help="走势组改为分批建仓：只要当日仍满足均线与估值条件就按 x%% 继续买入")
     parser.add_argument("--label-suffix", default="")
     args = parser.parse_args()
 
@@ -877,6 +884,7 @@ def main() -> int:
                      + ("_swap" if args.swap else "")
                      + ("" if args.trend_stop else "_nostop")
                      + (f"_corr{args.max_corr:g}" if args.max_corr else "")
+                     + ("_tranche" if args.trend_tranche else "")
                      + (f"_{args.tier_mode}" if args.tier_mode != "none" else "")
                      + ("_minup" if args.min_upside else "")
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
@@ -896,7 +904,7 @@ def main() -> int:
                                      if args.min_upside else None),
                          position_cap=args.position_cap,
                          only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None,
-                         universe=universe)
+                         universe=universe, trend_tranche=args.trend_tranche)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
