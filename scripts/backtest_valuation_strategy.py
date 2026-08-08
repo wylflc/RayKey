@@ -605,6 +605,31 @@ def max_drawdown(curve) -> tuple[float, str, str]:
     return worst, start, end
 
 
+def rolling_calmar(curve, years: int = 3, step: int = 20) -> list[tuple[str, float, float, float]]:
+    """滚动 `years` 年窗口的 (窗口末日, 窗口年化, 窗口最大回撤, 窗口 Calmar)。
+
+    **与全期 Calmar 的区别要说清**：`summarize` 里的 `Calmar = 全期CAGR / 全期最大回撤`，
+    它只有**一个**观测值，且分母是整段历史里最深的那一次——起点稍微一动就可能换成另一次
+    崩盘，数值随之跳变（§12.9.2 已实测过这种路径敏感）。滚动口径给出**一串**观测值，
+    可以看中位数与分布，比单点稳得多。
+    """
+    window = years * TRADING_DAYS
+    out = []
+    for end in range(window, len(curve), step):
+        seg = curve[end - window:end]
+        first, last = seg[0][1], seg[-1][1]
+        if first <= 0 or last <= 0:
+            continue
+        cagr = (last / first) ** (1 / years) - 1
+        peak, worst = -1.0, 0.0
+        for _d, equity, _c, _n in seg:
+            peak = max(peak, equity)
+            if peak > 0:
+                worst = max(worst, 1 - equity / peak)
+        out.append((seg[-1][0], cagr, worst, cagr / worst if worst > 0 else float("nan")))
+    return out
+
+
 def summarize(name: str, result: dict, capital: float, benchmark: dict[str, float],
               risk_free: list[tuple[str, float]]) -> dict:
     curve = result["equity"]
@@ -634,7 +659,18 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             bench_cagr = (pair[-1][1] / pair[0][1]) ** (1 / bench_years) - 1
             bench = f"{bench_cagr:.2%}（同期超额 {cagr - bench_cagr:+.2%}）"
 
-    return {"策略": name, "期末资产": final, "总收益": final / capital - 1, "年化": cagr,
+    roll = rolling_calmar(curve)
+    roll_c = sorted(r[3] for r in roll if r[3] == r[3])
+    roll_d = sorted(r[2] for r in roll)
+    roll_g = sorted(r[1] for r in roll)
+    return {"策略": name, "期末资产": final,
+            "滚动3年Calmar中位": statistics.median(roll_c) if roll_c else float("nan"),
+            "滚动3年Calmar_P10": roll_c[len(roll_c)//10] if roll_c else float("nan"),
+            "滚动3年Calmar_P90": roll_c[-max(1,len(roll_c)//10)] if roll_c else float("nan"),
+            "滚动3年回撤中位": statistics.median(roll_d) if roll_d else float("nan"),
+            "滚动3年年化中位": statistics.median(roll_g) if roll_g else float("nan"),
+            "滚动3年为负的窗口占比": (sum(1 for g in roll_g if g < 0)/len(roll_g)) if roll_g else float("nan"),
+            "滚动窗口数": len(roll), "总收益": final / capital - 1, "年化": cagr,
             "年化波动": vol, "最大回撤": worst, "回撤区间": f"{dd_start}~{dd_end}",
             "Calmar": cagr / worst if worst else float("nan"), "Sharpe": sharpe,
             "平均仓位": exposure, "周期数": len(closed),
