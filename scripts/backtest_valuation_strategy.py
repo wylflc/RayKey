@@ -148,6 +148,31 @@ def load_risk_free() -> list[tuple[str, float]]:
         return sorted((r["observed_on"], float(r["risk_free_rate"])) for r in csv.DictReader(handle))
 
 
+def new_low_flags(series: dict[str, float], lookback: int = 20) -> dict[str, bool]:
+    """{日期: 当日收盘是否创 `lookback` 日新低}。「止跌走稳」判据的原料。"""
+    days = sorted(series)
+    values = [series[d] for d in days]
+    out = {}
+    for i, v in enumerate(values):
+        window = values[max(0, i - lookback + 1): i + 1]
+        out[days[i]] = v <= min(window) + 1e-12
+    return out
+
+
+def stabilized(flags: dict[str, bool], days: list[str], index: dict[str, int],
+               day: str, quiet: int = 5) -> bool:
+    """**止跌走稳**：最近 `quiet` 个交易日内**一次都没有创过 20 日新低**。
+
+    用户 2026-08-08 原述「下跌后止跌走稳才买，例如五日内不破新低」。选这个判据而不是
+    「站上某条均线」，是因为它**只要求下跌停住、不要求已经转涨**——估值组本就是左侧买法，
+    要求转涨等于把它变成走势组。
+    """
+    i = index.get(day)
+    if i is None or i < quiet:
+        return False
+    return not any(flags.get(days[j], False) for j in range(i - quiet + 1, i + 1))
+
+
 def moving_averages(series: dict[str, float], windows=(20, 60)) -> dict[str, dict[int, float]]:
     """逐日均线。走势组的入场与止损都要用。"""
     days = sorted(series)
@@ -254,7 +279,9 @@ def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: s
 def run(strategy: str, x: float, states, prices, actions, mas, since: str, until: str,
         capital: float, width: float = 0.10, tiers: dict[str, str] | None = None,
         use_mos: bool = False, price_stop: bool = False, value_stop: float = 0.0,
-        stop_ma: int = 20) -> dict:
+        stop_ma: int = 20, trend_stop: bool = True, entry_filter: str = "none",
+        lump_sum: float = 0.0, swap: bool = False, swap_margin: float = 0.10,
+        max_positions: int = MAX_POSITIONS, lows=None, day_index=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -324,7 +351,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if not price:
                 continue
             ratio = today.get(code, (None, None, None))[2]
-            if (strategy == "trend" or price_stop) and lot.entry_stop and price < lot.entry_stop:
+            if ((strategy == "trend" and trend_stop) or price_stop) and lot.entry_stop and price < lot.entry_stop:
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
                 close_lot(portfolio, code, day, price, f"跌破建仓日MA{lot.entry_stop_ma}止损")
                 sell_count += 1
@@ -359,14 +386,43 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             eligible = [r for r in eligible
                         if (ma := mas.get(r[0], {}).get(day)) and 20 in ma and 60 in ma
                         and r[1] > ma[20] > ma[60]]
-        for code, close, value, ratio in eligible[:MAX_POSITIONS]:
+        if entry_filter == "stabilized" and lows is not None:
+            eligible = [r for r in eligible
+                        if stabilized(lows.get(r[0], {}), day_index[0].get(r[0], []),
+                                      day_index[1].get(r[0], {}), day)]
+        # 换仓：想买却买不下（没钱或槽位满）时，把**空间最小**的持仓换成**空间更大**的候选。
+        # `swap_margin` 是防抖阈值——两者 P/V 差不到这个数就不换，否则每天的微小排名波动
+        # 都会触发一次双边交易。
+        if swap and eligible:
+            for code, close, value, ratio in eligible[:max_positions]:
+                if code in portfolio.lots:
+                    continue
+                blocked = portfolio.cash < (lump_sum or budget) or len(portfolio.lots) >= max_positions
+                if not blocked:
+                    break
+                held = [(today[c][2], c) for c in portfolio.lots if c in today]
+                if not held:
+                    break
+                worst_ratio, worst = max(held)
+                if worst_ratio - ratio < swap_margin:
+                    break
+                price = marks.get(worst)
+                if not price:
+                    break
+                turnover += portfolio.lots[worst].shares * price
+                close_lot(portfolio, worst, day, price, f"换仓：让位给空间更大的{code}")
+                sell_count += 1
+        for code, close, value, ratio in eligible[:max_positions]:
             if portfolio.cash <= 0:
                 break
-            if strategy == "trend" and code in portfolio.lots:
-                continue                      # 走势组一笔买入，不加仓
-            amount = min(budget if strategy == "valuation" else equity / MAX_POSITIONS,
-                         portfolio.cash)
-            if amount <= 0 or code not in portfolio.lots and len(portfolio.lots) >= MAX_POSITIONS:
+            if (strategy == "trend" or lump_sum) and code in portfolio.lots:
+                continue                      # 一笔建仓：不加仓
+            if lump_sum:
+                amount = min(equity * lump_sum, portfolio.cash)
+            else:
+                amount = min(budget if strategy == "valuation" else equity / max_positions,
+                             portfolio.cash)
+            if amount <= 0 or code not in portfolio.lots and len(portfolio.lots) >= max_positions:
                 continue
             shares = amount / close
             lot = portfolio.lots.get(code)
@@ -548,6 +604,16 @@ def main() -> int:
                         help="止损均线周期；取 60 时，若建仓价已在 MA60 下方则自动退回 MA20")
     parser.add_argument("--value-stop", type=float, default=0.0,
                         help="基本面退出：内在价值自峰值回落超该比例即清仓，如 0.25")
+    parser.add_argument("--no-trend-stop", dest="trend_stop", action="store_false",
+                        help="走势组取消建仓日均线止损")
+    parser.add_argument("--entry-filter", choices=("none", "stabilized"), default="none",
+                        help="stabilized=止跌走稳（近 5 个交易日未创 20 日新低）才允许买入")
+    parser.add_argument("--lump-sum", type=float, default=0.0,
+                        help="一笔建仓，占总资产的百分比（如 5）；给了就不再定投加仓")
+    parser.add_argument("--swap", action="store_true",
+                        help="买不下时卖出空间最小的持仓，换空间更大的候选")
+    parser.add_argument("--swap-margin", type=float, default=0.10, help="换仓的 P/V 最小改善，防抖")
+    parser.add_argument("--max-positions", type=int, default=MAX_POSITIONS)
     parser.add_argument("--label-suffix", default="")
     args = parser.parse_args()
 
@@ -555,6 +621,9 @@ def main() -> int:
     states, prices, actions = load_states(), load_prices(), load_actions()
     names, benchmark, risk_free = load_names(), load_benchmark(), load_risk_free()
     mas = {code: moving_averages(series) for code, series in prices.items()}
+    lows = {code: new_low_flags(series) for code, series in prices.items()}
+    day_lists = {code: sorted(series) for code, series in prices.items()}
+    day_pos = {code: {d: i for i, d in enumerate(ds)} for code, ds in day_lists.items()}
     covered = sorted(states)
     print(f"  逐日状态 {sum(len(v) for v in states.values()):,} 行｜"
           f"{covered[0]} ~ {covered[-1]}｜行情 {len(prices)} 只｜"
@@ -573,11 +642,19 @@ def main() -> int:
                      + ("_mos" if args.use_mos else "")
                      + (f"_ma{args.stop_ma}" if args.price_stop else "")
                      + (f"_vstop{args.value_stop:g}" if args.value_stop else "")
+                     + ("_stab" if args.entry_filter == "stabilized" else "")
+                     + (f"_lump{args.lump_sum:g}" if args.lump_sum else "")
+                     + ("_swap" if args.swap else "")
+                     + ("" if args.trend_stop else "_nostop")
                      + args.label_suffix)
             result = run(strategy, x / 100.0, states, prices, actions, mas,
                          args.since, args.until, args.capital, width=width, tiers=tiers,
                          use_mos=args.use_mos, price_stop=args.price_stop,
-                         value_stop=args.value_stop, stop_ma=args.stop_ma)
+                         value_stop=args.value_stop, stop_ma=args.stop_ma,
+                         trend_stop=args.trend_stop, entry_filter=args.entry_filter,
+                         lump_sum=args.lump_sum / 100.0, swap=args.swap,
+                         swap_margin=args.swap_margin, max_positions=args.max_positions,
+                         lows=lows, day_index=(day_lists, day_pos))
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
