@@ -185,7 +185,8 @@ class Lot:
     max_drawdown: float = 0.0   # 1 − 价格/峰值 的最大值
     peak_money: float = 0.0     # (持仓市值+已回收)/累计投入 的峰值
     max_money_drawdown: float = 0.0
-    entry_stop: float = 0.0     # 建仓日 MA20（走势组入场即用；估值组开 --price-stop 时也用）
+    entry_stop: float = 0.0     # 建仓日止损价（见 entry_stop_price）
+    entry_stop_ma: int = 0      # 实际采用的均线周期——买在 MA60 下方时会退回 20
     peak_intrinsic: float = 0.0 # 持有期内内在价值的峰值——**基本面退出**按它的回撤触发
     exit_date: str = ""
     exit_reason: str = ""
@@ -224,6 +225,21 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
     return credited
 
 
+def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int) -> tuple[float, int]:
+    """建仓日的止损价，返回 (价格, 实际采用的均线周期)。
+
+    用户 2026-08-08 规则：**优先用 MA60；但若建仓时股价已在 MA60 下方，则退回 MA20。**
+    理由是买在 MA60 之下时，拿 MA60 当止损等于**建仓即触发**——止损价高于成本价，
+    这条止损不是保护而是立刻把仓位打掉。退回 MA20 才可能落在成本价下方。
+    """
+    if stop_ma == 20:
+        return ma.get(20, 0.0), 20
+    ma60 = ma.get(60, 0.0)
+    if ma60 and close >= ma60:
+        return ma60, 60
+    return ma.get(20, 0.0), 20
+
+
 def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: str) -> None:
     lot = portfolio.lots.pop(code)
     portfolio.cash += lot.shares * price
@@ -237,7 +253,8 @@ def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: s
 # ------------------------------------------------------------------ 回测
 def run(strategy: str, x: float, states, prices, actions, mas, since: str, until: str,
         capital: float, width: float = 0.10, tiers: dict[str, str] | None = None,
-        use_mos: bool = False, price_stop: bool = False, value_stop: float = 0.0) -> dict:
+        use_mos: bool = False, price_stop: bool = False, value_stop: float = 0.0,
+        stop_ma: int = 20) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -309,7 +326,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             ratio = today.get(code, (None, None, None))[2]
             if (strategy == "trend" or price_stop) and lot.entry_stop and price < lot.entry_stop:
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
-                close_lot(portfolio, code, day, price, "跌破建仓日MA20止损")
+                close_lot(portfolio, code, day, price, f"跌破建仓日MA{lot.entry_stop_ma}止损")
                 sell_count += 1
                 continue
             # 基本面退出：内在价值自峰值回落超阈值即清仓。**盯 V 不盯价**，故一只票可以
@@ -357,8 +374,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 ma = mas.get(code, {}).get(day, {})
                 lot = Lot(code=code, entry_date=day, entry_ratio=ratio, entry_value=value,
                           entry_band_low=(1 - width) * value, entry_band_high=(1 + width) * value,
-                          entry_upside=value / close - 1, entry_stop=ma.get(20, 0.0),
-                          peak_intrinsic=value)
+                          entry_upside=value / close - 1, peak_intrinsic=value)
+                lot.entry_stop, lot.entry_stop_ma = entry_stop_price(ma, close, stop_ma)
                 portfolio.lots[code] = lot
             lot.shares += shares
             lot.invested += amount
@@ -464,7 +481,7 @@ def _days_between(a: str, b: str) -> int:
 
 TRADE_FIELDS = ["security_code", "security_name", "entry_date", "exit_date", "holding_days",
                 "buys", "sells", "invested", "proceeds", "dividends", "return_pct",
-                "max_drawdown_in_cycle", "max_money_drawdown", "entry_pv_ratio", "entry_upside", "entry_intrinsic_value",
+                "max_drawdown_in_cycle", "max_money_drawdown", "entry_stop", "entry_stop_ma", "entry_pv_ratio", "entry_upside", "entry_intrinsic_value",
                 "entry_band_low", "entry_band_high", "exit_reason"]
 
 
@@ -484,6 +501,7 @@ def write_trades(path: Path, lots, names: dict[str, str]) -> None:
                 "return_pct": f"{lot.proceeds / lot.invested - 1:.6f}" if lot.invested else "",
                 "max_drawdown_in_cycle": f"{lot.max_drawdown:.6f}",
                 "max_money_drawdown": f"{lot.max_money_drawdown:.6f}",
+                "entry_stop": f"{lot.entry_stop:.4f}", "entry_stop_ma": lot.entry_stop_ma or "",
                 "entry_pv_ratio": f"{lot.entry_ratio:.4f}", "entry_upside": f"{lot.entry_upside:.4f}",
                 "entry_intrinsic_value": f"{lot.entry_value:.4f}",
                 "entry_band_low": f"{lot.entry_band_low:.4f}",
@@ -525,7 +543,9 @@ def main() -> int:
                         help="带的半宽 w：买入线 1−w、减持线 1+w。可给多个做敏感度")
     parser.add_argument("--use-mos", action="store_true",
                         help="买入线改按档位安全边际 1−MOS（L1 0.90/L2 0.80/L3 0.70）")
-    parser.add_argument("--price-stop", action="store_true", help="估值组也用建仓日 MA20 止损")
+    parser.add_argument("--price-stop", action="store_true", help="估值组也用建仓日均线止损")
+    parser.add_argument("--stop-ma", type=int, choices=(20, 60), default=20,
+                        help="止损均线周期；取 60 时，若建仓价已在 MA60 下方则自动退回 MA20")
     parser.add_argument("--value-stop", type=float, default=0.0,
                         help="基本面退出：内在价值自峰值回落超该比例即清仓，如 0.25")
     parser.add_argument("--label-suffix", default="")
@@ -551,13 +571,13 @@ def main() -> int:
         for x in args.x:
             label = (f"{strategy}_x{x:g}_w{width:g}"
                      + ("_mos" if args.use_mos else "")
-                     + ("_ma20" if args.price_stop else "")
+                     + (f"_ma{args.stop_ma}" if args.price_stop else "")
                      + (f"_vstop{args.value_stop:g}" if args.value_stop else "")
                      + args.label_suffix)
             result = run(strategy, x / 100.0, states, prices, actions, mas,
                          args.since, args.until, args.capital, width=width, tiers=tiers,
                          use_mos=args.use_mos, price_stop=args.price_stop,
-                         value_stop=args.value_stop)
+                         value_stop=args.value_stop, stop_ma=args.stop_ma)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
