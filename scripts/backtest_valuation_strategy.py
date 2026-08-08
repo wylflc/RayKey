@@ -41,6 +41,7 @@ import csv
 import math
 import statistics
 import sys
+import collections
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -146,6 +147,76 @@ def load_risk_free() -> list[tuple[str, float]]:
         return []
     with RATES.open(newline="", encoding="utf-8") as handle:
         return sorted((r["observed_on"], float(r["risk_free_rate"])) for r in csv.DictReader(handle))
+
+
+def daily_returns(prices: dict[str, dict[str, float]],
+                  actions: dict[str, dict[str, tuple[float, float]]]) -> dict[str, dict[str, float]]:
+    """逐票日收益率。**必须按送转折算**，否则除权日会被当成一次 −50% 的暴跌算进相关性。"""
+    out: dict[str, dict[str, float]] = {}
+    for code, series in prices.items():
+        days = sorted(series)
+        ret = {}
+        for prev, cur in zip(days, days[1:]):
+            base = series[prev]
+            cash, ratio = actions.get(code, {}).get(cur, (0.0, 0.0))
+            if base > 0:
+                ret[cur] = (series[cur] * (1 + ratio) + cash) / base - 1
+        out[code] = ret
+    return out
+
+
+class Correlations:
+    """按月缓存的两两相关性。**按需计算**——每天只用得到「候选前几十只 + 现有持仓」，
+    全市场 261×261 全算是 3.4 万对 × 170 个月，纯 Python 跑不动也没必要。
+    """
+
+    def __init__(self, returns, window: int = 252, min_overlap: int = 120):
+        self.returns = returns
+        self.window = window
+        self.min_overlap = min_overlap
+        self._cache: dict[tuple, float | None] = {}
+        self._std: dict[tuple, tuple] = {}
+
+    def _series(self, code: str, month: str):
+        key = (code, month)
+        if key not in self._std:
+            days = [d for d in sorted(self.returns.get(code, {})) if d[:7] < month]
+            days = days[-self.window:]
+            values = [self.returns[code][d] for d in days]
+            if len(values) < self.min_overlap:
+                self._std[key] = ({}, 0.0)
+            else:
+                self._std[key] = ({d: v for d, v in zip(days, values)}, 0.0)
+        return self._std[key][0]
+
+    def get(self, a: str, b: str, day: str) -> float | None:
+        """`day` 当月之前满一年的日收益率相关系数；重叠不足返回 None（**当作未知、不当作 0**）。"""
+        if a == b:
+            return 1.0
+        month = day[:7]
+        key = (month, a, b) if a < b else (month, b, a)
+        if key in self._cache:
+            return self._cache[key]
+        sa, sb = self._series(a, month), self._series(b, month)
+        common = sa.keys() & sb.keys()
+        if len(common) < self.min_overlap:
+            self._cache[key] = None
+            return None
+        xs = [sa[d] for d in common]
+        ys = [sb[d] for d in common]
+        n = len(xs)
+        mx, my = sum(xs) / n, sum(ys) / n
+        num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+        dx = sum((x - mx) ** 2 for x in xs) ** 0.5
+        dy = sum((y - my) ** 2 for y in ys) ** 0.5
+        value = num / (dx * dy) if dx > 0 and dy > 0 else None
+        self._cache[key] = value
+        return value
+
+
+# 档位排序偏置。用户 2026-08-08 提出「L1 空间 +20/+10 再跟 L2 排序」。
+TIER_BONUS = {"L1": 0.20, "L2": 0.10, "L3": 0.0}
+TIER_QUOTA = {"L1": 4, "L2": 5, "L3": 1}
 
 
 def new_low_flags(series: dict[str, float], lookback: int = 20) -> dict[str, bool]:
@@ -281,7 +352,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         use_mos: bool = False, price_stop: bool = False, value_stop: float = 0.0,
         stop_ma: int = 20, trend_stop: bool = True, entry_filter: str = "none",
         lump_sum: float = 0.0, swap: bool = False, swap_margin: float = 0.10,
-        max_positions: int = MAX_POSITIONS, lows=None, day_index=None) -> dict:
+        max_positions: int = MAX_POSITIONS, lows=None, day_index=None,
+        max_corr: float = 0.0, corr=None, tier_mode: str = "none",
+        scan_depth: int = 40) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -412,6 +485,36 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 turnover += portfolio.lots[worst].shares * price
                 close_lot(portfolio, worst, day, price, f"换仓：让位给空间更大的{code}")
                 sell_count += 1
+        # ---- 档位排序偏置（用户 2026-08-08）
+        if tier_mode == "bonus":
+            eligible.sort(key=lambda r: -(1.0 / r[3] + TIER_BONUS.get(tiers.get(r[0], DEFAULT_TIER), 0.0)))
+        elif tier_mode == "quota":
+            # 各档位各自排序，再按配额取——避免某一档因整体估值水平不同而被系统性挤出
+            picked, used = [], collections.Counter()
+            for r in eligible:
+                t = tiers.get(r[0], DEFAULT_TIER)
+                if used[t] < TIER_QUOTA.get(t, 0):
+                    picked.append(r)
+                    used[t] += 1
+            picked += [r for r in eligible if r not in picked]
+            eligible = picked
+
+        # ---- 相关性过滤：**贪心**地沿排序往下走，与已选/已持仓相关性超阈值的跳过，
+        # 顺位补下一名（用户 2026-08-08：「第一和第五相关性很强则跳过第五，考虑第 21 名」）。
+        if max_corr and corr is not None:
+            chosen, anchors = [], list(portfolio.lots)
+            for r in eligible[:scan_depth]:
+                if len(chosen) >= max_positions:
+                    break
+                if r[0] in portfolio.lots:
+                    chosen.append(r)          # 已持仓的继续加仓，不受相关性约束
+                    continue
+                c = [corr.get(r[0], other, day) for other in anchors + [x[0] for x in chosen]]
+                if any(v is not None and v > max_corr for v in c):
+                    continue
+                chosen.append(r)
+            eligible = chosen
+
         for code, close, value, ratio in eligible[:max_positions]:
             if portfolio.cash <= 0:
                 break
@@ -614,6 +717,12 @@ def main() -> int:
                         help="买不下时卖出空间最小的持仓，换空间更大的候选")
     parser.add_argument("--swap-margin", type=float, default=0.10, help="换仓的 P/V 最小改善，防抖")
     parser.add_argument("--max-positions", type=int, default=MAX_POSITIONS)
+    parser.add_argument("--max-corr", type=float, default=0.0,
+                        help="相关性上限，如 0.7；与已选/已持仓相关性超过它的候选跳过、顺位补下一名")
+    parser.add_argument("--corr-window", type=int, default=252, help="相关性回看交易日数")
+    parser.add_argument("--scan-depth", type=int, default=40, help="相关性过滤时最多往下扫多少名")
+    parser.add_argument("--tier-mode", choices=("none", "bonus", "quota"), default="none",
+                        help="bonus=L1空间+20pp/L2+10pp 后再排序；quota=各档位分别排序并给买入额度")
     parser.add_argument("--label-suffix", default="")
     args = parser.parse_args()
 
@@ -624,6 +733,7 @@ def main() -> int:
     lows = {code: new_low_flags(series) for code, series in prices.items()}
     day_lists = {code: sorted(series) for code, series in prices.items()}
     day_pos = {code: {d: i for i, d in enumerate(ds)} for code, ds in day_lists.items()}
+    corr = Correlations(daily_returns(prices, actions), args.corr_window) if args.max_corr else None
     covered = sorted(states)
     print(f"  逐日状态 {sum(len(v) for v in states.values()):,} 行｜"
           f"{covered[0]} ~ {covered[-1]}｜行情 {len(prices)} 只｜"
@@ -646,6 +756,8 @@ def main() -> int:
                      + (f"_lump{args.lump_sum:g}" if args.lump_sum else "")
                      + ("_swap" if args.swap else "")
                      + ("" if args.trend_stop else "_nostop")
+                     + (f"_corr{args.max_corr:g}" if args.max_corr else "")
+                     + (f"_{args.tier_mode}" if args.tier_mode != "none" else "")
                      + args.label_suffix)
             result = run(strategy, x / 100.0, states, prices, actions, mas,
                          args.since, args.until, args.capital, width=width, tiers=tiers,
@@ -654,7 +766,9 @@ def main() -> int:
                          trend_stop=args.trend_stop, entry_filter=args.entry_filter,
                          lump_sum=args.lump_sum / 100.0, swap=args.swap,
                          swap_margin=args.swap_margin, max_positions=args.max_positions,
-                         lows=lows, day_index=(day_lists, day_pos))
+                         lows=lows, day_index=(day_lists, day_pos),
+                         max_corr=args.max_corr, corr=corr, tier_mode=args.tier_mode,
+                         scan_depth=args.scan_depth)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
