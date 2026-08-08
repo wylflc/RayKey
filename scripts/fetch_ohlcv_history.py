@@ -255,21 +255,23 @@ def main() -> int:
     targets = universe()
     if args.codes_file:
         wanted = {line.strip().zfill(6) for line in args.codes_file.read_text().split() if line.strip()}
-        known = {t["security_code"]: t for t in targets}
+        known = {code: (code, name, exchange) for code, name, exchange in targets}
         # 池外代码在 a_share_securities.csv 里查交易所；查不到的按代码段兜底（见 secid）
         extra = []
         with (ROOT / "data/raw/a_share_securities.csv").open(newline="", encoding="utf-8") as handle:
             for row in csv.DictReader(handle):
                 code = (row.get("security_code") or row.get("\ufeffsecurity_code") or "").zfill(6)
                 if code in wanted and code not in known:
-                    extra.append({"security_code": code,
-                                  "security_name": row.get("security_name", ""),
-                                  "exchange": row.get("exchange", "")})
-        found = {e["security_code"] for e in extra} | (wanted & set(known))
-        missing = wanted - found
-        targets = [known[c] for c in wanted if c in known] + extra
+                    extra.append((code, row.get("security_name", ""), row.get("exchange", "")))
+        found = {e[0] for e in extra} | (wanted & set(known))
+        missing = sorted(wanted - found)
+        # **查无的这批恰恰是最要紧的**：证券主表是「当前」的，退市股本就不在其中，
+        # 而它们正是幸存者偏差里「消失的那一半」。故仍按代码段兜底尝试取数
+        # （`secid()` 对空 exchange 会按首位判沪深），取不到再算失败。
+        extra += [(c, "", "") for c in missing]
+        targets = [known[c] for c in sorted(wanted) if c in known] + extra
         print(f"按清单取数：请求 {len(wanted)} 只｜命中 {len(targets)} 只"
-              + (f"｜**证券主表查无 {len(missing)} 只**（多为已退市，行情可能也取不到）" if missing else ""))
+              + (f"｜证券主表查无 {len(missing)} 只（多为已退市）→ **仍按代码段兜底尝试**" if missing else ""))
     if args.limit:
         targets = targets[:args.limit]
     OHLCV_DIR.mkdir(parents=True, exist_ok=True)

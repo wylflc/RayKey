@@ -127,6 +127,14 @@ def max_dd(series):
     return worst
 
 
+# 沪深两市代码段。**必须按板块过滤**：`RPT_LICO_FN_CPD` 含新三板（43/83/87/88/92、4 开头），
+# 它们从不在 A 股策略的可投范围内。§12.4.2 早已记过这一点，本脚本首版却漏掉了——
+# 后果是 2020 年那次筛选 831 家里有 **417 家（50.2%）是新三板**，把「入池率」压到了 6.4%，
+# 按板块过滤后应为 12.9%。**这是一个会让幸存者偏差看起来比实际严重一倍的口径错误。**
+def is_a_share(code: str) -> bool:
+    return code[:1] in ("0", "3", "6") and code[:2] not in ("43", "83", "87", "88", "92")
+
+
 def screen(annuals, as_of_year: int, roe_min: float, years: int):
     """时点筛选：截至 `as_of_year` 末，连续 `years` 个财年 ROE ≥ 阈值且净利为正。
 
@@ -136,6 +144,8 @@ def screen(annuals, as_of_year: int, roe_min: float, years: int):
     """
     passed = []
     for code, rows in annuals.items():
+        if not is_a_share(code):
+            continue
         window = [str(y) for y in range(as_of_year - years + 1, as_of_year + 1)]
         vals = []
         for y in window:
