@@ -61,6 +61,10 @@ SELL_RATIO_MIN = 1.10     # 触发减持：P/V ≥ 1.1
 MAX_POSITIONS = 10
 TRADING_DAYS = 244
 
+# 安全边际按档位（§6.5.7.1.1：风险惩罚归决策层，不塞进 r）。**只作用于买入线。**
+MOS_BY_TIER = {"L1": 0.10, "L2": 0.20, "L3": 0.30}
+DEFAULT_TIER = "L2"
+
 
 def _num(text: str | None) -> float | None:
     try:
@@ -121,6 +125,15 @@ def load_names() -> dict[str, str]:
         return {r["security_code"]: r["security_name"] for r in csv.DictReader(handle)}
 
 
+def load_tiers() -> dict[str, str]:
+    """{代码: 档位}——买入线按档位分档时用（--use-mos）。"""
+    path = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
+    if not path.exists():
+        return {}
+    with path.open(newline="", encoding="utf-8") as handle:
+        return {r["security_code"]: r["quality_tier"] for r in csv.DictReader(handle)}
+
+
 def load_benchmark() -> dict[str, float]:
     if not BENCHMARK.exists():
         return {}
@@ -172,7 +185,8 @@ class Lot:
     max_drawdown: float = 0.0   # 1 − 价格/峰值 的最大值
     peak_money: float = 0.0     # (持仓市值+已回收)/累计投入 的峰值
     max_money_drawdown: float = 0.0
-    entry_stop: float = 0.0     # 走势组：建仓日 MA20
+    entry_stop: float = 0.0     # 建仓日 MA20（走势组入场即用；估值组开 --price-stop 时也用）
+    peak_intrinsic: float = 0.0 # 持有期内内在价值的峰值——**基本面退出**按它的回撤触发
     exit_date: str = ""
     exit_reason: str = ""
 
@@ -222,13 +236,34 @@ def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: s
 
 # ------------------------------------------------------------------ 回测
 def run(strategy: str, x: float, states, prices, actions, mas, since: str, until: str,
-        capital: float) -> dict:
+        capital: float, width: float = 0.10, tiers: dict[str, str] | None = None,
+        use_mos: bool = False, price_stop: bool = False, value_stop: float = 0.0) -> dict:
+    """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
+
+    `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
+    **MOS 只管买、不管卖**——安全边际是「便宜到什么程度才敢下手」，卖出仍按带上沿。
+    这是 §6.5.7.1.1「估值层给 r、决策层给 MOS」那条分工的落地；此前 MOS 只算进带文件的
+    `max_buy_price` 列，回测一行都没引用（§15.2 第 2 条「成文未落地」，本轮补上）。
+
+    `price_stop`：给估值组也装上走势组那套「跌破建仓日 MA20 即清仓」。
+    `value_stop`：**基本面退出**——内在价值自持有期峰值回落超过该比例即清仓。
+    它直接盯 V 而不盯价格，是对「业绩下滑→越跌越贵」那条链路的正面处理：
+    实测现行规则下这条链路虽然存在（64 次减持里 10 次由 V 下修触发），但**太慢**
+    ——徐工机械那一笔从建仓到被判贵走了 9 年半。
+    """
     portfolio = Portfolio(cash=capital)
     days = sorted(d for d in states if since <= d <= until)
     last_price: dict[str, float] = {}   # 停牌日没有行情，须沿用最后成交价盯市
     equity_curve: list[tuple[str, float, float, int]] = []
     buy_count = sell_count = 0
     turnover = 0.0
+    tiers = tiers or {}
+    sell_line = 1.0 + width
+
+    def buy_line(code: str) -> float:
+        if use_mos:
+            return 1.0 - MOS_BY_TIER.get(tiers.get(code, DEFAULT_TIER), width)
+        return 1.0 - width
 
     for day in days:
         apply_corporate_actions(portfolio, day, actions)
@@ -258,6 +293,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             lot.peak_price = max(lot.peak_price, price)
             if lot.peak_price > 0:
                 lot.max_drawdown = max(lot.max_drawdown, 1 - price / lot.peak_price)
+            current_value = today.get(code, (None, None, None))[1]
+            if current_value:
+                lot.peak_intrinsic = max(lot.peak_intrinsic, current_value)
             if lot.invested > 0:
                 money = (lot.shares * price + lot.proceeds) / lot.invested
                 lot.peak_money = max(lot.peak_money, money)
@@ -269,18 +307,27 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if not price:
                 continue
             ratio = today.get(code, (None, None, None))[2]
-            if strategy == "trend" and lot.entry_stop and price < lot.entry_stop:
+            if (strategy == "trend" or price_stop) and lot.entry_stop and price < lot.entry_stop:
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
                 close_lot(portfolio, code, day, price, "跌破建仓日MA20止损")
                 sell_count += 1
                 continue
-            if ratio is not None and ratio >= SELL_RATIO_MIN:
+            # 基本面退出：内在价值自峰值回落超阈值即清仓。**盯 V 不盯价**，故一只票可以
+            # 在股价没怎么跌的时候就被卖掉——那正是「业绩塌了但市场还没反应」的情形。
+            if value_stop and lot.peak_intrinsic > 0:
+                current_value = today.get(code, (None, None, None))[1]
+                if current_value and current_value <= lot.peak_intrinsic * (1 - value_stop):
+                    turnover += lot.shares * price
+                    close_lot(portfolio, code, day, price, f"内在价值自峰值回落≥{value_stop:.0%}")
+                    sell_count += 1
+                    continue
+            if ratio is not None and ratio >= sell_line:
                 shares = min(lot.shares, budget / price)
                 if shares <= 0:
                     continue
                 if shares >= lot.shares * 0.999:
                     turnover += lot.shares * price
-                    close_lot(portfolio, code, day, price, f"P/V≥{SELL_RATIO_MIN}清空")
+                    close_lot(portfolio, code, day, price, f"P/V≥{sell_line:.2f}清空")
                 else:
                     lot.shares -= shares
                     portfolio.cash += shares * price
@@ -290,7 +337,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 sell_count += 1
 
         # ---- 买入：合格集为空则持币（用户 2026-08-08 裁定），**不硬凑前十**
-        eligible = sorted((r for r in states[day] if r[3] <= BUY_RATIO_MAX), key=lambda r: r[3])
+        eligible = sorted((r for r in states[day] if r[3] <= buy_line(r[0])), key=lambda r: r[3])
         if strategy == "trend":
             eligible = [r for r in eligible
                         if (ma := mas.get(r[0], {}).get(day)) and 20 in ma and 60 in ma
@@ -309,8 +356,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if lot is None:
                 ma = mas.get(code, {}).get(day, {})
                 lot = Lot(code=code, entry_date=day, entry_ratio=ratio, entry_value=value,
-                          entry_band_low=0.90 * value, entry_band_high=1.10 * value,
-                          entry_upside=value / close - 1, entry_stop=ma.get(20, 0.0))
+                          entry_band_low=(1 - width) * value, entry_band_high=(1 + width) * value,
+                          entry_upside=value / close - 1, entry_stop=ma.get(20, 0.0),
+                          peak_intrinsic=value)
                 portfolio.lots[code] = lot
             lot.shares += shares
             lot.invested += amount
@@ -473,6 +521,14 @@ def main() -> int:
     parser.add_argument("--until", default="2026-08-07")
     parser.add_argument("--capital", type=float, default=INITIAL_CAPITAL)
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
+    parser.add_argument("--width", type=float, nargs="+", default=[0.10],
+                        help="带的半宽 w：买入线 1−w、减持线 1+w。可给多个做敏感度")
+    parser.add_argument("--use-mos", action="store_true",
+                        help="买入线改按档位安全边际 1−MOS（L1 0.90/L2 0.80/L3 0.70）")
+    parser.add_argument("--price-stop", action="store_true", help="估值组也用建仓日 MA20 止损")
+    parser.add_argument("--value-stop", type=float, default=0.0,
+                        help="基本面退出：内在价值自峰值回落超该比例即清仓，如 0.25")
+    parser.add_argument("--label-suffix", default="")
     args = parser.parse_args()
 
     print(f"载入…（逐日估值状态、行情、除权除息、均线）")
@@ -487,13 +543,21 @@ def main() -> int:
         print(f"  ⚠ 请求起点 {args.since} 早于估值状态起点 **{covered[0]}**，"
               f"实际从后者起跑（历史带需先有逐季财务与五年年报 ROE，见 §12.4.3）")
 
+    tiers = load_tiers()
     strategies = ["valuation", "trend"] if args.strategy == "both" else [args.strategy]
     rows = []
     for strategy in strategies:
+      for width in args.width:
         for x in args.x:
-            label = f"{strategy}_x{x:g}"
+            label = (f"{strategy}_x{x:g}_w{width:g}"
+                     + ("_mos" if args.use_mos else "")
+                     + ("_ma20" if args.price_stop else "")
+                     + (f"_vstop{args.value_stop:g}" if args.value_stop else "")
+                     + args.label_suffix)
             result = run(strategy, x / 100.0, states, prices, actions, mas,
-                         args.since, args.until, args.capital)
+                         args.since, args.until, args.capital, width=width, tiers=tiers,
+                         use_mos=args.use_mos, price_stop=args.price_stop,
+                         value_stop=args.value_stop)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
@@ -506,7 +570,7 @@ def main() -> int:
                   f"｜最大回撤 {summary['最大回撤']:.1%}｜周期 {summary['周期数']}")
 
     if rows:
-        with (args.out_dir / "summary.csv").open("w", newline="", encoding="utf-8") as handle:
+        with (args.out_dir / f"summary{args.label_suffix or ''}.csv").open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
             writer.writeheader()
             writer.writerows(rows)
