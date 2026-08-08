@@ -75,21 +75,33 @@ def _num(text: str | None) -> float | None:
 
 
 # ------------------------------------------------------------------ 载入
-def load_states() -> dict[str, list[tuple[str, float, float, float]]]:
-    """{日期: [(代码, 收盘, 内在价值, P/V), …]}——已按送转折算过的口径。"""
+def load_states(path: Path | None = None,
+                codes: set[str] | None = None) -> dict[str, list[tuple[str, float, float, float]]]:
+    """{日期: [(代码, 收盘, 内在价值, P/V), …]}——已按送转折算过的口径。
+
+    `codes` 限定载入范围。全市场建带后逐日状态上千万行，全量驻留内存要好几 GB；
+    给了时点股票库就只需要它的历年并集，其余行读了也用不上。
+    """
     out: dict[str, list[tuple[str, float, float, float]]] = defaultdict(list)
-    with DAILY_STATES.open(newline="", encoding="utf-8") as handle:
+    with (path or DAILY_STATES).open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
+            if codes is not None and row["security_code"] not in codes:
+                continue
             out[row["date"]].append((row["security_code"], float(row["close"]),
                                      float(row["intrinsic_value"]), float(row["valuation_ratio"])))
     return out
 
 
-def load_prices() -> dict[str, dict[str, float]]:
-    """持仓在**没有带**的日子也要按市价盯市，故行情单独全量载入。"""
+def load_prices(codes: set[str] | None = None) -> dict[str, dict[str, float]]:
+    """持仓在**没有带**的日子也要按市价盯市，故行情单独载入。
+
+    `codes` 限定范围。全市场 5,000+ 只行情读成 dict 要 3~4 GB——**在 8 GB 机器上，
+    与逐日状态叠加会把系统拖死**（2026-08-08 实测：4 个回测并行导致两次黑屏）。
+    只有出现在逐日状态里的代码才可能被买或被盯市，其余读了也用不上。
+    """
     out: dict[str, dict[str, float]] = {}
     for path in sorted(OHLCV_DIR.glob("*.csv")):
-        if path.stem.startswith("INDEX_"):
+        if path.stem.startswith("INDEX_") or (codes is not None and path.stem not in codes):
             continue
         series = {}
         with path.open(newline="", encoding="utf-8") as handle:
@@ -133,6 +145,19 @@ def load_tiers() -> dict[str, str]:
         return {}
     with path.open(newline="", encoding="utf-8") as handle:
         return {r["security_code"]: r["quality_tier"] for r in csv.DictReader(handle)}
+
+
+def load_universe(path: Path) -> list[tuple[str, set[str]]]:
+    """时点股票库：[(生效日, {代码})]，按生效日升序。
+
+    每档名单从 `effective_from` 起生效到下一档生效前一日。**生效日不可提前**——
+    `Y` 年的年报要到 `Y+1` 年 4 月底才披露完，见 `build_point_in_time_universe.py`。
+    """
+    by_date: dict[str, set[str]] = defaultdict(set)
+    with path.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            by_date[row["effective_from"]].add(row["security_code"])
+    return sorted(by_date.items())
 
 
 def load_benchmark() -> dict[str, float]:
@@ -355,7 +380,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         max_positions: int = MAX_POSITIONS, lows=None, day_index=None,
         max_corr: float = 0.0, corr=None, tier_mode: str = "none",
         scan_depth: int = 40, min_upside: dict[str, float] | None = None,
-        position_cap: float = 0.0, only_tiers: set[str] | None = None) -> dict:
+        position_cap: float = 0.0, only_tiers: set[str] | None = None,
+        universe: list[tuple[str, set[str]]] | None = None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -377,6 +403,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     turnover = 0.0
     tiers = tiers or {}
     sell_line = 1.0 + width
+    # 时点股票库：`members` 随日期切换。第一档生效前**一只都不可买**——那段时间还没有
+    # 任何「当时可得」的名单，凭空放行等于用未来的股票库交易。
+    uni_idx, members = 0, (set() if universe else None)
 
     def buy_line(code: str) -> float:
         if use_mos:
@@ -385,6 +414,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
     for day in days:
         apply_corporate_actions(portfolio, day, actions)
+        if universe:
+            while uni_idx < len(universe) and universe[uni_idx][0] <= day:
+                members = universe[uni_idx][1]
+                uni_idx += 1
         today = {code: (close, value, ratio) for code, close, value, ratio in states[day]}
         # 停牌股当日无价，**必须沿用最后成交价**——否则它会整只从净值里消失，
         # 复牌当天再凭空出现，资金曲线上是一对假的暴跌+暴涨。
@@ -425,6 +458,23 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if not price:
                 continue
             ratio = today.get(code, (None, None, None))[2]
+            # 移出股票库 → **逐步清仓**（用户 2026-08-08：「对于被移除股票库的公司，逐步清仓」）。
+            # 按与减持同一速度卖，不一次性砸出——一年一次的换库若全额出清，会在每年 5 月
+            # 制造一次集中抛售，测出来的是流动性冲击而不是规则优劣。
+            if members is not None and code not in members:
+                shares = min(lot.shares, budget / price)
+                if shares > 0:
+                    if shares >= lot.shares * 0.999:
+                        turnover += lot.shares * price
+                        close_lot(portfolio, code, day, price, "移出股票库·逐步清仓")
+                    else:
+                        lot.shares -= shares
+                        portfolio.cash += shares * price
+                        lot.proceeds += shares * price
+                        lot.sells += 1
+                        turnover += shares * price
+                    sell_count += 1
+                continue
             if ((strategy == "trend" and trend_stop) or price_stop) and lot.entry_stop and price < lot.entry_stop:
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
                 close_lot(portfolio, code, day, price, f"跌破建仓日MA{lot.entry_stop_ma}止损")
@@ -455,7 +505,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 sell_count += 1
 
         # ---- 买入：合格集为空则持币（用户 2026-08-08 裁定），**不硬凑前十**
-        eligible = sorted((r for r in states[day] if r[3] <= buy_line(r[0])), key=lambda r: r[3])
+        pool = states[day] if members is None else [r for r in states[day] if r[0] in members]
+        eligible = sorted((r for r in pool if r[3] <= buy_line(r[0])), key=lambda r: r[3])
         # 分档最低空间门槛（用户 2026-08-08：L1 >30%、L2 >40%；**L3 未指定，本脚本按 L2 取 40%**
         # ——L3 风险更高，门槛不该比 L2 松）。空间 = V/P − 1 = 1/(P/V) − 1。
         if min_upside:
@@ -780,11 +831,19 @@ def main() -> int:
     parser.add_argument("--position-cap", type=float, default=0.0,
                         help="单票买入上限占总资产比例，如 0.10；只挡加仓不强制减持")
     parser.add_argument("--only-tiers", default="", help="只买这些档位，逗号分隔，如 L1")
+    parser.add_argument("--daily-states", type=Path, help="逐日估值状态文件，缺省用 261 池版本")
+    parser.add_argument("--universe-file", type=Path,
+                        help="时点股票库（build_point_in_time_universe.py 的产出）。"
+                             "给了它就只在当期成员里选股，移出的持仓逐步清仓")
     parser.add_argument("--label-suffix", default="")
     args = parser.parse_args()
 
     print(f"载入…（逐日估值状态、行情、除权除息、均线）")
-    states, prices, actions = load_states(), load_prices(), load_actions()
+    universe = load_universe(args.universe_file) if args.universe_file else None
+    states = load_states(args.daily_states,
+                         {c for _d, m in universe for c in m} if universe else None)
+    prices = load_prices({r[0] for rows in states.values() for r in rows})
+    actions = load_actions()
     names, benchmark, risk_free = load_names(), load_benchmark(), load_risk_free()
     mas = {code: moving_averages(series) for code, series in prices.items()}
     lows = {code: new_low_flags(series) for code, series in prices.items()}
@@ -795,6 +854,10 @@ def main() -> int:
     print(f"  逐日状态 {sum(len(v) for v in states.values()):,} 行｜"
           f"{covered[0]} ~ {covered[-1]}｜行情 {len(prices)} 只｜"
           f"基准 {'沪深300 ' + str(len(benchmark)) + ' 日' if benchmark else '**缺**'}")
+    if universe:
+        sizes = [len(m) for _d, m in universe]
+        print(f"  **时点股票库**：{len(universe)} 档｜{universe[0][0]} 起生效｜"
+              f"每档 {min(sizes)}~{max(sizes)} 只｜并集 {len({c for _d, m in universe for c in m}):,} 只")
     if args.since < covered[0]:
         print(f"  ⚠ 请求起点 {args.since} 早于估值状态起点 **{covered[0]}**，"
               f"实际从后者起跑（历史带需先有逐季财务与五年年报 ROE，见 §12.4.3）")
@@ -832,7 +895,8 @@ def main() -> int:
                          min_upside=(dict(zip(("L1", "L2", "L3"), args.min_upside))
                                      if args.min_upside else None),
                          position_cap=args.position_cap,
-                         only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None)
+                         only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None,
+                         universe=universe)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
