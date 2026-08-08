@@ -35,15 +35,24 @@
 
 口径选择（**这些是判断，不是数据，需用户确认**）
 ----------------------------------------------
-* `r` 按 §6.5.7.1 的质量分档区间取中位：L1 → 8%｜L2 → 10%｜L3 → 13%。始终附敏感度。
-* `ROE_T` 终值 ROE：L1 → 15%｜L2 → 12%｜L3 → 10%（竞争终将压低超额 ROE）。
-* `g_T` = 3%（名义 GDP 量级），`N` = 10 年线性 fade。
+* `--r-mode tier`（缺省）：`r` 按 §6.5.7.1 分档中位 L1 8%／L2 10%／L3 13%，`ROE_T` 按
+  档位表。**已知问题见 §6.5.7.1.1**——它把质量惩罚写进 `r`，与 §6.2.1 的买入规则重复
+  惩罚同一风险，实测制造出按档位分层的 2.6 倍价差。
+* `--r-mode market`：`r = R_f + β·ERP` 逐期取值，`ROE_T = r + 永续超额`，
+  **且 `g_T` 被 `R_f` 封顶**。风险惩罚移交决策层 `MOS_BY_TIER`。
+  **`g_T ≤ R_f` 必须与降 r 同时生效**：实测只降 r 不动 g_T 会使 P0* +109%，捆绑后 +75%。
+  **当前 `data/reference/cost_of_equity_inputs.csv` 只有一个观测点且未经核验**，故本模式
+  跑历史带会逐条拒绝——这是有意的，用今天的利率回测七年前属 §12.4 前视。
+* `g_T` 缺省 3%（market 模式下再取 `min(3%, R_f)`），`N` = 10 年线性 fade。
 * **`N=10` 是衰减期不是高增长期**：§6.5.7.1 v1.56 硬规则限制的 `n1` 是「增速维持不变的
   年数」，本模型 g 自第 1 年即开始衰减，`n1` 实为 0，故不与该规则冲突。
+* `roe0` 缺省走「长期锚 + 趋势识别 + 近期读数」（`trend_aware_roe`），不是纯中位。
 * `g0` 两种口径都算，默认用哪个见 `--g0-source`：
   - `trailing`：归母净利 TTM 的三年 CAGR。**是外推**（§15.2 第 6 条的形态之一）。
-  - `sustainable`：`ROE_TTM × (1 − 近三年派息率均值)`，即可内生维持的增长。**不外推**，
+  - `sustainable`：`roe0 × (1 − 近三年派息率均值)`，即可内生维持的增长。**不外推**，
     且与模型的再投资关系自洽。
+* `incremental_roe = ΔEPS/ΔBPS` **只报不用**：实测 54% 的带其增量回报低于建模 ROE
+  （中位低 2.8pp），即 `g = ROE×b` 多数情况下高估增长。是否接入模型待裁定。
 
 用法::
 
@@ -69,7 +78,11 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from intrinsic_value import (  # noqa: E402
     DEFAULT_G_TERMINAL,
     ValuationError,
+    cost_of_equity,
     intrinsic_value,
+    margin_of_safety,
+    terminal_growth_ceiling,
+    terminal_roe,
     valuation_label,
 )
 
@@ -81,13 +94,54 @@ TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 # §6.5.7.2：现值锚已含要求回报，系数取 [0.90, 1.10] 而非 [0.85, 1.05]（避免二次保守）。
 BAND_LOW_COEF, BAND_HIGH_COEF = 0.90, 1.10
 
-# §6.5.7.1 的 r 分档区间取中位；ROE_T 为终值 ROE。**判断值，非观测值。**
+# --------------------------------------------------------- r 与终值参数
+#
+# 两套口径并存，由 `--r-mode` 选：
+#
+# `tier`（旧）：§6.5.7.1 的质量分档区间取中位。**已知问题**——它把「公司差、多要点回报」
+#   写进 r，而 §6.2.1 的档位买入规则又惩罚一次同一个风险，构成重复惩罚；且 L3 的 13%
+#   对应的是极高风险企业，不该因为只是「战术层」就自动赋值。
+#
+# `market`（新，2026-08-08 外部评审建议）：`r = R_f + β·ERP`，逐期取当时的 R_f 与 ERP。
+#   风险惩罚改由**决策层的安全边际**承担（`MOS_BY_TIER`），与估值层分离。
 TIER_PARAMS = {
     "L1": {"r": 0.08, "roe_terminal": 0.15},
     "L2": {"r": 0.10, "roe_terminal": 0.12},
     "L3": {"r": 0.13, "roe_terminal": 0.10},
 }
 DEFAULT_TIER = "L2"
+
+RATES_FILE = ROOT / "data/reference/cost_of_equity_inputs.csv"
+
+# β 初版按类型简化（评审给的量级）。**不用行情 raw beta**：小盘噪声、停牌、A 股风格切换
+# 都会让它失真，且过去的 β 未必代表未来。待有行业 β 后再按资本结构还原。
+BETA_BY_TIER = {"L1": 0.9, "L2": 1.0, "L3": 1.3}
+
+# 终值超额回报 `ROE_T − r`。竞争均衡下增量回报趋向资本成本，故无护城河者取 0
+# （此时终值 PE 恰为 1/r，增长不创造价值）。正超额是**需要护城河证据**的强假设。
+TERMINAL_EXCESS_BY_TIER = {"L1": 0.06, "L2": 0.03, "L3": 0.0}
+
+# 安全边际属决策层，**不得再塞进 r**（否则与 §6.2.1 档位规则重复惩罚同一风险）。
+MOS_BY_TIER = {"L1": 0.10, "L2": 0.20, "L3": 0.30}
+
+
+def load_rates() -> list[tuple[str, float, float]]:
+    """(观测日, R_f, ERP) 升序。逐期取值以避免用 2026 年的利率回测 2017 年。"""
+    if not RATES_FILE.exists():
+        return []
+    rows = []
+    with RATES_FILE.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            rf, erp = _num(row.get("risk_free_rate")), _num(row.get("equity_risk_premium"))
+            if rf is not None and erp is not None:
+                rows.append((row["observed_on"], rf, erp))
+    return sorted(rows)
+
+
+def rates_as_of(rates: list[tuple[str, float, float]], date: str) -> tuple[float, float] | None:
+    """`date` 当时**已可观测**的最近一组利率；无则 None——**不外推、不用后来的利率**。"""
+    usable = [x for x in rates if x[0] <= date]
+    return (usable[-1][1], usable[-1][2]) if usable else None
 
 # 可行性验证样本：刻意覆盖每一种已知失败形态，不是随机抽的。
 SAMPLE_CODES = [
@@ -241,6 +295,62 @@ def derive_roe(series: dict[str, dict], period: str,
     return TTMValue(eps.value / bps, eps.evidence_dates + [series[period]["notice_date"]]), "eps_over_bps"
 
 
+def annual_roe_series(series: dict[str, dict], available_at: str, years: int) -> list[tuple[str, float]]:
+    """公告日 ≤ `available_at` 的近 `years` 个财年 ROE，**按财年升序**。"""
+    out = []
+    for period in reversed(fiscal_years_before(series, available_at, years)):
+        row = series[period]
+        roe, profit = _num(row.get("weightavg_roe")), _num(row.get("parent_netprofit"))
+        if roe is None or (roe == 0 and profit not in (None, 0)):
+            continue
+        out.append((period, roe / 100.0))
+    return out
+
+
+def net_margin(row: dict) -> float | None:
+    profit, revenue = _num(row.get("parent_netprofit")), _num(row.get("total_operate_income"))
+    if profit is None or not revenue:
+        return None
+    return profit / revenue
+
+
+def trend_efficiency(values: list[float]) -> float:
+    """净变动 ÷ 总行程，∈[0,1]。**单调趋势趋近 1，来回震荡趋近 0。**
+
+    为什么不用标准差判周期股（首版即用 σ，实测是错的）：σ 量的是**离散度**，而一路上行的
+    成长股离散度同样很大。实测宁德时代 σ=39.4%、亿联网络 18.8%（都是趋势不是周期），
+    而真正的商品周期股紫金矿业只有 6.7%、徐工机械 5.1%——**按 σ 判会把两类正好判反**。
+    本比率量的是「有没有来回」，才是周期的定义。
+    """
+    if len(values) < 3:
+        return 1.0
+    travel = sum(abs(b - a) for a, b in zip(values, values[1:]))
+    return abs(values[-1] - values[0]) / travel if travel else 1.0
+
+
+def roe_trend(series: dict[str, dict], observations: list[tuple[str, float]],
+              min_efficiency: float) -> str:
+    """判定 ROE 是否存在**可靠**趋势，返回 "up"／"down"／""。
+
+    两条都要满足，缺一即判无趋势：
+    ① 走势够单调（`trend_efficiency ≥ 阈值`）——比「三次变化里两次同向」严得多，后者约有
+       一半概率靠掷硬币就能满足；
+    ② **净利率同向**——这是用现有字段能做的那一半杜邦验证。ROE 上行若并非来自净利率改善，
+       就可能只是净资产被回购／减值做小了，那不是经营能力提高，不该据此上调估值。
+       （完整杜邦还需资产周转率与权益乘数，本表无总资产字段，故只做这一半并写明。）
+    """
+    if len(observations) < 4:
+        return ""
+    values = [v for _, v in observations]
+    if trend_efficiency(values) < min_efficiency:
+        return ""
+    direction = "up" if values[-1] > values[0] else "down"
+    margins = [m for m in (net_margin(series[p]) for p, _ in observations) if m is not None]
+    if len(margins) < 2:
+        return ""
+    return direction if ((margins[-1] > margins[0]) == (direction == "up")) else ""
+
+
 def normalized_roe(series: dict[str, dict], available_at: str, years: int = 5,
                    stat: str = "median") -> tuple[float | None, int]:
     """近 `years` 个已披露财年的**年度 ROE 中位数**——模型里的 ROE 是结构参数不是周期读数。
@@ -261,6 +371,79 @@ def normalized_roe(series: dict[str, dict], available_at: str, years: int = 5,
         return None, 0
     agg = statistics.median if stat == "median" else statistics.fmean
     return agg(values), len(values)
+
+
+# 走势单调度阈值。低于下限 = 来回震荡 = 周期股，窗口拉长到覆盖一个完整景气周期；
+# 高于上限 = 结构性趋势，近期读数才有资格加权。中间地带一律当无趋势，用锚。
+CYCLICAL_EFFICIENCY = 0.35
+CYCLICAL_AMPLITUDE = 0.50        # ROE 极差须超过中位数一半，否则只是平稳带噪声
+TREND_EFFICIENCY = 0.55
+CYCLICAL_WINDOW = 9              # 周期股窗口须覆盖一个完整景气周期，5 年可能只覆盖半个
+
+
+def trend_aware_roe(series: dict[str, dict], available_at: str, base_years: int,
+                    stat: str) -> tuple[float | None, dict]:
+    """长期锚 + 趋势识别 + 近期读数的混合 ROE（2026-08-08 外部评审建议，实测后采纳）。
+
+    为什么不在「TTM」与「五年中位」之间二选一：中位数能治**噪声与周期**，治不了**结构性趋势**。
+    实测两端都有代价——TTM 口径下东阿阿胶 2020 年低谷算出隐含 PE **201**（恰在底部报最贵）；
+    纯五年中位下九号公司（ROE 上行）对人工档案只有 **0.20x**、山西汾酒（ROE 下行）**2.04x**。
+
+    故：无可靠趋势时用锚（中位）；有可靠趋势时按 `0.6·近期 + 0.4·锚` 让近期读数说话。
+    「可靠」的判据见 `roe_trend`——**必须同时有净利率的同向印证**，否则回购做小净资产
+    造成的 ROE 上行也会被当成经营改善。
+    """
+    probe = [v for _, v in annual_roe_series(series, available_at, max(base_years, CYCLICAL_WINDOW))]
+    efficiency = trend_efficiency(probe)
+    # 判周期股要**两个条件**：来回震荡（低单调度）**且**振幅够大。只看单调度会把「平稳带
+    # 小噪声」也判成周期——实测贵州茅台单调度仅 32%（净变动小、行程也小），但 ROE 常年
+    # 30~38%，显然不是周期股。故加振幅闸：极差须超过中位数的一半。
+    amplitude = (max(probe) - min(probe)) / abs(statistics.median(probe)) if probe and statistics.median(probe) else 0.0
+    cyclical = efficiency < CYCLICAL_EFFICIENCY and amplitude > CYCLICAL_AMPLITUDE
+    window = CYCLICAL_WINDOW if cyclical else base_years
+
+    observations = annual_roe_series(series, available_at, window)
+    if not observations:
+        return None, {"years": 0}
+    values = [v for _, v in observations]
+    agg = statistics.median if stat == "median" else statistics.fmean
+    anchor = agg(values)
+    direction = roe_trend(series, observations, TREND_EFFICIENCY)
+    if direction and len(values) >= 2:
+        recent = 0.6 * values[-1] + 0.4 * values[-2]
+        value = 0.6 * recent + 0.4 * anchor
+    else:
+        value = anchor
+    return value, {"years": len(values), "window": window, "anchor": anchor,
+                   "trend": direction, "roe_sigma": efficiency}
+
+
+def incremental_roe(series: dict[str, dict], actions: list[dict], available_at: str,
+                    span: int = 4) -> float | None:
+    """增量股东回报 `ΔEPS / ΔBPS`——**新投进去的一块钱赚回多少**。
+
+    为什么必须单看它（外部评审 2026-08-08 提出，本仓库现有字段刚好够算）：
+    `g = ROE × b` 隐含「新增资本能继续赚到与存量相同的 ROE」，这对多数非金融公司不成立。
+    茅台过去 ROE 35%，不代表新投 100 亿还能产出 35 亿。真正决定增长的是**增量回报**，
+    历史平均 ROE 只是它的一个有偏代理。
+
+    两期的每股口径若跨过送转并不同基，故按公告日之间的累计送转比把旧期折算回来再相减。
+    """
+    annuals = fiscal_years_before(series, available_at, span + 1)
+    if len(annuals) < span + 1:
+        return None
+    new_period, old_period = annuals[0], annuals[-1]
+    new_row, old_row = series[new_period], series[old_period]
+    factor = split_factor(actions, old_row["notice_date"], new_row["notice_date"])
+    eps_new, eps_old = _num(new_row.get("basic_eps")), _num(old_row.get("basic_eps"))
+    bps_new, bps_old = _num(new_row.get("bps")), _num(old_row.get("bps"))
+    if None in (eps_new, eps_old, bps_new, bps_old):
+        return None
+    delta_eps = eps_new - eps_old / factor
+    delta_bps = bps_new - bps_old / factor
+    if delta_bps <= 0:
+        return None   # 净资产未增长时增量回报无定义（回购／分红超过留存）
+    return delta_eps / delta_bps
 
 
 # ------------------------------------------------------------------ 输入推导
@@ -335,7 +518,19 @@ class Band:
     g0: float | None = None
     g0_capped: bool = False
     r: float | None = None
+    r_mode: str = ""
+    rf: float | None = None
+    erp: float | None = None
+    beta: float | None = None
+    g_terminal: float | None = None
     roe_terminal: float | None = None
+    roe_anchor: float | None = None
+    roe_trend: str = ""
+    roe_window: int | None = None
+    roe_sigma: float | None = None
+    incremental_roe: float | None = None
+    mos: float | None = None
+    max_buy_price: float | None = None
     value: float | None = None
     band_low: float | None = None
     band_high: float | None = None
@@ -367,23 +562,49 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     available_at = max(evidence)
 
     params = TIER_PARAMS.get(tier, TIER_PARAMS[DEFAULT_TIER])
-    r, roe_t = params["r"], params["roe_terminal"]
+    rf = erp = beta = None
+    g_terminal = args.g_terminal
+    if args.r_mode == "market":
+        observed = rates_as_of(args.rates, available_at)
+        if observed is None:
+            return Band(code, name, period, notice, available_at, "unavailable",
+                        f"{available_at} 当时无可观测的 R_f/ERP —— **不外推、不借用后来的利率**"
+                        f"（§12.4）；须补 {RATES_FILE.name} 的历史序列")
+        rf, erp = observed
+        beta = BETA_BY_TIER.get(tier, 1.0)
+        r = cost_of_equity(rf, erp, beta)
+        # 终值 ROE 由 r 推出而非拍档位表：竞争均衡下增量回报趋向资本成本。
+        roe_t = terminal_roe(r, TERMINAL_EXCESS_BY_TIER.get(tier, 0.0))
+        # **g_T ≤ R_f 与「r 用 R_f+βERP」是一套，不能只取前半**。R_f 已含长期通胀与实际
+        # 增长预期，g_T > R_f 等于假设经济永续跑赢无风险利率。实测只降 r 不动 g_T，
+        # P0* 由 10.19 抬到 21.29（+109%）；同时收紧 g_T 则为 17.88（+75%）——
+        # 差额的三分之一来自这个未经检验的 g_T 而非来自 r。
+        g_terminal = min(args.g_terminal, terminal_growth_ceiling(rf))
+    else:
+        r, roe_t = params["r"], params["roe_terminal"]
 
     band = Band(code, name, period, notice, available_at, "unavailable",
                 eps_ttm=eps.value if eps else None, roe_ttm=roe.value if roe else None,
                 roe_source=roe_source, bps=bps,
-                g_trailing=trailing_cagr(series, period), r=r, roe_terminal=roe_t)
+                g_trailing=trailing_cagr(series, period), r=r, r_mode=args.r_mode,
+                rf=rf, erp=erp, beta=beta, g_terminal=g_terminal, roe_terminal=roe_t,
+                mos=MOS_BY_TIER.get(tier),
+                incremental_roe=incremental_roe(series, actions, available_at))
 
     # 归一化口径：ROE 取近五年年度中位（结构参数），EPS 由清洁盈余 E = ROE×B 反推。
     # 这样两个输入天然自洽，且不把周期低谷的读数外推十年（见 normalized_roe 文档）。
     if args.roe_source == "normalized":
-        roe0, years = normalized_roe(series, available_at, args.roe_years, args.roe_stat)
+        roe0, meta = trend_aware_roe(series, available_at, args.roe_years, args.roe_stat)
+        band.roe_anchor = meta.get("anchor")
+        band.roe_trend = meta.get("trend", "")
+        band.roe_window = meta.get("window")
+        band.roe_sigma = meta.get("roe_sigma")
         if roe0 is None or bps is None or bps <= 0:
             band.reason = ("归一化 ROE 不可算：无已披露年报 ROE" if roe0 is None else
                            f"BPS={bps} 不可用")
             return band
-        if years < args.min_roe_years:
-            band.reason = f"已披露年报 ROE 仅 {years} 年 < 要求 {args.min_roe_years} 年"
+        if meta["years"] < args.min_roe_years:
+            band.reason = f"已披露年报 ROE 仅 {meta['years']} 年 < 要求 {args.min_roe_years} 年"
             return band
         eps0 = roe0 * bps
     else:
@@ -416,7 +637,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
 
     try:
         result = intrinsic_value(eps0, roe0, g0, r, roe_terminal=roe_t,
-                                 g_terminal=args.g_terminal, n=args.n)
+                                 g_terminal=g_terminal, n=args.n)
     except ValuationError as exc:
         band.status, band.reason = "rejected", str(exc)
         return band
@@ -428,6 +649,9 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     band.terminal_share = result.terminal_share
     band.implied_pe = result.implied_pe
     band.min_payout = result.min_payout
+    # 安全边际在**决策层**单独给出，不混进 r（否则同一个风险被惩罚两次）
+    if band.mos is not None:
+        band.max_buy_price = margin_of_safety(result.intrinsic_value, band.mos)
     return band
 
 
@@ -486,8 +710,10 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
 # ------------------------------------------------------------------ 输出
 BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", "notice_date",
                "available_at", "status", "reason", "eps_ttm", "roe_ttm", "roe_source", "bps",
-               "eps0", "roe0", "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
-               "r", "roe_terminal", "intrinsic_value", "band_low", "band_high",
+               "eps0", "roe0", "roe_anchor", "roe_trend", "roe_window", "roe_efficiency",
+               "incremental_roe", "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
+               "r_mode", "rf", "erp", "beta", "r", "g_terminal", "roe_terminal",
+               "intrinsic_value", "band_low", "band_high", "mos", "max_buy_price",
                "implied_pe", "pe_on_ttm_eps", "terminal_share", "min_payout"]
 
 
@@ -501,10 +727,17 @@ def band_row(band: Band, tier: str) -> dict:
         "available_at": band.available_at, "status": band.status, "reason": band.reason,
         "eps_ttm": fmt(band.eps_ttm), "roe_ttm": fmt(band.roe_ttm),
         "roe_source": band.roe_source, "bps": fmt(band.bps),
-        "eps0": fmt(band.eps0), "roe0": fmt(band.roe0), "payout": fmt(band.payout),
+        "eps0": fmt(band.eps0), "roe0": fmt(band.roe0),
+        "roe_anchor": fmt(band.roe_anchor), "roe_trend": band.roe_trend,
+        "roe_window": "" if band.roe_window is None else str(band.roe_window),
+        "roe_efficiency": fmt(band.roe_sigma), "incremental_roe": fmt(band.incremental_roe),
+        "payout": fmt(band.payout),
         "g_trailing": fmt(band.g_trailing), "g_sustainable": fmt(band.g_sustainable),
         "g0": fmt(band.g0), "g0_capped": "Y" if band.g0_capped else "",
-        "r": fmt(band.r, 3), "roe_terminal": fmt(band.roe_terminal, 3),
+        "r_mode": band.r_mode, "rf": fmt(band.rf, 4), "erp": fmt(band.erp, 4),
+        "beta": fmt(band.beta, 2), "r": fmt(band.r, 4),
+        "g_terminal": fmt(band.g_terminal, 4), "roe_terminal": fmt(band.roe_terminal, 4),
+        "mos": fmt(band.mos, 2), "max_buy_price": fmt(band.max_buy_price),
         "intrinsic_value": fmt(band.value), "band_low": fmt(band.band_low),
         "band_high": fmt(band.band_high), "implied_pe": fmt(band.implied_pe, 2),
         "pe_on_ttm_eps": fmt(pe_ttm, 2),
@@ -574,6 +807,22 @@ def report(all_bands: list[tuple[str, Band]], daily_counts: dict[str, int],
             sources[band.roe_source or "无 TTM ROE（归一化口径下不影响建带）"] += 1
         print("ROE 取数来源：" + "｜".join(f"{k} {v}" for k, v in sorted(sources.items())))
 
+    if ok:
+        trends: dict[str, int] = defaultdict(int)
+        for band in ok:
+            trends[band.roe_trend or "无趋势→用锚"] += 1
+        print("ROE 趋势判定（净利率同向印证后）：" + "｜".join(f"{k} {v}" for k, v in sorted(trends.items())))
+        cyc = [b for b in ok if b.roe_window and b.roe_window > args.roe_years]
+        print(f"按周期股拉长窗口（走势单调度<{CYCLICAL_EFFICIENCY:.0%}）：{len(cyc)}/{len(ok)}"
+              f"（{len(cyc)/len(ok):.0%}）")
+        pairs = [(b.incremental_roe, b.roe0) for b in ok if b.incremental_roe is not None and b.roe0]
+        if pairs:
+            gaps = sorted(inc - roe for inc, roe in pairs)
+            below = sum(1 for inc, roe in pairs if inc < roe)
+            print(f"增量 ROE(ΔEPS/ΔBPS) − 建模 ROE（n={len(pairs)}）：中位 {statistics.median(gaps):+.1%}｜"
+                  f"**低于建模 ROE 的有 {below}（{below/len(pairs):.0%}）**"
+                  f"\n  ↑ 低于即说明「新投入的钱赚得不如存量」，g=ROE×b 会高估增长（外部评审第 11 点）")
+
     grouped: dict[str, list[Band]] = defaultdict(list)
     for code, band in all_bands:
         grouped[code].append(band)
@@ -613,6 +862,8 @@ def main() -> int:
     parser.add_argument("--roe-source", choices=("normalized", "ttm"), default="normalized",
                         help="normalized=近五年年度 ROE 中位并由 E=ROE×B 反推 EPS（缺省，避免顺周期陷阱）")
     parser.add_argument("--g0-source", choices=("sustainable", "trailing"), default="sustainable")
+    parser.add_argument("--r-mode", choices=("tier", "market"), default="tier",
+                        help="tier=§6.5.7.1 分档中位（旧）；market=R_f+βERP 逐期取值（需利率序列）")
     parser.add_argument("--roe-years", type=int, default=5, help="归一化 ROE 的回看年数")
     parser.add_argument("--roe-stat", choices=("median", "mean"), default="median")
     parser.add_argument("--min-roe-years", type=int, default=3,
@@ -632,6 +883,10 @@ def main() -> int:
     else:
         codes = sorted(p.stem for p in OHLCV_DIR.glob("*.csv"))
 
+    args.rates = load_rates()
+    if args.r_mode == "market" and not args.rates:
+        print(f"**{RATES_FILE.relative_to(ROOT)} 无可用观测**，market 模式无法建带")
+        return 1
     tiers = load_tiers()
     financials = load_financials(set(codes))
     actions = load_actions()
