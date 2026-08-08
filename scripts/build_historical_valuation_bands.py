@@ -918,7 +918,12 @@ def main() -> int:
     scope.add_argument("--sample", action="store_true", help="10 只可行性验证样本")
     scope.add_argument("--codes", help="逗号分隔代码")
     scope.add_argument("--all", action="store_true", help="全部有行情的股票")
+    scope.add_argument("--codes-file", type=Path, help="每行一个代码")
     parser.add_argument("--since", default="2016-03-31")
+    # 时点股票库回测**必须**用它。否则池内 261 只带着 §5 人工分档（L1 终值超额 6%），
+    # 池外 1,278 只一律落 DEFAULT_TIER（3%）——选样偏差会绕过可选池、从估值口径溜回来。
+    parser.add_argument("--uniform-tier", choices=tuple(TIER_PARAMS),
+                        help="强制所有股票用同一分档，抹掉人工分档带来的前视优势")
     parser.add_argument("--roe-source", choices=("normalized", "ttm"), default="normalized",
                         help="normalized=近五年年度 ROE 中位并由 E=ROE×B 反推 EPS（缺省，避免顺周期陷阱）")
     parser.add_argument("--g0-source", choices=("sustainable", "trailing"), default="sustainable")
@@ -942,8 +947,12 @@ def main() -> int:
         codes = list(SAMPLE_CODES)
     elif args.codes:
         codes = [c.strip().zfill(6) for c in args.codes.split(",") if c.strip()]
+    elif args.codes_file:
+        codes = sorted({ln.strip().zfill(6) for ln in args.codes_file.read_text().splitlines()
+                        if ln.strip()})
     else:
         codes = sorted(p.stem for p in OHLCV_DIR.glob("*.csv"))
+    codes = [c for c in codes if not c.startswith("INDEX")]
 
     args.rates = load_rates()
     if args.r_mode == "market" and not args.rates:
@@ -952,7 +961,8 @@ def main() -> int:
     tiers = load_tiers()
     financials = load_financials(set(codes))
     actions = load_actions()
-    print(f"历史带重建：{len(codes)} 只｜报告期起点 {args.since}｜g0={args.g0_source}")
+    print(f"历史带重建：{len(codes)} 只｜报告期起点 {args.since}｜g0={args.g0_source}"
+          + (f"｜**分档统一为 {args.uniform_tier}**" if args.uniform_tier else ""))
 
     all_bands: list[tuple[str, Band]] = []
     band_rows: list[dict] = []
@@ -965,7 +975,7 @@ def main() -> int:
         if not series:
             print(f"  ⚠ {code} 无财务数据，跳过")
             continue
-        tier = (tiers.get(code) or {}).get("quality_tier") or DEFAULT_TIER
+        tier = args.uniform_tier or (tiers.get(code) or {}).get("quality_tier") or DEFAULT_TIER
         name = next(iter(series.values()))["security_name"]
         periods = sorted(p for p in series if p >= args.since)
         bands = [build_band(code, name, tier, series, actions.get(code, []), p, args) for p in periods]

@@ -23,3 +23,6 @@ data/processed/a_share_historical_valuation_daily.csv
 
 # 回测逐日净值与逐周期明细（由 backtest_valuation_strategy.py 完全可重建）
 data/processed/backtest/*_equity.csv
+data/processed/a_share_historical_valuation_daily_pit.csv
+data/raw/corporate_actions/*_shard*.csv
+data/raw/corporate_actions/*_full*.csv
