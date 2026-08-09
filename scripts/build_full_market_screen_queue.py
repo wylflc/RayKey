@@ -72,6 +72,19 @@ def load_period(name: str) -> dict[str, dict]:
     return out
 
 
+def is_a_share(code: str) -> bool:
+    """**只用于给名录补漏**：仅接受沪深 0/3/6 段，排除 B 股（20x/90x）。
+
+    北交所与新三板共用 43/83/87/88 段，无法由代码区分，**名录里已有的 312 只北交所照常保留，
+    名录外的 8x/9x 一律视为新三板不予补入**——首版误把它们放进来，全市场数从 5,653 涨到 6,148。
+    """
+    return code[:1] in ("0", "3", "6") and code[:2] not in ("20", "40", "42", "43", "90")
+
+
+def board_of(code: str) -> str:
+    return {"68": "star_market", "30": "chinext"}.get(code[:2], "main_board")
+
+
 def classify(revenue, netprofit, roe, name: str) -> tuple[str, str]:
     """排队分层。**只决定判断粒度，不决定结论**——见文件头。"""
     if name.startswith(("*ST", "ST")):
@@ -92,10 +105,19 @@ def main() -> int:
     ap.add_argument("--batch", type=int, default=0, help="打印第几批待判事实（0=只建队列）")
     ap.add_argument("--size", type=int, default=120)
     ap.add_argument("--tier", default="A_核心", help="打印哪一层")
+    ap.add_argument("--h1-only", action="store_true",
+                    help="只列已出 2026 中报的公司（用户 2026-08-09：先判这批，其余等中报）")
     args = ap.parse_args()
 
     h1, q1 = load_period("2026-06-30"), load_period("2026-03-31")
     securities = {r["security_code"]: r for r in csv.DictReader(SEC.open(encoding="utf-8-sig"))}
+    # A 股名录会滞后于财报（2026-08-09 实测漏了 4 只 8 月上市新股）。**以并集为准**，
+    # 名录缺的从财报补出名称，板块按代码段推断，并在 `board` 里标 `*新增` 以便复核。
+    for code, row in {**q1, **h1}.items():
+        if code in securities or not is_a_share(code):
+            continue
+        securities[code] = {"security_code": code, "security_name": row.get("security_name", ""),
+                            "board": board_of(code) + "*新增", "listing_date": ""}
     triage = {r["security_code"]: r for r in csv.DictReader(TRIAGE.open(encoding="utf-8"))}
     tiers = {r["security_code"]: r for r in csv.DictReader(TIERS.open(encoding="utf-8"))}
 
@@ -161,14 +183,16 @@ def main() -> int:
         print(f"已建空判定档 {VERDICTS.relative_to(ROOT)}")
 
     if args.batch:
-        group = [r for r in rows if r["queue_tier"] == args.tier]
+        group = [r for r in rows if r["basis"] == "2026H1"] if args.h1_only \
+            else [r for r in rows if r["queue_tier"] == args.tier]
         done = set()
         if VERDICTS.exists():
             done = {r["security_code"] for r in csv.DictReader(VERDICTS.open(encoding="utf-8"))}
         todo = [r for r in group if r["security_code"] not in done]
         lo = (args.batch - 1) * args.size
         batch = todo[lo:lo + args.size]
-        print(f"\n# {args.tier} 待判 {len(todo):,}｜本批 {len(batch)}（第 {args.batch} 批）")
+        print(f"\n# {'已出2026中报' if args.h1_only else args.tier} 待判 {len(todo):,}｜"
+              f"本批 {len(batch)}（第 {args.batch} 批）")
         print("# 代码 名称 板块｜口径｜营收亿 净利亿 ROE% 毛利% 净利率% 营收同比 净利同比｜原分类")
         for r in batch:
             print(f'{r["security_code"]} {r["security_name"]:<8}{r["board"][:4]:<5}{r["basis"]}｜'

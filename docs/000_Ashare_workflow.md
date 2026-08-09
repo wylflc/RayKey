@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v2.49
+# A股选股-估值-量价操作流程 v2.50
 
 > **本行的版本号是唯一版本真值**：`scripts/workflow_decision_log.py` 在导入时解析它写入决策日志的 `workflow_version` 列，改版时改这里即可，不得在别处另存一份（v1.43 曾在脚本里硬编码并落后正文 19 个版本）。逐版内容见 `docs/Ashare_workflow_changelog.md`。
 
