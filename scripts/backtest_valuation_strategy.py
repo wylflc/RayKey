@@ -572,7 +572,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_bypass_corr: bool = False, stats: dict | None = None,
         cluster_swap: bool = False, cluster_delta: float = 0.85,
         cluster_min_upside: float = 0.20, swap_partial: bool = False,
-        lot_size: int = 0) -> dict:
+        lot_size: int = 0, rebuy: str = "off") -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -588,6 +588,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     """
     portfolio = Portfolio(cash=capital)
     stats = stats if stats is not None else collections.Counter()
+    # 割肉后的「欠账」：被 `trend_exit_ma` 清掉的股数记在此处，等该股重新满足买入条件时
+    # 按 `rebuy` 口径补回。**lump=一次性买回相同股数；gradual=交回常规定投**（即不记账）。
+    cut_shares: dict[str, float] = {}
     days = sorted(d for d in states if since <= d <= until)
     last_price: dict[str, float] = {}   # 停牌日没有行情，须沿用最后成交价盯市
     equity_curve: list[tuple[str, float, float, int]] = []
@@ -737,6 +740,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if trend_exit_ma:
                 ma_now = mas.get(code, {}).get(day, {})
                 if trend_exit_ma in ma_now and price < ma_now[trend_exit_ma]:
+                    if rebuy == "lump":
+                        cut_shares[code] = cut_shares.get(code, 0.0) + lot.shares
+                        stats["割肉记账"] += 1
                     turnover += lot.shares * price
                     close_lot(portfolio, code, day, price, f"跌破MA{trend_exit_ma}清仓")
                     sell_count += 1
@@ -984,6 +990,18 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 amount = shares * close
             else:
                 shares = amount / close
+            # 割肉买回：**只在该股重新合格的那一天触发一次**，买回被割掉的全部股数（现金不足则买满为止）。
+            # 与常规定投的区别是它不受 0.5%% 一档限制——割肉时卖掉的是整仓，补回也应是整仓。
+            if rebuy == "lump" and cut_shares.get(code) and code not in portfolio.lots:
+                want = cut_shares.pop(code)
+                if lot_size:
+                    want = int(want // lot_size) * lot_size
+                afford = min(want, portfolio.cash / close) if close > 0 else 0.0
+                if lot_size:
+                    afford = int(afford // lot_size) * lot_size
+                if afford > 0:
+                    shares, amount = afford, afford * close
+                    stats["割肉买回"] += 1
             lot = portfolio.lots.get(code)
             if lot is None:
                 ma = mas.get(code, {}).get(day, {})
@@ -1259,6 +1277,8 @@ def main() -> int:
                         help="容忍的下滑幅度：rating 为评级均值降幅，eps 为预测降幅比例")
     parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
+    parser.add_argument("--rebuy", choices=("off", "lump", "gradual"), default="off",
+                        help="割肉后的买回口径：lump=重新合格当日一次性买回相同股数；gradual=交回常规定投")
     parser.add_argument("--lot-size", type=int, default=0, metavar="N",
                         help="最小交易单位（A股填 100）。打开后买入按手向下取整、买不足一手则跳过")
     parser.add_argument("--swap-partial", action="store_true",
@@ -1341,6 +1361,7 @@ def main() -> int:
                      + (f"_only{args.only_tiers}" if args.only_tiers else "")
                      + ("_sp" if args.swap_partial else "")
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
+                     + (f"_rb{args.rebuy}" if args.rebuy != "off" else "")
                      + (f"_cl{args.cluster_delta:g}u{args.cluster_min_upside:g}" if args.cluster_swap else "")
                      + (f"_rg{args.research_gate}{args.research_window}"
                         f"{'B' if args.research_missing == 'block' else ''}"
@@ -1377,7 +1398,7 @@ def main() -> int:
                          swap_bypass_corr=args.swap_bypass_corr, stats=run_stats,
                          cluster_swap=args.cluster_swap, cluster_delta=args.cluster_delta,
                          cluster_min_upside=args.cluster_min_upside / 100.0,
-                         swap_partial=args.swap_partial, lot_size=args.lot_size)
+                         swap_partial=args.swap_partial, lot_size=args.lot_size, rebuy=args.rebuy)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
