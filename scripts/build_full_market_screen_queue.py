@@ -86,7 +86,11 @@ def board_of(code: str) -> str:
 
 
 def classify(revenue, netprofit, roe, name: str) -> tuple[str, str]:
-    """排队分层。**只决定判断粒度，不决定结论**——见文件头。"""
+    """排队分层。**只决定判断粒度，不决定结论**——见文件头。
+
+    **入参必须是年度口径**（2025 年报）。首版误传当期营收（一季报为单季）导致大量中型公司
+    被错分到 C_排除——判据是年度阈值（5 亿/30 亿），拿单季数去比等于把门槛抬高了四倍。
+    """
     if name.startswith(("*ST", "ST")):
         return "C_排除", "ST/退市风险警示"
     if revenue is None:
@@ -112,6 +116,7 @@ def main() -> int:
     args = ap.parse_args()
 
     h1, q1 = load_period("2026-06-30"), load_period("2026-03-31")
+    ann25 = load_period("2025-12-31")   # 分层专用：**必须用年度口径**，见 classify 文档串
     securities = {r["security_code"]: r for r in csv.DictReader(SEC.open(encoding="utf-8-sig"))}
     # A 股名录会滞后于财报（2026-08-09 实测漏了 4 只 8 月上市新股）。**以并集为准**，
     # 名录缺的从财报补出名称，板块按代码段推断，并在 `board` 里标 `*新增` 以便复核。
@@ -136,7 +141,20 @@ def main() -> int:
         roe = _num(row.get("weightavg_roe"))
         gross = _num(row.get("gross_margin"))
         name = sec["security_name"]
-        tier, reason = classify(revenue, profit, roe, name)
+        # **分层只能用 2025 年报的年度营收**。首版误用当期（一季报为单季）营收去比年度门槛，
+        # 使年营收 20~33 亿的公司（泛微网络 22.9 亿、黔源电力 32.9 亿）被打进 C_排除，
+        # 2026-08-09 扫描 C 层异常个案时发现。年报缺失时用当期值×4 折年，并在理由里标注。
+        a25 = ann25.get(code, {})
+        rev_year = (_num(a25.get("total_operate_income")) or 0) / 1e8 if a25 else None
+        prof_year = (_num(a25.get("parent_netprofit")) or 0) / 1e8 if a25 else None
+        roe_year = _num(a25.get("weightavg_roe")) if a25 else None
+        annualized = False
+        if rev_year is None and revenue is not None:
+            rev_year, prof_year, roe_year = revenue * (2 if basis == "2026H1" else 4), profit, roe
+            annualized = True
+        tier, reason = classify(rev_year, prof_year, roe_year, name)
+        if annualized:
+            reason += "（按当期折年，年报缺失）"
         rows.append({
             "security_code": code, "security_name": name, "board": sec["board"],
             "listing_date": sec.get("listing_date", "")[:10],
