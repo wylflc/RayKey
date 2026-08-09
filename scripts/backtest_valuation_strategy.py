@@ -269,7 +269,7 @@ def stabilized(flags: dict[str, bool], days: list[str], index: dict[str, int],
     return not any(flags.get(days[j], False) for j in range(i - quiet + 1, i + 1))
 
 
-def moving_averages(series: dict[str, float], windows=(5, 10, 20, 60, 120)) -> dict[str, dict[int, float]]:
+def moving_averages(series: dict[str, float], windows=(5, 10, 20, 60, 120, 240)) -> dict[str, dict[int, float]]:
     """逐日均线。走势组的入场与止损都要用。"""
     days = sorted(series)
     values = [series[d] for d in days]
@@ -385,7 +385,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
         sell_line_override: float | None = None, trend_exit_ma: int = 0,
         rank_by_upside: bool = True, entry_mode: str = "trend", dev_ma: int = 60,
-        dev_buy_max: float = 1.10, dev_sell_min: float = 0.0) -> dict:
+        dev_buy_max: float = 1.10, dev_sell_min: float = 0.0,
+        hold_strong: str = "off", hold_strong_ma: tuple[int, ...] = ()) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -412,6 +413,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     # 时点股票库：`members` 随日期切换。第一档生效前**一只都不可买**——那段时间还没有
     # 任何「当时可得」的名单，凭空放行等于用未来的股票库交易。
     uni_idx, members = 0, (set() if universe else None)
+
+    def strong_bull(code: str, day: str) -> bool:
+        """完全多头排列：MA20>MA60>MA120>MA240（窗口可配）。**当日可判、无前视**。
+
+        用户 2026-08-09：「在上升浪中因空间降低而卖出宁德时代、中际旭创这种股票，
+        可能是收益率无法提高的真正来源……对完全处于强势多头状态的股票不减仓。」
+        本判据只用当日已收盘的价格序列，与内在价值无关，故估值带下修时它仍独立成立。
+        """
+        if not hold_strong_ma:
+            return False
+        ma = mas.get(code, {}).get(day, {})
+        if not all(w in ma for w in hold_strong_ma):
+            return False
+        return all(ma[a] > ma[b] for a, b in zip(hold_strong_ma, hold_strong_ma[1:]))
 
     def buy_line(code: str) -> float:
         if use_mos:
@@ -515,6 +530,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     close_lot(portfolio, code, day, price, f"内在价值自峰值回落≥{value_stop:.0%}")
                     sell_count += 1
                     continue
+            # 强势多头豁免减持：空间缩小不卖，等趋势自己走坏或财报更新带改变格局。
+            if (hold_strong in ("sell", "both") and strong_bull(code, day)):
+                continue
             if ratio is not None and ratio >= sell_line:
                 shares = min(lot.shares, budget / price)
                 if shares <= 0:
@@ -571,7 +589,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 blocked = portfolio.cash < (lump_sum or budget) or len(portfolio.lots) >= max_positions
                 if not blocked:
                     break
-                held = [(today[c][2], c) for c in portfolio.lots if c in today]
+                held = [(today[c][2], c) for c in portfolio.lots if c in today
+                        and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
                 if not held:
                     break
                 worst_ratio, worst = max(held)
@@ -878,6 +897,10 @@ def main() -> int:
     parser.add_argument("--universe-file", type=Path,
                         help="时点股票库（build_point_in_time_universe.py 的产出）。"
                              "给了它就只在当期成员里选股，移出的持仓逐步清仓")
+    parser.add_argument("--hold-strong", choices=("off", "swap", "sell", "both"), default="off",
+                        help="强势多头排列的持仓豁免：swap=不被换出／sell=不减持／both=两者")
+    parser.add_argument("--hold-strong-ma", nargs="+", type=int, default=[20, 60, 120, 240],
+                        help="多头排列所用均线，需严格递减，如 `20 60 120 240`")
     parser.add_argument("--entry-mode", choices=("trend", "deviation", "both"), default="trend",
                         help="trend=收盘>MA20>MA60；deviation=收盘≤中期均线×上限；both=两者同时")
     parser.add_argument("--dev-ma", type=int, default=60, help="偏离度所用的中期均线")
@@ -944,6 +967,7 @@ def main() -> int:
                      + ("_norank" if not args.rank_by_upside else "")
                      + (f"_{args.entry_mode}" if args.entry_mode != "trend" else "")
                      + (f"_dsell{args.dev_sell_min:g}" if args.dev_sell_min else "")
+                     + (f"_hs{args.hold_strong}{len(args.hold_strong_ma)}" if args.hold_strong != "off" else "")
                      + (f"_{args.tier_mode}" if args.tier_mode != "none" else "")
                      + ("_minup" if args.min_upside else "")
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
@@ -969,7 +993,8 @@ def main() -> int:
                          trend_exit_ma=args.trend_exit_ma,
                          rank_by_upside=args.rank_by_upside, entry_mode=args.entry_mode,
                          dev_ma=args.dev_ma, dev_buy_max=args.dev_buy_max,
-                         dev_sell_min=args.dev_sell_min)
+                         dev_sell_min=args.dev_sell_min, hold_strong=args.hold_strong,
+                         hold_strong_ma=tuple(args.hold_strong_ma))
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
