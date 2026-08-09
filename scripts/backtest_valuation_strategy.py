@@ -578,7 +578,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_bypass_corr: bool = False, stats: dict | None = None,
         cluster_swap: bool = False, cluster_delta: float = 0.85,
         cluster_min_upside: float = 0.20, swap_partial: bool = False,
-        lot_size: int = 0, rebuy: str = "off", ledger: list | None = None) -> dict:
+        lot_size: int = 0, rebuy: str = "off", ledger: list | None = None,
+        min_lot_cooldown: int = 0) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -597,6 +598,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     # 割肉后的「欠账」：被 `trend_exit_ma` 清掉的股数记在此处，等该股重新满足买入条件时
     # 按 `rebuy` 口径补回。**lump=一次性买回相同股数；gradual=交回常规定投**（即不记账）。
     cut_shares: dict[str, float] = {}
+    last_buy: dict[str, str] = {}      # 每股最近一次买入日，供「买不起一档就买一手」的冷却期判定
     days = sorted(d for d in states if since <= d <= until)
     last_price: dict[str, float] = {}   # 停牌日没有行情，须沿用最后成交价盯市
     equity_curve: list[tuple[str, float, float, int]] = []
@@ -990,8 +992,17 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if lot_size:
                 lots_n = int(amount // (close * lot_size))
                 if lots_n <= 0:
-                    stats["买不足一手·跳过"] += 1
-                    continue
+                    # 高价股（茅台一手 13 万）一档金额买不起一手。**不因此放弃建仓**，改为
+                    # 每次买一手、隔 `min_lot_cooldown` 个交易日再买下一手（用户 2026-08-09 指令）。
+                    # 冷却期是必需的：不设的话一手会天天买，等于把该股的定投速度放大到一档以上。
+                    prior = last_buy.get(code)
+                    ready = prior is None or _days_between(prior, day) >= min_lot_cooldown
+                    if min_lot_cooldown and ready and portfolio.cash >= close * lot_size:
+                        lots_n = 1
+                        stats["高价股·按手建仓"] += 1
+                    else:
+                        stats["买不足一手·跳过"] += 1
+                        continue
                 shares = lots_n * lot_size
                 amount = shares * close
             else:
@@ -1020,6 +1031,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             lot.invested += amount
             lot.buys += 1
             portfolio.cash -= amount
+            last_buy[code] = day
             if ledger is not None:
                 ledger.append({"date": day, "security_code": code, "action": "买入",
                                "shares": f"{shares:.0f}", "price": f"{close:.3f}",
@@ -1289,6 +1301,8 @@ def main() -> int:
                         help="容忍的下滑幅度：rating 为评级均值降幅，eps 为预测降幅比例")
     parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
+    parser.add_argument("--min-lot-cooldown", type=int, default=0, metavar="D",
+                        help="高价股一档买不起一手时，改为每 D 个自然日买一手；0 表示跳过不买")
     parser.add_argument("--trade-log", type=Path, help="导出逐笔成交流水（人工核对用）")
     parser.add_argument("--rebuy", choices=("off", "lump", "gradual"), default="off",
                         help="割肉后的买回口径：lump=重新合格当日一次性买回相同股数；gradual=交回常规定投")
@@ -1380,6 +1394,7 @@ def main() -> int:
                      + (f"_only{args.only_tiers}" if args.only_tiers else "")
                      + ("_sp" if args.swap_partial else "")
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
+                     + (f"_ml{args.min_lot_cooldown}" if args.min_lot_cooldown else "")
                      + (f"_rb{args.rebuy}" if args.rebuy != "off" else "")
                      + (f"_cl{args.cluster_delta:g}u{args.cluster_min_upside:g}" if args.cluster_swap else "")
                      + (f"_rg{args.research_gate}{args.research_window}"
@@ -1419,7 +1434,7 @@ def main() -> int:
                          cluster_swap=args.cluster_swap, cluster_delta=args.cluster_delta,
                          cluster_min_upside=args.cluster_min_upside / 100.0,
                          swap_partial=args.swap_partial, lot_size=args.lot_size, rebuy=args.rebuy,
-                         ledger=ledger)
+                         ledger=ledger, min_lot_cooldown=args.min_lot_cooldown)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
