@@ -450,6 +450,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         median = arr[n // 2] if n % 2 else (arr[n // 2 - 1] + arr[n // 2]) / 2
         return ratio / median if median > 0 else ratio
 
+    def strong_bull(code: str, day: str) -> bool:
+        """完全多头排列：MA20>MA60>MA120>MA240（窗口可配）。**当日可判、无前视**。
+
+        用于豁免强势股的减持与换出——**根因是报告期之间 `V` 冻结**：中际旭创 2025-05-26
+        收盘 92.4／V=108.2／P/V=0.85，三周后收盘 125.2 而 V 仍是 108.2，P/V 被价格单方面
+        推到 1.16 触发清空；此后该股再涨 560%。均线排列与内在价值无关，故可独立成立。
+        """
+        if not hold_strong_ma:
+            return False
+        ma = mas.get(code, {}).get(day, {})
+        if not all(w in ma for w in hold_strong_ma):
+            return False
+        return all(ma[a] > ma[b] for a, b in zip(hold_strong_ma, hold_strong_ma[1:]))
+
     def buy_line(code: str) -> float:
         if use_mos:
             return 1.0 - MOS_BY_TIER.get(tiers.get(code, DEFAULT_TIER), width)
