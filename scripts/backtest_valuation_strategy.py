@@ -1316,7 +1316,13 @@ def main() -> int:
     prices = load_prices({r[0] for rows in states.values() for r in rows})
     actions = load_actions()
     names, benchmark, risk_free = load_names(), load_benchmark(), load_risk_free()
-    mas = {code: moving_averages(series) for code, series in prices.items()}
+    # 均线窗口按**本次实际用到的**收集，缺哪条算哪条。此前固定 (5,10,20,60,120,240)，
+    # 传入未预计算的窗口（如 `--trend-ma 10 30`）会使条件恒假、**一笔交易都不产生却不报错**
+    # ——典型的静默失效（§15.2 第 3 条），2026-08-09 实测撞到后修正。
+    windows = sorted({5, 10, 20, 60, 120, 240} | set(args.trend_ma) | set(args.hold_strong_ma)
+                     | {args.dev_ma, args.stop_ma} | ({args.trend_exit_ma} if args.trend_exit_ma else set()))
+    mas = {code: moving_averages(series, tuple(w for w in windows if w > 0))
+           for code, series in prices.items()}
     lows = {code: new_low_flags(series) for code, series in prices.items()}
     day_lists = {code: sorted(series) for code, series in prices.items()}
     day_pos = {code: {d: i for i, d in enumerate(ds)} for code, ds in day_lists.items()}
