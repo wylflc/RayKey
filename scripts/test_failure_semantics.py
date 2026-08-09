@@ -35,7 +35,6 @@ HOLDING = {
     "security_name": "贵州茅台",
     "current_shares": "100",
     "cost_basis": "1500",
-    "stop_loss_price": "1400",
 }
 POOL_ROW = {
     "security_code": "600519",
@@ -45,9 +44,9 @@ POOL_ROW = {
 }
 
 
-def run_tracker(price, *, stop="1400", pool=True, monkey_quotes=None):
+def run_tracker(price, *, pool=True, monkey_quotes=None):
     """Drive tracker.track() with the network stubbed out."""
-    holding = dict(HOLDING, stop_loss_price=stop)
+    holding = dict(HOLDING)
     quotes = monkey_quotes if monkey_quotes is not None else (
         {} if price is None else {"600519": {"price": price}}
     )
@@ -75,7 +74,8 @@ def case_no_quote_is_not_hold():
     """核心用例：取不到行情时动作必须是 `数据缺失`，绝不能是 `持有`。
 
     旧版落 `持有` 并在备注写「沿用上一交易日结论」，而脚本从不读上一日文件——
-    一只已跌破割肉价的停牌股会显示为持有，在 Tier-0 规则上制造静默失效。
+    一只 `P/V` 已越过 1.10、本该按 §9.7.2 减持的停牌股会显示为持有，
+    在唯一的卖出规则上制造静默失效（v2.56 前该缺陷作用于割肉价，同型）。
     """
     row = run_tracker(None)
     if row["action"] == "持有":
@@ -87,19 +87,28 @@ def case_no_quote_is_not_hold():
     return []
 
 
-def case_no_quote_never_claims_stop_checked():
+def case_no_quote_leaves_pv_empty():
+    """无行情时 `pv` 必须为空——空值代表「没算」，0 或沿用旧值都会被下游当成真数。"""
     row = run_tracker(None)
-    return [] if not row.get("stop_hit") else ["无行情却断言割肉未触及"]
+    return [] if row.get("pv") == "" else [f"无行情时 `pv` 应为空，实得 `{row.get('pv')}`"]
 
 
-def case_stop_breach_still_detected():
-    row = run_tracker(1350.0)  # 1350 <= 1400 割肉价
-    return [] if row["action"] == "割肉提醒" else [f"跌破割肉价应判 `割肉提醒`，实得 `{row['action']}`"]
-
-
-def case_normal_day_is_hold():
-    row = run_tracker(1800.0)  # 带内、未破割肉价
+def case_pv_computed_against_band_mid():
+    """P/V 必须对带中值算（v2.56 §9.7 唯一判据），不是对带下沿或上沿。"""
+    row = run_tracker(1800.0)  # 带 1600-2000，中值 1800 → P/V = 1.00
+    if row["pv"] != "1.00":
+        return [f"带中值 1800、现价 1800 应得 P/V=1.00，实得 `{row['pv']}`"]
     return [] if row["action"] == "持有" else [f"正常日应判 `持有`，实得 `{row['action']}`"]
+
+
+def case_pv_over_trim_line_is_flagged_in_note():
+    """`P/V ≥ 1.10` 必须在备注点名——它是唯一会触发减持的条件，静默即失效。"""
+    row = run_tracker(2200.0)  # 2200/1800 = 1.22
+    if row["pv"] != "1.22":
+        return [f"应得 P/V=1.22，实得 `{row['pv']}`"]
+    if "1.10" not in str(row.get("note", "")):
+        return ["P/V 已越减持线却未在备注点名（§9.7.2 第四步）"]
+    return []
 
 
 def case_all_rows_failed_is_not_success():
@@ -149,9 +158,9 @@ def case_holdings_provenance_uses_actual_path():
 
 CASES = [
     ("无行情不得判『持有』（核心）", case_no_quote_is_not_hold),
-    ("无行情不得断言割肉未触及", case_no_quote_never_claims_stop_checked),
-    ("跌破割肉价仍被识别", case_stop_breach_still_detected),
-    ("正常交易日判『持有』", case_normal_day_is_hold),
+    ("无行情时 P/V 必须为空", case_no_quote_leaves_pv_empty),
+    ("P/V 对带中值计算", case_pv_computed_against_band_mid),
+    ("P/V 越减持线必须点名", case_pv_over_trim_line_is_flagged_in_note),
     ("全市场取数失败非 0 退出", case_all_rows_failed_is_not_success),
     ("扫描 0 行非 0 退出", case_empty_scan_is_not_success),
     ("个别停牌不中断整批", case_isolated_failures_still_pass),
