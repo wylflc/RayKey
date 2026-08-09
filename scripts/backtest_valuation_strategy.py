@@ -558,7 +558,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         research: "ResearchGate | None" = None,
         swap_bypass_corr: bool = False, stats: dict | None = None,
         cluster_swap: bool = False, cluster_delta: float = 0.85,
-        cluster_min_upside: float = 0.20) -> dict:
+        cluster_min_upside: float = 0.20, swap_partial: bool = False) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -854,6 +854,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 用户 2026-08-09 追问的正是这个口径。`swap_bypass_corr` 打开后，已经为之腾过位的候选
         # 豁免相关性检查：既然已经付出了卖出的代价，就该买到它。
         swap_targets: set[str] = set()
+        reduced_today: set[str] = set()      # 同一只每日最多被换仓减一档，防止一天削十次
         # 簇内升级之后仍保留原换仓作为**兜底**：用户方案里「没有强相关持仓就直接建仓或加仓」
         # 隐含了「有钱」这个前提，而簇内升级是自筹资金的（卖一只买一只），**不产生新增现金**。
         # 缺了兜底，资金打满后组合就冻住——实测换手由 200.9% 塌到 17.6%、买入 2145→474 笔。
@@ -876,8 +877,23 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 price = marks.get(worst)
                 if not price:
                     break
-                turnover += portfolio.lots[worst].shares * price
-                close_lot(portfolio, worst, day, price, f"换仓：让位给空间更大的{code}")
+                # `swap_partial`（用户 2026-08-09）：换仓由**整仓卖出**改为**按定投同速减一档**。
+                # **仅在「只差钱、槽位没满」时适用**——槽位满时减仓不腾出槽位，新标的照样买不进
+                # （买入循环里 `code not in lots and len(lots) >= max_positions` 会挡下），
+                # 只会每天空转地削持仓。故槽位满时仍整仓卖出。
+                lot_worst = portfolio.lots[worst]
+                partial = swap_partial and len(portfolio.lots) < max_positions and worst not in reduced_today
+                shares = min(lot_worst.shares, budget / price) if partial else lot_worst.shares
+                if partial and shares < lot_worst.shares * 0.999:
+                    lot_worst.shares -= shares
+                    portfolio.cash += shares * price
+                    lot_worst.proceeds += shares * price
+                    lot_worst.sells += 1
+                    turnover += shares * price
+                    reduced_today.add(worst)
+                else:
+                    turnover += lot_worst.shares * price
+                    close_lot(portfolio, worst, day, price, f"换仓：让位给空间更大的{code}")
                 sell_count += 1
                 swap_targets.add(code)
         # ---- 档位排序偏置（用户 2026-08-08）
@@ -1215,6 +1231,8 @@ def main() -> int:
                         help="容忍的下滑幅度：rating 为评级均值降幅，eps 为预测降幅比例")
     parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
+    parser.add_argument("--swap-partial", action="store_true",
+                        help="换仓由整仓卖出改为按定投同速减一档（仅在只差钱、槽位未满时）")
     parser.add_argument("--cluster-swap", action="store_true",
                         help="簇内升级模式：相关性用作「替换谁」的判据而非排除过滤器，持仓数不设上限")
     parser.add_argument("--cluster-delta", type=float, default=0.85,
@@ -1291,6 +1309,7 @@ def main() -> int:
                      + ("_minup" if args.min_upside else "")
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
                      + (f"_only{args.only_tiers}" if args.only_tiers else "")
+                     + ("_sp" if args.swap_partial else "")
                      + (f"_cl{args.cluster_delta:g}u{args.cluster_min_upside:g}" if args.cluster_swap else "")
                      + (f"_rg{args.research_gate}{args.research_window}"
                         f"{'B' if args.research_missing == 'block' else ''}"
@@ -1326,7 +1345,8 @@ def main() -> int:
                          research_gate=args.research_gate, research=research,
                          swap_bypass_corr=args.swap_bypass_corr, stats=run_stats,
                          cluster_swap=args.cluster_swap, cluster_delta=args.cluster_delta,
-                         cluster_min_upside=args.cluster_min_upside / 100.0)
+                         cluster_min_upside=args.cluster_min_upside / 100.0,
+                         swap_partial=args.swap_partial)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
