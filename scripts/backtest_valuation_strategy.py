@@ -415,36 +415,40 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     # 时点股票库：`members` 随日期切换。第一档生效前**一只都不可买**——那段时间还没有
     # 任何「当时可得」的名单，凭空放行等于用未来的股票库交易。
     uni_idx, members = 0, (set() if universe else None)
-    # 分位数排序：把当日 P/V 换算成它在**该股自身历史 P/V 分布**中的位置再排序。
+    # 相对便宜度排序：把当日 P/V 换算成「相对该股自身历史」的读数再排序。
     # 用户 2026-08-09：单一 P/V 升序使可选集退化为深度价值股（价值股 P/V 常年 0.3~0.6，
     # 成长股修正估值后也只到 0.8 上下，永远排在后面——实测中际旭创 2025-05 合格但列第 27）。
-    # **严格无前视**：分位数只用「当日之前已观测到的」P/V，逐日插入，绝不使用未来分布。
+    #
+    # 两种口径：
+    #   `quantile` 百分位——**已实测在底部饱和**（§12.9.26：2025-05-09 合格集前十的分位
+    #              全部是 0.00，中际旭创并列第 17），端点处退化为无信息并列。
+    #   `ratio`    当前 P/V ÷ 历史中位 P/V——**连续量，跌破历史最低后仍可继续减小**，
+    #              故在端点不饱和。中际旭创 0.88/历史中位 vs 招行 0.30/历史中位，可公平比较。
+    #
+    # **严格无前视**：历史只含当日之前已观测到的 P/V，逐日插入；窗口版同步淘汰最老一条，
+    # 使排序表恰好等于窗口内容。观测不足 `quantile_min_obs` 时退回原始 P/V，不猜。
     from bisect import bisect_left, insort
-    pv_hist: dict[str, list[float]] = defaultdict(list)
+    from collections import deque as _deque
+    pv_order: dict[str, object] = defaultdict(_deque)   # 插入序，用于淘汰
+    pv_sorted: dict[str, list[float]] = defaultdict(list)
+
+    def push_pv(code: str, ratio: float) -> None:
+        order, arr = pv_order[code], pv_sorted[code]
+        order.append(ratio)
+        insort(arr, ratio)
+        if quantile_window and len(order) > quantile_window:
+            old = order.popleft()
+            del arr[bisect_left(arr, old)]
 
     def score_of(code: str, ratio: float) -> float:
-        """排序分：`pv` 模式返回原始 P/V；`quantile` 模式返回历史分位（0=史上最便宜）。"""
-        if rank_mode != "quantile":
+        arr = pv_sorted[code]
+        if rank_mode == "pv" or len(arr) < quantile_min_obs:
             return ratio
-        hist = pv_hist[code]
-        if len(hist) < quantile_min_obs:
-            return ratio          # 历史不足时退回原始 P/V，不猜
-        window = hist if not quantile_window else hist[-quantile_window:]
-        return bisect_left(sorted(window) if quantile_window else window, ratio) / len(window)
-
-    def strong_bull(code: str, day: str) -> bool:
-        """完全多头排列：MA20>MA60>MA120>MA240（窗口可配）。**当日可判、无前视**。
-
-        用户 2026-08-09：「在上升浪中因空间降低而卖出宁德时代、中际旭创这种股票，
-        可能是收益率无法提高的真正来源……对完全处于强势多头状态的股票不减仓。」
-        本判据只用当日已收盘的价格序列，与内在价值无关，故估值带下修时它仍独立成立。
-        """
-        if not hold_strong_ma:
-            return False
-        ma = mas.get(code, {}).get(day, {})
-        if not all(w in ma for w in hold_strong_ma):
-            return False
-        return all(ma[a] > ma[b] for a, b in zip(hold_strong_ma, hold_strong_ma[1:]))
+        if rank_mode == "quantile":
+            return bisect_left(arr, ratio) / len(arr)
+        n = len(arr)
+        median = arr[n // 2] if n % 2 else (arr[n // 2 - 1] + arr[n // 2]) / 2
+        return ratio / median if median > 0 else ratio
 
     def buy_line(code: str) -> float:
         if use_mos:
@@ -458,10 +462,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 members = universe[uni_idx][1]
                 uni_idx += 1
         today = {code: (close, value, ratio) for code, close, value, ratio in states[day]}
-        scores = {code: score_of(code, r[2]) for code, r in today.items()} if rank_mode == "quantile" else {}
-        if rank_mode == "quantile":
+        scores = {code: score_of(code, r[2]) for code, r in today.items()} if rank_mode != "pv" else {}
+        if rank_mode != "pv":
             for code, r in today.items():
-                insort(pv_hist[code], r[2])
+                push_pv(code, r[2])
         # 停牌股当日无价，**必须沿用最后成交价**——否则它会整只从净值里消失，
         # 复牌当天再凭空出现，资金曲线上是一对假的暴跌+暴涨。
         marks = {}
@@ -577,7 +581,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         def _key(r):
             if not rank_by_upside:
                 return r[0]
-            return scores.get(r[0], r[3]) if rank_mode == "quantile" else r[3]
+            return scores.get(r[0], r[3]) if rank_mode != "pv" else r[3]
         eligible = sorted((r for r in pool if r[3] <= buy_line(r[0])), key=_key)
         # 分档最低空间门槛（用户 2026-08-08：L1 >30%、L2 >40%；**L3 未指定，本脚本按 L2 取 40%**
         # ——L3 风险更高，门槛不该比 L2 松）。空间 = V/P − 1 = 1/(P/V) − 1。
@@ -614,13 +618,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 blocked = portfolio.cash < (lump_sum or budget) or len(portfolio.lots) >= max_positions
                 if not blocked:
                     break
-                held = [(scores.get(c, today[c][2]) if rank_mode == "quantile" else today[c][2], c)
+                held = [(scores.get(c, today[c][2]) if rank_mode != "pv" else today[c][2], c)
                         for c in portfolio.lots if c in today
                         and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
                 if not held:
                     break
                 worst_ratio, worst = max(held)
-                cand_score = scores.get(code, ratio) if rank_mode == "quantile" else ratio
+                cand_score = scores.get(code, ratio) if rank_mode != "pv" else ratio
                 if worst_ratio - cand_score < swap_margin:
                     break
                 price = marks.get(worst)
@@ -924,8 +928,8 @@ def main() -> int:
     parser.add_argument("--universe-file", type=Path,
                         help="时点股票库（build_point_in_time_universe.py 的产出）。"
                              "给了它就只在当期成员里选股，移出的持仓逐步清仓")
-    parser.add_argument("--rank-mode", choices=("pv", "quantile"), default="pv",
-                        help="pv=按原始 P/V 升序；quantile=按该股自身历史 P/V 分位升序（0=史上最便宜）")
+    parser.add_argument("--rank-mode", choices=("pv", "quantile", "ratio"), default="pv",
+                        help="pv=原始 P/V 升序；quantile=历史分位（已实测底部饱和）；ratio=当前 P/V÷历史中位（连续量，端点不饱和）")
     parser.add_argument("--quantile-window", type=int, default=0,
                         help="分位数回看交易日数，0=自上市以来全历史")
     parser.add_argument("--quantile-min-obs", type=int, default=250,
@@ -1001,7 +1005,7 @@ def main() -> int:
                      + (f"_{args.entry_mode}" if args.entry_mode != "trend" else "")
                      + (f"_dsell{args.dev_sell_min:g}" if args.dev_sell_min else "")
                      + (f"_hs{args.hold_strong}{len(args.hold_strong_ma)}" if args.hold_strong != "off" else "")
-                     + (f"_q{args.quantile_window or 'all'}" if args.rank_mode == "quantile" else "")
+                     + (f"_{args.rank_mode[:1]}{args.quantile_window or 'all'}" if args.rank_mode != "pv" else "")
                      + (f"_{args.tier_mode}" if args.tier_mode != "none" else "")
                      + ("_minup" if args.min_upside else "")
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
