@@ -555,7 +555,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         hold_strong: str = "off", hold_strong_ma: tuple[int, ...] = (),
         rank_mode: str = "pv", quantile_window: int = 0,
         quantile_min_obs: int = 250, research_gate: str = "off",
-        research: "ResearchGate | None" = None) -> dict:
+        research: "ResearchGate | None" = None,
+        swap_bypass_corr: bool = False, stats: dict | None = None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -570,6 +571,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     ——徐工机械那一笔从建仓到被判贵走了 9 年半。
     """
     portfolio = Portfolio(cash=capital)
+    stats = stats if stats is not None else collections.Counter()
     days = sorted(d for d in states if since <= d <= until)
     last_price: dict[str, float] = {}   # 停牌日没有行情，须沿用最后成交价盯市
     equity_curve: list[tuple[str, float, float, int]] = []
@@ -796,6 +798,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 换仓：想买却买不下（没钱或槽位满）时，把**空间最小**的持仓换成**空间更大**的候选。
         # `swap_margin` 是防抖阈值——两者 P/V 差不到这个数就不换，否则每天的微小排名波动
         # 都会触发一次双边交易。
+        # `swap_targets`：本日因「空间更大」而触发了卖出的候选。**换仓块在相关性过滤之前执行**，
+        # 故它可以为一只随后被相关性挡掉的候选腾位——卖了却买不进，钱转投下一个不相关的候选。
+        # 用户 2026-08-09 追问的正是这个口径。`swap_bypass_corr` 打开后，已经为之腾过位的候选
+        # 豁免相关性检查：既然已经付出了卖出的代价，就该买到它。
+        swap_targets: set[str] = set()
         if swap and eligible:
             for code, close, value, ratio in eligible[:max_positions]:
                 if code in portfolio.lots:
@@ -818,6 +825,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 turnover += portfolio.lots[worst].shares * price
                 close_lot(portfolio, worst, day, price, f"换仓：让位给空间更大的{code}")
                 sell_count += 1
+                swap_targets.add(code)
         # ---- 档位排序偏置（用户 2026-08-08）
         if tier_mode == "bonus":
             eligible.sort(key=lambda r: -(1.0 / r[3] + TIER_BONUS.get(tiers.get(r[0], DEFAULT_TIER), 0.0)))
@@ -844,6 +852,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 c = [corr.get(r[0], other, day) for other in anchors + [x[0] for x in chosen]]
                 if any(v is not None and v > max_corr for v in c):
+                    if r[0] in swap_targets:
+                        stats["换仓目标被相关性挡下"] += 1
+                        if swap_bypass_corr:
+                            chosen.append(r)
+                            continue
                     continue
                 chosen.append(r)
             eligible = chosen
@@ -1148,6 +1161,8 @@ def main() -> int:
                         help="容忍的下滑幅度：rating 为评级均值降幅，eps 为预测降幅比例")
     parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
+    parser.add_argument("--swap-bypass-corr", action="store_true",
+                        help="已为之腾过位的换仓目标豁免相关性检查——卖都卖了就该买到它")
     parser.add_argument("--research-permute", type=int, default=0, metavar="N",
                         help="安慰剂：研报序列按代码序错位 N 位，保留拦截强度、抹掉个股信息")
     parser.add_argument("--label-suffix", default="")
@@ -1222,6 +1237,7 @@ def main() -> int:
                      + args.label_suffix)
             if research is not None:
                 research.blocked.clear()
+            run_stats = collections.Counter()
             result = run(strategy, x / 100.0, states, prices, actions, mas,
                          args.since, args.until, args.capital, width=width, tiers=tiers,
                          use_mos=args.use_mos, price_stop=args.price_stop,
@@ -1246,7 +1262,8 @@ def main() -> int:
                          hold_strong_ma=tuple(args.hold_strong_ma), rank_mode=args.rank_mode,
                          quantile_window=args.quantile_window,
                          quantile_min_obs=args.quantile_min_obs,
-                         research_gate=args.research_gate, research=research)
+                         research_gate=args.research_gate, research=research,
+                         swap_bypass_corr=args.swap_bypass_corr, stats=run_stats)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
@@ -1257,6 +1274,8 @@ def main() -> int:
             rows.append(summary)
             print(f"  {label}: 期末 {summary['期末资产']/1e4:,.1f} 万｜年化 {summary['年化']:.2%}"
                   f"｜最大回撤 {summary['最大回撤']:.1%}｜周期 {summary['周期数']}")
+            if run_stats:
+                print("    " + "｜".join(f"{k} {v:,}" for k, v in run_stats.most_common()))
             if research is not None and research.blocked:
                 print("    研报门槛拦下（候选×日次）："
                       + "｜".join(f"{k} {v:,}" for k, v in research.blocked.most_common()))
