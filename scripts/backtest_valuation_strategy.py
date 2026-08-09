@@ -527,6 +527,19 @@ def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int) -> tuple[
     return ma.get(20, 0.0), 20
 
 
+def sell_shares(target: float, held: float, price: float, lot_size: int) -> float:
+    """分批卖出的股数：按手向下取整。**剩余不足一手则整笔卖出**——A 股允许零股卖出，
+    但不允许留着买不回来的零头当仓位管理。返回 0 表示本次不动。"""
+    if not lot_size:
+        return min(held, target)
+    want = min(held, target)
+    lots_n = int(want // lot_size)
+    if lots_n <= 0:
+        return 0.0
+    shares = lots_n * lot_size
+    return held if held - shares < lot_size else shares
+
+
 def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: str) -> None:
     lot = portfolio.lots.pop(code)
     portfolio.cash += lot.shares * price
@@ -558,7 +571,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         research: "ResearchGate | None" = None,
         swap_bypass_corr: bool = False, stats: dict | None = None,
         cluster_swap: bool = False, cluster_delta: float = 0.85,
-        cluster_min_upside: float = 0.20, swap_partial: bool = False) -> dict:
+        cluster_min_upside: float = 0.20, swap_partial: bool = False,
+        lot_size: int = 0) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -694,7 +708,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 按与减持同一速度卖，不一次性砸出——一年一次的换库若全额出清，会在每年 5 月
             # 制造一次集中抛售，测出来的是流动性冲击而不是规则优劣。
             if members is not None and code not in members:
-                shares = min(lot.shares, budget / price)
+                shares = sell_shares(budget / price, lot.shares, price, lot_size)
                 if shares > 0:
                     if shares >= lot.shares * 0.999:
                         turnover += lot.shares * price
@@ -745,7 +759,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if (hold_strong in ("sell", "both") and strong_bull(code, day)):
                 continue
             if ratio is not None and ratio >= sell_line:
-                shares = min(lot.shares, budget / price)
+                shares = sell_shares(budget / price, lot.shares, price, lot_size)
                 if shares <= 0:
                     continue
                 if shares >= lot.shares * 0.999:
@@ -883,7 +897,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # 只会每天空转地削持仓。故槽位满时仍整仓卖出。
                 lot_worst = portfolio.lots[worst]
                 partial = swap_partial and len(portfolio.lots) < max_positions and worst not in reduced_today
-                shares = min(lot_worst.shares, budget / price) if partial else lot_worst.shares
+                shares = (sell_shares(budget / price, lot_worst.shares, price, lot_size)
+                          if partial else lot_worst.shares)
                 if partial and shares < lot_worst.shares * 0.999:
                     stats["换仓·减一档"] += 1
                     lot_worst.shares -= shares
@@ -957,7 +972,18 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if room <= 0:
                     continue
                 amount = min(amount, room)
-            shares = amount / close
+            # A 股买入必须是 100 股整数倍。`lot_size` 打开后按手向下取整，**买不足一手就跳过**
+            # ——这才是真实可执行的口径。一档金额买不起一手的高价股（茅台一手 13 万）会被自然排除，
+            # 这不是缺陷而是事实：0.5%% 的定投额度本来就装不下这类标的。
+            if lot_size:
+                lots_n = int(amount // (close * lot_size))
+                if lots_n <= 0:
+                    stats["买不足一手·跳过"] += 1
+                    continue
+                shares = lots_n * lot_size
+                amount = shares * close
+            else:
+                shares = amount / close
             lot = portfolio.lots.get(code)
             if lot is None:
                 ma = mas.get(code, {}).get(day, {})
@@ -1233,6 +1259,8 @@ def main() -> int:
                         help="容忍的下滑幅度：rating 为评级均值降幅，eps 为预测降幅比例")
     parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
+    parser.add_argument("--lot-size", type=int, default=0, metavar="N",
+                        help="最小交易单位（A股填 100）。打开后买入按手向下取整、买不足一手则跳过")
     parser.add_argument("--swap-partial", action="store_true",
                         help="换仓由整仓卖出改为按定投同速减一档（仅在只差钱、槽位未满时）")
     parser.add_argument("--cluster-swap", action="store_true",
@@ -1312,6 +1340,7 @@ def main() -> int:
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
                      + (f"_only{args.only_tiers}" if args.only_tiers else "")
                      + ("_sp" if args.swap_partial else "")
+                     + (f"_lot{args.lot_size}" if args.lot_size else "")
                      + (f"_cl{args.cluster_delta:g}u{args.cluster_min_upside:g}" if args.cluster_swap else "")
                      + (f"_rg{args.research_gate}{args.research_window}"
                         f"{'B' if args.research_missing == 'block' else ''}"
@@ -1348,7 +1377,7 @@ def main() -> int:
                          swap_bypass_corr=args.swap_bypass_corr, stats=run_stats,
                          cluster_swap=args.cluster_swap, cluster_delta=args.cluster_delta,
                          cluster_min_upside=args.cluster_min_upside / 100.0,
-                         swap_partial=args.swap_partial)
+                         swap_partial=args.swap_partial, lot_size=args.lot_size)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
