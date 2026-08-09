@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 import argparse
+import bisect
 import csv
 import math
 import statistics
@@ -44,6 +45,7 @@ import sys
 import collections
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -51,6 +53,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 DAILY_STATES = ROOT / "data/processed/a_share_historical_valuation_daily.csv"
 OHLCV_DIR = ROOT / "data/raw/ohlcv"
+RESEARCH_DIR = ROOT / "data/raw/research_reports"
 ACTIONS = ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv"
 RATES = ROOT / "data/reference/cost_of_equity_inputs.csv"
 BENCHMARK = ROOT / "data/raw/ohlcv/INDEX_000300.csv"
@@ -90,6 +93,169 @@ def load_states(path: Path | None = None,
             out[row["date"]].append((row["security_code"], float(row["close"]),
                                      float(row["intrinsic_value"]), float(row["valuation_ratio"])))
     return out
+
+
+class ResearchGate:
+    """卖方研报的**预期方向门槛**（用户 2026-08-09：「只有近期研报预期在增长或几乎不变的公司才能买入」）。
+
+    数据边界（决定了这个门槛能测多长，见 `fetch_a_share_research_reports.py` 文件头）
+    ------------------------------------------------------------------------------
+    * 研报全市场覆盖**始于 2017-01**；
+    * **预测 EPS 字段只有 2024 年之后的研报才有值**，2017-2023 全空。
+
+    因此两个口径的可测窗口完全不同，**必须分开报**：
+
+    ``rating``  评级方向。近 `window` 天研报的 `emRatingValue` 均值 vs 前一个 `window`
+                天的均值（0=中性 1=持有 2=增持 3=买入）。均值下滑超过 `tol` 即拦截。
+                **2018 起可测**（需前置一个窗口做基期）。
+    ``nodown``  近 `window` 天内出现过评级下调（`rating_change==1`）即拦截。比 ``rating``
+                更硬，只认「有机构明确下调」这一件事，不受覆盖机构结构变化影响。
+    ``target``  目标价方向。近窗口目标价中位数 vs 前窗口中位数，跌幅超 `tol` 即拦截。
+                填充率 36% 且**贯穿 2017-2026**，是全窗口唯一可用的「预期水平」代理
+                （预测 EPS 只有 2024+）。**必须做送转折算**——10 转 10 会把目标价腰斩，
+                不折算就会被读成一次 −50% 的下修。折算办法见 `load_research`。
+    ``eps``     前瞻 EPS 修正。`fwd12 = TY×(1−f) + NY×f`，`f` 为发布日在当年的进度——
+                TY 指**发布当年**（2025-11 的茅台研报 TY≈76.5／NY≈81，12 月被下修到 72.7），
+                跨年时按进度加权可保持连续，避免 12 月→1 月的财年标签跳变被误读成修正。
+                取窗口内中位数比前窗口中位数，跌幅超 `tol` 即拦截。**仅 2025 起可测**。
+
+    `missing` 决定「无研报覆盖」怎么办。**这一项会改变门槛的性质**：`block` 会把它变成
+    一个隐含的规模／关注度过滤器（小盘股常年零覆盖），`pass` 才是纯粹的预期方向门槛。
+    默认 `pass`——只在**有证据表明预期被下修**时才拦，没有证据不等于坏消息。
+    """
+
+    def __init__(self, ratings, downgrades, forecasts, targets=None, window: int = 180,
+                 tol: float = 0.0, missing: str = "pass", permute: int = 0):
+        self.ratings, self.downgrades, self.forecasts = ratings, downgrades, forecasts
+        self.targets = targets or {}
+        self.window, self.tol, self.missing = window, tol, missing
+        self.blocked = collections.Counter()
+        # 安慰剂：把每只股票的研报序列**按代码序错位 `permute` 位**。拦截强度、时间分布、
+        # 覆盖稀疏性全都保留，唯独抹掉「这条信号说的是这家公司」。若安慰剂同样能提高收益，
+        # 则增益来自「少买／被动持币」的机械效果，与研报内容无关。
+        self.permute = {}
+        if permute:
+            codes = sorted(set(self.ratings) | set(self.targets) | set(self.downgrades))
+            self.permute = {c: codes[(i + permute) % len(codes)] for i, c in enumerate(codes)} if codes else {}
+
+    def _key(self, code: str) -> str:
+        return self.permute.get(code, code)
+
+    @staticmethod
+    def _shift(day: str, days: int) -> str:
+        return (date.fromisoformat(day) - timedelta(days=days)).isoformat()
+
+    @staticmethod
+    def _slice(series, lo: str, hi: str):
+        """`series` 为按日期升序的 [(date, value), …]；取 **lo < date < hi，两端都开**。
+
+        右端开区间是刻意的：研报的 `publishDate` 只到日，无从判断它在当日开盘前还是收盘后
+        发布，而回测按收盘价成交。把当日研报排除掉，最多损失一天新鲜度，却能让「不含未来」
+        这件事**无需辩护**。
+        """
+        i = bisect.bisect_right(series, (lo, float("inf")))
+        j = bisect.bisect_left(series, (hi, float("-inf")))
+        return [v for _, v in series[i:j]]
+
+    def allows(self, mode: str, code: str, day: str) -> bool:
+        mid, start = self._shift(day, self.window), self._shift(day, 2 * self.window)
+        code = self._key(code)
+        if mode in ("rating", "both"):
+            series = self.ratings.get(code)
+            recent = self._slice(series, mid, day) if series else []
+            prior = self._slice(series, start, mid) if series else []
+            if not recent:
+                if self.missing == "block":
+                    self.blocked["无覆盖"] += 1
+                    return False
+            elif prior and (statistics.fmean(recent) - statistics.fmean(prior)) < -self.tol:
+                self.blocked["评级下滑"] += 1
+                return False
+        if mode == "nodown":
+            series = self.downgrades.get(code)
+            if series and self._slice(series, mid, day):
+                self.blocked["评级下调"] += 1
+                return False
+            if self.missing == "block" and not (self.ratings.get(code)
+                                                and self._slice(self.ratings[code], mid, day)):
+                self.blocked["无覆盖"] += 1
+                return False
+        if mode in ("target", "both"):
+            series = self.targets.get(code)
+            recent = self._slice(series, mid, day) if series else []
+            prior = self._slice(series, start, mid) if series else []
+            if not recent or not prior:
+                if self.missing == "block":
+                    self.blocked["无目标价"] += 1
+                    return False
+            elif statistics.median(prior) > 0 and \
+                    statistics.median(recent) / statistics.median(prior) - 1 < -self.tol:
+                self.blocked["目标价下修"] += 1
+                return False
+        if mode == "eps":
+            series = self.forecasts.get(code)
+            recent = self._slice(series, mid, day) if series else []
+            prior = self._slice(series, start, mid) if series else []
+            if not recent or not prior:
+                if self.missing == "block":
+                    self.blocked["无预测"] += 1
+                    return False
+            elif statistics.median(prior) > 0 and \
+                    statistics.median(recent) / statistics.median(prior) - 1 < -self.tol:
+                self.blocked["预测下修"] += 1
+                return False
+        return True
+
+
+def load_research(codes: set[str] | None = None, directory: Path | None = None, actions=None):
+    """读研报原始档，装配成四张按日期升序的时点表。**只保留 publish_date，绝不引用当前一致预期。**
+
+    目标价的送转折算：令 `C(d) = ∏(1+ratio)`（该股在 d 之前所有除权的送转比例连乘），
+    则 `aim × C(d)` 在同一只股票内部是**同一把尺子**——发生 10 转 10 时，除权前定的
+    目标价 100 与除权后定的 50 都会折成同一个数，不再产生假的 −50% 下修。
+    """
+    factors: dict[str, list[tuple[str, float]]] = {}
+    for code, events in (actions or {}).items():
+        cumulative, series = 1.0, []
+        for day in sorted(events):
+            cumulative *= (1.0 + events[day][1])
+            series.append((day, cumulative))
+        if series:
+            factors[code] = series
+
+    def factor_at(code: str, day: str) -> float:
+        series = factors.get(code)
+        if not series:
+            return 1.0
+        i = bisect.bisect_left(series, (day, float("-inf")))
+        return series[i - 1][1] if i else 1.0
+
+    ratings: dict[str, list[tuple[str, float]]] = defaultdict(list)
+    downgrades: dict[str, list[tuple[str, float]]] = defaultdict(list)
+    forecasts: dict[str, list[tuple[str, float]]] = defaultdict(list)
+    targets: dict[str, list[tuple[str, float]]] = defaultdict(list)
+    for path in sorted((directory or RESEARCH_DIR).glob("reports_*.csv")):
+        with path.open(newline="", encoding="utf-8") as handle:
+            for row in csv.DictReader(handle):
+                code, day = row["security_code"], row["publish_date"]
+                if not code or len(day) != 10 or (codes is not None and code not in codes):
+                    continue
+                value = _num(row.get("rating_value"))
+                if value is not None:
+                    ratings[code].append((day, value))
+                if (row.get("rating_change") or "").strip() == "1":
+                    downgrades[code].append((day, 1.0))
+                this_year, next_year = _num(row.get("predict_this_year_eps")), _num(row.get("predict_next_year_eps"))
+                if this_year and next_year and this_year > 0 and next_year > 0:
+                    fraction = (date.fromisoformat(day).timetuple().tm_yday - 1) / 365.0
+                    forecasts[code].append((day, this_year * (1 - fraction) + next_year * fraction))
+                aim = _num(row.get("aim_price"))
+                if aim and aim > 0:
+                    targets[code].append((day, aim * factor_at(code, day)))
+    for table in (ratings, downgrades, forecasts, targets):
+        for series in table.values():
+            series.sort()
+    return dict(ratings), dict(downgrades), dict(forecasts), dict(targets)
 
 
 def load_prices(codes: set[str] | None = None) -> dict[str, dict[str, float]]:
@@ -388,7 +554,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         dev_buy_max: float = 1.10, dev_sell_min: float = 0.0,
         hold_strong: str = "off", hold_strong_ma: tuple[int, ...] = (),
         rank_mode: str = "pv", quantile_window: int = 0,
-        quantile_min_obs: int = 250) -> dict:
+        quantile_min_obs: int = 250, research_gate: str = "off",
+        research: "ResearchGate | None" = None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -604,6 +771,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         if (1.0 / r[3] - 1.0) >= min_upside.get(tiers.get(r[0], DEFAULT_TIER), 0.0)]
         if only_tiers:
             eligible = [r for r in eligible if tiers.get(r[0], DEFAULT_TIER) in only_tiers]
+        # 研报预期门槛：**卡在所有买入路径的上游**——`eligible` 同时供定投买入与换仓选目标，
+        # 在此过滤即等于「每次买入节点都要过一次」，加仓也一样受约束（用户 2026-08-09 原话）。
+        if research_gate != "off" and research is not None:
+            eligible = [r for r in eligible if research.allows(research_gate, r[0], day)]
         # 入场模式：trend=收盘>MA20>MA60（方向）；deviation=收盘 ≤ MA60×dev_buy_max（位置）；
         # both=两者同时满足。**方向与位置是两件事**——方向判断趋势是否成立，位置判断是否追高。
         if strategy == "trend" and entry_mode in ("deviation", "both"):
@@ -969,6 +1140,16 @@ def main() -> int:
                         help="减持线（P/V），缺省 1+w；设为 1.30 即涨到 30%% 溢价才减持")
     parser.add_argument("--trend-tranche", action="store_true",
                         help="走势组改为分批建仓：只要当日仍满足均线与估值条件就按 x%% 继续买入")
+    parser.add_argument("--research-gate",
+                        choices=("off", "rating", "nodown", "target", "eps", "both"),
+                        default="off", help="研报预期方向门槛，见 ResearchGate 文档串")
+    parser.add_argument("--research-window", type=int, default=180, help="研报回看天数（对比窗口同长）")
+    parser.add_argument("--research-tol", type=float, default=0.0,
+                        help="容忍的下滑幅度：rating 为评级均值降幅，eps 为预测降幅比例")
+    parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
+                        help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
+    parser.add_argument("--research-permute", type=int, default=0, metavar="N",
+                        help="安慰剂：研报序列按代码序错位 N 位，保留拦截强度、抹掉个股信息")
     parser.add_argument("--label-suffix", default="")
     args = parser.parse_args()
 
@@ -984,6 +1165,17 @@ def main() -> int:
     day_lists = {code: sorted(series) for code, series in prices.items()}
     day_pos = {code: {d: i for i, d in enumerate(ds)} for code, ds in day_lists.items()}
     corr = Correlations(daily_returns(prices, actions), args.corr_window) if args.max_corr else None
+    research = None
+    if args.research_gate != "off":
+        ratings, downgrades, forecasts, targets = load_research(set(prices), actions=actions)
+        research = ResearchGate(ratings, downgrades, forecasts, targets,
+                                window=args.research_window, tol=args.research_tol,
+                                missing=args.research_missing, permute=args.research_permute)
+        spans = [d for series in ratings.values() for d, _ in series[:1]]
+        print(f"  **研报门槛 {args.research_gate}**：有评级 {len(ratings):,} 只｜有下调记录 {len(downgrades):,} 只｜"
+              f"有目标价 {len(targets):,} 只｜有预测 {len(forecasts):,} 只｜"
+              f"最早评级 {min(spans) if spans else '缺'}｜"
+              f"窗口 {args.research_window}d｜容忍 {args.research_tol:g}｜无覆盖={args.research_missing}")
     covered = sorted(states)
     print(f"  逐日状态 {sum(len(v) for v in states.values()):,} 行｜"
           f"{covered[0]} ~ {covered[-1]}｜行情 {len(prices)} 只｜"
@@ -1024,7 +1216,12 @@ def main() -> int:
                      + ("_minup" if args.min_upside else "")
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
                      + (f"_only{args.only_tiers}" if args.only_tiers else "")
+                     + (f"_rg{args.research_gate}{args.research_window}"
+                        f"{'B' if args.research_missing == 'block' else ''}"
+                        if args.research_gate != "off" else "")
                      + args.label_suffix)
+            if research is not None:
+                research.blocked.clear()
             result = run(strategy, x / 100.0, states, prices, actions, mas,
                          args.since, args.until, args.capital, width=width, tiers=tiers,
                          use_mos=args.use_mos, price_stop=args.price_stop,
@@ -1048,7 +1245,8 @@ def main() -> int:
                          dev_sell_min=args.dev_sell_min, hold_strong=args.hold_strong,
                          hold_strong_ma=tuple(args.hold_strong_ma), rank_mode=args.rank_mode,
                          quantile_window=args.quantile_window,
-                         quantile_min_obs=args.quantile_min_obs)
+                         quantile_min_obs=args.quantile_min_obs,
+                         research_gate=args.research_gate, research=research)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
@@ -1059,6 +1257,9 @@ def main() -> int:
             rows.append(summary)
             print(f"  {label}: 期末 {summary['期末资产']/1e4:,.1f} 万｜年化 {summary['年化']:.2%}"
                   f"｜最大回撤 {summary['最大回撤']:.1%}｜周期 {summary['周期数']}")
+            if research is not None and research.blocked:
+                print("    研报门槛拦下（候选×日次）："
+                      + "｜".join(f"{k} {v:,}" for k, v in research.blocked.most_common()))
 
     if rows:
         with (args.out_dir / f"summary{args.label_suffix or ''}.csv").open("w", newline="", encoding="utf-8") as handle:
