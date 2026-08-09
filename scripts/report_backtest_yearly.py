@@ -28,7 +28,7 @@ def load_curve(path: Path):
     rows = []
     with path.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
-            rows.append((row["date"], float(row["total_equity"]),
+            rows.append((row["date"], float(row.get("net_equity") or row["total_equity"]),
                          float(row.get("cash_ratio") or 0), int(float(row.get("positions") or 0))))
     return rows
 
