@@ -383,7 +383,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         position_cap: float = 0.0, only_tiers: set[str] | None = None,
         universe: list[tuple[str, set[str]]] | None = None,
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
-        sell_line_override: float | None = None) -> dict:
+        sell_line_override: float | None = None, trend_exit_ma: int = 0,
+        rank_by_upside: bool = True) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -479,6 +480,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         turnover += shares * price
                     sell_count += 1
                 continue
+            # 走势退出：**跟随均线**而非建仓日固定价。用户 2026-08-09：「把跌破120日均线作为
+            # 减仓阈值」。与 `--price-stop` 的区别是后者盯建仓当日那条静态止损价，此处盯当日均线。
+            if trend_exit_ma:
+                ma_now = mas.get(code, {}).get(day, {})
+                if trend_exit_ma in ma_now and price < ma_now[trend_exit_ma]:
+                    turnover += lot.shares * price
+                    close_lot(portfolio, code, day, price, f"跌破MA{trend_exit_ma}清仓")
+                    sell_count += 1
+                    continue
             if ((strategy == "trend" and trend_stop) or price_stop) and lot.entry_stop and price < lot.entry_stop:
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
                 close_lot(portfolio, code, day, price, f"跌破建仓日MA{lot.entry_stop_ma}止损")
@@ -510,7 +520,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
         # ---- 买入：合格集为空则持币（用户 2026-08-08 裁定），**不硬凑前十**
         pool = states[day] if members is None else [r for r in states[day] if r[0] in members]
-        eligible = sorted((r for r in pool if r[3] <= buy_line(r[0])), key=lambda r: r[3])
+        # `rank_by_upside=False`：空间只作**阈值**不作排序，合格集内按代码排序（中性顺序），
+        # 即「只要空间够 + 走势好就买」，不再优先买最便宜的。用户 2026-08-09 提出的对照口径。
+        eligible = sorted((r for r in pool if r[3] <= buy_line(r[0])),
+                          key=(lambda r: r[3]) if rank_by_upside else (lambda r: r[0]))
         # 分档最低空间门槛（用户 2026-08-08：L1 >30%、L2 >40%；**L3 未指定，本脚本按 L2 取 40%**
         # ——L3 风险更高，门槛不该比 L2 松）。空间 = V/P − 1 = 1/(P/V) − 1。
         if min_upside:
@@ -844,6 +857,10 @@ def main() -> int:
     parser.add_argument("--universe-file", type=Path,
                         help="时点股票库（build_point_in_time_universe.py 的产出）。"
                              "给了它就只在当期成员里选股，移出的持仓逐步清仓")
+    parser.add_argument("--trend-exit-ma", type=int, default=0,
+                        help="持仓收盘跌破该均线即清仓（0=不启用）；盯当日均线，非建仓日静态止损价")
+    parser.add_argument("--no-rank", dest="rank_by_upside", action="store_false",
+                        help="空间只作阈值不作排序：合格集内按代码中性排序，不优先买最便宜的")
     parser.add_argument("--trend-ma", nargs="+", type=int, default=[20, 60],
                         help="走势触发的均线，如 `20 60` 表示 收盘>MA20>MA60；`5 20` 表示 收盘>MA5>MA20；单个值表示只要求站上该均线")
     parser.add_argument("--sell-line", type=float, default=0.0,
@@ -895,6 +912,8 @@ def main() -> int:
                      + ("_tranche" if args.trend_tranche else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
+                     + (f"_xma{args.trend_exit_ma}" if args.trend_exit_ma else "")
+                     + ("_norank" if not args.rank_by_upside else "")
                      + (f"_{args.tier_mode}" if args.tier_mode != "none" else "")
                      + ("_minup" if args.min_upside else "")
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
@@ -916,7 +935,9 @@ def main() -> int:
                          only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None,
                          universe=universe, trend_tranche=args.trend_tranche,
                          trend_ma=tuple(args.trend_ma),
-                         sell_line_override=args.sell_line or None)
+                         sell_line_override=args.sell_line or None,
+                         trend_exit_ma=args.trend_exit_ma,
+                         rank_by_upside=args.rank_by_upside)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
