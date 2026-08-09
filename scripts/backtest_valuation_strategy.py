@@ -556,7 +556,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         rank_mode: str = "pv", quantile_window: int = 0,
         quantile_min_obs: int = 250, research_gate: str = "off",
         research: "ResearchGate | None" = None,
-        swap_bypass_corr: bool = False, stats: dict | None = None) -> dict:
+        swap_bypass_corr: bool = False, stats: dict | None = None,
+        cluster_swap: bool = False, cluster_delta: float = 0.85,
+        cluster_min_upside: float = 0.20) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -795,6 +797,55 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             eligible = [r for r in eligible
                         if stabilized(lows.get(r[0], {}), day_index[0].get(r[0], []),
                                       day_index[1].get(r[0], {}), day)]
+        # ---- 簇内升级模式（用户 2026-08-09 提出的完整方案）
+        # 与既有「换仓 + 相关性过滤」的根本差别：**相关性在这里是「替换谁」的判据，
+        # 不是「排除谁」的过滤器**。既有口径下高相关候选会触发卖出**空间最小的持仓**
+        # （可能与它毫不相关），等于用分散度换便宜；此处改为卖出**与它同簇的那只**，
+        # 敞口结构不变、只把簇内的持仓换成更便宜的一只。持仓个数不设上限，由簇的数量自然决定。
+        #
+        # 每日三步：
+        #   ① 备选 = 空间 ≥ `cluster_min_upside` 的合格候选（空间作门槛，不作排序上限）
+        #   ② 在备选内部两两去相关（**不看持仓**），得到当日买入备选
+        #   ③ 逐个决定：与某持仓相关性 > `cluster_delta` 且更便宜 → 换掉那只；
+        #      与任何持仓都不强相关 → 直接建仓或加仓；簇内已有更便宜的 → 本日不买
+        if cluster_swap and eligible:
+            cands = [r for r in eligible if (1.0 / r[3] - 1.0) >= cluster_min_upside]
+            picks: list = []
+            for r in cands[:scan_depth]:
+                if corr is not None and max_corr and any(
+                        (v := corr.get(r[0], q[0], day)) is not None and v > max_corr for q in picks):
+                    continue
+                picks.append(r)
+            final = []
+            for r in picks:
+                code = r[0]
+                if code in portfolio.lots:
+                    final.append(r)                      # 已持仓：继续加仓
+                    continue
+                cand_score = scores.get(code, r[3]) if rank_mode != "pv" else r[3]
+                kin = []
+                if corr is not None:
+                    for held in portfolio.lots:
+                        if held not in today:
+                            continue
+                        v = corr.get(code, held, day)
+                        if v is not None and v > cluster_delta:
+                            kin.append((scores.get(held, today[held][2])
+                                        if rank_mode != "pv" else today[held][2], held))
+                if not kin:
+                    final.append(r)                      # 无同簇持仓：直接建仓
+                    continue
+                worst_ratio, worst = max(kin)            # 同簇里最贵的那只
+                if worst_ratio - cand_score < swap_margin:
+                    continue                             # 簇内已有更便宜的，本日不买
+                price = marks.get(worst)
+                if not price:
+                    continue
+                turnover += portfolio.lots[worst].shares * price
+                close_lot(portfolio, worst, day, price, f"同簇升级：让位给更便宜的{code}")
+                sell_count += 1
+                final.append(r)
+            eligible = final
         # 换仓：想买却买不下（没钱或槽位满）时，把**空间最小**的持仓换成**空间更大**的候选。
         # `swap_margin` 是防抖阈值——两者 P/V 差不到这个数就不换，否则每天的微小排名波动
         # 都会触发一次双边交易。
@@ -803,6 +854,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 用户 2026-08-09 追问的正是这个口径。`swap_bypass_corr` 打开后，已经为之腾过位的候选
         # 豁免相关性检查：既然已经付出了卖出的代价，就该买到它。
         swap_targets: set[str] = set()
+        # 簇内升级之后仍保留原换仓作为**兜底**：用户方案里「没有强相关持仓就直接建仓或加仓」
+        # 隐含了「有钱」这个前提，而簇内升级是自筹资金的（卖一只买一只），**不产生新增现金**。
+        # 缺了兜底，资金打满后组合就冻住——实测换手由 200.9% 塌到 17.6%、买入 2145→474 笔。
         if swap and eligible:
             for code, close, value, ratio in eligible[:max_positions]:
                 if code in portfolio.lots:
@@ -842,7 +896,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
         # ---- 相关性过滤：**贪心**地沿排序往下走，与已选/已持仓相关性超阈值的跳过，
         # 顺位补下一名（用户 2026-08-08：「第一和第五相关性很强则跳过第五，考虑第 21 名」）。
-        if max_corr and corr is not None:
+        if max_corr and corr is not None and not cluster_swap:
             chosen, anchors = [], list(portfolio.lots)
             for r in eligible[:scan_depth]:
                 if len(chosen) >= max_positions:
@@ -1161,6 +1215,12 @@ def main() -> int:
                         help="容忍的下滑幅度：rating 为评级均值降幅，eps 为预测降幅比例")
     parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
+    parser.add_argument("--cluster-swap", action="store_true",
+                        help="簇内升级模式：相关性用作「替换谁」的判据而非排除过滤器，持仓数不设上限")
+    parser.add_argument("--cluster-delta", type=float, default=0.85,
+                        help="判定「同簇」的相关性阈值；超过它才视为可互相替换")
+    parser.add_argument("--cluster-min-upside", type=float, default=20.0, metavar="PCT",
+                        help="备选的最低空间（百分数），空间=V/P−1")
     parser.add_argument("--swap-bypass-corr", action="store_true",
                         help="已为之腾过位的换仓目标豁免相关性检查——卖都卖了就该买到它")
     parser.add_argument("--research-permute", type=int, default=0, metavar="N",
@@ -1231,6 +1291,7 @@ def main() -> int:
                      + ("_minup" if args.min_upside else "")
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
                      + (f"_only{args.only_tiers}" if args.only_tiers else "")
+                     + (f"_cl{args.cluster_delta:g}u{args.cluster_min_upside:g}" if args.cluster_swap else "")
                      + (f"_rg{args.research_gate}{args.research_window}"
                         f"{'B' if args.research_missing == 'block' else ''}"
                         if args.research_gate != "off" else "")
@@ -1263,7 +1324,9 @@ def main() -> int:
                          quantile_window=args.quantile_window,
                          quantile_min_obs=args.quantile_min_obs,
                          research_gate=args.research_gate, research=research,
-                         swap_bypass_corr=args.swap_bypass_corr, stats=run_stats)
+                         swap_bypass_corr=args.swap_bypass_corr, stats=run_stats,
+                         cluster_swap=args.cluster_swap, cluster_delta=args.cluster_delta,
+                         cluster_min_upside=args.cluster_min_upside / 100.0)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
