@@ -540,8 +540,14 @@ def sell_shares(target: float, held: float, price: float, lot_size: int) -> floa
     return held if held - shares < lot_size else shares
 
 
-def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: str) -> None:
+def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: str,
+              ledger: list | None = None) -> None:
     lot = portfolio.lots.pop(code)
+    if ledger is not None:
+        ledger.append({"date": day, "security_code": code, "action": "卖出",
+                       "shares": f"{lot.shares:.0f}", "price": f"{price:.3f}",
+                       "amount": f"{lot.shares * price:.0f}", "pv_ratio": "",
+                       "intrinsic_value": "", "reason": reason})
     portfolio.cash += lot.shares * price
     lot.proceeds += lot.shares * price
     lot.shares = 0.0
@@ -572,7 +578,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_bypass_corr: bool = False, stats: dict | None = None,
         cluster_swap: bool = False, cluster_delta: float = 0.85,
         cluster_min_upside: float = 0.20, swap_partial: bool = False,
-        lot_size: int = 0, rebuy: str = "off") -> dict:
+        lot_size: int = 0, rebuy: str = "off", ledger: list | None = None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -715,7 +721,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if shares > 0:
                     if shares >= lot.shares * 0.999:
                         turnover += lot.shares * price
-                        close_lot(portfolio, code, day, price, "移出股票库·逐步清仓")
+                        close_lot(portfolio, code, day, price, ledger=ledger, reason="移出股票库·逐步清仓")
                     else:
                         lot.shares -= shares
                         portfolio.cash += shares * price
@@ -734,7 +740,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 base = ma_now.get(dev_ma)
                 if base and price >= base * dev_sell_min:
                     turnover += lot.shares * price
-                    close_lot(portfolio, code, day, price, f"偏离MA{dev_ma}达{dev_sell_min:.0%}清仓")
+                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"偏离MA{dev_ma}达{dev_sell_min:.0%}清仓")
                     sell_count += 1
                     continue
             if trend_exit_ma:
@@ -744,12 +750,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         cut_shares[code] = cut_shares.get(code, 0.0) + lot.shares
                         stats["割肉记账"] += 1
                     turnover += lot.shares * price
-                    close_lot(portfolio, code, day, price, f"跌破MA{trend_exit_ma}清仓")
+                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"跌破MA{trend_exit_ma}清仓")
                     sell_count += 1
                     continue
             if ((strategy == "trend" and trend_stop) or price_stop) and lot.entry_stop and price < lot.entry_stop:
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
-                close_lot(portfolio, code, day, price, f"跌破建仓日MA{lot.entry_stop_ma}止损")
+                close_lot(portfolio, code, day, price, ledger=ledger, reason=f"跌破建仓日MA{lot.entry_stop_ma}止损")
                 sell_count += 1
                 continue
             # 基本面退出：内在价值自峰值回落超阈值即清仓。**盯 V 不盯价**，故一只票可以
@@ -758,7 +764,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 current_value = today.get(code, (None, None, None))[1]
                 if current_value and current_value <= lot.peak_intrinsic * (1 - value_stop):
                     turnover += lot.shares * price
-                    close_lot(portfolio, code, day, price, f"内在价值自峰值回落≥{value_stop:.0%}")
+                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"内在价值自峰值回落≥{value_stop:.0%}")
                     sell_count += 1
                     continue
             # 强势多头豁免减持：空间缩小不卖，等趋势自己走坏或财报更新带改变格局。
@@ -770,7 +776,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 if shares >= lot.shares * 0.999:
                     turnover += lot.shares * price
-                    close_lot(portfolio, code, day, price, f"P/V≥{sell_line:.2f}清空")
+                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"P/V≥{sell_line:.2f}清空")
                 else:
                     lot.shares -= shares
                     portfolio.cash += shares * price
@@ -862,7 +868,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if not price:
                     continue
                 turnover += portfolio.lots[worst].shares * price
-                close_lot(portfolio, worst, day, price, f"同簇升级：让位给更便宜的{code}")
+                close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"同簇升级：让位给更便宜的{code}")
                 sell_count += 1
                 final.append(r)
             eligible = final
@@ -916,7 +922,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 else:
                     stats["换仓·整仓卖出"] += 1
                     turnover += lot_worst.shares * price
-                    close_lot(portfolio, worst, day, price, f"换仓：让位给空间更大的{code}")
+                    close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓：让位给空间更大的{code}")
                 sell_count += 1
                 swap_targets.add(code)
         # ---- 档位排序偏置（用户 2026-08-08）
@@ -1014,6 +1020,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             lot.invested += amount
             lot.buys += 1
             portfolio.cash -= amount
+            if ledger is not None:
+                ledger.append({"date": day, "security_code": code, "action": "买入",
+                               "shares": f"{shares:.0f}", "price": f"{close:.3f}",
+                               "amount": f"{amount:.0f}", "pv_ratio": f"{ratio:.4f}",
+                               "intrinsic_value": f"{value:.3f}",
+                               "reason": "定投加仓" if lot.buys > 1 else "首次建仓"})
             buy_count += 1
             turnover += amount
 
@@ -1277,6 +1289,7 @@ def main() -> int:
                         help="容忍的下滑幅度：rating 为评级均值降幅，eps 为预测降幅比例")
     parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
+    parser.add_argument("--trade-log", type=Path, help="导出逐笔成交流水（人工核对用）")
     parser.add_argument("--rebuy", choices=("off", "lump", "gradual"), default="off",
                         help="割肉后的买回口径：lump=重新合格当日一次性买回相同股数；gradual=交回常规定投")
     parser.add_argument("--lot-size", type=int, default=0, metavar="N",
@@ -1370,6 +1383,7 @@ def main() -> int:
             if research is not None:
                 research.blocked.clear()
             run_stats = collections.Counter()
+            ledger = [] if args.trade_log else None
             result = run(strategy, x / 100.0, states, prices, actions, mas,
                          args.since, args.until, args.capital, width=width, tiers=tiers,
                          use_mos=args.use_mos, price_stop=args.price_stop,
@@ -1398,13 +1412,21 @@ def main() -> int:
                          swap_bypass_corr=args.swap_bypass_corr, stats=run_stats,
                          cluster_swap=args.cluster_swap, cluster_delta=args.cluster_delta,
                          cluster_min_upside=args.cluster_min_upside / 100.0,
-                         swap_partial=args.swap_partial, lot_size=args.lot_size, rebuy=args.rebuy)
+                         swap_partial=args.swap_partial, lot_size=args.lot_size, rebuy=args.rebuy,
+                         ledger=ledger)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
             write_trades(args.out_dir / f"{label}_trades.csv", result["closed"], names)
             write_equity(args.out_dir / f"{label}_equity.csv", result["equity"])
             write_periods(args.out_dir / f"{label}_periods.csv", result["equity"])
+            if ledger:
+                with args.trade_log.open("w", newline="", encoding="utf-8") as handle:
+                    w = csv.DictWriter(handle, fieldnames=list(ledger[0]) + ["security_name"])
+                    w.writeheader()
+                    for row in ledger:
+                        w.writerow({**row, "security_name": names.get(row["security_code"], "")})
+                print(f"    成交流水 {len(ledger):,} 笔 → {args.trade_log}")
             summary = summarize(label, result, args.capital, benchmark, risk_free)
             rows.append(summary)
             print(f"  {label}: 期末 {summary['期末资产']/1e4:,.1f} 万｜年化 {summary['年化']:.2%}"
