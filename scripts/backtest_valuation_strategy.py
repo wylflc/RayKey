@@ -384,7 +384,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         universe: list[tuple[str, set[str]]] | None = None,
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
         sell_line_override: float | None = None, trend_exit_ma: int = 0,
-        rank_by_upside: bool = True) -> dict:
+        rank_by_upside: bool = True, entry_mode: str = "trend", dev_ma: int = 60,
+        dev_buy_max: float = 1.10, dev_sell_min: float = 0.0) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -482,6 +483,17 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 continue
             # 走势退出：**跟随均线**而非建仓日固定价。用户 2026-08-09：「把跌破120日均线作为
             # 减仓阈值」。与 `--price-stop` 的区别是后者盯建仓当日那条静态止损价，此处盯当日均线。
+            # 偏离度卖出：涨到中期均线的 `dev_sell_min` 倍以上即清仓。用户 2026-08-09：
+            # 「涨的比中期均线高很多就卖出」。与 P/V 减持线的区别是它盯**价格相对自身均线的位置**，
+            # 与内在价值无关，故在估值带失真时仍可用。
+            if dev_sell_min:
+                ma_now = mas.get(code, {}).get(day, {})
+                base = ma_now.get(dev_ma)
+                if base and price >= base * dev_sell_min:
+                    turnover += lot.shares * price
+                    close_lot(portfolio, code, day, price, f"偏离MA{dev_ma}达{dev_sell_min:.0%}清仓")
+                    sell_count += 1
+                    continue
             if trend_exit_ma:
                 ma_now = mas.get(code, {}).get(day, {})
                 if trend_exit_ma in ma_now and price < ma_now[trend_exit_ma]:
@@ -531,7 +543,16 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         if (1.0 / r[3] - 1.0) >= min_upside.get(tiers.get(r[0], DEFAULT_TIER), 0.0)]
         if only_tiers:
             eligible = [r for r in eligible if tiers.get(r[0], DEFAULT_TIER) in only_tiers]
-        if strategy == "trend":
+        # 入场模式：trend=收盘>MA20>MA60（方向）；deviation=收盘 ≤ MA60×dev_buy_max（位置）；
+        # both=两者同时满足。**方向与位置是两件事**——方向判断趋势是否成立，位置判断是否追高。
+        if strategy == "trend" and entry_mode in ("deviation", "both"):
+            kept = []
+            for r in eligible:
+                base = mas.get(r[0], {}).get(day, {}).get(dev_ma)
+                if base and r[1] <= base * dev_buy_max:
+                    kept.append(r)
+            eligible = kept
+        if strategy == "trend" and entry_mode in ("trend", "both"):
             eligible = [r for r in eligible
                         if (ma := mas.get(r[0], {}).get(day)) and all(w in ma for w in trend_ma)
                         and r[1] > ma[trend_ma[0]]
@@ -857,6 +878,13 @@ def main() -> int:
     parser.add_argument("--universe-file", type=Path,
                         help="时点股票库（build_point_in_time_universe.py 的产出）。"
                              "给了它就只在当期成员里选股，移出的持仓逐步清仓")
+    parser.add_argument("--entry-mode", choices=("trend", "deviation", "both"), default="trend",
+                        help="trend=收盘>MA20>MA60；deviation=收盘≤中期均线×上限；both=两者同时")
+    parser.add_argument("--dev-ma", type=int, default=60, help="偏离度所用的中期均线")
+    parser.add_argument("--dev-buy-max", type=float, default=1.10,
+                        help="买入上限：收盘 ≤ 中期均线 × 该倍数才买")
+    parser.add_argument("--dev-sell-min", type=float, default=0.0,
+                        help="卖出下限：收盘 ≥ 中期均线 × 该倍数即清仓（0=不启用）")
     parser.add_argument("--trend-exit-ma", type=int, default=0,
                         help="持仓收盘跌破该均线即清仓（0=不启用）；盯当日均线，非建仓日静态止损价")
     parser.add_argument("--no-rank", dest="rank_by_upside", action="store_false",
@@ -914,6 +942,8 @@ def main() -> int:
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
                      + (f"_xma{args.trend_exit_ma}" if args.trend_exit_ma else "")
                      + ("_norank" if not args.rank_by_upside else "")
+                     + (f"_{args.entry_mode}" if args.entry_mode != "trend" else "")
+                     + (f"_dsell{args.dev_sell_min:g}" if args.dev_sell_min else "")
                      + (f"_{args.tier_mode}" if args.tier_mode != "none" else "")
                      + ("_minup" if args.min_upside else "")
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
@@ -937,7 +967,9 @@ def main() -> int:
                          trend_ma=tuple(args.trend_ma),
                          sell_line_override=args.sell_line or None,
                          trend_exit_ma=args.trend_exit_ma,
-                         rank_by_upside=args.rank_by_upside)
+                         rank_by_upside=args.rank_by_upside, entry_mode=args.entry_mode,
+                         dev_ma=args.dev_ma, dev_buy_max=args.dev_buy_max,
+                         dev_sell_min=args.dev_sell_min)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
