@@ -885,6 +885,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 partial = swap_partial and len(portfolio.lots) < max_positions and worst not in reduced_today
                 shares = min(lot_worst.shares, budget / price) if partial else lot_worst.shares
                 if partial and shares < lot_worst.shares * 0.999:
+                    stats["换仓·减一档"] += 1
                     lot_worst.shares -= shares
                     portfolio.cash += shares * price
                     lot_worst.proceeds += shares * price
@@ -892,6 +893,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     turnover += shares * price
                     reduced_today.add(worst)
                 else:
+                    stats["换仓·整仓卖出"] += 1
                     turnover += lot_worst.shares * price
                     close_lot(portfolio, worst, day, price, f"换仓：让位给空间更大的{code}")
                 sell_count += 1
