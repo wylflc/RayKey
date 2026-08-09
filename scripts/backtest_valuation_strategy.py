@@ -269,7 +269,7 @@ def stabilized(flags: dict[str, bool], days: list[str], index: dict[str, int],
     return not any(flags.get(days[j], False) for j in range(i - quiet + 1, i + 1))
 
 
-def moving_averages(series: dict[str, float], windows=(20, 60)) -> dict[str, dict[int, float]]:
+def moving_averages(series: dict[str, float], windows=(5, 10, 20, 60, 120)) -> dict[str, dict[int, float]]:
     """逐日均线。走势组的入场与止损都要用。"""
     days = sorted(series)
     values = [series[d] for d in days]
@@ -382,7 +382,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         scan_depth: int = 40, min_upside: dict[str, float] | None = None,
         position_cap: float = 0.0, only_tiers: set[str] | None = None,
         universe: list[tuple[str, set[str]]] | None = None,
-        trend_tranche: bool = False) -> dict:
+        trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
+        sell_line_override: float | None = None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -403,7 +404,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     buy_count = sell_count = 0
     turnover = 0.0
     tiers = tiers or {}
-    sell_line = 1.0 + width
+    # 减持线可独立于带宽设定：`--sell-line 1.30` 表示涨到 P/V=1.30 才开始减持，
+    # 用来检验「让利润跑得更远」是否有效（实测 P/V≥1.10 清空的 17 笔中位 +28.6%、胜率 88%）。
+    sell_line = sell_line_override if sell_line_override else 1.0 + width
     # 时点股票库：`members` 随日期切换。第一档生效前**一只都不可买**——那段时间还没有
     # 任何「当时可得」的名单，凭空放行等于用未来的股票库交易。
     uni_idx, members = 0, (set() if universe else None)
@@ -517,8 +520,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             eligible = [r for r in eligible if tiers.get(r[0], DEFAULT_TIER) in only_tiers]
         if strategy == "trend":
             eligible = [r for r in eligible
-                        if (ma := mas.get(r[0], {}).get(day)) and 20 in ma and 60 in ma
-                        and r[1] > ma[20] > ma[60]]
+                        if (ma := mas.get(r[0], {}).get(day)) and all(w in ma for w in trend_ma)
+                        and r[1] > ma[trend_ma[0]]
+                        and (len(trend_ma) < 2 or ma[trend_ma[0]] > ma[trend_ma[1]])]
         if entry_filter == "stabilized" and lows is not None:
             eligible = [r for r in eligible
                         if stabilized(lows.get(r[0], {}), day_index[0].get(r[0], []),
@@ -840,6 +844,10 @@ def main() -> int:
     parser.add_argument("--universe-file", type=Path,
                         help="时点股票库（build_point_in_time_universe.py 的产出）。"
                              "给了它就只在当期成员里选股，移出的持仓逐步清仓")
+    parser.add_argument("--trend-ma", nargs="+", type=int, default=[20, 60],
+                        help="走势触发的均线，如 `20 60` 表示 收盘>MA20>MA60；`5 20` 表示 收盘>MA5>MA20；单个值表示只要求站上该均线")
+    parser.add_argument("--sell-line", type=float, default=0.0,
+                        help="减持线（P/V），缺省 1+w；设为 1.30 即涨到 30%% 溢价才减持")
     parser.add_argument("--trend-tranche", action="store_true",
                         help="走势组改为分批建仓：只要当日仍满足均线与估值条件就按 x%% 继续买入")
     parser.add_argument("--label-suffix", default="")
@@ -885,6 +893,8 @@ def main() -> int:
                      + ("" if args.trend_stop else "_nostop")
                      + (f"_corr{args.max_corr:g}" if args.max_corr else "")
                      + ("_tranche" if args.trend_tranche else "")
+                     + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
+                     + (f"_sl{args.sell_line:g}" if args.sell_line else "")
                      + (f"_{args.tier_mode}" if args.tier_mode != "none" else "")
                      + ("_minup" if args.min_upside else "")
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
@@ -904,7 +914,9 @@ def main() -> int:
                                      if args.min_upside else None),
                          position_cap=args.position_cap,
                          only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None,
-                         universe=universe, trend_tranche=args.trend_tranche)
+                         universe=universe, trend_tranche=args.trend_tranche,
+                         trend_ma=tuple(args.trend_ma),
+                         sell_line_override=args.sell_line or None)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
