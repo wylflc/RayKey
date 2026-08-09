@@ -105,6 +105,8 @@ def main() -> int:
     ap.add_argument("--batch", type=int, default=0, help="打印第几批待判事实（0=只建队列）")
     ap.add_argument("--size", type=int, default=120)
     ap.add_argument("--tier", default="A_核心", help="打印哪一层")
+    ap.add_argument("--preview", action="store_true",
+                    help="预审模式：以 2025 年报打底、叠加 2026Q1 与中报预告方向（用户 2026-08-09）")
     ap.add_argument("--h1-only", action="store_true",
                     help="只列已出 2026 中报的公司（用户 2026-08-09：先判这批，其余等中报）")
     args = ap.parse_args()
@@ -183,8 +185,35 @@ def main() -> int:
         print(f"已建空判定档 {VERDICTS.relative_to(ROOT)}")
 
     if args.batch:
-        group = [r for r in rows if r["basis"] == "2026H1"] if args.h1_only \
-            else [r for r in rows if r["queue_tier"] == args.tier]
+        if args.preview:
+            # 预审：**以 2025 年报为主证据**（完整审计年度，护城河判断依赖多年利润率结构，
+            # 半年报不改变结论），2026Q1 与中报预告只用于定方向与标记需等中报的例外。
+            ann = load_period("2025-12-31")
+            pre = {}
+            fc = ROOT / "data/interim/a_share_earnings_forecasts.csv"
+            if fc.exists():
+                for row in csv.DictReader(fc.open(encoding="utf-8")):
+                    if row["report_date"].startswith("2026-06") and row["predict_finance_code"] == "004":
+                        pre[row["security_code"]] = row
+            group = []
+            for r in rows:
+                if r["queue_tier"] != args.tier or r["security_code"] not in pre:
+                    continue
+                a25 = ann.get(r["security_code"], {})
+                f = lambda k: _num(a25.get(k))
+                rev, npf = f("total_operate_income"), f("parent_netprofit")
+                r = dict(r)
+                r["y25_rev"] = f"{rev / 1e8:.1f}" if rev else ""
+                r["y25_np"] = f"{npf / 1e8:.1f}" if npf is not None else ""
+                r["y25_roe"] = a25.get("weightavg_roe", "")[:5]
+                r["y25_gross"] = a25.get("gross_margin", "")[:5]
+                r["pre_type"] = pre[r["security_code"]]["predict_type"]
+                r["pre_amp"] = pre[r["security_code"]]["add_amp_lower"][:7]
+                group.append(r)
+        elif args.h1_only:
+            group = [r for r in rows if r["basis"] == "2026H1"]
+        else:
+            group = [r for r in rows if r["queue_tier"] == args.tier]
         done = set()
         if VERDICTS.exists():
             done = {r["security_code"] for r in csv.DictReader(VERDICTS.open(encoding="utf-8"))}
@@ -195,6 +224,11 @@ def main() -> int:
               f"本批 {len(batch)}（第 {args.batch} 批）")
         print("# 代码 名称 板块｜口径｜营收亿 净利亿 ROE% 毛利% 净利率% 营收同比 净利同比｜原分类")
         for r in batch:
+            if args.preview:
+                print(f'{r["security_code"]} {r["security_name"]:<8}｜25年报 收{r["y25_rev"]:>7}亿 '
+                      f'净{r["y25_np"]:>7}亿 ROE{r["y25_roe"]:>6} 毛{r["y25_gross"]:>6}｜'
+                      f'26Q1 收{r["revenue_yi"]:>7} ROE{r["roe_pct"]:>6}｜中报预告 {r["pre_type"]}{r["pre_amp"]}%')
+                continue
             print(f'{r["security_code"]} {r["security_name"]:<8}{r["board"][:4]:<5}{r["basis"]}｜'
                   f'{r["revenue_yi"]:>8} {r["netprofit_yi"]:>8} {r["roe_pct"]:>6} {r["gross_pct"]:>6} '
                   f'{r["net_margin_pct"]:>6} {r["revenue_yoy"][:6]:>7} {r["netprofit_yoy"][:7]:>8}｜'
