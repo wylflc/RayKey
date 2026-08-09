@@ -484,14 +484,80 @@ class Portfolio:
     cash: float
     lots: dict[str, Lot] = field(default_factory=dict)
     closed: list[Lot] = field(default_factory=list)
+    debt: float = 0.0                 # 融资余额（含已计提利息）
+    interest_paid: float = 0.0        # 累计利息
 
-    def equity(self, prices: dict[str, float]) -> float:
+    def gross(self, prices: dict[str, float]) -> float:
+        """总资产 = 现金 + 持仓市值。担保比例的分子。"""
         total = self.cash
         for code, lot in self.lots.items():
             price = prices.get(code)
             if price:
                 total += lot.shares * price
         return total
+
+    def equity(self, prices: dict[str, float]) -> float:
+        """**净资产 N = 总资产 − 融资负债**（§9.7.1.1）。无杠杆时与旧口径完全一致。"""
+        return self.gross(prices) - self.debt
+
+    def margin_ratio(self, prices: dict[str, float]) -> float:
+        """担保比例 = 总资产 ÷ 融资负债。无负债时为无穷大。"""
+        return float("inf") if self.debt <= 0 else self.gross(prices) / self.debt
+
+
+def credit_room(portfolio: Portfolio, limit: float) -> float:
+    """还能再融多少。"""
+    return max(0.0, limit - portfolio.debt)
+
+
+def buying_power(portfolio: Portfolio, limit: float) -> float:
+    """可用于买入的总金额 = 现金 + 剩余授信。"""
+    return portfolio.cash + credit_room(portfolio, limit)
+
+
+def draw_credit(portfolio: Portfolio, need: float, limit: float) -> float:
+    """现金不足时融资补足，返回实际可动用的现金额。"""
+    if portfolio.cash >= need:
+        return need
+    draw = min(need - portfolio.cash, credit_room(portfolio, limit))
+    if draw > 0:
+        portfolio.cash += draw
+        portfolio.debt += draw
+    return min(need, portfolio.cash)
+
+
+def repay_debt(portfolio: Portfolio, ratchet: bool) -> None:
+    """融资棘轮：卖出回笼的资金**必须先偿还融资**，不得循环滚入下一笔买入。"""
+    if not ratchet or portfolio.debt <= 0 or portfolio.cash <= 0:
+        return
+    pay = min(portfolio.cash, portfolio.debt)
+    portfolio.cash -= pay
+    portfolio.debt -= pay
+
+
+def force_liquidate(portfolio: Portfolio, day: str, marks: dict[str, float],
+                    maintenance: float, recover_to: float, ledger: list | None) -> dict:
+    """担保比例跌破维持线时的强制平仓。
+
+    按持仓市值从大到小卖，直到担保比例回到 `recover_to`（警戒线）或无券可卖。
+    **A 股实盘是券商代为强平、不由持有人择时**，故这里不看 P/V、不看走势，只看市值。
+    """
+    sold_value = 0.0
+    order = sorted(portfolio.lots.items(),
+                   key=lambda kv: -(kv[1].shares * marks.get(kv[0], 0.0)))
+    for code, lot in order:
+        if portfolio.margin_ratio(marks) >= recover_to or portfolio.debt <= 0:
+            break
+        price = marks.get(code)
+        if not price:
+            continue
+        proceeds = lot.shares * price
+        sold_value += proceeds
+        close_lot(portfolio, code, day, price, "强制平仓", ledger)
+        pay = min(portfolio.cash, portfolio.debt)
+        portfolio.cash -= pay
+        portfolio.debt -= pay
+    return {"sold": sold_value, "ratio_after": portfolio.margin_ratio(marks)}
 
 
 def apply_corporate_actions(portfolio: Portfolio, day: str,
@@ -559,6 +625,8 @@ def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: s
 # ------------------------------------------------------------------ 回测
 def run(strategy: str, x: float, states, prices, actions, mas, since: str, until: str,
         capital: float, width: float = 0.10, tiers: dict[str, str] | None = None,
+        credit_ratio: float = 0.0, credit_cap: float = 0.0, margin_rate: float = 0.0,
+        maintenance: float = 1.30, recover_to: float = 1.50, margin_ratchet: bool = False,
         use_mos: bool = False, price_stop: bool = False, value_stop: float = 0.0,
         stop_ma: int = 20, trend_stop: bool = True, entry_filter: str = "none",
         lump_sum: float = 0.0, swap: bool = False, swap_margin: float = 0.10,
@@ -665,8 +733,19 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             return 1.0 - MOS_BY_TIER.get(tiers.get(code, DEFAULT_TIER), width)
         return 1.0 - width
 
+    prev_day = None
+    margin_events: list[dict] = []
+    min_ratio, min_ratio_day = float("inf"), ""
+    credit_limit = 0.0
     for day in days:
         apply_corporate_actions(portfolio, day, actions)
+
+        # ---- 融资计息（不需要价格，故放在循环头）----
+        if portfolio.debt > 0 and margin_rate > 0 and prev_day:
+            accrue = portfolio.debt * margin_rate * max(1, _days_between(prev_day, day)) / 365.0
+            portfolio.debt += accrue
+            portfolio.interest_paid += accrue
+        prev_day = day
         if universe:
             while uni_idx < len(universe) and universe[uni_idx][0] <= day:
                 members = universe[uni_idx][1]
@@ -685,8 +764,28 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 last_price[code] = price
             if code in last_price:
                 marks[code] = last_price[code]
+        # ---- 融资：按当日净资产重定授信额度，并查担保比例 ----
+        if credit_ratio > 0:
+            net_now = portfolio.equity(marks)
+            # 授信随净资产变动、封顶 credit_cap；**已用额度不因限额下调而被强制归还**，
+            # 只是不能再新增——现实中券商下调授信也是这个次序。
+            credit_limit = max(portfolio.debt, min(max(net_now, 0.0) * credit_ratio, credit_cap))
+            ratio_now = portfolio.margin_ratio(marks)
+            if portfolio.debt > 0 and ratio_now < min_ratio:
+                min_ratio, min_ratio_day = ratio_now, day
+            if portfolio.debt > 0 and ratio_now < maintenance:
+                res = force_liquidate(portfolio, day, marks, maintenance, recover_to, ledger)
+                marks = {c: p for c, p in marks.items() if c in portfolio.lots}
+                margin_events.append({
+                    "date": day, "ratio_before": ratio_now, "ratio_after": res["ratio_after"],
+                    "sold": res["sold"], "equity_before": net_now,
+                    "equity_after": portfolio.equity(marks), "debt_after": portfolio.debt,
+                })
+                stats["**爆仓·强制平仓**"] += 1
+
         equity = portfolio.equity(marks)
         if equity <= 0:
+            stats["**穿仓·净资产归零**"] += 1
             break
         budget = equity * x
 
@@ -963,7 +1062,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             eligible = chosen
 
         for code, close, value, ratio in eligible[:max_positions]:
-            if portfolio.cash <= 0:
+            if buying_power(portfolio, credit_limit) <= 0:
                 break
             # 走势组默认一笔建仓（总资产 ÷ 持仓上限）且不加仓；`trend_tranche` 打开后改为
             # **与估值组同一套定投**——只要当日仍满足「P/V 合格 且 收盘>MA20>MA60」就继续买入
@@ -971,11 +1070,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             tranche = trend_tranche and strategy == "trend"
             if ((strategy == "trend" and not tranche) or lump_sum) and code in portfolio.lots:
                 continue                      # 一笔建仓：不加仓
+            avail = buying_power(portfolio, credit_limit)
             if lump_sum:
-                amount = min(equity * lump_sum, portfolio.cash)
+                amount = min(equity * lump_sum, avail)
             else:
                 amount = min(budget if (strategy == "valuation" or tranche)
-                             else equity / max_positions, portfolio.cash)
+                             else equity / max_positions, avail)
             if amount <= 0 or code not in portfolio.lots and len(portfolio.lots) >= max_positions:
                 continue
             # 单票上限：**只挡加仓、不强制减持**——已有仓位因上涨超限是「买入上限」管不着的，
@@ -997,7 +1097,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     # 冷却期是必需的：不设的话一手会天天买，等于把该股的定投速度放大到一档以上。
                     prior = last_buy.get(code)
                     ready = prior is None or _days_between(prior, day) >= min_lot_cooldown
-                    if min_lot_cooldown and ready and portfolio.cash >= close * lot_size:
+                    if (min_lot_cooldown and ready
+                            and buying_power(portfolio, credit_limit) >= close * lot_size):
                         lots_n = 1
                         stats["高价股·按手建仓"] += 1
                     else:
@@ -1013,7 +1114,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 want = cut_shares.pop(code)
                 if lot_size:
                     want = int(want // lot_size) * lot_size
-                afford = min(want, portfolio.cash / close) if close > 0 else 0.0
+                afford = (min(want, buying_power(portfolio, credit_limit) / close)
+                          if close > 0 else 0.0)
                 if lot_size:
                     afford = int(afford // lot_size) * lot_size
                 if afford > 0:
@@ -1030,6 +1132,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             lot.shares += shares
             lot.invested += amount
             lot.buys += 1
+            draw_credit(portfolio, amount, credit_limit)   # 现金不足即动用授信
             portfolio.cash -= amount
             last_buy[code] = day
             if ledger is not None:
@@ -1052,7 +1155,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     last_price[code] = price
                 if code in last_price:
                     marks[code] = last_price[code]
-        equity_curve.append((day, portfolio.equity(marks), portfolio.cash, len(portfolio.lots)))
+        # 融资棘轮（§13.2）：日终剩余现金先还融资，不留到下一笔买入。
+        repay_debt(portfolio, margin_ratchet)
+        equity_curve.append((day, portfolio.equity(marks), portfolio.cash, len(portfolio.lots),
+                             portfolio.debt, portfolio.margin_ratio(marks)))
 
     # 收尾：按最后一日收盘价清算未平仓，使逐周期收益可比
     if days:
@@ -1062,13 +1168,16 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if price:
                 close_lot(portfolio, code, last, price, "回测截止清算")
     return {"equity": equity_curve, "closed": portfolio.closed,
-            "buys": buy_count, "sells": sell_count, "turnover": turnover}
+            "buys": buy_count, "sells": sell_count, "turnover": turnover,
+            "margin_events": margin_events, "min_margin_ratio": min_ratio,
+            "min_margin_day": min_ratio_day, "interest_paid": portfolio.interest_paid,
+            "final_debt": portfolio.debt}
 
 
 # ------------------------------------------------------------------ 指标
 def period_returns(curve: list[tuple[str, float, float, int]], key) -> list[tuple[str, float]]:
     buckets: dict[str, tuple[float, float]] = {}
-    for day, equity, _cash, _n in curve:
+    for day, equity, *_rest in curve:
         label = key(day)
         first, _ = buckets.get(label, (equity, equity))
         buckets[label] = (first, equity)
@@ -1077,7 +1186,7 @@ def period_returns(curve: list[tuple[str, float, float, int]], key) -> list[tupl
 
 def max_drawdown(curve) -> tuple[float, str, str]:
     peak, worst, start, end, peak_day = -1.0, 0.0, "", "", ""
-    for day, equity, _c, _n in curve:
+    for day, equity, *_r in curve:
         if equity > peak:
             peak, peak_day = equity, day
         elif peak > 0:
@@ -1104,7 +1213,7 @@ def rolling_calmar(curve, years: int = 3, step: int = 20) -> list[tuple[str, flo
             continue
         cagr = (last / first) ** (1 / years) - 1
         peak, worst = -1.0, 0.0
-        for _d, equity, _c, _n in seg:
+        for _d, equity, *_r in seg:
             peak = max(peak, equity)
             if peak > 0:
                 worst = max(worst, 1 - equity / peak)
@@ -1125,7 +1234,7 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
     worst, dd_start, dd_end = max_drawdown(curve)
     rf = statistics.fmean([r for _, r in risk_free]) if risk_free else 0.0
     sharpe = (cagr - rf) / vol if vol and not math.isnan(vol) and vol > 0 else float("nan")
-    exposure = statistics.fmean([1 - c / e for _d, e, c, _n in curve if e > 0])
+    exposure = statistics.fmean([1 - c / e for _d, e, c, *_r in curve if e > 0])
 
     closed = result["closed"]
     wins = [l for l in closed if l.proceeds > l.invested]
@@ -1162,7 +1271,7 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
                     if any(p > 0 for p in profits) and any(p <= 0 for p in profits) else float("nan")),
             "平均持有天数": statistics.fmean(holding) if holding else float("nan"),
             "买入笔数": result["buys"], "卖出笔数": result["sells"],
-            "年均换手": (result["turnover"] / years / statistics.fmean([e for _d, e, _c, _n in curve])
+            "年均换手": (result["turnover"] / years / statistics.fmean([e for _d, e, *_r in curve])
                      if years else float("nan")),
             "基准年化": bench}
 
@@ -1206,10 +1315,14 @@ def write_equity(path: Path, curve) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["date", "total_equity", "cash", "positions", "cash_ratio"])
-        for day, equity, cash, count in curve:
+        writer.writerow(["date", "net_equity", "cash", "positions", "cash_ratio",
+                         "debt", "margin_ratio"])
+        for day, equity, cash, count, *rest in curve:
+            debt = rest[0] if rest else 0.0
+            ratio = rest[1] if len(rest) > 1 else float("inf")
             writer.writerow([day, f"{equity:.2f}", f"{cash:.2f}", count,
-                             f"{cash / equity:.4f}" if equity else ""])
+                             f"{cash / equity:.4f}" if equity else "",
+                             f"{debt:.2f}", "" if ratio == float("inf") else f"{ratio:.4f}"])
 
 
 def write_periods(path: Path, curve) -> None:
@@ -1231,6 +1344,17 @@ def main() -> int:
     parser.add_argument("--since", default="2000-01-01")
     parser.add_argument("--until", default="2026-08-07")
     parser.add_argument("--capital", type=float, default=INITIAL_CAPITAL)
+    mg = parser.add_argument_group("融资（杠杆）")
+    mg.add_argument("--credit-ratio", type=float, default=0.0,
+                    help="授信额度 ÷ 净资产。用户口径：净资产300万授权200万 → 0.667。0=不用杠杆")
+    mg.add_argument("--credit-cap", type=float, default=10_000_000.0,
+                    help="授信绝对上限（元），默认 1000 万")
+    mg.add_argument("--margin-rate", type=float, default=0.035, help="融资年利率")
+    mg.add_argument("--maintenance-ratio", type=float, default=1.30, help="平仓线（担保比例）")
+    mg.add_argument("--recover-ratio", type=float, default=1.50,
+                    help="强平后需恢复到的担保比例")
+    mg.add_argument("--margin-ratchet", action="store_true",
+                    help="融资棘轮：日终剩余现金先还融资，不留到下一笔买入")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
     parser.add_argument("--width", type=float, nargs="+", default=[0.10],
                         help="带的半宽 w：买入线 1−w、减持线 1+w。可给多个做敏感度")
@@ -1407,6 +1531,10 @@ def main() -> int:
             ledger = [] if args.trade_log else None
             result = run(strategy, x / 100.0, states, prices, actions, mas,
                          args.since, args.until, args.capital, width=width, tiers=tiers,
+                         credit_ratio=args.credit_ratio, credit_cap=args.credit_cap,
+                         margin_rate=args.margin_rate,
+                         maintenance=args.maintenance_ratio, recover_to=args.recover_ratio,
+                         margin_ratchet=args.margin_ratchet,
                          use_mos=args.use_mos, price_stop=args.price_stop,
                          value_stop=args.value_stop, stop_ma=args.stop_ma,
                          trend_stop=args.trend_stop, entry_filter=args.entry_filter,
