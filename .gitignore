@@ -27,3 +27,4 @@ data/processed/a_share_historical_valuation_daily_pit.csv
 data/raw/corporate_actions/*_shard*.csv
 data/raw/corporate_actions/*_full*.csv
 data/processed/a_share_historical_valuation_daily_261L2.csv
+data/processed/a_share_daily_g*.csv

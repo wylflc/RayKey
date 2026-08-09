@@ -392,8 +392,28 @@ TREND_EFFICIENCY = 0.55
 CYCLICAL_WINDOW = 9              # 周期股窗口须覆盖一个完整景气周期，5 年可能只覆盖半个
 
 
+def growth_confirmed(series: dict[str, dict], observations: list[tuple[str, float]]) -> bool:
+    """确认成长：ROE **连续两年上行** 且 净利率同向 且 营收同向。三条缺一不可。
+
+    比 `roe_trend` 严格——后者只要求整段走势单调度够高与净利率同向，可能命中一次性跳升；
+    此处要求最近两次年度变化都为正，且营收也在扩张，以排除「减值做小净资产」与
+    「毛利改善但规模萎缩」两类假成长。**全部只用已披露年报，无前视。**
+    """
+    if len(observations) < 3:
+        return False
+    values = [v for _, v in observations]
+    if not (values[-1] > values[-2] > values[-3]):
+        return False
+    margins = [net_margin(series[p]) for p, _ in observations[-3:]]
+    revenues = [_num(series[p].get('total_operate_income')) for p, _ in observations[-3:]]
+    if any(m is None for m in margins) or any(r is None for r in revenues):
+        return False
+    return margins[-1] > margins[0] and revenues[-1] > revenues[0]
+
+
 def trend_aware_roe(series: dict[str, dict], available_at: str, base_years: int,
-                    stat: str) -> tuple[float | None, dict]:
+                    stat: str, latest_weight: float = 0.6,
+                    recent_weight: float = 0.6) -> tuple[float | None, dict]:
     """长期锚 + 趋势识别 + 近期读数的混合 ROE（2026-08-08 外部评审建议，实测后采纳）。
 
     为什么不在「TTM」与「五年中位」之间二选一：中位数能治**噪声与周期**，治不了**结构性趋势**。
@@ -420,13 +440,22 @@ def trend_aware_roe(series: dict[str, dict], available_at: str, base_years: int,
     agg = statistics.median if stat == "median" else statistics.fmean
     anchor = agg(values)
     direction = roe_trend(series, observations, TREND_EFFICIENCY)
+    confirmed = growth_confirmed(series, observations) if direction == "up" else False
     if direction and len(values) >= 2:
-        recent = 0.6 * values[-1] + 0.4 * values[-2]
-        value = 0.6 * recent + 0.4 * anchor
+        # 两层阻尼：①`recent` 把最新一年与上一年混合；②再与长期锚混合。
+        # **对确认成长股这两层会叠加成六四折**——实测中际旭创 2024 年 ROE 31.23%，
+        # 经 0.6×(0.6×31.23+0.4×16.58)+0.4×11.73 后只剩 19.91%，内在价值随之腰斩，
+        # 该股在 2025 年 4 月（前瞻 PE 约 7）仍被合格线 P/V≤0.90 挡在门外（用户 2026-08-09 指出）。
+        # `growth_confirmed` 命中时改用更陡的权重，让已实现的最新一年说话。
+        w_last = latest_weight if confirmed else 0.6
+        w_recent = recent_weight if confirmed else 0.6
+        recent = w_last * values[-1] + (1 - w_last) * values[-2]
+        value = w_recent * recent + (1 - w_recent) * anchor
     else:
         value = anchor
     return value, {"years": len(values), "window": window, "anchor": anchor,
-                   "trend": direction, "roe_sigma": efficiency}
+                   "trend": direction, "roe_sigma": efficiency,
+                   "growth_confirmed": "1" if confirmed else ""}
 
 
 def incremental_roe(series: dict[str, dict], actions: list[dict], available_at: str,
@@ -605,7 +634,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     # 归一化口径：ROE 取近五年年度中位（结构参数），EPS 由清洁盈余 E = ROE×B 反推。
     # 这样两个输入天然自洽，且不把周期低谷的读数外推十年（见 normalized_roe 文档）。
     if args.roe_source == "normalized":
-        roe0, meta = trend_aware_roe(series, available_at, args.roe_years, args.roe_stat)
+        roe0, meta = trend_aware_roe(series, available_at, args.roe_years, args.roe_stat,
+                                     args.growth_latest_weight, args.growth_recent_weight)
         band.roe_anchor = meta.get("anchor")
         band.roe_trend = meta.get("trend", "")
         band.roe_window = meta.get("window")
@@ -749,7 +779,7 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
 # ------------------------------------------------------------------ 输出
 BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", "notice_date",
                "available_at", "status", "reason", "eps_ttm", "roe_ttm", "roe_source", "bps",
-               "eps0", "roe0", "roe_anchor", "roe_trend", "roe_window", "roe_efficiency",
+               "eps0", "roe0", "roe_anchor", "roe_trend", "growth_confirmed", "roe_window", "roe_efficiency",
                "incremental_roe", "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
                "r_mode", "rf", "erp", "beta", "r", "g_terminal", "roe_terminal",
                "intrinsic_value", "band_low", "band_high", "mos", "max_buy_price",
@@ -933,6 +963,10 @@ def main() -> int:
     parser.add_argument("--roe-stat", choices=("median", "mean"), default="median")
     parser.add_argument("--min-roe-years", type=int, default=3,
                         help="归一化 ROE 至少需要几个已披露财年，缺省 3")
+    parser.add_argument("--growth-latest-weight", type=float, default=0.6,
+                        help="确认成长股：最新一年在 recent 中的权重（缺省 0.6 即不变）")
+    parser.add_argument("--growth-recent-weight", type=float, default=0.6,
+                        help="确认成长股：recent 相对长期锚的权重（缺省 0.6 即不变）")
     parser.add_argument("--min-terminal-spread", type=float, default=0.02,
                         help="ROE_T 须高出 g_T 的最小利差，缺省 2pp（低于此估值对分母任意敏感）")
     parser.add_argument("--g0-cap", type=float, default=0.25, help="g0 上限，缺省 25%%")
