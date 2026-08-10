@@ -609,6 +609,29 @@ def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int) -> tuple[
     return ma.get(20, 0.0), 20
 
 
+def lot_ratio_ready(counters: dict, code: str, lot_value: float, tranche: float) -> bool:
+    """§9.7.3 比例冷却（用户 2026-08-10 指令）：一手价值是一档的 `x` 倍时，**成交一手后跳过随后
+    `round(x) − 1` 次合格机会**，即每 `round(x)` 次合格才动一手。
+
+    为什么按「合格次数」而不是自然日：冷却的目的是让**平均速度等于一档/次**，而合格机会本身
+    是不连续的（走势条件断了就不合格）。按日历天计的话，一只票停牌或走势坏掉十天，冷却期照走，
+    复合格当天就能立刻成交——冷却等于没起作用。原 `--min-lot-cooldown 5` 即此形态。
+
+    取 `round(x)` 而非 `floor(x)+1`：目标是平均速度 ≈ 一档/次，`round` 的偏差 <5%
+    （茅台 x=9.07 → 每 9 次一手 = 1.008 档/次；春风动力 x=2.04 → 每 2 次一手 = 1.02 档/次）。
+    若按字面「跳过 x 次」则为每 10 次/每 3 次，速度掉到 0.91/0.68 档，对贵股系统性欠配。
+
+    买卖共用一个计数器：同一只票不可能同日既在买入清单又在减持清单。
+    """
+    if tranche <= 0 or lot_value <= 0:
+        return False
+    if counters.get(code, 0) > 0:
+        counters[code] -= 1
+        return False
+    counters[code] = max(1, round(lot_value / tranche)) - 1
+    return True
+
+
 def sell_shares(target: float, held: float, price: float, lot_size: int) -> float:
     """分批卖出的股数：按手向下取整。**剩余不足一手则整笔卖出**——A 股允许零股卖出，
     但不允许留着买不回来的零头当仓位管理。返回 0 表示本次不动。"""
@@ -667,7 +690,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         cluster_swap: bool = False, cluster_delta: float = 0.85,
         cluster_min_upside: float = 0.20, swap_partial: bool = False,
         lot_size: int = 0, rebuy: str = "off", ledger: list | None = None,
-        min_lot_cooldown: int = 0) -> dict:
+        min_lot_cooldown: int = 0, lot_ratio_cooldown: bool = False) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -755,6 +778,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
     prev_day = None
     margin_events: list[dict] = []
+    lot_counters: dict[str, int] = {}   # §9.7.3 比例冷却，买卖共用
     min_ratio, min_ratio_day = float("inf"), ""
     credit_limit = 0.0
     prev_trading = {n: d for d, n in zip(days, days[1:])}
@@ -874,6 +898,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 制造一次集中抛售，测出来的是流动性冲击而不是规则优劣。
             if members is not None and code not in members:
                 shares = sell_shares(budget / price, lot.shares, price, lot_size)
+                if (not shares and lot_ratio_cooldown and lot_size
+                        and lot.shares >= lot_size
+                        and lot_ratio_ready(lot_counters, code, price * lot_size, budget)):
+                    shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
+                    stats["高价股·按手减持"] += 1
                 if shares > 0:
                     if shares >= lot.shares * 0.999:
                         turnover += lot.shares * price
@@ -957,6 +986,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if ratio is not None and ratio >= sell_line:
                 stats["P/V≥减持线·减一档"] += 1
                 shares = sell_shares(budget / price, lot.shares, price, lot_size)
+                if (not shares and lot_ratio_cooldown and lot_size
+                        and lot.shares >= lot_size
+                        and lot_ratio_ready(lot_counters, code, price * lot_size, budget)):
+                    shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
+                    stats["高价股·按手减持"] += 1
                 if shares <= 0:
                     continue
                 if shares >= lot.shares * 0.999:
@@ -1103,6 +1137,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 partial = swap_partial and len(portfolio.lots) < max_positions and worst not in reduced_today
                 shares = (sell_shares(budget / price, lot_worst.shares, price, lot_size)
                           if partial else lot_worst.shares)
+                if (partial and not shares and lot_ratio_cooldown and lot_size
+                        and lot_worst.shares >= lot_size
+                        and lot_ratio_ready(lot_counters, worst, price * lot_size, budget)):
+                    shares = (lot_size if lot_worst.shares - lot_size >= lot_size
+                              else lot_worst.shares)
+                    stats["高价股·按手换仓"] += 1
                 if partial and shares < lot_worst.shares * 0.999:
                     stats["换仓·减一档"] += 1
                     lot_worst.shares -= shares
@@ -1187,10 +1227,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     # 高价股（茅台一手 13 万）一档金额买不起一手。**不因此放弃建仓**，改为
                     # 每次买一手、隔 `min_lot_cooldown` 个交易日再买下一手（用户 2026-08-09 指令）。
                     # 冷却期是必需的：不设的话一手会天天买，等于把该股的定投速度放大到一档以上。
-                    prior = last_buy.get(code)
-                    ready = prior is None or _days_between(prior, day) >= min_lot_cooldown
-                    if (min_lot_cooldown and ready
-                            and buying_power(portfolio, credit_limit) >= fill * lot_size):
+                    # v2.77 起冷却由「自然日」改为「合格次数」（`lot_ratio_ready`，§9.7.3）；
+                    # `--min-lot-cooldown` 保留为旧口径，两者互斥，都不给则不建仓（原行为）。
+                    if lot_ratio_cooldown:
+                        ready = lot_ratio_ready(lot_counters, code, fill * lot_size, budget)
+                    else:
+                        prior = last_buy.get(code)
+                        ready = (min_lot_cooldown
+                                 and (prior is None or _days_between(prior, day) >= min_lot_cooldown))
+                    if ready and buying_power(portfolio, credit_limit) >= fill * lot_size:
                         lots_n = 1
                         stats["高价股·按手建仓"] += 1
                     else:
@@ -1532,6 +1577,8 @@ def main() -> int:
                         help="容忍的下滑幅度：rating 为评级均值降幅，eps 为预测降幅比例")
     parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
+    parser.add_argument("--lot-ratio-cooldown", action="store_true",
+                        help="§9.7.3 比例冷却：一手价值是一档的 x 倍时，成交一手后跳过 round(x)−1 次合格机会（买卖共用）")
     parser.add_argument("--min-lot-cooldown", type=int, default=0, metavar="D",
                         help="高价股一档买不起一手时，改为每 D 个自然日买一手；0 表示跳过不买")
     parser.add_argument("--trade-log", type=Path, help="导出逐笔成交流水（人工核对用）")
@@ -1634,6 +1681,7 @@ def main() -> int:
                      + ("_sp" if args.swap_partial else "")
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
                      + (f"_ml{args.min_lot_cooldown}" if args.min_lot_cooldown else "")
+                     + ("_lrc" if args.lot_ratio_cooldown else "")
                      + (f"_rb{args.rebuy}" if args.rebuy != "off" else "")
                      + (f"_cl{args.cluster_delta:g}u{args.cluster_min_upside:g}" if args.cluster_swap else "")
                      + (f"_rg{args.research_gate}{args.research_window}"
@@ -1680,7 +1728,8 @@ def main() -> int:
                          cluster_swap=args.cluster_swap, cluster_delta=args.cluster_delta,
                          cluster_min_upside=args.cluster_min_upside / 100.0,
                          swap_partial=args.swap_partial, lot_size=args.lot_size, rebuy=args.rebuy,
-                         ledger=ledger, min_lot_cooldown=args.min_lot_cooldown)
+                         ledger=ledger, min_lot_cooldown=args.min_lot_cooldown,
+                         lot_ratio_cooldown=args.lot_ratio_cooldown)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue

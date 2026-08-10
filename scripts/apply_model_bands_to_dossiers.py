@@ -46,14 +46,26 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from build_historical_valuation_bands import load_actions, split_factor  # noqa: E402
+
 DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 
 
 def latest_model_bands(path: Path, min_available: str) -> tuple[dict, dict]:
-    """每只取 `available_at` 最新且可用的一条。返回 (可用带, 被时点门槛挡下的)。"""
+    """每只取最新且可用的一条。返回 (可用带, 被时点门槛挡下的)。
+
+    **排序键必须是 `(available_at, report_date)` 两项**：A 股年报与一季报绝大多数在同一天
+    披露（4/29-4/30），两条的 `available_at` 因此相等；只比 `available_at` 时严格 `>` 不成立，
+    先读到的那条（文件按报告期升序，即**年报**）会留下来，一季报被丢掉。
+    2026-08-10 v2.72 首次落地即踩此坑——168 只可比标的中 **59 只用了上一期报告的带**，
+    且方向一致偏低（格力电器 108.54 而非 113.07、五粮液 107.30 而非 114.51），
+    与回测面板逐票对不上。回测面板本身取值正确，故这**只是生产侧的选择错**，不是口径分歧。
+    """
     best: dict[str, dict] = {}
     for row in csv.DictReader(path.open(newline="", encoding="utf-8-sig")):
         if row.get("status") != "ok":
@@ -63,8 +75,9 @@ def latest_model_bands(path: Path, min_available: str) -> tuple[dict, dict]:
                 continue
         except (TypeError, ValueError):
             continue
-        code, avail = row["security_code"], row.get("available_at", "")
-        if code not in best or avail > best[code]["available_at"]:
+        code = row["security_code"]
+        key = (row.get("available_at", ""), row.get("report_date", ""))
+        if code not in best or key > (best[code]["available_at"], best[code]["report_date"]):
             best[code] = row
     stale = {c: r for c, r in best.items() if r["available_at"][:10] < min_available}
     return {c: r for c, r in best.items() if c not in stale}, stale
@@ -83,8 +96,9 @@ def main() -> int:
     usable, stale = latest_model_bands(args.bands, args.min_available)
     rows = list(csv.DictReader(args.dossiers.open(newline="", encoding="utf-8-sig")))
     header = list(rows[0].keys())
+    actions = load_actions()
 
-    applied, kept_unvaluable, kept_stale = [], [], []
+    applied, kept_unvaluable, kept_stale, split_adj = [], [], [], []
     for row in rows:
         code = row["security_code"]
         band = usable.get(code)
@@ -92,7 +106,16 @@ def main() -> int:
             (kept_stale if code in stale else kept_unvaluable).append(row["security_name"])
             continue
 
-        iv = float(band["intrinsic_value"])
+        # **送转必须在这里再除一次**：`intrinsic_value` 是报告期口径的每股价值，而现价是不复权的。
+        # 该报告公告之后若发生送转，股数变了而 `IV` 没变，带就与价格不同基——带偏高一个送转比，
+        # `P/V` 相应偏低。回测面板的 `split_factor` 列做的正是这件事，生产侧此前漏做：
+        # 2026-08-10 复核发现 18 只不一致，全部是 1.30/1.40/1.45 三个送转比
+        # （兴齐眼药 2026-05-22 十送四点五，带 25.80 应为 17.80，`P/V` 1.66 实为 **2.41**）。
+        # `since` 取该期**公告日**而非报告期末，理由同 `split_factor` 的文档串。
+        factor = split_factor(actions.get(code, []), band["notice_date"], args.as_of)
+        iv = float(band["intrinsic_value"]) / factor
+        if factor != 1.0:
+            split_adj.append(f"{row['security_name']}÷{factor:g}")
         old_low, old_high = row["band_low"], row["band_high"]
         old_mid = (float(old_low) + float(old_high)) / 2 if old_low and old_high else None
 
@@ -131,6 +154,8 @@ def main() -> int:
         applied.append(row["security_name"])
 
     print(f"档案 {len(rows)} 份｜**改用模型带 {len(applied)} 份**")
+    if split_adj:
+        print(f"  送转折算 {len(split_adj)} 只：{'、'.join(split_adj)}")
     if kept_unvaluable:
         print(f"  保留手工带·模型判不可估 {len(kept_unvaluable)} 只：{'、'.join(kept_unvaluable)}")
     if kept_stale:
