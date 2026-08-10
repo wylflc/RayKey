@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v2.71
+# A股选股-估值-量价操作流程 v2.72
 
 > **本行的版本号是唯一版本真值**：`scripts/workflow_decision_log.py` 在导入时解析它写入决策日志的 `workflow_version` 列，改版时改这里即可，不得在别处另存一份。逐版内容见 `docs/Ashare_workflow_changelog.md`。
 >
@@ -15,7 +15,7 @@
 | 今日持仓的公告与估值跟踪 | §11 | `track_holdings_daily.py --as-of` | `a_share_holdings.csv`（四列）+ 池 → `daily_holdings_tracking.csv` |
 | 季度全市场质量审查 / 三类初筛 | §5 | `build_quarterly_quality_review_queue.py`；全量重扫按 §5.4.6 | 队列 → `a_share_attention_triage.csv` |
 | 对 worth_attention 做 L1-L3 分层 | §5.7-§5.8 | 无（模型判断） | triage → `a_share_watchlist_quality_tiers.csv` |
-| 估值排雷 / 更新核心估值池 | §6 | `build_valuation_band_cards.py` → **`apply_valuation_band_cards.py`** → `validate_valuation_bands.py` → `build_a_share_core_valuation_pool.py`（**四步缺一不可**，§6.7 要求 10） | 逐票档案 + 分层 → `a_share_core_valuation_pool.csv` |
+| 估值排雷 / 更新核心估值池 | §6 | **`build_historical_valuation_bands.py` → `apply_model_bands_to_dossiers.py`** → `build_valuation_band_cards.py` → **`apply_valuation_band_cards.py`** → `validate_valuation_bands.py` → `build_a_share_core_valuation_pool.py`（**六步缺一不可**，§6.7 要求 10） | 财报 → 模型带 → 档案 → `a_share_core_valuation_pool.csv` |
 | 给新入池公司定合理价区间 | **§6.5.7 建档**（唯一建带路径） | `build_company_dossier_readmes.py` | 一致预期/财报证据 → `a_share_valuation_dossiers.csv` + `data/companies/<代码>_<名称>/` |
 | 财报披露后的滚动更新 | §7 | `build_report_update_queue.py` | triage/tiers/pool → 更新队列 |
 | 单家公司值不值得关注 | §5.4 + 防过度纳入清单 + 边缘判例集 | 无 | → triage 行 + 决策日志 |
@@ -43,7 +43,8 @@
 | `data/raw/a_share_securities.csv` | A股证券名单。**与财报文件取并集使用**——名录更新滞后于新股上市，2026-08 实测缺 24 家（含宇树科技、长鑫科技） |
 | `data/processed/a_share_attention_triage.csv` | 三类初筛结论（`worth_attention`/`boundary_pending`/`garbage`） |
 | `data/processed/a_share_watchlist_quality_tiers.csv` | L1-L3 质量分层与参考分 |
-| `data/processed/a_share_valuation_dossiers.csv` | **逐票估值档案，唯一建带来源** |
+| `data/processed/a_share_valuation_dossiers.csv` | 逐票估值档案。**v2.72 起带由内在价值模型写入**（§6.5.7.3），本文件是载体不是来源；逐票研究结论（`key_metrics`／`review_triggers` 等）仍在此维护 |
+| `data/interim/pool_model_bands.csv` | **内在价值模型带，v2.72 起的唯一带来源**（`build_historical_valuation_bands.py` 产出，与 §12.9 回测同一套口径） |
 | `data/processed/a_share_core_valuation_pool.csv` | 核心估值合格池（含 `fair_price_low/high`） |
 | `data/processed/000_a_share_core_valuation_pool.md` | 池阅读版 |
 | `data/processed/daily_buy_candidates.csv` | 每日量价事实与 MA（**不是买入名单**） |
@@ -1071,6 +1072,29 @@ python3 scripts/build_company_dossier_readmes.py --check  # 只比对不写盘�
 
 **首个判例：紫金矿业（601899）** —— 剔除 PB 腿，其余沿用房内口径。中枢归母 827.00 亿 × 终值 PE 14.29（L2：1/(10%−3%)）× [0.85, 1.05] ÷ 265.9071 亿股 = **37.78~46.67**（现价 32.95，较低估）。剔除 PB 腿的依据：账面净资产是矿权的**历史取得成本**，而紫金的价值恰恰来自低价收购矿权再开发，账面不反映矿山当前经济价值；另按 `(ROE−g)/(COE−g)` 反推，现 ROE 33.04% 对应合理 PB 4.29、现 PB 4.62 仅高约 8%，而对静态中位 3.51 的「高 32%」是因为中位未随 ROE 上移调整（2016-2020 ROE 均值 10.61% → 2021-2025 均值 25.92%）。**争议点已显式化**：本带假设 827 亿中枢可持续；若判定其中含不可持续的金属价格红利，应改用归一化净利率重算中枢并同步下移——该判断由用户拍板，不由通用公式默认。
 
+#### 6.5.7.3 带的来源：内在价值模型（v2.72 起，取代逐票手工带）
+
+**背景（§12.9.1 的发现）**：2026-08-10 查出**回测用的带与实盘出单的带不是同一套**。回测读 `intrinsic_value.py` 的机械模型（`g0 = ROE×留存率`、10 年 fade、`n1=0`、隐含 PE 中位 **15.0**），而实盘出单用 273 份手工档案（169 份走 `一致预期 × PEG`，隐含 PE 20~45x）。**全池中位相差 1.24 倍**——即实盘等效运行在买入线约 **1.12** 上，超出 §12.6 扫过的 0.70~1.00 全区间，且落在「越松越差」的一侧。用户裁定：**按回测口径落实。**
+
+**口径对齐（本节成立的前提）**：模型输出 `band = IV × [0.90, 1.10]`，**中值恰为 `IV`**；回测的 `valuation_ratio = 收盘 ÷ IV`。故写入档案后，生产口径的 `P/V = 收盘 ÷ 区间中值` 与回测**逐位一致**，不引入换算误差。
+
+**模型参数（不得在别处另定）**：`--r-mode market`（`r = Rf + β·ERP`，取报告期**当时**可观测利率）｜`--g0-source sustainable`｜`--g0-cap 0.25`｜`--n 10 --n1 0`｜`--roe-source normalized`（近五年年度 ROE 中位）｜`g_T = min(3%, Rf)`｜`ROE_T = r + 永续超额` 且 ≤ `ROE0`。**这些取值的依据是 §12.9 的全部实测**：压 `g0` 五起点全负（−1.78／−3.57pp）、抬 `g0` 与改 fade 形状均不可复现（§12.10）。
+
+**何时仍用手工带**（`apply_model_bands_to_dossiers.py` 自动识别并跳过）：
+
+| 情形 | 判据 | 2026-08-10 落地时的实例 |
+| --- | --- | --- |
+| 模型判不可估 | `EPS0 ≤ 0` 或 `ROE0 ≤ 0` | 3 只：百济神州、盛合晶微、寒武纪（连亏致归一化 ROE 为负） |
+| 模型带时点过旧 | `available_at` 早于 `--min-available`（缺省 2025-01-01） | 7 只：石基信息、利亚德、华大智造、景嘉微、隆平高科、洲明科技、宏桥控股（2024 资产注入，模型带停在 2012-10） |
+
+**263/273 换用模型带，10 只保留手工带。** §6.5.5.2「不得判无法估值」不变——这 10 只走逐票推导正是该条的适用场景。
+
+**逐票档案保留什么**：只覆盖带相关六列（`band_low`/`band_high`/`band_method`/`band_derivation`/`anchor_earnings_yi`/`reviewed_at`）；`key_metrics`、`hf_indicators`、`next_earnings_check`、`review_triggers`、`dossier_dir`、`notes` **原样保留**——那是逐票研究的结论，与用哪个模型算带无关，且 §7.4.1 的复核触发仍要用它。原手工带写入 `notes` 留痕。
+
+**`bespoke` 必须保持 `true`（硬规则）**：其语义是「带只由本档给出，通用十类模型不参与」，而本档现在装的正是模型带。**设成 `false` 会让 `build_valuation_band_cards.py` 走通用路径把带覆盖掉**——2026-08-10 首次落地时正是这么错的，17 只被重算成兜底 EPV 后判无法估值，校验 175/181。修正后 181/181 通过。
+
+**落地当日的影响（须知情）**：全池 `P/V` 中位由 1.094 升到 **1.330**；当日合格集由 24 只变为 **15 只**且构成完全改变（银行、白酒、煤炭为主）；**25 只持仓中 12 只越过减持线 1.10**（宇通客车 2.33、春风动力 1.96、东阿阿胶 1.82、兴齐眼药 1.66……），按 §9.7.2 第四步进入每日一档减持。
+
 ### 6.6 估值审查执行规则
 
 估值审查对全部 worth_attention 公司执行（核心层 L1/L2 优先），目标是排除过度高估，不是只寻找显著低估股票。估值必须先按 §6.5.0 判定顺序确定策略标签，再使用该标签唯一对应的建带公式（§6.5.2）。
@@ -1209,7 +1233,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 7. 现价刷新与档位差分（v1.03/v1.05）：`--quotes fetch` 经 `scripts/a_share_quotes.py` 拉取腾讯批量行情快照；`--md-only` 供每日扫描调用——只重渲染 MD 并写一行 `pool_price_refresh` 汇总日志，不重写池 CSV、不逐股重写池结论。每次渲染把当日有效档位写入快照 `data/interim/pool_effective_tiers.csv`，与上一快照差分得出**当日档位变化名单**（进汇总日志与扫描报告第二节）；现价缺失（停牌/请求失败）的行沿用估值时点值定档。
 8. 业绩预告物化（v1.04；v1.09 起不在 MD 展示；v1.16 起每日刷新）：`scripts/fetch_a_share_earnings_forecasts.py` 将东财业绩预告接口物化为 `data/interim/a_share_earnings_forecasts.csv`（`--report-date` 缺省自动取最近一个已结束的季度报告期末，可显式指定，适用一季报/中报/三季报/年度各预告季；字段含代码、报告期、公告日、指标口径 004归母/005扣非/006营收、预告区间、同比增幅、去年同期、预告类型、检索时间与来源）。该文件**不是一次性物化，而是每个扫描日经 §9.1 第一步 1a 重抓**——预告披露是逐日到达的事件流，停更的文件等于关闭 §7.4/§7.5.5 的事件入口（判例：睿创微纳 2026-07-20 盘后预告，7/17 的旧文件使其三个交易日不可见）。该文件**只作 §7.5.5 express 复核队列的输入**，且刷新汇总**不得只报覆盖数**：必须列出**待复核名单本身**（代码+名称+公告日+披露类型；判定=预告/快报/正式报告公告日的最大者晚于 max(`valuation_reviewed_at`, `evidence_available_at`)，缺失时回退 `pool_as_of`，v1.18 起为三类披露并集口径），并标注披露文件检索时间——检索日早于扫描日时加"⚠️数据过期"警告并按 §9.1 第一步 1a 当场重抓。待复核名单逐票按 §7.5.5 express 复核闭环（复核更新 `valuation_reviewed_at`/`valuation_evidence_event` 后自动移出名单）；名单非空时写入扫描报告第二节与第三节待办。复核完成后其影响体现为 估值时间/估值事件 两列与合理价区间的更新，预告具体数字不进入池 MD。
 9. 定期报告与业绩快报披露物化（v1.18）：`scripts/fetch_a_share_report_disclosures.py` 将东财**正式定期报告披露**（RPT_LICO_FN_CPD，公告日=实际披露日，含归母/营收实际数与同比）与**业绩快报**（RPT_FCI_PERFORMANCEE）物化为 `data/interim/a_share_report_disclosures.csv`（`disclosure_type` 区分 periodic_report/express_report；`--report-date` 缺省口径同预告脚本）。与预告文件同为**每个扫描日经 §9.1 第一步 1a 重抓**的事件流入口：仅抓预告等于对快报与正式报告闭眼（判例：华润三九 7/15、大族激光 7/21（归母 +163%）H1 快报在仅预告机制下持续不可见，直至 2026-07-22 本文件增设才被发现，两只均已超期）。该文件供 报告更新队列（§7.2/§7.3 公告日触发）与 待复核名单（要求 8 并集口径）使用；同一披露季内正式报告公告日晚于快报/预告的，正式报告构成新一次复核触发（快报/预告先行复核不豁免正式报告复核，实际数与预告的兑现偏差按 §6.6.1.3 回填台账）。
-10. **建带四步链（v1.28 立校验前置，v2.08 补回 `apply` 步）**：从逐票档案到池，**四步缺一不可、顺序不可换**——
+10. **建带六步链（v1.28 立校验前置，v2.08 补回 `apply` 步，v2.72 前置模型带两步）**：从财报到池，**六步缺一不可、顺序不可换**。前两步是 v2.72 新增：`build_historical_valuation_bands.py`（算模型带）→ `apply_model_bands_to_dossiers.py`（写进档案）。其后四步不变——
 
     ```bash
     # ① 档案 → 建带卡（只写 data/interim/valuation_band_cards.csv，不动估值表）
@@ -1549,7 +1573,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 
    全池逐日搜新闻不可执行，本范围只覆盖当天可能改变决策的部分（实测约 30-50 只/日）。范围外公司的非披露类事件要等下次触发、下次定期披露或用户点名时才发现。**实际只查了其中一部分时须写明覆盖度，不得默认全覆盖。**
 
-1c. **命中即当日更新估值**：按 §7.4.1 先更新逐票档案、再重算合理价区间（`reviewed_at` 改当日）。**只要当日有任何一条带被改动，必须按 §6.7 要求 10 的四步重跑**：`build_valuation_band_cards.py` → **`apply_valuation_band_cards.py`** → `validate_valuation_bands.py` → `build_a_share_core_valuation_pool.py --as-of 当日`。**漏掉 `apply` 与不重跑等价**——建带脚本只写建带卡，校验与池物化读的都是估值表。
+1c. **命中即当日更新估值**：按 §7.4.1 先更新逐票档案的**研究结论**（`key_metrics`／`review_triggers`／`notes`），带本身由模型重算——**新财报落地后须先跑 `build_historical_valuation_bands.py` 与 `apply_model_bands_to_dossiers.py` 两步**（§6.5.7.3）。**只要当日有任何一条带被改动，必须按 §6.7 要求 10 的其余四步重跑**：`build_valuation_band_cards.py` → **`apply_valuation_band_cards.py`** → `validate_valuation_bands.py` → `build_a_share_core_valuation_pool.py --as-of 当日`。**漏掉 `apply` 与不重跑等价**——建带脚本只写建带卡，校验与池物化读的都是估值表。
 
 **第二步 全池定档**
 
