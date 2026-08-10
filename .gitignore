@@ -39,3 +39,4 @@ data/processed/hist_bands_n1_*.csv
 data/processed/hd_*.csv
 data/processed/hb_*.csv
 data/processed/backtest/*_trades.csv
+data/processed/backtest/*_periods.csv
