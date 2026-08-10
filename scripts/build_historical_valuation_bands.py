@@ -698,7 +698,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
 
     try:
         result = intrinsic_value(eps0, roe0, g0, r, roe_terminal=roe_t,
-                                 g_terminal=g_terminal, n=args.n)
+                                 g_terminal=g_terminal, n=args.n, n1=args.n1)
     except ValuationError as exc:
         band.status, band.reason = "rejected", str(exc)
         return band
@@ -973,6 +973,9 @@ def main() -> int:
     parser.add_argument("--g0-floor", type=float, default=0.0)
     parser.add_argument("--g-terminal", type=float, default=DEFAULT_G_TERMINAL)
     parser.add_argument("--n", type=int, default=10, help="fade 年数（非高增长年数，见文件头）")
+    parser.add_argument("--n1", type=int, default=0,
+                        help="高速期年数：前 n1 年 ROE 与 g 维持起始值不衰减，其后再 fade n 年。"
+                             "缺省 0 = 原行为（g 自第 1 年即衰减）")
     parser.add_argument("--out-bands", type=Path)
     parser.add_argument("--out-daily", type=Path)
     args = parser.parse_args()

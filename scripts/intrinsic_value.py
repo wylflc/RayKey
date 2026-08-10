@@ -134,6 +134,7 @@ def intrinsic_value(
     roe_terminal: float | None = None,
     g_terminal: float = DEFAULT_G_TERMINAL,
     n: int = DEFAULT_N,
+    n1: int = 0,
     lam: float | None = None,
     consistent: bool = True,
     g_for_peg: float | None = None,
@@ -163,8 +164,13 @@ def intrinsic_value(
         raise ValuationError(
             f"ROE_T={roe_terminal:.2%} ≤ g_T={g_terminal:.2%}：终值留存率 ≥100%，永续增长无法内生维持")
 
-    roe_path = [_fade(roe0, roe_terminal, t, n, lam) for t in range(1, n + 1)]
-    g_path = [_fade(g0, g_terminal, t, n, lam) for t in range(1, n + 1)]
+    # `n1`（用户 2026-08-10）：**高速期年数**——前 n1 年 ROE 与 g 维持起始值不衰减，
+    # 其后再按 n 年 fade 到终值。缺省 0，即原行为（g 自第 1 年起即衰减）。
+    # 加它的理由是用户的观察「很多公司能保持很多年的高 ROE」，而 n1=0 隐含
+    # 「竞争侵蚀从第一年就开始」，对宽护城河公司偏严。**它只改路径形状，不改留存率
+    # 一致性、护栏与终值口径**，故 n1=0 时须与旧结果逐位相同（见 --self-test）。
+    roe_path = [roe0] * n1 + [_fade(roe0, roe_terminal, t, n, lam) for t in range(1, n + 1)]
+    g_path = [g0] * n1 + [_fade(g0, g_terminal, t, n, lam) for t in range(1, n + 1)]
     if any(x <= 0 for x in roe_path):
         raise ValuationError("fade 路径上出现非正 ROE：请检查 ROE_T 或 λ")
 
@@ -205,7 +211,8 @@ def intrinsic_value(
     # 终值：第 N 年后进入稳态（ROE_T、g_T 恒定），此时 b = g_T/ROE_T 正确无需修正
     payout_terminal = 1 - g_terminal / roe_terminal
     terminal_value = eps_path[-1] * (1 + g_terminal) * payout_terminal / (r - g_terminal)
-    terminal_pv = terminal_value / (1 + r) ** n
+    # **显式期是 n1 + n 年**，终值须按同一年数折现——只改路径不改这里会把终值高估 (1+r)^n1 倍
+    terminal_pv = terminal_value / (1 + r) ** (n1 + n)
 
     value = explicit_pv + terminal_pv
     peg_growth = g_for_peg if g_for_peg is not None else g0
