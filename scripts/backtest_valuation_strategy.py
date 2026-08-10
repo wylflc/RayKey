@@ -279,6 +279,22 @@ def load_prices(codes: set[str] | None = None) -> dict[str, dict[str, float]]:
     return out
 
 
+def load_opens(codes: set[str] | None = None) -> dict[str, dict[str, float]]:
+    """逐票开盘价。仅 `--exec-delay 1 --exec-price open` 用得到，故按需载入。"""
+    out: dict[str, dict[str, float]] = {}
+    for path in sorted(OHLCV_DIR.glob("*.csv")):
+        if path.stem.startswith("INDEX_") or (codes is not None and path.stem not in codes):
+            continue
+        series = {}
+        with path.open(newline="", encoding="utf-8") as handle:
+            for row in csv.DictReader(handle):
+                value = _num(row.get("open"))
+                if value and value > 0:
+                    series[row["date"]] = value
+        out[path.stem] = series
+    return out
+
+
 def load_actions() -> dict[str, dict[str, tuple[float, float]]]:
     """{代码: {除权日: (每股现金红利, 送转比)}}。同日多条相加/连乘。"""
     out: dict[str, dict[str, tuple[float, float]]] = defaultdict(dict)
@@ -636,7 +652,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         position_cap: float = 0.0, only_tiers: set[str] | None = None,
         universe: list[tuple[str, set[str]]] | None = None,
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
-        trend_tol: float = 0.0,
+        trend_tol: float = 0.0, exec_delay: int = 0, exec_price: str = "close",
+        opens: dict[str, dict[str, float]] | None = None,
         sell_line_override: float | None = None, trend_exit_ma: int = 0,
         rank_by_upside: bool = True, entry_mode: str = "trend", dev_ma: int = 60,
         dev_buy_max: float = 1.10, dev_sell_min: float = 0.0,
@@ -738,6 +755,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     margin_events: list[dict] = []
     min_ratio, min_ratio_day = float("inf"), ""
     credit_limit = 0.0
+    prev_trading = {n: d for d, n in zip(days, days[1:])}
     for day in days:
         apply_corporate_actions(portfolio, day, actions)
 
@@ -751,7 +769,17 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             while uni_idx < len(universe) and universe[uni_idx][0] <= day:
                 members = universe[uni_idx][1]
                 uni_idx += 1
-        today = {code: (close, value, ratio) for code, close, value, ratio in states[day]}
+        # 成交时序（用户 2026-08-10）：`exec_delay=1` = 「T 日收盘算信号、T+1 日成交」。
+        # **实现为「移信号」而非「移价格」**——在 T 日用 T−1 的判据、在 T 日成交，
+        # 于是现金、股数、盯市全部落在同一天。**先前按「记在 T 日、用 T+1 的价」实现是错的**：
+        # 花的钱是 T+1 的价而持仓按 T 日收盘盯市，跳空大的日子会在净值曲线上造出一对假涨跌，
+        # 2015-06 崩盘段实测把最大回撤由 33% 放大到 56%——那是记账错配，不是执行代价。
+        sig_day = prev_trading.get(day) if exec_delay else day
+        if sig_day is None:
+            equity_curve.append((day, portfolio.equity({}), portfolio.cash, 0, portfolio.debt,
+                                 portfolio.margin_ratio({})))
+            continue
+        today = {code: (close, value, ratio) for code, close, value, ratio in states[sig_day]}
         scores = {code: score_of(code, r[2]) for code, r in today.items()} if rank_mode != "pv" else {}
         if rank_mode != "pv":
             for code, r in today.items():
@@ -760,11 +788,25 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 复牌当天再凭空出现，资金曲线上是一对假的暴跌+暴涨。
         marks = {}
         for code in portfolio.lots:
-            price = today[code][0] if code in today else prices.get(code, {}).get(day)
+            price = prices.get(code, {}).get(day) or (today[code][0] if code in today else None)
             if price:
                 last_price[code] = price
             if code in last_price:
                 marks[code] = last_price[code]
+        # ---- 成交价口径（用户 2026-08-10）：`exec_delay=1` 表示「T 日收盘算信号、T+1 日成交」。
+        # **只改成交价，不改判据**——合格集、`P/V`、均线、盯市净值一律仍用 T 日收盘，
+        # 因为信号本来就定义在 T 日收盘上；改的只是这笔单实际以什么价格成交。
+        # T+1 无价（停牌/最后一日）时回落到 T 日收盘并计数，不静默丢弃该笔。
+        def fill_price(code: str, fallback: float | None) -> float | None:
+            if exec_delay == 0:
+                return fallback                      # 现行口径：成交价即 T 日收盘
+            src = (opens or {}) if exec_price == "open" else prices
+            got = src.get(code, {}).get(day)
+            if got and got > 0:
+                return got
+            stats["成交日无价·回落信号日收盘"] += 1
+            return fallback
+
         # ---- 融资：按当日净资产重定授信额度，并查担保比例 ----
         if credit_ratio > 0:
             net_now = portfolio.equity(marks)
@@ -811,7 +853,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
         # ---- 卖出（先卖后买：卖出释放的现金当日即可用，与「有资金就买」一致）
         for code in list(portfolio.lots):
-            lot, price = portfolio.lots[code], marks.get(code)
+            lot, price = portfolio.lots[code], fill_price(code, marks.get(code))
             if not price:
                 continue
             ratio = today.get(code, (None, None, None))[2]
@@ -888,7 +930,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 sell_count += 1
 
         # ---- 买入：合格集为空则持币（用户 2026-08-08 裁定），**不硬凑前十**
-        pool = states[day] if members is None else [r for r in states[day] if r[0] in members]
+        pool = states[sig_day] if members is None else [r for r in states[sig_day] if r[0] in members]
         # `rank_by_upside=False`：空间只作**阈值**不作排序，合格集内按代码排序（中性顺序），
         # 即「只要空间够 + 走势好就买」，不再优先买最便宜的。用户 2026-08-09 提出的对照口径。
         def _key(r):
@@ -925,7 +967,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 本参数能回答的是「放松到这个程度策略本身还成不成立」，不是「能不能消除时点差」。
             k = 1.0 - trend_tol
             eligible = [r for r in eligible
-                        if (ma := mas.get(r[0], {}).get(day)) and all(w in ma for w in trend_ma)
+                        if (ma := mas.get(r[0], {}).get(sig_day)) and all(w in ma for w in trend_ma)
                         and r[1] > ma[trend_ma[0]] * k
                         and (len(trend_ma) < 2 or ma[trend_ma[0]] > ma[trend_ma[1]] * k)]
         if entry_filter == "stabilized" and lows is not None:
@@ -973,7 +1015,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 worst_ratio, worst = max(kin)            # 同簇里最贵的那只
                 if worst_ratio - cand_score < swap_margin:
                     continue                             # 簇内已有更便宜的，本日不买
-                price = marks.get(worst)
+                price = fill_price(worst, marks.get(worst))
                 if not price:
                     continue
                 turnover += portfolio.lots[worst].shares * price
@@ -1009,7 +1051,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 cand_score = scores.get(code, ratio) if rank_mode != "pv" else ratio
                 if worst_ratio - cand_score < swap_margin:
                     break
-                price = marks.get(worst)
+                price = fill_price(worst, marks.get(worst))
                 if not price:
                     break
                 # `swap_partial`（用户 2026-08-09）：换仓由**整仓卖出**改为**按定投同速减一档**。
@@ -1075,6 +1117,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 走势组默认一笔建仓（总资产 ÷ 持仓上限）且不加仓；`trend_tranche` 打开后改为
             # **与估值组同一套定投**——只要当日仍满足「P/V 合格 且 收盘>MA20>MA60」就继续买入
             # 总资产 × x%。用户 2026-08-09：「走势满足要求的情况下分批进行建仓」。
+            fill = fill_price(code, close) or close
             tranche = trend_tranche and strategy == "trend"
             if ((strategy == "trend" and not tranche) or lump_sum) and code in portfolio.lots:
                 continue                      # 一笔建仓：不加仓
@@ -1098,7 +1141,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # ——这才是真实可执行的口径。一档金额买不起一手的高价股（茅台一手 13 万）会被自然排除，
             # 这不是缺陷而是事实：0.5%% 的定投额度本来就装不下这类标的。
             if lot_size:
-                lots_n = int(amount // (close * lot_size))
+                lots_n = int(amount // (fill * lot_size))
                 if lots_n <= 0:
                     # 高价股（茅台一手 13 万）一档金额买不起一手。**不因此放弃建仓**，改为
                     # 每次买一手、隔 `min_lot_cooldown` 个交易日再买下一手（用户 2026-08-09 指令）。
@@ -1106,35 +1149,35 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     prior = last_buy.get(code)
                     ready = prior is None or _days_between(prior, day) >= min_lot_cooldown
                     if (min_lot_cooldown and ready
-                            and buying_power(portfolio, credit_limit) >= close * lot_size):
+                            and buying_power(portfolio, credit_limit) >= fill * lot_size):
                         lots_n = 1
                         stats["高价股·按手建仓"] += 1
                     else:
                         stats["买不足一手·跳过"] += 1
                         continue
                 shares = lots_n * lot_size
-                amount = shares * close
+                amount = shares * fill
             else:
-                shares = amount / close
+                shares = amount / fill
             # 割肉买回：**只在该股重新合格的那一天触发一次**，买回被割掉的全部股数（现金不足则买满为止）。
             # 与常规定投的区别是它不受 0.5%% 一档限制——割肉时卖掉的是整仓，补回也应是整仓。
             if rebuy == "lump" and cut_shares.get(code) and code not in portfolio.lots:
                 want = cut_shares.pop(code)
                 if lot_size:
                     want = int(want // lot_size) * lot_size
-                afford = (min(want, buying_power(portfolio, credit_limit) / close)
-                          if close > 0 else 0.0)
+                afford = (min(want, buying_power(portfolio, credit_limit) / fill)
+                          if fill > 0 else 0.0)
                 if lot_size:
                     afford = int(afford // lot_size) * lot_size
                 if afford > 0:
-                    shares, amount = afford, afford * close
+                    shares, amount = afford, afford * fill
                     stats["割肉买回"] += 1
             lot = portfolio.lots.get(code)
             if lot is None:
                 ma = mas.get(code, {}).get(day, {})
                 lot = Lot(code=code, entry_date=day, entry_ratio=ratio, entry_value=value,
                           entry_band_low=(1 - width) * value, entry_band_high=(1 + width) * value,
-                          entry_upside=value / close - 1, peak_intrinsic=value)
+                          entry_upside=value / fill - 1, peak_intrinsic=value)
                 lot.entry_stop, lot.entry_stop_ma = entry_stop_price(ma, close, stop_ma)
                 portfolio.lots[code] = lot
             lot.shares += shares
@@ -1419,6 +1462,10 @@ def main() -> int:
                         help="持仓收盘跌破该均线即清仓（0=不启用）；盯当日均线，非建仓日静态止损价")
     parser.add_argument("--no-rank", dest="rank_by_upside", action="store_false",
                         help="空间只作阈值不作排序：合格集内按代码中性排序，不优先买最便宜的")
+    parser.add_argument("--exec-delay", type=int, choices=(0, 1), default=0,
+                        help="0=T 日收盘算信号当日成交（现行）；1=T 日收盘算信号、T+1 日成交")
+    parser.add_argument("--exec-price", choices=("close", "open"), default="close",
+                        help="--exec-delay 1 时的成交价取 T+1 的开盘还是收盘")
     parser.add_argument("--trend-tol", type=float, nargs="+", default=[0.0],
                         help="走势条件容差 t：判据放宽为 收盘 > MA20×(1−t) 且 MA20 > MA60×(1−t)。"
                              "0.005 即 0.5%%。可给多个做敏感度")
@@ -1463,6 +1510,8 @@ def main() -> int:
     states = load_states(args.daily_states,
                          {c for _d, m in universe for c in m} if universe else None)
     prices = load_prices({r[0] for rows in states.values() for r in rows})
+    opens = (load_opens({r[0] for rows in states.values() for r in rows})
+             if args.exec_delay and args.exec_price == "open" else None)
     actions = load_actions()
     names, benchmark, risk_free = load_names(), load_benchmark(), load_risk_free()
     # 均线窗口按**本次实际用到的**收集，缺哪条算哪条。此前固定 (5,10,20,60,120,240)，
@@ -1508,6 +1557,7 @@ def main() -> int:
           for trend_tol in args.trend_tol:
             label = (f"{strategy}_x{x:g}_w{width:g}"
                      + (f"_tol{trend_tol:g}" if trend_tol else "")
+                     + (f"_x{args.exec_delay}{args.exec_price[0]}" if args.exec_delay else "")
                      + ("_mos" if args.use_mos else "")
                      + (f"_ma{args.stop_ma}" if args.price_stop else "")
                      + (f"_vstop{args.value_stop:g}" if args.value_stop else "")
@@ -1562,6 +1612,7 @@ def main() -> int:
                          only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None,
                          universe=universe, trend_tranche=args.trend_tranche,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
+                         exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,
                          sell_line_override=args.sell_line or None,
                          trend_exit_ma=args.trend_exit_ma,
                          rank_by_upside=args.rank_by_upside, entry_mode=args.entry_mode,
