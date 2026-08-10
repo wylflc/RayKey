@@ -121,6 +121,30 @@ def exchange_of(code: str) -> str:
     return "SH" if code[0] == "6" else "SZ"
 
 
+REPORT_EVENT = {"03-31": "一季报", "06-30": "中报", "09-30": "三季报", "12-31": "年报"}
+
+
+def _load_model_bands() -> dict:
+    """模型带里每只最新可用的一条。取值口径与 `apply_model_bands_to_dossiers.py` 完全一致
+    （`(available_at, report_date)` 双键），否则两处会给出不同的报告期。"""
+    path = ROOT / "data/interim/pool_model_bands.csv"
+    best: dict[str, dict] = {}
+    if not path.exists():
+        return best
+    with path.open(newline="", encoding="utf-8-sig") as fh:
+        for r in csv.DictReader(fh):
+            if r.get("status") != "ok":
+                continue
+            code = r["security_code"]
+            key = (r.get("available_at", ""), r.get("report_date", ""))
+            if code not in best or key > (best[code]["available_at"], best[code]["report_date"]):
+                best[code] = r
+    return best
+
+
+MODEL_BANDS = _load_model_bands()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="把建带卡与标签重映射合并回估值表")
     parser.add_argument("--as-of", required=True)
@@ -217,6 +241,17 @@ def main() -> int:
             row["fair_price_basis"] = f"§6.5.2.1 锚定量不可得，本票建档未完成（§6.5.5.2）：{reason}"
             stats["unvaluable"] += 1
 
+        # v2.79：模型带行的「估值时间/估值事件」必须取**模型带的报告期**，不是取数证据的时点。
+        # v2.72 换模型带后带由逐季财务算出，而 `evidence_cutoff()` 读的是 `valuation_evidence/`
+        # 里上一次证据抓取的截止期——两者已经不是同一件事。判例：宇通客车 2026-08-10 的带来自
+        # 2026-06-30 中报，池 MD 却显示「2026-04-28 一季报」，读者据此会以为带没跟上中报。
+        mb = MODEL_BANDS.get(code)
+        if mb:
+            row["evidence_available_at"] = mb["available_at"][:10]
+            row["valuation_evidence_event"] = REPORT_EVENT.get(mb["report_date"][5:10], "定期报告")
+            row["valuation_reviewed_at"] = mb["available_at"][:10]
+            row["valuation_method"] = "内在价值模型（§6.5.7.3，v2.72 起唯一带来源）"
+            continue
         cutoff_date, cutoff_event = evidence_cutoff(code)
         if cutoff_date:
             row["evidence_available_at"] = cutoff_date
