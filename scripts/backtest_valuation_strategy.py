@@ -653,6 +653,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         universe: list[tuple[str, set[str]]] | None = None,
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
         trend_tol: float = 0.0, exec_delay: int = 0, exec_price: str = "close",
+        sell_trend_ma: tuple[int, ...] = (),
         opens: dict[str, dict[str, float]] | None = None,
         sell_line_override: float | None = None, trend_exit_ma: int = 0,
         rank_by_upside: bool = True, entry_mode: str = "trend", dev_ma: int = 60,
@@ -914,6 +915,22 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 强势多头豁免减持：空间缩小不卖，等趋势自己走坏或财报更新带改变格局。
             if (hold_strong in ("sell", "both") and strong_bull(code, day)):
                 continue
+            # `sell_trend_ma`（用户 2026-08-10）：**卖出端的右侧化**。买入端要求
+            # `收盘 > MA20 > MA60`（贵了才卖不够，还要等趋势真的坏掉），卖出端原本是纯估值触发
+            # ——`P/V ≥ 减持线` 当日即开始按一档减。本参数把它改为**还须同时呈空头排列**才减，
+            # 例如 `(5, 20)` 即 `收盘 < MA5 < MA20`。空元组 = 原行为。
+            # **只闸这一条路径**：出 §5 名单的清仓与换仓卖出不受影响——前者是基本面退出、
+            # 后者是资金驱动，都与趋势无关；闸住它们等于在该走的时候不走。
+            # 判据用**信号日**的收盘与均线（与买入端同源），不是成交价。
+            if ratio is not None and ratio >= sell_line and sell_trend_ma:
+                sig_close = today.get(code, (None,))[0]
+                ma_s = mas.get(code, {}).get(sig_day, {})
+                if not sig_close or not all(w in ma_s for w in sell_trend_ma):
+                    continue                       # 均线不全 → 不减，等数据齐
+                seq = [sig_close] + [ma_s[w] for w in sell_trend_ma]
+                if not all(a < b for a, b in zip(seq, seq[1:])):
+                    stats["减持被走势闸门挡下"] += 1
+                    continue
             if ratio is not None and ratio >= sell_line:
                 shares = sell_shares(budget / price, lot.shares, price, lot_size)
                 if shares <= 0:
@@ -1462,6 +1479,9 @@ def main() -> int:
                         help="持仓收盘跌破该均线即清仓（0=不启用）；盯当日均线，非建仓日静态止损价")
     parser.add_argument("--no-rank", dest="rank_by_upside", action="store_false",
                         help="空间只作阈值不作排序：合格集内按代码中性排序，不优先买最便宜的")
+    parser.add_argument("--sell-trend-ma", nargs="*", type=int, default=[],
+                        help="减持的前置走势闸门：给 `5 20` 表示还须 收盘<MA5<MA20 才按一档减。"
+                             "空=原行为（纯估值触发）。只闸 P/V 减持，不闸出名单清仓与换仓")
     parser.add_argument("--exec-delay", type=int, choices=(0, 1), default=0,
                         help="0=T 日收盘算信号当日成交（现行）；1=T 日收盘算信号、T+1 日成交")
     parser.add_argument("--exec-price", choices=("close", "open"), default="close",
@@ -1518,6 +1538,7 @@ def main() -> int:
     # 传入未预计算的窗口（如 `--trend-ma 10 30`）会使条件恒假、**一笔交易都不产生却不报错**
     # ——典型的静默失效（§15.2 第 3 条），2026-08-09 实测撞到后修正。
     windows = sorted({5, 10, 20, 60, 120, 240} | set(args.trend_ma) | set(args.hold_strong_ma)
+                     | set(args.sell_trend_ma)
                      | {args.dev_ma, args.stop_ma} | ({args.trend_exit_ma} if args.trend_exit_ma else set()))
     mas = {code: moving_averages(series, tuple(w for w in windows if w > 0))
            for code, series in prices.items()}
@@ -1558,6 +1579,7 @@ def main() -> int:
             label = (f"{strategy}_x{x:g}_w{width:g}"
                      + (f"_tol{trend_tol:g}" if trend_tol else "")
                      + (f"_x{args.exec_delay}{args.exec_price[0]}" if args.exec_delay else "")
+                     + (f"_sma{'-'.join(map(str, args.sell_trend_ma))}" if args.sell_trend_ma else "")
                      + ("_mos" if args.use_mos else "")
                      + (f"_ma{args.stop_ma}" if args.price_stop else "")
                      + (f"_vstop{args.value_stop:g}" if args.value_stop else "")
@@ -1613,6 +1635,7 @@ def main() -> int:
                          universe=universe, trend_tranche=args.trend_tranche,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,
+                         sell_trend_ma=tuple(args.sell_trend_ma),
                          sell_line_override=args.sell_line or None,
                          trend_exit_ma=args.trend_exit_ma,
                          rank_by_upside=args.rank_by_upside, entry_mode=args.entry_mode,
