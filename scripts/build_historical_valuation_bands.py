@@ -686,7 +686,15 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     band.payout = payout
     band.g_sustainable = roe0 * (1 - payout) if payout is not None else None
 
-    g0 = band.g_trailing if args.g0_source == "trailing" else band.g_sustainable
+    # `trailing_fb`（用户 2026-08-10，修 §12.9.7 结论三的混淆②）：优先用已实现三年 CAGR，
+    # **取不到时回落到 sustainable**。纯 `trailing` 会丢掉 2,793 条带（19.8% 覆盖），
+    # 而 `g_trailing` 是 `g_sustainable` 的严格子集，回落即可补齐、不引入新缺口。
+    if args.g0_source == "trailing":
+        g0 = band.g_trailing
+    elif args.g0_source == "trailing_fb":
+        g0 = band.g_trailing if band.g_trailing is not None else band.g_sustainable
+    else:
+        g0 = band.g_sustainable
     # `--g0-shrink`（用户 2026-08-10）：g0 乘数。**用来检验「该资本化多少增长」这一整条响应曲线**，
     # 而不是逐条修补输入。动机是 `incremental_roe`（ΔEPS/ΔBPS）实测中位 13.2% 低于建模 roe0 16.1%
     # （−3.3pp、59% 偏低），即 `g = ROE×b` 多数情况下高估增长；但它本身噪声过大不能直接当输入
@@ -962,7 +970,9 @@ def main() -> int:
                         help="强制所有股票用同一分档，抹掉人工分档带来的前视优势")
     parser.add_argument("--roe-source", choices=("normalized", "ttm"), default="normalized",
                         help="normalized=近五年年度 ROE 中位并由 E=ROE×B 反推 EPS（缺省，避免顺周期陷阱）")
-    parser.add_argument("--g0-source", choices=("sustainable", "trailing"), default="sustainable")
+    parser.add_argument("--g0-source", choices=("sustainable", "trailing", "trailing_fb"),
+                        default="sustainable",
+                        help="trailing_fb = 优先已实现三年 CAGR、取不到时回落 sustainable（补齐覆盖）")
     parser.add_argument("--r-mode", choices=("tier", "market"), default="tier",
                         help="tier=§6.5.7.1 分档中位（旧）；market=R_f+βERP 逐期取值（需利率序列）")
     parser.add_argument("--roe-years", type=int, default=5, help="归一化 ROE 的回看年数")
