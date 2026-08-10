@@ -1069,6 +1069,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 picks.append(r)
             final = []
+            cluster_reduced: set[str] = set()
             for r in picks:
                 code = r[0]
                 if code in portfolio.lots:
@@ -1093,8 +1094,36 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 price = fill_price(worst, marks.get(worst))
                 if not price:
                     continue
-                turnover += portfolio.lots[worst].shares * price
-                close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"同簇升级：让位给更便宜的{code}")
+                # v2.78：簇内升级同样支持「减一档」（用户 2026-08-10 澄清口径）。
+                # 原实现是整仓卖出，与 v2.74 已否定的换仓整仓卖出同形——两者砸掉的都是
+                # §12.3 里正在复利的仓位。`cluster_reduced` 保证同一只每日至多被削一档。
+                lot_w = portfolio.lots[worst]
+                if swap_partial and worst not in cluster_reduced:
+                    shares = sell_shares(budget / price, lot_w.shares, price, lot_size)
+                    if (not shares and lot_ratio_cooldown and lot_size
+                            and lot_w.shares >= lot_size
+                            and lot_ratio_ready(lot_counters, worst, price * lot_size, budget)):
+                        shares = lot_size if lot_w.shares - lot_size >= lot_size else lot_w.shares
+                    if not shares:
+                        continue                     # 一手都减不动 → 本日不升级
+                    cluster_reduced.add(worst)
+                    if shares < lot_w.shares * 0.999:
+                        stats["簇内升级·减一档"] += 1
+                        lot_w.shares -= shares
+                        portfolio.cash += shares * price
+                        lot_w.proceeds += shares * price
+                        lot_w.sells += 1
+                        turnover += shares * price
+                    else:
+                        turnover += lot_w.shares * price
+                        close_lot(portfolio, worst, day, price, ledger=ledger,
+                                  reason=f"同簇升级·余额不足一档清仓：让位给{code}")
+                elif swap_partial:
+                    continue                         # 本日已削过这只，不重复
+                else:
+                    turnover += lot_w.shares * price
+                    close_lot(portfolio, worst, day, price, ledger=ledger,
+                              reason=f"同簇升级：让位给更便宜的{code}")
                 sell_count += 1
                 final.append(r)
             eligible = final
