@@ -654,6 +654,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
         trend_tol: float = 0.0, exec_delay: int = 0, exec_price: str = "close",
         sell_trend_ma: tuple[int, ...] = (),
+        liquidate_ma: int = 0, liquidate_days: int = 3,
         opens: dict[str, dict[str, float]] | None = None,
         sell_line_override: float | None = None, trend_exit_ma: int = 0,
         rank_by_upside: bool = True, entry_mode: str = "trend", dev_ma: int = 60,
@@ -757,6 +758,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     min_ratio, min_ratio_day = float("inf"), ""
     credit_limit = 0.0
     prev_trading = {n: d for d, n in zip(days, days[1:])}
+    below_ma_run: dict[str, int] = {}      # 连续跌破 `liquidate_ma` 的天数，逐日累计
     for day in days:
         apply_corporate_actions(portfolio, day, actions)
 
@@ -781,6 +783,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                                  portfolio.margin_ratio({})))
             continue
         today = {code: (close, value, ratio) for code, close, value, ratio in states[sig_day]}
+        # `liquidate_ma` 的连续天数计数（用户 2026-08-10）：**对全池逐日累计**，不能只对持仓算
+        # ——一只票可能在计数中途被卖光又买回，只对持仓算会把计数错误地清零。
+        if liquidate_ma:
+            for c, r in today.items():
+                ma_l = mas.get(c, {}).get(sig_day, {}).get(liquidate_ma)
+                if ma_l is None:
+                    below_ma_run[c] = 0
+                else:
+                    below_ma_run[c] = below_ma_run.get(c, 0) + 1 if r[0] < ma_l else 0
         scores = {code: score_of(code, r[2]) for code, r in today.items()} if rank_mode != "pv" else {}
         if rank_mode != "pv":
             for code, r in today.items():
@@ -922,6 +933,18 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # **只闸这一条路径**：出 §5 名单的清仓与换仓卖出不受影响——前者是基本面退出、
             # 后者是资金驱动，都与趋势无关；闸住它们等于在该走的时候不走。
             # 判据用**信号日**的收盘与均线（与买入端同源），不是成交价。
+            # `liquidate_ma` / `liquidate_days`（用户 2026-08-10）：**贵 + 中期趋势确认走坏 → 一次清仓**。
+            # 与 `--trend-exit-ma` 的两点区别：①**须同时 `P/V ≥ 减持线`**（只对已经贵的票生效，
+            # 便宜票跌破年线是加仓机会不是清仓理由）；②**要求连续 N 日**跌破，不是单日破线，
+            # 以滤掉一次性插针。它在减一档之前判——既然要清，就不必先减一档。
+            if (liquidate_ma and ratio is not None and ratio >= sell_line
+                    and below_ma_run.get(code, 0) >= liquidate_days):
+                turnover += lot.shares * price
+                close_lot(portfolio, code, day, price, ledger=ledger,
+                          reason=f"P/V≥{sell_line:.2f}且连续{liquidate_days}日破MA{liquidate_ma}·清仓")
+                sell_count += 1
+                stats[f"贵+破MA{liquidate_ma}·一键清仓"] += 1
+                continue
             if ratio is not None and ratio >= sell_line and sell_trend_ma:
                 sig_close = today.get(code, (None,))[0]
                 ma_s = mas.get(code, {}).get(sig_day, {})
@@ -932,6 +955,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     stats["减持被走势闸门挡下"] += 1
                     continue
             if ratio is not None and ratio >= sell_line:
+                stats["P/V≥减持线·减一档"] += 1
                 shares = sell_shares(budget / price, lot.shares, price, lot_size)
                 if shares <= 0:
                     continue
@@ -1479,6 +1503,11 @@ def main() -> int:
                         help="持仓收盘跌破该均线即清仓（0=不启用）；盯当日均线，非建仓日静态止损价")
     parser.add_argument("--no-rank", dest="rank_by_upside", action="store_false",
                         help="空间只作阈值不作排序：合格集内按代码中性排序，不优先买最便宜的")
+    parser.add_argument("--liquidate-ma", type=int, default=0,
+                        help="一键清仓的均线（0=不启用）：`P/V ≥ 减持线` 且连续 N 日跌破它即整仓卖出。"
+                             "120=半年线、240=年线。与 --trend-exit-ma 的区别是它须同时满足 P/V 条件")
+    parser.add_argument("--liquidate-days", type=int, default=3,
+                        help="一键清仓要求的连续跌破天数")
     parser.add_argument("--sell-trend-ma", nargs="*", type=int, default=[],
                         help="减持的前置走势闸门：给 `5 20` 表示还须 收盘<MA5<MA20 才按一档减。"
                              "空=原行为（纯估值触发）。只闸 P/V 减持，不闸出名单清仓与换仓")
@@ -1538,7 +1567,7 @@ def main() -> int:
     # 传入未预计算的窗口（如 `--trend-ma 10 30`）会使条件恒假、**一笔交易都不产生却不报错**
     # ——典型的静默失效（§15.2 第 3 条），2026-08-09 实测撞到后修正。
     windows = sorted({5, 10, 20, 60, 120, 240} | set(args.trend_ma) | set(args.hold_strong_ma)
-                     | set(args.sell_trend_ma)
+                     | set(args.sell_trend_ma) | ({args.liquidate_ma} if args.liquidate_ma else set())
                      | {args.dev_ma, args.stop_ma} | ({args.trend_exit_ma} if args.trend_exit_ma else set()))
     mas = {code: moving_averages(series, tuple(w for w in windows if w > 0))
            for code, series in prices.items()}
@@ -1580,6 +1609,7 @@ def main() -> int:
                      + (f"_tol{trend_tol:g}" if trend_tol else "")
                      + (f"_x{args.exec_delay}{args.exec_price[0]}" if args.exec_delay else "")
                      + (f"_sma{'-'.join(map(str, args.sell_trend_ma))}" if args.sell_trend_ma else "")
+                     + (f"_liq{args.liquidate_ma}d{args.liquidate_days}" if args.liquidate_ma else "")
                      + ("_mos" if args.use_mos else "")
                      + (f"_ma{args.stop_ma}" if args.price_stop else "")
                      + (f"_vstop{args.value_stop:g}" if args.value_stop else "")
@@ -1636,6 +1666,7 @@ def main() -> int:
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,
                          sell_trend_ma=tuple(args.sell_trend_ma),
+                         liquidate_ma=args.liquidate_ma, liquidate_days=args.liquidate_days,
                          sell_line_override=args.sell_line or None,
                          trend_exit_ma=args.trend_exit_ma,
                          rank_by_upside=args.rank_by_upside, entry_mode=args.entry_mode,
