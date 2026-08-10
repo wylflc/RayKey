@@ -32,3 +32,10 @@ data/processed/a_share_daily_g*.csv
 # 全市场个股研报（OI-034 第 20 步）：约 33MB、2017-01 起 145,460 篇，
 # 由 scripts/fetch_a_share_research_reports.py 完全可重建（全市场按月切片 + infoCode 去重）。
 data/raw/research_reports/
+
+# 估值带模型变体的逐日状态与带表（§12.9 实验产物，由 build_historical_valuation_bands.py 完全可重建）
+data/processed/hist_daily_n1_*.csv
+data/processed/hist_bands_n1_*.csv
+data/processed/hd_*.csv
+data/processed/hb_*.csv
+data/processed/backtest/*_trades.csv
