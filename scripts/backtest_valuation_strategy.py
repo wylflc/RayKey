@@ -636,6 +636,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         position_cap: float = 0.0, only_tiers: set[str] | None = None,
         universe: list[tuple[str, set[str]]] | None = None,
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
+        trend_tol: float = 0.0,
         sell_line_override: float | None = None, trend_exit_ma: int = 0,
         rank_by_upside: bool = True, entry_mode: str = "trend", dev_ma: int = 60,
         dev_buy_max: float = 1.10, dev_sell_min: float = 0.0,
@@ -916,10 +917,17 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     kept.append(r)
             eligible = kept
         if strategy == "trend" and entry_mode in ("trend", "both"):
+            # `trend_tol`（用户 2026-08-10）：走势条件的容差。判据由 `收盘 > MA20` 放宽为
+            # `收盘 > MA20 × (1 − tol)`，`MA20 > MA60` 同样处理。**动机是执行时点差而非选股**——
+            # 信号定义在收盘，而用户在盘中下单，收盘前跨越均线的票在盘中看不到（判例：
+            # 特宝生物 2026-08-10 当日 +4.31%，尾盘才收在 MA20 上方 +0.26%）。
+            # **注意容差不消除边界，只是把边界挪个位置**：新线附近照样有票在盘中与收盘之间翻转。
+            # 本参数能回答的是「放松到这个程度策略本身还成不成立」，不是「能不能消除时点差」。
+            k = 1.0 - trend_tol
             eligible = [r for r in eligible
                         if (ma := mas.get(r[0], {}).get(day)) and all(w in ma for w in trend_ma)
-                        and r[1] > ma[trend_ma[0]]
-                        and (len(trend_ma) < 2 or ma[trend_ma[0]] > ma[trend_ma[1]])]
+                        and r[1] > ma[trend_ma[0]] * k
+                        and (len(trend_ma) < 2 or ma[trend_ma[0]] > ma[trend_ma[1]] * k)]
         if entry_filter == "stabilized" and lows is not None:
             eligible = [r for r in eligible
                         if stabilized(lows.get(r[0], {}), day_index[0].get(r[0], []),
@@ -1411,6 +1419,9 @@ def main() -> int:
                         help="持仓收盘跌破该均线即清仓（0=不启用）；盯当日均线，非建仓日静态止损价")
     parser.add_argument("--no-rank", dest="rank_by_upside", action="store_false",
                         help="空间只作阈值不作排序：合格集内按代码中性排序，不优先买最便宜的")
+    parser.add_argument("--trend-tol", type=float, nargs="+", default=[0.0],
+                        help="走势条件容差 t：判据放宽为 收盘 > MA20×(1−t) 且 MA20 > MA60×(1−t)。"
+                             "0.005 即 0.5%%。可给多个做敏感度")
     parser.add_argument("--trend-ma", nargs="+", type=int, default=[20, 60],
                         help="走势触发的均线，如 `20 60` 表示 收盘>MA20>MA60；`5 20` 表示 收盘>MA5>MA20；单个值表示只要求站上该均线")
     parser.add_argument("--sell-line", type=float, default=0.0,
@@ -1494,7 +1505,9 @@ def main() -> int:
     for strategy in strategies:
       for width in args.width:
         for x in args.x:
+          for trend_tol in args.trend_tol:
             label = (f"{strategy}_x{x:g}_w{width:g}"
+                     + (f"_tol{trend_tol:g}" if trend_tol else "")
                      + ("_mos" if args.use_mos else "")
                      + (f"_ma{args.stop_ma}" if args.price_stop else "")
                      + (f"_vstop{args.value_stop:g}" if args.value_stop else "")
@@ -1548,7 +1561,7 @@ def main() -> int:
                          position_cap=args.position_cap,
                          only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None,
                          universe=universe, trend_tranche=args.trend_tranche,
-                         trend_ma=tuple(args.trend_ma),
+                         trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          sell_line_override=args.sell_line or None,
                          trend_exit_ma=args.trend_exit_ma,
                          rank_by_upside=args.rank_by_upside, entry_mode=args.entry_mode,
