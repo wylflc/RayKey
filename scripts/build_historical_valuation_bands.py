@@ -687,6 +687,12 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     band.g_sustainable = roe0 * (1 - payout) if payout is not None else None
 
     g0 = band.g_trailing if args.g0_source == "trailing" else band.g_sustainable
+    # `--g0-shrink`（用户 2026-08-10）：g0 乘数。**用来检验「该资本化多少增长」这一整条响应曲线**，
+    # 而不是逐条修补输入。动机是 `incremental_roe`（ΔEPS/ΔBPS）实测中位 13.2% 低于建模 roe0 16.1%
+    # （−3.3pp、59% 偏低），即 `g = ROE×b` 多数情况下高估增长；但它本身噪声过大不能直接当输入
+    # （P5 −19.8%、P95 52.5%、17% 为负），故改用可控乘数等价检验。1.0 = 原行为。
+    if g0 is not None and args.g0_shrink != 1.0:
+        g0 *= args.g0_shrink
     if g0 is None:
         band.reason = f"g0（{args.g0_source}）不可算：近三年无正 EPS 财年可算派息率"
         return band
@@ -971,6 +977,8 @@ def main() -> int:
                         help="ROE_T 须高出 g_T 的最小利差，缺省 2pp（低于此估值对分母任意敏感）")
     parser.add_argument("--g0-cap", type=float, default=0.25, help="g0 上限，缺省 25%%")
     parser.add_argument("--g0-floor", type=float, default=0.0)
+    parser.add_argument("--g0-shrink", type=float, default=1.0,
+                        help="g0 乘数，1.0=原行为。用于检验「该资本化多少增长」的响应曲线")
     parser.add_argument("--g-terminal", type=float, default=DEFAULT_G_TERMINAL)
     parser.add_argument("--n", type=int, default=10, help="fade 年数（非高增长年数，见文件头）")
     parser.add_argument("--n1", type=int, default=0,
