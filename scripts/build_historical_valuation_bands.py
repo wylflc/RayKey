@@ -466,7 +466,7 @@ ONESIDED_SOURCES = ("onesided_up", "onesided_max", "onesided_min")
 
 
 def pick_roe0(mode: str, normalized: float, roe_ttm_value: float | None,
-              trend: str) -> tuple[float, str]:
+              trend: str, lift: float = 1.0) -> tuple[float, str]:
     """单边口径下本行取哪一侧的 ROE，返回 (roe0, 口径标签)。
 
     **比较基准是 `trend_aware_roe` 的输出（= `normalized` 臂实际用的 roe0），不是纯五年中位。**
@@ -487,7 +487,13 @@ def pick_roe0(mode: str, normalized: float, roe_ttm_value: float | None,
     if mode == "onesided_up":
         return (roe_ttm_value, "ttm(上行)") if trend == "up" else (normalized, "normalized")
     if mode == "onesided_max" and roe_ttm_value > normalized:
-        return roe_ttm_value, "ttm(孰高)"
+        # **`--roe-lift λ` 把「去掉高位惩罚」由开关变成刻度**（用户 2026-08-11）：
+        # `roe0 = 归一化值 + λ·(当期 − 归一化值)`，λ=0 即现行、λ=1 即完全采信当期。
+        # **允许 λ>1 越过当期读数**——这一段是用来分辨两种解释的：若曲线过了 λ=1 还在涨，
+        # 起作用的就不是「相信当期读数」而是「偏向 ROE 上行的那批公司」本身。
+        # 只对 `当期 > 归一化值` 的一侧生效，低谷侧不动（低谷保护是这条规则的全部价值来源）。
+        return normalized + lift * (roe_ttm_value - normalized), (
+            "ttm(孰高)" if lift == 1.0 else f"lift{lift:g}(孰高)")
     if mode == "onesided_min" and roe_ttm_value < normalized:
         return roe_ttm_value, "ttm(孰低)"
     return normalized, "normalized"
@@ -697,7 +703,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         band.roe0_normalized, band.roe0_mode = roe0, "normalized"
         if args.roe_source in ONESIDED_SOURCES:
             roe0, band.roe0_mode = pick_roe0(args.roe_source, roe0,
-                                             roe.value if roe else None, band.roe_trend)
+                                             roe.value if roe else None, band.roe_trend,
+                                             args.roe_lift)
         # **eps0 一律走清洁盈余 `E = ROE×B`**，与 normalized 臂同式——单边口径改的只有
         # 「roe0 取哪一侧」这一个自由度，若同时换 EPS 口径就分不清差异来自哪一处。
         eps0 = roe0 * bps
@@ -1030,6 +1037,9 @@ def main() -> int:
                         help="trailing_fb = 优先已实现三年 CAGR、取不到时回落 sustainable（补齐覆盖）")
     parser.add_argument("--r-mode", choices=("tier", "market"), default="tier",
                         help="tier=§6.5.7.1 分档中位（旧）；market=R_f+βERP 逐期取值（需利率序列）")
+    parser.add_argument("--roe-lift", type=float, default=1.0, metavar="LAMBDA",
+                        help="onesided_max 专用：roe0 = 归一化值 + λ·(当期 − 归一化值)，只对当期偏高的一侧生效。"
+                             "λ=0 退回归一化、λ=1 即完全采信当期、λ>1 为外推（见 pick_roe0）")
     parser.add_argument("--roe-years", type=int, default=5, help="归一化 ROE 的回看年数")
     parser.add_argument("--roe-stat", choices=("median", "mean"), default="median")
     parser.add_argument("--min-roe-years", type=int, default=3,
