@@ -1289,7 +1289,14 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     stats["割肉买回"] += 1
             lot = portfolio.lots.get(code)
             if lot is None:
-                ma = mas.get(code, {}).get(day, {})
+                # 止损价取**成交日**均线。成交日停牌时 `mas[code][day]` 整条缺失，
+                # `ma.get(20, 0.0)` 会返回 0，而 `lot.entry_stop` 为 0 时止损分支被 falsy 短路
+                # ——**该仓从此永远不受止损约束，且没有任何提示**（§13 第 3 条的静默失效）。
+                # 实测 2002 起点 1,697 个周期里有 4 个如此。成交价此时已回落到信号日收盘，
+                # 故止损价一并回落到信号日均线，两者同源。
+                ma = mas.get(code, {}).get(day) or mas.get(code, {}).get(sig_day, {})
+                if not mas.get(code, {}).get(day):
+                    stats["成交日无均线·止损价回落信号日"] += 1
                 lot = Lot(code=code, entry_date=day, entry_ratio=ratio, entry_value=value,
                           entry_band_low=(1 - width) * value, entry_band_high=(1 + width) * value,
                           entry_upside=value / fill - 1, peak_intrinsic=value)
@@ -1302,8 +1309,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             portfolio.cash -= amount
             last_buy[code] = day
             if ledger is not None:
+                # **price 必须记 `fill` 不是 `close`**：`close` 是信号日收盘，而这笔单成交在
+                # `fill`（`--exec-delay 1` 下即成交日收盘）。流水是「人工核对用」的凭证，
+                # 记错价会让对账人得出与实际不同的成本；成交本身一直用的是 `fill`（`shares = amount/fill`），
+                # 故本次修正只改打印列，不改任何回测结果。
                 ledger.append({"date": day, "security_code": code, "action": "买入",
-                               "shares": f"{shares:.0f}", "price": f"{close:.3f}",
+                               "shares": f"{shares:.0f}", "price": f"{fill:.3f}",
                                "amount": f"{amount:.0f}", "pv_ratio": f"{ratio:.4f}",
                                "intrinsic_value": f"{value:.3f}",
                                "reason": "定投加仓" if lot.buys > 1 else "首次建仓"})
