@@ -7,10 +7,12 @@
    等于把幸存者偏差直接烧进队列。现行情已补 `data/raw/a_share_delisted_roster.csv` 的 344 只。
 2. **年份窗口可回溯到 2002**（旧版硬编码 `Y0, Y1 = 2009, 2025`）。回测长跑从 2002 起，
    队列只覆盖 2009+ 会让 2002-2008 段无时点名单可用。
-3. **ROE 改用 `EPS/BPS` 推算，不再直接信 `weightavg_roe`**。实测该字段两边都有坏值：
-   东财 600217·2013 给出「亏 1.17 亿却加权 ROE +35.49」，新浪 600448·2009 给出 −0.27
-   而其自身净资产收益率为 −31.97。推算值在三个判例上与新浪净资产收益率精确吻合。
-   仍读原字段做**一致性校验**，矛盾即打标 `roe_conflict`，交由判定环节处理，**不静默丢弃**。
+3. **ROE 用 `weightavg_roe`，并加符号一致性校验**。曾一度改用 `EPS/BPS` 推算，**该决定已撤销**：
+   东财 `basic_eps` 会被**追溯复权**（送转后按当前股本重述）而 `bps` 不会，两者相除因此失真——
+   判例 002369·2010 的 `EPS/BPS` = 5.0% 而 `weightavg_roe` = 12.29%，后者与新浪「加权净资产收益率」
+   **逐位相同**。`weightavg_roe` 才是跨源可比、且未被复权污染的字段。
+   仍逐期做**符号一致性校验**（ROE 与归母净利符号相反即为坏行，全库 0.21%），
+   矛盾即打标 `roe_conflict` 交由判定环节处理，**不静默丢弃**。
 
 本脚本**只决定「何时值得判」**（召回网），不做任何 worth_attention 判定——
 判定口径见 `docs/Ashare_pit_judgment_protocol.md`。
@@ -72,14 +74,18 @@ def first_traded() -> dict[str, str]:
 
 
 def roe_of(row) -> tuple[float | None, bool]:
-    """返回 (ROE 小数, 是否与原字段矛盾)。**推算优先**，见模块文档第 3 条。"""
-    eps, bps = _num(row.get("basic_eps")), _num(row.get("bps"))
+    """返回 (ROE 小数, 该行是否自相矛盾)。**用 `weightavg_roe`**，见模块文档第 3 条。
+
+    矛盾判据是 ROE 与**归母净利**符号相反——这是行内逻辑矛盾，与口径定义无关，
+    不像跨源比对那样会被「基本/摊薄」「调整前/调整后」的定义差混淆。
+    """
     stated = _num(row.get("weightavg_roe"))
-    derived = eps / bps if (eps is not None and bps not in (None, 0)) else None
-    if derived is None:
-        return (stated / 100.0 if stated is not None else None), False
-    conflict = stated is not None and abs(stated) > 1 and (stated > 0) != (derived > 0)
-    return derived, conflict
+    profit = _num(row.get("parent_netprofit"))
+    if stated is None:
+        return None, False
+    conflict = (profit is not None and abs(stated) > 1 and abs(profit) > 1e6
+                and (stated > 0) != (profit > 0))
+    return stated / 100.0, conflict
 
 
 def window(series: dict[str, dict], year: int, w: int = 5):
