@@ -645,6 +645,20 @@ def sell_shares(target: float, held: float, price: float, lot_size: int) -> floa
     return held if held - shares < lot_size else shares
 
 
+def log_partial_sell(ledger: list | None, day: str, code: str, shares: float,
+                     price: float, reason: str) -> None:
+    """部分减持也要进流水。**此前只有 `close_lot` 记账**，故流水缺掉全部「减一档」，
+    拿它重建逐日持仓会得到系统性偏高的股数——实测重建出的前三大合计可达 123.8%，
+    而回测是无杠杆的。流水是「人工核对用」的凭证，缺一半就不能用来对账。
+    """
+    if ledger is None:
+        return
+    ledger.append({"date": day, "security_code": code, "action": "卖出",
+                   "shares": f"{shares:.0f}", "price": f"{price:.3f}",
+                   "amount": f"{shares * price:.0f}", "pv_ratio": "",
+                   "intrinsic_value": "", "reason": reason})
+
+
 def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: str,
               ledger: list | None = None) -> None:
     lot = portfolio.lots.pop(code)
@@ -908,6 +922,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         turnover += lot.shares * price
                         close_lot(portfolio, code, day, price, ledger=ledger, reason="移出股票库·逐步清仓")
                     else:
+                        log_partial_sell(ledger, day, code, shares, price, "移出股票库·减一档")
                         lot.shares -= shares
                         portfolio.cash += shares * price
                         lot.proceeds += shares * price
@@ -997,6 +1012,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     turnover += lot.shares * price
                     close_lot(portfolio, code, day, price, ledger=ledger, reason=f"P/V≥{sell_line:.2f}清空")
                 else:
+                    log_partial_sell(ledger, day, code, shares, price, f"P/V≥{sell_line:.2f}·减一档")
                     lot.shares -= shares
                     portfolio.cash += shares * price
                     lot.proceeds += shares * price
@@ -1179,6 +1195,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     lot_worst.proceeds += shares * price
                     lot_worst.sells += 1
                     turnover += shares * price
+                    log_partial_sell(ledger, day, worst, shares, price, f"换仓·减一档：让位给{code}")
                     reduced_today.add(worst)
                 else:
                     stats["换仓·整仓卖出"] += 1
@@ -1334,8 +1351,16 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     marks[code] = last_price[code]
         # 融资棘轮（§13.2）：日终剩余现金先还融资，不留到下一笔买入。
         repay_debt(portfolio, margin_ratchet)
-        equity_curve.append((day, portfolio.equity(marks), portfolio.cash, len(portfolio.lots),
-                             portfolio.debt, portfolio.margin_ratio(marks)))
+        # **无单票上限的实际后果必须可量**（§9.7.1 明文不设单票上限）：逐日记下最大单股权重
+        # 与前三大合计，写进净值曲线。不记的话「集中度」只能靠事后从流水重建，而流水按构造
+        # 缺部分减持（本次一并补上），重建值会系统性偏高。
+        eq_now = portfolio.equity(marks)
+        weights = sorted((lot.shares * marks[c] / eq_now
+                          for c, lot in portfolio.lots.items() if c in marks and eq_now > 0),
+                         reverse=True)
+        equity_curve.append((day, eq_now, portfolio.cash, len(portfolio.lots),
+                             portfolio.debt, portfolio.margin_ratio(marks),
+                             weights[0] if weights else 0.0, sum(weights[:3])))
 
     # 收尾：按最后一日收盘价清算未平仓，使逐周期收益可比
     if days:
@@ -1493,13 +1518,16 @@ def write_equity(path: Path, curve) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
         writer.writerow(["date", "net_equity", "cash", "positions", "cash_ratio",
-                         "debt", "margin_ratio"])
+                         "debt", "margin_ratio", "top1_weight", "top3_weight"])
         for day, equity, cash, count, *rest in curve:
             debt = rest[0] if rest else 0.0
             ratio = rest[1] if len(rest) > 1 else float("inf")
+            top1 = rest[2] if len(rest) > 2 else 0.0
+            top3 = rest[3] if len(rest) > 3 else 0.0
             writer.writerow([day, f"{equity:.2f}", f"{cash:.2f}", count,
                              f"{cash / equity:.4f}" if equity else "",
-                             f"{debt:.2f}", "" if ratio == float("inf") else f"{ratio:.4f}"])
+                             f"{debt:.2f}", "" if ratio == float("inf") else f"{ratio:.4f}",
+                             f"{top1:.4f}", f"{top3:.4f}"])
 
 
 def write_periods(path: Path, curve) -> None:
