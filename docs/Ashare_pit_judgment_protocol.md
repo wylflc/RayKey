@@ -226,7 +226,7 @@ security_code,business_desc_at_from,worth_from_period,worth_from_notice,worth_to
 | 首签年 | 判定家数 | 入选 |
 | ---: | ---: | ---: |
 | 2002 | 134 | 11 |
-| 2003 | 50 | 2 |
+| 2003 | 50 | 3 |
 | 2004 | 58 | 2 |
 | 2005 | 40 | 2 |
 | 2006 | 81 | 1 |
