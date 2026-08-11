@@ -1378,12 +1378,17 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
 # ------------------------------------------------------------------ 指标
 def period_returns(curve: list[tuple[str, float, float, int]], key) -> list[tuple[str, float]]:
-    buckets: dict[str, tuple[float, float]] = {}
+    """分期收益。**基数是上一期末**，不是本期首日——否则跨期当日的涨跌被两边同时排除，
+    逐期链乘对不上全期总收益（2002 起点上曾差出 572x vs 692x，见回测日志 §12.24.5）。"""
+    last: dict[str, float] = {}
     for day, equity, *_rest in curve:
-        label = key(day)
-        first, _ = buckets.get(label, (equity, equity))
-        buckets[label] = (first, equity)
-    return [(k, last / first - 1) for k, (first, last) in sorted(buckets.items())]
+        last[key(day)] = equity
+    base = curve[0][1] if curve else 0.0
+    out: list[tuple[str, float]] = []
+    for label in sorted(last):
+        out.append((label, last[label] / base - 1 if base else float("nan")))
+        base = last[label]
+    return out
 
 
 def max_drawdown(curve) -> tuple[float, str, str]:
