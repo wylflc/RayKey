@@ -3,17 +3,23 @@
 
 取代 `scan_holdings_sell_signals.py`。该脚本自 v2.56 起只做三件事：
 
-1. 读四列持仓清单（代码/名称/股数/成本价）；
+1. 读五列持仓清单（代码/名称/股数/成本价/**建仓日止损价**）；
 2. 取当日现价，对照核心估值合格池刷新现档（§6.2.1.6）与空间；
-3. 算出 `P/V`（现价 ÷ 合理价区间中值），供 §9.7 的机械买卖判定消费。
+3. 算出 `P/V`（现价 ÷ 合理价区间中值），供 §9.7 的机械买卖判定消费；
+4. 比对收盘价与 `entry_stop_price`，命中即出 §9.7.5 的整仓清空提示。
 
-**v2.56 移除割肉价**（§14.3 整节退役，依据 §12.9.38：三条割肉口径五起点
-全负 −9.43 ~ −14.79pp）。随之移除的字段与取值：`stop_loss_price`、
-`stop_hit`、`day_low`、`割肉提醒`。**清单里若仍带 `stop_loss_price` 列，
-本脚本一律忽略**——留一个没有消费者的字段，下次就会有人把它读回来当规则用。
+**v2.56 移除的是滚动均线割肉**（原 §14.3，依据 §12.9.38：破 MA60／破 MA120
+三条口径五起点全负 −9.43 ~ −14.79pp）。随之移除的字段：`stop_loss_price`、
+`stop_hit`、`day_low`、`割肉提醒`。
 
-**本脚本不产生任何买卖结论。** 卖出只有 §9.7.2 第四步三条（`P/V ≥ 1.10`
-减持、出 §5 名单清仓、换仓），由执行侧按本脚本输出的 `pv` 计算。
+**v2.83 加回的 `entry_stop_price` 与它不是同一件事**（§9.7.5）：那条是**随均线
+移动**的割肉线，这条是**建仓日定死、永不上移**的固定价，回测里自始开启
+（`trend_stop` 缺省 `True`），关掉它五起点全负、中位 −2.46pp。两者唯一的共同点
+是都叫「止损」——**不得因为 v2.56 删过一个止损就把这个也删掉**。
+
+**本脚本不产生任何买卖结论。** 卖出只有 §9.7.2 第四步四条（⓪跌破建仓日止损
+整仓、①`P/V ≥ 1.10` 且破 MA20 减一档、②出 §5 名单减一档、③换仓减一档），
+由执行侧按本脚本输出的 `pv` 与 `stop_hit` 计算。
 
 **刻意不做**的事（§14.6 退役清单）——盈亏、权重、仓位占比、单笔风险、
 大趋势走坏判定、估值卖出减仓梯、加仓资格、账户回撤与杠杆。若将来要加回来，
@@ -48,6 +54,11 @@ FIELDNAMES = [
     "security_name",
     "current_shares",
     "cost_basis",
+    # §9.7.5（v2.83）：建仓日 MA20 定死的止损价，与 `stop_hit` 一并输出。留空 = 该票
+    # 不受本条约束（存量持仓过渡口径）。**留空必须能与"跌破了"区分开**，故 `stop_hit`
+    # 用三取值而不是布尔——布尔的 False 会把"没设"和"没跌破"混成同一个格子。
+    "entry_stop_price",
+    "stop_hit",
     "close",
     "quality_tier",
     # §9.2.1 参考分（v2.14）：只透传分层表经池 CSV 带过来的 quality_score，供报告显示同档内排序；
@@ -142,6 +153,22 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         elif pv is not None and pv >= 1.10:
             notes.append(f"**`P/V` {pv:.2f} ≥ 1.10**：按 §9.7.2 第四步每日减持一档（0.5%N）")
 
+        # §9.7.5 建仓日止损（v2.83）。**先判无行情**：没有收盘价就既不能说跌破、也不能
+        # 说没跌破，落 `无行情` 而不是默认放行——与 `action` 的 `数据缺失` 同一条理由。
+        entry_stop = to_float(h.get("entry_stop_price"))
+        if entry_stop is None:
+            stop_hit = "未设"
+        elif close is None:
+            stop_hit = "无行情"
+        elif close < entry_stop:
+            stop_hit = "**已跌破**"
+            notes.append(
+                f"**收盘 {close:g} < 建仓日止损价 {entry_stop:g}**："
+                f"按 §9.7.5 次日尾盘**整仓清空**，先于 `P/V` 减持与换仓执行"
+            )
+        else:
+            stop_hit = "否"
+
         # §14.5 三取值（v2.56 删去 `割肉提醒`）。无行情时必须落 `数据缺失` 而非 `持有`：
         # `持有` 是唯一读起来像「已检查、没事」的取值，而没有现价恰恰意味着 `P/V` 没算过。
         # 一只 P/V 已越过 1.10、本该减持的停牌股若显示为持有，就在唯一的卖出规则上
@@ -155,6 +182,8 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
                 "security_name": h.get("security_name", ""),
                 "current_shares": h.get("current_shares", ""),
                 "cost_basis": h.get("cost_basis", ""),
+                "entry_stop_price": "" if entry_stop is None else f"{entry_stop:g}",
+                "stop_hit": stop_hit,
                 "close": "" if close is None else f"{close:g}",
                 "quality_tier": (pool_row or {}).get("quality_tier", ""),
                 "quality_score": (pool_row or {}).get("quality_score", ""),
@@ -241,7 +270,10 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
         row = by_code[code]
         cash, ratio = float(event["cash_per_share"]), float(event["share_ratio"])  # type: ignore[arg-type]
         print(f"    - {row['security_name']}（{code}）{event['plan']}")
-        for label, field in (("成本价", "cost_basis"), ("带下沿", "fair_price_low"), ("带上沿", "fair_price_high")):
+        # `entry_stop_price` 与前三项一起调（§11.3）。**漏调它的后果比漏调带更立即**：
+        # 送转后价格按因子下跳而止损价不动，次日必然「跌破」，直接触发一次错误的整仓清仓。
+        for label, field in (("成本价", "cost_basis"), ("带下沿", "fair_price_low"),
+                             ("带上沿", "fair_price_high"), ("**建仓日止损价**", "entry_stop_price")):
             value = to_float(row.get(field))
             if value is None:
                 print(f"        {label}：未设定，无需调整")
@@ -250,6 +282,8 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
                   f"（(原价 − {cash:g}) ÷ (1 + {ratio:g})）")
         if ratio:
             print(f"        送转比例 {ratio:g}/股：`current_shares` 同须按 §14.4 调整")
+        print("        注：`entry_stop_price` 的调整**须持久化**——它是历史时点价格，"
+              "没有任何重建会重新算它（带的 `−D` 则到下次基本面重建即抹掉，见 §11.3）")
         print("        ⚠ 建议值须人工核对后写回，两条都要核："
               "①**本检出不知道你调过没有**——清单里没有记录调整状态的字段，若本日已按 §14.4 调过，"
               "忽略本行，再调一次就是重复除权；"
@@ -287,6 +321,21 @@ def main() -> None:
     print(f"tracked {len(rows)} holdings as of {as_of}")
     # §14.4 检出排在 P/V 结论之前打印：除权未调时，下面那行 P/V 就是错的（§9.1 第四步）。
     report_ex_dividend(rows, as_of, args.timeout)
+    # §9.7.5 排在 P/V 之前：止损是第 ⓪ 条路径，命中即整仓，不再走减持与换仓。
+    # **无事也打印**，且必须把「未设」单列——一行「跌破：无」在 25 只全部未设时是恒真的，
+    # 与恒亮的告警同型（§13 第 3 条）。
+    stopped = [r for r in rows if r["stop_hit"] == "**已跌破**"]
+    unset = [r for r in rows if r["stop_hit"] == "未设"]
+    blind = [r for r in rows if r["stop_hit"] == "无行情"]
+    if stopped:
+        names = "、".join(f"{r['security_name']}(收 {r['close']} < 止损 {r['entry_stop_price']})" for r in stopped)
+        print(f"  **跌破建仓日止损 {len(stopped)} 只**：{names}——按 §9.7.5 次日尾盘**整仓清空**，先于减持与换仓")
+    else:
+        print(f"  跌破建仓日止损：无（已设止损价 {len(rows) - len(unset)}/{len(rows)} 只"
+              + (f"，其中 {len(blind)} 只当日无行情无法比对" if blind else "") + "）")
+    if unset:
+        print(f"  未设建仓日止损 {len(unset)} 只：{'、'.join(str(r['security_name']) for r in unset)}"
+              f"——§9.7.5 对其不生效，须待清空后重新建仓时按新规则设定")
     if trim:
         names = "、".join(f"{r['security_name']}({r['pv']})" for r in trim)
         print(f"  **P/V ≥ 1.10 共 {len(trim)} 只**：{names}——按 §9.7.2 第四步每日减持一档")

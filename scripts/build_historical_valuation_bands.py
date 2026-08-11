@@ -458,6 +458,36 @@ def trend_aware_roe(series: dict[str, dict], available_at: str, base_years: int,
                    "growth_confirmed": "1" if confirmed else ""}
 
 
+# 单边归一化口径：**只在一个方向上放弃归一化**（用户 2026-08-11 指令）。
+# 动机是横截面实测——今日池里当期 ROE 站上自身五年中位 115% 的 49 只，只有 1 只过得了
+# 买入线；而归一化真正要防的只是「在周期低谷把低盈利外推十年」这一个方向。两个方向用
+# 同一把尺子，等于为了防低谷陷阱把结构性改善一并抹掉。
+ONESIDED_SOURCES = ("onesided_up", "onesided_max", "onesided_min")
+
+
+def pick_roe0(mode: str, anchor: float, roe_ttm_value: float | None,
+              trend: str) -> tuple[float, str]:
+    """单边口径下本行取哪一侧的 ROE，返回 (roe0, 口径标签)。
+
+    * `onesided_up`——**只对判定为上行趋势的行**改用当期 TTM ROE，其余仍用归一化锚。
+      判据沿用 `roe_trend`（单调度 + 净利率同向印证），不另立标准；这是最窄的一刀。
+    * `onesided_max`——当期高于锚就取当期（等价于「凡不在低谷就不归一化」）。
+    * `onesided_min`——当期低于锚就取当期，即 §12.14 末尾提的「取两者孰低」。**它是对照组**：
+      与前两者方向相反，若三者同向变好则说明是尺度效应而非方向信息。
+
+    `roe_ttm` 取不到时一律回落到锚，并在标签里写明——**不得静默回落**（§13 第 3 条）。
+    """
+    if roe_ttm_value is None:
+        return anchor, "anchor(无TTM)"
+    if mode == "onesided_up":
+        return (roe_ttm_value, "ttm(上行)") if trend == "up" else (anchor, "anchor")
+    if mode == "onesided_max" and roe_ttm_value > anchor:
+        return roe_ttm_value, "ttm(孰高)"
+    if mode == "onesided_min" and roe_ttm_value < anchor:
+        return roe_ttm_value, "ttm(孰低)"
+    return anchor, "anchor"
+
+
 def incremental_roe(series: dict[str, dict], actions: list[dict], available_at: str,
                     span: int = 4) -> float | None:
     """增量股东回报 `ΔEPS / ΔBPS`——**新投进去的一块钱赚回多少**。
@@ -566,6 +596,7 @@ class Band:
     roe_terminal: float | None = None
     roe_anchor: float | None = None
     roe_trend: str = ""
+    roe0_mode: str = ""            # 单边口径下本行实际取了哪一侧（anchor / ttm）
     roe_window: int | None = None
     roe_sigma: float | None = None
     incremental_roe: float | None = None
@@ -598,6 +629,10 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             return Band(code, name, period, notice, notice, "unavailable", reason)
         if roe is None:
             return Band(code, name, period, notice, notice, "unavailable", "TTM ROE 不可得（伪 0 且无 BPS 可退回）")
+        evidence += eps.evidence_dates + roe.evidence_dates
+    elif args.roe_source in ONESIDED_SOURCES and eps is not None and roe is not None:
+        # 单边口径**读 TTM ROE 来定取哪一侧**，故 TTM 各分量的公告日同样进生效日——
+        # 只在最终取了 TTM 那一侧才结转，就是拿后来才披露的数做了当期的选择（§12.4 前视）。
         evidence += eps.evidence_dates + roe.evidence_dates
     available_at = max(evidence)
 
@@ -633,7 +668,10 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
 
     # 归一化口径：ROE 取近五年年度中位（结构参数），EPS 由清洁盈余 E = ROE×B 反推。
     # 这样两个输入天然自洽，且不把周期低谷的读数外推十年（见 normalized_roe 文档）。
-    if args.roe_source == "normalized":
+    if args.roe_source == "ttm":
+        roe0, eps0 = roe.value, eps.value
+        band.roe0_mode = "ttm"
+    else:
         roe0, meta = trend_aware_roe(series, available_at, args.roe_years, args.roe_stat,
                                      args.growth_latest_weight, args.growth_recent_weight)
         band.roe_anchor = meta.get("anchor")
@@ -647,9 +685,13 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         if meta["years"] < args.min_roe_years:
             band.reason = f"已披露年报 ROE 仅 {meta['years']} 年 < 要求 {args.min_roe_years} 年"
             return band
+        band.roe0_mode = "anchor"
+        if args.roe_source in ONESIDED_SOURCES:
+            roe0, band.roe0_mode = pick_roe0(args.roe_source, roe0,
+                                             roe.value if roe else None, band.roe_trend)
+        # **eps0 一律走清洁盈余 `E = ROE×B`**，与 normalized 臂同式——单边口径改的只有
+        # 「roe0 取哪一侧」这一个自由度，若同时换 EPS 口径就分不清差异来自哪一处。
         eps0 = roe0 * bps
-    else:
-        roe0, eps0 = roe.value, eps.value
     band.roe0, band.eps0 = roe0, eps0
 
     # **终值 ROE 不得高于起始 ROE**：本模型的 fade 是「竞争侵蚀超额回报」的衰减机制，
@@ -793,7 +835,8 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
 # ------------------------------------------------------------------ 输出
 BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", "notice_date",
                "available_at", "status", "reason", "eps_ttm", "roe_ttm", "roe_source", "bps",
-               "eps0", "roe0", "roe_anchor", "roe_trend", "growth_confirmed", "roe_window", "roe_efficiency",
+               "eps0", "roe0", "roe_anchor", "roe_trend", "roe0_mode", "growth_confirmed",
+               "roe_window", "roe_efficiency",
                "incremental_roe", "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
                "r_mode", "rf", "erp", "beta", "r", "g_terminal", "roe_terminal",
                "intrinsic_value", "band_low", "band_high", "mos", "max_buy_price",
@@ -812,6 +855,7 @@ def band_row(band: Band, tier: str) -> dict:
         "roe_source": band.roe_source, "bps": fmt(band.bps),
         "eps0": fmt(band.eps0), "roe0": fmt(band.roe0),
         "roe_anchor": fmt(band.roe_anchor), "roe_trend": band.roe_trend,
+        "roe0_mode": band.roe0_mode,
         "roe_window": "" if band.roe_window is None else str(band.roe_window),
         "roe_efficiency": fmt(band.roe_sigma), "incremental_roe": fmt(band.incremental_roe),
         "payout": fmt(band.payout),
@@ -968,8 +1012,10 @@ def main() -> int:
     # 池外 1,278 只一律落 DEFAULT_TIER（3%）——选样偏差会绕过可选池、从估值口径溜回来。
     parser.add_argument("--uniform-tier", choices=tuple(TIER_PARAMS),
                         help="强制所有股票用同一分档，抹掉人工分档带来的前视优势")
-    parser.add_argument("--roe-source", choices=("normalized", "ttm"), default="normalized",
-                        help="normalized=近五年年度 ROE 中位并由 E=ROE×B 反推 EPS（缺省，避免顺周期陷阱）")
+    parser.add_argument("--roe-source",
+                        choices=("normalized", "ttm") + ONESIDED_SOURCES, default="normalized",
+                        help="normalized=近五年年度 ROE 中位并由 E=ROE×B 反推 EPS（缺省，避免顺周期陷阱）；"
+                             "onesided_up/max/min=单边归一化，见 pick_roe0")
     parser.add_argument("--g0-source", choices=("sustainable", "trailing", "trailing_fb"),
                         default="sustainable",
                         help="trailing_fb = 优先已实现三年 CAGR、取不到时回落 sustainable（补齐覆盖）")
