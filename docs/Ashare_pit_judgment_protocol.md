@@ -14,8 +14,8 @@
 单元 = **（公司 × 定期报告期）**，产出为区间：
 
 ```csv
-security_code,name_at_from,worth_from_period,worth_from_notice,worth_to_period,worth_to_notice,basis,reason,evidence
-600585,海螺水泥,2004-12-31,2005-04-21,9999,,fin,<该公司自己的理由>,<引用的同期事实>
+security_code,business_desc_at_from,worth_from_period,worth_from_notice,worth_to_period,worth_to_notice,basis,reason,evidence
+600585,华东水泥龙头/熟料产能约X万吨/安徽,2004-12-31,2005-04-21,9999,,fin,<该公司自己的理由>,<引用的同期事实>
 ```
 
 - **生效日 = 该期报告的公告日**（`worth_from_notice`），不再用「Y+1 年 4 月 30 日」这类人为切口。
@@ -23,7 +23,8 @@ security_code,name_at_from,worth_from_period,worth_from_notice,worth_to_period,w
 - 一家可有多段区间（护城河丢失后重建即再开一段）。
 - `worth_from_period = 0` 表示**从未够格**，一行即可。
 - `worth_to_period = 9999` 表示截至最新期仍成立。
-- `name_at_from` 记**该期当时的简称**，不是今日简称（见 §3 第 3 条）。
+- `business_desc_at_from` 记**该期时点的业务描述**（行业+主营+规模+区位），**不含简称与代码**——见 §3 第 3 条。
+  `security_code` 只用于装配与回查，**不进入判定输入**。
 
 ## 2 判据
 
