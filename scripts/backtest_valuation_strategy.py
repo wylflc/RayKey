@@ -737,7 +737,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         universe: list[tuple[str, set[str]]] | None = None,
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
         trend_tol: float = 0.0, exec_delay: int = 0, exec_price: str = "close",
-        sell_trend_ma: tuple[int, ...] = (), sell_full: bool = False,
+        sell_trend_ma: tuple[int, ...] = (), sell_full: bool = False, stop_min_days: int = 0,
         liquidate_ma: int = 0, liquidate_days: int = 3,
         opens: dict[str, dict[str, float]] | None = None,
         sell_line_override: float | None = None, trend_exit_ma: int = 0,
@@ -1001,7 +1001,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     close_lot(portfolio, code, day, price, ledger=ledger, reason=f"跌破MA{trend_exit_ma}清仓")
                     sell_count += 1
                     continue
-            if ((strategy == "trend" and trend_stop) or price_stop) and lot.entry_stop and price < lot.entry_stop:
+            # `stop_min_days`（用户 2026-08-12）：止损的最短持有期。逐笔分析显示 73% 的平仓是
+            # 建仓后**中位 3 天**即触发的止损，卖出后该股半年/1年/3年中位仍 +0.9%/+2.9%/+16.6%
+            # ——即这条止损主要在切掉刚建的仓，而非在保护已有利润。本开关用于检验「给仓位一点时间」。
+            if ((strategy == "trend" and trend_stop) or price_stop) and lot.entry_stop and price < lot.entry_stop \
+                    and (not stop_min_days or _days_between(lot.entry_date, day) >= stop_min_days):
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
                 close_lot(portfolio, code, day, price, ledger=ledger, reason=f"跌破建仓日MA{lot.entry_stop_ma}止损")
                 sell_count += 1
@@ -1720,6 +1724,8 @@ def main() -> int:
                         help="割肉后的买回口径：lump=重新合格当日一次性买回相同股数；gradual=交回常规定投")
     parser.add_argument("--lot-size", type=int, default=0, metavar="N",
                         help="最小交易单位（A股填 100）。打开后买入按手向下取整、买不足一手则跳过")
+    parser.add_argument("--stop-min-days", type=int, default=0, metavar="D",
+                        help="建仓日均线止损的最短持有期：不足 D 个自然日不触发（0=原行为）")
     parser.add_argument("--sell-full", action="store_true",
                         help="P/V≥减持线（且过走势闸门）时整仓卖出，而非按一档减")
     parser.add_argument("--swap-partial", action="store_true",
@@ -1820,6 +1826,7 @@ def main() -> int:
                      + (f"_corr{args.max_corr:g}" if args.max_corr else "")
                      + ("_tranche" if args.trend_tranche else "")
                      + ("_sf" if args.sell_full else "")
+                     + (f"_smd{args.stop_min_days}" if args.stop_min_days else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
                      + (f"_xma{args.trend_exit_ma}" if args.trend_exit_ma else "")
@@ -1865,7 +1872,7 @@ def main() -> int:
                          position_cap=args.position_cap,
                          only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None,
                          universe=universe, trend_tranche=args.trend_tranche,
-                         sell_full=args.sell_full,
+                         sell_full=args.sell_full, stop_min_days=args.stop_min_days,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,
                          sell_trend_ma=tuple(args.sell_trend_ma),
