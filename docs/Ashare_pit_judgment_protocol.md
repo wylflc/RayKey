@@ -220,7 +220,7 @@ security_code,business_desc_at_from,worth_from_period,worth_from_notice,worth_to
 ## 9 判定进度与已固化的判据（2026-08-12 记）
 
 队列共 3,598 家（`data/processed/pit_attention/judgment_queue.csv`，按首个签名年份分档）。
-截至本次记录，**首签年 2002-2011 的十档全部判完，共 1,075 家**，结果落在
+截至本次记录，**首签年 2002-2012 的十一档全部判完，共 1,210 家**，结果落在
 `data/processed/pit_attention/judgment_log.csv`。
 
 | 首签年 | 判定家数 | 入选 |
@@ -235,9 +235,10 @@ security_code,business_desc_at_from,worth_from_period,worth_from_notice,worth_to
 | 2009 | 93 | 3 |
 | 2010 | 215 | 2 |
 | 2011 | 201 | 6 |
-| **合计** | **1,075** | **43（4.0%）** |
+| 2012 | 135 | 1 |
+| **合计** | **1,210** | **44（3.6%）** |
 
-`basis` 分布：`fin` 717 / `boundary` 337 / `qual` 21。**剩余 2012-2025 共 2,523 家未判。**
+`basis` 分布：`fin` 819 / `boundary` 370 / `qual` 21。**剩余 2013-2025 共 2,388 家未判。**
 
 ### 9.1 反复使用、必须保持一致的判据
 
