@@ -31,8 +31,10 @@
 2. **幸存者偏差（不可测，非本脚本能修）**。本仓库行情库 5,210 个文件**无一在 2026 年前
    终止**，财务库同样查无退市公司——长航油运、康得新、信威、华锐风电等九只已知退市股
    在两侧均不存在。**故任何配置都测不到退市造成的偏误**，需外部数据源，见 OI-040。
-3. **不计交易成本**。A 股双边约 0.1~0.2%（含印花税），高换手参数（大 x、日频）受影响远
-   大于低换手参数，**故 x 之间的比较对 x 大的一侧不利**。
+3. **交易成本缺省不计**，须显式打开。`--fee-preset user` 即用户券商口径（佣金万一、最低
+   5 元、印花税 0.05% 单边卖出、过户费 0.001% 双边）；`--fee-stamp-mode historical` 另按
+   成交日取历史印花税率（2007-05-30~2008-04-23 曾达 0.3% 双边）。**不打开时高换手参数被系
+   统性高估**，故 x、换仓阈值一类改变换手的参数必须开着成本比。
 
 用法::
 
@@ -69,6 +71,46 @@ BUY_RATIO_MAX = 0.90      # 合格：P/V ≤ 0.9
 SELL_RATIO_MIN = 1.10     # 触发减持：P/V ≥ 1.1
 MAX_POSITIONS = 10
 TRADING_DAYS = 244
+
+# ------------------------------------------------------------------ 交易成本
+# 缺省全零 → 与历史全部回测逐位可复现。开启后买卖两侧都从现金里扣，不改成交股数。
+# 印花税历史沿革（`--fee-stamp-mode historical`）：早年双边征收且税率高得多，
+# 2007-05-30~2008-04-23 的 0.3% 双边对高换手配置是致命的，故必须能单独检验。
+STAMP_HISTORY = [                     # (生效日, 税率, 是否双边)
+    ("1900-01-01", 0.0040, True),
+    ("2001-11-16", 0.0020, True),
+    ("2005-01-24", 0.0010, True),
+    ("2007-05-30", 0.0030, True),
+    ("2008-04-24", 0.0010, True),
+    ("2008-09-19", 0.0010, False),    # 起改单边征收
+    ("2023-08-28", 0.0005, False),
+]
+
+FEES = {"commission": 0.0, "min_fee": 0.0, "transfer": 0.0,
+        "stamp": 0.0, "stamp_mode": "flat", "paid": 0.0}
+
+
+def _stamp_rate(day: str, side: str) -> float:
+    """按成交日取印花税率。`side` 为 buy/sell。"""
+    if FEES["stamp_mode"] != "historical":
+        return FEES["stamp"] if side == "sell" else 0.0
+    rate, both = 0.0, False
+    for start, r, b in STAMP_HISTORY:
+        if day >= start:
+            rate, both = r, b
+    return rate if (side == "sell" or both) else 0.0
+
+
+def trade_fee(amount: float, day: str, side: str) -> float:
+    """一笔成交的全部费用：佣金（有最低额）＋过户费＋印花税。金额为零则不收费。"""
+    if amount <= 0 or not FEES["commission"] and not FEES["min_fee"] \
+            and not FEES["transfer"] and FEES["stamp_mode"] == "flat" and not FEES["stamp"]:
+        return 0.0
+    fee = max(amount * FEES["commission"], FEES["min_fee"])
+    fee += amount * FEES["transfer"]
+    fee += amount * _stamp_rate(day, side)
+    FEES["paid"] += fee
+    return fee
 
 # 安全边际按档位（§6.5.7.1.1：风险惩罚归决策层，不塞进 r）。**只作用于买入线。**
 MOS_BY_TIER = {"L1": 0.10, "L2": 0.20, "L3": 0.30}
@@ -672,7 +714,7 @@ def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: s
                        "shares": f"{lot.shares:.0f}", "price": f"{price:.3f}",
                        "amount": f"{lot.shares * price:.0f}", "pv_ratio": "",
                        "intrinsic_value": "", "reason": reason})
-    portfolio.cash += lot.shares * price
+    portfolio.cash += lot.shares * price - trade_fee(lot.shares * price, day, "sell")
     lot.proceeds += lot.shares * price
     lot.shares = 0.0
     lot.exit_date, lot.exit_reason = day, reason
@@ -724,6 +766,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     ——徐工机械那一笔从建仓到被判贵走了 9 年半。
     """
     portfolio = Portfolio(cash=capital)
+    fees0 = FEES["paid"]        # 本次 run 的费用 = 结束时累计 − 起始累计
     stats = stats if stats is not None else collections.Counter()
     # 割肉后的「欠账」：被 `trend_exit_ma` 清掉的股数记在此处，等该股重新满足买入条件时
     # 按 `rebuy` 口径补回。**lump=一次性买回相同股数；gradual=交回常规定投**（即不记账）。
@@ -929,7 +972,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     else:
                         log_partial_sell(ledger, day, code, shares, price, "移出股票库·减一档")
                         lot.shares -= shares
-                        portfolio.cash += shares * price
+                        portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                         lot.proceeds += shares * price
                         lot.sells += 1
                         turnover += shares * price
@@ -1019,7 +1062,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 else:
                     log_partial_sell(ledger, day, code, shares, price, f"P/V≥{sell_line:.2f}·减一档")
                     lot.shares -= shares
-                    portfolio.cash += shares * price
+                    portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                     lot.proceeds += shares * price
                     lot.sells += 1
                     turnover += shares * price
@@ -1131,7 +1174,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     if shares < lot_w.shares * 0.999:
                         stats["簇内升级·减一档"] += 1
                         lot_w.shares -= shares
-                        portfolio.cash += shares * price
+                        portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                         lot_w.proceeds += shares * price
                         lot_w.sells += 1
                         turnover += shares * price
@@ -1196,7 +1239,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if partial and shares < lot_worst.shares * 0.999:
                     stats["换仓·减一档"] += 1
                     lot_worst.shares -= shares
-                    portfolio.cash += shares * price
+                    portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                     lot_worst.proceeds += shares * price
                     lot_worst.sells += 1
                     turnover += shares * price
@@ -1327,8 +1370,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             lot.shares += shares
             lot.invested += amount
             lot.buys += 1
-            draw_credit(portfolio, amount, credit_limit)   # 现金不足即动用授信
-            portfolio.cash -= amount
+            fee = trade_fee(amount, day, "buy")
+            draw_credit(portfolio, amount + fee, credit_limit)   # 现金不足即动用授信
+            portfolio.cash -= amount + fee
             last_buy[code] = day
             if ledger is not None:
                 # **price 必须记 `fill` 不是 `close`**：`close` 是信号日收盘，而这笔单成交在
@@ -1374,7 +1418,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             price = prices.get(code, {}).get(last)
             if price:
                 close_lot(portfolio, code, last, price, "回测截止清算")
-    return {"equity": equity_curve, "closed": portfolio.closed,
+    return {"equity": equity_curve, "closed": portfolio.closed, "fees": FEES["paid"] - fees0,
             "buys": buy_count, "sells": sell_count, "turnover": turnover,
             "margin_events": margin_events, "min_margin_ratio": min_ratio,
             "min_margin_day": min_ratio_day, "interest_paid": portfolio.interest_paid,
@@ -1485,6 +1529,8 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "买入笔数": result["buys"], "卖出笔数": result["sells"],
             "年均换手": (result["turnover"] / years / statistics.fmean([e for _d, e, *_r in curve])
                      if years else float("nan")),
+            "累计手续费": result.get("fees", 0.0),
+            "手续费占初始本金": result.get("fees", 0.0) / capital if capital else float("nan"),
             "基准年化": bench}
 
 
@@ -1677,7 +1723,24 @@ def main() -> int:
     parser.add_argument("--research-permute", type=int, default=0, metavar="N",
                         help="安慰剂：研报序列按代码序错位 N 位，保留拦截强度、抹掉个股信息")
     parser.add_argument("--label-suffix", default="")
+    fg = parser.add_argument_group("交易成本（缺省全零，与既往回测逐位可复现）")
+    fg.add_argument("--fee-preset", choices=("none", "user"), default="none",
+                    help="user＝用户券商口径：佣金万一、最低 5 元、印花税 0.05% 单边卖出、过户费 0.001% 双边")
+    fg.add_argument("--commission", type=float, default=0.0, help="佣金费率，万一即 0.0001")
+    fg.add_argument("--min-fee", type=float, default=0.0, help="单笔佣金最低额（元）")
+    fg.add_argument("--stamp", type=float, default=0.0, help="印花税率（单边卖出），现行 0.0005")
+    fg.add_argument("--transfer", type=float, default=0.0, help="过户费率（双边），现行 0.00001")
+    fg.add_argument("--fee-stamp-mode", choices=("flat", "historical"), default="flat",
+                    help="historical＝按成交日取历史印花税率（含早年双边征收），用于检验高换手配置在真实税率下是否还成立")
     args = parser.parse_args()
+
+    if args.fee_preset == "user":       # 用户 2026-08-12 提供的券商口径
+        args.commission = args.commission or 0.0001
+        args.min_fee = args.min_fee or 5.0
+        args.stamp = args.stamp or 0.0005
+        args.transfer = args.transfer or 0.00001
+    FEES.update(commission=args.commission, min_fee=args.min_fee, stamp=args.stamp,
+                transfer=args.transfer, stamp_mode=args.fee_stamp_mode)
 
     print(f"载入…（逐日估值状态、行情、除权除息、均线）")
     universe = load_universe(args.universe_file) if args.universe_file else None
@@ -1849,7 +1912,13 @@ def main() -> int:
               "本次未给 `--universe-file`，故本轮读数含该前视。")
     print("⚠ **幸存者偏差（无法修）**：本仓库行情与财务两侧均不含退市公司"
           "（5,210 个行情文件无一在 2026 年前终止），任何配置都测不到它——见 OI-040。")
-    print("⚠ **不计交易成本**：对高换手（大 x）一侧更有利。")
+    if FEES["commission"] or FEES["min_fee"] or FEES["stamp"] or FEES["stamp_mode"] == "historical":
+        stamp = ("按成交日历史税率（含早年双边征收）" if FEES["stamp_mode"] == "historical"
+                 else f"{FEES['stamp']*1e4:.1f}‱ 单边卖出")
+        print(f"交易成本已计入：佣金 {FEES['commission']*1e4:.1f}‱（最低 {FEES['min_fee']:.0f} 元）、"
+              f"过户费 {FEES['transfer']*1e4:.2f}‱ 双边、印花税 {stamp}")
+    else:
+        print("⚠ **不计交易成本**：对高换手（大 x）一侧更有利。加 --fee-preset user 可计入。")
     return 0
 
 
