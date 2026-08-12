@@ -737,7 +737,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         universe: list[tuple[str, set[str]]] | None = None,
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
         trend_tol: float = 0.0, exec_delay: int = 0, exec_price: str = "close",
-        sell_trend_ma: tuple[int, ...] = (),
+        sell_trend_ma: tuple[int, ...] = (), sell_full: bool = False,
         liquidate_ma: int = 0, liquidate_days: int = 3,
         opens: dict[str, dict[str, float]] | None = None,
         sell_line_override: float | None = None, trend_exit_ma: int = 0,
@@ -1047,6 +1047,16 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     stats["减持被走势闸门挡下"] += 1
                     continue
             if ratio is not None and ratio >= sell_line:
+                # `sell_full`（用户 2026-08-12）：触发即整仓卖出，不按一档减。
+                # 与 `--dev-sell-min` / `--liquidate-ma` 的区别是它仍只看 P/V 与走势闸门，
+                # 不另加均线条件——即「符合卖出条件就一次性卖完」的直译。
+                if sell_full:
+                    stats["P/V≥减持线·整仓卖出"] += 1
+                    turnover += lot.shares * price
+                    close_lot(portfolio, code, day, price, ledger=ledger,
+                              reason=f"P/V≥{sell_line:.2f}整仓卖出")
+                    sell_count += 1
+                    continue
                 stats["P/V≥减持线·减一档"] += 1
                 shares = sell_shares(budget / price, lot.shares, price, lot_size)
                 if (not shares and lot_ratio_cooldown and lot_size
@@ -1710,6 +1720,8 @@ def main() -> int:
                         help="割肉后的买回口径：lump=重新合格当日一次性买回相同股数；gradual=交回常规定投")
     parser.add_argument("--lot-size", type=int, default=0, metavar="N",
                         help="最小交易单位（A股填 100）。打开后买入按手向下取整、买不足一手则跳过")
+    parser.add_argument("--sell-full", action="store_true",
+                        help="P/V≥减持线（且过走势闸门）时整仓卖出，而非按一档减")
     parser.add_argument("--swap-partial", action="store_true",
                         help="换仓由整仓卖出改为按定投同速减一档（仅在只差钱、槽位未满时）")
     parser.add_argument("--cluster-swap", action="store_true",
@@ -1807,6 +1819,7 @@ def main() -> int:
                      + ("" if args.trend_stop else "_nostop")
                      + (f"_corr{args.max_corr:g}" if args.max_corr else "")
                      + ("_tranche" if args.trend_tranche else "")
+                     + ("_sf" if args.sell_full else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
                      + (f"_xma{args.trend_exit_ma}" if args.trend_exit_ma else "")
@@ -1852,6 +1865,7 @@ def main() -> int:
                          position_cap=args.position_cap,
                          only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None,
                          universe=universe, trend_tranche=args.trend_tranche,
+                         sell_full=args.sell_full,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,
                          sell_trend_ma=tuple(args.sell_trend_ma),
