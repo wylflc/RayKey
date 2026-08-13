@@ -20,14 +20,19 @@
               三年为正比例 47%/57%/67%/83%/90%），是银行组唯一单调的候选
 
 用法：
-    python3 rebuild_bank_bands.py <模式> <输出文件>
+    python3 rebuild_bank_bands.py <模式> <输出文件> [逐日状态文件]
     模式 = fixed:0.15 | peer | pbhist | divspread:0.02
+
+第三个可选参数用于把同一口径施加到**别的逐日状态文件**上（例如护城河池与银行的并集），
+银行名单与基本面序列仍取自 pit116 面板与其估值带——银行的 bps/roe0/payout 与池子无关。
 """
 import csv, sys, os, bisect, collections, statistics
 ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
 PANEL = f"{ROOT}/data/processed/pit_attention/universe_panel_pit_v2.csv"
 BANDS = f"{ROOT}/data/processed/a_share_historical_valuation_bands_pit116.csv"
 DAILY = f"{ROOT}/data/processed/a_share_historical_valuation_daily_pit116.csv"
+if len(sys.argv) > 3:
+    DAILY = sys.argv[3]
 WINDOW_DAYS = 1095          # 滚动窗口三年
 G_CAP = 0.03                # 终值增长上限，与主模型一致
 
