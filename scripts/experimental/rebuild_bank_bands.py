@@ -14,10 +14,14 @@
   peer        COE 取**滚动窗口内同业隐含 COE 的中位**，窗口严格早于当日（分布不是当日点位，
               合乎 §6.5.5 的价格独立性硬约束）
   pbhist      PB* 直接取该行**滚动窗口内自身 PB 的中位**，完全不经 ROE
+  divspread:RP  股利折现：`V = 近 12 个月每股现金分红 ÷ (十年国债 + RP)`，
+              即「股息率要比国债高出 RP 才算合理价」。实测（§12.31）该口径的
+              股息率−国债利差在全历史五档上单调（其后三年 −0.8%/+1.3%/+3.0%/+7.9%/+11.2%，
+              三年为正比例 47%/57%/67%/83%/90%），是银行组唯一单调的候选
 
 用法：
     python3 rebuild_bank_bands.py <模式> <输出文件>
-    模式 = fixed:0.15 | peer | pbhist
+    模式 = fixed:0.15 | peer | pbhist | divspread:0.02
 """
 import csv, sys, os, bisect, collections, statistics
 ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
@@ -124,6 +128,48 @@ def own_pb(c, day):
     return statistics.median(x[1] for x in s[lo:hi]) if hi - lo >= 60 else None
 
 FIXED = float(mode.split(":")[1]) if mode.startswith("fixed:") else None
+RP = float(mode.split(":")[1]) if mode.startswith("divspread:") else None
+
+# ---- 股利折现口径要用的两组序列 ----
+RFS = []
+if RP is not None:
+    for r in csv.DictReader(open(f"{ROOT}/data/reference/cost_of_equity_inputs.csv", encoding="utf-8")):
+        try:
+            RFS.append((r["observed_on"], float(r["risk_free_rate"])))
+        except (TypeError, ValueError):
+            pass
+    RFS.sort()
+RFD = [x[0] for x in RFS]
+
+DIV = collections.defaultdict(list)
+if RP is not None:
+    import glob as _glob
+    for f in _glob.glob(f"{ROOT}/data/raw/corporate_actions/*.csv"):
+        for r in csv.DictReader(open(f, encoding="utf-8")):
+            d = r.get("ex_dividend_date") or ""
+            if len(d) != 10:
+                continue
+            try:
+                v = float(r.get("cash_per_share") or 0)
+            except ValueError:
+                v = 0.0
+            if v > 0:
+                DIV[r["security_code"]].append((d, v))
+    for c in DIV:
+        DIV[c].sort()
+
+def rf_at(day):
+    i = bisect.bisect_right(RFD, day) - 1
+    return RFS[i][1] if i >= 0 else None
+
+def div_ttm(c, day):
+    """近 12 个月已除权的每股现金分红——只回看，无前视。"""
+    s = DIV.get(c)
+    if not s:
+        return 0.0
+    ds = [x[0] for x in s]
+    lo = _shift(day, 365)
+    return sum(x[1] for x in s[bisect.bisect_left(ds, lo):bisect.bisect_right(ds, day)])
 
 # ---- 第二遍：重写银行行 ----
 n_rewritten = n_kept = n_dropped = 0
@@ -147,6 +193,18 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         _, bps, roe0, payout = f
         if not bps or bps <= 0:
             n_dropped += 1; continue
+        if RP is not None:
+            r10 = rf_at(d); dv = div_ttm(c, d)
+            if r10 is None or dv <= 0: n_dropped += 1; continue
+            v = dv / (r10 + RP)
+            if v <= 0: n_dropped += 1; continue
+            pb_star.append(v / bps)
+            r["intrinsic_value"] = f"{v:.4f}"
+            r["band_low"] = f"{v*0.9:.4f}"
+            r["band_high"] = f"{v*1.1:.4f}"
+            r["valuation_ratio"] = f"{px/v:.4f}"
+            r["upside_to_low"] = f"{v*0.9/px-1:.4f}"
+            w.writerow(r); n_rewritten += 1; continue
         if mode == "pbhist":
             pbs = own_pb(c, d)
             if pbs is None: n_dropped += 1; continue

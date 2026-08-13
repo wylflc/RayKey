@@ -44,6 +44,19 @@ python3 scripts/experimental/rebuild_bank_bands.py peer      data/processed/vd_p
 
 不需要 `torch`/`numpy`，只用标准库。产出的逐日估值文件**不入库**。
 
+## 成长/PEG 并联通道（2026-08-13，结论：不采纳，见回测日志 §12.31.4）
+
+| 文件 | 作用 |
+| --- | --- |
+| `add_growth_path.py` | 给现行估值带并联一条 PEG 通道（`V = EPS_ttm × g×100 × PEG目标`），取 `min(P/V_DCF, P/V_PEG)`，只放宽不收紧。支持 `--min-g/--max-g/--min-roe/--max-pe/--accel/--only-nonbank` 各类护栏 |
+
+```bash
+python3 scripts/experimental/add_growth_path.py 1.0 data/processed/vd_pit116_pegG.csv --max-g 1.50 --max-pe 80
+```
+
+不需要 `torch`/`numpy`。**结论为负**：合格面守恒使并联通道变成「换人」而非「加法」，
+新放进来的观测其后一年 +4.3%、被挤掉的 +5.7%。护栏加不出正收益，`--accel` 还会反向恶化。
+
 ## 生产脚本上唯一为这些实验开的口子
 
 `scripts/build_historical_valuation_bands.py --roe-external CSV`：用外部预测的 ROE 覆盖 `roe0`，
