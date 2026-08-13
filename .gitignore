@@ -56,3 +56,6 @@ data/processed/vd_moat141.csv
 data/processed/vb_moat141.csv
 data/processed/vd_union216*.csv
 data/processed/vb_union216.csv
+data/processed/vd_pm300.csv
+data/processed/vb_pm300.csv
+data/processed/vd_pmall.csv

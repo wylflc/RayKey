@@ -57,6 +57,22 @@ python3 scripts/experimental/add_growth_path.py 1.0 data/processed/vd_pit116_peg
 不需要 `torch`/`numpy`。**结论为负**：合格面守恒使并联通道变成「换人」而非「加法」，
 新放进来的观测其后一年 +4.3%、被挤掉的 +5.7%。护栏加不出正收益，`--accel` 还会反向恶化。
 
+## 逐筛选年时点重判（2026-08-13，结论：机械化失败，见回测日志 §12.33）
+
+| 文件 | 作用 |
+| --- | --- |
+| `pit_moat_screen.py` | 阈值版：五条并联护城河签名（M1 品牌定价权／M2 高于同业／M3 扩张不降毛利／M4 周期抗压／M5 规模龙头），各对应 §5.4 一条判据 |
+| `pit_moat_rank.py` | 综合分版：八个分项逐年在全市场分位归一后**等权**相加，取前 N。权重不拟合已知名单，141 家只作事后验收 |
+
+```bash
+python3 scripts/experimental/pit_moat_rank.py --top-n 200 --calib          # 只验收
+python3 scripts/experimental/pit_moat_rank.py --top-n 200 --out panel.csv  # 出面板
+```
+
+**结论为负**：最好 −0.84pp，滚动三年回撤 36%（现行面板 20%），入选股自入选日起中位年化 **−2.4%**
+（后视护城河名单为 +7.3%）。原因是八个分项全是「已实现的基本面强度」，在基本面顶点同时最大化，
+而基本面顶点与价格顶点重合。局部进步：宁德时代与牧原股份都比人工判定早两年入选。
+
 ## 生产脚本上唯一为这些实验开的口子
 
 `scripts/build_historical_valuation_bands.py --roe-external CSV`：用外部预测的 ROE 覆盖 `roe0`，
