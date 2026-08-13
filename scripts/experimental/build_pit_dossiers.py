@@ -53,6 +53,7 @@ def main():
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--out", required=True)
     ap.add_argument("--list-out", help="同时写出本批代码清单")
+    ap.add_argument("--brief", action="store_true", help="三时段速览：每只两行，供批量初判")
     a = ap.parse_args()
 
     bloom = list(csv.DictReader(open(f"{PIT}/bloom_queue.csv", encoding="utf-8")))
@@ -129,7 +130,26 @@ def main():
         late = [y for y in ys if yrs[y]["avail"] > f"{y+1}-04-30"]
         if late:
             lines.append("注：以下财年的年报可得日晚于次年4月底：" + ",".join(map(str, late)))
-        out.append("\n".join(lines))
+        if a.brief:
+            # 三时段速览：每段给「营收 / 毛利率减同业 / ROE减同业 / 盈利年占比」
+            segs = []
+            n = len(ys)
+            for lo, hi, lbl in ((0, n // 3, "早"), (n // 3, 2 * n // 3, "中"), (2 * n // 3, n, "近")):
+                seg = ys[lo:hi]
+                if not seg:
+                    continue
+                rv = [yrs[y]["rev"] / 1e8 for y in seg if yrs[y]["rev"]]
+                dg = [yrs[y]["gm"] - gm_med[(g, y)] for y in seg
+                      if yrs[y]["gm"] is not None and (g, y) in gm_med]
+                dr = [yrs[y]["roe"] - roe_med[(g, y)] for y in seg
+                      if yrs[y]["roe"] is not None and (g, y) in roe_med]
+                pos = sum(1 for y in seg if (yrs[y]["np"] or 0) > 0)
+                f = lambda v: (f"{statistics.median(v):+.0f}" if v else "—")
+                segs.append(f"{lbl}{seg[0]}-{seg[-1]} 收{(statistics.median(rv) if rv else 0):.0f}亿 "
+                            f"毛利差{f(dg)} ROE差{f(dr)} 盈利{pos}/{len(seg)}")
+            out.append(head + "\n  " + "｜".join(segs))
+        else:
+            out.append("\n".join(lines))
 
     with open(a.out, "w", encoding="utf-8") as fh:
         fh.write(f"# 时点档案：{len(out)} 只（毛利率/ROE 单位 %，营收与归母单位亿元）\n"
