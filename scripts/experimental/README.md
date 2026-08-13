@@ -31,6 +31,19 @@ python3 -m venv /tmp/nnvenv && /tmp/nnvenv/bin/pip install numpy torch
 `nn_apply.py` 与 `nn_roe.py` 还需要同目录下的 `pit116_codes.txt`（时点面板的代码清单）。
 中间产物与产出的逐日估值文件**都不入库**。
 
+## 银行估值口径重算（2026-08-13，结论：合格面确实被摊平但年化不动，见回测日志 §12.30.4）
+
+| 文件 | 作用 |
+| --- | --- |
+| `rebuild_bank_bands.py` | 按 §6.5.7.1 的 J-金融资本型口径只重算银行的估值带，非银行行逐位不动。三种模式：`fixed:COE`（给定折现率）／`peer`（滚动三年同业隐含 COE 中位）／`pbhist`（滚动三年自身 PB 中位） |
+
+```bash
+python3 scripts/experimental/rebuild_bank_bands.py fixed:0.17 data/processed/vd_pit116_bkcoe17.csv
+python3 scripts/experimental/rebuild_bank_bands.py peer      data/processed/vd_pit116_bkpeer.csv
+```
+
+不需要 `torch`/`numpy`，只用标准库。产出的逐日估值文件**不入库**。
+
 ## 生产脚本上唯一为这些实验开的口子
 
 `scripts/build_historical_valuation_bands.py --roe-external CSV`：用外部预测的 ROE 覆盖 `roe0`，
