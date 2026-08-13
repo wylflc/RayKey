@@ -52,3 +52,7 @@ data/processed/backtest/summary_*.csv
 # experimental/add_growth_path.py 完全可重建。既有已入库的 14 个不动。
 data/processed/vd_pit116_*.csv
 data/processed/vb_pit116_*.csv
+data/processed/vd_moat141.csv
+data/processed/vb_moat141.csv
+data/processed/vd_union216*.csv
+data/processed/vb_union216.csv
