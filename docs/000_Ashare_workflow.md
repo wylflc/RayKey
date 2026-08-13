@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v2.89
+# A股选股-估值-量价操作流程 v2.90
 
 > **本行的版本号是唯一版本真值**：`scripts/workflow_decision_log.py` 在导入时解析它写入决策日志的 `workflow_version` 列，改版时改这里即可，不得在别处另存一份。逐版内容见 `docs/Ashare_workflow_changelog.md`。
 >
@@ -854,12 +854,12 @@ python3 scripts/build_company_dossier_readmes.py --check  # 只比对不写盘�
 
 **口径对齐（本节成立的前提）**：模型输出 `band = IV × [0.90, 1.10]`，**中值恰为 `IV`**；回测的 `valuation_ratio = 收盘 ÷ IV`。故写入档案后，生产口径的 `P/V = 收盘 ÷ 区间中值` 与回测**逐位一致**，不引入换算误差。
 
-**模型参数（不得在别处另定）**：`--r-mode market`（`r = Rf + β·ERP`，取报告期**当时**可观测利率）｜`--g0-source sustainable`｜`--g0-cap 0.25`｜`--n 10 --n1 0`｜**`--roe-source onesided_max --roe-lift 1.5`**（v2.89，见下）｜`g_T = min(3%, Rf)`｜`ROE_T = r + 永续超额` 且 ≤ `ROE0`。**这些取值的依据是 `docs/Ashare_backtest_log.md` 的全部实测**：压 `g0` 五起点全负（−1.78／−3.57pp）、抬 `g0` 与改 fade 形状均不可复现（`docs/Ashare_backtest_log.md` §12.10）。
+**模型参数（不得在别处另定）**：`--r-mode market`（`r = Rf + β·ERP`，取报告期**当时**可观测利率）｜`--g0-source sustainable`｜`--g0-cap 0.25`｜`--n 10 --n1 0`｜**`--roe-source onesided_max --roe-lift 2.0`**（v2.90，见下）｜`g_T = min(3%, Rf)`｜`ROE_T = r + 永续超额` 且 ≤ `ROE0`。**这些取值的依据是 `docs/Ashare_backtest_log.md` 的全部实测**：压 `g0` 五起点全负（−1.78／−3.57pp）、抬 `g0` 与改 fade 形状均不可复现（`docs/Ashare_backtest_log.md` §12.10）。
 
 **`roe0` 口径（v2.89 由 `normalized` 改为 `onesided_max` 且 λ=1.5，依据 `docs/Ashare_backtest_log.md` §12.39）**：
 
 ```
-roe0 = 近五年年度 ROE 中位  +  1.5 × max(0, 当期 TTM ROE − 近五年中位)
+roe0 = 近五年年度 ROE 中位  +  2.0 × max(0, 当期 TTM ROE − 近五年中位)
 ```
 
 即**只在当期 ROE 高于自己五年中位时才上调，低谷侧一个字不动**（低谷保护是 `normalized` 的全部价值来源，必须保留）。
