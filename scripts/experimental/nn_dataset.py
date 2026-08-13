@@ -38,7 +38,7 @@ def load_actions():
     for f in glob.glob(f"{ROOT}/data/raw/corporate_actions/*.csv"):
         with open(f, encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
-                d=r.get("ex_date") or r.get("date")
+                d=r.get("ex_dividend_date") or r.get("ex_date") or r.get("date")
                 if not d: continue
                 cash=num(r.get("cash_per_share")) or 0.0
                 ratio=num(r.get("share_ratio")) or 0.0
@@ -107,6 +107,12 @@ def build(seq_len=20, horizon_days=756, min_hist=12):
             f["bps_growth"]= (bps/prev_bps-1) if (bps and prev_bps and prev_bps>0) else None
             f["eps_to_bps"]= (eps/bps) if (eps is not None and bps and bps>0) else None
             per_feats.append((nd, rp, f, bps, eps))
+        # 未来 ROE 路径的取数表：只保留年报（report_date 以 12-31 结尾），
+        # 因为季度 `weightavg_roe` 是年初至今累计值，只有第四季度那条等于全年 ROE。
+        annual=[(rp, num(r.get("weightavg_roe")))
+                for nd, rp, r in recs if rp.endswith("12-31") and num(r.get("weightavg_roe")) is not None]
+        annual.sort()
+        ann_rp=[rp for rp,_ in annual]
         # 逐条样本：用第 j 条公告日作为观测日
         for j in range(seq_len-1, len(per_feats)):
             obs = per_feats[j][0]
@@ -141,18 +147,27 @@ def build(seq_len=20, horizon_days=756, min_hist=12):
                 if miss>len(FEATS)*0.5: ok=False; break
                 seq.append(vec)
             if not ok or len(seq)!=seq_len: continue
-            # 标签：观测日之后 horizon_days 的年化后复权总回报
+            # 标签一：观测日之后 horizon_days 的年化后复权总回报。
+            # **标签缺失不丢样本**——最近三年的观测标签还没兑现，但推断时仍要给它出估值，
+            # 所以这里留 None，由训练侧自己过滤。
             fi=bisect.bisect_left(ds, obs)
             ti=fi+int(horizon_days/365*244)
-            if ti>=len(ds): continue
-            if adj[fi]<=0: continue
-            tot=adj[ti]/adj[fi]
-            if tot<=0: continue
-            yrs=horizon_days/365.0
-            y=tot**(1/yrs)-1
-            y=max(-0.6, min(1.5, y))
-            rows.append((code, obs, seq, y))
+            y=None
+            if ti<len(ds) and adj[fi]>0 and adj[ti]/adj[fi]>0:
+                yrs=horizon_days/365.0
+                y=max(-0.6, min(1.5, (adj[ti]/adj[fi])**(1/yrs)-1))
+            # 标签二：观测日之后三个完整年度的 ROE 均值。取的是**报告期在观测日之后**的年报
+            # ——`per_feats[j]` 那条报告期已公告，属于历史；未来路径从下一个报告期起算。
+            cur_rp = per_feats[j][1]
+            k = bisect.bisect_right(ann_rp, cur_rp)
+            fut = [v for _, v in annual[k:k+3]]
+            y_roe = (sum(fut)/len(fut)/100.0) if len(fut)==3 else None
+            if y_roe is not None:
+                y_roe = max(-0.30, min(0.50, y_roe))
+            rows.append((code, obs, seq, y, y_roe, bps_now))
     print(f"样本 {len(rows):,}  跳过 {dict(skipped)}", flush=True)
+    n_roe = sum(1 for r in rows if r[4] is not None)
+    print(f"其中带未来三年 ROE 标签 {n_roe:,}", flush=True)
     return rows
 
 if __name__=="__main__":

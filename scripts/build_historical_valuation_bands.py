@@ -122,6 +122,11 @@ TIER_PARAMS = {
 }
 DEFAULT_TIER = "L2"
 
+# `--roe-external` 装载的外部 ROE 预测：{代码: [(可得日, roe0), ...] 已排序}。
+# 缺省为空 dict，即所有既往产出逐位可复现。
+EXTERNAL_ROE: dict[str, list[tuple[str, float]]] = {}
+EXTERNAL_STATS: defaultdict[str, int] = defaultdict(int)
+
 RATES_FILE = ROOT / "data/reference/cost_of_equity_inputs.csv"
 
 # β 初版按类型简化（评审给的量级）。**不用行情 raw beta**：小盘噪声、停牌、A 股风格切换
@@ -708,6 +713,21 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         # **eps0 一律走清洁盈余 `E = ROE×B`**，与 normalized 臂同式——单边口径改的只有
         # 「roe0 取哪一侧」这一个自由度，若同时换 EPS 口径就分不清差异来自哪一处。
         eps0 = roe0 * bps
+    # 外部 ROE 覆盖（实验用）：只换 roe0 这一个输入，EPS 仍走清洁盈余 E=ROE×B，
+    # 折现率、终值、护栏全部沿用现行模型——这样回测差异只能归因到 ROE 预测本身。
+    ext = EXTERNAL_ROE.get(code) if EXTERNAL_ROE else None
+    if ext:
+        i = bisect_right(ext, (available_at, float("inf"))) - 1
+        if i >= 0:
+            roe0 = ext[i][1]
+            band.roe0_mode = "external"
+            EXTERNAL_STATS["命中"] += 1
+            if bps is not None and bps > 0:
+                eps0 = roe0 * bps
+        else:
+            EXTERNAL_STATS["无当期预测"] += 1
+    elif EXTERNAL_ROE:
+        EXTERNAL_STATS["该股无预测"] += 1
     band.roe0, band.eps0 = roe0, eps0
 
     # **终值 ROE 不得高于起始 ROE**：本模型的 fade 是「竞争侵蚀超额回报」的衰减机制，
@@ -1040,6 +1060,10 @@ def main() -> int:
     parser.add_argument("--roe-lift", type=float, default=1.0, metavar="LAMBDA",
                         help="onesided_max 专用：roe0 = 归一化值 + λ·(当期 − 归一化值)，只对当期偏高的一侧生效。"
                              "λ=0 退回归一化、λ=1 即完全采信当期、λ>1 为外推（见 pick_roe0）")
+    parser.add_argument("--roe-external", type=Path, metavar="CSV",
+                        help="用外部预测的 ROE 覆盖 roe0（列：security_code,available_at,roe0）。"
+                             "取 available_at ≤ 本期可得日的最后一条；查不到的期次维持原口径并计数。"
+                             "供实验用（scripts/experimental），不参与任何生产流程")
     parser.add_argument("--roe-years", type=int, default=5, help="归一化 ROE 的回看年数")
     parser.add_argument("--roe-stat", choices=("median", "mean"), default="median")
     parser.add_argument("--min-roe-years", type=int, default=3,
@@ -1078,6 +1102,21 @@ def main() -> int:
     if args.r_mode == "market" and not args.rates:
         print(f"**{RATES_FILE.relative_to(ROOT)} 无可用观测**，market 模式无法建带")
         return 1
+    if args.roe_external:
+        with args.roe_external.open(encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                try:
+                    v = float(r["roe0"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if v == v:
+                    EXTERNAL_ROE.setdefault(r["security_code"].zfill(6), []).append(
+                        (r["available_at"], v))
+        for seq in EXTERNAL_ROE.values():
+            seq.sort()
+        print(f"外部 ROE 预测：{len(EXTERNAL_ROE)} 只、"
+              f"{sum(len(v) for v in EXTERNAL_ROE.values()):,} 条 ← {args.roe_external}")
+
     tiers = load_tiers()
     financials = load_financials(set(codes))
     actions = load_actions()
@@ -1127,6 +1166,8 @@ def main() -> int:
             writer.writerows(daily_rows)
         print(f"逐日状态已写入 {args.out_daily}（{len(daily_rows):,} 行）")
 
+    if EXTERNAL_ROE:
+        print("外部 ROE 覆盖率：" + "｜".join(f"{k} {v:,}" for k, v in sorted(EXTERNAL_STATS.items())))
     report(all_bands, daily_counts, price_counts, args)
     return 0
 
