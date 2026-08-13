@@ -39,6 +39,7 @@ ap.add_argument("--max-pe", type=float, default=0.0)
 ap.add_argument("--accel", action="store_true", help="要求 roe_ttm 不低于一年前")
 ap.add_argument("--only-nonbank", action="store_true")
 ap.add_argument("--daily", default=DAILY, help="底稿逐日文件，缺省用现行 DCF 带")
+ap.add_argument("--bands", default=BANDS, help="基本面来源带表")
 a = ap.parse_args()
 
 name = {r["security_code"]: r["security_name"]
@@ -48,7 +49,7 @@ def is_bank(c):
     return ("银行" in n) or n.endswith("行") or "农商" in n
 
 seq = collections.defaultdict(list)
-for r in csv.DictReader(open(BANDS, encoding="utf-8")):
+for r in csv.DictReader(open(a.bands, encoding="utf-8")):
     av = r.get("available_at") or ""
     if len(av) != 10:
         continue
