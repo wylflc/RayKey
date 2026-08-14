@@ -5,12 +5,15 @@
 （`docs/000_Ashare_workflow.md` §12.1 记着两次前车之鉴：`--max-corr` 缺省 0、`--lot-size` 缺省 0）。
 本脚本把**那条完整命令固化成 `BASE`**，配置文件只写「相对基准改了什么」。
 
-配置文件每行： `标签|额外参数`
-额外参数一般含 `--daily-states` 与 `--universe-file`（每条臂可用不同的逐日文件与面板）。
-**标签为 `BASE` 的那一行是对照臂**，Δ 一律相对它算。
+配置文件每行： `标签|额外参数`，**额外参数只写「相对基准改了什么」**——
+逐日状态、宇宙面板、三条线都已在 `BASE` 里给全，不必也不该在每行重抄
+（重抄一次就多一次抄漏的机会，而抄漏 `--universe-file` 会静默退回今日 261 池、读数含选样前视）。
+**标签为 `BASE` 的那一行是对照臂**（额外参数留空即可），Δ 一律相对它算。
+同名开关重复给时以后者为准，故要改哪条就在该行写哪条。
 
-    BASE|--daily-states data/processed/a_share_daily_states_adopted.csv --universe-file … --width -0.5853
-    D110|--daily-states … --universe-file … --width -0.5853 --entry-mode both --dev-buy-max 1.10
+    BASE|
+    D110|--entry-mode both --dev-buy-max 1.10
+    U3|--universe-file data/processed/pit_attention/panel_moat_bank_v3.csv
 
 用法：
     python3 scripts/sweep_backtest_configs.py <配置文件> --out out.txt          # 缺省 23 个起点
@@ -35,20 +38,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "data/processed/backtest"
 
-# §9.7.1.2 的完整命令，逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
+# §9.7.1.2 的基准臂，逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
 #
-# **对照臂的宇宙自 2026-08-14 起改为 V4 面板**（`panel_moat_bank_v4.csv`，211 只、已应用退出判定，
-# 见 `docs/Ashare_backtest_log.md` §12.53~§12.54）。两步：①旧的 169 只面板因 OI-053 的接线错误漏掉
-# 55 只已判入选公司 → 统一口径重判后补回，得 V3（211 只）；②V3 未接 `exit_log.csv` 的退出判定，
-# 而 §9.7.2 第②条本就假定有退出 → 按 `notice` 可得日接回，得 V4。
-# **对照臂须同时给** `--universe-file .../panel_moat_bank_v4.csv --width -0.5884 --sell-line 1.1044 --swap-margin 0.1503`。
-# 基准读数：23 起点年化中位 **14.61%**、滚 3 年回撤中位 34.3%；2009-11 长跑年化 15.41%、最大回撤 49.8%。
+# **宇宙 = V4 面板**（`panel_moat_bank_v4.csv`，211 只，已按 `exit_log.csv` 的 X1/X3 退出与
+# 对称重入逐档切换在册状态；见 `docs/Ashare_backtest_log.md` §12.53~§12.54）。
+# **三条线是「对齐线」而非生产线**（生产为 1.63 / 1.10 / 0.15）：换宇宙会整体平移 `P/V` 分布，
+# 沿用同一条名义线放行的合格面就变了，比出来的是两条不同宽度的闸门而不是两套设定（§12.30）。
+# 基准读数：23 起点年化中位 **14.61%**、滚 3 年回撤中位 34.3%、年均换手 5.26；
+# 2009-11 长跑 300 万 → 3,283 万、年化 15.41%、最大回撤 49.8%。
 BASE = (
-    "--strategy trend --trend-tranche --trend-ma 20 60 --sell-line 1.10 "
-    "--corr-window 252 --scan-depth 40 --max-positions 999 "
+    "--strategy trend --trend-tranche --x 1.0 --trend-ma 20 60 "
+    "--corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 0.85 "
     "--swap --swap-partial --sell-trend-ma 20 "
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
-    "--x 1.0 --max-corr 0.85 --swap-margin 0.15 --fee-preset user --no-artifacts"
+    "--fee-preset user --no-artifacts "
+    "--width -0.5884 --sell-line 1.1044 --swap-margin 0.1503 "
+    "--daily-states data/processed/a_share_daily_states_adopted.csv "
+    "--universe-file data/processed/pit_attention/panel_moat_bank_v4.csv"
 )
 # 每半年一个起点，2009-11 ~ 2020-11 共 23 个（§12.39.2 以来的标准起点集）。
 DEFAULT_STARTS = [f"{y}-{m}-01" for y in range(2009, 2021) for m in ("05", "11")][1:]
