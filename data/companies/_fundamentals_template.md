@@ -1,6 +1,6 @@
 # 单票季度财务台账
 
-口径与义务见 `docs/000_Ashare_workflow.md` §6.6.1 第 1/3 条。每票一个文件：`<代码>_<名称>.md`，按报告期一行追加、不重写历史行；估值复核先读本文件、只增量补新季度。
+口径与义务见 `docs/000_Ashare_workflow.md` §6.6.1 第 1/3 条。每票一个文件：`data/companies/<代码>_<名称>/fundamentals.md`（v2.92 由 `data/processed/fundamentals/` 迁入，与该票的 README、研报台账同目录），按报告期一行追加、不重写历史行；估值复核先读本文件、只增量补新季度。
 
 每票文件模板：
 

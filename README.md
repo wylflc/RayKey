@@ -27,11 +27,26 @@ The personal investment system in `docs/000_personal-investment-system-v1.zh.md`
 - `docs/archive/` — completed process logs, one-off audits, and implemented design docs. Not inputs to any live flow.
 - `docs/peer-group-calibration/` — per-industry calibration narratives; the audit trail of how the round-1 rules were formed.
 - `docs/adr/` — architecture decision records; ADR-0006 defines the current round-1 triage standard.
-- `data/raw/` — immutable universe snapshots (ADR-0001).
+- `data/raw/` — immutable universe snapshots (ADR-0001). Prices, quarterly financials and research
+  reports are `.gitignore`d: ~890 MB, fully re-fetchable by the `fetch_*` scripts.
 - `data/interim/` — resumable work queues and fetched evidence.
 - `data/processed/` — current workflow outputs and the decision log.
+- `data/companies/<code>_<name>/` — **everything human-readable about one stock lives here**: the
+  valuation dossier (`README.md`), the quarterly financial ledger (`fundamentals.md`) and the
+  research ledger. Consolidated in workflow v2.92; the ledgers were previously under
+  `data/processed/fundamentals/`.
 - `data/archive/` — closed-round results kept for cross-round reference.
 - `scripts/` — deterministic workflow scripts; company judgment is model work specified in the workflow doc, not thresholds in scripts (ADR-0004/0006).
+- `scripts/archive/` — retired scripts. Each row in its README carries an archived-on date and a
+  delete-after date (3 months); nothing is due before 2026-11-02.
+
+**Derived artifacts are disposable.** Backtests and valuation-band variants regenerate from the
+scripts, so they are `.gitignore`d and cleaned with `scripts/clean_derived_artifacts.py`
+(reports by default, `--apply` to act). Before the 2026-08-14 sweep the repo carried 5.7 GB of them
+across 57k files; historical scan readings are consolidated into
+`data/processed/backtest/scan_summaries.csv`. Multi-config sweeps go through
+`scripts/sweep_backtest_configs.py`, which pins the workflow §9.7.1.2 command as its baseline
+rather than having each round retype it.
 
 ## Cross-Round Company Analysis Index
 
