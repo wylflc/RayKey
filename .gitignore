@@ -10,58 +10,41 @@ __pycache__/
 notebooks/_figs/
 notebooks/.ipynb_checkpoints/
 
-# 逐票历史日线（OI-035）：约 73MB、每日新增、且由 scripts/fetch_ohlcv_history.py 完全可重建。
-# 除权除息事件不在此列——它体量小、变动慢，且是「事实」的那一半，照常入库。
+# ---------------------------------------------------------------- 原始数据
+# 三者都是**按接口完全可重建**的抓取产物，体量大、每日/每季增长，故不入库。
+# 重建入口见各自的 fetch 脚本；除权除息事件不在此列——体量小、变动慢，且是「事实」的那一半，照常入库。
+# 逐票历史日线，约 750MB（OI-035）
 data/raw/ohlcv/
-
-# 逐季度全市场财务数据（OI-034 前置）：约 56MB、全市场 × 42 个报告期，
-# 由 scripts/fetch_a_share_quarterly_financials.py 完全可重建。
+# 逐季度全市场财务，约 100MB（OI-034 前置）
 data/raw/financials/
-
-# 历史估值状态逐日表（67MB，由 build_historical_valuation_bands.py 完全可重建）
-data/processed/a_share_historical_valuation_daily.csv
-
-# 回测逐日净值与逐周期明细（由 backtest_valuation_strategy.py 完全可重建）
-data/processed/backtest/*_equity.csv
-data/processed/a_share_historical_valuation_daily_pit.csv
+# 全市场个股研报，约 33MB（OI-034 第 20 步）
+data/raw/research_reports/
 data/raw/corporate_actions/*_shard*.csv
 data/raw/corporate_actions/*_full*.csv
-data/processed/a_share_historical_valuation_daily_261L2.csv
-data/processed/a_share_daily_g*.csv
 
-# 全市场个股研报（OI-034 第 20 步）：约 33MB、2017-01 起 145,460 篇，
-# 由 scripts/fetch_a_share_research_reports.py 完全可重建（全市场按月切片 + infoCode 去重）。
-data/raw/research_reports/
-
-# 估值带模型变体的逐日状态与带表（§12.9 实验产物，由 build_historical_valuation_bands.py 完全可重建）
-data/processed/hist_daily_n1_*.csv
-data/processed/hist_bands_n1_*.csv
+# ---------------------------------------------------------------- 派生产物
+# 以下一律由 `scripts/build_historical_valuation_bands.py` 与
+# `scripts/backtest_valuation_strategy.py` 完全重建，**清理入口是
+# `scripts/clean_derived_artifacts.py`**（缺省只报告，--apply 才删）。
+#
+# 逐日估值状态：生产口径两份（缺省版 + 采纳版），单份 90~100MB，太大不入库但要留在盘上。
+data/processed/a_share_historical_valuation_daily.csv
+data/processed/a_share_daily_states_adopted.csv
+# 估值带模型变体（§12.9~§12.40 的实验臂）：单份 50~140MB，跑完即可删。
+data/processed/vd_*.csv
+data/processed/vb_*.csv
 data/processed/hd_*.csv
 data/processed/hb_*.csv
+data/processed/hist_daily_*.csv
+data/processed/hist_bands_*.csv
+data/processed/a_share_daily_g*.csv
+data/processed/a_share_historical_valuation_daily_*.csv
+data/processed/a_share_historical_valuation_bands_*.csv
+
+# 回测产物：一轮参数扫描落成百上千份，2026-08-14 清理前有 5.7 万个文件 / 5.8 GB。
+# **历次扫描的读数已归并进入库的 `backtest/scan_summaries.csv`，此处只挡原件。**
+data/processed/backtest/*_equity.csv
 data/processed/backtest/*_trades.csv
 data/processed/backtest/*_periods.csv
-
-# 参数扫描的逐次汇总（2026-08-13）：一次扫描就产出成百上千个 summary_<标签><起点>.csv，
-# 标签是 JT5FINw-0.6171x2 这类一次性记号，结论一律写在 docs/Ashare_backtest_log.md 里，
-# 文件本身由 scripts/backtest_valuation_strategy.py 完全可重建。
-# **既有已入库的 3,324 个不动**——本条只阻止后续扫描继续往仓库里堆。
 data/processed/backtest/summary_*.csv
-
-# 估值带模型变体的逐日状态与带表（§12.28~§12.31 实验产物，单个 30-70MB）：
-# 由 build_historical_valuation_bands.py / experimental/rebuild_bank_bands.py /
-# experimental/add_growth_path.py 完全可重建。既有已入库的 14 个不动。
-data/processed/vd_pit116_*.csv
-data/processed/vb_pit116_*.csv
-data/processed/vd_moat141.csv
-data/processed/vb_moat141.csv
-data/processed/vd_union216*.csv
-data/processed/vb_union216.csv
-data/processed/vd_pm300.csv
-data/processed/vb_pm300.csv
-data/processed/vd_pmall.csv
-data/processed/vd_pitmoat.csv
-data/processed/vb_pitmoat.csv
-data/processed/vd_pmfinal.csv
-data/processed/vd_pmfinal_bkdiv.csv
-data/processed/vd_pmfinal2.csv
-data/processed/vd_pmfinal2_bkdiv.csv
+data/processed/backtest/summary.csv
