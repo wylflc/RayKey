@@ -42,17 +42,19 @@ OUT_DIR = ROOT / "data/processed/backtest"
 #
 # **宇宙 = V4 面板**（`panel_moat_bank_v4.csv`，211 只，已按 `exit_log.csv` 的 X1/X3 退出与
 # 对称重入逐档切换在册状态；见 `docs/Ashare_backtest_log.md` §12.53~§12.54）。
-# **三条线是「对齐线」而非生产线**（生产为 1.63 / 1.10 / 0.15）：换宇宙会整体平移 `P/V` 分布，
-# 沿用同一条名义线放行的合格面就变了，比出来的是两条不同宽度的闸门而不是两套设定（§12.30）。
-# 基准读数：23 起点年化中位 **14.61%**、滚 3 年回撤中位 34.3%、年均换手 5.26；
-# 2009-11 长跑 300 万 → 3,283 万、年化 15.41%、最大回撤 49.8%。
+# **三条线与 §9.7.1 的生产线同值**（v2.98 起，用户 2026-08-14 指定买 1.00 / 减 2.50 / 换仓改善 0.15；
+# 上一版基准臂为了与 V3 可比而单解过一套对齐线 1.5884/1.1044/0.1503，现已废止，不再维护两组数）。
+# 基准读数：23 起点年化中位 **13.15%**、滚 3 年回撤中位 32.5%、年均换手 3.46；
+# 2009-11 长跑 300 万 → 2,075 万、年化 12.28%、最大回撤 48.0%。
+# **换估值口径或换宇宙做 A/B 时仍须把三条线一起重解到同一合格面**（§12.30，align_buy_line.py）；
+# 改交易参数本身不需要对齐。
 BASE = (
     "--strategy trend --trend-tranche --x 1.0 --trend-ma 20 60 "
     "--corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 0.85 "
     "--swap --swap-partial --sell-trend-ma 20 "
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
     "--fee-preset user --no-artifacts "
-    "--width -0.5884 --sell-line 1.1044 --swap-margin 0.1503 "
+    "--width 0.0 --sell-line 2.50 --swap-margin 0.15 "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v4.csv"
 )

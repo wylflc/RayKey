@@ -18,7 +18,7 @@
 是都叫「止损」——**不得因为 v2.56 删过一个止损就把这个也删掉**。
 
 **本脚本不产生任何买卖结论。** 卖出只有 §9.7.2 第四步四条（⓪跌破建仓日止损
-整仓、①`P/V ≥ 1.10` 且破 MA20 减一档、②出 §5 名单减一档、③换仓减一档），
+整仓、①`P/V` 越过 §9.7.1 减持线且破 MA20 减一档、②出 §5 名单减一档、③换仓减一档），
 由执行侧按本脚本输出的 `pv` 与 `stop_hit` 计算。
 
 **刻意不做**的事（§14.6 退役清单）——盈亏、权重、仓位占比、单笔风险、
@@ -48,6 +48,11 @@ DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_holdings_tracking.csv"
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 
+# **减持线的唯一落点在 §9.7.1，这里只放一份副本**（v2.98 由 1.10 改为 2.50，用户 2026-08-14 指令）。
+# 此前本文件把 1.10 硬编码在五处，v2.89 改参数表时一处都没跟上——正是 v2.97 清掉的那类
+# 「同一个量抄在多处后各自漂移」。改这里之前先改 §9.7.1。
+SELL_LINE = 2.50
+
 FIELDNAMES = [
     "as_of",
     "security_code",
@@ -68,7 +73,7 @@ FIELDNAMES = [
     "fair_price_low",
     "fair_price_high",
     "upside",
-    # §9.7 的唯一买卖判据（v2.56）：pv = 现价 ÷ 合理价区间中值。阈值 ≤0.90 买、≥1.10 减持。
+    # §9.7 的唯一买卖判据（v2.56）：pv = 现价 ÷ 合理价区间中值；两条线的取值只在 §9.7.1 定。
     # 与 upside 是同一个量的倒数关系（pv = 1/(1+upside)），但阈值定在 pv 上，故必须直接输出，
     # 不让读者每天心算倒数。
     "pv",
@@ -150,8 +155,8 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
             notes.append("不在核心估值合格池内，无带——按 §9.7.2 第四步逐日清仓")
         elif low is None or high is None:
             notes.append("池内无合理价区间（无法估值）：无 `P/V`，当日不进机械判定")
-        elif pv is not None and pv >= 1.10:
-            notes.append(f"**`P/V` {pv:.2f} ≥ 1.10**：按 §9.7.2 第四步每日减持一档（0.5%N）")
+        elif pv is not None and pv >= SELL_LINE:
+            notes.append(f"**`P/V` {pv:.2f} ≥ {SELL_LINE:.2f}**：按 §9.7.2 第四步每日减持一档")
 
         # §9.7.5 建仓日止损（v2.83）。**先判无行情**：没有收盘价就既不能说跌破、也不能
         # 说没跌破，落 `无行情` 而不是默认放行——与 `action` 的 `数据缺失` 同一条理由。
@@ -171,7 +176,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
 
         # §14.5 三取值（v2.56 删去 `割肉提醒`）。无行情时必须落 `数据缺失` 而非 `持有`：
         # `持有` 是唯一读起来像「已检查、没事」的取值，而没有现价恰恰意味着 `P/V` 没算过。
-        # 一只 P/V 已越过 1.10、本该减持的停牌股若显示为持有，就在唯一的卖出规则上
+        # 一只 P/V 已越过减持线、本该减持的停牌股若显示为持有，就在唯一的卖出规则上
         # 制造了静默失效（§15.2 第 3 条）。
         action = "数据缺失" if close is None else "持有"
 
@@ -315,7 +320,7 @@ def main() -> None:
         writer.writerows(rows)
     log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv, args.valuation_pool)
 
-    trim = [r for r in rows if r["pv"] and float(r["pv"]) >= 1.10]
+    trim = [r for r in rows if r["pv"] and float(r["pv"]) >= SELL_LINE]
     no_pv = [r for r in rows if not str(r["pv"]).strip()]
     no_band = [r for r in rows if not r["fair_price_low"]]
     print(f"tracked {len(rows)} holdings as of {as_of}")
@@ -338,9 +343,9 @@ def main() -> None:
               f"——§9.7.5 对其不生效，须待清空后重新建仓时按新规则设定")
     if trim:
         names = "、".join(f"{r['security_name']}({r['pv']})" for r in trim)
-        print(f"  **P/V ≥ 1.10 共 {len(trim)} 只**：{names}——按 §9.7.2 第四步每日减持一档")
+        print(f"  **P/V ≥ {SELL_LINE:.2f} 共 {len(trim)} 只**：{names}——按 §9.7.2 第四步每日减持一档")
     else:
-        print("  P/V ≥ 1.10：无")
+        print(f"  P/V ≥ {SELL_LINE:.2f}：无")
     if no_pv:
         print(f"  **P/V 未算出 {len(no_pv)} 只**：{'、'.join(str(r['security_name']) for r in no_pv)}（无行情或无带，当日不进 §9.7 判定）")
     if no_band:

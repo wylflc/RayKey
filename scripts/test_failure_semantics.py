@@ -74,7 +74,7 @@ def case_no_quote_is_not_hold():
     """核心用例：取不到行情时动作必须是 `数据缺失`，绝不能是 `持有`。
 
     旧版落 `持有` 并在备注写「沿用上一交易日结论」，而脚本从不读上一日文件——
-    一只 `P/V` 已越过 1.10、本该按 §9.7.2 减持的停牌股会显示为持有，
+    一只 `P/V` 已越过减持线、本该按 §9.7.2 减持的停牌股会显示为持有，
     在唯一的卖出规则上制造静默失效（v2.56 前该缺陷作用于割肉价，同型）。
     """
     row = run_tracker(None)
@@ -102,11 +102,17 @@ def case_pv_computed_against_band_mid():
 
 
 def case_pv_over_trim_line_is_flagged_in_note():
-    """`P/V ≥ 1.10` 必须在备注点名——它是唯一会触发减持的条件，静默即失效。"""
-    row = run_tracker(2200.0)  # 2200/1800 = 1.22
-    if row["pv"] != "1.22":
-        return [f"应得 P/V=1.22，实得 `{row['pv']}`"]
-    if "1.10" not in str(row.get("note", "")):
+    """越过减持线必须在备注点名——它是唯一会触发减持的条件，静默即失效。
+
+    **阈值从 `tracker.SELL_LINE` 读，不写字面量**——写死就会在下一次改线时静默失效，
+    而这个测试的全部意义正是拦住静默失效（v2.98 改线时踩到过：原用例钉死 1.10）。
+    """
+    price = 1800.0 * tracker.SELL_LINE * 1.1          # 稳稳越线
+    row = run_tracker(price)
+    expect = f"{price / 1800.0:.2f}"
+    if row["pv"] != expect:
+        return [f"应得 P/V={expect}，实得 `{row['pv']}`"]
+    if f"{tracker.SELL_LINE:.2f}" not in str(row.get("note", "")):
         return ["P/V 已越减持线却未在备注点名（§9.7.2 第四步）"]
     return []
 
