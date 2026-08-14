@@ -88,20 +88,17 @@ python3 scripts/experimental/deviation_gate_diagnostics.py <逐日估值状态.c
 **顺带记一条通用标尺**：同批回测里，只挡掉合格集的 **0.2%** 就能让 Δ年化中位动 −0.91pp，
 而空跑对照逐位等于基准。**故 |Δ| ≲ 1pp 且符号数在 8/23~15/23 之间者一律读作无效应。**
 
-## `daily_scan_adopted.py`：按 §9.7 采纳口径跑一次全池扫描 + 次日买入清单
+## `daily_scan_adopted.py` —— 已退役（2026-08-14，结 OI-051）
 
-```bash
-python3 scripts/experimental/daily_scan_adopted.py --as-of YYYY-MM-DD --nav 4500000 \
-    --bands data/processed/a_share_pool_model_bands_adopted.csv [--render-pool]
-```
+**其全部功能已并入生产入口 `scripts/screen_daily_volume_price_signals.py`**，本目录不再保留副本。
 
-**四个一次性脚本的合并**（`fetch_recent_klines`／`daily_scan_v290`／`build_entry_plan`／
-`render_pool_model_bands`，2026-08-13 写于临时目录，2026-08-14 并入一处）。四段是一条流水线，
-分开放既要手工串联、又各自硬编码了临时目录路径，**跨会话根本跑不起来**。
+并入的是 §9.7 机械执行层：模型带 `P/V`、银行股利折现、`收>MA20>MA60` 闸门、
+按 `P/V` 升序 + 252 日相关性 ≤0.85 去相关（下扫至多 40 名）、一档 = 净资产 × 1%、
+整手向下取整与 §9.7.3 比例冷却。生产入口新增 `--model-bands / --nav / --rf / --plan-out` 四个参数。
 
-⚠ **它与 §8 成文入口 `screen_daily_volume_price_signals.py` 是两套独立实现**，
-口径重叠、代码不共享，已登记 **OI-051**。合并前任何一方改口径都要手动同步另一方；
-**不要把本脚本写进 §8/§9 的正式链路**。
+**等价性已验证**：同一交易日、同一模型带下，两套实现给出的 17 只买入清单在
+**代码、名称、现价、`P/V`、股数上逐只逐字段一致**——且这是跨数据源的一致
+（生产走东财 `fqt=1`，退役版走腾讯 `qfq`）。详见 `docs/Ashare_backtest_log.md` §12.42。
 
 ## 生产脚本上唯一为这些实验开的口子
 

@@ -24,6 +24,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
+DEFAULT_MODEL_BANDS = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
+DEFAULT_PLAN_OUT = ROOT / "data/processed/daily_entry_plan.csv"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 # 后备行情源：东财历史行情不可用/空响应时切换（同为前复权日线；成交额以收盘×量近似，仅影响流动性门槛估计）。
 # 统一走腾讯 newfqkline：同构覆盖 sh/sz/bj，且为北交所唯一可用历史K线源；旧 web.ifzq 端点在批量扫描下易限流（2026-07-17 实测 501）。
@@ -1135,6 +1137,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--symbols", default="", help="Optional comma-separated security codes to filter the input pool.")
     parser.add_argument("--timeout", type=float, default=8.0, help="Per-request network timeout in seconds.")
     parser.add_argument("--workers", type=int, default=8, help="Parallel data-provider requests.")
+    # ---- §9.7 机械执行层（并入自 experimental，结 OI-051）。三个都给才出买入计划。
+    parser.add_argument("--model-bands", type=Path, default=DEFAULT_MODEL_BANDS,
+                        help="§6.5.7.1 批量模型带表；§9.7 的 P/V 用它，不用池里的逐票档案带")
+    parser.add_argument("--nav", type=float, default=0.0,
+                        help="当日净资产，用于定一档 = NAV × 1%%。不给则只算 P/V、不出买入计划")
+    parser.add_argument("--rf", type=float, default=0.017114,
+                        help="十年国债收益率，银行股利折现用（§12.31）")
+    parser.add_argument("--plan-out", type=Path, default=DEFAULT_PLAN_OUT)
     return parser.parse_args()
 
 
@@ -1150,6 +1160,204 @@ def load_blocked_codes(path: Path) -> set[str] | None:
         for row in rows
         if row.get("security_code") and (row.get("buy_blocked", "").strip() == "review_pending")
     }
+
+
+# ------------------------------------------------------------------ §9.7 机械执行层
+# 本段并入自 `scripts/experimental/daily_scan_adopted.py`（结 OI-051，2026-08-14）。
+# 此前 §9.7 的排序/去相关/定档只存在于 experimental 那份实现里，与本脚本口径重叠、代码独立
+# ——「文档说的」与「实际跑的」分叉两次的同一形态。合并后 §8 取数与 §9.7 决策在同一次跑批内完成。
+#
+# **口径一律来自 `docs/000_Ashare_workflow.md` §9.7，此处不另立标准。** 三处细节：
+#   * 走势闸门 `收 > MA20 > MA60` 用**前复权**序列（收盘与均线同尺度，除息不产生假信号）；
+#   * `P/V` = **未复权现价 ÷ 当日带**。本脚本的 `close` 取自 `fqt=1` 前复权序列，
+#     而前复权序列**锚在最新一根**，故 `--as-of` 为最近交易日时末根收盘即未复权现价，两者同尺度；
+#     **回溯历史日期时该等式不成立**，故本层只在 `--as-of` 为最新交易日时给出买入计划。
+#   * 银行不走 DCF，走股利折现（§12.31）。
+SEC97_BUY_LINE = 1.63          # §9.7.1，v2.89 由 0.90 改，依据 backtest_log §12.39
+SEC97_MAX_CORR = 0.85          # §9.7.1，252 日日收益率皮尔逊相关上限
+SEC97_SCAN_DEPTH = 40          # §9.7.2 第 3 步：相关性过滤时最多下扫多少名
+SEC97_TRANCHE_PCT = 0.01       # §9.7.1「单次买入 = 当日净资产 × 1.0%」
+SEC97_LOT = 100                # A 股一手
+BANK_RISK_PREMIUM = 0.02       # §12.31 股利折现的风险溢价
+
+
+def is_bank(name: str) -> bool:
+    return "银行" in name or name.endswith("行") or "农商" in name
+
+
+def load_model_bands(path: Path, as_of: str) -> dict[str, dict]:
+    """§6.5.7.1 批量模型带，逐票取 `available_at ≤ as_of` 的最新一条。
+
+    **不能按报告期排序取最新**——未到披露日的带在当日不可用，那是后视。
+    """
+    latest: dict[str, tuple[str, dict]] = {}
+    with path.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            status = row.get("status")
+            if status not in (None, "", "ok"):
+                continue
+            avail = row.get("band_available_at") or row.get("available_at") or ""
+            code = (row.get("security_code") or "").zfill(6)
+            if len(avail) == 10 and avail <= as_of and code:
+                if code not in latest or avail >= latest[code][0]:
+                    latest[code] = (avail, row)
+    return {code: row for code, (_, row) in latest.items()}
+
+
+def bank_dividend_intrinsic(code: str, as_of: str, rf: float) -> float | None:
+    """§12.31：`V = 近 12 个月每股现金分红 ÷ (十年国债 + 2%)`。无分红返回 None。"""
+    total = 0.0
+    low = f"{int(as_of[:4]) - 1}{as_of[4:]}"
+    for path in sorted((ROOT / "data/raw/corporate_actions").glob("*.csv")):
+        with path.open(newline="", encoding="utf-8") as handle:
+            for row in csv.DictReader(handle):
+                if (row.get("security_code") or "").zfill(6) != code:
+                    continue
+                day = row.get("ex_dividend_date") or ""
+                value = to_float(row.get("cash_per_share")) or 0.0
+                if len(day) == 10 and low < day <= as_of and value > 0:
+                    total += value
+    return total / (rf + BANK_RISK_PREMIUM) if total > 0 else None
+
+
+def daily_returns_window(codes: Iterable[str], window: int = 253) -> dict[str, list[float]]:
+    """逐票近 `window` 根的日收益率，取自本地行情库。重叠不足 120 根的不参与相关性。"""
+    out: dict[str, list[float]] = {}
+    for code in codes:
+        path = ROOT / "data/raw/ohlcv" / f"{code}.csv"
+        if not path.exists():
+            continue
+        with path.open(newline="", encoding="utf-8") as handle:
+            closes = [float(r["close"]) for r in csv.DictReader(handle) if r.get("close")][-window:]
+        if len(closes) >= 120:
+            out[code] = [closes[i] / closes[i - 1] - 1 for i in range(1, len(closes))]
+    return out
+
+
+def pearson(returns: dict[str, list[float]], a: str, b: str) -> float:
+    """两票日收益率的皮尔逊相关。任一缺数据返回 0——**当作不相关会放行**，故缺数据要单独报。"""
+    xs, ys = returns.get(a), returns.get(b)
+    if not xs or not ys:
+        return 0.0
+    n = min(len(xs), len(ys))
+    xs, ys = xs[-n:], ys[-n:]
+    mx, my = mean(xs), mean(ys)
+    sx = math.sqrt(sum((v - mx) ** 2 for v in xs))
+    sy = math.sqrt(sum((v - my) ** 2 for v in ys))
+    if sx == 0 or sy == 0:
+        return 0.0
+    return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / (sx * sy)
+
+
+def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
+                    as_of: str, rf: float) -> None:
+    """给每行挂上 §9.7 用的 `model_intrinsic_value` / `model_pv` / `model_band_source`。
+
+    **与 §8 的 `fair_price_low/high`（逐票档案带）并存、互不覆盖**：档案带继续供
+    §6.2.1.6 自动定档用，模型带只供 §9.7 用。两者在 28 只上偏离 >50%，故不可混用
+    （见 `data/processed/000_a_share_core_valuation_pool.md` 的 ⚠ 标注）。
+    """
+    for row in rows:
+        code = str(row.get("security_code", "")).zfill(6)
+        name = str(row.get("security_name", ""))
+        intrinsic, source = None, ""
+        if is_bank(name):
+            intrinsic = bank_dividend_intrinsic(code, as_of, rf)
+            if intrinsic:
+                source = "股利折现"
+        if intrinsic is None and code in bands:
+            intrinsic = to_float(bands[code].get("intrinsic_value"))
+            if intrinsic:
+                source = f"模型带·{bands[code].get('report_date', '')}"
+        close = to_float(row.get("close"))
+        row["model_intrinsic_value"] = round(intrinsic, 4) if intrinsic else ""
+        row["model_band_source"] = source
+        row["model_pv"] = (round(close / intrinsic, 4)
+                           if close and intrinsic and intrinsic > 0 else "")
+
+
+def section97_entry_plan(rows: list[dict[str, object]], nav: float) -> dict[str, object]:
+    """§9.7.2 第 3、5 步：按 `P/V` 升序、去相关、逐个买一档。
+
+    §9.7.3 比例冷却：一手金额 > 一档时买一手，其后跳过 `round(x)−1` 次合格机会
+    （本函数是单日快照，故只记 `cooldown_skips` 供次日跑批读，不在此处消费）。
+    """
+    tranche = nav * SEC97_TRANCHE_PCT
+    eligible = [
+        r for r in rows
+        if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC97_BUY_LINE
+        and to_float(r.get("close")) and to_float(r.get("ma20")) and to_float(r.get("ma60"))
+        and to_float(r["close"]) > to_float(r["ma20"]) > to_float(r["ma60"])
+    ]
+    eligible.sort(key=lambda r: r["model_pv"])
+    n_cheap = sum(1 for r in rows
+                  if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC97_BUY_LINE)
+
+    returns = daily_returns_window([str(r["security_code"]).zfill(6) for r in eligible])
+    picked: list[dict] = []
+    dropped: list[tuple[dict, float, str]] = []
+    for cand in eligible[:SEC97_SCAN_DEPTH]:
+        code = str(cand["security_code"]).zfill(6)
+        worst, worst_name = 0.0, ""
+        for held in picked:
+            value = pearson(returns, code, str(held["security_code"]).zfill(6))
+            if value > worst:
+                worst, worst_name = value, str(held.get("security_name", ""))
+        if worst > SEC97_MAX_CORR:
+            dropped.append((cand, worst, worst_name))
+            continue
+        picked.append(cand)
+
+    cash, plan = nav, []
+    for cand in picked:
+        price = to_float(cand.get("close")) or 0.0
+        if price <= 0:
+            continue
+        lot_amount = price * SEC97_LOT
+        lots = int(tranche // lot_amount) if lot_amount <= tranche else 1
+        cooldown = 0 if lot_amount <= tranche else round(lot_amount / tranche) - 1
+        amount = lots * lot_amount
+        if lots <= 0 or amount > cash:
+            continue
+        cash -= amount
+        plan.append({
+            "security_code": str(cand["security_code"]).zfill(6),
+            "security_name": cand.get("security_name", ""),
+            "quality_tier": cand.get("quality_tier", ""),
+            "close": price,
+            "model_intrinsic_value": cand.get("model_intrinsic_value", ""),
+            "model_pv": cand["model_pv"],
+            "model_band_source": cand.get("model_band_source", ""),
+            "lots": lots,
+            "shares": lots * SEC97_LOT,
+            "amount": round(amount, 2),
+            "cooldown_skips": cooldown,
+        })
+    return {"plan": plan, "dropped": dropped, "eligible": eligible,
+            "n_cheap": n_cheap, "cash": cash, "tranche": tranche}
+
+
+def report_section97(result: dict[str, object], nav: float, out_path: Path) -> None:
+    plan, dropped = result["plan"], result["dropped"]
+    invested = nav - result["cash"]
+    print(f"\n§9.7 机械执行：`P/V ≤ {SEC97_BUY_LINE}` 的 {result['n_cheap']} 只；"
+          f"再过 `收>MA20>MA60` 的 **{len(result['eligible'])} 只**；"
+          f"相关性 >{SEC97_MAX_CORR} 剔除 {len(dropped)} 只 → 买入 {len(plan)} 只")
+    print(f"  一档 {result['tranche'] / 1e4:,.2f} 万｜投入 {invested / 1e4:,.1f} 万"
+          f"（仓位 {invested / nav * 100:.1f}%）｜余现金 {result['cash'] / 1e4:,.1f} 万")
+    for i, p in enumerate(plan, 1):
+        band = f"{p['model_intrinsic_value'] * 0.9:.2f}-{p['model_intrinsic_value'] * 1.1:.2f}" \
+            if isinstance(p["model_intrinsic_value"], float) else "—"
+        print(f"  {i:>3} {p['security_code']} {p['security_name']:<9}"
+              f"｜现价 {p['close']:>8.2f}｜带 {band:>17}｜P/V {p['model_pv']:.2f}"
+              f"｜{p['shares']:>5} 股 {p['amount'] / 1e4:>5.2f} 万"
+              + (f"｜其后跳过 {p['cooldown_skips']} 次" if p["cooldown_skips"] else ""))
+    for cand, value, who in dropped:
+        print(f"  [相关性剔除] {cand.get('security_name','')} "
+              f"P/V {cand['model_pv']:.2f}｜与已选 {who} 相关 {value:.2f}")
+    if plan:
+        write_csv(out_path, plan, list(plan[0].keys()))
+        print(f"  买入计划已写 {out_path}")
 
 
 def main() -> int:
@@ -1241,6 +1449,11 @@ def main() -> int:
         "fair_price_high",
         "band_position",
         "margin_of_safety",
+        # §9.7 用的模型带三列（结 OI-051）。**与 fair_price_low/high 并存不混用**：
+        # 前者是逐票档案带、供 §6.2.1.6 自动定档；这三列是批量模型带、供 §9.7 买入判定。
+        "model_intrinsic_value",
+        "model_band_source",
+        "model_pv",
         "deep_value_watch",
         "strategy_tag",
         "total_market_cap_bn",
@@ -1300,6 +1513,22 @@ def main() -> int:
         "data_source",
         "screened_at_utc",
     ]
+    # §9.7 的 P/V **必须在落盘之前挂上**：`fieldnames` 里已经声明了那三列，
+    # 若等落盘后再算，写出去的就是三列空值——正是本文件 §9.2.1 校验段警告的
+    # 「某列整体为空而无人察觉」。首版就踩了这一脚，靠落地校验（下方 priced 计数）当场发现。
+    section97_ready = bool(args.model_bands and args.model_bands.exists())
+    if section97_ready:
+        bands = load_model_bands(args.model_bands, args.as_of)
+        attach_model_pv(rows, bands, args.as_of, args.rf)
+        priced = sum(1 for r in rows if isinstance(r.get("model_pv"), float))
+        print(f"§9.7 模型带：{len(bands)} 只有带，{priced}/{len(rows)} 只算出 P/V"
+              f"（银行走股利折现 rf={args.rf:.4%}+{BANK_RISK_PREMIUM:.0%}）")
+        if priced < len(rows):
+            missing = [str(r.get("security_name", "")) for r in rows
+                       if not isinstance(r.get("model_pv"), float)][:8]
+            print(f"  **无带 {len(rows) - priced} 只**（§9.7 判定不到它们）：{'、'.join(missing)}")
+        if rows and not priced:
+            print("  **告警：model_pv 整列为空** —— 模型带与池对不上号，§9.7 本次等于没跑")
     write_csv(args.output_csv, rows, fieldnames)
     review_note = (
         "复核冻结：已启用（读取更新队列）。" if blocked is not None else
@@ -1338,6 +1567,16 @@ def main() -> int:
     print(f"参考分（§9.2.1）非空 {len(scored)}/{len(rows)} 行")
     if rows and not scored:
         print("**告警：quality_score 整列为空** —— 池 CSV 未透传参考分，报告不得手填，先修池物化")
+
+    # §9.7 的买入计划（`attach_model_pv` 已在落盘前跑过，见上文）。
+    if section97_ready:
+        if args.nav > 0:
+            report_section97(section97_entry_plan(rows, args.nav), args.nav, args.plan_out)
+        else:
+            print("§9.7 未给 --nav，只算 P/V 不出买入计划（一档以净资产为基数）")
+    else:
+        print(f"§9.7 机械执行层未运行：模型带文件不存在（{args.model_bands}）。"
+              f"重建见 §6.5.7.1；不跑它则本次只产出 §8 的取数与信号，**买入判定缺席**")
 
     return data_error_exit_code(rows)
 
