@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v2.94
+# A股选股-估值-量价操作流程 v2.95
 
 > **本行的版本号是唯一版本真值**：`scripts/workflow_decision_log.py` 在导入时解析它写入决策日志的 `workflow_version` 列，改版时改这里即可，不得在别处另存一份。逐版内容见 `docs/Ashare_workflow_changelog.md`。
 >
@@ -1485,6 +1485,15 @@ python3 scripts/backtest_valuation_strategy.py \
   --universe-file data/processed/pit_attention/panel_moat_bank_adopted.csv \
   --since <起点>
 ```
+
+**⚠ 回测对照臂的宇宙自 2026-08-14 起改为 V3 面板**（`data/processed/pit_attention/panel_moat_bank_v3.csv`，
+**211 只**，用户裁定，见 `docs/Ashare_backtest_log.md` §12.53）。
+旧的 169 只 `panel_moat_bank_adopted.csv` 因 OI-053 的接线错误漏掉 55 只已判入选公司
+（贵州茅台、恒瑞医药、海康威视、中国神华、长江电力……），其相对优势有相当部分来自那次**无人打算的排除**。
+**新基准读数**：23 起点年化中位 **15.16%（23/23 为正）**、滚 3 年回撤中位 39.9%；
+2009-11 长跑 300 万 → 3,730 万、年化 16.29%、最大回撤 51.4%、正收益年 14/18。
+**参数一个不改，只换 `--universe-file`**——实测 V3 上成文的 1.5853/1.10/0.15 优于按旧面板对齐的线（+0.39pp）。
+**此前 §12.40~§12.50 引用的 22.09%／19.34% 是旧面板口径，同面板下的相对结论仍然有效，绝对水平须按本条改读。**
 
 **两个输入已固化在仓库里**（v2.91 立）：`a_share_daily_states_adopted.csv` 是 λ=2.0 且银行走股利折现的逐日状态，
 `panel_moat_bank_adopted.csv` 是护城河 128 家 ＋ 银行 41 家的时点面板。

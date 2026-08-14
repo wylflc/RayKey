@@ -36,6 +36,11 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "data/processed/backtest"
 
 # §9.7.1.2 的完整命令，逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
+#
+# **对照臂的宇宙自 2026-08-14 起改为 V3 面板**（`panel_moat_bank_v3.csv`，211 只，用户裁定，
+# 见 `docs/Ashare_backtest_log.md` §12.53）。旧的 169 只面板因 OI-053 的接线错误漏掉 55 只
+# 已判入选公司，其相对优势有相当部分来自那次无人打算的排除，故不再作基准。
+# 基准读数：23 起点年化中位 **15.16%（23/23 为正）**，2009-11 长跑年化 16.29%、最大回撤 51.4%。
 BASE = (
     "--strategy trend --trend-tranche --trend-ma 20 60 --sell-line 1.10 "
     "--corr-window 252 --scan-depth 40 --max-positions 999 "
