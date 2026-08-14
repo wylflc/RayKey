@@ -51,6 +51,7 @@ import statistics
 import sys
 import collections
 from collections import defaultdict
+from operator import mul as _mul
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from pathlib import Path
@@ -134,11 +135,23 @@ def load_states(path: Path | None = None,
     """
     out: dict[str, list[tuple[str, float, float, float]]] = defaultdict(list)
     with (path or DAILY_STATES).open(newline="", encoding="utf-8") as handle:
-        for row in csv.DictReader(handle):
-            if codes is not None and row["security_code"] not in codes:
+        # 用 `csv.reader` + 列下标，不用 `DictReader`：后者每行都要新建一个 dict，
+        # 逐日状态动辄六十万行，一次长跑光这一处就是 1.5 秒。**列名仍从表头取**，
+        # 不写死顺序——建带脚本改过列序也不会读错。
+        reader = csv.reader(handle)
+        header = next(reader, None)
+        if header is None:
+            return out
+        i_code, i_date = header.index("security_code"), header.index("date")
+        i_close, i_iv = header.index("close"), header.index("intrinsic_value")
+        i_ratio = header.index("valuation_ratio")
+        append = out.__getitem__
+        for row in reader:
+            code = row[i_code]
+            if codes is not None and code not in codes:
                 continue
-            out[row["date"]].append((row["security_code"], float(row["close"]),
-                                     float(row["intrinsic_value"]), float(row["valuation_ratio"])))
+            append(row[i_date]).append((code, float(row[i_close]),
+                                        float(row[i_iv]), float(row[i_ratio])))
     return out
 
 
@@ -312,32 +325,36 @@ def load_prices(codes: set[str] | None = None) -> dict[str, dict[str, float]]:
     与逐日状态叠加会把系统拖死**（2026-08-08 实测：4 个回测并行导致两次黑屏）。
     只有出现在逐日状态里的代码才可能被买或被盯市，其余读了也用不上。
     """
-    out: dict[str, dict[str, float]] = {}
-    for path in sorted(OHLCV_DIR.glob("*.csv")):
-        if path.stem.startswith("INDEX_") or (codes is not None and path.stem not in codes):
-            continue
-        series = {}
-        with path.open(newline="", encoding="utf-8") as handle:
-            for row in csv.DictReader(handle):
-                close = _num(row.get("close"))
-                if close and close > 0:
-                    series[row["date"]] = close
-        out[path.stem] = series
-    return out
+    return _load_ohlcv_column("close", codes)
 
 
 def load_opens(codes: set[str] | None = None) -> dict[str, dict[str, float]]:
     """逐票开盘价。仅 `--exec-delay 1 --exec-price open` 用得到，故按需载入。"""
+    return _load_ohlcv_column("open", codes)
+
+
+def _load_ohlcv_column(column: str, codes: set[str] | None) -> dict[str, dict[str, float]]:
+    """逐票行情的某一列。收盘与开盘只差列名，合成一处，避免两边各改一遍。
+
+    与 `load_states` 同理走 `csv.reader` + 列下标：一次长跑要读近百万行，
+    `DictReader` 的建 dict 开销在这里同样是秒级的。
+    """
     out: dict[str, dict[str, float]] = {}
     for path in sorted(OHLCV_DIR.glob("*.csv")):
         if path.stem.startswith("INDEX_") or (codes is not None and path.stem not in codes):
             continue
         series = {}
         with path.open(newline="", encoding="utf-8") as handle:
-            for row in csv.DictReader(handle):
-                value = _num(row.get("open"))
+            reader = csv.reader(handle)
+            header = next(reader, None)
+            if header is None or column not in header or "date" not in header:
+                out[path.stem] = series
+                continue
+            i_val, i_date = header.index(column), header.index("date")
+            for row in reader:
+                value = _num(row[i_val]) if i_val < len(row) else None
                 if value and value > 0:
-                    series[row["date"]] = value
+                    series[row[i_date]] = value
         out[path.stem] = series
     return out
 
@@ -419,6 +436,9 @@ def daily_returns(prices: dict[str, dict[str, float]],
     return out
 
 
+_MISS = object()   # `None` 是合法的相关性取值（重叠不足），故缓存未命中要用另一个哨兵
+
+
 class Correlations:
     """按月缓存的两两相关性。**按需计算**——每天只用得到「候选前几十只 + 现有持仓」，
     全市场 261×261 全算是 3.4 万对 × 170 个月，纯 Python 跑不动也没必要。
@@ -430,18 +450,34 @@ class Correlations:
         self.min_overlap = min_overlap
         self._cache: dict[tuple, float | None] = {}
         self._std: dict[tuple, tuple] = {}
+        # 逐票排好序的交易日，只排一次。原先每个 (code, month) 都重排一遍全序列，
+        # 一次长跑里是十几万次 O(n log n)。
+        self._days: dict[str, list[str]] = {c: sorted(r) for c, r in returns.items()}
 
     def _series(self, code: str, month: str):
+        """返回 `(日期元组, 值列表, 去均值后的值列表, 模长, 日期→值的 dict)`。
+
+        **为什么要备这么多份**：`get` 的快路径要「已对齐的去均值向量 + 模长」直接做点积，
+        慢路径（两只票停牌日不同、日期集不等）仍要按 `common` 现算，需要 dict 版本。
+        """
         key = (code, month)
-        if key not in self._std:
-            days = [d for d in sorted(self.returns.get(code, {})) if d[:7] < month]
-            days = days[-self.window:]
-            values = [self.returns[code][d] for d in days]
-            if len(values) < self.min_overlap:
-                self._std[key] = ({}, 0.0)
+        cached = self._std.get(key)
+        if cached is None:
+            series = self.returns.get(code, {})
+            all_days = self._days.get(code, ())
+            # 全序列已排序，故「本月之前」是一个前缀，用 bisect 切比逐个过滤快
+            cut = bisect.bisect_left(all_days, month)
+            days = all_days[max(0, cut - self.window):cut]
+            if len(days) < self.min_overlap:
+                cached = ((), (), (), 0.0, {})
             else:
-                self._std[key] = ({d: v for d, v in zip(days, values)}, 0.0)
-        return self._std[key][0]
+                values = [series[d] for d in days]
+                mean = sum(values) / len(values)
+                centered = [v - mean for v in values]
+                norm = sum(v * v for v in centered) ** 0.5
+                cached = (tuple(days), values, centered, norm, dict(zip(days, values)))
+            self._std[key] = cached
+        return cached
 
     def get(self, a: str, b: str, day: str) -> float | None:
         """`day` 当月之前满一年的日收益率相关系数；重叠不足返回 None（**当作未知、不当作 0**）。"""
@@ -449,15 +485,29 @@ class Correlations:
             return 1.0
         month = day[:7]
         key = (month, a, b) if a < b else (month, b, a)
-        if key in self._cache:
-            return self._cache[key]
-        sa, sb = self._series(a, month), self._series(b, month)
-        common = sa.keys() & sb.keys()
+        cached = self._cache.get(key, _MISS)
+        if cached is not _MISS:
+            return cached
+        days_a, _, ca, na, map_a = self._series(a, month)
+        days_b, _, cb, nb, map_b = self._series(b, month)
+        if len(days_a) < self.min_overlap or len(days_b) < self.min_overlap:
+            self._cache[key] = None
+            return None
+        if days_a == days_b:
+            # 快路径：两只票的交易日完全相同（同一交易日历、都没停牌），占绝大多数。
+            # 此时按 `common` 求的均值就等于各自窗口的均值，故可直接用预算好的去均值向量点积。
+            # `sum(map(mul, ...))` 走 C 层，比生成器表达式快数倍。
+            value = sum(map(_mul, ca, cb)) / (na * nb) if na > 0 and nb > 0 else None
+            self._cache[key] = value
+            return value
+        # 慢路径：日期集不等（有一方停牌），只能按交集现算。**按日期排序遍历**，
+        # 不用集合迭代序——集合序受字符串哈希影响，同一份数据换个进程可能换个求和顺序。
+        common = sorted(map_a.keys() & map_b.keys())
         if len(common) < self.min_overlap:
             self._cache[key] = None
             return None
-        xs = [sa[d] for d in common]
-        ys = [sb[d] for d in common]
+        xs = [map_a[d] for d in common]
+        ys = [map_b[d] for d in common]
         n = len(xs)
         mx, my = sum(xs) / n, sum(ys) / n
         num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
@@ -1754,6 +1804,9 @@ def main() -> int:
     parser.add_argument("--min-lot-cooldown", type=int, default=0, metavar="D",
                         help="高价股一档买不起一手时，改为每 D 个自然日买一手；0 表示跳过不买")
     parser.add_argument("--trade-log", type=Path, help="导出逐笔成交流水（人工核对用）")
+    parser.add_argument("--no-artifacts", dest="artifacts", action="store_false",
+                        help="不落 *_trades/_equity/_periods 三份逐条产物，只写 summary。"
+                             "参数扫描一律加它——逐年收益与净值曲线只在单跑分析时才用得到")
     parser.add_argument("--rebuy", choices=("off", "lump", "gradual"), default="off",
                         help="割肉后的买回口径：lump=重新合格当日一次性买回相同股数；gradual=交回常规定投")
     parser.add_argument("--lot-size", type=int, default=0, metavar="N",
@@ -1935,9 +1988,14 @@ def main() -> int:
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
-            write_trades(args.out_dir / f"{label}_trades.csv", result["closed"], names)
-            write_equity(args.out_dir / f"{label}_equity.csv", result["equity"])
-            write_periods(args.out_dir / f"{label}_periods.csv", result["equity"])
+            # `--no-artifacts`：参数扫描只看 summary，逐笔/逐日/逐期三份写了就删。
+            # 一轮 253 次运行会落 759 个文件、约 5 GB，且**目录一旦堆到几万个条目，
+            # 后续每次运行的建档开销本身就会拖慢回测**（2026-08-14 实测：清空目录后同一份
+            # 扫描由 ~75 分钟降到 6 分 24 秒，其中相当一部分正是目录规模造成的）。
+            if args.artifacts:
+                write_trades(args.out_dir / f"{label}_trades.csv", result["closed"], names)
+                write_equity(args.out_dir / f"{label}_equity.csv", result["equity"])
+                write_periods(args.out_dir / f"{label}_periods.csv", result["equity"])
             if ledger:
                 with args.trade_log.open("w", newline="", encoding="utf-8") as handle:
                     w = csv.DictWriter(handle, fieldnames=list(ledger[0]) + ["security_name"])
@@ -1964,8 +2022,10 @@ def main() -> int:
             where = args.out_dir.relative_to(ROOT)
         except ValueError:
             where = args.out_dir
-        print(f"\n落点 {where}/：逐周期 *_trades.csv、"
-              f"逐日 *_equity.csv、年月收益 *_periods.csv、汇总 summary.csv")
+        print(f"\n落点 {where}/：" + ("逐周期 *_trades.csv、逐日 *_equity.csv、"
+                                     "年月收益 *_periods.csv、汇总 summary.csv"
+                                     if args.artifacts else
+                                     "汇总 summary.csv（--no-artifacts，未落逐条产物）"))
     if not args.universe_file:
         print("\n⚠ **选样前视**：标的是今日 261 只池内股，池由 2026 年的分层选出。"
               "已实测其代价——2010-05~2026-08 同区间，改用逐年时点股票库后年化 "

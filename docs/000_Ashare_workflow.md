@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v2.91
+# A股选股-估值-量价操作流程 v2.92
 
 > **本行的版本号是唯一版本真值**：`scripts/workflow_decision_log.py` 在导入时解析它写入决策日志的 `workflow_version` 列，改版时改这里即可，不得在别处另存一份。逐版内容见 `docs/Ashare_workflow_changelog.md`。
 >
@@ -1460,8 +1460,29 @@ python3 scripts/backtest_valuation_strategy.py \
   --exec-delay 1 --exec-price close \
   --width -0.6330 \
   --fee-preset user \
+  --daily-states data/processed/a_share_daily_states_adopted.csv \
+  --universe-file data/processed/pit_attention/panel_moat_bank_adopted.csv \
   --since <起点>
 ```
+
+**两个输入已固化在仓库里**（v2.91 立）：`a_share_daily_states_adopted.csv` 是 λ=2.0 且银行走股利折现的逐日状态，
+`panel_moat_bank_adopted.csv` 是护城河 128 家 ＋ 银行 41 家的时点面板。
+此前两者只存在于临时目录，**本节的命令实际不可复现**——这是本次固化的原因。
+两份都因体量在 `.gitignore` 内（逐日状态 92MB），删了按下一段重建。
+
+**做多配置对比不要手抄这条命令**——`scripts/sweep_backtest_configs.py` 已把它固化成 `BASE`，
+配置文件只写「相对基准改了什么」，并自动出 §12.1 要求的「Δ中位 + 符号数」对照表：
+
+```bash
+python3 scripts/sweep_backtest_configs.py <配置文件> --out 读数.txt      # 缺省 23 个标准起点
+python3 scripts/sweep_backtest_configs.py --report --out 读数.txt        # 只重出表
+```
+
+**手抄整条命令已两次导致整轮实测作废**（`--max-corr` 缺省 0、`--lot-size` 缺省 0，见本节末尾的教训），
+故新增实验一律走它。它内建 `--no-artifacts`：扫描只看 summary，
+**逐笔/逐日/逐期三份产物在扫描里是纯浪费**——一轮 253 次运行会落 759 个文件约 5 GB，
+而目录堆大之后回测本身会变慢（§12.41 实测 ~75 分钟 → 6 分 24 秒）。
+单跑分析要逐年收益或净值曲线时不要加该开关。
 
 **估值带须先按 §6.5.7.1 的 v2.90 口径重建**（`--roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 --since 2002-01-01`），
 再对银行行套用股利折现（`scripts/experimental/rebuild_bank_bands.py divspread:0.02`）。
