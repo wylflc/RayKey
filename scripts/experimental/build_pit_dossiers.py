@@ -59,7 +59,13 @@ def main():
     bloom = list(csv.DictReader(open(f"{PIT}/bloom_queue.csv", encoding="utf-8")))
     if a.codes:
         want = {ln.strip().zfill(6) for ln in open(a.codes, encoding="utf-8") if ln.strip()}
-        bloom = [r for r in bloom if r["security_code"] in want]
+        # **`--codes` 不再是「在 bloom 队列里过滤」，而是「就按这批代码出档案」**（2026-08-14 修，OI-053）。
+        # 原实现拿 bloom 队列做全集，于是**凡不在队列里的代码一律静默产出 0 份档案**——
+        # 而 OI-053 要重判的 51 只恰恰全都不在队列里。下游只用到 `security_code` 一个字段，
+        # 故这里直接按代码造行即可。**这是 OI-053 那处「把增量队列当完整宇宙」在工具层的同一实例。**
+        have = {r["security_code"] for r in bloom}
+        bloom = [r for r in bloom if r["security_code"] in want] + \
+                [{"security_code": c} for c in sorted(want - have)]
     elif a.sample:
         # 按触发类型分层抽样：T1（ROE 型）与 T2（营收×毛利型）各按其占比抽
         strata = collections.defaultdict(list)

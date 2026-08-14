@@ -41,6 +41,7 @@ def main():
     ap.add_argument("--roe-gap", type=float, default=8.0, help="ROE 高出同业中位的百分点")
     ap.add_argument("--min-rev", type=float, default=3.0, help="峰值营收下限（亿）")
     ap.add_argument("--out")
+    ap.add_argument("--codes", help="代码清单文件；不给则用 bloom 队列")
     a = ap.parse_args()
 
     ann = collections.defaultdict(dict)
@@ -63,8 +64,14 @@ def main():
     gm_med = {k: statistics.median(v) for k, v in gm_all.items() if len(v) >= 5}
     roe_med = {k: statistics.median(v) for k, v in roe_all.items() if len(v) >= 5}
 
-    bloom = [r["security_code"] for r in
-             csv.DictReader(open(f"{PIT}/bloom_queue.csv", encoding="utf-8"))]
+    # `--codes` 给了就按该清单筛，否则默认 bloom 队列（2026-08-14 补，OI-053）。
+    # **原实现只认 bloom 队列**，而 OI-053 要复判的 51 只全不在队列内——
+    # 与 `build_pit_dossiers.py` 是同一处「把增量队列当完整宇宙」。
+    if a.codes:
+        bloom = [ln.strip().zfill(6) for ln in open(a.codes, encoding="utf-8") if ln.strip()]
+    else:
+        bloom = [r["security_code"] for r in
+                 csv.DictReader(open(f"{PIT}/bloom_queue.csv", encoding="utf-8"))]
     keep, drop = [], []
     why = collections.Counter()
     for c in bloom:
