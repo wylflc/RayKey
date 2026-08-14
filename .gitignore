@@ -48,3 +48,8 @@ data/processed/backtest/*_trades.csv
 data/processed/backtest/*_periods.csv
 data/processed/backtest/summary_*.csv
 data/processed/backtest/summary.csv
+
+# 纠偏原则检验（notebooks/valuation_band_vs_price.ipynb）的诊断用逐日状态，
+# 重建命令写在该 notebook 的第二个 cell 里。
+data/processed/diag_daily_states.csv
+data/processed/diag_bands.csv
