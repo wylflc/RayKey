@@ -792,7 +792,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         liquidate_ma: int = 0, liquidate_days: int = 3,
         opens: dict[str, dict[str, float]] | None = None,
         sell_line_override: float | None = None, trend_exit_ma: int = 0,
-        rank_by_upside: bool = True, entry_mode: str = "trend", dev_ma: int = 60,
+        rank_by_upside: bool = True, buy_floor: float = 0.0,
+        entry_mode: str = "trend", dev_ma: int = 60,
         dev_buy_max: float = 1.10, dev_sell_min: float = 0.0,
         hold_strong: str = "off", hold_strong_ma: tuple[int, ...] = (),
         rank_mode: str = "pv", quantile_window: int = 0,
@@ -1172,6 +1173,14 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 return r[0]
             return scores.get(r[0], r[3]) if rank_mode != "pv" else r[3]
         eligible = sorted((r for r in pool if r[3] <= buy_line(r[0])), key=_key)
+        # `buy_floor`（用户 2026-08-14：「扩大买入阈值的范围，例如 0.8-1.2」的双边读法）：
+        # 买入由单边上限改为**区间** `[buy_floor, buy_line]`，即**过分便宜的也不买**。
+        # 动机是在「公平 P/V」口径下，`P/V` 远低于 1 未必是错杀，也可能是市场看对了
+        # （基本面正在坏、带还没反映）。0 表示不设下限，即原行为。
+        if buy_floor > 0:
+            kept = [r for r in eligible if r[3] >= buy_floor]
+            stats["买入下限挡下"] += len(eligible) - len(kept)
+            eligible = kept
         # 分档最低空间门槛（用户 2026-08-08：L1 >30%、L2 >40%；**L3 未指定，本脚本按 L2 取 40%**
         # ——L3 风险更高，门槛不该比 L2 松）。空间 = V/P − 1 = 1/(P/V) − 1。
         if min_upside:
@@ -1787,6 +1796,9 @@ def main() -> int:
                              "0.005 即 0.5%%。可给多个做敏感度")
     parser.add_argument("--trend-ma", nargs="+", type=int, default=[20, 60],
                         help="走势触发的均线，如 `20 60` 表示 收盘>MA20>MA60；`5 20` 表示 收盘>MA5>MA20；单个值表示只要求站上该均线")
+    parser.add_argument("--buy-floor", type=float, default=0.0, metavar="X",
+                        help="买入下限：`P/V < X` 的候选也不买，即买入区间变成 [X, 买入线]。"
+                             "0=不设下限（原行为）。用于检验「过分便宜的是错杀还是市场看对了」")
     parser.add_argument("--sell-line", type=float, default=0.0,
                         help="减持线（P/V），缺省 1+w；设为 1.30 即涨到 30%% 溢价才减持")
     parser.add_argument("--trend-tranche", action="store_true",
@@ -1921,6 +1933,7 @@ def main() -> int:
                      + (f"_smd{args.stop_min_days}" if args.stop_min_days else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
+                     + (f"_bf{args.buy_floor:g}" if args.buy_floor else "")
                      + (f"_xma{args.trend_exit_ma}" if args.trend_exit_ma else "")
                      + ("_norank" if not args.rank_by_upside else "")
                      + (f"_{args.entry_mode}" if args.entry_mode != "trend" else "")
@@ -1972,7 +1985,8 @@ def main() -> int:
                          liquidate_ma=args.liquidate_ma, liquidate_days=args.liquidate_days,
                          sell_line_override=args.sell_line or None,
                          trend_exit_ma=args.trend_exit_ma,
-                         rank_by_upside=args.rank_by_upside, entry_mode=args.entry_mode,
+                         rank_by_upside=args.rank_by_upside, buy_floor=args.buy_floor,
+                         entry_mode=args.entry_mode,
                          dev_ma=args.dev_ma, dev_buy_max=args.dev_buy_max,
                          dev_sell_min=args.dev_sell_min, hold_strong=args.hold_strong,
                          hold_strong_ma=tuple(args.hold_strong_ma), rank_mode=args.rank_mode,
