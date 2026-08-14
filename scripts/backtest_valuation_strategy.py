@@ -738,6 +738,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
         trend_tol: float = 0.0, exec_delay: int = 0, exec_price: str = "close",
         sell_trend_ma: tuple[int, ...] = (), sell_full: bool = False, stop_min_days: int = 0,
+        stop_partial: bool = False, stop_tranche: float = 1.0,
         liquidate_ma: int = 0, liquidate_days: int = 3,
         opens: dict[str, dict[str, float]] | None = None,
         sell_line_override: float | None = None, trend_exit_ma: int = 0,
@@ -1006,6 +1007,36 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # ——即这条止损主要在切掉刚建的仓，而非在保护已有利润。本开关用于检验「给仓位一点时间」。
             if ((strategy == "trend" and trend_stop) or price_stop) and lot.entry_stop and price < lot.entry_stop \
                     and (not stop_min_days or _days_between(lot.entry_date, day) >= stop_min_days):
+                # `stop_partial`（用户 2026-08-14：「卖出改为定投式减仓」）：止损由**整仓清空**
+                # 改为**与定投同速、每日减一档**。这是当前策略里最后一条整仓路径——出名单清仓、
+                # `P/V` 减持、换仓三条早已是按档减，故本开关等于把卖出端整体对称到买入端。
+                # **`entry_stop` 只在建仓那天设一次、加仓不重设**（见 `if lot is None` 分支），
+                # 故语义是「只要还在建仓日均线之下就每天减一档」，价格站回线上即自动停手。
+                if stop_partial:
+                    # `stop_tranche` 是减仓速度的倍数：1.0 = 与定投同速，∞ = 退回整仓清空。
+                    # 用它做剂量-反应，检验「减得慢」到底是不是 STP 变差的原因。
+                    shares = sell_shares(budget * stop_tranche / price, lot.shares, price, lot_size)
+                    if (not shares and lot_ratio_cooldown and lot_size
+                            and lot.shares >= lot_size
+                            and lot_ratio_ready(lot_counters, code, price * lot_size, budget)):
+                        shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
+                        stats["高价股·按手减持"] += 1
+                    if shares > 0:
+                        if shares >= lot.shares * 0.999:
+                            turnover += lot.shares * price
+                            close_lot(portfolio, code, day, price, ledger=ledger,
+                                      reason=f"跌破建仓日MA{lot.entry_stop_ma}·减完清空")
+                        else:
+                            log_partial_sell(ledger, day, code, shares, price,
+                                             f"跌破建仓日MA{lot.entry_stop_ma}·减一档")
+                            lot.shares -= shares
+                            portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
+                            lot.proceeds += shares * price
+                            lot.sells += 1
+                            turnover += shares * price
+                        sell_count += 1
+                        stats["止损·减一档"] += 1
+                    continue
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
                 close_lot(portfolio, code, day, price, ledger=ledger, reason=f"跌破建仓日MA{lot.entry_stop_ma}止损")
                 sell_count += 1
@@ -1104,10 +1135,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             eligible = [r for r in eligible if research.allows(research_gate, r[0], day)]
         # 入场模式：trend=收盘>MA20>MA60（方向）；deviation=收盘 ≤ MA60×dev_buy_max（位置）；
         # both=两者同时满足。**方向与位置是两件事**——方向判断趋势是否成立，位置判断是否追高。
+        # **均线必须取 `sig_day`**：`r[1]` 来自 `states[sig_day]`，即信号日收盘；原先拿 `day`
+        # （成交日）的 MA 与它相比，在 `--exec-delay 1` 下等于用 T+1 的收盘去判 T 日的信号
+        # ——**后视**。改为两侧同取 `sig_day`，与走势闸门同源（v2.91 修，2026-08-14）。
         if strategy == "trend" and entry_mode in ("deviation", "both"):
             kept = []
             for r in eligible:
-                base = mas.get(r[0], {}).get(day, {}).get(dev_ma)
+                base = mas.get(r[0], {}).get(sig_day, {}).get(dev_ma)
                 if base and r[1] <= base * dev_buy_max:
                     kept.append(r)
             eligible = kept
@@ -1728,6 +1762,10 @@ def main() -> int:
                         help="建仓日均线止损的最短持有期：不足 D 个自然日不触发（0=原行为）")
     parser.add_argument("--sell-full", action="store_true",
                         help="P/V≥减持线（且过走势闸门）时整仓卖出，而非按一档减")
+    parser.add_argument("--stop-partial", action="store_true",
+                        help="建仓日均线止损改为「定投式减仓」：每日减一档而非整仓清空（用户 2026-08-14）")
+    parser.add_argument("--stop-tranche", type=float, default=1.0, metavar="K",
+                        help="--stop-partial 的减仓速度倍数：1=与定投同速，3=每日减三档；只在 --stop-partial 下生效")
     parser.add_argument("--swap-partial", action="store_true",
                         help="换仓由整仓卖出改为按定投同速减一档（仅在只差钱、槽位未满时）")
     parser.add_argument("--cluster-swap", action="store_true",
@@ -1826,6 +1864,7 @@ def main() -> int:
                      + (f"_corr{args.max_corr:g}" if args.max_corr else "")
                      + ("_tranche" if args.trend_tranche else "")
                      + ("_sf" if args.sell_full else "")
+                     + (f"_stp{args.stop_tranche:g}" if args.stop_partial else "")  # `_sp` 已被 --swap-partial 占用
                      + (f"_smd{args.stop_min_days}" if args.stop_min_days else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
@@ -1873,6 +1912,7 @@ def main() -> int:
                          only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None,
                          universe=universe, trend_tranche=args.trend_tranche,
                          sell_full=args.sell_full, stop_min_days=args.stop_min_days,
+                         stop_partial=args.stop_partial, stop_tranche=args.stop_tranche,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,
                          sell_trend_ma=tuple(args.sell_trend_ma),
