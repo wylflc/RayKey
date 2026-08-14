@@ -37,10 +37,12 @@ OUT_DIR = ROOT / "data/processed/backtest"
 
 # §9.7.1.2 的完整命令，逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
 #
-# **对照臂的宇宙自 2026-08-14 起改为 V3 面板**（`panel_moat_bank_v3.csv`，211 只，用户裁定，
-# 见 `docs/Ashare_backtest_log.md` §12.53）。旧的 169 只面板因 OI-053 的接线错误漏掉 55 只
-# 已判入选公司，其相对优势有相当部分来自那次无人打算的排除，故不再作基准。
-# 基准读数：23 起点年化中位 **15.16%（23/23 为正）**，2009-11 长跑年化 16.29%、最大回撤 51.4%。
+# **对照臂的宇宙自 2026-08-14 起改为 V4 面板**（`panel_moat_bank_v4.csv`，211 只、已应用退出判定，
+# 见 `docs/Ashare_backtest_log.md` §12.53~§12.54）。两步：①旧的 169 只面板因 OI-053 的接线错误漏掉
+# 55 只已判入选公司 → 统一口径重判后补回，得 V3（211 只）；②V3 未接 `exit_log.csv` 的退出判定，
+# 而 §9.7.2 第②条本就假定有退出 → 按 `notice` 可得日接回，得 V4。
+# **对照臂须同时给** `--universe-file .../panel_moat_bank_v4.csv --width -0.5884 --sell-line 1.1044 --swap-margin 0.1503`。
+# 基准读数：23 起点年化中位 **14.61%**、滚 3 年回撤中位 34.3%；2009-11 长跑年化 15.41%、最大回撤 49.8%。
 BASE = (
     "--strategy trend --trend-tranche --trend-ma 20 60 --sell-line 1.10 "
     "--corr-window 252 --scan-depth 40 --max-positions 999 "
