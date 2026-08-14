@@ -100,6 +100,23 @@ python3 scripts/experimental/deviation_gate_diagnostics.py <逐日估值状态.c
 **代码、名称、现价、`P/V`、股数上逐只逐字段一致**——且这是跨数据源的一致
 （生产走东财 `fqt=1`，退役版走腾讯 `qfq`）。详见 `docs/Ashare_backtest_log.md` §12.42。
 
+## 中轴按什么定：`decompose_pv_bias.py` / `calibrate_band_by_group.py` / `align_buy_line.py`（§12.45）
+
+```bash
+python3 scripts/experimental/decompose_pv_bias.py            # 偏置能被什么解释（R² 分解）
+python3 scripts/experimental/calibrate_band_by_group.py <输入逐日> <输出逐日> <ind1|ind2|tier|ind1xtier>
+python3 scripts/experimental/align_buy_line.py <基准逐日> <基准线> <待对齐逐日>...
+```
+
+**结论为负，但诊断有效**：偏置由**行业**决定（一级行业 R²=**0.540**）而非护城河（质量分层 R²=**0.014**）；
+按行业做时点扩窗校准确实把纠偏原则修好了（合格率 14%→33%、log 离散度 0.482→0.378），
+**但回测 −6.34pp（0/23）**，且行业×分层更差（−13.50pp）。
+机理：校准把合格面从化石能源挪向医药生物（+11pp），正是把钱从真正赚钱的那批挪走。
+
+**`calibrate_band_by_group.py` 是时点扩窗的**：第 Y 年的因子只用 Y 年之前的观测，样本不足退回 1.0，预热 5 年。
+**`align_buy_line.py` 必须对三条线都用**——买入线、减持线、换仓阈值凡定义在 `P/V` 上的都要重标度，
+只对齐买入线会让卖出机制睡着（§12.45.4 踩过，方向没变但幅度差 4pp）。
+
 ## 生产脚本上唯一为这些实验开的口子
 
 `scripts/build_historical_valuation_bands.py --roe-external CSV`：用外部预测的 ROE 覆盖 `roe0`，
