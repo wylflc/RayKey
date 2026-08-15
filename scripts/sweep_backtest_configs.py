@@ -46,6 +46,11 @@ OUT_DIR = ROOT / "data/processed/backtest"
 # 上一版基准臂为了与 V3 可比而单解过一套对齐线 1.5884/1.1044/0.1503，现已废止，不再维护两组数）。
 # **`--position-cap 0.15` 于 v3.01 并入**（用户 2026-08-15 指令）——缺省是 0 即无上限，
 # 漏给会静默退回「单票可占八成仓位」的旧口径（实测基准 79% 的交易日单票 >30%、峰值 84.5%，OI-057）。
+# **v3.02 再并入四条**（同日第二批指令）：`--stop-ma 60`（止损改建仓日 MA60）、
+# `--addon-trend ma-only`（已有持仓只看 MA20>MA60 即可加仓）、`--no-value-sell`（删估值减持）、
+# `--swap-require-weak`（换仓的卖出源须 `收盘 < MA20`）。
+# **后两者必须成对**：各自单独是 −0.37／−1.51，合起来 +2.14（20/23）、滚 5 年 +2.69（23/23）。
+# **且整组依赖单票上限**——去掉 `--position-cap` 后效应归零（−0.15／11-23），见 §12.62.3。
 # 基准读数见 `docs/000_Ashare_workflow.md` §9.7.1.2 节末的「v3.01 基准读数」——**改这里就要改那里**。
 # **换估值口径或换宇宙做 A/B 时仍须把三条线一起重解到同一合格面**（§12.30，align_buy_line.py）；
 # 改交易参数本身不需要对齐。
@@ -56,6 +61,7 @@ BASE = (
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
     "--fee-preset user --no-artifacts "
     "--width 0.0 --sell-line 2.50 --swap-margin 0.15 --position-cap 0.15 "
+    "--stop-ma 60 --addon-trend ma-only --no-value-sell --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v4.csv"
 )
