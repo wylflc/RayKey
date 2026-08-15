@@ -44,8 +44,9 @@ OUT_DIR = ROOT / "data/processed/backtest"
 # 对称重入逐档切换在册状态；见 `docs/Ashare_backtest_log.md` §12.53~§12.54）。
 # **三条线与 §9.7.1 的生产线同值**（v2.98 起，用户 2026-08-14 指定买 1.00 / 减 2.50 / 换仓改善 0.15；
 # 上一版基准臂为了与 V3 可比而单解过一套对齐线 1.5884/1.1044/0.1503，现已废止，不再维护两组数）。
-# 基准读数：23 起点年化中位 **13.15%**、滚 3 年回撤中位 32.5%、年均换手 3.46；
-# 2009-11 长跑 300 万 → 2,075 万、年化 12.28%、最大回撤 48.0%。
+# **`--position-cap 0.15` 于 v3.01 并入**（用户 2026-08-15 指令）——缺省是 0 即无上限，
+# 漏给会静默退回「单票可占八成仓位」的旧口径（实测基准 79% 的交易日单票 >30%、峰值 84.5%，OI-057）。
+# 基准读数见 `docs/000_Ashare_workflow.md` §9.7.1.2 节末的「v3.01 基准读数」——**改这里就要改那里**。
 # **换估值口径或换宇宙做 A/B 时仍须把三条线一起重解到同一合格面**（§12.30，align_buy_line.py）；
 # 改交易参数本身不需要对齐。
 BASE = (
@@ -54,7 +55,7 @@ BASE = (
     "--swap --swap-partial --sell-trend-ma 20 "
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
     "--fee-preset user --no-artifacts "
-    "--width 0.0 --sell-line 2.50 --swap-margin 0.15 "
+    "--width 0.0 --sell-line 2.50 --swap-margin 0.15 --position-cap 0.15 "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v4.csv"
 )
