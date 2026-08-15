@@ -823,7 +823,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         gate: str = "pv", buy_pct: float = 0.05, sell_pct: float = 0.60,
         pct_stop_when_rich: bool = False,
         addon_trend: str = "full", no_value_sell: bool = False,
-        swap_require_weak: bool = False, swap_weak_ma: int = 20) -> dict:
+        swap_require_weak: bool = False, swap_weak_ma: int = 20,
+        swap_out_min_pv: float = 0.0) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -1437,6 +1438,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         and (not swap_require_weak
                              or ((_m := mas.get(c, {}).get(sig_day, {})).get(swap_weak_ma) is not None
                                  and today[c][0] < _m[swap_weak_ma]))
+                        # `swap_out_min_pv`（用户 2026-08-15：「只有高估严重了才允许换仓，
+                        # 而不是仅仅排序变了就轻易地换」）：卖出源还须自身 `P/V ≥ 阈值`。
+                        # 与 `swap_margin`（候选须比持仓便宜出边际）正交——那是**相对**条件，
+                        # 这是**绝对**条件：持仓本身不算贵时，谁更便宜都不换。缺省 0 = 关。
+                        and (not swap_out_min_pv or today[c][2] >= swap_out_min_pv)
                         and c not in quota_hold_today
                         and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
                 if not held:
@@ -1990,9 +1996,18 @@ def main() -> int:
     parser.add_argument("--no-value-sell", action="store_true",
                         help="删掉「`P/V` 过减持线就减一档」整条路径（§9.7.2 第 4 步第①条）。"
                              "此后卖出只剩：建仓日均线止损、出名单清仓、换仓")
+    # 三个「反向开关」：BASE 串里已含 --no-value-sell / --swap-require-weak / --swap 这类
+    # store_true，扫描器只能**追加**参数、无法删除，故各配一个同 dest 的反向旗（后出现者胜）。
+    parser.add_argument("--value-sell", dest="no_value_sell", action="store_false",
+                        help="反向开关：重新启用减持线（覆盖此前的 --no-value-sell）")
     parser.add_argument("--swap-require-weak", action="store_true",
                         help="换仓的卖出源须同时 `收盘 < MA{--swap-weak-ma}`，"
                              "即只换走势已走坏的持仓，涨势中的不因排名靠后被换掉")
+    parser.add_argument("--no-swap-require-weak", dest="swap_require_weak", action="store_false",
+                        help="反向开关：取消换仓的弱势要求（覆盖此前的 --swap-require-weak）")
+    parser.add_argument("--swap-out-min-pv", type=float, default=0.0, metavar="X",
+                        help="换仓的**绝对**门槛：只有自身 P/V ≥ X 的持仓才允许被换出"
+                             "（「高估严重才换，排序变了不轻易换」）。缺省 0 = 关")
     parser.add_argument("--swap-weak-ma", type=int, default=20,
                         help="配 --swap-require-weak 用的均线周期，缺省 20")
     parser.add_argument("--hold-strong", choices=("off", "swap", "sell", "both"), default="off",
@@ -2202,6 +2217,7 @@ def main() -> int:
                      + ("_addma" if args.addon_trend == "ma-only" else "")
                      + ("_nvs" if args.no_value_sell else "")
                      + (f"_swk{args.swap_weak_ma}" if args.swap_require_weak else "")
+                     + (f"_sop{args.swap_out_min_pv:g}" if args.swap_out_min_pv else "")
                      + (f"_q{args.quantile_window or 'all'}b{args.buy_pct:g}"
                         + (f"s{args.sell_pct:g}" if args.gate == "self-pct" else "A")
                         + ("nr" if args.pct_stop_when_rich else "")
@@ -2271,7 +2287,8 @@ def main() -> int:
                          pct_stop_when_rich=args.pct_stop_when_rich,
                          addon_trend=args.addon_trend, no_value_sell=args.no_value_sell,
                          swap_require_weak=args.swap_require_weak,
-                         swap_weak_ma=args.swap_weak_ma)
+                         swap_weak_ma=args.swap_weak_ma,
+                         swap_out_min_pv=args.swap_out_min_pv)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
