@@ -756,9 +756,24 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             return band
         band.roe0_normalized, band.roe0_mode = roe0, "normalized"
         if args.roe_source in ONESIDED_SOURCES:
-            roe0, band.roe0_mode = pick_roe0(args.roe_source, roe0,
-                                             roe.value if roe else None, band.roe_trend,
-                                             args.roe_lift)
+            # **peak 守卫（--dcf-peak-guard K，实验，缺省关）**：当期 TTM ROE > K × 十年年度
+            # ROE 中位时判「利润相对自身长史处于极端高位」，**跳过单边上抬**、退回归一化值。
+            # 锚点诊断（§12.68）：λ=2.0 的单边抬在周期利润顶火上浇油——牧原 2020 读 0.51、
+            # 方大特钢 2018 读 0.27，都把「顶部利润 × 上抬」当成了便宜。与 roic 口径的
+            # `--roic-cycle-guard peak` 同一思想：要防的是把高位利润外推十年，不是「有来回」。
+            peaked = False
+            if getattr(args, "dcf_peak_guard", 0) and roe is not None:
+                longs = [v for _p, v in annual_roe_series(series, available_at,
+                                                          max(args.roe_years, 10))]
+                peaked = (len(longs) >= 4 and roe.value > 0
+                          and roe.value > args.dcf_peak_guard * statistics.median(longs))
+            if peaked:
+                band.roe0_mode = "normalized_peak_guard"
+                ROIC_STATS["DCF peak 守卫·不上抬"] += 1
+            else:
+                roe0, band.roe0_mode = pick_roe0(args.roe_source, roe0,
+                                                 roe.value if roe else None, band.roe_trend,
+                                                 args.roe_lift)
         # **eps0 一律走清洁盈余 `E = ROE×B`**，与 normalized 臂同式——单边口径改的只有
         # 「roe0 取哪一侧」这一个自由度，若同时换 EPS 口径就分不清差异来自哪一处。
         eps0 = roe0 * bps
@@ -1446,6 +1461,9 @@ def main() -> int:
                              "peak=当前比率>K×十年中位（防的是把高位利润外推，锚点实测更准）")
     parser.add_argument("--roic-peak-k", type=float, default=1.6, metavar="K",
                         help="peak 守卫的倍数阈值，缺省 1.6")
+    parser.add_argument("--dcf-peak-guard", type=float, default=0.0, metavar="K",
+                        help="DCF 臂的 peak 守卫：当期 TTM ROE > K×十年年度 ROE 中位时不做单边上抬"
+                             "（周期利润顶不外推）。缺省 0 = 关（现行生产行为）")
     parser.add_argument("--iroe-cap", type=float, default=0.40, metavar="X",
                         help="iROE 的上限，防止个别极端读数把估值推到发散；缺省 40%%")
     parser.add_argument("--out-bands", type=Path)
@@ -1548,6 +1566,9 @@ def main() -> int:
 
     if EXTERNAL_ROE:
         print("外部 ROE 覆盖率：" + "｜".join(f"{k} {v:,}" for k, v in sorted(EXTERNAL_STATS.items())))
+    if getattr(args, "dcf_peak_guard", 0):
+        print(f"DCF peak 守卫（K={args.dcf_peak_guard:g}）："
+              f"跳过单边上抬 {ROIC_STATS.get('DCF peak 守卫·不上抬', 0):,} 带")
     if args.value_model == "roic":
         paths = defaultdict(int)
         for _c, b in all_bands:

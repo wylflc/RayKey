@@ -68,6 +68,15 @@ ANCHORS = [
     ("300308", "中际旭创", "2018-12-31", "高估", "壳重组后商誉高企，光模块景气回落"),
 ]
 
+# 银行锚点：**只用于给生产基准（DCF + 银行股利折现覆盖）打分**，不进 ROIC 变体的打分——
+# 框架 §6 规定金融企业不走 ROIC 口径，变体在银行上退回的是权益 DCF 而非生产的股利折现，
+# 给变体按银行打分会把「没实现的东西」错算成它的成绩。
+BANK_ANCHORS = [
+    ("601166", "兴业银行", "2013-12-31", "低估", "破净+PE~4.5，2014'银行股还有没有人要'大讨论，当年Q4起大涨"),
+    ("601939", "建设银行", "2013-12-31", "低估", "四大行集体破净，股息率~7%"),
+    ("600036", "招商银行", "2020-12-31", "高估", "'银茅'抱团顶，PB~2 创十年新高，2021-02 见顶后三年腰斩"),
+]
+
 VARIANT_FLAGS = {
     "v1": [],
     # v2：只修「稳定性缺陷」——IC 下限 + NOPAT 单边（含周期守卫），g 仍走资本口径
@@ -83,16 +92,23 @@ VARIANT_FLAGS = {
     # v5：hybrid + peak 守卫（当前比率>K×十年中位才判周期，替换打错目标的单调度守卫）
     "v5a": ["--roic-growth", "hybrid", "--roic-cycle-guard", "peak", "--roic-peak-k", "1.5"],
     "v5b": ["--roic-growth", "hybrid", "--roic-cycle-guard", "peak", "--roic-peak-k", "2.0"],
+    # DCF 侧（§12.68）：dcf = 生产口径复现（非银行应与「生产基准」列一致，作自检）；
+    # dcf_guard = 生产口径 + peak 守卫（利润顶不做 λ=2 单边上抬），检验牧原/方大两类错读能否修掉
+    "dcf": ["--value-model", "dcf"],
+    "dcf_guard": ["--value-model", "dcf", "--dcf-peak-guard", "1.5"],
 }
 
 
 def build_variant(tag: str, flags: list[str]) -> Path:
     out = SCRATCH / f"anchor_bands_{tag}.csv"
-    codes = ",".join(sorted({a[0] for a in ANCHORS}))
+    # 银行代码也建带——只为拿到 available_at（银行走 equity_fallback，其值不进变体打分）
+    codes = ",".join(sorted({a[0] for a in ANCHORS + BANK_ANCHORS}))
     cmd = [PY, str(ROOT / "scripts/build_historical_valuation_bands.py"),
-           "--codes", codes, "--value-model", "roic",
+           "--codes", codes,
            "--roe-source", "onesided_max", "--roe-lift", "2.0", "--uniform-tier", "L2",
            "--since", "2012-01-01", "--out-bands", str(out), *flags]
+    if "--value-model" not in flags:
+        cmd += ["--value-model", "roic"]
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode != 0:
         raise SystemExit(f"{tag} 建带失败：\n{r.stdout[-2000:]}\n{r.stderr[-2000:]}")
@@ -129,13 +145,14 @@ def main():
     ap.add_argument("--tag", default="custom")
     a = ap.parse_args()
 
-    codes = sorted({x[0] for x in ANCHORS})
+    all_anchors = ANCHORS + BANK_ANCHORS
+    codes = sorted({x[0] for x in all_anchors})
     prices = {c: bhv.load_ohlcv(c) for c in codes}
     actions = bhv.load_actions()
 
     # 每个锚点的价格日、前向 3 年复权收益、DCF 参照 P/V（都与变体无关，先算一次）
     fixed = {}
-    for code, name, period, label, note in ANCHORS:
+    for code, name, period, label, note in all_anchors:
         fixed[(code, period)] = None
     dcf_pv = {}
 
@@ -161,7 +178,7 @@ def main():
     # 价格日按「全变体一致」取：available_at 理论上不因变体而变（同一份财报）
     any_tag = next(iter(readings))
     rows = []
-    for code, name, period, label, note in ANCHORS:
+    for code, name, period, label, note in all_anchors:
         band = readings[any_tag].get((code, period))
         if band is None:
             rows.append((code, name, period, label, note, None, None, None))
@@ -202,7 +219,10 @@ def main():
               f"{'路径':>13}{'分子':>16}{'g来源':>9}{'g0':>7}  判定")
         pvs, fwds, labels = [], [], []
         cheap_miss, exp_miss = [], []
+        bank_keys = {(c, p) for c, _n, p, _l, _w in BANK_ANCHORS}
         for (code, name, period, label, note, avail, p0, fwd) in rows:
+            if (code, period) in bank_keys:
+                continue          # 银行不进变体打分（见 BANK_ANCHORS 注释）
             band = rd.get((code, period))
             if band is None or p0 is None:
                 print(f"{name:<10}{period:<12}{label:<5}{'—':>7}   （无带或无价格）")
@@ -240,9 +260,64 @@ def main():
             print(f"  高估读错（P/V<1.5）：{'、'.join(exp_miss)}")
         summary.append((tag, auc, rho))
 
+    # ---------------- 生产基准自身的成绩单 ----------------
+    # P/V 取自 §9.7.1.2 采纳的逐日状态（--uniform-tier L2、λ=2.0、银行股利折现覆盖），
+    # 即回测与每日扫描**实际消费**的那一列——不是重算，是审计。
+    bank_keys = {(c, p) for c, _n, p, _l, _w in BANK_ANCHORS}
+    print(f"\n{'=' * 108}\n生产基准（§9.7.1.2 采纳口径：DCF L2 λ=2.0 ＋ 银行股利折现）"
+          f"\n{'=' * 108}")
+    print(f"{'公司':<10}{'报告期':<12}{'共识':<5}{'P/V':>7}{'前向3年':>9}  判定")
+    core_pvs, core_labels = [], []
+    all_pvs, all_labels, fwd_pairs = [], [], []
+    cheap_miss, exp_miss = [], []
+    for (code, name, period, label, note, avail, p0, fwd) in rows:
+        if avail is None or p0 is None:
+            continue
+        k0 = price_at(prices[code], avail)
+        pv = dcf_pv.get((code, k0[0]))
+        if pv is None:
+            print(f"{name:<10}{period:<12}{label:<5}{'—':>7}   （采纳逐日状态无该日读数）")
+            continue
+        is_bank = (code, period) in bank_keys
+        ok = (pv <= 1.0) if label == "低估" else (pv >= 1.5)
+        mark = ("✓" if ok else ("✗ 读成贵" if label == "低估" else "✗ 读成便宜")) \
+            + ("（银行）" if is_bank else "")
+        if not ok:
+            (cheap_miss if label == "低估" else exp_miss).append(name + period[:4])
+        print(f"{name:<10}{period:<12}{label:<5}{pv:>7.2f}"
+              f"{fwd * 100 if fwd is not None else float('nan'):>8.0f}%  {mark}")
+        all_pvs.append(pv)
+        all_labels.append(label)
+        if not is_bank:
+            core_pvs.append(pv)
+            core_labels.append(label)
+        if fwd is not None:
+            fwd_pairs.append((pv, fwd))
+
+    def auc_of(vals, labs):
+        cheap = [p for p, l in zip(vals, labs) if l == "低估"]
+        exp = [p for p, l in zip(vals, labs) if l == "高估"]
+        pairs = [(c, e) for c in cheap for e in exp]
+        return (sum(1 for c, e in pairs if c < e) / len(pairs), len(pairs),
+                statistics.median(cheap), statistics.median(exp))
+
+    auc_c, n_c, med_lo, med_hi = auc_of(core_pvs, core_labels)
+    auc_a, n_a, _, _ = auc_of(all_pvs, all_labels)
+    rho = spearman([x for x, _ in fwd_pairs], [y for _, y in fwd_pairs]) \
+        if len(fwd_pairs) > 2 else float("nan")
+    print(f"\n  核心 26 锚（与 ROIC 变体同口径可比）：配对正确率 **{auc_c:.1%}**（{n_c} 对）"
+          f"｜低估组中位 {med_lo:.2f} vs 高估组中位 {med_hi:.2f}")
+    print(f"  含银行 {len(all_pvs)} 锚：配对正确率 **{auc_a:.1%}**（{n_a} 对）"
+          f"｜Spearman(P/V, 前向3年) **{rho:+.3f}**（银行前向收益不含分红，被低估）")
+    if cheap_miss:
+        print(f"  低估读错（P/V>1.0）：{'、'.join(cheap_miss)}")
+    if exp_miss:
+        print(f"  高估读错（P/V<1.5）：{'、'.join(exp_miss)}")
+    summary.append(("生产基准·核心26", auc_c, rho))
+
     print(f"\n{'=' * 60}\n汇总")
     for tag, auc, rho in summary:
-        print(f"  {tag:<6} 配对正确率 {auc:.1%}｜Spearman {rho:+.3f}")
+        print(f"  {tag:<12} 配对正确率 {auc:.1%}｜Spearman {rho:+.3f}")
 
 
 if __name__ == "__main__":
