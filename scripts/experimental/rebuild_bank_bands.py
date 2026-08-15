@@ -33,6 +33,16 @@ BANDS = f"{ROOT}/data/processed/a_share_historical_valuation_bands_pit116.csv"
 DAILY = f"{ROOT}/data/processed/a_share_historical_valuation_daily_pit116.csv"
 if len(sys.argv) > 3:
     DAILY = sys.argv[3]
+if len(sys.argv) > 4:
+    BANDS = sys.argv[4]
+# **两个缺省输入已于 2026-08-14 的 §12.41 清理中被删**（`*_pit116.csv` 命中删除模式）。
+# 缺了 BANDS 时 `fundamentals()` 对每一行都返回 None，于是**每一条银行行都被静默丢弃**——
+# 银行占面板 41/211，丢光了读数照样跑得出来，正是本仓库反复踩的那类静默失效（§15.2 第 3 条）。
+# 故这里硬失败，并允许用第 4 个参数指定任意一份含 bps/roe0/payout 的带文件。
+for _p, _what in ((DAILY, "逐日状态"), (BANDS, "估值带")):
+    if not os.path.exists(_p):
+        sys.exit(f"缺少{_what}文件：{_p}\n"
+                 f"用法：rebuild_bank_bands.py <模式> <输出> [逐日状态] [估值带]")
 WINDOW_DAYS = 1095          # 滚动窗口三年
 G_CAP = 0.03                # 终值增长上限，与主模型一致
 
