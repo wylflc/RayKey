@@ -323,6 +323,30 @@ def annual_roe_series(series: dict[str, dict], available_at: str, years: int) ->
     return out
 
 
+def annual_cash_roe(series: dict[str, dict], available_at: str, years: int) -> list[float]:
+    """近 `years` 个已披露财年的**现金 ROE** ＝ 每股经营现金流 ÷ 每股净资产。
+
+    这是「All Money Is Equal」口径（用户 2026-08-15）里 Owner Earnings 的落地方式：
+    框架要的是 `NOPAT + D&A − 维持性资本开支 − ΔWC`，**本仓库的财务表没有这四项中的任何一项**
+    （只有归母净利、营收、EPS、BPS、加权 ROE、毛利率、每股经营现金流）。
+    可得的最接近替代是**经营现金流**——它天然含 D&A 与 ΔWC，缺的只有维持性资本开支。
+    **故本口径是「税后经营现金 ÷ 净资产」而不是真正的 Owner Earnings**，
+    它会系统性高估重资产公司（不扣维持性资本开支）、与轻资产公司的差距因此被压缩。
+    这是数据边界不是建模选择，读结论时必须记住。
+
+    用「每股现金流 ÷ 每股净资产」而不是绝对额：两者同为每股口径、同期同基，
+    送转不影响比值，可直接与 `weightavg_roe` 并列进同一套归一化。
+    """
+    out = []
+    for period in reversed(fiscal_years_before(series, available_at, years)):
+        row = series[period]
+        cfps, bps = _num(row.get("op_cashflow_ps")), _num(row.get("bps"))
+        if cfps is None or bps is None or bps <= 0:
+            continue
+        out.append(cfps / bps)
+    return out
+
+
 def net_margin(row: dict) -> float | None:
     profit, revenue = _num(row.get("parent_netprofit")), _num(row.get("total_operate_income"))
     if profit is None or not revenue:
@@ -620,6 +644,12 @@ class Band:
     roe_window: int | None = None
     roe_sigma: float | None = None
     incremental_roe: float | None = None
+    # ---- All Money Is Equal 口径的字段（--value-model ame）----
+    cash_roe0: float | None = None            # 正常化现金 ROE = 每股经营现金流 ÷ BPS
+    owner_earnings0: float | None = None      # 每股 Owner Earnings（现金口径）
+    v_zero_growth: float | None = None        # 框架 §1 的零增长锚 OE/r
+    incremental_roe_used: float | None = None # 实际喂进引擎的 iROE（已封顶）
+    ame_path: str | None = None               # growth ／ zero_growth
     mos: float | None = None
     max_buy_price: float | None = None
     value: float | None = None
@@ -729,6 +759,82 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     elif EXTERNAL_ROE:
         EXTERNAL_STATS["该股无预测"] += 1
     band.roe0, band.eps0 = roe0, eps0
+
+    # ---------------- All Money Is Equal 口径（用户 2026-08-15）----------------
+    # 框架的核心断言是：估值的底层不是 PE/PEG，而是「今天投的 1 元钱换来多少可分配现金」。
+    # 落到本模块的代数上，**引擎不用改，改的是喂给它的三个输入**：
+    #   分子   `eps0`  会计盈利 → **正常化经营现金流**（Owner Earnings 的可得替代）
+    #   再投资 `roe0`  存量 ROE → **增量回报 iROE = ΔEPS/ΔBPS**
+    #                  （框架 §4：决定增长价值的是「新投的 1 元能多赚多少」，不是存量资产赚了多少）
+    #   增长   `g0`    存量ROE×b → **iROE × b**（框架 §2：g = ROIC × Reinvestment Rate）
+    # 终值式 `(1−g_T/ROE_T)/(r−g_T)` 与显式期的 `1−g/ROE` 本来就是框架 §2/§6 的式子，原样沿用。
+    #
+    # **为什么不用 EV/ROIC/FCFF**：那需要 EBIT、税率、折旧摊销、资本开支、有息负债、现金、
+    # 营运资金——**本仓库一项都没有**。框架 §6 本就规定金融企业走权益口径 `g=ROE×b`、
+    # `PE=(1−g/ROE)/(r−g)`，本实现把该权益口径用于全部公司，差别是杠杆隐含而非显式。
+    if getattr(args, "value_model", "dcf") == "ame":
+        cash = annual_cash_roe(series, available_at, args.roe_years)
+        if len(cash) < args.min_roe_years:
+            band.reason = f"现金 ROE 仅 {len(cash)} 年 < 要求 {args.min_roe_years} 年"
+            return band
+        croe0 = statistics.median(cash)
+        band.cash_roe0 = croe0
+        if croe0 <= 0 or bps <= 0:
+            band.status, band.reason = "rejected", (
+                f"正常化现金 ROE={croe0:.2%} 非正：经营现金长期为负，按现金折现无意义，"
+                f"须走 §6.5.5.2 逐票建档")
+            return band
+        oe0 = croe0 * bps
+        iroe = incremental_roe(series, actions, available_at)
+        band.owner_earnings0 = oe0
+        # 零增长锚（框架 §1）：`V0 = OwnerEarnings / r`。它是整个体系的零点，
+        # 也是 §5「先算 g=0 的价值，再看当前价格要求多少增长」的比较基准，故一律记录。
+        band.v_zero_growth = oe0 / r
+        # `iROE` 噪声极大（全池 P5 −19.8%、P95 52.5%、17% 为负，见 §12.9 的实测）。
+        # **不可用时不猜增长，直接退回零增长永续**——这正是框架 §5 的稳健主张：
+        # 与其预测 g，不如先给出 g=0 的价值。落到这里就是 `V = OE/r`。
+        if iroe is None or iroe <= g_terminal + args.min_terminal_spread:
+            band.status = "ok"
+            band.value = band.v_zero_growth
+            band.band_low = BAND_LOW_COEF * band.value
+            band.band_high = BAND_HIGH_COEF * band.value
+            band.terminal_share = 1.0
+            band.implied_pe = band.value / oe0
+            band.g0, band.roe_terminal, band.ame_path = 0.0, None, "zero_growth"
+            if band.mos is not None:
+                band.max_buy_price = margin_of_safety(band.value, band.mos)
+            return band
+        iroe = min(iroe, args.iroe_cap)
+        band.incremental_roe_used = iroe
+        payout, _yrs = payout_ratio(series, actions, available_at)
+        band.payout = payout
+        if payout is None:
+            band.reason = "派息率不可算：近三年无正 EPS 财年"
+            return band
+        g0 = max(min(iroe * (1 - payout), args.g0_cap), args.g0_floor)
+        band.g0 = g0
+        band.g_sustainable = roe0 * (1 - payout)      # 记录存量口径以便与增量口径对照
+        roe_t_ame = min(roe_t, iroe)
+        if roe_t_ame <= g_terminal + args.min_terminal_spread:
+            band.status, band.reason = "rejected", (
+                f"终值回报 {roe_t_ame:.2%} 距 g_T={g_terminal:.2%} 不足 "
+                f"{args.min_terminal_spread:.1%}：可分配现金趋零、估值对分母任意敏感")
+            return band
+        band.roe_terminal = roe_t_ame
+        try:
+            res = intrinsic_value(oe0, iroe, g0, r, roe_terminal=roe_t_ame,
+                                  g_terminal=g_terminal, n=args.n, n1=args.n1)
+        except ValuationError as exc:
+            band.status, band.reason = "rejected", str(exc)
+            return band
+        band.status, band.value = "ok", res.intrinsic_value
+        band.band_low = BAND_LOW_COEF * res.intrinsic_value
+        band.band_high = BAND_HIGH_COEF * res.intrinsic_value
+        band.terminal_share, band.implied_pe = res.terminal_share, res.implied_pe
+        band.min_payout, band.ame_path = res.min_payout, "growth"
+        if band.mos is not None:
+            band.max_buy_price = margin_of_safety(res.intrinsic_value, band.mos)
+        return band
 
     # **终值 ROE 不得高于起始 ROE**：本模型的 fade 是「竞争侵蚀超额回报」的衰减机制，
     # 不是「困境反转」的复苏机制。把 `ROE_T = r + 超额` 硬套到低谷公司上，等于凭空假设它
@@ -886,7 +992,9 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "available_at", "status", "reason", "eps_ttm", "roe_ttm", "roe_source", "bps",
                "eps0", "roe0", "roe_anchor", "roe_trend", "roe0_normalized", "roe0_mode",
                "growth_confirmed", "roe_window", "roe_efficiency",
-               "incremental_roe", "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
+               "incremental_roe", "cash_roe0", "owner_earnings0", "v_zero_growth",
+               "incremental_roe_used", "ame_path",
+               "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
                "r_mode", "rf", "erp", "beta", "r", "g_terminal", "roe_terminal",
                "intrinsic_value", "band_low", "band_high", "mos", "max_buy_price",
                "implied_pe", "pe_on_ttm_eps", "terminal_share", "min_payout"]
@@ -907,6 +1015,10 @@ def band_row(band: Band, tier: str) -> dict:
         "roe0_normalized": fmt(band.roe0_normalized, 6), "roe0_mode": band.roe0_mode,
         "roe_window": "" if band.roe_window is None else str(band.roe_window),
         "roe_efficiency": fmt(band.roe_sigma), "incremental_roe": fmt(band.incremental_roe),
+        "cash_roe0": fmt(band.cash_roe0), "owner_earnings0": fmt(band.owner_earnings0),
+        "v_zero_growth": fmt(band.v_zero_growth),
+        "incremental_roe_used": fmt(band.incremental_roe_used),
+        "ame_path": band.ame_path or "",
         "payout": fmt(band.payout),
         "g_trailing": fmt(band.g_trailing), "g_sustainable": fmt(band.g_sustainable),
         "g0": fmt(band.g0), "g0_capped": "Y" if band.g0_capped else "",
@@ -1099,6 +1211,12 @@ def main() -> int:
     parser.add_argument("--n1", type=int, default=0,
                         help="高速期年数：前 n1 年 ROE 与 g 维持起始值不衰减，其后再 fade n 年。"
                              "缺省 0 = 原行为（g 自第 1 年即衰减）")
+    parser.add_argument("--value-model", choices=("dcf", "ame"), default="dcf",
+                        help="dcf=现行口径（会计盈利 ＋ 存量 ROE）；"
+                             "ame=All Money Is Equal（正常化经营现金流 ＋ 增量回报 iROE），"
+                             "用户 2026-08-15 指令，见 docs/Ashare_backtest_log.md §12.65")
+    parser.add_argument("--iroe-cap", type=float, default=0.40, metavar="X",
+                        help="iROE 的上限，防止个别极端读数把估值推到发散；缺省 40%%")
     parser.add_argument("--out-bands", type=Path)
     parser.add_argument("--out-daily", type=Path)
     args = parser.parse_args()
