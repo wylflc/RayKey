@@ -86,6 +86,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import roic_inputs  # noqa: E402
+
 from intrinsic_value import (  # noqa: E402
     DEFAULT_G_TERMINAL,
     ValuationError,
@@ -126,6 +128,9 @@ DEFAULT_TIER = "L2"
 # 缺省为空 dict，即所有既往产出逐位可复现。
 EXTERNAL_ROE: dict[str, list[tuple[str, float]]] = {}
 EXTERNAL_STATS: defaultdict[str, int] = defaultdict(int)
+# `--value-model roic` 的三大报表输入，`main()` 里一次性装载（{代码: {财年: RoicYear}}）
+ROIC_YEARS: dict[str, dict[str, "roic_inputs.RoicYear"]] = {}
+ROIC_STATS: defaultdict[str, int] = defaultdict(int)
 
 RATES_FILE = ROOT / "data/reference/cost_of_equity_inputs.csv"
 
@@ -650,6 +655,18 @@ class Band:
     v_zero_growth: float | None = None        # 框架 §1 的零增长锚 OE/r
     incremental_roe_used: float | None = None # 实际喂进引擎的 iROE（已封顶）
     ame_path: str | None = None               # growth ／ zero_growth
+    # ---- ROIC/FCFF 真口径的字段（--value-model roic，OI-060 补数据后）----
+    nopat_ps: float | None = None             # 每股 NOPAT = EBIT×(1−t) ÷ 股数
+    roic0: float | None = None                # 正常化 ROIC（近 N 年中位）
+    incremental_roic: float | None = None     # ΔNOPAT/ΔIC
+    reinvestment_rate: float | None = None    # (capex − D&A + ΔWC)/NOPAT
+    wacc: float | None = None
+    cost_of_debt: float | None = None
+    tax_rate: float | None = None
+    net_debt_ps: float | None = None          # (有息负债 − 超额现金 + 少数股东权益)/股数
+    ev_ps: float | None = None                # 企业价值/股（扣净负债前）
+    owner_earnings_true_ps: float | None = None  # CFO − 维持性capex（≈D&A），每股
+    roic_path: str | None = None              # growth ／ zero_growth ／ equity_fallback
     mos: float | None = None
     max_buy_price: float | None = None
     value: float | None = None
@@ -759,6 +776,126 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     elif EXTERNAL_ROE:
         EXTERNAL_STATS["该股无预测"] += 1
     band.roe0, band.eps0 = roe0, eps0
+
+    # ---------------- ROIC/FCFF 真口径（用户 2026-08-15，OI-060 补数据后）----------------
+    # 这是「All Money Is Equal」框架 §2~§4 的**本来面目**：估的是企业整体产生的自由现金
+    # （FCFF），折现率用 WACC，终值用 `EV/NOPAT = (1−g_T/ROIC_T)/(WACC−g_T)`，
+    # 最后减净负债回到股权。§12.65 第一版只能拿经营现金流当 Owner Earnings（没扣资本开支），
+    # 本版有了三大报表，`维持性资本开支`／`ΔWC`／`有息负债`／`超额现金` 全部实算。
+    #
+    # **引擎仍不用改**：把 `eps0→每股NOPAT`、`roe0→ROIC`、`r→WACC`、`roe_terminal→ROIC_T`
+    # 喂进 `intrinsic_value`，它算出的 `payout×NOPAT` 恰是 `NOPAT×(1−再投资率)` ＝ FCFF，
+    # 终值式恰是框架的 EV/NOPAT——**得到的是每股企业价值**，再减净负债即得每股股权价值。
+    if getattr(args, "value_model", "dcf") == "roic":
+        history = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at, args.roe_years)
+        latest = max(history, key=lambda y: y.period) if history else None
+        # **整只股票没取到报表时退回权益口径而不是拒绝**：拒绝会把该股整条踢出宇宙，
+        # 于是 A/B 同时变了「估值口径」与「候选池」两个变量，§12.30 明令不可（曾踩中）。
+        # 退回并计数，读结论时按这个比例折价。
+        if code not in ROIC_YEARS:
+            band.roic_path = "equity_fallback"
+            ROIC_STATS["无三大报表·退回权益口径"] += 1
+        elif len(history) < args.min_roe_years:
+            band.reason = f"三大报表年份仅 {len(history)} < 要求 {args.min_roe_years} 年"
+            return band
+        # **金融企业退回权益口径**（框架 §6）：银行/券商/保险的「有息负债」是经营性负债，
+        # 投入资本与 FCFF 没有经济含义。不是降级处理，是框架本身的规定。
+        elif latest.is_financial:
+            band.roic_path = "equity_fallback"
+            ROIC_STATS["金融企业退回权益口径"] += 1
+        elif latest.parent_equity is None or not latest.parent_equity > 0 or bps is None or bps <= 0:
+            band.status, band.reason = "rejected", "母公司权益或 BPS 不可用，股数无法反推"
+            return band
+        else:
+            # **总额 → 每股一律走「除以母公司权益得比率，再乘当期 BPS」**，
+            # 与本模块 `eps0 = roe0 × bps` 完全同式：比率是同一份年报内部的无量纲量，
+            # 送转/增发都不影响它，乘上当期 BPS 后自动落在与价格序列相同的每股基准上。
+            #
+            # **不可以用「年报权益 ÷ 当期 BPS」反推股数**——年报权益一年内不变而 BPS 逐季变，
+            # 分红除权当季 BPS 下跌会让隐含股数虚增。实测茅台每股 NOPAT 在年内
+            # 39.42→43.57→40.11 来回摆动，摆幅全部来自六七月派息，不是经营变化。
+            roic0 = roic_inputs.normalized_roic(history)
+            iroic = roic_inputs.incremental_roic(history)
+            rr = roic_inputs.reinvestment_rate(history)
+            rd = roic_inputs.cost_of_debt(history)
+            tax = latest.tax_rate if latest.tax_rate is not None else roic_inputs.DEFAULT_TAX_RATE
+            w = roic_inputs.wacc(r, rd, tax, latest.total_equity or 0.0, latest.interest_debt)
+            band.roic0, band.incremental_roic, band.reinvestment_rate = roic0, iroic, rr
+            band.wacc, band.cost_of_debt, band.tax_rate = w, rd, tax
+            if latest.nopat is None or latest.nopat <= 0:
+                band.status, band.reason = "rejected", (
+                    f"NOPAT={latest.nopat}: 息税前利润非正，按现金折现无意义，须走 §6.5.5.2 逐票建档")
+                return band
+            # 正常化 NOPAT：与 ROIC 同窗口取**比率**中位再乘 BPS，避免把单年高点/低谷外推十年
+            ratios = [y.nopat / y.parent_equity for y in history
+                      if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
+            if not ratios:
+                band.status, band.reason = "rejected", "无可用的 NOPAT/母公司权益比率"
+                return band
+            nopat_ps = statistics.median(ratios) * bps
+            band.nopat_ps = nopat_ps
+            if latest.cfo is not None:
+                band.owner_earnings_true_ps = (
+                    (latest.cfo - latest.dep_amort) / latest.parent_equity * bps)
+            net_debt_ps = ((latest.interest_debt - latest.excess_cash
+                            + latest.minority_equity) / latest.parent_equity * bps)
+            band.net_debt_ps = net_debt_ps
+            if nopat_ps <= 0:
+                band.status, band.reason = "rejected", "正常化每股 NOPAT 非正"
+                return band
+            # 零增长锚（框架 §1）：EV = NOPAT/WACC。ROIC 或再投资率不可用时**不猜增长**。
+            band.v_zero_growth = nopat_ps / w - net_debt_ps
+            usable = (roic0 is not None and roic0 > g_terminal + args.min_terminal_spread
+                      and rr is not None and iroic is not None)
+            if not usable:
+                value = band.v_zero_growth
+                if value <= 0:
+                    band.status, band.reason = "rejected", (
+                        f"零增长股权价值 {value:.2f} ≤ 0：净负债超过零增长企业价值")
+                    return band
+                band.status, band.value, band.roic_path = "ok", value, "zero_growth"
+                band.band_low, band.band_high = BAND_LOW_COEF * value, BAND_HIGH_COEF * value
+                band.terminal_share, band.implied_pe = 1.0, value / nopat_ps
+                band.g0 = 0.0
+                if band.mos is not None:
+                    band.max_buy_price = margin_of_safety(value, band.mos)
+                return band
+            # 框架 §4：**增长由增量回报决定**，故 g = 增量ROIC × 再投资率。
+            # 再投资率夹在 [0,1]：>1 表示靠外部融资扩张，那部分增长不属于现有股东。
+            rr_used = min(max(rr, 0.0), 1.0)
+            iroic_used = min(iroic, args.iroe_cap)
+            g0 = max(min(iroic_used * rr_used, args.g0_cap), args.g0_floor)
+            band.g0 = g0
+            # 终值 ROIC：与基准同规——基准 L2 是 `ROE_T = r + 2pp` 且 ≤ ROE0，
+            # 这里平移成 `ROIC_T = WACC + 2pp` 且 ≤ ROIC0（竞争均衡下超额回报收敛）。
+            roic_t = min(w + (roe_t - r), roic0)
+            if roic_t <= g_terminal + args.min_terminal_spread:
+                band.status, band.reason = "rejected", (
+                    f"终值 ROIC={roic_t:.2%} 距 g_T={g_terminal:.2%} 不足 "
+                    f"{args.min_terminal_spread:.1%}：可分配现金趋零、估值对分母任意敏感")
+                return band
+            band.roe_terminal = roic_t
+            try:
+                res = intrinsic_value(nopat_ps, roic0, g0, w, roe_terminal=roic_t,
+                                      g_terminal=g_terminal, n=args.n, n1=args.n1)
+            except ValuationError as exc:
+                band.status, band.reason = "rejected", str(exc)
+                return band
+            band.ev_ps = res.intrinsic_value
+            value = res.intrinsic_value - net_debt_ps
+            if value <= 0:
+                band.status, band.reason = "rejected", (
+                    f"股权价值 {value:.2f} ≤ 0：净负债 {net_debt_ps:.2f} 超过企业价值 "
+                    f"{res.intrinsic_value:.2f}，须走 §6.5.5.2 逐票建档")
+                return band
+            band.status, band.value, band.roic_path = "ok", value, "growth"
+            band.band_low, band.band_high = BAND_LOW_COEF * value, BAND_HIGH_COEF * value
+            # 终值占比按**企业价值**口径报（净负债不属于折现流）
+            band.terminal_share, band.implied_pe = res.terminal_share, value / nopat_ps
+            band.min_payout = res.min_payout
+            if band.mos is not None:
+                band.max_buy_price = margin_of_safety(value, band.mos)
+            return band
 
     # ---------------- All Money Is Equal 口径（用户 2026-08-15）----------------
     # 框架的核心断言是：估值的底层不是 PE/PEG，而是「今天投的 1 元钱换来多少可分配现金」。
@@ -994,6 +1131,9 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "growth_confirmed", "roe_window", "roe_efficiency",
                "incremental_roe", "cash_roe0", "owner_earnings0", "v_zero_growth",
                "incremental_roe_used", "ame_path",
+               "nopat_ps", "roic0", "incremental_roic", "reinvestment_rate", "wacc",
+               "cost_of_debt", "tax_rate", "net_debt_ps", "ev_ps",
+               "owner_earnings_true_ps", "roic_path",
                "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
                "r_mode", "rf", "erp", "beta", "r", "g_terminal", "roe_terminal",
                "intrinsic_value", "band_low", "band_high", "mos", "max_buy_price",
@@ -1019,6 +1159,14 @@ def band_row(band: Band, tier: str) -> dict:
         "v_zero_growth": fmt(band.v_zero_growth),
         "incremental_roe_used": fmt(band.incremental_roe_used),
         "ame_path": band.ame_path or "",
+        "nopat_ps": fmt(band.nopat_ps), "roic0": fmt(band.roic0, 4),
+        "incremental_roic": fmt(band.incremental_roic, 4),
+        "reinvestment_rate": fmt(band.reinvestment_rate, 4),
+        "wacc": fmt(band.wacc, 4), "cost_of_debt": fmt(band.cost_of_debt, 4),
+        "tax_rate": fmt(band.tax_rate, 4), "net_debt_ps": fmt(band.net_debt_ps),
+        "ev_ps": fmt(band.ev_ps),
+        "owner_earnings_true_ps": fmt(band.owner_earnings_true_ps),
+        "roic_path": band.roic_path or "",
         "payout": fmt(band.payout),
         "g_trailing": fmt(band.g_trailing), "g_sustainable": fmt(band.g_sustainable),
         "g0": fmt(band.g0), "g0_capped": "Y" if band.g0_capped else "",
@@ -1211,10 +1359,13 @@ def main() -> int:
     parser.add_argument("--n1", type=int, default=0,
                         help="高速期年数：前 n1 年 ROE 与 g 维持起始值不衰减，其后再 fade n 年。"
                              "缺省 0 = 原行为（g 自第 1 年即衰减）")
-    parser.add_argument("--value-model", choices=("dcf", "ame"), default="dcf",
+    parser.add_argument("--value-model", choices=("dcf", "ame", "roic"), default="dcf",
                         help="dcf=现行口径（会计盈利 ＋ 存量 ROE）；"
-                             "ame=All Money Is Equal（正常化经营现金流 ＋ 增量回报 iROE），"
-                             "用户 2026-08-15 指令，见 docs/Ashare_backtest_log.md §12.65")
+                             "ame=All Money Is Equal 的现金流代理版（经营现金流 ＋ iROE，"
+                             "**没扣资本开支**，见 §12.65）；"
+                             "roic=同框架的真口径（NOPAT/投入资本/FCFF/WACC，需三大报表，见 §12.66）")
+    parser.add_argument("--statements-dir", type=Path, default=roic_inputs.STMT_DIR,
+                        help="--value-model roic 的三大报表目录，缺省 data/raw/financials_statements/")
     parser.add_argument("--iroe-cap", type=float, default=0.40, metavar="X",
                         help="iROE 的上限，防止个别极端读数把估值推到发散；缺省 40%%")
     parser.add_argument("--out-bands", type=Path)
@@ -1254,6 +1405,20 @@ def main() -> int:
     tiers = load_tiers()
     financials = load_financials(set(codes))
     actions = load_actions()
+    if args.value_model == "roic":
+        # `--roe-terminal-ratio` 改的是 `roe_t`，而 roic 分支在它生效**之前**就返回了，
+        # 给了会静默无效——静默无效比报错危险得多（会以为测了其实没测）。
+        if getattr(args, "roe_terminal_ratio", None):
+            print("**--roe-terminal-ratio 对 roic 口径无效**（终值用 ROIC_T = WACC + 超额），"
+                  "请去掉后重跑，避免读成「测过了」")
+            return 1
+        ROIC_YEARS.update(roic_inputs.load_statements(set(codes), args.statements_dir))
+        if not ROIC_YEARS:
+            print(f"**{args.statements_dir} 无三大报表**，roic 口径无法建带。"
+                  f"先跑 scripts/fetch_a_share_financial_statements.py")
+            return 1
+        rows = sum(len(v) for v in ROIC_YEARS.values())
+        print(f"三大报表：{len(ROIC_YEARS)}/{len(codes)} 只、{rows:,} 个财年")
     print(f"历史带重建：{len(codes)} 只｜报告期起点 {args.since}｜g0={args.g0_source}"
           + (f"｜**分档统一为 {args.uniform_tier}**" if args.uniform_tier else ""))
 
@@ -1302,6 +1467,20 @@ def main() -> int:
 
     if EXTERNAL_ROE:
         print("外部 ROE 覆盖率：" + "｜".join(f"{k} {v:,}" for k, v in sorted(EXTERNAL_STATS.items())))
+    if args.value_model == "roic":
+        paths = defaultdict(int)
+        for _c, b in all_bands:
+            if b.status == "ok":
+                paths[b.roic_path or "equity_fallback"] += 1
+        total = sum(paths.values()) or 1
+        print("ROIC 口径落地路径：" + "｜".join(
+            f"{k} {v:,}（{v / total:.1%}）" for k, v in sorted(paths.items())))
+        if ROIC_STATS:
+            print("  退回原因：" + "｜".join(f"{k} {v:,}" for k, v in sorted(ROIC_STATS.items())))
+        # **退回比例是读结论的前提**：退回的行走的还是旧口径，A/B 差异只来自真正走 ROIC 的那部分
+        fallback = paths.get("equity_fallback", 0)
+        if fallback / total > 0.30:
+            print(f"  ⚠ **{fallback / total:.1%} 的带没走 ROIC 口径**，本轮 A/B 主要在测剩下那部分")
     report(all_bands, daily_counts, price_counts, args)
     return 0
 

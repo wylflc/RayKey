@@ -19,6 +19,9 @@ data/raw/ohlcv/
 data/raw/financials/
 # 全市场个股研报，约 33MB（OI-034 第 20 步）
 data/raw/research_reports/
+# 面板三大报表年报全量，约 11MB（OI-060 解除后的 ROIC 口径输入）。
+# 重建：python3 scripts/fetch_a_share_financial_statements.py
+data/raw/financials_statements/
 data/raw/corporate_actions/*_shard*.csv
 data/raw/corporate_actions/*_full*.csv
 
@@ -40,6 +43,11 @@ data/processed/hist_bands_*.csv
 data/processed/a_share_daily_g*.csv
 data/processed/a_share_historical_valuation_daily_*.csv
 data/processed/a_share_historical_valuation_bands_*.csv
+# ROIC/FCFF 口径（§12.66）：带 96MB、逐日两份各 1.7GB。
+# 重建：build_historical_valuation_bands.py --all --value-model roic …（命令见 §12.66.2）
+data/processed/roic_bands.csv
+data/processed/roic_daily_raw.csv
+data/processed/roic_daily_states.csv
 
 # 回测产物：一轮参数扫描落成百上千份，2026-08-14 清理前有 5.7 万个文件 / 5.8 GB。
 # **历次扫描的读数已归并进入库的 `backtest/scan_summaries.csv`，此处只挡原件。**
@@ -48,6 +56,8 @@ data/processed/backtest/*_trades.csv
 data/processed/backtest/*_periods.csv
 data/processed/backtest/summary_*.csv
 data/processed/backtest/summary.csv
+# `--label-suffix` 命名的单跑汇总（如 summaryV304ROIC.csv），同属原件不入库
+data/processed/backtest/summary[A-Z]*.csv
 # 逐笔成交流水（`--trade-log`）：notebooks/price_pv_channels.ipynb 的输入，
 # 由该 notebook 第二格的命令一条重建，不入库。
 data/processed/backtest/*trade_log.csv

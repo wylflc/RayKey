@@ -1,0 +1,254 @@
+#!/usr/bin/env python3
+"""从三大报表推导 ROIC / FCFF 口径的估值输入（「All Money Is Equal」框架 §2~§4）。
+
+与 §12.65 第一版的区别
+----------------------
+第一版（`--value-model ame`）只有每股经营现金流可用，于是拿它当 Owner Earnings。
+**经营现金流加回了折旧摊销却没有扣资本开支**，对重资产公司系统性偏高，实测把神火／中石油／
+陕煤／神华／海螺加进组合、把银行与消费医药砍掉——**与缺口方向逐一对应**，所以那一版
+测出的不是「按现金比较是否更好」，而是「把折旧当成现金会怎样」。
+
+本模块用 `data/raw/financials_statements/` 的三大报表把缺口补上，实现框架的**本来面目**：
+
+    NOPAT = EBIT × (1 − t)                          EBIT = 利润总额 + 利息费用
+    投入资本 IC = 有息负债 + 股东权益 − 超额现金
+    ROIC = NOPAT / IC                               增量 ROIC = ΔNOPAT / ΔIC
+    再投资率 RR = (资本开支 − 折旧摊销 + ΔWC) / NOPAT
+    g = ROIC × RR                                   FCFF = NOPAT × (1 − RR)
+    EV/NOPAT 终值 = (1 − g_T/ROIC_T) / (WACC − g_T)
+
+**金融企业不走这条路**：框架 §6 明写金融企业用权益口径 `g = ROE×b`、`PB=(ROE−g)/(r−g)`，
+因为对银行/保险而言「有息负债」是经营性负债、投入资本无经济意义。故本模块对
+`org_table` 落在 `B*`/`S*`/`I*` 的公司返回 `None`，由调用方退回现行权益 DCF。
+
+口径选择与它们的代价
+--------------------
+* **账面权重算 WACC**：`WACC = (E·re + D·rd·(1−t))/(E+D)` 里的 `E` 用账面净资产而非市值。
+  用市值会**循环**（估值依赖 WACC、WACC 依赖市值），标准解法是迭代或用目标结构；
+  这里取账面权重，代价是高市净率公司的股权权重被低估、WACC 偏低（偏乐观）。
+* **维持性资本开支 ≈ 折旧摊销**：框架要的是「维持竞争地位所需」的那部分，报表不单独披露。
+  折旧摊销是最常用的代理（Buffett 原文即用它），代价是高增长期公司的扩张性开支
+  会被算成再投资（正确）、而通胀期的重置成本高于历史成本折旧（低估维持开支，偏乐观）。
+* **超额现金 = max(0, 货币资金 + 交易性金融资产 − 2%×营收)**：2% 是营运现金的通行经验值。
+* **2019 年前没有单列的利息费用**：`FE_INTEREST_EXPENSE` 实测只覆盖 30% 的财年（新准则才单列），
+  其余年份退回**财务费用净额**且负值取 0。财务费用净额已扣利息收入，故对现金多的公司
+  会低估利息费用——但这类公司本就几乎无息负债，`EBIT ≈ 利润总额` 恰好是对的；
+  真正受影响的是「既有大额存款又有大额借款」的公司，其 EBIT 会被低估、ROIC 偏低（偏保守）。
+"""
+from __future__ import annotations
+
+import csv
+import statistics
+from dataclasses import dataclass
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+STMT_DIR = ROOT / "data/raw/financials_statements"
+
+OPERATING_CASH_RATIO = 0.02      # 营运现金 ≈ 2% 营收，其余视为超额现金
+DEFAULT_TAX_RATE = 0.25          # 法定税率，利润总额非正时回退
+TAX_RATE_BOUNDS = (0.0, 0.40)
+COST_OF_DEBT_BOUNDS = (0.02, 0.12)
+DEFAULT_COST_OF_DEBT = 0.045
+
+# 有息负债的构成。租赁负债计入（新准则下经营租赁上表，不计会低估重资产零售/航空的杠杆）。
+DEBT_FIELDS = ("SHORT_LOAN", "SHORT_BOND_PAYABLE", "NONCURRENT_LIAB_1YEAR",
+               "LONG_LOAN", "BOND_PAYABLE", "LEASE_LIAB", "PERPETUAL_BOND_PAYBALE")
+# 折旧摊销四项。**不含 `OILGAS_BIOLOGY_DEPR`／`IR_DEPR`**——实测海螺水泥 2024
+# `FA_IR_DEPR`=7,214,312,412 恰等于 `OILGAS`(7,210,685,487)+`IR_DEPR`(3,626,925)，
+# 即 `FA_IR_DEPR` 是**父项合计**，再加子项就是重复计。
+DEPR_FIELDS = ("FA_IR_DEPR", "IA_AMORTIZE", "LPE_AMORTIZE", "USERIGHT_ASSET_AMORTIZE")
+# 经营性营运资金。用资产负债表存量差分而非现金流量表的加回项——后者在并购年份会混入
+# 合并范围变动，存量差分同样会但至少口径单一、可复核。
+WC_ASSET_FIELDS = ("INVENTORY", "ACCOUNTS_RECE", "NOTE_ACCOUNTS_RECE", "NOTE_RECE",
+                   "PREPAYMENT", "CONTRACT_ASSET")
+WC_LIAB_FIELDS = ("ACCOUNTS_PAYABLE", "NOTE_ACCOUNTS_PAYABLE", "NOTE_PAYABLE",
+                  "ADVANCE_RECEIVABLES", "CONTRACT_LIAB", "TAX_PAYABLE",
+                  "STAFF_SALARY_PAYABLE")
+
+FINANCIAL_TABLE_PREFIXES = ("RPT_F10_FINANCE_B", "RPT_F10_FINANCE_S", "RPT_F10_FINANCE_I")
+
+
+def _num(value) -> float | None:
+    if value in (None, "", "None"):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _sum(row: dict, fields) -> float:
+    """字段求和，缺失记 0。**缺失与零在报表里同义**（东财对未披露项留空）。"""
+    return sum(_num(row.get(f)) or 0.0 for f in fields)
+
+
+@dataclass
+class RoicYear:
+    """单个财年的 ROIC 口径输入。全部为**总额**（元），不是每股。"""
+    period: str
+    notice_date: str
+    ebit: float | None = None
+    tax_rate: float | None = None
+    nopat: float | None = None
+    invested_capital: float | None = None
+    interest_debt: float = 0.0
+    excess_cash: float = 0.0
+    minority_equity: float = 0.0
+    total_equity: float | None = None
+    parent_equity: float | None = None
+    revenue: float | None = None
+    capex: float = 0.0
+    dep_amort: float = 0.0
+    working_capital: float | None = None
+    cfo: float | None = None
+    interest_expense: float = 0.0
+    is_financial: bool = False
+
+
+def load_statements(codes: set[str] | None = None,
+                    stmt_dir: Path = STMT_DIR) -> dict[str, dict[str, RoicYear]]:
+    """读三大报表 → `{代码: {财年: RoicYear}}`。缺表即返回空，由调用方降级。"""
+    raw: dict[str, dict[str, dict[str, dict]]] = {}
+    for kind in ("balance", "income", "cashflow"):
+        path = stmt_dir / f"{kind}.csv"
+        if not path.exists():
+            return {}
+        with path.open(encoding="utf-8-sig") as handle:
+            for row in csv.DictReader(handle):
+                code = (row.get("security_code") or "").zfill(6)
+                if codes is not None and code not in codes:
+                    continue
+                period = (row.get("REPORT_DATE") or "")[:10]
+                if not period.endswith("-12-31"):
+                    continue
+                raw.setdefault(code, {}).setdefault(period, {})[kind] = row
+
+    out: dict[str, dict[str, RoicYear]] = {}
+    for code, periods in raw.items():
+        for period, parts in periods.items():
+            bal, inc, cfl = parts.get("balance"), parts.get("income"), parts.get("cashflow")
+            if not (bal and inc):
+                continue
+            # 公告日取三表最晚——三表同属一份年报，但东财偶有单表 notice 缺失/提前
+            notice = max((p.get("NOTICE_DATE") or "")[:10] for p in parts.values())
+            if not notice:
+                continue
+            year = RoicYear(period=period, notice_date=notice)
+            year.is_financial = any(
+                (p.get("org_table") or "").startswith(FINANCIAL_TABLE_PREFIXES)
+                for p in parts.values())
+            year.revenue = _num(inc.get("TOTAL_OPERATE_INCOME"))
+            year.total_equity = _num(bal.get("TOTAL_EQUITY"))
+            year.parent_equity = _num(bal.get("TOTAL_PARENT_EQUITY"))
+            year.minority_equity = _num(bal.get("MINORITY_EQUITY")) or 0.0
+            year.interest_debt = _sum(bal, DEBT_FIELDS)
+            # 利息费用：新准则单列 `FE_INTEREST_EXPENSE`，早年只有财务费用净额
+            year.interest_expense = (_num(inc.get("FE_INTEREST_EXPENSE"))
+                                     or max(_num(inc.get("FINANCE_EXPENSE")) or 0.0, 0.0))
+            total_profit = _num(inc.get("TOTAL_PROFIT"))
+            income_tax = _num(inc.get("INCOME_TAX"))
+            if total_profit is not None:
+                year.ebit = total_profit + year.interest_expense
+                if total_profit > 0 and income_tax is not None:
+                    rate = income_tax / total_profit
+                    lo, hi = TAX_RATE_BOUNDS
+                    year.tax_rate = min(max(rate, lo), hi)
+                else:
+                    year.tax_rate = DEFAULT_TAX_RATE
+                year.nopat = year.ebit * (1 - year.tax_rate)
+            cash = (_num(bal.get("MONETARYFUNDS")) or 0.0) \
+                + (_num(bal.get("TRADE_FINASSET")) or 0.0) \
+                + (_num(bal.get("TRADE_FINASSET_NOTFVTPL")) or 0.0)
+            operating_cash = OPERATING_CASH_RATIO * (year.revenue or 0.0)
+            year.excess_cash = max(0.0, cash - operating_cash)
+            if year.total_equity is not None:
+                ic = year.interest_debt + year.total_equity - year.excess_cash
+                year.invested_capital = ic if ic > 0 else None
+            year.working_capital = _sum(bal, WC_ASSET_FIELDS) - _sum(bal, WC_LIAB_FIELDS)
+            if cfl:
+                year.capex = _num(cfl.get("CONSTRUCT_LONG_ASSET")) or 0.0
+                year.dep_amort = _sum(cfl, DEPR_FIELDS)
+                year.cfo = _num(cfl.get("NETCASH_OPERATE"))
+            out.setdefault(code, {})[period] = year
+    return out
+
+
+def years_before(years: dict[str, RoicYear], available_at: str, count: int) -> list[RoicYear]:
+    """公告日 ≤ `available_at` 的最近 `count` 个财年，**降序**（与建带模块同规）。"""
+    usable = [y for y in years.values() if y.notice_date and y.notice_date <= available_at]
+    return sorted(usable, key=lambda y: y.period, reverse=True)[:count]
+
+
+def roic_of(year: RoicYear, prev: RoicYear | None) -> float | None:
+    """`NOPAT / 平均投入资本`。首年无上期时退回期末投入资本。"""
+    if year.nopat is None or year.invested_capital is None:
+        return None
+    base = year.invested_capital
+    if prev is not None and prev.invested_capital:
+        base = (year.invested_capital + prev.invested_capital) / 2
+    return year.nopat / base if base > 0 else None
+
+
+def normalized_roic(history: list[RoicYear]) -> float | None:
+    """近若干年 ROIC 的中位——与建带模块的归一化 ROE 同规（不外推单年低谷/高点）。"""
+    ordered = sorted(history, key=lambda y: y.period)
+    values = [r for r in (roic_of(y, ordered[i - 1] if i else None)
+                          for i, y in enumerate(ordered)) if r is not None]
+    return statistics.median(values) if values else None
+
+
+def incremental_roic(history: list[RoicYear]) -> float | None:
+    """`ΔNOPAT / ΔIC`——**新投的一块钱多赚回多少**（框架 §4：比存量 ROIC 更要紧）。
+
+    投入资本未净增长时无定义（回购/减值把 IC 打薄，此时比值的符号没有经济含义）。
+    """
+    ordered = sorted(history, key=lambda y: y.period)
+    if len(ordered) < 2:
+        return None
+    new, old = ordered[-1], ordered[0]
+    if None in (new.nopat, old.nopat, new.invested_capital, old.invested_capital):
+        return None
+    delta_ic = new.invested_capital - old.invested_capital
+    if delta_ic <= 0:
+        return None
+    return (new.nopat - old.nopat) / delta_ic
+
+
+def reinvestment_rate(history: list[RoicYear]) -> float | None:
+    """`(资本开支 − 折旧摊销 + ΔWC) / NOPAT`，按窗口合计而非单年（单年噪声极大）。"""
+    ordered = sorted(history, key=lambda y: y.period)
+    if len(ordered) < 2:
+        return None
+    nopat_sum = sum(y.nopat for y in ordered[1:] if y.nopat is not None)
+    if nopat_sum <= 0:
+        return None
+    capex_sum = sum(y.capex for y in ordered[1:])
+    depr_sum = sum(y.dep_amort for y in ordered[1:])
+    delta_wc = 0.0
+    if ordered[0].working_capital is not None and ordered[-1].working_capital is not None:
+        delta_wc = ordered[-1].working_capital - ordered[0].working_capital
+    return (capex_sum - depr_sum + delta_wc) / nopat_sum
+
+
+def cost_of_debt(history: list[RoicYear]) -> float:
+    """`利息费用 / 平均有息负债`，夹在 [2%, 12%]。无债或不可算时回退 4.5%。"""
+    ordered = sorted(history, key=lambda y: y.period)
+    interest = sum(y.interest_expense for y in ordered[1:])
+    debts = [y.interest_debt for y in ordered if y.interest_debt > 0]
+    if not debts or interest <= 0 or len(ordered) < 2:
+        return DEFAULT_COST_OF_DEBT
+    avg_debt = statistics.mean(debts)
+    if avg_debt <= 0:
+        return DEFAULT_COST_OF_DEBT
+    lo, hi = COST_OF_DEBT_BOUNDS
+    return min(max(interest / (len(ordered) - 1) / avg_debt, lo), hi)
+
+
+def wacc(cost_equity: float, cost_debt: float, tax_rate: float,
+         equity: float, debt: float) -> float:
+    """`(E·re + D·rd·(1−t)) / (E+D)`，**账面权重**（用市值会循环，见模块头）。"""
+    total = equity + debt
+    if total <= 0 or equity <= 0:
+        return cost_equity
+    return (equity * cost_equity + debt * cost_debt * (1 - tax_rate)) / total
