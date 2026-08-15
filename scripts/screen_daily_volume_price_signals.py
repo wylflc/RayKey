@@ -1178,6 +1178,10 @@ SEC97_MAX_CORR = 0.85          # §9.7.1，252 日日收益率皮尔逊相关上
 SEC97_SCAN_DEPTH = 40          # §9.7.2 第 3 步：相关性过滤时最多下扫多少名
 SEC97_TRANCHE_PCT = 0.01       # §9.7.1「单次买入 = 当日净资产 × 1.0%」
 SEC97_LOT = 100                # A 股一手
+SEC97_POSITION_CAP = 0.15      # §9.7.1「单票上限」，v3.01 立；**只挡加仓、不强制减持**
+# §9.7.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
+# 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
+SEC97_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
 BANK_RISK_PREMIUM = 0.02       # §12.31 股利折现的风险溢价
 
 
@@ -1276,18 +1280,48 @@ def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
                            if close and intrinsic and intrinsic > 0 else "")
 
 
-def section97_entry_plan(rows: list[dict[str, object]], nav: float) -> dict[str, object]:
+def load_holdings() -> dict[str, float]:
+    """{代码: 持股数}。读不到就返回空——**空 dict 会让本函数退回 v3.00 口径**，
+    故调用方必须把「有没有读到持仓」显示出来，不能静默。"""
+    out: dict[str, float] = {}
+    if not SEC97_HOLDINGS.exists():
+        return out
+    with SEC97_HOLDINGS.open(newline="", encoding="utf-8-sig") as fh:
+        for r in csv.DictReader(fh):
+            shares = to_float(r.get("current_shares"))
+            if shares and shares > 0:
+                out[str(r["security_code"]).zfill(6)] = shares
+    return out
+
+
+def section97_entry_plan(rows: list[dict[str, object]], nav: float,
+                         holdings: dict[str, float] | None = None) -> dict[str, object]:
     """§9.7.2 第 3、5 步：按 `P/V` 升序、去相关、逐个买一档。
 
     §9.7.3 比例冷却：一手金额 > 一档时买一手，其后跳过 `round(x)−1` 次合格机会
     （本函数是单日快照，故只记 `cooldown_skips` 供次日跑批读，不在此处消费）。
+
+    **两条与持仓有关的规则（v3.01/v3.02，OI-058／OI-059）**：
+    - **走势条件分新旧**：新建仓须 `收盘 > MA20 > MA60`；**已有持仓的加仓只须 `MA20 > MA60`**。
+    - **单票上限**：买入后该票市值 ÷ N 超过 `SEC97_POSITION_CAP` 即跳过、顺位补下一名；
+      **只挡加仓，已有持仓因上涨越限不回削**。
+    `holdings` 为空时两条都退化为原口径，故调用方须把「读到几只持仓」打出来。
     """
+    holdings = holdings or {}
     tranche = nav * SEC97_TRANCHE_PCT
+
+    def trend_ok(r) -> bool:
+        c, m20, m60 = to_float(r.get("close")), to_float(r.get("ma20")), to_float(r.get("ma60"))
+        if not (c and m20 and m60) or not m20 > m60:
+            return False
+        if str(r["security_code"]).zfill(6) in holdings:
+            return True                      # 已持仓：只看均线排列
+        return c > m20                       # 新建仓：还要站上 MA20
+
     eligible = [
         r for r in rows
         if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC97_BUY_LINE
-        and to_float(r.get("close")) and to_float(r.get("ma20")) and to_float(r.get("ma60"))
-        and to_float(r["close"]) > to_float(r["ma20"]) > to_float(r["ma60"])
+        and trend_ok(r)
     ]
     eligible.sort(key=lambda r: r["model_pv"])
     n_cheap = sum(1 for r in rows
@@ -1308,16 +1342,22 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float) -> dict[str,
             continue
         picked.append(cand)
 
-    cash, plan = nav, []
+    cash, plan, capped = nav, [], []
     for cand in picked:
         price = to_float(cand.get("close")) or 0.0
         if price <= 0:
             continue
+        code = str(cand["security_code"]).zfill(6)
         lot_amount = price * SEC97_LOT
         lots = int(tranche // lot_amount) if lot_amount <= tranche else 1
         cooldown = 0 if lot_amount <= tranche else round(lot_amount / tranche) - 1
         amount = lots * lot_amount
         if lots <= 0 or amount > cash:
+            continue
+        # 单票上限：**按「买入后」的市值判**，与回测 `--position-cap` 逐字同义。
+        held_value = holdings.get(code, 0.0) * price
+        if nav > 0 and (held_value + amount) / nav > SEC97_POSITION_CAP:
+            capped.append((cand, held_value / nav))
             continue
         cash -= amount
         plan.append({
@@ -1333,16 +1373,32 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float) -> dict[str,
             "amount": round(amount, 2),
             "cooldown_skips": cooldown,
         })
-    return {"plan": plan, "dropped": dropped, "eligible": eligible,
-            "n_cheap": n_cheap, "cash": cash, "tranche": tranche}
+    return {"plan": plan, "dropped": dropped, "eligible": eligible, "capped": capped,
+            "n_cheap": n_cheap, "cash": cash, "tranche": tranche,
+            "n_held": len(holdings),
+            "n_addon": sum(1 for r in eligible
+                           if str(r["security_code"]).zfill(6) in holdings
+                           and not (to_float(r.get("close")) or 0) > (to_float(r.get("ma20")) or 0))}
 
 
 def report_section97(result: dict[str, object], nav: float, out_path: Path) -> None:
     plan, dropped = result["plan"], result["dropped"]
     invested = nav - result["cash"]
     print(f"\n§9.7 机械执行：`P/V ≤ {SEC97_BUY_LINE}` 的 {result['n_cheap']} 只；"
-          f"再过 `收>MA20>MA60` 的 **{len(result['eligible'])} 只**；"
+          f"再过走势条件的 **{len(result['eligible'])} 只**"
+          f"（新建仓 `收>MA20>MA60`；**已持仓只须 `MA20>MA60`**，其中 {result['n_addon']} 只"
+          f"是靠这条放宽进来的回踩加仓）；"
           f"相关性 >{SEC97_MAX_CORR} 剔除 {len(dropped)} 只 → 买入 {len(plan)} 只")
+    if result["n_held"] == 0:
+        print("  ⚠ **没读到任何持仓**（data/processed/a_share_holdings.csv 缺失或为空）"
+              "——单票上限与加仓放宽两条都会退回旧口径，买入计划不可直接照做")
+    else:
+        print(f"  持仓 {result['n_held']} 只已载入｜单票上限 {SEC97_POSITION_CAP:.0%}"
+              f"（只挡加仓、不强制减持）")
+    for cand, w in result["capped"]:
+        print(f"  [单票上限挡下] {cand.get('security_name','')} "
+              f"P/V {cand['model_pv']:.2f}｜现持仓已占净资产 {w:.1%}，再买一档将越过 "
+              f"{SEC97_POSITION_CAP:.0%}")
     print(f"  一档 {result['tranche'] / 1e4:,.2f} 万｜投入 {invested / 1e4:,.1f} 万"
           f"（仓位 {invested / nav * 100:.1f}%）｜余现金 {result['cash'] / 1e4:,.1f} 万")
     for i, p in enumerate(plan, 1):
@@ -1571,7 +1627,8 @@ def main() -> int:
     # §9.7 的买入计划（`attach_model_pv` 已在落盘前跑过，见上文）。
     if section97_ready:
         if args.nav > 0:
-            report_section97(section97_entry_plan(rows, args.nav), args.nav, args.plan_out)
+            report_section97(section97_entry_plan(rows, args.nav, load_holdings()),
+                             args.nav, args.plan_out)
         else:
             print("§9.7 未给 --nav，只算 P/V 不出买入计划（一档以净资产为基数）")
     else:

@@ -1781,6 +1781,12 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
     r5g = sorted(r[1] for r in roll5)
     r5d = sorted(r[2] for r in roll5)
     r5c = sorted(r[3] for r in roll5 if r[3] == r[3])
+    # 滚动 10 年（用户 2026-08-15）：**只有 2009-11 那条长跑够长**，
+    # 23 个起点里 2016-11 之后的起点一个 10 年窗口都凑不出，故该列在多数臂上是空的
+    # ——**空不等于差，读表时不要把 nan 当成 0**。
+    roll10 = rolling_calmar(curve, years=10)
+    r10g = sorted(r[1] for r in roll10)
+    r10d = sorted(r[2] for r in roll10)
     # 逐年：**只取完整自然年**。起点在 11 月、终点在 8 月，首尾两个残年会把
     # 「两个月的涨幅」当成一年的年化混进中位数里，那是口径错误不是业绩。
     yearly = period_returns(curve, key=lambda d: d[:4])
@@ -1803,6 +1809,11 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "滚动5年Calmar中位": statistics.median(r5c) if r5c else float("nan"),
             "滚动5年为负的窗口占比": (sum(1 for g in r5g if g < 0)/len(r5g)) if r5g else float("nan"),
             "滚动5年窗口数": len(roll5),
+            "滚动10年年化中位": statistics.median(r10g) if r10g else float("nan"),
+            "滚动10年年化P10": r10g[len(r10g)//10] if r10g else float("nan"),
+            "滚动10年回撤中位": statistics.median(r10d) if r10d else float("nan"),
+            "滚动10年为负的窗口占比": (sum(1 for g in r10g if g < 0)/len(r10g)) if r10g else float("nan"),
+            "滚动10年窗口数": len(roll10),
             "逐年收益中位": statistics.median(yg) if yg else float("nan"),
             "逐年收益均值": statistics.fmean(yg) if yg else float("nan"),
             "逐年最差": yg[0] if yg else float("nan"),
