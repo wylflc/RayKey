@@ -821,7 +821,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         quota_members: dict | None = None, quota_pct: float = 0.0,
         quota_swappable: bool = False,
         gate: str = "pv", buy_pct: float = 0.05, sell_pct: float = 0.60,
-        pct_stop_when_rich: bool = False) -> dict:
+        pct_stop_when_rich: bool = False,
+        addon_trend: str = "full", no_value_sell: bool = False,
+        swap_require_weak: bool = False, swap_weak_ma: int = 20) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -1191,7 +1193,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 sell_count += 1
                 stats[f"贵+破MA{liquidate_ma}·一键清仓"] += 1
                 continue
-            if is_rich(code, ratio) and sell_trend_ma:
+            # `no_value_sell`（用户 2026-08-15：「删除超过 P/V 之后的减仓规则」）：
+            # **整条估值减持路径关闭**（§9.7.2 第 4 步第①条）。此后卖出只剩三条：
+            # ⓪建仓日均线止损、②出 §5 名单逐步清仓、③换仓。
+            # **注意现行减持线 2.50 十八年只触发 9 次**，故这条的直接影响本就很小；
+            # 真正的意义是把「贵了要不要减」这个判断从机械规则里彻底移除。
+            if not no_value_sell and is_rich(code, ratio) and sell_trend_ma:
                 sig_close = today.get(code, (None,))[0]
                 ma_s = mas.get(code, {}).get(sig_day, {})
                 if not sig_close or not all(w in ma_s for w in sell_trend_ma):
@@ -1200,7 +1207,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if not all(a < b for a, b in zip(seq, seq[1:])):
                     stats["减持被走势闸门挡下"] += 1
                     continue
-            if is_rich(code, ratio):
+            if is_rich(code, ratio) and not no_value_sell:
                 # `sell_full`（用户 2026-08-12）：触发即整仓卖出，不按一档减。
                 # 与 `--dev-sell-min` / `--liquidate-ma` 的区别是它仍只看 P/V 与走势闸门，
                 # 不另加均线条件——即「符合卖出条件就一次性卖完」的直译。
@@ -1297,10 +1304,21 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # **注意容差不消除边界，只是把边界挪个位置**：新线附近照样有票在盘中与收盘之间翻转。
             # 本参数能回答的是「放松到这个程度策略本身还成不成立」，不是「能不能消除时点差」。
             k = 1.0 - trend_tol
-            eligible = [r for r in eligible
-                        if (ma := mas.get(r[0], {}).get(sig_day)) and all(w in ma for w in trend_ma)
-                        and r[1] > ma[trend_ma[0]] * k
-                        and (len(trend_ma) < 2 or ma[trend_ma[0]] > ma[trend_ma[1]] * k)]
+            # `addon_trend="ma-only"`（用户 2026-08-15）：**已有持仓的加仓放宽走势条件**——
+            # 只要 `MA20 > MA60`（趋势还在）就继续定投，不再要求 `收盘 > MA20`。
+            # 新建仓不受影响，仍须 `收盘 > MA20 > MA60`。
+            # 语义是「建仓那一刻要确认趋势成立，此后回踩不打断定投」；
+            # **它必然放大回撤**——回踩途中继续投钱，而止损仍是唯一的截断（见 §9.7.5）。
+            def _trend_ok(r):
+                ma = mas.get(r[0], {}).get(sig_day)
+                if not ma or not all(w in ma for w in trend_ma):
+                    return False
+                if len(trend_ma) >= 2 and not ma[trend_ma[0]] > ma[trend_ma[1]] * k:
+                    return False
+                if addon_trend == "ma-only" and r[0] in portfolio.lots:
+                    return True                      # 已持仓：只看均线排列，不看价格位置
+                return r[1] > ma[trend_ma[0]] * k
+            eligible = [r for r in eligible if _trend_ok(r)]
         if entry_filter == "stabilized" and lows is not None:
             eligible = [r for r in eligible
                         if stabilized(lows.get(r[0], {}), day_index[0].get(r[0], []),
@@ -1407,10 +1425,18 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # 分位口径下换仓比的是**分位**，`swap_margin` 的单位随之变成分位点
                 # （0.15 = 15 个分位点），不再是 `P/V` 的差值。历史不足而算不出分位的持仓
                 # **不作为卖出源**——判不了贵贱就不该被判成「最贵的那个」而被换掉。
+                # `swap_require_weak`（用户 2026-08-15）：**只换走势已经走坏的持仓**——
+                # 卖出源须同时满足 `收盘 < MA20`。动机是 §12.56.2 那条实测：
+                # 换仓是终结长期赢家的唯一路径，而「更便宜的候选出现」与「这只该卖」是两件事。
+                # 加上这个条件后，涨势中的持仓不会仅仅因为排名靠后就被换掉。
+                # **判据用信号日的收盘与均线**，与买入端、减持闸门同源。
                 held = [((pcts[c] if gate == "self-pct" else
                           (scores.get(c, today[c][2]) if rank_mode != "pv" else today[c][2])), c)
                         for c in portfolio.lots if c in today
                         and (gate != "self-pct" or c in pcts)
+                        and (not swap_require_weak
+                             or ((_m := mas.get(c, {}).get(sig_day, {})).get(swap_weak_ma) is not None
+                                 and today[c][0] < _m[swap_weak_ma]))
                         and c not in quota_hold_today
                         and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
                 if not held:
@@ -1946,6 +1972,18 @@ def main() -> int:
                         help="self-pct 下的卖出闸：分位 ≥ Q 才允许减持/换出/止损")
     parser.add_argument("--pct-stop-when-rich", action="store_true",
                         help="止损只对分位 ≥ --sell-pct 的仓位生效，即「抄底之后不止损」")
+    # ---- 用户 2026-08-15 第二批：加仓放宽、删估值减持、换仓加走势条件 ----
+    parser.add_argument("--addon-trend", choices=("full", "ma-only"), default="full",
+                        help="full=加仓与新建仓同条件（缺省）；"
+                             "ma-only=**已有持仓**只要 MA20>MA60 就继续定投，不再要求 收盘>MA20")
+    parser.add_argument("--no-value-sell", action="store_true",
+                        help="删掉「`P/V` 过减持线就减一档」整条路径（§9.7.2 第 4 步第①条）。"
+                             "此后卖出只剩：建仓日均线止损、出名单清仓、换仓")
+    parser.add_argument("--swap-require-weak", action="store_true",
+                        help="换仓的卖出源须同时 `收盘 < MA{--swap-weak-ma}`，"
+                             "即只换走势已走坏的持仓，涨势中的不因排名靠后被换掉")
+    parser.add_argument("--swap-weak-ma", type=int, default=20,
+                        help="配 --swap-require-weak 用的均线周期，缺省 20")
     parser.add_argument("--hold-strong", choices=("off", "swap", "sell", "both"), default="off",
                         help="强势多头排列的持仓豁免：swap=不被换出／sell=不减持／both=两者")
     parser.add_argument("--hold-strong-ma", nargs="+", type=int, default=[20, 60, 120, 240],
@@ -2150,6 +2188,9 @@ def main() -> int:
                      + (f"_dsell{args.dev_sell_min:g}" if args.dev_sell_min else "")
                      + (f"_hs{args.hold_strong}{len(args.hold_strong_ma)}" if args.hold_strong != "off" else "")
                      + (f"_{args.rank_mode[:1]}{args.quantile_window or 'all'}" if args.rank_mode != "pv" else "")
+                     + ("_addma" if args.addon_trend == "ma-only" else "")
+                     + ("_nvs" if args.no_value_sell else "")
+                     + (f"_swk{args.swap_weak_ma}" if args.swap_require_weak else "")
                      + (f"_q{args.quantile_window or 'all'}b{args.buy_pct:g}"
                         + (f"s{args.sell_pct:g}" if args.gate == "self-pct" else "A")
                         + ("nr" if args.pct_stop_when_rich else "")
@@ -2216,7 +2257,10 @@ def main() -> int:
                          quota_members=quota, quota_pct=args.quota_pct,
                          quota_swappable=args.quota_swappable,
                          gate=args.gate, buy_pct=args.buy_pct, sell_pct=args.sell_pct,
-                         pct_stop_when_rich=args.pct_stop_when_rich)
+                         pct_stop_when_rich=args.pct_stop_when_rich,
+                         addon_trend=args.addon_trend, no_value_sell=args.no_value_sell,
+                         swap_require_weak=args.swap_require_weak,
+                         swap_weak_ma=args.swap_weak_ma)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
