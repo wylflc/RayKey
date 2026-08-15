@@ -98,14 +98,27 @@ def report(path: Path, title: str) -> None:
     """对照表。Δ 相对 `BASE` 臂，按 §12.1 同时给中位与符号数——单看中位会把掷硬币读成效应。"""
     arms: dict[str, dict[str, dict]] = collections.defaultdict(dict)
     order: list[str] = []
+    # 跑挂的运行以 `标签|起点|ERR`（或 `EMPTY`）落盘。**必须在这里数出来**——
+    # 下面按字段数过滤会把它们丢掉，于是**整条臂全挂时它连一行都没有，表里完全不出现**，
+    # 短臂告警（比较起点数）也发现不了。2026-08-15 实测撞到一次：`--stop-ma 120` 不在
+    # argparse 的 choices 里，23 次运行全部退出，而对照表看上去一切正常。
+    failed: dict[str, int] = collections.Counter()
     for line in path.read_text(encoding="utf-8").splitlines():
         parts = line.split("|")
+        if len(parts) == 3 and parts[2] in ("ERR", "EMPTY"):
+            failed[parts[0]] += 1
         if len(parts) != 2 + len(FIELDS):
             continue
         label, since = parts[0], parts[1]
         if label not in order:
             order.append(label)
         arms[label][since] = dict(zip(FIELDS, map(float, parts[2:])))
+    if failed:
+        dead = [k for k in failed if k not in arms]
+        print("⚠ 有运行跑挂了：" + "、".join(f"{k} {v} 次" for k, v in failed.items())
+              + (f"\n  **其中 {'、'.join(dead)} 一行都没跑出来，下表里完全不会出现**"
+                 "——先单跑一次看报错（多半是参数拼错或不在 choices 里），不要以为这些臂没测。"
+                 if dead else ""), file=sys.stderr)
     if "BASE" not in arms:
         print("配置文件里没有 BASE 臂，无法算 Δ", file=sys.stderr)
         return
