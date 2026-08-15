@@ -406,6 +406,20 @@ def load_universe(path: Path) -> list[tuple[str, set[str]]]:
     return sorted(by_date.items())
 
 
+def load_quota(path: Path) -> dict[str, list[tuple[str, str]]]:
+    """配置通道的成员区间：{代码: [(起, 止)]}。与 `--universe-file` 同格式，`effective_to` 可空。
+
+    与 `load_universe` 的差别是这里要按**代码**查「今天算不算成员」，而不是按日期取整档名单，
+    故存成区间而不是逐档快照。
+    """
+    out: dict[str, list[tuple[str, str]]] = defaultdict(list)
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            out[row["security_code"].zfill(6)].append(
+                (row["effective_from"], row.get("effective_to") or "9999-12-31"))
+    return dict(out)
+
+
 def load_benchmark() -> dict[str, float]:
     if not BENCHMARK.exists():
         return {}
@@ -803,7 +817,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         cluster_swap: bool = False, cluster_delta: float = 0.85,
         cluster_min_upside: float = 0.20, swap_partial: bool = False,
         lot_size: int = 0, rebuy: str = "off", ledger: list | None = None,
-        min_lot_cooldown: int = 0, lot_ratio_cooldown: bool = False) -> dict:
+        min_lot_cooldown: int = 0, lot_ratio_cooldown: bool = False,
+        quota_members: dict | None = None, quota_pct: float = 0.0,
+        quota_swappable: bool = False) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -1166,6 +1182,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
         # ---- 买入：合格集为空则持币（用户 2026-08-08 裁定），**不硬凑前十**
         pool = states[sig_day] if members is None else [r for r in states[sig_day] if r[0] in members]
+        # 配置通道的当日成员（见下方买入段）。**必须在换仓之前算好**——换仓要用它把通道持仓
+        # 排除在卖出源之外，而换仓在买入之前跑。
+        quota_today: set[str] = set()
+        if quota_pct > 0 and quota_members:
+            quota_today = {c for c, spans in quota_members.items()
+                           if any(a <= sig_day < b for a, b in spans)}
+        # 拆解用：`quota_swappable` 打开后通道持仓照样可被换仓卖出，
+        # 于是「通道买入」与「通道免换仓」两个机制可以单独计价（用户 2026-08-15 那轮的必需检验）。
+        quota_hold_today = set() if quota_swappable else quota_today
         # `rank_by_upside=False`：空间只作**阈值**不作排序，合格集内按代码排序（中性顺序），
         # 即「只要空间够 + 走势好就买」，不再优先买最便宜的。用户 2026-08-09 提出的对照口径。
         def _key(r):
@@ -1317,8 +1342,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 blocked = portfolio.cash < (lump_sum or budget) or len(portfolio.lots) >= max_positions
                 if not blocked:
                     break
+                # 配置通道的持仓**不作为换仓的卖出源**——否则通道刚买进来就会被主排序换掉，
+                # 额度形同虚设（§12.56.2 实测：换仓正是终结长期赢家的那条路径）。
                 held = [(scores.get(c, today[c][2]) if rank_mode != "pv" else today[c][2], c)
                         for c in portfolio.lots if c in today
+                        and c not in quota_hold_today
                         and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
                 if not held:
                     break
@@ -1393,9 +1421,41 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 chosen.append(r)
             eligible = chosen
 
+        # ---- 配置通道（用户 2026-08-15 指令；OI-046 末段那条唯一未实测的方向）----
+        # 给一批「白马/成长」单开一条**与 `P/V` 排序并行**的固定额度：成员只要**走势闸门开着**
+        # 就可以买，**不要求过买入线、不进主排序、不受相关性过滤**，直到该组市值占净资产
+        # 达到 `quota_pct` 为止；额度用满后成员回落为普通候选。
+        # **这等于一个组合里跑两套逻辑**，故只在显式给 `--quota-pct` 时启用（缺省关闭）。
+        #
+        # 实现上**不另写一套下单逻辑**——只把够格的成员插到 `eligible` 最前面，整手取整、
+        # 比例冷却、单票上限、建仓日止损、流水记账全部沿用下面那个循环。多写一套的风险
+        # 远大于收益（§15.2 第 3 条：同一件事写两遍，迟早两边不一样）。
+        quota_room = 0.0
+        if quota_today:
+            held = sum(lot.shares * marks[c] for c, lot in portfolio.lots.items()
+                       if c in quota_today and c in marks)
+            quota_room = equity * quota_pct - held
+            if quota_room > 0:
+                k = 1.0 - trend_tol
+                picks = [r for r in pool if r[0] in quota_today
+                         and (ma := mas.get(r[0], {}).get(sig_day))
+                         and all(w in ma for w in trend_ma)
+                         and r[1] > ma[trend_ma[0]] * k
+                         and (len(trend_ma) < 2 or ma[trend_ma[0]] > ma[trend_ma[1]] * k)]
+                picks.sort(key=lambda r: r[3])          # 组内仍按 P/V 升序，只是不与主池竞争
+                already = {r[0] for r in picks}
+                eligible = picks + [r for r in eligible if r[0] not in already]
+                stats["配置通道·当日候选"] += len(picks)
+
         for code, close, value, ratio in eligible[:max_positions]:
             if buying_power(portfolio, credit_limit) <= 0:
                 break
+            # 配置通道的额度用完就不再按通道买；该成员此后只能走普通路径（即需过买入线）。
+            if code in quota_today:
+                if quota_room <= 0 and ratio > buy_line(code):
+                    continue
+            elif quota_pct > 0 and ratio > buy_line(code):
+                continue                      # 通道把成员插到了队首，非成员仍须过买入线
             # 走势组默认一笔建仓（总资产 ÷ 持仓上限）且不加仓；`trend_tranche` 打开后改为
             # **与估值组同一套定投**——只要当日仍满足「P/V 合格 且 收盘>MA20>MA60」就继续买入
             # 总资产 × x%。用户 2026-08-09：「走势满足要求的情况下分批进行建仓」。
@@ -1477,6 +1537,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             lot.shares += shares
             lot.invested += amount
             lot.buys += 1
+            if code in quota_today:
+                quota_room -= amount          # 额度按**买入金额**扣，与上面按市值算余额同一把尺
+                stats["配置通道·成交"] += 1
             fee = trade_fee(amount, day, "buy")
             draw_credit(portfolio, amount + fee, credit_limit)   # 现金不足即动用授信
             portfolio.cash -= amount + fee
@@ -1758,6 +1821,14 @@ def main() -> int:
     parser.add_argument("--universe-file", type=Path,
                         help="时点股票库（build_point_in_time_universe.py 的产出）。"
                              "给了它就只在当期成员里选股，移出的持仓逐步清仓")
+    parser.add_argument("--quota-file", type=Path,
+                        help="配置通道的成员区间（与 --universe-file 同格式）。"
+                             "配 --quota-pct 使用；OI-046 末段那条「不经由 P/V 排序的独立配置通道」")
+    parser.add_argument("--quota-pct", type=float, default=0.0, metavar="P",
+                        help="配置通道占净资产的比例，如 0.20。成员只要走势闸门开着就买、"
+                             "不要求过买入线、不进主排序、不被换仓卖出。0=关闭（缺省）")
+    parser.add_argument("--quota-swappable", action="store_true",
+                        help="配置通道的持仓照常可被换仓卖出（只保留「买得进」不保留「留得住」），用于拆解两个机制各值多少")
     parser.add_argument("--rank-mode", choices=("pv", "quantile", "ratio"), default="pv",
                         help="pv=原始 P/V 升序；quantile=历史分位（已实测底部饱和）；ratio=当前 P/V÷历史中位（连续量，端点不饱和）")
     parser.add_argument("--quantile-window", type=int, default=0,
@@ -1865,6 +1936,9 @@ def main() -> int:
 
     print(f"载入…（逐日估值状态、行情、除权除息、均线）")
     universe = load_universe(args.universe_file) if args.universe_file else None
+    quota = load_quota(args.quota_file) if args.quota_file else None
+    if args.quota_pct > 0 and not quota:
+        sys.exit("给了 --quota-pct 却没给 --quota-file：配置通道无成员，等于没开——拒绝静默跑空")
     states = load_states(args.daily_states,
                          {c for _d, m in universe for c in m} if universe else None)
     prices = load_prices({r[0] for rows in states.values() for r in rows})
@@ -1998,7 +2072,9 @@ def main() -> int:
                          cluster_min_upside=args.cluster_min_upside / 100.0,
                          swap_partial=args.swap_partial, lot_size=args.lot_size, rebuy=args.rebuy,
                          ledger=ledger, min_lot_cooldown=args.min_lot_cooldown,
-                         lot_ratio_cooldown=args.lot_ratio_cooldown)
+                         lot_ratio_cooldown=args.lot_ratio_cooldown,
+                         quota_members=quota, quota_pct=args.quota_pct,
+                         quota_swappable=args.quota_swappable)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue

@@ -103,6 +103,15 @@ def report(path: Path, title: str) -> None:
         return
     base = arms["BASE"]
     starts = sorted({s for a in arms.values() for s in a})
+    # **跑挂的运行必须喊出来**：`run_one` 对失败返回 `ERR`/`EMPTY`，那种行的字段数对不上、
+    # 在上面被静默跳过，于是该臂只剩下少数起点，表里只体现为「符号 3/15」这种不起眼的分母。
+    # 2026-08-15 实测撞到一次：8 个并发各载一份 92MB 逐日状态，K33 臂有 8 次被打挂，
+    # 差点把一个只有 15 个起点的读数当成 23 起点的结论。
+    short = {label: len(arm) for label, arm in arms.items() if len(arm) < len(starts)}
+    if short:
+        print("⚠ 以下臂的起点不全（其余起点跑挂了，读数不可与满起点的臂直接比较）："
+              + "、".join(f"{k} {v}/{len(starts)}" for k, v in short.items())
+              + "\n  → 重跑这些臂，或降低 --workers（并发过高会因内存被打挂）", file=sys.stderr)
     print(f"{title}（{len(starts)} 个起点，对照＝BASE）")
     print(f"{'配置':<14}{'Δ年化中位':>10}{'符号':>8}{'年化':>8}{'Sharpe':>8}"
           f"{'滚3回撤':>9}{'滚3Calmar':>10}{'换手':>7}{'仓位':>6}")

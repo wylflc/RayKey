@@ -737,6 +737,19 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     # 压到 `min(ROE_T, ROE0)` 后，这类公司多半会被下面的 `ROE_T > g_T` 护栏拦掉，
     # **正确地转去 §6.5.5.2 逐票建档**——低谷反转本就不该由批量模型定价。
     roe_t = min(roe_t, roe0) if roe0 > 0 else roe_t
+
+    # **公司特定的终值 ROE**（`--roe-terminal-ratio K`，2026-08-15 用户指令）：`ROE_T = K × roe0`，
+    # 取代按分档定死的常数。动机见 OI-050——`--uniform-tier L2` 下 `ROE_T` 对每家公司都是 12%，
+    # 于是终值 PE 恒为 11.04，而终值占内在价值 74%~100%，整套估值在排序上退化成 PE 筛子。
+    #
+    # **必须设下限，否则这个实验测的就不是同一件事**：低 ROE 公司在 K=1/3 下 `ROE_T` 会掉到
+    # `g_T + 2pp` 之下而被下面的护栏整条拒绝，等于「改估值」顺带「把一批公司剔出面板」，
+    # 两个变量混在一起。故这里夹在 `[g_T + min_terminal_spread, roe0]` 内并计数落地情况。
+    if getattr(args, "roe_terminal_ratio", None) and roe0 > 0:
+        floor = g_terminal + args.min_terminal_spread
+        want = args.roe_terminal_ratio * roe0
+        roe_t = min(max(want, floor), roe0)
+        EXTERNAL_STATS["ROE_T 触下限" if want < floor else "ROE_T 按比例"] += 1
     band.roe_terminal = roe_t
 
     # 终值 ROE 逼近 g_T 时派息率 `1 − g_T/ROE_T` 趋于 0，价值对分母**任意敏感**——不是
@@ -1074,6 +1087,9 @@ def main() -> int:
                         help="确认成长股：recent 相对长期锚的权重（缺省 0.6 即不变）")
     parser.add_argument("--min-terminal-spread", type=float, default=0.02,
                         help="ROE_T 须高出 g_T 的最小利差，缺省 2pp（低于此估值对分母任意敏感）")
+    parser.add_argument("--roe-terminal-ratio", type=float, metavar="K",
+                        help="终值 ROE 改按公司自身定：ROE_T = K × roe0，夹在 "
+                             "[g_T + min-terminal-spread, roe0] 内。缺省不启用（按分档常数）")
     parser.add_argument("--g0-cap", type=float, default=0.25, help="g0 上限，缺省 25%%")
     parser.add_argument("--g0-floor", type=float, default=0.0)
     parser.add_argument("--g0-shrink", type=float, default=1.0,
