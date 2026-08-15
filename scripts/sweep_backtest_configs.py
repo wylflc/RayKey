@@ -40,8 +40,8 @@ OUT_DIR = ROOT / "data/processed/backtest"
 
 # §9.7.1.2 的基准臂，逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
 #
-# **宇宙 = V4 面板**（`panel_moat_bank_v4.csv`，211 只，已按 `exit_log.csv` 的 X1/X3 退出与
-# 对称重入逐档切换在册状态；见 `docs/Ashare_backtest_log.md` §12.53~§12.54）。
+# **宇宙 = V5 面板**（`panel_moat_bank_v5.csv`，211 只）：按 `exit_log.csv` 的 X1/X3 退出与
+# 对称重入逐档切换在册状态（§12.53~§12.54），且**已修掉 15 只的入选前视**（§12.64）。
 # **三条线与 §9.7.1 的生产线同值**（v2.98 起，用户 2026-08-14 指定买 1.00 / 减 2.50 / 换仓改善 0.15；
 # 上一版基准臂为了与 V3 可比而单解过一套对齐线 1.5884/1.1044/0.1503，现已废止，不再维护两组数）。
 # **`--position-cap 0.15` 于 v3.01 并入**（用户 2026-08-15 指令）——缺省是 0 即无上限，
@@ -51,7 +51,7 @@ OUT_DIR = ROOT / "data/processed/backtest"
 # `--swap-require-weak`（换仓的卖出源须 `收盘 < MA20`）。
 # **后两者必须成对**：各自单独是 −0.37／−1.51，合起来 +2.14（20/23）、滚 5 年 +2.69（23/23）。
 # **且整组依赖单票上限**——去掉 `--position-cap` 后效应归零（−0.15／11-23），见 §12.62.3。
-# 基准读数见 `docs/000_Ashare_workflow.md` §9.7.1.2 节末的「v3.01 基准读数」——**改这里就要改那里**。
+# 基准读数见 `docs/000_Ashare_workflow.md` §9.7.1.2 的「v3.04 基准读数」——**改这里就要改那里**。
 # **换估值口径或换宇宙做 A/B 时仍须把三条线一起重解到同一合格面**（§12.30，align_buy_line.py）；
 # 改交易参数本身不需要对齐。
 BASE = (
@@ -63,7 +63,7 @@ BASE = (
     "--width 0.0 --sell-line 2.50 --swap-margin 0.15 --position-cap 0.15 "
     "--stop-ma 60 --addon-trend ma-only --no-value-sell --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
-    "--universe-file data/processed/pit_attention/panel_moat_bank_v4.csv"
+    "--universe-file data/processed/pit_attention/panel_moat_bank_v5.csv"
 )
 # 每半年一个起点，2009-11 ~ 2020-11 共 23 个（§12.39.2 以来的标准起点集）。
 DEFAULT_STARTS = [f"{y}-{m}-01" for y in range(2009, 2021) for m in ("05", "11")][1:]
@@ -74,8 +74,8 @@ FIELDS = ("年化", "最大回撤", "Sharpe", "Calmar", "平均仓位", "年均�
           "逐年收益中位", "逐年为正比例", "逐年最差", "完整自然年数")
 # 用户 2026-08-15：**判优劣不再用「某年至今的年化」**——那条读数被单个起点决定，
 # 一次崩盘落在窗口内外就能翻转结论。改用滚动 3 年 / 滚动 5 年 / 逐年三条，Δ 以滚动 3 年为首。
-# 三条口径**不可互换**：基准 2009-11 起点全期年化 12.28%，但滚动 5 年年化中位 18.01%
-# ——滚动窗口不含「从起点一路跌下去」那些段，天然高于全期 CAGR。
+# 三条口径**不可互换**，且**滚动口径只能比较不能当预期**——滚动窗口结构性低估样本开头那一段，
+# 沪深300 同法同期是 10 年中位 4.50% vs 全期 1.96%（差 2.3 倍）。见 §12.63。
 DELTA_KEYS = ("滚动3年年化中位", "滚动5年年化中位", "逐年收益中位")
 
 
