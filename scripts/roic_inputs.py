@@ -107,8 +107,15 @@ class RoicYear:
 
 
 def load_statements(codes: set[str] | None = None,
-                    stmt_dir: Path = STMT_DIR) -> dict[str, dict[str, RoicYear]]:
-    """读三大报表 → `{代码: {财年: RoicYear}}`。缺表即返回空，由调用方降级。"""
+                    stmt_dir: Path = STMT_DIR,
+                    ic_floor: float = 0.0) -> dict[str, dict[str, RoicYear]]:
+    """读三大报表 → `{代码: {财年: RoicYear}}`。缺表即返回空，由调用方降级。
+
+    `ic_floor`：投入资本下限 = `ic_floor × 总权益`。**v1 缺省 0（不启用）**。
+    动机（§12.67 锚点诊断）：`IC = 有息负债 + 权益 − 超额现金` 对现金极厚的公司会趋零，
+    ROIC 随之发散——实测格力 2018 报 **793.7%**，全池 4.0% 的带 ROIC0 > 100%，
+    恰集中在格力×40、五粮液×31、茅台×24 这批现金最厚的名字。分母趋零后
+    ROIC、增量 ROIC、ΔIC 全部失真。下限取「权益的一个比例」而非常数，保持无量纲。"""
     raw: dict[str, dict[str, dict[str, dict]]] = {}
     for kind in ("balance", "income", "cashflow"):
         path = stmt_dir / f"{kind}.csv"
@@ -164,6 +171,8 @@ def load_statements(codes: set[str] | None = None,
             year.excess_cash = max(0.0, cash - operating_cash)
             if year.total_equity is not None:
                 ic = year.interest_debt + year.total_equity - year.excess_cash
+                if ic_floor > 0:
+                    ic = max(ic, ic_floor * year.total_equity)
                 year.invested_capital = ic if ic > 0 else None
             year.working_capital = _sum(bal, WC_ASSET_FIELDS) - _sum(bal, WC_LIAB_FIELDS)
             if cfl:
@@ -213,6 +222,31 @@ def incremental_roic(history: list[RoicYear]) -> float | None:
     if delta_ic <= 0:
         return None
     return (new.nopat - old.nopat) / delta_ic
+
+
+def trailing_nopat_cagr(history: list[RoicYear], min_years: int = 3) -> float | None:
+    """窗口内**总额 NOPAT** 的年化增速，端点各取两年均值抗单年噪声。
+
+    为什么需要它（§12.67 锚点诊断）：`g = 增量ROIC × 再投资率` 只度量**资本驱动**的增长。
+    对最好的生意——提价、品牌、负营运资金——利润在净再投资约为零甚至为负时照样增长
+    （茅台 2018 窗口 RR=−16.6%、格力 −45.9%、宁德 2021 −232%），资本口径把它们的 g 判成 0，
+    于是在 2019-04 这类公认买点上把茅台/五粮液/老窖全部读成「高估」。
+    利润增长本身是资本自由增长的直接观测，两条腿取大（调用方负责）。
+
+    总额而非每股：增发/回购的稀释效应属于「每股」层，本函数量的是生意本身的增速；
+    每股修正由估值层的 BPS 基准完成。端点须为正，跨度不足 `min_years` 年返回 None。
+    """
+    ordered = [y for y in sorted(history, key=lambda x: x.period) if y.nopat is not None]
+    if len(ordered) < min_years + 1:
+        return None
+    head = [y.nopat for y in ordered[:2]]
+    tail = [y.nopat for y in ordered[-2:]]
+    begin, end = statistics.mean(head), statistics.mean(tail)
+    span = (int(ordered[-1].period[:4]) + int(ordered[-2].period[:4])
+            - int(ordered[0].period[:4]) - int(ordered[1].period[:4])) / 2
+    if begin <= 0 or end <= 0 or span < min_years - 1:
+        return None
+    return (end / begin) ** (1 / span) - 1
 
 
 def reinvestment_rate(history: list[RoicYear]) -> float | None:

@@ -667,6 +667,8 @@ class Band:
     ev_ps: float | None = None                # 企业价值/股（扣净负债前）
     owner_earnings_true_ps: float | None = None  # CFO − 维持性capex（≈D&A），每股
     roic_path: str | None = None              # growth ／ zero_growth ／ equity_fallback
+    roic_nopat_mode: str = ""                 # median ／ onesided ／ cyclical_median
+    roic_g_source: str = ""                   # capital ／ trailing ／ none
     mos: float | None = None
     max_buy_price: float | None = None
     value: float | None = None
@@ -827,12 +829,47 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     f"NOPAT={latest.nopat}: 息税前利润非正，按现金折现无意义，须走 §6.5.5.2 逐票建档")
                 return band
             # 正常化 NOPAT：与 ROIC 同窗口取**比率**中位再乘 BPS，避免把单年高点/低谷外推十年
-            ratios = [y.nopat / y.parent_equity for y in history
+            ratios = [y.nopat / y.parent_equity
+                      for y in sorted(history, key=lambda x: x.period)
                       if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
             if not ratios:
                 band.status, band.reason = "rejected", "无可用的 NOPAT/母公司权益比率"
                 return band
-            nopat_ps = statistics.median(ratios) * bps
+            # **周期股守卫**：判定为周期态时**不抬分子、不用利润增速**，只按中位＋资本口径
+            # ——否则牧原/方大特钢一类会在利润顶被抬高分子、再被利润增速灌高 g，
+            # 正好在最不该买的点读成便宜。两种探测器（--roic-cycle-guard）：
+            # * efficiency：走势单调度 < 35%（镜像 DCF 臂）。**锚点实测它打错目标**——
+            #   茅台 2018 的五年窗含 2014-15 的 V 型回撤（回到新高≠周期顶）被误杀增长腿，
+            #   而牧原 2020 单边冲顶（单调度高）反而漏网（§12.67）。
+            # * peak：**当前比率 > K × 十年长窗中位**。要防的从来不是「有来回」，
+            #   是「把极端高位的利润外推十年」——直接量它。牧原 2020 ≈3× 长窗中位 → 拦下；
+            #   茅台 2018 ≈1.1× → 放行。K 由 --roic-peak-k 给。
+            if getattr(args, "roic_cycle_guard", "efficiency") == "peak":
+                long_hist = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at,
+                                                     max(args.roe_years, 10))
+                long_ratios = [y.nopat / y.parent_equity
+                               for y in sorted(long_hist, key=lambda x: x.period)
+                               if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
+                nopat_cyclical = (len(long_ratios) >= 4 and long_ratios[-1] > 0
+                                  and long_ratios[-1] > args.roic_peak_k
+                                  * statistics.median(long_ratios))
+            else:
+                nopat_cyclical = len(ratios) >= 3 and trend_efficiency(ratios) < 0.35
+            ratio0 = statistics.median(ratios)
+            band.roic_nopat_mode = "median"
+            # **单边口径**（v2，镜像 §6.5.7.1 v2.90 的 `onesided_max λ`）：当期比率高于中位时
+            # `ratio0 = 中位 + λ×(当期 − 中位)`——保留低谷保护（低于中位仍用中位），去掉高位惩罚。
+            # 锚点诊断的直接动机：中际旭创 2018（壳→资产重组）当期比率远高于五年中位，
+            # 纯中位给出每股 NOPAT 0.18、P/V=70 的荒唐读数；茅台一类快增长公司则被中位滞后约两年。
+            if getattr(args, "roic_nopat_source", "median") == "onesided_max" and not nopat_cyclical:
+                current = ratios[-1]
+                if current > ratio0:
+                    ratio0 = ratio0 + args.roe_lift * (current - ratio0)
+                    band.roic_nopat_mode = "onesided"
+            if nopat_cyclical:
+                band.roic_nopat_mode = "cyclical_median"
+                ROIC_STATS["NOPAT 周期守卫·按中位"] += 1
+            nopat_ps = ratio0 * bps
             band.nopat_ps = nopat_ps
             if latest.cfo is not None:
                 band.owner_earnings_true_ps = (
@@ -843,10 +880,16 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             if nopat_ps <= 0:
                 band.status, band.reason = "rejected", "正常化每股 NOPAT 非正"
                 return band
-            # 零增长锚（框架 §1）：EV = NOPAT/WACC。ROIC 或再投资率不可用时**不猜增长**。
+            # 零增长锚（框架 §1）：EV = NOPAT/WACC。
             band.v_zero_growth = nopat_ps / w - net_debt_ps
-            usable = (roic0 is not None and roic0 > g_terminal + args.min_terminal_spread
-                      and rr is not None and iroic is not None)
+            growth_mode = getattr(args, "roic_growth", "capital")
+            # v1（capital）：ROIC、再投资率、增量 ROIC 任一不可用 → 整条退零增长永续。
+            # v2（hybrid）：**只有 ROIC0 不可用才退零增长**——ΔIC ≤ 0（现金牛把投入资本
+            # 越做越小）在 v1 里触发 iroic=None → 零增长，恰把「资本效率最好」误判成
+            # 「没有增长」，茅台/五粮液 2018 年报因此在公认买点读成高估（锚点诊断 §12.67）。
+            roic_ok = roic0 is not None and roic0 > g_terminal + args.min_terminal_spread
+            usable = (roic_ok if growth_mode == "hybrid"
+                      else roic_ok and rr is not None and iroic is not None)
             if not usable:
                 value = band.v_zero_growth
                 if value <= 0:
@@ -860,11 +903,31 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 if band.mos is not None:
                     band.max_buy_price = margin_of_safety(value, band.mos)
                 return band
-            # 框架 §4：**增长由增量回报决定**，故 g = 增量ROIC × 再投资率。
+            # 框架 §4：**资本驱动的增长 g = 增量ROIC × 再投资率**。
             # 再投资率夹在 [0,1]：>1 表示靠外部融资扩张，那部分增长不属于现有股东。
-            rr_used = min(max(rr, 0.0), 1.0)
-            iroic_used = min(iroic, args.iroe_cap)
-            g0 = max(min(iroic_used * rr_used, args.g0_cap), args.g0_floor)
+            g_capital = None
+            if rr is not None and iroic is not None and iroic > 0 and rr > 0:
+                g_capital = min(iroic, args.iroe_cap) * min(rr, 1.0)
+            if growth_mode == "hybrid":
+                # **两条腿取大**：资本口径之外，允许「资本自由的增长」——提价/品牌/负营运
+                # 资金驱动的利润增长在净再投资≈0 时照样发生（茅台 2018 RR=−16.6% 而利润
+                # 五年翻倍）。利润增速本身是它的直接观测，乘 `--roic-trail-weight` 衰减。
+                # **周期股守卫同样作用于这条腿**（利润顶的高增速不外推）。
+                g_trail = None
+                if not nopat_cyclical:
+                    cagr = roic_inputs.trailing_nopat_cagr(history)
+                    if cagr is not None and cagr > 0:
+                        g_trail = cagr * args.roic_trail_weight
+                candidates = [g for g in (g_capital, g_trail) if g is not None]
+                g0_raw = max(candidates) if candidates else 0.0
+                band.roic_g_source = ("trailing" if g_trail is not None
+                                      and (g_capital is None or g_trail >= g_capital)
+                                      else "capital" if g_capital is not None else "none")
+                ROIC_STATS[f"g 来源·{band.roic_g_source}"] += 1
+            else:
+                g0_raw = g_capital if g_capital is not None else 0.0
+                band.roic_g_source = "capital"
+            g0 = max(min(g0_raw, args.g0_cap), args.g0_floor)
             band.g0 = g0
             # 终值 ROIC：与基准同规——基准 L2 是 `ROE_T = r + 2pp` 且 ≤ ROE0，
             # 这里平移成 `ROIC_T = WACC + 2pp` 且 ≤ ROIC0（竞争均衡下超额回报收敛）。
@@ -1133,7 +1196,7 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "incremental_roe_used", "ame_path",
                "nopat_ps", "roic0", "incremental_roic", "reinvestment_rate", "wacc",
                "cost_of_debt", "tax_rate", "net_debt_ps", "ev_ps",
-               "owner_earnings_true_ps", "roic_path",
+               "owner_earnings_true_ps", "roic_path", "roic_nopat_mode", "roic_g_source",
                "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
                "r_mode", "rf", "erp", "beta", "r", "g_terminal", "roe_terminal",
                "intrinsic_value", "band_low", "band_high", "mos", "max_buy_price",
@@ -1167,6 +1230,7 @@ def band_row(band: Band, tier: str) -> dict:
         "ev_ps": fmt(band.ev_ps),
         "owner_earnings_true_ps": fmt(band.owner_earnings_true_ps),
         "roic_path": band.roic_path or "",
+        "roic_nopat_mode": band.roic_nopat_mode, "roic_g_source": band.roic_g_source,
         "payout": fmt(band.payout),
         "g_trailing": fmt(band.g_trailing), "g_sustainable": fmt(band.g_sustainable),
         "g0": fmt(band.g0), "g0_capped": "Y" if band.g0_capped else "",
@@ -1366,6 +1430,22 @@ def main() -> int:
                              "roic=同框架的真口径（NOPAT/投入资本/FCFF/WACC，需三大报表，见 §12.66）")
     parser.add_argument("--statements-dir", type=Path, default=roic_inputs.STMT_DIR,
                         help="--value-model roic 的三大报表目录，缺省 data/raw/financials_statements/")
+    parser.add_argument("--roic-ic-floor", type=float, default=0.0, metavar="K",
+                        help="投入资本下限 = K×总权益，挡住现金厚公司 IC 趋零导致的 ROIC 发散"
+                             "（格力 2018 实测 793.7%%）。缺省 0 = v1 行为")
+    parser.add_argument("--roic-nopat-source", choices=("median", "onesided_max"), default="median",
+                        help="正常化 NOPAT 比率的口径：median=五年中位（v1）；onesided_max=当期高于"
+                             "中位时按 --roe-lift 的 λ 单边上抬（镜像 §6.5.7.1 v2.90），周期股除外")
+    parser.add_argument("--roic-growth", choices=("capital", "hybrid"), default="capital",
+                        help="g 的口径：capital=增量ROIC×再投资率（v1，资本驱动）；hybrid=与利润"
+                             "增速两条腿取大（资本自由的增长不再被判 0），周期股只走资本腿")
+    parser.add_argument("--roic-trail-weight", type=float, default=1.0, metavar="W",
+                        help="hybrid 中利润增速那条腿的权重（g_trail = W × NOPAT 五年CAGR），缺省 1.0")
+    parser.add_argument("--roic-cycle-guard", choices=("efficiency", "peak"), default="efficiency",
+                        help="周期守卫的探测器：efficiency=走势单调度<35%%（镜像 DCF 臂）；"
+                             "peak=当前比率>K×十年中位（防的是把高位利润外推，锚点实测更准）")
+    parser.add_argument("--roic-peak-k", type=float, default=1.6, metavar="K",
+                        help="peak 守卫的倍数阈值，缺省 1.6")
     parser.add_argument("--iroe-cap", type=float, default=0.40, metavar="X",
                         help="iROE 的上限，防止个别极端读数把估值推到发散；缺省 40%%")
     parser.add_argument("--out-bands", type=Path)
@@ -1412,7 +1492,8 @@ def main() -> int:
             print("**--roe-terminal-ratio 对 roic 口径无效**（终值用 ROIC_T = WACC + 超额），"
                   "请去掉后重跑，避免读成「测过了」")
             return 1
-        ROIC_YEARS.update(roic_inputs.load_statements(set(codes), args.statements_dir))
+        ROIC_YEARS.update(roic_inputs.load_statements(set(codes), args.statements_dir,
+                                                      ic_floor=args.roic_ic_floor))
         if not ROIC_YEARS:
             print(f"**{args.statements_dir} 无三大报表**，roic 口径无法建带。"
                   f"先跑 scripts/fetch_a_share_financial_statements.py")

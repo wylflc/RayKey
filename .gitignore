@@ -48,6 +48,10 @@ data/processed/a_share_historical_valuation_bands_*.csv
 data/processed/roic_bands.csv
 data/processed/roic_daily_raw.csv
 data/processed/roic_daily_states.csv
+# 锚点定标后的 v2 口径（§12.67），同规
+data/processed/roic2_bands.csv
+data/processed/roic2_daily_raw.csv
+data/processed/roic2_daily_states.csv
 
 # 回测产物：一轮参数扫描落成百上千份，2026-08-14 清理前有 5.7 万个文件 / 5.8 GB。
 # **历次扫描的读数已归并进入库的 `backtest/scan_summaries.csv`，此处只挡原件。**
