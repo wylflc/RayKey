@@ -56,3 +56,4 @@ data/processed/backtest/*trade_log.csv
 # 重建命令写在该 notebook 的第二个 cell 里。
 data/processed/diag_daily_states.csv
 data/processed/diag_bands.csv
+data/processed/metric_states/

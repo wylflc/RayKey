@@ -62,7 +62,14 @@ BASE = (
 DEFAULT_STARTS = [f"{y}-{m}-01" for y in range(2009, 2021) for m in ("05", "11")][1:]
 
 FIELDS = ("年化", "最大回撤", "Sharpe", "Calmar", "平均仓位", "年均换手",
-          "滚动3年年化中位", "滚动3年回撤中位", "滚动3年Calmar中位", "滚动3年为负的窗口占比")
+          "滚动3年年化中位", "滚动3年回撤中位", "滚动3年Calmar中位", "滚动3年为负的窗口占比",
+          "滚动5年年化中位", "滚动5年回撤中位", "滚动5年为负的窗口占比",
+          "逐年收益中位", "逐年为正比例", "逐年最差", "完整自然年数")
+# 用户 2026-08-15：**判优劣不再用「某年至今的年化」**——那条读数被单个起点决定，
+# 一次崩盘落在窗口内外就能翻转结论。改用滚动 3 年 / 滚动 5 年 / 逐年三条，Δ 以滚动 3 年为首。
+# 三条口径**不可互换**：基准 2009-11 起点全期年化 12.28%，但滚动 5 年年化中位 18.01%
+# ——滚动窗口不含「从起点一路跌下去」那些段，天然高于全期 CAGR。
+DELTA_KEYS = ("滚动3年年化中位", "滚动5年年化中位", "逐年收益中位")
 
 
 def run_one(job):
@@ -112,25 +119,33 @@ def report(path: Path, title: str) -> None:
         print("⚠ 以下臂的起点不全（其余起点跑挂了，读数不可与满起点的臂直接比较）："
               + "、".join(f"{k} {v}/{len(starts)}" for k, v in short.items())
               + "\n  → 重跑这些臂，或降低 --workers（并发过高会因内存被打挂）", file=sys.stderr)
-    print(f"{title}（{len(starts)} 个起点，对照＝BASE）")
-    print(f"{'配置':<14}{'Δ年化中位':>10}{'符号':>8}{'年化':>8}{'Sharpe':>8}"
-          f"{'滚3回撤':>9}{'滚3Calmar':>10}{'换手':>7}{'仓位':>6}")
+    print(f"{title}（{len(starts)} 个起点，对照＝BASE；Δ 按滚动3年排序）")
+    print(f"{'配置':<14}{'Δ滚3':>8}{'符号':>7}{'Δ滚5':>8}{'符号':>7}{'Δ逐年':>8}{'符号':>7}"
+          f"{'滚3年化':>8}{'滚5年化':>8}{'逐年中位':>9}{'逐年正':>7}"
+          f"{'滚3回撤':>8}{'换手':>6}{'仓位':>5}")
     rows = []
     for label in order:
         arm = arms[label]
         common = [s for s in starts if s in arm and s in base]
         if not common:
             continue
-        deltas = [arm[s]["年化"] - base[s]["年化"] for s in common]
+        # 三条口径各算各的 Δ 与符号数。**符号数不是「哪条口径」的性质，是起点敏感性的性质**
+        # ——中位为正而符号 12/23 说明效应由少数起点扛着，与用哪条读数无关（§12.1 第①层）。
+        dz = {k: [arm[s][k] - base[s][k] for s in common] for k in DELTA_KEYS}
         # `arm`/`common` 是循环变量，闭包会晚绑定到最后一轮——必须用默认参数当场固定，
         # 否则每一行打印出来的都是最后一条臂的读数（Δ 列因为是即时算的，反而看不出错）。
         med = lambda k, _a=arm, _c=common: statistics.median(_a[s][k] for s in _c)
-        rows.append((statistics.median(deltas), label, sum(1 for d in deltas if d > 0),
-                     len(common), med))
-    for delta, label, pos, n, med in sorted(rows, reverse=True):
-        print(f"{label:<14}{delta * 100:>+10.2f}{f'{pos}/{n}':>8}{med('年化') * 100:>8.2f}"
-              f"{med('Sharpe'):>8.2f}{med('滚动3年回撤中位') * 100:>9.1f}"
-              f"{med('滚动3年Calmar中位'):>10.2f}{med('年均换手'):>7.2f}{med('平均仓位') * 100:>6.0f}")
+        rows.append((statistics.median(dz[DELTA_KEYS[0]]), label, dz, len(common), med))
+    for _sort, label, dz, n, med in sorted(rows, key=lambda t: -t[0]):
+        cells = ""
+        for k in DELTA_KEYS:
+            d = dz[k]
+            cells += f"{statistics.median(d) * 100:>+8.2f}{f'{sum(1 for v in d if v > 0)}/{n}':>7}"
+        print(f"{label:<14}{cells}"
+              f"{med('滚动3年年化中位') * 100:>8.2f}{med('滚动5年年化中位') * 100:>8.2f}"
+              f"{med('逐年收益中位') * 100:>9.2f}{med('逐年为正比例') * 100:>7.0f}"
+              f"{med('滚动3年回撤中位') * 100:>8.1f}{med('年均换手'):>6.2f}"
+              f"{med('平均仓位') * 100:>5.0f}")
 
 
 def main():

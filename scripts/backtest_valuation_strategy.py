@@ -819,7 +819,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         lot_size: int = 0, rebuy: str = "off", ledger: list | None = None,
         min_lot_cooldown: int = 0, lot_ratio_cooldown: bool = False,
         quota_members: dict | None = None, quota_pct: float = 0.0,
-        quota_swappable: bool = False) -> dict:
+        quota_swappable: bool = False,
+        gate: str = "pv", buy_pct: float = 0.05, sell_pct: float = 0.60,
+        pct_stop_when_rich: bool = False) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -849,6 +851,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     # 减持线可独立于带宽设定：`--sell-line 1.30` 表示涨到 P/V=1.30 才开始减持，
     # 用来检验「让利润跑得更远」是否有效（实测 P/V≥1.10 清空的 17 笔中位 +28.6%、胜率 88%）。
     sell_line = sell_line_override if sell_line_override else 1.0 + width
+    rich_tag = f"分位≥{sell_pct:.0%}" if gate == "self-pct" else f"P/V≥{sell_line:.2f}"
+    # `self-pct-buy` = **非对称闸门**：买入用自身分位（把绝对口径永远够不着的白马放进来——
+    # 迈瑞 17 年没有一天 `P/V≤1.00`，却有 43% 的日子在自身 3 年 10 分位以下），
+    # 卖出/止损/换仓一律退回原始比值口径（现行减持线 2.50 十八年只响 9 次，等于让赢家跑）。
+    # 动机见 §12.61：分位是一把均值回归的尺子，擅长「找到谁便宜」，不擅长「决定何时离场」。
+    pct_buy_gate = gate in ("self-pct", "self-pct-buy")
     # 时点股票库：`members` 随日期切换。第一档生效前**一只都不可买**——那段时间还没有
     # 任何「当时可得」的名单，凭空放行等于用未来的股票库交易。
     uni_idx, members = 0, (set() if universe else None)
@@ -906,6 +914,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             return 1.0 - MOS_BY_TIER.get(tiers.get(code, DEFAULT_TIER), width)
         return 1.0 - width
 
+    # ---- 分位表预热：把 `since` 之前**已经发生过**的观测先灌进去。
+    # 不预热的话每个起点都要空等 `quantile_min_obs` 天才有第一只可买票，而这段空窗
+    # 占全程的比例**随起点而变**（2020-11 起点要空掉全程的 17%、2009-11 起点只空 6%），
+    # 于是多起点符号数量的是「起点离今天多远」而不是「规则好不好」——§12.1 第①层直接失效。
+    # **不是前视**：灌进去的全是 `since` 之前的历史，交易仍从 `since` 当天才开始。
+    if pct_buy_gate or rank_mode != "pv":
+        warm = sorted(d for d in states if d < since)
+        if quantile_window:
+            warm = warm[-quantile_window:]      # 逐股再由 push_pv 按窗口淘汰，取这么多天即够
+        for d in warm:
+            for _code, _c, _v, _ratio in states[d]:
+                push_pv(_code, _ratio)
+        stats["分位表预热·交易日"] = len(warm)
+
     prev_day = None
     margin_events: list[dict] = []
     lot_counters: dict[str, int] = {}   # §9.7.3 比例冷却，买卖共用
@@ -946,10 +968,33 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     below_ma_run[c] = 0
                 else:
                     below_ma_run[c] = below_ma_run.get(c, 0) + 1 if r[0] < ma_l else 0
+        # ---- 自身分位闸门（用户 2026-08-15 的重构口径）----
+        # **每只股票只跟自己比**：把当日估值指标换算成「在该股自身历史里的分位」，
+        # 买入闸 = 分位 ≤ `buy_pct`、卖出闸 = 分位 ≥ `sell_pct`。
+        # 与既有 `--rank-mode quantile` 的根本差别：那个分位**只用于排序**，
+        # 谁能进合格集仍由原始 `P/V` 比线决定（§12.9.26 测的是排序不是闸门）；
+        # 本模式让分位**直接当闸门**，横截面的绝对水平不再参与任何判定。
+        #
+        # **历史不足即不可买**，不像 `score_of` 那样回落到原始比值——回落会让新股
+        # 凭「无历史」绕过闸门，那正是本模式要消除的横截面比较。
+        pcts: dict[str, float] = {}
+        if pct_buy_gate:
+            for code, r in today.items():
+                arr = pv_sorted[code]
+                if len(arr) >= quantile_min_obs:
+                    pcts[code] = bisect_left(arr, r[2]) / len(arr)
         scores = {code: score_of(code, r[2]) for code, r in today.items()} if rank_mode != "pv" else {}
-        if rank_mode != "pv":
+        # **先算分位再入库**：当日这一条不参与自己的分位，故判据只用 t 之前的观测，严格无前视。
+        if rank_mode != "pv" or pct_buy_gate:
             for code, r in today.items():
                 push_pv(code, r[2])
+
+        def is_rich(code: str, ratio: float | None) -> bool:
+            """「贵」的判据。分位口径下与原始比值口径下是两套完全不同的尺子。"""
+            if gate == "self-pct":
+                p = pcts.get(code)
+                return p is not None and p >= sell_pct
+            return ratio is not None and ratio >= sell_line
         # 停牌股当日无价，**必须沿用最后成交价**——否则它会整只从净值里消失，
         # 复牌当天再凭空出现，资金曲线上是一对假的暴跌+暴涨。
         marks = {}
@@ -1072,7 +1117,14 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # `stop_min_days`（用户 2026-08-12）：止损的最短持有期。逐笔分析显示 73% 的平仓是
             # 建仓后**中位 3 天**即触发的止损，卖出后该股半年/1年/3年中位仍 +0.9%/+2.9%/+16.6%
             # ——即这条止损主要在切掉刚建的仓，而非在保护已有利润。本开关用于检验「给仓位一点时间」。
-            if ((strategy == "trend" and trend_stop) or price_stop) and lot.entry_stop and price < lot.entry_stop \
+            # `pct_stop_when_rich`（用户 2026-08-15：「抄底之后不止损，只有这个股票被踢出池子才止损」）：
+            # 止损**只对已经贵起来的仓位生效**。语义是「便宜时下跌是加仓机会不是离场理由，
+            # 只有涨到自身历史高分位之后才用均线保护利润」。**出名单清仓那条不受影响**
+            # ——它在本分支之前判、且是基本面退出，正是用户说的「被踢出池子才止损」那条路径。
+            if pct_stop_when_rich and not is_rich(code, ratio):
+                if lot.entry_stop and price < lot.entry_stop:
+                    stats["止损·因仍便宜而不触发"] += 1   # 只数**真的被压住**的那些，不数每一天
+            elif ((strategy == "trend" and trend_stop) or price_stop) and lot.entry_stop and price < lot.entry_stop \
                     and (not stop_min_days or _days_between(lot.entry_date, day) >= stop_min_days):
                 # `stop_partial`（用户 2026-08-14：「卖出改为定投式减仓」）：止损由**整仓清空**
                 # 改为**与定投同速、每日减一档**。这是当前策略里最后一条整仓路径——出名单清仓、
@@ -1131,15 +1183,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 与 `--trend-exit-ma` 的两点区别：①**须同时 `P/V ≥ 减持线`**（只对已经贵的票生效，
             # 便宜票跌破年线是加仓机会不是清仓理由）；②**要求连续 N 日**跌破，不是单日破线，
             # 以滤掉一次性插针。它在减一档之前判——既然要清，就不必先减一档。
-            if (liquidate_ma and ratio is not None and ratio >= sell_line
+            if (liquidate_ma and is_rich(code, ratio)
                     and below_ma_run.get(code, 0) >= liquidate_days):
                 turnover += lot.shares * price
                 close_lot(portfolio, code, day, price, ledger=ledger,
-                          reason=f"P/V≥{sell_line:.2f}且连续{liquidate_days}日破MA{liquidate_ma}·清仓")
+                          reason=f"{rich_tag}且连续{liquidate_days}日破MA{liquidate_ma}·清仓")
                 sell_count += 1
                 stats[f"贵+破MA{liquidate_ma}·一键清仓"] += 1
                 continue
-            if ratio is not None and ratio >= sell_line and sell_trend_ma:
+            if is_rich(code, ratio) and sell_trend_ma:
                 sig_close = today.get(code, (None,))[0]
                 ma_s = mas.get(code, {}).get(sig_day, {})
                 if not sig_close or not all(w in ma_s for w in sell_trend_ma):
@@ -1148,7 +1200,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if not all(a < b for a, b in zip(seq, seq[1:])):
                     stats["减持被走势闸门挡下"] += 1
                     continue
-            if ratio is not None and ratio >= sell_line:
+            if is_rich(code, ratio):
                 # `sell_full`（用户 2026-08-12）：触发即整仓卖出，不按一档减。
                 # 与 `--dev-sell-min` / `--liquidate-ma` 的区别是它仍只看 P/V 与走势闸门，
                 # 不另加均线条件——即「符合卖出条件就一次性卖完」的直译。
@@ -1156,7 +1208,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     stats["P/V≥减持线·整仓卖出"] += 1
                     turnover += lot.shares * price
                     close_lot(portfolio, code, day, price, ledger=ledger,
-                              reason=f"P/V≥{sell_line:.2f}整仓卖出")
+                              reason=f"{rich_tag}整仓卖出")
                     sell_count += 1
                     continue
                 stats["P/V≥减持线·减一档"] += 1
@@ -1170,9 +1222,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 if shares >= lot.shares * 0.999:
                     turnover += lot.shares * price
-                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"P/V≥{sell_line:.2f}清空")
+                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"{rich_tag}清空")
                 else:
-                    log_partial_sell(ledger, day, code, shares, price, f"P/V≥{sell_line:.2f}·减一档")
+                    log_partial_sell(ledger, day, code, shares, price, f"{rich_tag}·减一档")
                     lot.shares -= shares
                     portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                     lot.proceeds += shares * price
@@ -1196,8 +1248,16 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         def _key(r):
             if not rank_by_upside:
                 return r[0]
+            if pct_buy_gate:
+                return (pcts[r[0]], r[0])     # 组内也按「相对自身多便宜」排，不再比绝对水平
             return scores.get(r[0], r[3]) if rank_mode != "pv" else r[3]
-        eligible = sorted((r for r in pool if r[3] <= buy_line(r[0])), key=_key)
+        if pct_buy_gate:
+            # **闸门即分位**：没有足够历史的（`pcts` 里没有）一律不可买。
+            eligible = sorted((r for r in pool
+                               if (p := pcts.get(r[0])) is not None and p <= buy_pct), key=_key)
+            stats["分位闸·当日合格"] += len(eligible)
+        else:
+            eligible = sorted((r for r in pool if r[3] <= buy_line(r[0])), key=_key)
         # `buy_floor`（用户 2026-08-14：「扩大买入阈值的范围，例如 0.8-1.2」的双边读法）：
         # 买入由单边上限改为**区间** `[buy_floor, buy_line]`，即**过分便宜的也不买**。
         # 动机是在「公平 P/V」口径下，`P/V` 远低于 1 未必是错杀，也可能是市场看对了
@@ -1344,14 +1404,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     break
                 # 配置通道的持仓**不作为换仓的卖出源**——否则通道刚买进来就会被主排序换掉，
                 # 额度形同虚设（§12.56.2 实测：换仓正是终结长期赢家的那条路径）。
-                held = [(scores.get(c, today[c][2]) if rank_mode != "pv" else today[c][2], c)
+                # 分位口径下换仓比的是**分位**，`swap_margin` 的单位随之变成分位点
+                # （0.15 = 15 个分位点），不再是 `P/V` 的差值。历史不足而算不出分位的持仓
+                # **不作为卖出源**——判不了贵贱就不该被判成「最贵的那个」而被换掉。
+                held = [((pcts[c] if gate == "self-pct" else
+                          (scores.get(c, today[c][2]) if rank_mode != "pv" else today[c][2])), c)
                         for c in portfolio.lots if c in today
+                        and (gate != "self-pct" or c in pcts)
                         and c not in quota_hold_today
                         and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
                 if not held:
                     break
                 worst_ratio, worst = max(held)
-                cand_score = scores.get(code, ratio) if rank_mode != "pv" else ratio
+                cand_score = (pcts[code] if gate == "self-pct" else
+                              (scores.get(code, ratio) if rank_mode != "pv" else ratio))
                 if worst_ratio - cand_score < swap_margin:
                     break
                 price = fill_price(worst, marks.get(worst))
@@ -1451,10 +1517,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if buying_power(portfolio, credit_limit) <= 0:
                 break
             # 配置通道的额度用完就不再按通道买；该成员此后只能走普通路径（即需过买入线）。
+            over_line = ((pcts.get(code) is None or pcts[code] > buy_pct) if pct_buy_gate
+                         else ratio > buy_line(code))
             if code in quota_today:
-                if quota_room <= 0 and ratio > buy_line(code):
+                if quota_room <= 0 and over_line:
                     continue
-            elif quota_pct > 0 and ratio > buy_line(code):
+            elif quota_pct > 0 and over_line:
                 continue                      # 通道把成员插到了队首，非成员仍须过买入线
             # 走势组默认一笔建仓（总资产 ÷ 持仓上限）且不加仓；`trend_tranche` 打开后改为
             # **与估值组同一套定投**——只要当日仍满足「P/V 合格 且 收盘>MA20>MA60」就继续买入
@@ -1680,6 +1748,21 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
     roll_c = sorted(r[3] for r in roll if r[3] == r[3])
     roll_d = sorted(r[2] for r in roll)
     roll_g = sorted(r[1] for r in roll)
+    # ---- 用户 2026-08-15 指定的三条读数口径：滚动 3 年 / 滚动 5 年 / 逐年。
+    # **不再用「某年至今的总收益」判优劣**——那条读数被起点单点决定，
+    # 一次崩盘落在窗口内外就能翻转结论（§12.1 多起点纪律的动机就是它）。
+    roll5 = rolling_calmar(curve, years=5)
+    r5g = sorted(r[1] for r in roll5)
+    r5d = sorted(r[2] for r in roll5)
+    r5c = sorted(r[3] for r in roll5 if r[3] == r[3])
+    # 逐年：**只取完整自然年**。起点在 11 月、终点在 8 月，首尾两个残年会把
+    # 「两个月的涨幅」当成一年的年化混进中位数里，那是口径错误不是业绩。
+    yearly = period_returns(curve, key=lambda d: d[:4])
+    first_y, last_y = curve[0][0][:4], curve[-1][0][:4]
+    full = [(y, v) for y, v in yearly
+            if not (y == first_y and curve[0][0][5:] > "01-10")
+            and not (y == last_y and curve[-1][0][5:] < "12-20")]
+    yg = sorted(v for _y, v in full)
     return {"策略": name, "期末资产": final,
             "滚动3年Calmar中位": statistics.median(roll_c) if roll_c else float("nan"),
             "滚动3年Calmar_P10": roll_c[len(roll_c)//10] if roll_c else float("nan"),
@@ -1687,7 +1770,20 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "滚动3年回撤中位": statistics.median(roll_d) if roll_d else float("nan"),
             "滚动3年年化中位": statistics.median(roll_g) if roll_g else float("nan"),
             "滚动3年为负的窗口占比": (sum(1 for g in roll_g if g < 0)/len(roll_g)) if roll_g else float("nan"),
-            "滚动窗口数": len(roll), "总收益": final / capital - 1, "年化": cagr,
+            "滚动窗口数": len(roll),
+            "滚动5年年化中位": statistics.median(r5g) if r5g else float("nan"),
+            "滚动5年年化P10": r5g[len(r5g)//10] if r5g else float("nan"),
+            "滚动5年回撤中位": statistics.median(r5d) if r5d else float("nan"),
+            "滚动5年Calmar中位": statistics.median(r5c) if r5c else float("nan"),
+            "滚动5年为负的窗口占比": (sum(1 for g in r5g if g < 0)/len(r5g)) if r5g else float("nan"),
+            "滚动5年窗口数": len(roll5),
+            "逐年收益中位": statistics.median(yg) if yg else float("nan"),
+            "逐年收益均值": statistics.fmean(yg) if yg else float("nan"),
+            "逐年最差": yg[0] if yg else float("nan"),
+            "逐年最好": yg[-1] if yg else float("nan"),
+            "逐年为正比例": (sum(1 for v in yg if v > 0)/len(yg)) if yg else float("nan"),
+            "完整自然年数": len(yg),
+            "总收益": final / capital - 1, "年化": cagr,
             "年化波动": vol, "最大回撤": worst, "回撤区间": f"{dd_start}~{dd_end}",
             "Calmar": cagr / worst if worst else float("nan"), "Sharpe": sharpe,
             "平均仓位": exposure, "周期数": len(closed),
@@ -1804,6 +1900,9 @@ def main() -> int:
                         help="一笔建仓，占总资产的百分比（如 5）；给了就不再定投加仓")
     parser.add_argument("--swap", action="store_true",
                         help="买不下时卖出空间最小的持仓，换空间更大的候选")
+    parser.add_argument("--no-swap", dest="swap", action="store_false",
+                        help="关掉换仓。`scripts/sweep_backtest_configs.py` 的 BASE 里带着 --swap，"
+                             "而 store_true 无法在配置行里撤销，故需要这条显式的关")
     parser.add_argument("--swap-margin", type=float, default=0.10, help="换仓的 P/V 最小改善，防抖")
     parser.add_argument("--max-positions", type=int, default=MAX_POSITIONS)
     parser.add_argument("--max-corr", type=float, default=0.0,
@@ -1834,7 +1933,19 @@ def main() -> int:
     parser.add_argument("--quantile-window", type=int, default=0,
                         help="分位数回看交易日数，0=自上市以来全历史")
     parser.add_argument("--quantile-min-obs", type=int, default=250,
-                        help="历史观测少于该数时退回原始 P/V 排序，不猜")
+                        help="历史观测少于该数时退回原始 P/V 排序，不猜；"
+                             "`--gate self-pct` 下含义更硬：不足即**不可买**，不回落")
+    # ---- 自身分位闸门（用户 2026-08-15 的重构口径：每只股票只跟自己比）----
+    parser.add_argument("--gate", choices=("pv", "self-pct", "self-pct-buy"), default="pv",
+                        help="pv=买卖闸门用原始比值比线（现行）；"
+                             "self-pct=买卖闸都用该股自身历史分位；"
+                             "self-pct-buy=**只有买入闸**用分位，卖出/止损/换仓仍按原始比值")
+    parser.add_argument("--buy-pct", type=float, default=0.05, metavar="Q",
+                        help="self-pct 下的买入闸：分位 ≤ Q 才可买（窗口由 --quantile-window 定）")
+    parser.add_argument("--sell-pct", type=float, default=0.60, metavar="Q",
+                        help="self-pct 下的卖出闸：分位 ≥ Q 才允许减持/换出/止损")
+    parser.add_argument("--pct-stop-when-rich", action="store_true",
+                        help="止损只对分位 ≥ --sell-pct 的仓位生效，即「抄底之后不止损」")
     parser.add_argument("--hold-strong", choices=("off", "swap", "sell", "both"), default="off",
                         help="强势多头排列的持仓豁免：swap=不被换出／sell=不减持／both=两者")
     parser.add_argument("--hold-strong-ma", nargs="+", type=int, default=[20, 60, 120, 240],
@@ -1939,6 +2050,31 @@ def main() -> int:
     quota = load_quota(args.quota_file) if args.quota_file else None
     if args.quota_pct > 0 and not quota:
         sys.exit("给了 --quota-pct 却没给 --quota-file：配置通道无成员，等于没开——拒绝静默跑空")
+    if args.gate.startswith("self-pct"):
+        if not 0 < args.buy_pct < 1 or not 0 < args.sell_pct <= 1:
+            sys.exit("--buy-pct/--sell-pct 是分位，须落在 (0,1]；给成 1.00/2.50 那是比值口径的线")
+        if args.buy_pct >= args.sell_pct:
+            sys.exit(f"买入分位 {args.buy_pct} ≥ 卖出分位 {args.sell_pct}：买卖闸重叠，会当天买当天卖")
+        # 这几个开关的判据全是**原始比值**（`1/(P/V)−1` 那套空间口径），在分位口径下含义不明。
+        # 静默地按比值算会得到一份看不出错的污染读数，故直接拒绝组合。
+        bad = [n for n, v in (("--buy-floor", args.buy_floor), ("--min-upside", args.min_upside),
+                              ("--cluster-swap", args.cluster_swap), ("--use-mos", args.use_mos),
+                              ("--tier-mode", args.tier_mode != "none")) if v]
+        if bad:
+            sys.exit(f"{'、'.join(bad)} 的判据是原始比值口径，与 --gate self-pct 不能同时用")
+        # `--width`/`--sell-line` 在分位口径下**完全不参与判定**。BASE 里一定带着这两个开关，
+        # 不喊一声的话很容易以为「买 1.00 减 2.50」还在生效——那正是 §12.1 记着的两次作废教训。
+        if args.gate == "self-pct":
+            print(f"⚠ --gate self-pct：买卖闸改用**自身分位** ≤{args.buy_pct:.0%} / ≥{args.sell_pct:.0%}"
+                  f"（窗口 {args.quantile_window or '全历史'} 交易日、最少 {args.quantile_min_obs} 个观测）；"
+                  f"\n  --width({args.width})/--sell-line({args.sell_line}) 本次**不参与任何判定**，"
+                  f"--swap-margin({args.swap_margin}) 的单位变成分位点。", file=sys.stderr)
+        else:
+            print(f"⚠ --gate self-pct-buy：**只有买入闸**改用自身分位 ≤{args.buy_pct:.0%}"
+                  f"（窗口 {args.quantile_window or '全历史'} 交易日）；卖出、止损、换仓仍按原始比值"
+                  f"（减持线 {args.sell_line}、换仓改善 {args.swap_margin}）。"
+                  f"\n  --sell-pct 本次**不生效**；--pct-stop-when-rich 仍生效但语义随之变成"
+                  f"「只在 P/V ≥ {args.sell_line} 时才止损」。", file=sys.stderr)
     states = load_states(args.daily_states,
                          {c for _d, m in universe for c in m} if universe else None)
     prices = load_prices({r[0] for rows in states.values() for r in rows})
@@ -2014,6 +2150,10 @@ def main() -> int:
                      + (f"_dsell{args.dev_sell_min:g}" if args.dev_sell_min else "")
                      + (f"_hs{args.hold_strong}{len(args.hold_strong_ma)}" if args.hold_strong != "off" else "")
                      + (f"_{args.rank_mode[:1]}{args.quantile_window or 'all'}" if args.rank_mode != "pv" else "")
+                     + (f"_q{args.quantile_window or 'all'}b{args.buy_pct:g}"
+                        + (f"s{args.sell_pct:g}" if args.gate == "self-pct" else "A")
+                        + ("nr" if args.pct_stop_when_rich else "")
+                        if args.gate.startswith("self-pct") else "")
                      + (f"_{args.tier_mode}" if args.tier_mode != "none" else "")
                      + ("_minup" if args.min_upside else "")
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
@@ -2074,7 +2214,9 @@ def main() -> int:
                          ledger=ledger, min_lot_cooldown=args.min_lot_cooldown,
                          lot_ratio_cooldown=args.lot_ratio_cooldown,
                          quota_members=quota, quota_pct=args.quota_pct,
-                         quota_swappable=args.quota_swappable)
+                         quota_swappable=args.quota_swappable,
+                         gate=args.gate, buy_pct=args.buy_pct, sell_pct=args.sell_pct,
+                         pct_stop_when_rich=args.pct_stop_when_rich)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
