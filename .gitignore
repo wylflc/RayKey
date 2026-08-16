@@ -75,3 +75,9 @@ data/processed/roiccond_states.csv
 data/processed/roiccond3_bands.csv
 data/processed/roiccond3_daily_raw.csv
 data/processed/roiccond3_states.csv
+data/processed/roiccond3s_bands.csv
+data/processed/roiccond3s_daily_raw.csv
+data/processed/roiccond3s_states.csv
+data/processed/roiccond3h_bands.csv
+data/processed/roiccond3h_daily_raw.csv
+data/processed/roiccond3h_states.csv

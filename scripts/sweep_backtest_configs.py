@@ -43,7 +43,8 @@ OUT_DIR = ROOT / "data/processed/backtest"
 # **估值 = ROIC 口径逐日状态**（`a_share_daily_states_adopted.csv`，重建三步见 §9.7.1.2）。
 # **宇宙 = v6b 面板**（`panel_moat_bank_v6b.csv`，287 代码/现役 222）：§5.4 全口径逐年判定 + 全银行子册，
 #   由 `verdicts_pit_moat_v6.csv` + `build_moat_panel.py` 确定性装配（§12.71，用户 2026-08-16 采纳）。
-# **三条线 1.0059/2.8967/0.1508 是 §12.30 对齐解（合格面 21.15%/27.90%），不得取整**。
+# **减持/换仓线 2.8967/0.1508 是 §12.30 对齐解（上侧面 27.90%），不得取整**；
+# **买入线 0.98（`--width 0.02`）是 v4.02 刻意收严的名义线**（合格面 21.15%→19.09%，非对齐产物，§12.72.4）。
 # **四条规则于 v4.00 重适配**（§12.69：23 起点对 DCF 旧基准全 23 正、中位 +4.81pp）：
 #   `--position-cap 0.20`（15→20，剂量单调、25 回撤超标）｜`--stop-ma 20`（60→20，栈内 +1.9）
 #   ｜`--x 1.5`（1.0→1.5，栈内支柱）｜恢复减持线（不给 --no-value-sell，终选子集内 +0.5）。
@@ -51,13 +52,13 @@ OUT_DIR = ROOT / "data/processed/backtest"
 # 换估值口径须全规则重扫，且**三条线一起重解到同一合格面**（§12.30，align_buy_line.py）。
 # 基准读数见 `docs/000_Ashare_workflow.md` §9.7.1.2 的「v4.00 基准读数」——**改这里就要改那里**。
 BASE = (
-    "--strategy trend --trend-tranche --x 1.5 --trend-ma 20 60 "
-    "--corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 0.85 "
+    "--strategy trend --trend-tranche --x 2.0 --trend-ma 20 60 "
+    "--corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 0.75 "
     "--swap --swap-partial --sell-trend-ma 20 "
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
     "--fee-preset user --no-artifacts "
-    "--width -0.0059 --sell-line 2.8967 --swap-margin 0.1508 --position-cap 0.20 "
-    "--stop-ma 20 --addon-trend ma-only --swap-require-weak "
+    "--width 0.02 --sell-line 2.8967 --swap-margin 0.1508 --position-cap 0.25 "
+    "--stop-ma 60 --addon-trend ma-only --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv"
 )

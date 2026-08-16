@@ -883,11 +883,25 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     ratio0 = ratio0 + args.roe_lift * (current - ratio0)
                     band.roic_nopat_mode = "onesided"
             elif nopat_src in ("conditional", "conditional3") and not nopat_cyclical:
-                # 分型锚（§12.72）：增长态=近三期年报比率严格单调上行 → 采信当期
-                # （§12.36.2 已证「上行时采信当期」是正确方向、缩短窗口整体是反的）；
-                # 非增长态（波动/下行）→ conditional 用五年中位（不动），conditional3 用三年中位。
+                # 分型锚（§12.72）：增长态 → 采信当期（§12.36.2 已证「上行时采信当期」是正确方向、
+                # 缩短窗口整体是反的）；非增长态（波动/下行）→ conditional 用五年中位、conditional3 用三年中位。
                 # 周期守卫命中的仍然只吃中位——顶部外推的保护优先于分型。
-                if len(ratios) >= 3 and ratios[-1] > ratios[-2] > ratios[-3]:
+                #
+                # 增长态的判别（--roic-cond-detect）：
+                # * strict：近三期严格单调上行（`a<b<c`）。干净但漏判——一次年度小回撤就出局，
+                #   而多数真成长股都有这样的年份。
+                # * soft：近三期里**两次上行**（含末期上行）且**当期高于窗口中位**。放宽的是
+                #   「单调」这一条，没有放宽「当期确实更高」——后者才是采信当期的前提。
+                rising = 0
+                if len(ratios) >= 3:
+                    rising = sum(1 for i in (-1, -2) if ratios[i] > ratios[i - 1])
+                if getattr(args, "roic_cond_detect", "strict") == "soft":
+                    is_growth = (len(ratios) >= 3 and rising >= 2
+                                 and ratios[-1] > ratios[-2]
+                                 and ratios[-1] > statistics.median(ratios))
+                else:
+                    is_growth = len(ratios) >= 3 and ratios[-1] > ratios[-2] > ratios[-3]
+                if is_growth:
                     ratio0 = ratios[-1]
                     band.roic_nopat_mode = "ttm_growth"
                 elif nopat_src == "conditional3" and len(ratios) >= 3:
@@ -1468,6 +1482,9 @@ def main() -> int:
                              "conditional=分型锚（§12.72，用户 2026-08-17 思路）——近三年比率单调上行"
                              "（增长态）且未触发周期守卫时**采信当期**，否则五年中位；"
                              "conditional3=同上但非增长态用**三年**中位。两档都建议配 --roic-cycle-guard peak")
+    parser.add_argument("--roic-cond-detect", choices=("strict", "soft"), default="strict",
+                        help="conditional/conditional3 的增长态判别：strict=近三期严格单调上行；"
+                             "soft=近三期两次上行且当期高于窗口中位（放宽单调，不放宽「当期更高」）")
     parser.add_argument("--roic-growth", choices=("capital", "hybrid"), default="capital",
                         help="g 的口径：capital=增量ROIC×再投资率（v1，资本驱动）；hybrid=与利润"
                              "增速两条腿取大（资本自由的增长不再被判 0），周期股只走资本腿")
