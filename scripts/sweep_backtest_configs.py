@@ -38,30 +38,25 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "data/processed/backtest"
 
-# §9.7.1.2 的基准臂，逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
+# §9.7.1.2 的基准臂（v4.00 = V1FINAL），逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
 #
-# **宇宙 = V5 面板**（`panel_moat_bank_v5.csv`，211 只）：按 `exit_log.csv` 的 X1/X3 退出与
-# 对称重入逐档切换在册状态（§12.53~§12.54），且**已修掉 15 只的入选前视**（§12.64）。
-# **三条线与 §9.7.1 的生产线同值**（v2.98 起，用户 2026-08-14 指定买 1.00 / 减 2.50 / 换仓改善 0.15；
-# 上一版基准臂为了与 V3 可比而单解过一套对齐线 1.5884/1.1044/0.1503，现已废止，不再维护两组数）。
-# **`--position-cap 0.15` 于 v3.01 并入**（用户 2026-08-15 指令）——缺省是 0 即无上限，
-# 漏给会静默退回「单票可占八成仓位」的旧口径（实测基准 79% 的交易日单票 >30%、峰值 84.5%，OI-057）。
-# **v3.02 再并入四条**（同日第二批指令）：`--stop-ma 60`（止损改建仓日 MA60）、
-# `--addon-trend ma-only`（已有持仓只看 MA20>MA60 即可加仓）、`--no-value-sell`（删估值减持）、
-# `--swap-require-weak`（换仓的卖出源须 `收盘 < MA20`）。
-# **后两者必须成对**：各自单独是 −0.37／−1.51，合起来 +2.14（20/23）、滚 5 年 +2.69（23/23）。
-# **且整组依赖单票上限**——去掉 `--position-cap` 后效应归零（−0.15／11-23），见 §12.62.3。
-# 基准读数见 `docs/000_Ashare_workflow.md` §9.7.1.2 的「v3.04 基准读数」——**改这里就要改那里**。
-# **换估值口径或换宇宙做 A/B 时仍须把三条线一起重解到同一合格面**（§12.30，align_buy_line.py）；
-# 改交易参数本身不需要对齐。
+# **估值 = ROIC 口径逐日状态**（`a_share_daily_states_adopted.csv`，重建三步见 §9.7.1.2）。
+# **宇宙 = V5 面板**（`panel_moat_bank_v5.csv`，211 只）：含退出与重入、已修入选前视（§12.64）。
+# **三条线 0.9963/2.8091/0.1494 是 §12.30 对旧口径合格面的对齐解，不得取整**。
+# **四条规则于 v4.00 重适配**（§12.69：23 起点对 DCF 旧基准全 23 正、中位 +4.81pp）：
+#   `--position-cap 0.20`（15→20，剂量单调、25 回撤超标）｜`--stop-ma 20`（60→20，栈内 +1.9）
+#   ｜`--x 1.5`（1.0→1.5，栈内支柱）｜恢复减持线（不给 --no-value-sell，终选子集内 +0.5）。
+# **规则与估值共适配**——同一规则在 DCF 与 ROIC 上符号可反转（加仓放宽、止损周期都反了），
+# 换估值口径须全规则重扫，且**三条线一起重解到同一合格面**（§12.30，align_buy_line.py）。
+# 基准读数见 `docs/000_Ashare_workflow.md` §9.7.1.2 的「v4.00 基准读数」——**改这里就要改那里**。
 BASE = (
-    "--strategy trend --trend-tranche --x 1.0 --trend-ma 20 60 "
+    "--strategy trend --trend-tranche --x 1.5 --trend-ma 20 60 "
     "--corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 0.85 "
     "--swap --swap-partial --sell-trend-ma 20 "
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
     "--fee-preset user --no-artifacts "
-    "--width 0.0 --sell-line 2.50 --swap-margin 0.15 --position-cap 0.15 "
-    "--stop-ma 60 --addon-trend ma-only --no-value-sell --swap-require-weak "
+    "--width 0.0037 --sell-line 2.8091 --swap-margin 0.1494 --position-cap 0.20 "
+    "--stop-ma 20 --addon-trend ma-only --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v5.csv"
 )

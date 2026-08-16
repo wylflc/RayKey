@@ -38,8 +38,8 @@ python3 -m venv /tmp/nnvenv && /tmp/nnvenv/bin/pip install numpy torch
 | `rebuild_bank_bands.py` | 按 §6.5.7.1 的 J-金融资本型口径只重算银行的估值带，非银行行逐位不动。三种模式：`fixed:COE`（给定折现率）／`peer`（滚动三年同业隐含 COE 中位）／`pbhist`（滚动三年自身 PB 中位） |
 
 ```bash
-python3 scripts/experimental/rebuild_bank_bands.py fixed:0.17 data/processed/vd_pit116_bkcoe17.csv
-python3 scripts/experimental/rebuild_bank_bands.py peer      data/processed/vd_pit116_bkpeer.csv
+python3 scripts/rebuild_bank_bands.py（v4.00 已提升为生产脚本） fixed:0.17 data/processed/vd_pit116_bkcoe17.csv
+python3 scripts/rebuild_bank_bands.py（v4.00 已提升为生产脚本） peer      data/processed/vd_pit116_bkpeer.csv
 ```
 
 不需要 `torch`/`numpy`，只用标准库。产出的逐日估值文件**不入库**。

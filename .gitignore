@@ -43,19 +43,9 @@ data/processed/hist_bands_*.csv
 data/processed/a_share_daily_g*.csv
 data/processed/a_share_historical_valuation_daily_*.csv
 data/processed/a_share_historical_valuation_bands_*.csv
-# ROIC/FCFF 口径（§12.66）：带 96MB、逐日两份各 1.7GB。
-# 重建：build_historical_valuation_bands.py --all --value-model roic …（命令见 §12.66.2）
+# ROIC 口径带与中间产物（v4.00 生产口径；重建三步见工作流 §9.7.1.2）
 data/processed/roic_bands.csv
 data/processed/roic_daily_raw.csv
-data/processed/roic_daily_states.csv
-# 锚点定标后的 v2 口径（§12.67），同规
-data/processed/roic2_bands.csv
-data/processed/roic2_daily_raw.csv
-data/processed/roic2_daily_states.csv
-# DCF peak 守卫实验（§12.68，0/23 弃用），同规
-data/processed/dcfg_bands.csv
-data/processed/dcfg_daily_raw.csv
-data/processed/dcfg_daily_states.csv
 
 # 回测产物：一轮参数扫描落成百上千份，2026-08-14 清理前有 5.7 万个文件 / 5.8 GB。
 # **历次扫描的读数已归并进入库的 `backtest/scan_summaries.csv`，此处只挡原件。**
