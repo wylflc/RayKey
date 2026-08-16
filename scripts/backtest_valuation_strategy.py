@@ -654,7 +654,7 @@ def draw_credit(portfolio: Portfolio, need: float, limit: float) -> float:
 
 
 def repay_debt(portfolio: Portfolio, ratchet: bool) -> None:
-    """融资棘轮：卖出回笼的资金**必须先偿还融资**，不得循环滚入下一笔买入。"""
+    """日终把剩余现金优先偿还融资（`--margin-ratchet`，纯研究开关，见 §12.70）。"""
     if not ratchet or portfolio.debt <= 0 or portfolio.cash <= 0:
         return
     pay = min(portfolio.cash, portfolio.debt)
@@ -1668,7 +1668,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     last_price[code] = price
                 if code in last_price:
                     marks[code] = last_price[code]
-        # 融资棘轮（§13.2）：日终剩余现金先还融资，不留到下一笔买入。
+        # `--margin-ratchet`（纯研究开关，§12.70）：日终剩余现金先还融资，不留到下一笔买入。
         repay_debt(portfolio, margin_ratchet)
         # **无单票上限的实际后果必须可量**（§9.7.1 明文不设单票上限）：逐日记下最大单股权重
         # 与前三大合计，写进净值曲线。不记的话「集中度」只能靠事后从流水重建，而流水按构造
@@ -1924,7 +1924,7 @@ def main() -> int:
     mg.add_argument("--recover-ratio", type=float, default=1.50,
                     help="强平后需恢复到的担保比例")
     mg.add_argument("--margin-ratchet", action="store_true",
-                    help="融资棘轮：日终剩余现金先还融资，不留到下一笔买入")
+                    help="日终剩余现金先还融资，不留到下一笔买入。**纯研究开关**，用于复现 §12.70 的融资场景\n                         A/B（实测近中性、略负）；不对应任何生效规则——同名的账户级机制已于 2026-08-17 退役")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
     parser.add_argument("--width", type=float, nargs="+", default=[0.10],
                         help="带的半宽 w：买入线 1−w、减持线 1+w。可给多个做敏感度")
