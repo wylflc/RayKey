@@ -125,31 +125,45 @@ def main() -> int:
         # 而本档现在装的正是模型带。设成 `false` 会让 `build_valuation_band_cards.py` 走通用路径
         # 把带覆盖掉——2026-08-10 首次落地时正是这么错的，17 只被重算成兜底 EPV 后判无法估值。
         row["bespoke"] = "true"
-        row["band_method"] = "内在价值模型（§6.5.7.3）：ROE—再投资—增长—可分配现金—折现"
-        row["band_derivation"] = (
-            f"`intrinsic_value.py` 主模型，与 §12.9 回测所用带**同一套口径**。"
-            f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜"
-            f"eps0 {band['eps0']}、roe0 {float(band['roe0']):.2%}"
-            f"（{band.get('roe_source', '')}，近五年归一化）｜"
-            f"g0 {float(band['g0']):.2%} = ROE × (1 − 派息率 {float(band['payout'] or 0):.0%})"
-            f"{'（**已触 g0 上限 25%**）' if band.get('g0_capped') == 'Y' else ''}｜"
-            f"r {float(band['r']):.2%}（Rf+β·ERP，取报告期当时利率）｜"
-            f"g_T {float(band['g_terminal']):.2%}、ROE_T {float(band['roe_terminal']):.2%}｜"
-            f"10 年线性 fade（n1=0，自第 1 年起衰减）｜"
-            f"**内在价值 {iv:.2f} 元**，隐含 PE {band['implied_pe'][:6]}、"
-            f"终值占比 {float(band['terminal_share']):.0%}。"
-            f"带 = IV × [0.90, 1.10]，**中值恰为 IV**，故 `P/V = 收盘 ÷ 中值` 与回测的 "
-            f"`valuation_ratio = 收盘 ÷ IV` 逐位一致。"
-        )
+        # v4.00：带来源分四条路径（§6.5.7.3），派生说明按路径写，不再一律套权益 DCF 的口径
+        roic_path = (band.get("roic_path") or "").strip()
+        common_head = (f"与 §9.7.1.2 回测所用带**同一套口径**。"
+                       f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜")
+        common_tail = (f"**内在价值 {iv:.2f} 元**。带 = IV × [0.90, 1.10]，**中值恰为 IV**，"
+                       f"故 `P/V = 收盘 ÷ 中值` 与回测的 `valuation_ratio` 逐位一致。")
+        def _f(key, fmt="{:.2%}"):
+            try:
+                return fmt.format(float(band.get(key) or 0))
+            except (TypeError, ValueError):
+                return "—"
+        if roic_path == "bank_divspread":
+            row["band_method"] = "银行·股利折现（§6.5.7.3）"
+            row["band_derivation"] = (common_head
+                + "V = 近 12 个月每股现金分红 ÷ (十年国债 + 2%)｜" + common_tail)
+        elif roic_path in ("growth", "zero_growth"):
+            row["band_method"] = "内在价值模型·ROIC 口径（§6.5.7.3）：NOPAT—投入资本—增量回报—WACC—EV−净负债"
+            row["band_derivation"] = (common_head
+                + f"每股 NOPAT {band.get('nopat_ps', '—')}｜ROIC0 {_f('roic0')}｜"
+                + f"增量 ROIC {_f('incremental_roic')}｜再投资率 {_f('reinvestment_rate')}｜"
+                + f"g0 {_f('g0')} = 增量ROIC × 再投资率｜WACC {_f('wacc')}｜"
+                + f"终值 ROIC {_f('roe_terminal')}、g_T {_f('g_terminal')}｜"
+                + f"每股净负债 {band.get('net_debt_ps', '—')}｜"
+                + ("**零增长永续**（增长输入不可用，V = NOPAT/WACC − 净负债）｜"
+                   if roic_path == "zero_growth" else "")
+                + common_tail)
+        else:
+            row["band_method"] = "内在价值模型·权益退路（§6.5.7.3：无三大报表时的权益 DCF）"
+            row["band_derivation"] = (common_head
+                + f"eps0 {band.get('eps0', '—')}、roe0 {_f('roe0')}（{band.get('roe_source', '')}）｜"
+                + f"g0 {_f('g0')} = ROE × 留存率｜r {_f('r')}｜"
+                + f"g_T {_f('g_terminal')}、ROE_T {_f('roe_terminal')}｜" + common_tail)
         row["anchor_earnings_yi"] = ""      # 本模型按每股折现，不用亿元口径的利润锚
         row["reviewed_at"] = args.as_of
-        row["decided_by"] = "内在价值模型（v2.72 起唯一带来源）"
-        note = (f"**{args.as_of} 换用内在价值模型带（v2.72）**：原手工带 "
-                f"{old_low}~{old_high}" + (f"（中值 {old_mid:.2f}，为模型带的 {old_mid / iv:.2f}x）"
+        row["decided_by"] = "内在价值模型（§6.5.7.3 唯一带来源；v4.00 起 ROIC 口径）"
+        note = (f"**{args.as_of} 换用 v4.00 ROIC 口径带**：原带 "
+                f"{old_low}~{old_high}" + (f"（中值 {old_mid:.2f}，为新带的 {old_mid / iv:.2f}x）"
                                            if old_mid else "") +
-                f" → {row['band_low']}~{row['band_high']}。"
-                f"换的理由见 §12.9.1：原档案带与回测所用带中位差 1.24 倍，"
-                f"等效把买入线抬到约 1.12，超出 §12.6 验证过的全区间。")
+                f" → {row['band_low']}~{row['band_high']}。依据 §12.66~§12.69。")
         row["notes"] = note + ("｜" + row["notes"] if row["notes"] else "")
         applied.append(row["security_name"])
 

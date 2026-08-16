@@ -17,7 +17,7 @@
 | 今日持仓的公告与估值跟踪 | §11 | `track_holdings_daily.py --as-of` | `a_share_holdings.csv`（五列）+ 池 → `daily_holdings_tracking.csv` |
 | 季度全市场质量审查 / 三类初筛 | §5 | `build_quarterly_quality_review_queue.py`；全量重扫按 §5.4.6 | 队列 → `a_share_attention_triage.csv` |
 | 对 worth_attention 做 L1-L3 分层 | §5.7-§5.8 | 无（模型判断） | triage → `a_share_watchlist_quality_tiers.csv` |
-| 估值排雷 / 更新核心估值池 | §6 | **`build_historical_valuation_bands.py` → `apply_model_bands_to_dossiers.py`** → `build_valuation_band_cards.py` → **`apply_valuation_band_cards.py`** → `validate_valuation_bands.py` → `build_a_share_core_valuation_pool.py`（**六步缺一不可**，§6.7 要求 10） | 财报 → 模型带 → 档案 → `a_share_core_valuation_pool.csv` |
+| 估值排雷 / 更新核心估值池 | §6 | **§9.7.1.2 三步重建（取数→ROIC 建带→银行覆盖）→ `build_pool_model_bands.py` → `apply_model_bands_to_dossiers.py`** → `build_valuation_band_cards.py` → **`apply_valuation_band_cards.py`** → `validate_valuation_bands.py` → `build_a_share_core_valuation_pool.py`（**缺一不可**，§6.7 要求 10） | 三大报表+财报 → ROIC 模型带 → 档案 → `a_share_core_valuation_pool.csv` |
 | 给新入池公司定合理价区间 | **§6.5 内在价值模型**（唯一建带路径） | 建带六步链；README 由 `build_company_dossier_readmes.py` 从 CSV 渲染 | 一致预期/财报证据 → `a_share_valuation_dossiers.csv` + `data/companies/<代码>_<名称>/` |
 | 财报披露后的滚动更新 | §7 | `build_report_update_queue.py` | triage/tiers/pool → 更新队列 |
 | 单家公司值不值得关注 | §5.4 + 防过度纳入清单 + 边缘判例集 | 无 | → triage 行 + 决策日志 |

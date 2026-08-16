@@ -500,6 +500,24 @@ def build_overseas_section(
 _RESEARCH_CACHE: dict[str, str] = {}
 
 
+def load_valuation_paths() -> dict[str, str]:
+    """池模型带文件（v4.00 ROIC 口径）的 `roic_path` → 「估值路径」展示列。
+
+    取代原「策略」列（通用十一类标签，v4.00 起不再展示——它既不参与带计算也不参与买卖，
+    对读者的问题「这条带是怎么来的」没有回答；估值路径回答的正是这个）。
+    """
+    path = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
+    label = {"growth": "ROIC·增长", "zero_growth": "ROIC·零增长",
+             "equity_fallback": "权益退路", "bank_divspread": "银行·股利折现"}
+    out: dict[str, str] = {}
+    if path.exists():
+        with path.open(newline="", encoding="utf-8-sig") as handle:
+            for row in csv.DictReader(handle):
+                code = (row.get("security_code") or "").zfill(6)
+                out[code] = label.get((row.get("roic_path") or "").strip(), "权益退路")
+    return out
+
+
 def _evidence_retrieved(code: str) -> str:
     """证据文件的检索日（§7.4.1 研报触发只能靠新鲜度，不能靠研报发布日比较）。"""
     if code in _RESEARCH_CACHE:
@@ -533,6 +551,7 @@ def write_markdown(
     quotes = quotes or {}
     forecasts = forecasts or {}
     prev_tiers = prev_tiers or {}
+    valuation_paths = load_valuation_paths()
     # v1.39：阅读版按 **质量档 L1→L3，档内按参考分降序** 排列（§5.7：参考分只作档内排序
     # 展示，不改变矩阵资格、不代为定仓位档）。此前按估值表原序，读者无法一眼看出质量梯度。
     _tier_rank = {tier: index for index, tier in enumerate(("L1", "L2", "L3"))}
@@ -593,7 +612,7 @@ def write_markdown(
         body.append(
             "| {security_code} | {security_name} | {quality_tier_label} | {quality_score} | ".format(**row)
             + str(cells["valuation_cell"])
-            + " | {strategy_tag} | ".format(**row)
+            + f" | {valuation_paths.get(str(row.get('security_code', '')).zfill(6), '手工带（§6.5.7.4）')} | "
             + f"{cells['price']} | "
             + f"{cells['band']} | {cells['upside']} | {cells['pe']} | {cells['pb']} | "
             + "{valuation_reviewed_at} | {valuation_evidence_event} |".format(
@@ -607,7 +626,7 @@ def write_markdown(
         "",
         f"生成日期：{as_of}｜{quote_line}",
         "",
-        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是全量 worth_attention 单一列表阅读版。**买卖由 §9.7 唯一决定**：买入线与减持线的取值只在 §9.7.1 定（现为买 `P/V ≤ 1.00` 且 `收盘 > MA20 > MA60`、减 `P/V ≥ 2.50`）；`P/V` = 现价 ÷ 合理价区间中值，与本表「空间」列互为倒数。**档位（低估/中性/高估等）自 v2.56 起只是展示标签，不决定能否买**。",
+        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是全量 worth_attention 单一列表阅读版。**买卖由 §9.7 唯一决定**：买入线/减持线的取值只在工作流 §9.7.1 一处定，本表不复写数字；`P/V` = 现价 ÷ 合理价区间中值，与本表「空间」列互为倒数。**档位（低估/中性/高估等）只是展示标签，不决定能否买**。带为 **ROIC 口径**（§6.5.7.3，v4.00）：非金融按 NOPAT/投入资本/WACC 折现，银行按股利折现，「估值路径」列标明每条带怎么来的。",
         "",
         "- **档位按现价自动定档（§6.2.1.6，无人工复核，双向不限幅）**：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`——**箭头左端是审定档（最近一次证据复核的结论），不是昨日档**，可能是多日累计漂移；当日发生的变化另见扫描报告与刷新日志。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
         "- 现价/PE/PB 为每日扫描时的行情快照（PE 为 TTM 口径）；现价缺失（停牌/请求失败）的行沿用估值时点值。",
@@ -615,7 +634,7 @@ def write_markdown(
         "- **本表每一条带都可双向使用（v1.47）**：只能回答「便宜」不能回答「贵」的带（下限带、周期假设未决）不是偏保守的带，是**没算完的带**——一律判「无法估值」并进入 §6.5.7 建档队列；无带即无 `P/V`，该票当日不进 §9.7 的任何买卖判定。",
         "- **每一条带都出自逐票估值档案（§6.5.7）**：带由该公司单独设计的方法给出，并约定了跟踪指标与复核触发条件（见 `data/processed/a_share_valuation_dossiers.csv`，人读正文在 `data/companies/<代码>_<名称>/README.md`）。v2.00 起全池全部建档，通用十一类（A/C/D/E/F/H/J/K/M/N/P）已退居分类标签，只用于分类、排序与同族比较，**不再参与任何一条带的计算**；新入池公司在建档之前一律判「无法估值」（带显示 —），不以通用公式顶一条带上去。**因此「带非空」即「档案带」**，v2.03 起不再逐行标「（档）」——一个出现在 100% 行上的标记不区分任何东西。",
         "- 业绩预告不在本表展示（v1.09）：预告物化文件（§6.7.8）只作 §7.5.5 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
-        "- 合理价区间为该股按其策略模型处于「中性」档的价格带，是估值的唯一输出锚（换算依据见池 CSV `fair_price_basis`；模型认可的公允中枢≈区间中值，空间列即按中值/现价计算）。",
+        "- 合理价区间 = 模型内在价值 × [0.90, 1.10]，是估值的唯一输出锚（模型认可的公允中枢≈区间中值，空间列即按中值/现价计算）。「估值路径」列：ROIC·增长／ROIC·零增长＝§6.5.7.3 真口径；权益退路＝无三大报表时的权益 DCF；银行·股利折现＝§6.5.7.3 银行式；手工带＝§6.5.7.4 例外。",
         "- 估值时间 = 最近一次估值复核日（合理价区间的推导日）；估值事件 = 该次复核所依据的最新披露（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件）。档位每日按现价自动重算，带只在 §7 复核时更新——「价格改档、证据改带」。审定档、核心理由与复核时点价（`valuation_price`）见池 CSV。",
         *(
             ["- 文末附**海外关注清单**（非A股，§6.8）：只作质量与估值观察，不入本池 CSV、不进每日量价扫描、无买入资格。"]
@@ -623,7 +642,7 @@ def write_markdown(
             else []
         ),
         "",
-        "| 代码 | 名称 | 质量 | 参考分 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
+        "| 代码 | 名称 | 质量 | 参考分 | 估值 | 估值路径 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
         "| --- | --- | --- | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
         *body,
         *(extra_sections or []),
