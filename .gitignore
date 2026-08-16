@@ -65,3 +65,7 @@ data/processed/backtest/*trade_log.csv
 data/processed/diag_daily_states.csv
 data/processed/diag_bands.csv
 data/processed/metric_states/
+data/raw/financials_statements_v6new/
+data/processed/dcf_bands.csv
+data/processed/dcf_daily_raw.csv
+data/processed/dcf_states.csv
