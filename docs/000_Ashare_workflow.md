@@ -1445,7 +1445,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 
 **回测口径覆盖不到、须另按原章节执行的三件事**：
 
-1. **杠杆**。回测是无杠杆纯多头模拟，结论只在 100% 敞口下成立。账户级防护层见 §10。
+1. **杠杆**。回测自 v4.05 起**按融资口径模拟**（本金 300 万、授信 = min(净资产×60%, 180 万)、强平线 130%、年利率 3.5%），含利息成本与强平判定；但它**不模拟**授信额度的临时调整、券商风控加保、以及个人的追加/提取资金。账户级防护层见 §10。
 2. **个股突发风险**。造假、审计异常、资金占用由 §5 判定并移出名单，本节据名单变动被动跟随。
 3. **流动性**。回测按收盘价成交、未建模冲击成本，故 §10.1 第 3 条流动性门槛是硬过滤。
 
@@ -1495,12 +1495,20 @@ python3 scripts/backtest_valuation_strategy.py \
   --lot-size 100 --lot-ratio-cooldown \
   --exec-delay 1 --exec-price close \
   --fee-preset user \
+  --capital 3000000 --credit-ratio 0.6 --credit-cap 1800000 \
+  --maintenance-ratio 1.30 --margin-rate 0.035 \
   --width 0.0507 --sell-line 2.5548 --swap-margin 0.1461 \
   --stop-ma 60 --addon-trend ma-only --swap-require-weak \
   --daily-states data/processed/a_share_daily_states_adopted.csv \
   --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv \
   --since <起点>
 ```
+
+**回测基础设置＝融资口径（v4.05 起，用户 2026-08-17 裁定）**：本金 **300 万**、授信上限 **min(净资产×60%, 180 万)**、强平线 **130%**、融资年利率 **3.5%**。三点须知情：
+① **授信按本金封顶、不随净资产增长**，故杠杆在早年最重要、账户做大后自然衰减——这与真实券商授信一致；
+② 利息按日计提、计入净值；强平按担保比例 130% 触发并回补至 150%；
+③ **不启用融资棘轮**（该机制 2026-08-17 已退役，§12.75），`--margin-ratchet` 仅作研究开关。
+**无杠杆读数仍须并列引用**（见下表 `无杠杆对照`列）——杠杆放大的是同一套信号，不改变策略排序（§12.77）。
 
 **v4.04 基准读数**（23 起点，2009-11 ~ 2020-11 每半年一个，取中位）：
 
@@ -1619,7 +1627,7 @@ python3 scripts/rebuild_bank_bands.py divspread:0.02 \
 | T 日信号、T+1 尾盘成交 | `--exec-delay 1 --exec-price close` | 参数对比时用 `--exec-delay 0`（同日口径）跑得更快且结论同序 |
 | **建仓日均线止损** | **不给 `--no-trend-stop`**（＋上面的 `--stop-ma 60`） | **走势组缺省即开启**（`trend_stop=True`），**缺省开启因而容易漏写**，见 §9.7.5 |
 | 其余止损/止盈一律无 | 不给 `--price-stop`/`--value-stop`/`--trend-exit-ma` | 滚动均线割肉（破 MA60／MA120）已被五起点全负否决（§12.9.38），**不得与上一行混为一谈** |
-| **无融资** | 不给 `--credit-ratio`/`--credit-cap`/`--margin-rate` | 回测基准是**无杠杆**纯多头，账户级杠杆由 §10 管。融资场景（授信 60%、3.5%）的读数见 §12.70：杠杆放大策略差距、不改变排序 |
+| **融资口径** | **`--capital 3000000 --credit-ratio 0.6 --credit-cap 1800000 --maintenance-ratio 1.30 --margin-rate 0.035`** | v4.05 起为基准设置（用户裁定）。**四个参数缺一不可**：不给 `--credit-ratio` 即退回无杠杆、读数不可与本基准比。杠杆放大策略差距、不改变排序（§12.70/§12.77） |
 
 **已明确不采纳、不得再打开的开关**（依据在 `docs/Ashare_backtest_log.md` 对应节）：
 `--trend-tol`（走势容差）、`--cluster-swap`（簇内升级）、`--swap-bypass-corr`（腾位豁免相关性）、
@@ -1744,7 +1752,7 @@ python3 scripts/rebuild_bank_bands.py divspread:0.02 \
 
 ### 10.2 账户级防护层
 
-**本层不在 §9.7 的机械口径内，因为回测无杠杆、其结论只在 100% 敞口下成立。**
+**本层不在 §9.7 的机械口径内。** 回测自 v4.05 起已含融资与强平（口径见 §9.7.1.2），但它只模拟一条固定授信线与一条强平线；**授信被临时下调、券商加保、追加/提取资金、以及回撤后的行为反应**都在回测之外，由本层承担。
 
 | 项 | 口径 |
 | --- | --- |

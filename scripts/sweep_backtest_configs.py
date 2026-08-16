@@ -58,6 +58,11 @@ BASE = (
     "--swap --swap-partial --sell-trend-ma 20 "
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
     "--fee-preset user --no-artifacts "
+    # **回测基础设置＝融资口径**（用户 2026-08-17 裁定）：本金 300 万、授信上限 = min(净资产×60%, 180 万)、
+    # 强平线 130%、融资年利率 3.5%。授信封顶是**本金的 60%**（不随净资产增长），故杠杆在早年最重要、后期自然衰减。
+    # **不给 `--margin-ratchet`**：该机制已于 2026-08-17 退役（§12.75），回测侧只作研究开关。
+    "--capital 3000000 --credit-ratio 0.6 --credit-cap 1800000 "
+    "--maintenance-ratio 1.30 --margin-rate 0.035 "
     "--width 0.0507 --sell-line 2.5548 --swap-margin 0.1461 "
     "--stop-ma 60 --addon-trend ma-only --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "

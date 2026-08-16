@@ -81,3 +81,6 @@ data/processed/roiccond3s_states.csv
 data/processed/roiccond3h_bands.csv
 data/processed/roiccond3h_daily_raw.csv
 data/processed/roiccond3h_states.csv
+data/processed/roicmed_bands.csv
+data/processed/roicmed_daily_raw.csv
+data/processed/roicmed_states.csv
