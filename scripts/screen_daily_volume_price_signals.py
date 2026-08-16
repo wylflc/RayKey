@@ -1331,13 +1331,22 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float,
     n_cheap = sum(1 for r in rows
                   if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC97_BUY_LINE)
 
-    returns = daily_returns_window([str(r["security_code"]).zfill(6) for r in eligible])
+    # **相关性基准必须含在手持仓**（2026-08-17 修）：§9.7.1 写的是「与**在手**/已选标的 ≤ 0.75」，
+    # 而此前这里只用 `picked`（当日已选候选）作基准，**持仓被完全忽略**——回测侧 `--max-corr`
+    # 一直是对「在手 + 已选」判的，两侧口径因此分叉。判例：2026-08-17 持有山西汾酒时，
+    # 与之相关 0.79 的古井贡酒仍被排在买入计划第 1 位。
+    held_rows = [r for r in rows if str(r["security_code"]).zfill(6) in holdings]
+    returns = daily_returns_window(
+        [str(r["security_code"]).zfill(6) for r in eligible]
+        + [str(r["security_code"]).zfill(6) for r in held_rows])
     picked: list[dict] = []
     dropped: list[tuple[dict, float, str]] = []
     for cand in eligible[:SEC97_SCAN_DEPTH]:
         code = str(cand["security_code"]).zfill(6)
         worst, worst_name = 0.0, ""
-        for held in picked:
+        for held in held_rows + picked:
+            if str(held["security_code"]).zfill(6) == code:
+                continue                     # 加仓自身不与自己比
             value = pearson(returns, code, str(held["security_code"]).zfill(6))
             if value > worst:
                 worst, worst_name = value, str(held.get("security_name", ""))
