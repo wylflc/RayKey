@@ -85,7 +85,10 @@ def latest_model_bands(path: Path, min_available: str) -> tuple[dict, dict]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="把内在价值模型的带写入逐票档案")
-    ap.add_argument("--bands", type=Path, default=ROOT / "data/interim/pool_model_bands.csv")
+    # v4.01：缺省改指 §6.7 第①步的采纳产物。旧缺省 data/interim/pool_model_bands.csv 是
+    # v2.72 DCF 时代的一次性物化，2026-08-17 曾以缺省身份把 8-10 的陈旧带写回档案（当日发现即修）。
+    ap.add_argument("--bands", type=Path,
+                    default=ROOT / "data/processed/a_share_pool_model_bands_adopted.csv")
     ap.add_argument("--dossiers", type=Path, default=DOSSIERS)
     ap.add_argument("--as-of", required=True)
     ap.add_argument("--min-available", default="2025-01-01",
