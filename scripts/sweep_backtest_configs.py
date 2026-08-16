@@ -170,7 +170,10 @@ def main():
     ap.add_argument("config", nargs="?", type=Path, help="配置文件；只出表时可省略")
     ap.add_argument("--out", type=Path, required=True, help="读数落点（每行一次运行）")
     ap.add_argument("--starts", default="", help="逗号分隔的起点；缺省是 23 个标准起点")
-    ap.add_argument("--workers", type=int, default=8)
+    # **缺省 2**：单个回测进程实测峰值 1.25 GB（`/usr/bin/time -l`，2026-08-17），
+    # 本机 8 GB 物理内存且 swap 为 0——缺省 8 并发 ≈ 10 GB，会把整机打到黑屏（已发生一次）。
+    # 调高前先算：并发数 × 1.3 GB + 其它后台作业 必须 < 5 GB。见 CLAUDE.md「机器资源约束」。
+    ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--report", action="store_true", help="不重跑，只对 --out 现有内容出表")
     ap.add_argument("--title", default="扫描结果")
     args = ap.parse_args()

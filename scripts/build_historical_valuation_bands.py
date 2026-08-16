@@ -1557,9 +1557,17 @@ def main() -> int:
 
     all_bands: list[tuple[str, Band]] = []
     band_rows: list[dict] = []
-    daily_rows: list[dict] = []
     daily_counts: dict[str, int] = {}
     price_counts: dict[str, int] = {}
+
+    # **逐日状态边算边写**（2026-08-17）：此前把全部 1,500 万行状态堆成 `list[dict]` 最后一次性
+    # `writerows`，在 8 GB 机器上是十几 GB 的驻留——与并发扫描同时跑会把整机打到黑屏（见 CLAUDE.md
+    # 「机器资源约束」）。改成开一个句柄流式写，峰值内存与股票数无关，只与单只的天数有关。
+    daily_handle = daily_writer = None
+    daily_total = 0
+    if args.out_daily:
+        args.out_daily.parent.mkdir(parents=True, exist_ok=True)
+        daily_handle = args.out_daily.open("w", newline="", encoding="utf-8")
 
     for code in codes:
         series = financials.get(code, {})
@@ -1581,7 +1589,16 @@ def main() -> int:
         usable = [b for b in applicable_bands(bands) if prices and b.report_date >= prices[0][0]]
         first = usable[0].available_at if usable else None
         price_counts[code] = sum(1 for d, _ in prices if first and d >= first)
-        daily_rows.extend(states)
+        if daily_handle is not None and states:
+            if daily_writer is None:
+                daily_writer = csv.DictWriter(daily_handle, fieldnames=list(states[0]))
+                daily_writer.writeheader()
+            daily_writer.writerows(states)
+            daily_total += len(states)
+
+    if daily_handle is not None:
+        daily_handle.close()
+        print(f"逐日状态已写入 {args.out_daily}（{daily_total:,} 行，流式）")
 
     if args.out_bands:
         args.out_bands.parent.mkdir(parents=True, exist_ok=True)
@@ -1590,13 +1607,6 @@ def main() -> int:
             writer.writeheader()
             writer.writerows(band_rows)
         print(f"带已写入 {args.out_bands}（{len(band_rows)} 行）")
-    if args.out_daily and daily_rows:
-        args.out_daily.parent.mkdir(parents=True, exist_ok=True)
-        with args.out_daily.open("w", newline="", encoding="utf-8") as handle:
-            writer = csv.DictWriter(handle, fieldnames=list(daily_rows[0]))
-            writer.writeheader()
-            writer.writerows(daily_rows)
-        print(f"逐日状态已写入 {args.out_daily}（{len(daily_rows):,} 行）")
 
     if EXTERNAL_ROE:
         print("外部 ROE 覆盖率：" + "｜".join(f"{k} {v:,}" for k, v in sorted(EXTERNAL_STATS.items())))
