@@ -876,11 +876,23 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             # `ratio0 = 中位 + λ×(当期 − 中位)`——保留低谷保护（低于中位仍用中位），去掉高位惩罚。
             # 锚点诊断的直接动机：中际旭创 2018（壳→资产重组）当期比率远高于五年中位，
             # 纯中位给出每股 NOPAT 0.18、P/V=70 的荒唐读数；茅台一类快增长公司则被中位滞后约两年。
-            if getattr(args, "roic_nopat_source", "median") == "onesided_max" and not nopat_cyclical:
+            nopat_src = getattr(args, "roic_nopat_source", "median")
+            if nopat_src == "onesided_max" and not nopat_cyclical:
                 current = ratios[-1]
                 if current > ratio0:
                     ratio0 = ratio0 + args.roe_lift * (current - ratio0)
                     band.roic_nopat_mode = "onesided"
+            elif nopat_src in ("conditional", "conditional3") and not nopat_cyclical:
+                # 分型锚（§12.72）：增长态=近三期年报比率严格单调上行 → 采信当期
+                # （§12.36.2 已证「上行时采信当期」是正确方向、缩短窗口整体是反的）；
+                # 非增长态（波动/下行）→ conditional 用五年中位（不动），conditional3 用三年中位。
+                # 周期守卫命中的仍然只吃中位——顶部外推的保护优先于分型。
+                if len(ratios) >= 3 and ratios[-1] > ratios[-2] > ratios[-3]:
+                    ratio0 = ratios[-1]
+                    band.roic_nopat_mode = "ttm_growth"
+                elif nopat_src == "conditional3" and len(ratios) >= 3:
+                    ratio0 = statistics.median(ratios[-3:])
+                    band.roic_nopat_mode = "median3"
             if nopat_cyclical:
                 band.roic_nopat_mode = "cyclical_median"
                 ROIC_STATS["NOPAT 周期守卫·按中位"] += 1
@@ -1448,9 +1460,14 @@ def main() -> int:
     parser.add_argument("--roic-ic-floor", type=float, default=0.0, metavar="K",
                         help="投入资本下限 = K×总权益，挡住现金厚公司 IC 趋零导致的 ROIC 发散"
                              "（格力 2018 实测 793.7%%）。缺省 0 = v1 行为")
-    parser.add_argument("--roic-nopat-source", choices=("median", "onesided_max"), default="median",
+    parser.add_argument("--roic-nopat-source",
+                        choices=("median", "onesided_max", "conditional", "conditional3"),
+                        default="median",
                         help="正常化 NOPAT 比率的口径：median=五年中位（v1）；onesided_max=当期高于"
-                             "中位时按 --roe-lift 的 λ 单边上抬（镜像 §6.5.7.1 v2.90），周期股除外")
+                             "中位时按 --roe-lift 的 λ 单边上抬（镜像 §6.5.7.1 v2.90），周期股除外；"
+                             "conditional=分型锚（§12.72，用户 2026-08-17 思路）——近三年比率单调上行"
+                             "（增长态）且未触发周期守卫时**采信当期**，否则五年中位；"
+                             "conditional3=同上但非增长态用**三年**中位。两档都建议配 --roic-cycle-guard peak")
     parser.add_argument("--roic-growth", choices=("capital", "hybrid"), default="capital",
                         help="g 的口径：capital=增量ROIC×再投资率（v1，资本驱动）；hybrid=与利润"
                              "增速两条腿取大（资本自由的增长不再被判 0），周期股只走资本腿")

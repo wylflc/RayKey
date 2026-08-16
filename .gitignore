@@ -69,3 +69,9 @@ data/raw/financials_statements_v6new/
 data/processed/dcf_bands.csv
 data/processed/dcf_daily_raw.csv
 data/processed/dcf_states.csv
+data/processed/roiccond_bands.csv
+data/processed/roiccond_daily_raw.csv
+data/processed/roiccond_states.csv
+data/processed/roiccond3_bands.csv
+data/processed/roiccond3_daily_raw.csv
+data/processed/roiccond3_states.csv
