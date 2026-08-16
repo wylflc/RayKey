@@ -1141,7 +1141,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-bands", type=Path, default=DEFAULT_MODEL_BANDS,
                         help="§6.5.7.1 批量模型带表；§9.7 的 P/V 用它，不用池里的逐票档案带")
     parser.add_argument("--nav", type=float, default=0.0,
-                        help="当日净资产，用于定一档 = NAV × 1%%。不给则只算 P/V、不出买入计划")
+                        help="当日净资产，用于定一档 = NAV × §9.7.1 的比例。不给则只算 P/V、不出买入计划")
+    parser.add_argument("--funds", type=float, default=None,
+                        help="当日**可用资金 = 现金 + 未用授信**（OI-062）。买入计划以此为预算；"
+                             "不给则退回「可用资金＝净资产」的旧估算并显著告警。满仓/带融资账户必须给。")
     parser.add_argument("--rf", type=float, default=0.017114,
                         help="十年国债收益率，银行股利折现用（§12.31）")
     parser.add_argument("--plan-out", type=Path, default=DEFAULT_PLAN_OUT)
@@ -1298,7 +1301,7 @@ def load_holdings() -> dict[str, float]:
     return out
 
 
-def section97_entry_plan(rows: list[dict[str, object]], nav: float,
+def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float | None = None,
                          holdings: dict[str, float] | None = None) -> dict[str, object]:
     """§9.7.2 第 3、5 步：按 `P/V` 升序、去相关、逐个买一档。
 
@@ -1355,7 +1358,10 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float,
             continue
         picked.append(cand)
 
-    cash, plan, capped = nav, [], []
+    # **可用资金 ≠ 净资产**（OI-062，2026-08-17 修）：满仓或带融资的账户里，净资产早已变成持仓市值，
+    # 而买入只能用**现金＋未用授信**。此前这里以 `nav` 起算，会打印一份资金上不可能执行的计划——
+    # 判例：2026-08-17 实际现金 535 元、负债 212.8 万，计划却显示「投入 49.5 万、余现金 235.0 万」。
+    cash, plan, capped = (nav if funds is None else max(funds, 0.0)), [], []
     for cand in picked:
         price = to_float(cand.get("close")) or 0.0
         if price <= 0:
@@ -1388,6 +1394,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float,
         })
     return {"plan": plan, "dropped": dropped, "eligible": eligible, "capped": capped,
             "n_cheap": n_cheap, "cash": cash, "tranche": tranche,
+            "funds0": (nav if funds is None else max(funds, 0.0)), "funds_given": funds is not None,
             "n_held": len(holdings),
             "n_addon": sum(1 for r in eligible
                            if str(r["security_code"]).zfill(6) in holdings
@@ -1396,7 +1403,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float,
 
 def report_section97(result: dict[str, object], nav: float, out_path: Path) -> None:
     plan, dropped = result["plan"], result["dropped"]
-    invested = nav - result["cash"]
+    invested = float(result["funds0"]) - result["cash"]
     print(f"\n§9.7 机械执行：`P/V ≤ {SEC97_BUY_LINE}` 的 {result['n_cheap']} 只；"
           f"再过走势条件的 **{len(result['eligible'])} 只**"
           f"（新建仓 `收>MA20>MA60`；**已持仓只须 `MA20>MA60`**，其中 {result['n_addon']} 只"
@@ -1412,8 +1419,14 @@ def report_section97(result: dict[str, object], nav: float, out_path: Path) -> N
         print(f"  [单票上限挡下] {cand.get('security_name','')} "
               f"P/V {cand['model_pv']:.2f}｜现持仓已占净资产 {w:.1%}，再买一档将越过 "
               f"{SEC97_POSITION_CAP:.0%}")
-    print(f"  一档 {result['tranche'] / 1e4:,.2f} 万｜投入 {invested / 1e4:,.1f} 万"
-          f"（仓位 {invested / nav * 100:.1f}%）｜余现金 {result['cash'] / 1e4:,.1f} 万")
+    if result["funds_given"]:
+        print(f"  一档 {result['tranche'] / 1e4:,.2f} 万｜**可用资金 {float(result['funds0']) / 1e4:,.2f} 万**"
+              f"（现金＋未用授信）→ 投入 {invested / 1e4:,.2f} 万（占净资产 {invested / nav * 100:.1f}%）"
+              f"｜余 {result['cash'] / 1e4:,.2f} 万")
+    else:
+        print(f"  一档 {result['tranche'] / 1e4:,.2f} 万｜⚠ **未给 `--funds`，按「可用资金＝净资产」估算**"
+              f"（OI-062：满仓/带融资账户上此计划资金上不可执行，买入须走 §9.7.2 换仓）"
+              f"｜投入 {invested / 1e4:,.1f} 万（仓位 {invested / nav * 100:.1f}%）｜余 {result['cash'] / 1e4:,.1f} 万")
     for i, p in enumerate(plan, 1):
         band = f"{p['model_intrinsic_value'] * 0.9:.2f}-{p['model_intrinsic_value'] * 1.1:.2f}" \
             if isinstance(p["model_intrinsic_value"], float) else "—"
@@ -1640,7 +1653,7 @@ def main() -> int:
     # §9.7 的买入计划（`attach_model_pv` 已在落盘前跑过，见上文）。
     if section97_ready:
         if args.nav > 0:
-            report_section97(section97_entry_plan(rows, args.nav, load_holdings()),
+            report_section97(section97_entry_plan(rows, args.nav, args.funds, load_holdings()),
                              args.nav, args.plan_out)
         else:
             print("§9.7 未给 --nav，只算 P/V 不出买入计划（一档以净资产为基数）")
