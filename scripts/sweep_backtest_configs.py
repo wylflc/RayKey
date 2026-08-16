@@ -40,11 +40,12 @@ OUT_DIR = ROOT / "data/processed/backtest"
 
 # §9.7.1.2 的基准臂（v4.00 = V1FINAL），逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
 #
-# **估值 = ROIC 口径逐日状态**（`a_share_daily_states_adopted.csv`，重建三步见 §9.7.1.2）。
+# **估值 = ROIC 口径·分型锚＋增长腿**（`a_share_daily_states_adopted.csv`，重建见 §9.7.1.2：
+#   `--roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak`）。
 # **宇宙 = v6b 面板**（`panel_moat_bank_v6b.csv`，287 代码/现役 222）：§5.4 全口径逐年判定 + 全银行子册，
 #   由 `verdicts_pit_moat_v6.csv` + `build_moat_panel.py` 确定性装配（§12.71，用户 2026-08-16 采纳）。
-# **减持/换仓线 2.8967/0.1508 是 §12.30 对齐解（上侧面 27.90%），不得取整**；
-# **买入线 0.98（`--width 0.02`）是 v4.02 刻意收严的名义线**（合格面 21.15%→19.09%，非对齐产物，§12.72.4）。
+# **三条线 0.9493/2.5548/0.1461 是 v4.04 口径（分型锚＋增长腿）下的 §12.30 对齐解**（合格面 19.09%/27.90%），不得取整。
+# **不给 `--position-cap`**：v4.04 起单票无上限（用户 2026-08-17 裁定退役仓位控制，§12.75）——缺省 0 即无上限。
 # **四条规则于 v4.00 重适配**（§12.69：23 起点对 DCF 旧基准全 23 正、中位 +4.81pp）：
 #   `--position-cap 0.20`（15→20，剂量单调、25 回撤超标）｜`--stop-ma 20`（60→20，栈内 +1.9）
 #   ｜`--x 1.5`（1.0→1.5，栈内支柱）｜恢复减持线（不给 --no-value-sell，终选子集内 +0.5）。
@@ -57,7 +58,7 @@ BASE = (
     "--swap --swap-partial --sell-trend-ma 20 "
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
     "--fee-preset user --no-artifacts "
-    "--width 0.02 --sell-line 2.8967 --swap-margin 0.1508 --position-cap 0.25 "
+    "--width 0.0507 --sell-line 2.5548 --swap-margin 0.1461 "
     "--stop-ma 60 --addon-trend ma-only --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv"

@@ -1173,13 +1173,14 @@ def load_blocked_codes(path: Path) -> set[str] | None:
 #     而前复权序列**锚在最新一根**，故 `--as-of` 为最近交易日时末根收盘即未复权现价，两者同尺度；
 #     **回溯历史日期时该等式不成立**，故本层只在 `--as-of` 为最新交易日时给出买入计划。
 #   * 银行不走 DCF，走股利折现（§12.31）。
-SEC97_BUY_LINE = 0.98          # §9.7.1，v4.02：在 v6b 对齐解 1.0059 上刻意收严至合格面 19.09%（§12.72.4）
+SEC97_BUY_LINE = 0.9493        # §9.7.1，v4.04：分型锚＋增长腿口径下的 §12.30 对齐解（合格面 19.09%）
 SEC97_MAX_CORR = 0.75          # §9.7.1，252 日日收益率皮尔逊相关上限，v4.02 由 0.85 收紧（§12.72.1）
 SEC97_SCAN_DEPTH = 40          # §9.7.2 第 3 步：相关性过滤时最多下扫多少名
 SEC97_TRANCHE_PCT = 0.02       # §9.7.1「单次买入 = 当日净资产 × 2.0%」，v4.02 由 1.5% 改
 SEC97_LOT = 100                # A 股一手
-SEC97_POSITION_CAP = 0.25      # §9.7.1「单票上限」，v4.02 由 20% 改；**只挡加仓、不强制减持**
-SEC97_SELL_LINE = 2.8967       # §9.7.1「减持线」，v4.01 对齐 v6b：P/V ≥ 线且收盘 < MA20 → 减一档。
+SEC97_POSITION_CAP = None      # §9.7.1：v4.04 起**无单票上限**——用户 2026-08-17 裁定退役仓位控制，
+                               # 风险改由回撤与年化承担（§12.75）。None = 不设限，判定处直接跳过。
+SEC97_SELL_LINE = 2.5548       # §9.7.1「减持线」，v4.04 对齐解：P/V ≥ 线且收盘 < MA20 → 减一档。
 # ↑ 本脚本只做买入侧（§9.7.2 第 4 步卖出是人工），该常量是减持线数值的**脚本侧唯一落点**，
 #   供卖出侧人工核对引用——不是静默失效，是成文的分工（见工作流 §9.7.2 末段）。
 # §9.7.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
@@ -1359,7 +1360,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float,
             continue
         # 单票上限：**按「买入后」的市值判**，与回测 `--position-cap` 逐字同义。
         held_value = holdings.get(code, 0.0) * price
-        if nav > 0 and (held_value + amount) / nav > SEC97_POSITION_CAP:
+        if SEC97_POSITION_CAP and nav > 0 and (held_value + amount) / nav > SEC97_POSITION_CAP:
             capped.append((cand, held_value / nav))
             continue
         cash -= amount
@@ -1394,10 +1395,10 @@ def report_section97(result: dict[str, object], nav: float, out_path: Path) -> N
           f"相关性 >{SEC97_MAX_CORR} 剔除 {len(dropped)} 只 → 买入 {len(plan)} 只")
     if result["n_held"] == 0:
         print("  ⚠ **没读到任何持仓**（data/processed/a_share_holdings.csv 缺失或为空）"
-              "——单票上限与加仓放宽两条都会退回旧口径，买入计划不可直接照做")
+              "——加仓放宽会退回旧口径，买入计划不可直接照做")
     else:
-        print(f"  持仓 {result['n_held']} 只已载入｜单票上限 {SEC97_POSITION_CAP:.0%}"
-              f"（只挡加仓、不强制减持）")
+        cap_txt = f"单票上限 {SEC97_POSITION_CAP:.0%}（只挡加仓、不强制减持）" if SEC97_POSITION_CAP else "单票无上限（v4.04 退役）"
+        print(f"  持仓 {result['n_held']} 只已载入｜{cap_txt}")
     for cand, w in result["capped"]:
         print(f"  [单票上限挡下] {cand.get('security_name','')} "
               f"P/V {cand['model_pv']:.2f}｜现持仓已占净资产 {w:.1%}，再买一档将越过 "
