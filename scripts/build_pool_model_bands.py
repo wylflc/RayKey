@@ -28,7 +28,9 @@ OUT = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
 
 
 def is_bank(name: str) -> bool:
-    return "银" in name or "农商" in name
+    # 「银」单字会把兴业银锡(000426)这类矿业股误判成银行（2026-08-16 踩中，
+    # 估值路径被错标为股利折现）；收紧为「银行/农商」全词。
+    return "银行" in name or "农商" in name
 
 
 def main() -> int:
