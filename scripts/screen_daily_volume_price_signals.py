@@ -358,7 +358,8 @@ BREAKOUT_DAY_MIN_PCT = 1.0
 
 
 def deep_value_cheap(row: dict) -> bool:
-    """§9.6 条件①「足够便宜」。判定与跑批摘要共用一份实现，避免门槛写两处后漂移。"""
+    """深度低估提示的条件①「足够便宜」。**这是盘面描述，不是买入闸门**——买入资格只认
+    工作流 §9.7.1。判定与跑批摘要共用一份实现，避免门槛写两处后漂移。"""
     tier = str(row.get("quality_tier", "")).strip()[:2]
     floor = DEEP_VALUE_SPACE.get(tier)
     mos = row.get("margin_of_safety")
@@ -674,7 +675,7 @@ def classify_signal(
     valuation_price: float | None = None,
     at_index: int | None = None,
 ) -> dict[str, object]:
-    """at_index 缺省为最后一根K线；§9.5 缺口回溯用它在历史任一日重算信号。"""
+    """at_index 缺省为最后一根K线；§8.6 缺口回溯用它在历史任一日重算信号。"""
     add_indicators(rows)
     index = len(rows) - 1 if at_index is None else at_index
     row = rows[index]
@@ -806,7 +807,7 @@ def classify_signal(
         action_bias = "信号成立"
     elif entry_stage >= 1:
         # §8.13.5 阶段延续（v1.06）：触发后的缩量整理日属于信号延续而非转弱，延续窗口内视同候选可按有效段位执行。
-        signals.append(f"8.13 阶段延续({entry_stage}段)")
+        signals.append(f"阶段延续({entry_stage}段)")
         signal_state = "buy_candidate"
         action_bias = "阶段延续窗口内"
     elif wait_reasons:
@@ -906,7 +907,7 @@ def classify_signal(
 
 def gap_review(rows: list[dict[str, float | str]], as_of: str, since: str,
                limit_up_pct: float, cap_bn: float | None, valuation_price: float | None) -> dict[str, object]:
-    """§9.5 缺口回溯（v1.37）：把 since→as_of 之间**未被扫描的交易日**逐日重算一遍。
+    """§8.6 缺口回溯：把 since→as_of 之间**未被扫描的交易日**逐日重算一遍。
 
     现行 §9.1 是单日快照——隔一周再扫，期间出现过的放量、反转、信号触发全部不可见，
     只能看到"今天什么样"。缺口回溯逐日重跑 `classify_signal`，回答三件事：
@@ -1057,7 +1058,7 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = 
 
 
 def detect_last_scan(log_path: Path, as_of: str) -> str:
-    """§9.5：自动检出上一次扫描日——缺口回溯不能依赖人记得传 --since。"""
+    """§8.6：自动检出上一次扫描日——缺口回溯不能依赖人记得传 --since。"""
     if not log_path.exists():
         return ""
     dates = set()
@@ -1125,7 +1126,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--since",
         default="auto",
-        help='§9.5 缺口回溯起点。"auto"（缺省）从决策日志检出上次扫描日；'
+        help='§8.6 缺口回溯起点。"auto"（缺省）从决策日志检出上次扫描日；'
              '给具体日期则强制回溯该日之后；给空串关闭回溯。',
     )
     parser.add_argument("--as-of", required=True, help="Trading date in YYYY-MM-DD format.")
@@ -1451,9 +1452,9 @@ def main() -> int:
     if since == "auto":
         since = detect_last_scan(args.log_file, args.as_of)
         if since:
-            print(f"§9.5 缺口回溯：检出上次扫描日 {since}，将回溯 {since}→{args.as_of} 区间")
+            print(f"§8.6 缺口回溯：检出上次扫描日 {since}，将回溯 {since}→{args.as_of} 区间")
         else:
-            print("§9.5 缺口回溯：未检出上次扫描日，本次按单日快照执行")
+            print("§8.6 缺口回溯：未检出上次扫描日，本次按单日快照执行")
     rows = scan(input_rows, args.as_of, symbols, args.timeout, args.workers, since)
     blocked = load_blocked_codes(args.review_queue)
     for row in rows:
@@ -1624,7 +1625,7 @@ def main() -> int:
     deep = [r for r in rows if r.get("deep_value_watch")]
     cheap = [r for r in rows if deep_value_cheap(r)]
     weak_only = [r for r in cheap if not r.get("deep_value_watch")]
-    print(f"§9.6 深度低估重点关注：命中 {len(deep)} 只"
+    print(f"[盘面描述·不进 §9.7 判定] 深度低估重点关注：命中 {len(deep)} 只"
           f"（空间过门槛 {len(cheap)} 只，其中 {len(weak_only)} 只未见止跌/仍在下跌被排除）")
     # 全量打印，不截断（v2.11）：§9.2 第二节要求给出完整名单与逐只信息，
     # 这里少打一只，组稿时就无从知道它存在过。
@@ -1641,12 +1642,12 @@ def main() -> int:
               f"｜现价 {r.get('close','—')}｜带 {low}-{high}｜空间 {r['margin_of_safety'] * 100:.0f}%"
               f"｜当日 {pct_s}｜5日 {ret5_s}"
               f"｜{grade}｜{r.get('trend_strength','')}"
-              f"｜{(r.get('signals') or r.get('observation_tags') or '仅 §8.7.9 前置企稳')[:46]}")
+              f"｜{(r.get('signals') or r.get('observation_tags') or '仅平台企稳前置')[:46]}")
 
     # §9.2.1 落地校验：新增列跑完必须核对非空行数——§15.2 第 3 条四次复发的共同签名
     # 就是「某列整体为空而无人察觉」，而报告一旦改用手填值就再也发现不了。
     scored = [r for r in rows if str(r.get("quality_score", "")).strip()]
-    print(f"参考分（§9.2.1）非空 {len(scored)}/{len(rows)} 行")
+    print(f"参考分（工作流 §5.7）非空 {len(scored)}/{len(rows)} 行")
     if rows and not scored:
         print("**告警：quality_score 整列为空** —— 池 CSV 未透传参考分，报告不得手填，先修池物化")
 

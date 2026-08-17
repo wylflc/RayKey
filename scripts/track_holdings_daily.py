@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""每日持仓跟踪（工作流 §14，v2.56）。
+"""每日持仓跟踪（工作流 §11）。
 
 取代 `scan_holdings_sell_signals.py`。该脚本自 v2.56 起只做三件事：
 
 1. 读五列持仓清单（代码/名称/股数/成本价/**建仓日止损价**）；
-2. 取当日现价，对照核心估值合格池刷新现档（§6.2.1.6）与空间；
+2. 取当日现价，对照核心估值合格池刷新现档（§6.2）与空间；
 3. 算出 `P/V`（现价 ÷ 合理价区间中值），供 §9.7 的机械买卖判定消费；
 4. 比对收盘价与 `entry_stop_price`，命中即出 §9.7.5 的整仓清空提示。
 
-**v2.56 移除的是滚动均线割肉**（原 §14.3，依据 §12.9.38：破 MA60／破 MA120
+**v2.56 移除的是滚动均线割肉**（原持仓侧割肉条款，该编号已随 v4.07 精简退出正文；依据回测 log §12.9.38：破 MA60／破 MA120
 三条口径五起点全负 −9.43 ~ −14.79pp）。随之移除的字段：`stop_loss_price`、
 `stop_hit`、`day_low`、`割肉提醒`。
 
@@ -21,9 +21,9 @@
 整仓、①`P/V` 越过 §9.7.1 减持线且破 MA20 减一档、②出 §5 名单减一档、③换仓减一档），
 由执行侧按本脚本输出的 `pv` 与 `stop_hit` 计算。
 
-**刻意不做**的事（§14.6 退役清单）——盈亏、权重、仓位占比、单笔风险、
+**刻意不做**的事（退役清单，现由工作流 §11.1 的边界承担）——盈亏、权重、仓位占比、单笔风险、
 大趋势走坏判定、估值卖出减仓梯、加仓资格、账户回撤与杠杆。若将来要加回来，
-先改 §14 再改这里（§15 第 3 条）。
+先改工作流 §11 再改这里（§13 第 1 条）。
 
 `重大事项` 由大模型在逐票公告/新闻检索后判定，脚本不产出该取值。
 """
@@ -66,7 +66,7 @@ FIELDNAMES = [
     "stop_hit",
     "close",
     "quality_tier",
-    # §9.2.1 参考分（v2.14）：只透传分层表经池 CSV 带过来的 quality_score，供报告显示同档内排序；
+    # 参考分（工作流 §5.7）：只透传分层表经池 CSV 带过来的 quality_score，供报告显示同档内排序；
     # 不参与任何判定，也不在此重算。
     "quality_score",
     "effective_valuation_tier",
@@ -98,7 +98,7 @@ def load_pool(path: Path) -> dict[str, dict[str, str]]:
 
 
 def effective_tier(close: float, low: float | None, high: float | None) -> tuple[str, str]:
-    """§6.2.1.6 价格自动定档 + 空间（区间中值/现价 − 1）。带缺失时返回空档与空空间。
+    """§6.2 价格自动定档 + 空间（区间中值/现价 − 1）。带缺失时返回空档与空空间。
 
     v2.11（用户指令）：第五列由「带位」改为「空间」。带位（带内X%／低于带底-X%／越带顶+X%）
     与空间是同一件事的两种写法，而空间与池阅读版、§9.6 名单同口径且可直接比较——池 MD 早在
@@ -174,10 +174,10 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         else:
             stop_hit = "否"
 
-        # §14.5 三取值（v2.56 删去 `割肉提醒`）。无行情时必须落 `数据缺失` 而非 `持有`：
+        # §11.3 三取值（v2.56 删去 `割肉提醒`）。无行情时必须落 `数据缺失` 而非 `持有`：
         # `持有` 是唯一读起来像「已检查、没事」的取值，而没有现价恰恰意味着 `P/V` 没算过。
         # 一只 P/V 已越过减持线、本该减持的停牌股若显示为持有，就在唯一的卖出规则上
-        # 制造了静默失效（§15.2 第 3 条）。
+        # 制造了静默失效——这正是 §13 第 3 条要拦的形态。
         action = "数据缺失" if close is None else "持有"
 
         rows.append(
@@ -246,12 +246,12 @@ def log_decisions(
 
 
 def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: float) -> None:
-    """§14.4 除权除息检出（结 OI-030）：**每日固定输出一行**，无事也要说「无」。
+    """§11.4 除权除息检出（结 OI-030）：**每日固定输出一行**，无事也要说「无」。
 
     固定输出而非只在命中时打印，是本条的要点：不出声时，「今天查过了、没有」与「今天忘了查」
     在报告上长得一模一样——而 OI-030 登记的正是后者（规则预见了失效形态，却没有人负责触发它）。
 
-    只提示、不写回：§14.4 明文「调整由维护者完成」。**v2.56 后本检出的要害变了**——
+    只提示、不写回：§11.4 明文「调整由维护者完成」。**v2.56 后本检出的要害变了**——
     割肉价已退役，漏调影响的是 `P/V`（分子跳、分母不跳），会凭空造出一个买入信号；
     10 送 10 直接让 `P/V` 腰斩。危害由「多喊一次」升级为「多买一笔」。
     建议值一律标为**须人工核对**——差异化分派（判例即九号公司 2026-08-07）的价格口径与
@@ -269,7 +269,7 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
         print(f"  当日持仓除权除息：无（全市场 {len(events)} 家除权，均不在持仓内）")
         return
 
-    print(f"  **当日持仓除权除息 {len(hits)} 只**（§14.4：须在当日跟踪前调整**估值带**与 `cost_basis`）：")
+    print(f"  **当日持仓除权除息 {len(hits)} 只**（§11.4：须在当日跟踪前调整**估值带**与 `cost_basis`）：")
     by_code = {str(row["security_code"]): row for row in rows}
     for code, event in hits.items():
         row = by_code[code]
@@ -286,18 +286,18 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
             print(f"        {label} {value:g} → **建议 {adjust_for_ex_dividend(value, cash, ratio):.2f}**"
                   f"（(原价 − {cash:g}) ÷ (1 + {ratio:g})）")
         if ratio:
-            print(f"        送转比例 {ratio:g}/股：`current_shares` 同须按 §14.4 调整")
+            print(f"        送转比例 {ratio:g}/股：`current_shares` 同须按 §11.4 调整")
         print("        注：`entry_stop_price` 的调整**须持久化**——它是历史时点价格，"
               "没有任何重建会重新算它（带的 `−D` 则到下次基本面重建即抹掉，见 §11.3）")
         print("        ⚠ 建议值须人工核对后写回，两条都要核："
-              "①**本检出不知道你调过没有**——清单里没有记录调整状态的字段，若本日已按 §14.4 调过，"
+              "①**本检出不知道你调过没有**——清单里没有记录调整状态的字段，若本日已按 §11.4 调过，"
               "忽略本行，再调一次就是重复除权；"
               "②差异化分派的价格口径与公告每股派息不等（判例：九号公司 2026-08-07 公告 10派12.3852，"
               "价格口径每份 1.22）")
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="每日持仓跟踪（§14，v2.56）")
+    parser = argparse.ArgumentParser(description="每日持仓跟踪（工作流 §11）")
     parser.add_argument("--as-of", required=True, help="交易日 YYYY-MM-DD")
     parser.add_argument("--holdings", type=Path, default=DEFAULT_HOLDINGS)
     parser.add_argument("--valuation-pool", type=Path, default=DEFAULT_VALUATION_POOL)
@@ -324,7 +324,7 @@ def main() -> None:
     no_pv = [r for r in rows if not str(r["pv"]).strip()]
     no_band = [r for r in rows if not r["fair_price_low"]]
     print(f"tracked {len(rows)} holdings as of {as_of}")
-    # §14.4 检出排在 P/V 结论之前打印：除权未调时，下面那行 P/V 就是错的（§9.1 第四步）。
+    # §11.4 检出排在 P/V 结论之前打印：除权未调时，下面那行 P/V 就是错的（§9.1 第四步）。
     report_ex_dividend(rows, as_of, args.timeout)
     # §9.7.5 排在 P/V 之前：止损是第 ⓪ 条路径，命中即整仓，不再走减持与换仓。
     # **无事也打印**，且必须把「未设」单列——一行「跌破：无」在 25 只全部未设时是恒真的，
@@ -350,9 +350,9 @@ def main() -> None:
         print(f"  **P/V 未算出 {len(no_pv)} 只**：{'、'.join(str(r['security_name']) for r in no_pv)}（无行情或无带，当日不进 §9.7 判定）")
     if no_band:
         print(f"  无带（出池或无法估值）{len(no_band)} 只：{'、'.join(str(r['security_name']) for r in no_band)}")
-    # §9.2.1 落地校验：新增列必须核对非空行数（§15.2 第 3 条已复发四次的静默失效签名就是「整列为空而无人察觉」）。
+    # 落地校验：新增列必须核对非空行数——「整列为空而无人察觉」是本仓库复发过四次的静默失效签名（§13 第 3 条）。
     scored = [r for r in rows if str(r["quality_score"]).strip()]
-    print(f"  参考分（§9.2.1）非空 {len(scored)}/{len(rows)} 行")
+    print(f"  参考分（工作流 §5.7）非空 {len(scored)}/{len(rows)} 行")
     if rows and not scored:
         print("  **告警：quality_score 整列为空** —— 池 CSV 未透传参考分，报告不得手填，先修脚本/池物化")
 
