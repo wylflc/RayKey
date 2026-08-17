@@ -624,6 +624,7 @@ class Lot:
     max_money_drawdown: float = 0.0
     entry_stop: float = 0.0     # 建仓日止损价（见 entry_stop_price）
     entry_stop_ma: int = 0      # 实际采用的均线周期——买在 MA60 下方时会退回 20
+    stop_breach_streak: int = 0 # 连续收盘跌破止损价的交易日数；站回止损价即归零
     peak_intrinsic: float = 0.0 # 持有期内内在价值的峰值——**基本面退出**按它的回撤触发
     exit_date: str = ""
     exit_reason: str = ""
@@ -743,6 +744,24 @@ def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int) -> tuple[
     return ma.get(20, 0.0), 20
 
 
+def update_stop_breach(price: float, stop: float, streak: int,
+                       confirm_days: int = 1, deep_pct: float = 0.0) -> tuple[int, str]:
+    """更新固定止损价的连续跌破状态，返回 ``(新计数, 触发类型)``。
+
+    ``confirm_days`` 按该证券有收盘价的交易日计；收盘回到止损价或其上方即清零。
+    ``deep_pct`` 是深跌旁路，例如 0.03 表示收盘低于止损价 3% 时无需等满确认日。
+    缺省 ``confirm_days=1, deep_pct=0`` 与原先“首次跌破即止损”逐位等价。
+    """
+    if not stop or price >= stop:
+        return 0, ""
+    streak += 1
+    if deep_pct and price <= stop * (1 - deep_pct):
+        return streak, "deep"
+    if streak >= confirm_days:
+        return streak, "confirmed"
+    return streak, ""
+
+
 def lot_ratio_ready(counters: dict, code: str, lot_value: float, tranche: float) -> bool:
     """§9.7.3 比例冷却（用户 2026-08-10 指令）：一手价值是一档的 `x` 倍时，**成交一手后跳过随后
     `round(x) − 1` 次合格机会**，即每 `round(x)` 次合格才动一手。
@@ -825,6 +844,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         trend_tranche: bool = False, trend_ma: tuple[int, ...] = (20, 60),
         trend_tol: float = 0.0, exec_delay: int = 0, exec_price: str = "close",
         sell_trend_ma: tuple[int, ...] = (), sell_full: bool = False, stop_min_days: int = 0,
+        stop_confirm_days: int = 1, stop_deep_pct: float = 0.0,
         stop_partial: bool = False, stop_tranche: float = 1.0,
         liquidate_ma: int = 0, liquidate_days: int = 3,
         opens: dict[str, dict[str, float]] | None = None,
@@ -1147,11 +1167,28 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 止损**只对已经贵起来的仓位生效**。语义是「便宜时下跌是加仓机会不是离场理由，
             # 只有涨到自身历史高分位之后才用均线保护利润」。**出名单清仓那条不受影响**
             # ——它在本分支之前判、且是基本面退出，正是用户说的「被踢出池子才止损」那条路径。
+            stop_enabled = ((strategy == "trend" and trend_stop) or price_stop) and bool(lot.entry_stop)
+            stop_trigger = ""
+            if stop_enabled:
+                lot.stop_breach_streak, stop_trigger = update_stop_breach(
+                    price, lot.entry_stop, lot.stop_breach_streak,
+                    stop_confirm_days, stop_deep_pct,
+                )
+            else:
+                lot.stop_breach_streak = 0
             if pct_stop_when_rich and not is_rich(code, ratio):
                 if lot.entry_stop and price < lot.entry_stop:
                     stats["止损·因仍便宜而不触发"] += 1   # 只数**真的被压住**的那些，不数每一天
-            elif ((strategy == "trend" and trend_stop) or price_stop) and lot.entry_stop and price < lot.entry_stop \
+            elif stop_enabled and stop_trigger \
                     and (not stop_min_days or _days_between(lot.entry_date, day) >= stop_min_days):
+                if stop_trigger == "deep":
+                    trigger_reason = f"低于止损价{stop_deep_pct:.0%}·深跌旁路"
+                elif stop_confirm_days == 1:
+                    # 保留缺省配置的原始成交原因文本，避免只因新增研究开关就污染产物 diff。
+                    trigger_reason = "跌破"
+                else:
+                    trigger_reason = f"连续{lot.stop_breach_streak}日跌破"
+                stats[f"止损触发·{stop_trigger}"] += 1
                 # `stop_partial`（用户 2026-08-14：「卖出改为定投式减仓」）：止损由**整仓清空**
                 # 改为**与定投同速、每日减一档**。这是当前策略里最后一条整仓路径——出名单清仓、
                 # `P/V` 减持、换仓三条早已是按档减，故本开关等于把卖出端整体对称到买入端。
@@ -1170,10 +1207,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         if shares >= lot.shares * 0.999:
                             turnover += lot.shares * price
                             close_lot(portfolio, code, day, price, ledger=ledger,
-                                      reason=f"跌破建仓日MA{lot.entry_stop_ma}·减完清空")
+                                      reason=f"{trigger_reason}建仓日MA{lot.entry_stop_ma}·减完清空")
                         else:
                             log_partial_sell(ledger, day, code, shares, price,
-                                             f"跌破建仓日MA{lot.entry_stop_ma}·减一档")
+                                             f"{trigger_reason}建仓日MA{lot.entry_stop_ma}·减一档")
                             lot.shares -= shares
                             portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                             lot.proceeds += shares * price
@@ -1183,7 +1220,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         stats["止损·减一档"] += 1
                     continue
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
-                close_lot(portfolio, code, day, price, ledger=ledger, reason=f"跌破建仓日MA{lot.entry_stop_ma}止损")
+                close_lot(portfolio, code, day, price, ledger=ledger,
+                          reason=f"{trigger_reason}建仓日MA{lot.entry_stop_ma}止损")
                 sell_count += 1
                 continue
             # 基本面退出：内在价值自峰值回落超阈值即清仓。**盯 V 不盯价**，故一只票可以
@@ -2094,6 +2132,10 @@ def main() -> int:
                         help="最小交易单位（A股填 100）。打开后买入按手向下取整、买不足一手则跳过")
     parser.add_argument("--stop-min-days", type=int, default=0, metavar="D",
                         help="建仓日均线止损的最短持有期：不足 D 个自然日不触发（0=原行为）")
+    parser.add_argument("--stop-confirm-days", type=int, default=1, metavar="N",
+                        help="固定止损价须连续 N 个有收盘价的交易日被跌破才触发；1=原行为")
+    parser.add_argument("--stop-deep-pct", type=float, default=0.0, metavar="P",
+                        help="深跌旁路：收盘低于止损价 P 比例时立即触发，不等确认日；0=关闭，3%%填0.03")
     parser.add_argument("--sell-full", action="store_true",
                         help="P/V≥减持线（且过走势闸门）时整仓卖出，而非按一档减")
     parser.add_argument("--stop-partial", action="store_true",
@@ -2123,6 +2165,11 @@ def main() -> int:
     fg.add_argument("--fee-stamp-mode", choices=("flat", "historical"), default="flat",
                     help="historical＝按成交日取历史印花税率（含早年双边征收），用于检验高换手配置在真实税率下是否还成立")
     args = parser.parse_args()
+
+    if args.stop_confirm_days < 1:
+        sys.exit("--stop-confirm-days 须为 ≥1 的交易日数")
+    if not 0 <= args.stop_deep_pct < 1:
+        sys.exit("--stop-deep-pct 是比例，须落在 [0,1)，例如 3% 填 0.03")
 
     if args.fee_preset == "user":       # 用户 2026-08-12 提供的券商口径
         args.commission = args.commission or 0.0001
@@ -2228,6 +2275,8 @@ def main() -> int:
                      + ("_sf" if args.sell_full else "")
                      + (f"_stp{args.stop_tranche:g}" if args.stop_partial else "")  # `_sp` 已被 --swap-partial 占用
                      + (f"_smd{args.stop_min_days}" if args.stop_min_days else "")
+                     + (f"_scd{args.stop_confirm_days}" if args.stop_confirm_days != 1 else "")
+                     + (f"_sdp{args.stop_deep_pct * 100:g}" if args.stop_deep_pct else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
                      + (f"_bf{args.buy_floor:g}" if args.buy_floor else "")
@@ -2283,6 +2332,8 @@ def main() -> int:
                          only_tiers={t.strip() for t in args.only_tiers.split(",") if t.strip()} or None,
                          universe=universe, trend_tranche=args.trend_tranche,
                          sell_full=args.sell_full, stop_min_days=args.stop_min_days,
+                         stop_confirm_days=args.stop_confirm_days,
+                         stop_deep_pct=args.stop_deep_pct,
                          stop_partial=args.stop_partial, stop_tranche=args.stop_tranche,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,
