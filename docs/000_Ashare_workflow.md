@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.09
+# A股选股-估值-量价操作流程 v4.10
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -294,7 +294,9 @@ V = 近12个月每股现金分红 ÷（十年期国债收益率 + 2%）
 以下顺序是当前唯一生产路径。重建全历史模型带属于重作业，必须独占运行。
 
 ```bash
-# 1. 刷新池内三大报表
+# 1. 刷新财务输入。**两份缺一不可**：
+#    逐季财务是模型的 TTM 锚（每个扫描日都可能变），三大报表只有年报（4 月后到次年才动）。
+python3 scripts/fetch_a_share_quarterly_financials.py --as-of YYYY-MM-DD --since <当前报告期末>
 python3 scripts/fetch_a_share_financial_statements.py
 
 # 2. 构建 ROIC 带与逐日状态
@@ -329,6 +331,12 @@ python3 scripts/validate_valuation_bands.py \
 python3 scripts/build_a_share_core_valuation_pool.py --as-of YYYY-MM-DD
 ```
 
+**第 1 步的逐季财务是本链最容易静默过期的输入**：`data/raw/financials/<报告期>.csv` 一期一个文件，
+披露窗未关时首次写下的那份必然只覆盖少数早披露公司，而残缺文件与完整文件在磁盘上无法区分。
+脚本自 v4.10 起对**披露窗未关的报告期强制重取**（不再由 `--refresh` 决定）并在结尾告警，
+但**跳过第 1 步仍会让整条链拿旧 TTM 重算一遍旧带**——判例：贵州茅台 2026-08-15 披露半年报，
+而池内该行停在 04-25 的一季报，根因就是这一步从未进入每日流程。
+
 任一步失败即停止；不得把旧估值表上的校验通过当成新带已生效。完成后核对模型带、档案、估值表和核心池的带值与日期一致。校验失败行冻结新增买入，修复后再物化。
 
 仅刷新每日现价和展示档位时运行：
@@ -352,7 +360,18 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 
 ## 7. 阶段三：披露与事件滚动更新
 
-### 7.1 更新队列
+### 7.1 证据同步与更新队列
+
+**队列是消费者，必须先刷新它读的两个证据源**——只跑队列而不刷新源，等于每天拿旧证据重算一遍旧结论：
+
+```bash
+python3 scripts/fetch_a_share_report_disclosures.py --report-date <当前报告期末> \
+  --output data/interim/a_share_report_disclosures.csv
+python3 scripts/fetch_a_share_earnings_forecasts.py --report-date <当前报告期末> \
+  --output data/interim/a_share_earnings_forecasts.csv
+```
+
+再重建队列：
 
 ```bash
 python3 scripts/build_report_update_queue.py \
@@ -366,7 +385,10 @@ python3 scripts/build_report_update_queue.py \
   --output data/interim/a_share_report_update_queue.csv
 ```
 
-每个扫描日重建队列；文件日期早于扫描日即不可用。`garbage` 不进入队列。
+**三个文件都必须当日重建**；任一文件日期早于扫描日即不可用。`garbage` 不进入队列。
+
+`<当前报告期末>` 取最近一个已开始披露的报告期末（`2026-06-30` 一类）。**披露窗未关时覆盖面每天都在长**，
+故不存在"抓过一次就够了"——法定截止日为一季报 4-30、半年报 8-31、三季报 10-31、年报次年 4-30。
 
 ### 7.2 质量复核触发
 
@@ -444,8 +466,8 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 
 信号口径与执行时点只认 §9.7.1。执行日价格变化不重算信号日合格集；停牌或执行日新增 §7 事件时跳过该票并重新复核。
 
-1. **同步证据**：刷新预告、快报、定期报告和更新队列；运行财报日价格背离检查；核查 §7.4 的每日范围。
-2. **更新估值与档位**：命中事件时执行 §6.7；随后刷新核心池阅读版和当日档位。
+1. **同步证据**：按 **§7.1** 跑完「两个取数脚本 ＋ 队列重建」三条命令（**只重建队列不算同步证据**）；运行 §7.5.6 财报日价格背离检查；核查 §7.4 的每日范围。
+2. **更新估值与档位**：队列出现 `valuation_review_needed` 时执行 §6.7（**含其第 1 步的逐季财务刷新**）；随后刷新核心池阅读版和当日档位。
 3. **取行情与生成买入计划**：运行 §8.2，确认净资产、可用资金、持仓和模型带均已加载。
 4. **跟踪持仓与公司行动**：运行 `track_holdings_daily.py --as-of`；先处理除权除息，再检查止损、公告与估值。
 5. **形成执行清单**：按 §9.7.2 先卖后买，四张表即使为空也必须显示。

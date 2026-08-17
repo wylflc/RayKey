@@ -35,12 +35,16 @@
 
 用法
 ----
-    python3 scripts/build_historical_valuation_bands.py --codes-file <池代码> \
-        --since 2000-01-01 --r-mode market \
-        --out-bands data/interim/pool_model_bands.csv --out-daily /tmp/x.csv
-    python3 scripts/apply_model_bands_to_dossiers.py --bands data/interim/pool_model_bands.csv --as-of YYYY-MM-DD
+照 §6.7 建带链跑即可，**两个参数都用缺省**：
 
-随后照常跑 §6.7 四步链（建带卡 → apply → 校验 → 池物化）。
+    python3 scripts/build_pool_model_bands.py --as-of YYYY-MM-DD
+    python3 scripts/apply_model_bands_to_dossiers.py --as-of YYYY-MM-DD
+
+随后跑 §6.7 后半段（建带卡 → apply → 校验 → 池物化）。
+
+**不要再往 `data/interim/pool_model_bands.csv` 写带**：那是 v2.72 时代的中间物化文件，
+已于 2026-08-17 删除；生产带的唯一落点是 `data/processed/a_share_pool_model_bands_adopted.csv`
+（§2 固定产物表）。重建那个旧路径会让两个消费者读到不同的带。
 """
 from __future__ import annotations
 

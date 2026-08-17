@@ -134,6 +134,26 @@ def fetch_period(report_date: str, timeout: float, pause: float) -> tuple[list[d
     return rows, None
 
 
+# 法定披露截止日：一季报 4-30、半年报 8-31、三季报 10-31、年报次年 4-30。
+# **披露窗未关的报告期，磁盘上那份文件必然是残缺的**——首次抓取时多数公司还没披露。
+# 而残缺文件与完整文件在磁盘上无法区分，`--refresh` 又默认关闭，于是
+# 「抓过一次」＝「永远停在那一次的覆盖面」。2026-08-17 实测到这个形态：
+# 2026-06-30 期停在 8-11 抓的 538 家（贵州茅台 8-15 披露的半年报因此始终进不来），
+# 而同一天 2025-06-30 期有 11,583 家。故窗口未关的期一律强制重取，不由 `--refresh` 决定。
+DEADLINE_BY_MONTH_DAY = {"03-31": (0, 4, 30), "06-30": (0, 8, 31),
+                         "09-30": (0, 10, 31), "12-31": (1, 4, 30)}
+
+
+def disclosure_window_open(report_date: str, as_of: date) -> bool:
+    """报告期的法定披露窗是否仍未关闭（未关 = 文件必然还在长）。"""
+    year, month_day = int(report_date[:4]), report_date[5:]
+    offset = DEADLINE_BY_MONTH_DAY.get(month_day)
+    if offset is None:
+        return False
+    year_offset, month, day = offset
+    return as_of <= date(year + year_offset, month, day)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="逐季度历史财务数据全市场取数（OI-034 前置）")
     parser.add_argument("--as-of", required=True, help="截止日 YYYY-MM-DD")
@@ -151,12 +171,20 @@ def main() -> int:
 
     counts: dict[str, int] = {}
     failures: list[str] = []
+    open_note: list[str] = []
     for report_date in periods:
         path = args.out_dir / f"{report_date}.csv"
-        if path.exists() and not args.refresh:
+        window_open = disclosure_window_open(report_date, until)
+        if path.exists() and not args.refresh and not window_open:
             with path.open(newline="", encoding="utf-8") as handle:
                 counts[report_date] = sum(1 for _ in csv.DictReader(handle))
             continue
+        before = 0
+        if path.exists():
+            with path.open(newline="", encoding="utf-8") as handle:
+                before = sum(1 for _ in csv.DictReader(handle))
+            if window_open and not args.refresh:
+                print(f"  {report_date}: 披露窗未关，强制重取（现有 {before} 家）")
         rows, error = fetch_period(report_date, args.timeout, args.pause)
         if error:
             failures.append(f"{report_date}：{error}")
@@ -168,11 +196,18 @@ def main() -> int:
             writer.writeheader()
             writer.writerows(rows)
         counts[report_date] = len(rows)
-        print(f"  {report_date}: {len(rows):>5} 行")
+        delta = f"  (+{len(rows) - before} 家)" if before else ""
+        print(f"  {report_date}: {len(rows):>5} 行{delta}")
+        if window_open:
+            open_note.append(f"{report_date}（{len(rows)} 家，截止日前仍会增加）")
         time.sleep(args.pause)
 
     total = sum(counts.values())
     print(f"\n合计 {total:,} 行、{len(counts)} 个报告期")
+    if open_note:
+        print("⚠ **披露窗未关的报告期**：" + "；".join(open_note)
+              + "。这些期每个扫描日都必须重取，覆盖面到法定截止日才定型——"
+                "把它们当成完整数据用，等于系统性漏掉尚未披露的公司。")
 
     # §15.2 第 3 条硬自检：新增数据源必须核对**非空行数**与**每列的非空覆盖**。
     if counts:

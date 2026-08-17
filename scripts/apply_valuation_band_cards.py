@@ -124,13 +124,27 @@ def exchange_of(code: str) -> str:
 REPORT_EVENT = {"03-31": "一季报", "06-30": "中报", "09-30": "三季报", "12-31": "年报"}
 
 
+# **生产模型带的唯一落点**（§2 固定产物表）。此前这里指向 `data/interim/pool_model_bands.csv`
+# ——那是 v2.72 时代的中间物化文件，已在 2026-08-17 修 dossier 污染时删除。文件一删，
+# 下面的 `if not path.exists(): return best` 就让整张表**静默退回 `evidence_cutoff()` 兜底**，
+# 于是「估值时间/估值事件」两列改读 `valuation_evidence/*.json` 那份 8-04 的旧证据快照。
+# 后果：贵州茅台 8-15 披露半年报、带已按半年报重算为 667.21-815.48，而池 MD 仍显示
+# 「2026-04-25 一季报」。**空字典没有任何告警，与「模型带全部缺失」不可区分**——这正是
+# 本仓库反复踩到的静默失效签名，故本函数改为**读不到就硬失败**。
+MODEL_BANDS_PATH = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
+
+
 def _load_model_bands() -> dict:
     """模型带里每只最新可用的一条。取值口径与 `apply_model_bands_to_dossiers.py` 完全一致
     （`(available_at, report_date)` 双键），否则两处会给出不同的报告期。"""
-    path = ROOT / "data/interim/pool_model_bands.csv"
+    path = MODEL_BANDS_PATH
     best: dict[str, dict] = {}
     if not path.exists():
-        return best
+        raise SystemExit(
+            f"缺少生产模型带 {path.relative_to(ROOT)}——先跑 §6.7 第 4 步 "
+            f"`build_pool_model_bands.py`。**不可静默继续**：模型带缺失时"
+            "「估值时间/估值事件」会退回陈旧证据快照，读者据此以为带没跟上最新财报。"
+        )
     with path.open(newline="", encoding="utf-8-sig") as fh:
         for r in csv.DictReader(fh):
             if r.get("status") != "ok":
@@ -139,6 +153,8 @@ def _load_model_bands() -> dict:
             key = (r.get("available_at", ""), r.get("report_date", ""))
             if code not in best or key > (best[code]["available_at"], best[code]["report_date"]):
                 best[code] = r
+    if not best:
+        raise SystemExit(f"{path.relative_to(ROOT)} 里没有 status=ok 的模型带——同上，不可静默继续。")
     return best
 
 
