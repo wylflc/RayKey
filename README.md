@@ -6,15 +6,15 @@ The project supports a reproducible equity-research workflow: build an investabl
 
 ## Primary Workflow (A-share)
 
-`docs/000_Ashare_workflow.md` is the executable specification for the five-stage A-share loop. Its §0 routing table maps instructions to modules and scripts.
+`docs/000_Ashare_workflow.md` is the executable specification for the five-stage A-share loop. Its §0 routing table maps requests to the current sections and scripts; this README intentionally does not duplicate operational parameters or ordered command chains.
 
-1. Quarterly full-market quality review: round-1 three-class triage (`worth_attention` / `boundary_pending` / `garbage`, ADR-0006), then three-tier quality tiering (L1 strong / L2 medium / L3 weak moat) for worth-attention companies (§5.7/§5.7.1/§5.8, workflow v1.27).
+1. Quarterly full-market quality review: round-1 three-class triage (`worth_attention` / `boundary_pending` / `garbage`, ADR-0006), then three-tier quality tiering (L1 strong / L2 medium / L3 weak moat) for worth-attention companies (workflow §5).
 2. Valuation screening across the worth-attention set, materialized into the core valuation pool (core layer = L1/L2, tactical = L3).
 3. Rolling updates after financial-report disclosures.
 4. Daily volume-price scan producing buy candidates from the core valuation pool.
-5. Daily holdings tracking: per-holding announcement/news search plus a valuation refresh (workflow v2.05 reduced this stage from a sell-decision engine to plain tracking; the stop price is the only mechanical rule left, and the buy-side §10 gate retired in the same revision — the pipeline now ends at candidates).
+5. Daily execution and holdings tracking under workflow §9 and §11.
 
-The full-universe round-1 rescan is complete (5,653 companies triaged as of 2026-07-09: 261 worth_attention / 5,332 boundary_pending / 60 garbage); `docs/archive/round1-rescan-progress.md` holds the final snapshot. Tiering over that set was rebuilt on 2026-08-01 under workflow v1.27 and currently stands at **L1 22 / L2 230 / L3 9** (all evidence-reviewed; CATL was re-adjudicated to L1 under the §5.7.2 erosion-path criteria added in v1.40). Every reviewed conclusion is appended to `data/processed/a_share_workflow_decision_log.csv`.
+The completed full-universe rescan snapshot is in `docs/archive/round1-rescan-progress.md`. Current triage and tier counts must be read from the live processed CSVs rather than copied into this README; every reviewed conclusion is appended to `data/processed/a_share_workflow_decision_log.csv`.
 
 The personal investment system in `docs/000_personal-investment-system-v1.zh.md` (Chinese, canonical) is the default standard for all equity analysis.
 
@@ -22,7 +22,7 @@ The personal investment system in `docs/000_personal-investment-system-v1.zh.md`
 
 - `docs/000_Ashare_workflow.md` — main A-share workflow specification.
 - `docs/000_personal-investment-system-v1.zh.md` — personal investment rulebook.
-- `docs/Ashare_quality_rubric.md` — the Q1/Q2 scoring detail behind workflow §5.7 tier assignment. Rule-bearing content was hoisted into workflow §5.7.4 in v2.00; this file keeps the scoring recipe and the decided cases.
+- `docs/Ashare_quality_rubric.md` — scoring detail and decided cases behind workflow §5.7; the workflow keeps the current hard rules.
 - `docs/Ashare_workflow_changelog.md` — per-version workflow history; `docs/Ashare_workflow_open_issues.md` — confirmed-but-unfixed defects.
 - `docs/archive/` — completed process logs, one-off audits, and implemented design docs. Not inputs to any live flow.
 - `docs/peer-group-calibration/` — per-industry calibration narratives; the audit trail of how the round-1 rules were formed.
@@ -70,30 +70,7 @@ python3 scripts/build_quarterly_quality_review_queue.py --as-of YYYY-MM-DD   # q
 python3 scripts/build_report_update_queue.py --market A_SHARE --as-of YYYY-MM-DD  # post-disclosure update queue
 ```
 
-Valuation evidence and per-company dossiers (workflow §6.5.7 — the only path that produces a tradable band):
-
-```bash
-python3 scripts/fetch_a_share_valuation_evidence.py --codes 600519,000858   # consensus, financials, coverage
-python3 scripts/build_company_dossier_readmes.py --check                    # dossier CSV -> README, diff only
-
-# The four-step band chain (workflow §6.7 要求 10) — every step is required, in this order.
-# Skipping step 2 leaves the new bands in the card file and the pool on yesterday's bands,
-# while step 3 still reports "pass" on the stale table.
-python3 scripts/build_valuation_band_cards.py --tags data/interim/strategy_tag_map.csv \
-  --out data/interim/valuation_band_cards.csv --as-of YYYY-MM-DD   # 1. dossier -> band cards
-python3 scripts/apply_valuation_band_cards.py --as-of YYYY-MM-DD --quotes fetch  # 2. cards -> valuation table
-python3 scripts/validate_valuation_bands.py --as-of YYYY-MM-DD    # 3. gate before materialization
-# 4. build_a_share_core_valuation_pool.py — see below
-```
-
-Valuation pool materialization and daily scans (see workflow §6.7, §8.3, §14):
-
-```bash
-python3 scripts/build_a_share_core_valuation_pool.py --as-of YYYY-MM-DD
-python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD
-python3 scripts/track_holdings_daily.py --as-of YYYY-MM-DD
-python3 scripts/backtest_signal_replay.py --as-of YYYY-MM-DD --symbols CODE1,CODE2
-```
+Valuation, pool materialization, daily scans, holdings tracking, and backtests must use the current ordered commands in workflow §6.7, §8.2, §9.1, §11, and §12. They are not copied here so that changing one operational mouth cannot leave a stale second version.
 
 `scripts/workflow_decision_log.py` is the shared decision-log helper imported by the scan/pool scripts; it parses the workflow version from the spec's title line rather than hard-coding it.
 
