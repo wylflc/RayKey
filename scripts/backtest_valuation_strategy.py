@@ -394,16 +394,34 @@ def load_tiers() -> dict[str, str]:
 
 
 def load_universe(path: Path) -> list[tuple[str, set[str]]]:
-    """时点股票库：[(生效日, {代码})]，按生效日升序。
+    """时点股票库：把成员区间展开为 ``[(变更日, {在册代码})]``。
 
-    每档名单从 `effective_from` 起生效到下一档生效前一日。**生效日不可提前**——
-    `Y` 年的年报要到 `Y+1` 年 4 月底才披露完，见 `build_point_in_time_universe.py`。
+    CSV 是一行一个成员区间，不是每个 ``effective_from`` 一份完整快照。成员从
+    ``effective_from`` 起生效、到 ``effective_to`` 当日仍有效；空结束日表示开放区间。
+    相邻区间可能共享边界日，故用引用计数而不是简单集合增删，避免边界日后的误删。
+
+    **生效日不可提前**——`Y` 年的年报要到 `Y+1` 年 4 月底才披露完，见
+    `build_point_in_time_universe.py`。
     """
-    by_date: dict[str, set[str]] = defaultdict(set)
+    changes: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     with path.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
-            by_date[row["effective_from"]].add(row["security_code"])
-    return sorted(by_date.items())
+            code = row["security_code"]
+            changes[row["effective_from"]][code] += 1
+            effective_to = (row.get("effective_to") or "").strip()
+            if effective_to:
+                day_after = (date.fromisoformat(effective_to) + timedelta(days=1)).isoformat()
+                changes[day_after][code] -= 1
+
+    counts: dict[str, int] = defaultdict(int)
+    snapshots: list[tuple[str, set[str]]] = []
+    for day in sorted(changes):
+        for code, delta in changes[day].items():
+            counts[code] += delta
+            if counts[code] <= 0:
+                counts.pop(code, None)
+        snapshots.append((day, set(counts)))
+    return snapshots
 
 
 def load_quota(path: Path) -> dict[str, list[tuple[str, str]]]:
@@ -418,6 +436,11 @@ def load_quota(path: Path) -> dict[str, list[tuple[str, str]]]:
             out[row["security_code"].zfill(6)].append(
                 (row["effective_from"], row.get("effective_to") or "9999-12-31"))
     return dict(out)
+
+
+def interval_active(spans: list[tuple[str, str]], day: str) -> bool:
+    """Return whether ``day`` is inside any inclusive membership interval."""
+    return any(start <= day <= end for start, end in spans)
 
 
 def load_benchmark() -> dict[str, float]:
@@ -1247,7 +1270,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         quota_today: set[str] = set()
         if quota_pct > 0 and quota_members:
             quota_today = {c for c, spans in quota_members.items()
-                           if any(a <= sig_day < b for a, b in spans)}
+                           if interval_active(spans, sig_day)}
         # 拆解用：`quota_swappable` 打开后通道持仓照样可被换仓卖出，
         # 于是「通道买入」与「通道免换仓」两个机制可以单独计价（用户 2026-08-15 那轮的必需检验）。
         quota_hold_today = set() if quota_swappable else quota_today

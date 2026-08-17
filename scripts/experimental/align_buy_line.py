@@ -36,7 +36,9 @@ def load_spans(panel: Path):
     spans = collections.defaultdict(list)
     with open(panel, encoding="utf-8-sig") as fh:
         for r in csv.DictReader(fh):
-            spans[r["security_code"].zfill(6)].append((r["effective_from"], r["effective_to"]))
+            spans[r["security_code"].zfill(6)].append(
+                (r["effective_from"], r.get("effective_to") or "9999-12-31")
+            )
     return spans
 
 
@@ -47,7 +49,7 @@ def ratios(path: Path, spans) -> list[float]:
         for r in csv.DictReader(fh):
             code = r["security_code"].zfill(6)
             day = r["date"]
-            if not any(a <= day < b for a, b in spans.get(code, ())):
+            if not any(a <= day <= b for a, b in spans.get(code, ())):
                 continue
             try:
                 out.append(float(r["valuation_ratio"]))
