@@ -49,8 +49,7 @@ def main() -> int:
     args = parser.parse_args()
 
     tiers = read(TIERS)
-    # §5.7.4 六列的填充率自检（OI-024）：渲染分层阅读版是分层表的常规消费点，把缺口摆在这里
-    # 才会被看见。§15.2 第 3 条硬自检——凡新增列，跑完必须核对非空行数。
+    # 渲染前检查质量研究字段填充率（OI-024），避免整列缺失长期不可见。
     from backfill_quality_tier_columns import report_fill_rates
     report_fill_rates(tiers)
     tags = {r["security_code"].zfill(6): r for r in read(TAGS)}
@@ -61,12 +60,12 @@ def main() -> int:
         "# A股值得关注公司质量分层（阅读版）",
         "",
         f"- 生成日期：{args.as_of}｜由 `scripts/build_quality_tiers_md.py` 渲染，不手工维护",
-        f"- 口径：工作流 **v1.30** §5.7 三档分层（v1.27 重构）+ §6.5.0 十一类策略标签（v1.28/v1.30 重贴）",
+        "- 口径：工作流 §5.7 三档分层；版本读取工作流第 1 行，不在派生文件固化",
         f"- 覆盖：`worth_attention` 全部 {len(tiers)} 家；分布 "
         + " / ".join(f"{k} {counts[k]}" for k in ("L1", "L2", "L3") if counts[k]),
-        "- **分层只看业务质量，不含估值结论**。它的唯一职能是设定买入/持有/卖出提醒的严格程度（§6.2.1 三态矩阵），不配给关注名额——名单进出由 `attention_class` 独立判定。",
-        "- **策略标签的唯一职能是选出建带公式**（§6.5.0 判定顺序），不表达「这是什么风格的股票」。建带口径与参数区间见 §6.5.1-§6.5.4，带的合法性由 `scripts/validate_valuation_bands.py` 强制校验。",
-        "- 中间档占多数是正确结果而非缺陷：全池实测在任何指标上都是连续谱，区分来自规则的定义、不来自分数的分布（§5.7.1 第 6 条，金字塔要求已退役）。",
+        "- **分层只看业务质量，不含估值或交易结论**；不配给关注名额，名单进出由 `attention_class` 独立判定。",
+        "- **策略标签只作研究分类与展示**；生产估值统一按工作流 §6.5，交易只认 §9.7。",
+        "- 层级按工作流 §5.7 的规则逐家判定，不按预设分布调整。",
         "",
     ]
 
@@ -83,7 +82,7 @@ def main() -> int:
             tag = pool.get(code, {}).get("strategy_tag") or tags.get(code, {}).get("strategy_tag_letter", "")
             tier_now = pool.get(code, {}).get("valuation_tier", "—")
             reason = (row.get("tier_reason") or row.get("moat_summary") or "").replace("\n", " ").replace("|", "／")
-            # §5.7.3 起 `tier_reason` 要装四条判据的逐条对照，会超出表格可读宽度。
+            # `tier_reason` 的逐条对照可能超过表格可读宽度。
             # 截断保留，但必须**可见**——静默截断会让 MD 声称汇总了它其实没显示的依据。
             if len(reason) > 150:
                 reason = reason[:150] + "…（全文见 CSV `tier_reason`）"

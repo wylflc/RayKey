@@ -38,9 +38,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "data/processed/backtest"
 
-# §9.7.1.2 的现行基准臂（v4.06），逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
+# §9.7.1.2 的现行基准臂，逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
 #
-# **估值 = ROIC 口径·分型锚＋增长腿**（`a_share_daily_states_adopted.csv`，重建见 §9.7.1.2：
+# **估值 = ROIC 口径·分型锚＋增长腿**（`a_share_daily_states_adopted.csv`，重建见 §6.7：
 #   `--roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak`）。
 # **宇宙 = v6b 面板**（`panel_moat_bank_v6b.csv`，287 代码/现役 222）：§5.4 全口径逐年判定 + 全银行子册，
 #   由 `verdicts_pit_moat_v6.csv` + `build_moat_panel.py` 确定性装配（§12.71，用户 2026-08-16 采纳）。
@@ -55,7 +55,7 @@ BASE = (
     # **一档 = 净资产 × 5.0%**（v4.06 用户裁定）。§12.80 纠偏后 4% 与 5% 的配对差为噪声，
     # 属同一平台：年化优先可维持 5%，回撤敏感可取 4%；6% 的回撤与起点稳定性变差。
     "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 "
-    "--corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 0.75 "
+    "--corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 0.70 "
     "--swap --swap-partial --sell-trend-ma 20 "
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
     "--fee-preset user --no-artifacts "

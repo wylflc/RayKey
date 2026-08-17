@@ -1,30 +1,29 @@
 #!/usr/bin/env python3
-"""补建 §5.7.4 输出字段中从未落列的六列，并打印填充率自检（结 OI-024）。
+"""补建质量分层的六个研究字段，并打印填充率自检（结 OI-024）。
 
 登记的缺陷
 ----------
-§5.7.4 规定分层表的输出字段含 `q1_reason`／`q2_moat_type`／`q2_erosion_paths`／
+旧版分层表定义了 `q1_reason`／`q2_moat_type`／`q2_erosion_paths`／
 `q3_reason`／`q4_reason`／`tactical_thesis`，但 `a_share_watchlist_quality_tiers.csv`
 的 261 行中**这六列根本不存在**，属 §15.2 第 2 条「成文未落地」。
 
 **后果不对称**，两处最要紧：
 
-* `q2_erosion_paths` 缺列 = §5.7.2 的 L1 否决判据没有结构化载体。§5.7.2 要求否决必须
+* `q2_erosion_paths` 缺列 = 工作流 §5.7 的 L1 侵蚀路径判据没有结构化载体。该节要求否决必须
   逐条写明四判据，而判据写在自由文本里就无法被任何校验检查——宁德时代的误否决
   （v1.40 前判 L2）正是这么产生的。
-* `tactical_thesis` 缺列 = §6.2.1 对 L3 的「须有明确战术理由兑现路径」同样无处校验
-  （当前 L3 共 9 家）。
+* `tactical_thesis` 只保留为研究字段，不产生估值或交易资格；交易统一按工作流 §9.7。
 
 本脚本做什么、不做什么
 ----------------------
 **做**：①把六列建出来；②把 `q2_erosion_paths` 从 `moat_summary` 的「前瞻侵蚀：」段
 **转录**过来（实测 260/261 行有该段），命中 `erosion_path` 旗标的行同时带上旗标里的
-概率标注；③打印六列各自的非空行数（§15.2 第 3 条硬自检：凡新增列，跑完必须核对非空
+概率标注；③打印六列各自的非空行数（凡新增列，跑完必须核对非空
 行数——四次静默失效的共同签名就是「某列整体为空而无人察觉」）。
 
 **不做**：不给任何一列打分、不改任何档位。②是**转录**（同一句话换个位置存），不是
 判断；`q2_moat_type` 与 `tactical_thesis` 这类需要判断的内容由模型逐票回填，
-§5.7.4 硬约束第 4 条明文禁止关键词脚本自动打分。
+工作流 §5.7 禁止关键词脚本自动决定层级。
 
 幂等：已非空的单元格一律不覆盖，可反复运行。
 
@@ -43,7 +42,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 
-# §5.7.4 输出字段里这六列此前从未建列（OI-024）。顺序按 §5.7.4 正文的书写顺序。
+# 质量分层表里这六个研究字段此前从未建列（OI-024）。
 MISSING_COLUMNS = [
     "q1_reason",
     "q2_moat_type",
@@ -99,7 +98,7 @@ def report_fill_rates(rows: list[dict[str, str]]) -> None:
     for row in rows:
         by_tier.setdefault(row.get("quality_tier", ""), []).append(row)
 
-    print(f"§5.7.4 六列填充率自检（OI-024）｜分层表 {total} 行")
+    print(f"质量分层六列填充率自检（工作流 §5.7）｜分层表 {total} 行")
     for column in MISSING_COLUMNS:
         filled = sum(1 for row in rows if (row.get(column) or "").strip())
         mark = "" if filled else "  ← **整列为空**"
@@ -110,13 +109,12 @@ def report_fill_rates(rows: list[dict[str, str]]) -> None:
     l3 = by_tier.get("L3", [])
     l1_filled = sum(1 for row in l1 if (row.get("q2_erosion_paths") or "").strip())
     l3_filled = sum(1 for row in l3 if (row.get("tactical_thesis") or "").strip())
-    print(f"  → §5.7.2 L1 否决判据载体：L1 {l1_filled}/{len(l1)} 行有 q2_erosion_paths")
-    print(f"  → §6.2.1 L3 买入前置：    L3 {l3_filled}/{len(l3)} 行有 tactical_thesis"
-          + ("" if l3_filled == len(l3) else "  ← **缺口即该前置当前无法校验的家数**"))
+    print(f"  → §5.7 L1 侵蚀路径载体：L1 {l1_filled}/{len(l1)} 行有 q2_erosion_paths")
+    print(f"  → L3 研究备注（不影响交易）：L3 {l3_filled}/{len(l3)} 行有 tactical_thesis")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="补建 §5.7.4 六列并自检（OI-024）")
+    parser = argparse.ArgumentParser(description="补建质量分层六列并自检（OI-024）")
     parser.add_argument("--tiers", type=Path, default=DEFAULT_TIERS)
     parser.add_argument("--check", action="store_true", help="只打印填充率，不写回")
     args = parser.parse_args()
