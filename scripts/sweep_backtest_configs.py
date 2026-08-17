@@ -53,7 +53,10 @@ OUT_DIR = ROOT / "data/processed/backtest"
 # 换估值口径须全规则重扫，且**三条线一起重解到同一合格面**（§12.30，align_buy_line.py）。
 # 基准读数见 `docs/000_Ashare_workflow.md` §9.7.1.2 的「v4.00 基准读数」——**改这里就要改那里**。
 BASE = (
-    "--strategy trend --trend-tranche --x 2.0 --trend-ma 20 60 "
+    # **一档 = 净资产 × 5.0%**（v4.06，用户 2026-08-17 裁定，由 2.0% 改）。剂量曲线见 §12.78：
+    # 低于 2.0% 是明确更差（1.0% 滚3 −2.81 / 2 of 23）；2.0~3.0% 是平台；5.0% 逐年中位 +12.87（21/23）
+    # 而滚3/滚5 转为噪声级负值。**代价是集中度**：成交只数 68→62、最大单票权重中位 71.8%→78.2%。
+    "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 "
     "--corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 0.75 "
     "--swap --swap-partial --sell-trend-ma 20 "
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
