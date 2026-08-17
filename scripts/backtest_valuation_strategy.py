@@ -2157,7 +2157,7 @@ def main() -> int:
     parser.add_argument("--label-suffix", default="")
     fg = parser.add_argument_group("交易成本（缺省全零，与既往回测逐位可复现）")
     fg.add_argument("--fee-preset", choices=("none", "user"), default="none",
-                    help="user＝用户券商口径：佣金万一、最低 5 元、印花税 0.05% 单边卖出、过户费 0.001% 双边")
+                    help="user＝用户券商口径：佣金万一、最低 5 元、印花税 0.05%% 单边卖出、过户费 0.001%% 双边")
     fg.add_argument("--commission", type=float, default=0.0, help="佣金费率，万一即 0.0001")
     fg.add_argument("--min-fee", type=float, default=0.0, help="单笔佣金最低额（元）")
     fg.add_argument("--stamp", type=float, default=0.0, help="印花税率（单边卖出），现行 0.0005")
