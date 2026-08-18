@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.13
+# A股选股-估值-量价操作流程 v4.14
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -237,7 +237,7 @@ python3 scripts/build_quarterly_quality_review_queue.py \
 2. 财务数据按公告日 `available_at` 生效，禁止用报告期末代替可得日。
 3. 季报财务为累计口径；单季值用同年累计差分，TTM 用最近四个单季求和。
 4. 一致预期使用逐份研报归母净利润中位数，覆盖少于三家时不得采用；禁止混用送转前后的研报 EPS。
-5. 预告与快报只有在公告已发生、尚未被正式报告取代且报告期已实质走完时进入锚；快报优先，区间取中值。
+5. 预告与快报只有在公告已发生、尚未被正式报告取代且报告期已实质走完时进入锚；快报优先，区间取中值。**执行点是 §6.7 建带链第 4 步之后的 `apply_forecast_band_overlay.py`**（2026-08-18 落地，此前本条无任何执行点，见 changelog v4.14）。叠加只走 `bps` 通道——预告的归母净利经留存收益改变每股净资产，`nopat_ps = ratio0 × bps` 与 `eps0 = roe0 × bps` 随之等比缩放，**归一化锚 `ratio0`／`roe0` 不动**；净负债不调整（预告无资产负债表）。正式报告披露后由机械带自然取代。
 6. 跨字段比率必须使用同一披露口径；字段缺失时整体退回上一套已披露口径，不拼接半新半旧的数据。
 
 ### 6.5 当前估值方法
@@ -262,7 +262,9 @@ V = 近12个月每股现金分红 ÷（十年期国债收益率 + 2%）
 
 ##### 6.5.7.1 P/V 与带宽
 
-正常生产带的中值必须等于模型内在价值，生产 `P/V` 与回测 `valuation_ratio` 使用同一分母。
+正常生产带的中值必须等于模型内在价值。**生产 `P/V` 与回测 `valuation_ratio` 在未叠加预告的行上使用同一分母；被 §6.3 第 5 条叠加过的行是已知的例外**——回测宇宙没有历史预告面板（取数脚本只取当前报告期），无法在历史上复现预告，故这些行的生产分母比回测分母新。用户 2026-08-18 裁定：实盘能更快反映最新信息，该背离是有意的。
+
+隔离方式：叠加只写生产带 `a_share_pool_model_bands_adopted.csv`，**回测输入 `roic_bands.csv`／`roic_daily_raw.csv`／`a_share_daily_states_adopted.csv` 一律不碰**，故回测基准不受影响。带文件的 `forecast_overlay` 列非空即表示该行已叠加；引用回测读数论证生产行为时必须先看这一列。
 
 ##### 6.5.7.2 模型计算
 
@@ -312,8 +314,9 @@ python3 scripts/rebuild_bank_bands.py divspread:0.02 \
   data/processed/roic_daily_raw.csv \
   data/processed/roic_bands.csv
 
-# 4. 生成池模型带并写入逐票档案
+# 4. 生成池模型带 → 叠加预告/快报 → 写入逐票档案
 python3 scripts/build_pool_model_bands.py --as-of YYYY-MM-DD
+python3 scripts/apply_forecast_band_overlay.py --as-of YYYY-MM-DD
 python3 scripts/apply_model_bands_to_dossiers.py --as-of YYYY-MM-DD
 
 # 5. 档案 → 建带卡 → 估值表
@@ -415,9 +418,11 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 
 估值或事件复核触发后，将 `buy_blocked` 设为 `review_pending`，冻结新增买入但继续持仓跟踪。完成复核、更新证据与复核日期并重建队列后自动解除。
 
+**预告与快报触发的估值复核自 2026-08-18 起由 §6.3 第 5 条的叠加机械完成，不再需要人工 express 复核**：叠加把带与 `valuation_reviewed_at` 一并推进到公告日，队列重建后冻结自动解除。**仍会留在 `review_pending` 的只有叠加覆盖不到的行**，当日实测为 4 类：银行（股利折现口径，预告改利润不改分红）、`zero_growth` 路径输入不全、股本多期倒推不一致（增发/送转期间）、手工带（模型判不可估或模型带过旧）。这几类仍走人工复核，且脚本会逐行打印跳过原因。
+
 #### 7.5.5 Express 复核
 
-预告或快报原则上在下一交易日开盘前完成 express 复核；发现超期时当场补做并记录原因。
+预告或快报由 §6.3 第 5 条的叠加在每日扫描时自动进入带，**不再产生人工 express 复核义务**。只有叠加跳过的行需要人工处理，原则上在下一交易日开盘前完成；发现超期时当场补做并记录原因。
 
 #### 7.5.6 财报日价格背离
 

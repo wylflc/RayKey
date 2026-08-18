@@ -134,8 +134,19 @@ def main() -> int:
         row["bespoke"] = "true"
         # v4.00：带来源分四条路径（§6.5.7.3），派生说明按路径写，不再一律套权益 DCF 的口径
         roic_path = (band.get("roic_path") or "").strip()
-        common_head = (f"与 §9.7.1.2 回测所用带**同一套口径**。"
-                       f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜")
+        # 被 §6.3 第 5 条预告/快报叠加过的行**不能再宣称与回测同口径**——回测无历史预告面板。
+        overlay = (band.get("forecast_overlay") or "").strip()
+        if overlay:
+            common_head = (
+                f"**预告/快报口径（§6.3 第 5 条叠加，正式报告披露后由机械带取代）**："
+                f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}"
+                f"（{band.get('forecast_source') or overlay}）｜"
+                f"**本行与回测 `valuation_ratio` 不同口径**，回测无历史预告面板，"
+                f"差异见 §6.5.7.1｜叠加前 IV {band.get('pre_overlay_iv') or '—'}"
+                f"（报告期 {band.get('pre_overlay_report_date') or '—'}）｜")
+        else:
+            common_head = (f"与 §9.7.1.2 回测所用带**同一套口径**。"
+                           f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜")
         common_tail = (f"**内在价值 {iv:.2f} 元**。带 = IV × [0.90, 1.10]，**中值恰为 IV**，"
                        f"故 `P/V = 收盘 ÷ 中值` 与回测的 `valuation_ratio` 逐位一致。")
         def _f(key, fmt="{:.2%}"):
