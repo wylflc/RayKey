@@ -203,8 +203,14 @@ def recompute(band: dict, scale: float) -> tuple[float | None, float, str] | Non
             return None
         return None, iv * scale, "eps0"
     if path in ("growth", "zero_growth"):
-        nopat = num(band.get("nopat_ps"))
-        ev_ps, net_debt = num(band.get("ev_ps")), num(band.get("net_debt_ps"))
+        nopat, net_debt = num(band.get("nopat_ps")), num(band.get("net_debt_ps"))
+        ev_ps = num(band.get("ev_ps"))
+        if ev_ps is None:
+            # `zero_growth` 路径不落 `ev_ps`（建带脚本只写 `v_zero_growth = nopat_ps/wacc − net_debt_ps`），
+            # 由 IV 反解即可，二者恒等。不反解会把整条路径当成"输入不全"挡掉。
+            iv0 = num(band.get("intrinsic_value"))
+            if iv0 is not None and net_debt is not None:
+                ev_ps = iv0 + net_debt
         if nopat is None or ev_ps is None or net_debt is None or nopat <= 0:
             return None
         ev_new = ev_ps * scale
@@ -221,6 +227,9 @@ def main() -> int:
     ap.add_argument("--financials-dir", type=Path, default=ROOT / "data/raw/financials")
     ap.add_argument("--corporate-actions", type=Path,
                     default=ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv")
+    ap.add_argument("--overrides", type=Path,
+                    default=ROOT / "data/processed/manual_band_overrides.csv",
+                    help="§6.5.7.4 人工覆盖表；列内的行直接落带，且不再叠加预告")
     ap.add_argument("--pool", type=Path, default=ROOT / "data/processed/a_share_core_valuation_pool.csv",
                     help="只用于按 总市值÷现价 交叉校验股本；缺失则跳过校验")
     ap.add_argument("--out", type=Path, default=None, help="缺省原地覆盖 --bands")
@@ -257,6 +266,15 @@ def main() -> int:
             for row in csv.DictReader(handle):
                 actions.setdefault((row.get("security_code") or "").strip(), []).append(row)
 
+    # §6.5.7.4 人工覆盖必须**同时落到生产带文件**，否则只改了展示层：
+    # 扫描器的 `P/V` 读的是本文件，档案/池改了而这里没改，两层就会给出相反结论。
+    # 判例：宏桥控股 2026-08-18 人工覆盖到 27.15-33.18（低估 +57%），
+    # 而生产带仍是 0.1993，扫描器算出 `P/V` 96.3 并把它排除在合格集之外。
+    overrides: dict[str, dict] = {}
+    if args.overrides.exists():
+        with args.overrides.open(encoding="utf-8-sig", newline="") as handle:
+            overrides = {(r.get("security_code") or "").strip(): r for r in csv.DictReader(handle)}
+
     financials = load_financials(args.financials_dir)
 
     # 总股本交叉校验源：`total_market_cap_bn` 的单位是**十亿元**（宁德时代 1850.569 → 1.85 万亿），
@@ -271,6 +289,8 @@ def main() -> int:
 
     out_header = header + [c for c in OVERLAY_COLS if c not in header]
     applied, skipped, unchanged = [], [], 0
+    bank_cleared: list[tuple[str, str, str]] = []
+    override_applied: list[tuple[str, str, float, float]] = []
 
     for band in rows:
         for col in OVERLAY_COLS:
@@ -282,6 +302,27 @@ def main() -> int:
             unchanged += 1
             continue
 
+        ovr = overrides.get(code)
+        if ovr:
+            lo, hi = num(ovr.get("band_low")), num(ovr.get("band_high"))
+            if lo and hi and lo > 0:
+                mid = (lo + hi) / 2
+                band.update({
+                    "pre_overlay_iv": band.get("intrinsic_value", ""),
+                    "pre_overlay_report_date": band_period,
+                    "forecast_overlay": "manual_override",
+                    "forecast_notice_date": ovr.get("reviewed_at", ""),
+                    "forecast_source": f"§6.5.7.4 人工覆盖（{ovr.get('reason_code')}）",
+                    "bps_scale": "", "forecast_profit_yi": "",
+                    "overlay_note": (f"人工覆盖，**不叠加预告**：{ovr.get('note')}"
+                                     f"｜失效条件：{ovr.get('expires_when')}"),
+                    "intrinsic_value": f"{mid:.4f}",
+                    "band_low": f"{lo:.4f}", "band_high": f"{hi:.4f}",
+                    "available_at": ovr.get("reviewed_at", ""),
+                })
+                override_applied.append((name, ovr.get("reviewed_at", ""), lo, hi))
+                continue
+
         ev = pick_evidence(code, forecasts, express, band_period, args.as_of)
         if ev is None:
             unchanged += 1
@@ -291,10 +332,34 @@ def main() -> int:
             continue
 
         path = (band.get("roic_path") or "").strip()
+        if path == "bank_divspread":
+            # 银行走 `V = 近12月每股分红 ÷ (十年国债+2%)`，**分子是分红不是利润**，
+            # 故利润类证据（预告/快报）对带的影响恒为 0。按 §7.4「带变动不超过 2% 时只刷新证据日」，
+            # 这里只推进证据日期、不动带值——否则该行会因利润公告永远挂在 `review_pending` 上，
+            # 而它需要的复核其实是 §7.2 质量侧，不是估值侧。分红本身每次 §6.7 重建时由
+            # `rebuild_bank_bands.py` 自动吸收，无需人工。
+            band.update({
+                "forecast_overlay": "bank_no_change",
+                "forecast_notice_date": ev["notice_date"],
+                "forecast_report_date": ev["report_date"],
+                "forecast_profit_yi": f"{ev['profit'] / 1e8:.2f}",
+                "forecast_source": ev["label"],
+                "pre_overlay_iv": band.get("intrinsic_value", ""),
+                "pre_overlay_report_date": band_period,
+                "bps_scale": "1.000000",
+                "overlay_note": (
+                    f"§6.3 第 5 条：{ev['label']}（{ev['notice_date']}）归母 {ev['profit']/1e8:.2f} 亿，"
+                    f"**带值不变**——本行走股利折现（分子为近 12 个月每股分红），利润类证据不进分子。"
+                    f"按 §7.4 只推进证据日期以解除估值侧冻结；分红变动由 `rebuild_bank_bands.py` 每次重建自动吸收。"
+                    f"质量侧复核（§7.2）不受本条影响。"),
+                "report_date": ev["report_date"],
+                "available_at": ev["notice_date"],
+                "notice_date": ev["notice_date"],
+            })
+            bank_cleared.append((name, ev["label"], ev["notice_date"]))
+            continue
         if path not in ("growth", "zero_growth", "equity_fallback"):
-            why = ("银行走股利折现，预告改的是利润不是分红" if path == "bank_divspread"
-                   else "该路径的带不由盈利输入线性决定，bps 通道不适用")
-            skipped.append((name, f"估值路径 {path or '未知'} 不适用：{why}"))
+            skipped.append((name, f"估值路径 {path or '未知'} 不适用：该路径的带不由盈利输入线性决定，bps 通道不适用"))
             continue
 
         periods = financials.get(code, {})
@@ -313,9 +378,22 @@ def main() -> int:
             skipped.append((name, f"股本不可用：{shares_src}"))
             continue
 
-        # 累计口径对齐：同一会计年度内两期都是累计数，作差得区间利润；
-        # 跨年度（基线是上年年报）则预告本身即为新年度累计，不作差。
+        # 累计口径对齐——**只有两种基线算得出区间利润**：
+        #   ① 同一会计年度的更早一期：两边都是本年累计数，作差即区间利润；
+        #   ② 上一会计年度的年报：新年度从零起算，预告本身就是区间利润。
+        # 其它基线（如上年三季报对本年半年报）会漏掉中间若干季度的留存收益，
+        # **算出来的不是区间利润**。这类必须跳过而不是硬算——判例：京东方A 的生产带
+        # 停在 2023-09-30，与 2026-06-30 预告之间隔着近三年利润，硬算会把带推错。
         same_year = band_period[:4] == ev["report_date"][:4]
+        prior_year_end = (band_period.endswith("-12-31")
+                          and int(band_period[:4]) + 1 == int(ev["report_date"][:4]))
+        if same_year and band_period >= ev["report_date"]:
+            skipped.append((name, f"基线 {band_period} 不早于预告期 {ev['report_date']}，无法作差"))
+            continue
+        if not same_year and not prior_year_end:
+            skipped.append((name, f"基线 {band_period} 与预告期 {ev['report_date']} 累计口径对不齐"
+                                  f"（既非同年更早期，也非上年年报），区间利润算不出"))
+            continue
         delta_profit = ev["profit"] - base_profit if same_year else ev["profit"]
         dps = dividends_between(actions.get(code, []), band_period, ev["report_date"])
         delta_bps = delta_profit / shares - dps
@@ -375,13 +453,18 @@ def main() -> int:
         writer.writerows(rows)
 
     print(f"预告／快报叠加（§6.3 第 5 条）as-of {args.as_of} → {out_path.name}")
-    print(f"  已叠加 {len(applied)} 只｜跳过 {len(skipped)} 只｜无证据或已叠加 {unchanged} 只")
+    print(f"  已叠加 {len(applied)} 只｜人工覆盖 {len(override_applied)} 只｜"
+          f"银行只推证据日 {len(bank_cleared)} 只｜跳过 {len(skipped)} 只｜无证据或已叠加 {unchanged} 只")
     if applied:
         applied.sort(key=lambda a: (a[2] / a[1] - 1) if a[1] else 0)
         print(f"  {'名称':<10}{'原 IV':>10}{'新 IV':>10}{'变动':>9}  {'区间利润(亿)':>12}  证据")
         for name, old, new, label, notice, dprofit in applied:
             chg = f"{new / old - 1:+.1%}" if old else "—"
             print(f"  {name:<10}{old or 0:>10.2f}{new:>10.2f}{chg:>9}  {dprofit:>12.2f}  {label} {notice}")
+    for name, when, lo, hi in override_applied:
+        print(f"  · §6.5.7.4 人工覆盖落生产带：{name} → {lo:.2f}-{hi:.2f}（{when}）")
+    for name, label, notice in bank_cleared:
+        print(f"  · 银行只推进证据日、带值不变：{name}（{label} {notice}）")
     for name, why in skipped:
         print(f"  ⚠ 跳过 {name}：{why}")
     return 0

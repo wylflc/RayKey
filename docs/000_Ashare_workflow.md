@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.14
+# A股选股-估值-量价操作流程 v4.15
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -285,6 +285,8 @@ V = 近12个月每股现金分红 ÷（十年期国债收益率 + 2%）
 
 手工带必须使用前瞻一致预期或归一化利润，倍数必须可推导并记录来源，能够双向支持买入与减持；不得因“看起来更合理”绕过模型。模型重新可算后立即切回生产带。
 
+**手工带必须同时落到生产带文件，否则只改了展示层。** 逐票档案不是 §9.7 的输入——扫描器的 `P/V` 读 `data/processed/a_share_pool_model_bands_adopted.csv`。落点是 `data/processed/manual_band_overrides.csv`，由 `apply_forecast_band_overlay.py` 在 §6.7 第 4 步之后写入生产带，并被 `apply_model_bands_to_dossiers.py` 同步到档案，两层因此恒等。覆盖表逐行必填 `reason_code`、`note`（含倍数推导与来源）与 `expires_when`（失效条件）。**判例**：宏桥控股 2026-08-18 覆盖到 27.15-33.18（低估 +57%），而当时生产带仍是 0.1993，扫描器算出 `P/V` 96.3 并把它排除在合格集之外——展示说低估、交易层说排除，两层给出相反结论。
+
 ### 6.6 人工复核职责
 
 人工只处理：模型不可估原因；主体不可比；新证据是否触发重算；手工例外的锚与来源；校验失败行。正常公司不逐票选择模型、倍数或带宽。
@@ -326,6 +328,9 @@ python3 scripts/build_valuation_band_cards.py \
   --as-of YYYY-MM-DD
 python3 scripts/apply_valuation_band_cards.py --as-of YYYY-MM-DD --quotes fetch
 
+# 5.5 逐行自洽核对财务面板（检出会静默改变带的数据错误）
+python3 scripts/audit_financial_panel_consistency.py --as-of YYYY-MM-DD
+
 # 6. 校验并物化核心池
 python3 scripts/validate_valuation_bands.py \
   --valuation data/processed/a_share_focus_watchlist_l1_l2_valuation.csv \
@@ -340,7 +345,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --as-of YYYY-MM-DD
 但**跳过第 1 步仍会让整条链拿旧 TTM 重算一遍旧带**——判例：贵州茅台 2026-08-15 披露半年报，
 而池内该行停在 04-25 的一季报，根因就是这一步从未进入每日流程。
 
-任一步失败即停止；不得把旧估值表上的校验通过当成新带已生效。完成后核对模型带、档案、估值表和核心池的带值与日期一致。校验失败行冻结新增买入，修复后再物化。
+第 5.5 步只报异常不改数，**「严重」级须逐条处置后才继续**——一条倍数级的 `bps` 错误会静默改变 `P/V` 与买卖判定（判例：宏桥控股 FY2024/FY2025 的 `bps` 偏大约 10 倍，把 2026E PE 7.8 的票判成「高估」并藏出扫描之外）。任一步失败即停止；不得把旧估值表上的校验通过当成新带已生效。完成后核对模型带、档案、估值表和核心池的带值与日期一致。校验失败行冻结新增买入，修复后再物化。
 
 仅刷新每日现价和展示档位时运行：
 

@@ -87,6 +87,16 @@ def latest_model_bands(path: Path, min_available: str) -> tuple[dict, dict]:
     return {c: r for c, r in best.items() if c not in stale}, stale
 
 
+OVERRIDE_PATH = ROOT / "data/processed/manual_band_overrides.csv"
+
+
+def load_overrides() -> dict[str, dict]:
+    if not OVERRIDE_PATH.exists():
+        return {}
+    with OVERRIDE_PATH.open(encoding="utf-8-sig", newline="") as fh:
+        return {(r.get("security_code") or "").strip(): r for r in csv.DictReader(fh)}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="把内在价值模型的带写入逐票档案")
     # v4.01：缺省改指 §6.7 第①步的采纳产物。旧缺省 data/interim/pool_model_bands.csv 是
@@ -105,7 +115,9 @@ def main() -> int:
     header = list(rows[0].keys())
     actions = load_actions()
 
+    OVERRIDES = load_overrides()
     applied, kept_unvaluable, kept_stale, split_adj = [], [], [], []
+    overridden: list[str] = []
     for row in rows:
         code = row["security_code"]
         band = usable.get(code)
@@ -113,6 +125,20 @@ def main() -> int:
             (kept_stale if code in stale else kept_unvaluable).append(row["security_name"])
             continue
 
+        # §6.5.7.4 人工覆盖：模型算得出带、但该带**建立在不可比或已知错误的输入上**时，
+        # 仅靠 `bespoke` 保不住手工带——本脚本对有模型带的行是无条件改写的。
+        # 判例：宏桥控股 2024 年资产注入 + FY2024/25 的 bps 偏大 10 倍，模型带 0.0974 对现价 19.2。
+        # 覆盖表是唯一的例外落点，逐行须写明理由与失效条件。
+        ovr = OVERRIDES.get(code)
+        if ovr:
+            row["band_low"], row["band_high"] = ovr["band_low"], ovr["band_high"]
+            row["band_derivation"] = "manual_override"
+            row["bespoke"] = "true"
+            row["reviewed_at"] = ovr.get("reviewed_at") or row.get("reviewed_at", "")
+            row["band_method"] = (f"§6.5.7.4 人工覆盖（{ovr.get('reason_code')}）：{ovr.get('note')}"
+                                  f"｜失效条件：{ovr.get('expires_when')}")
+            overridden.append(row.get("security_name") or code)
+            continue
         # **送转必须在这里再除一次**：`intrinsic_value` 是报告期口径的每股价值，而现价是不复权的。
         # 该报告公告之后若发生送转，股数变了而 `IV` 没变，带就与价格不同基——带偏高一个送转比，
         # `P/V` 相应偏低。回测面板的 `split_factor` 列做的正是这件事，生产侧此前漏做：
@@ -204,6 +230,8 @@ def main() -> int:
         writer = csv.DictWriter(fh, fieldnames=header)
         writer.writeheader()
         writer.writerows(rows)
+    if overridden:
+        print(f"  §6.5.7.4 人工覆盖 {len(overridden)} 只（见 data/processed/manual_band_overrides.csv）：{'、'.join(overridden)}")
     print(f"  写入 {args.dossiers}")
     return 0
 
