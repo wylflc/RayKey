@@ -22,11 +22,28 @@ Treat the latest user request and committed project docs as the source of truth 
 - Git commit messages: one short sentence. No body, trailers, attribution, co-author tags, or any tool-generated signature.
 - Never store API keys, tokens, cookies, account identifiers, or paid-data credentials in the repository.
 
+## 时区：本机不是北京时间
+
+**本机时钟是欧洲时区（阿姆斯特丹，CEST = UTC+2，冬令时 CET = UTC+1），A 股的一切时点判断都必须换算到北京时间（UTC+8）。**
+夏令时期间北京 = 本机 + 6 小时。`date` 直接读出来的是本机时间，**不要拿它判断是否收盘**——
+判例：2026-08-18 本机 09:49 被误读成"A 股还在交易"，实际北京已是 15:49、早已收盘。
+
+判断收盘、报告期截止日、`--as-of` 取值、扫描是否可执行，一律用：
+
+```bash
+TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S %Z'
+```
+
+A 股交易时段（北京）：09:30-11:30、13:00-15:00。`--as-of` 用北京日期，不是本机日期
+（本机在 UTC+2 时，北京时间 00:00-06:00 对应本机前一天 18:00-24:00，**跨日**）。
+
 ## 机器资源约束（后台/长时作业必读）
 
-本机 **8 GB 物理内存、8 核、swap = 0**（`sysctl hw.memsize` / `vm.swapusage` 实测 2026-08-17）。
-没有交换分区意味着**超内存不是变慢，是整机死机黑屏**——2026-08-17 已因此崩过一次（当时并发跑了
-2 个建带 + 2 个扫描器 × 8 并发 ≈ 20 GB 需求）。以下为硬约束，不得"这次应该没事"地绕开：
+本机 **8 GB 物理内存、8 核**。**swap 是 macOS 按需生成的，不是固定值**——2026-08-17 实测为 0，
+2026-08-18 实测 `total = 5,120 MB / used = 4,028 MB`。**不要把某一次读数当成常量**，每次起重作业前现读
+`sysctl vm.swapusage`。有 swap 时超内存表现为剧烈变慢而非立刻黑屏，但 2026-08-17 那次死机是真的
+（当时并发跑了 2 个建带 + 2 个扫描器 × 8 并发 ≈ 20 GB 需求，远超物理内存 + 当时可用 swap）。
+以下为硬约束，不得"这次应该没事"地绕开：
 
 | 作业 | 实测峰值 | 规矩 |
 | --- | ---: | --- |
