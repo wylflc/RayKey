@@ -1381,6 +1381,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             continue
         cash -= amount
         plan.append({
+            "trade_date": "",   # 由 report_section97 统一填信号日（OI-065：无日期列则文件无法自证时点）
             "security_code": str(cand["security_code"]).zfill(6),
             "security_name": cand.get("security_name", ""),
             "quality_tier": cand.get("quality_tier", ""),
@@ -1402,8 +1403,18 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
                            and not (to_float(r.get("close")) or 0) > (to_float(r.get("ma20")) or 0))}
 
 
-def report_section97(result: dict[str, object], nav: float, out_path: Path) -> None:
+# `daily_entry_plan.csv` 的固定列。空计划也要写出带表头的空文件——OI-065：买入 0 只时
+# 不写文件，旧计划就原样留在盘上冒充当日结论（判例 2026-08-18：文件内容还是 08-14 的四条买入）。
+PLAN_FIELDS = ["trade_date", "security_code", "security_name", "quality_tier", "close",
+               "model_intrinsic_value", "model_pv", "model_band_source",
+               "lots", "shares", "amount", "cooldown_skips"]
+
+
+def report_section97(result: dict[str, object], nav: float, out_path: Path,
+                     as_of: str = "") -> None:
     plan, dropped = result["plan"], result["dropped"]
+    for p in plan:
+        p["trade_date"] = as_of
     invested = float(result["funds0"]) - result["cash"]
     print(f"\n§9.7 机械执行：`P/V ≤ {SEC97_BUY_LINE}` 的 {result['n_cheap']} 只；"
           f"再过走势条件的 **{len(result['eligible'])} 只**"
@@ -1438,9 +1449,11 @@ def report_section97(result: dict[str, object], nav: float, out_path: Path) -> N
     for cand, value, who in dropped:
         print(f"  [相关性剔除] {cand.get('security_name','')} "
               f"P/V {cand['model_pv']:.2f}｜与已选 {who} 相关 {value:.2f}")
-    if plan:
-        write_csv(out_path, plan, list(plan[0].keys()))
-        print(f"  买入计划已写 {out_path}")
+    # OI-065：**空计划也必须落盘**（只含表头），否则前一日的旧计划会原样留在盘上冒充今日结论；
+    # `trade_date` 列让读取方能自证文件时点，不再依赖 mtime。
+    write_csv(out_path, plan, PLAN_FIELDS)
+    print(f"  买入计划已写 {out_path}（trade_date={as_of or '—'}，{len(plan)} 条"
+          + ("；**今日买入为空，已写空文件覆盖旧计划**）" if not plan else "）"))
 
 
 def main() -> int:
@@ -1655,7 +1668,7 @@ def main() -> int:
     if section97_ready:
         if args.nav > 0:
             report_section97(section97_entry_plan(rows, args.nav, args.funds, load_holdings()),
-                             args.nav, args.plan_out)
+                             args.nav, args.plan_out, args.as_of)
         else:
             print("§9.7 未给 --nav，只算 P/V 不出买入计划（一档以净资产为基数）")
     else:

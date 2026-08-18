@@ -38,10 +38,18 @@ def main():
         for r in csv.DictReader(fh):
             names[r["security_code"]] = r.get("security_name", "")
 
-    vintages = collections.defaultdict(set)
+    # 面板是**成员区间**（effective_from/effective_to），不是逐档完整快照——§12.80 的
+    # 回测 loader 曾把区间当快照消费，本脚本首版同病。每个档位日的在册集合必须由
+    # 「区间覆盖该日」求出，否则每档只剩当天新进的公司。
+    intervals = []
     with open(a.panel, encoding="utf-8-sig") as fh:
         for r in csv.DictReader(fh):
-            vintages[r["effective_from"]].add(r["security_code"].zfill(6))
+            intervals.append((r["security_code"].zfill(6), r["effective_from"],
+                              r.get("effective_to") or "9999-12-31"))
+    # 工作流 §12：effective_from/effective_to 均为有效期边界，**结束日包含在内**。
+    vintages = {}
+    for day in {iv[1] for iv in intervals}:
+        vintages[day] = {c for c, lo, hi in intervals if lo <= day <= hi}
 
     seq = collections.defaultdict(list)
     with open(a.bands, encoding="utf-8") as fh:

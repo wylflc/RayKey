@@ -2392,6 +2392,7 @@ def main() -> int:
                       + "｜".join(f"{k} {v:,}" for k, v in research.blocked.most_common()))
 
     if rows:
+        args.out_dir.mkdir(parents=True, exist_ok=True)   # --out-dir 指向不存在目录时此前直接崩溃
         with (args.out_dir / f"summary{args.label_suffix or ''}.csv").open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
             writer.writeheader()

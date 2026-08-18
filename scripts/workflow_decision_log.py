@@ -164,6 +164,11 @@ def audit_supersedes(path: Path) -> dict[str, object]:
 if __name__ == "__main__":
     import sys
 
+    if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help"):
+        print("用法：workflow_decision_log.py [决策日志CSV]\n"
+              "无参数时自检缺省日志（版本同步 + supersedes 链完整性）；"
+              "作为库导入时提供 append 接口。")
+        sys.exit(0)
     target = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_DECISION_LOG
     stats = audit_supersedes(target)
     print(f"版本同步自检（OI-032）：正文 {WORKFLOW_VERSION}"
