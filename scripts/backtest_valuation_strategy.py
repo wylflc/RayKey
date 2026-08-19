@@ -846,6 +846,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         trend_tol: float = 0.0, exec_delay: int = 0, exec_price: str = "close",
         sell_trend_ma: tuple[int, ...] = (), sell_full: bool = False, stop_min_days: int = 0,
         stop_confirm_days: int = 1, stop_deep_pct: float = 0.0,
+        stop_line: str = "entry",
         stop_partial: bool = False, stop_tranche: float = 1.0,
         liquidate_ma: int = 0, liquidate_days: int = 3,
         opens: dict[str, dict[str, float]] | None = None,
@@ -1169,16 +1170,25 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 只有涨到自身历史高分位之后才用均线保护利润」。**出名单清仓那条不受影响**
             # ——它在本分支之前判、且是基本面退出，正是用户说的「被踢出池子才止损」那条路径。
             stop_enabled = ((strategy == "trend" and trend_stop) or price_stop) and bool(lot.entry_stop)
+            # `stop_line`（用户 2026-08-19 实验）：`min_entry_current` 把生效止损线改为
+            # **min(建仓日冻结线, 当日同周期均线)**——均线跌到冻结线之下时止损跟随下移（放宽），
+            # 均线上移不抬线（缺省 `entry` 即现行冻结口径，逐位不变）。周期取该仓实际采用的
+            # `entry_stop_ma`（买在 MA60 下方退 MA20 的仓，比较的也是当日 MA20，不混周期）。
+            stop_level = lot.entry_stop
+            if stop_line == "min_entry_current" and lot.entry_stop and lot.entry_stop_ma:
+                ma_cur = mas.get(code, {}).get(day, {}).get(lot.entry_stop_ma, 0.0)
+                if ma_cur:
+                    stop_level = min(stop_level, ma_cur)
             stop_trigger = ""
             if stop_enabled:
                 lot.stop_breach_streak, stop_trigger = update_stop_breach(
-                    price, lot.entry_stop, lot.stop_breach_streak,
+                    price, stop_level, lot.stop_breach_streak,
                     stop_confirm_days, stop_deep_pct,
                 )
             else:
                 lot.stop_breach_streak = 0
             if pct_stop_when_rich and not is_rich(code, ratio):
-                if lot.entry_stop and price < lot.entry_stop:
+                if stop_level and price < stop_level:
                     stats["止损·因仍便宜而不触发"] += 1   # 只数**真的被压住**的那些，不数每一天
             elif stop_enabled and stop_trigger \
                     and (not stop_min_days or _days_between(lot.entry_date, day) >= stop_min_days):
@@ -2203,6 +2213,9 @@ def main() -> int:
                         help="固定止损价须连续 N 个有收盘价的交易日被跌破才触发；1=原行为")
     parser.add_argument("--stop-deep-pct", type=float, default=0.0, metavar="P",
                         help="深跌旁路：收盘低于止损价 P 比例时立即触发，不等确认日；0=关闭，3%%填0.03")
+    parser.add_argument("--stop-line", choices=("entry", "min_entry_current"), default="entry",
+                        help="止损线口径：entry=建仓日冻结线（现行）；min_entry_current=min(建仓日线, "
+                             "当日同周期均线)——均线下移时止损跟随下移、上移不抬线（用户 2026-08-19 实验）")
     parser.add_argument("--sell-full", action="store_true",
                         help="P/V≥减持线（且过走势闸门）时整仓卖出，而非按一档减")
     parser.add_argument("--stop-partial", action="store_true",
@@ -2347,6 +2360,7 @@ def main() -> int:
                      + (f"_smd{args.stop_min_days}" if args.stop_min_days else "")
                      + (f"_scd{args.stop_confirm_days}" if args.stop_confirm_days != 1 else "")
                      + (f"_sdp{args.stop_deep_pct * 100:g}" if args.stop_deep_pct else "")
+                     + ("_slmin" if args.stop_line == "min_entry_current" else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
                      + (f"_bf{args.buy_floor:g}" if args.buy_floor else "")
@@ -2404,7 +2418,7 @@ def main() -> int:
                          universe=universe, trend_tranche=args.trend_tranche,
                          sell_full=args.sell_full, stop_min_days=args.stop_min_days,
                          stop_confirm_days=args.stop_confirm_days,
-                         stop_deep_pct=args.stop_deep_pct,
+                         stop_deep_pct=args.stop_deep_pct, stop_line=args.stop_line,
                          stop_partial=args.stop_partial, stop_tranche=args.stop_tranche,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,
