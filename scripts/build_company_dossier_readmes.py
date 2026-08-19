@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""从 a_share_valuation_dossiers.csv 渲染每家公司的 README.md（§6.5.7 主分析文档）。
+"""从 a_share_valuation_dossiers.csv 渲染每家公司的 README.md（§6.5.2 主分析文档）。
 
 CSV 是机器可读的唯一真值来源；README 是人读正文，章节顺序固定、不得逐票自由发挥
-（§6.5.7「格式统一」）。本脚本把这一条从约定变成可复算的渲染，避免逐份手写产生漂移。
+（§6.5.2「格式统一」）。本脚本把这一条从约定变成可复算的渲染，避免逐份手写产生漂移。
 
 用法：python3 scripts/build_company_dossier_readmes.py [--check]
   --check 只比对不写盘，有差异时以退出码 1 结束。
@@ -20,7 +20,7 @@ POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 
 HEADER = """# {name}（{code}）估值档案
 
-> §6.5.7 逐票估值档案**主分析文档**。**目的：确定本公司的合理估值区间，用于判定股价低估/高估程度。**
+> §6.5.2 逐票估值档案**主分析文档**。**目的：确定本公司的合理估值区间，用于判定股价低估/高估程度。**
 > 带的机器可读副本在 `data/processed/a_share_valuation_dossiers.csv`（建带引擎只读该 CSV），两者须一致。
 > {bespoke_line}
 > **更新义务（§7.4.1）**：定期报告／业绩预告快报／研报／高频经营数据／产业政策／技术发布任一变化 →
@@ -44,7 +44,7 @@ FOOTER = """
 **人工取证**：接口不提供的输入（储量、在手订单、管线阶段、分红预案、高频经营数据）由复核者检索后
 写入同一 JSON 的 `manual_evidence`（逐条含录入日/类型/期间/标题/来源URL/摘要/用途），每轮抓取结转不清空。
 研报逐份跟踪见 `research_ledger.md`（§6.6.1 台账口径，若已建立）。
-**v2.07 起不再设 `sources/` 原件目录**——东财无原件下载接口，该机制成文后执行 0 次（§6.5.7）。
+**v2.07 起不再设 `sources/` 原件目录**——东财无原件下载接口，该机制成文后执行 0 次（§6.5.2）。
 """
 
 BESPOKE_ON = "`bespoke = true`——带只由本档给出，通用十类模型不参与计算。"

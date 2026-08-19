@@ -9,7 +9,7 @@ band which cannot be recomputed does not confer buy eligibility (§6.7 要求 10
 The check that matters is the direction of causation (§6.6 分工恒等式)::
 
     带 = 模型(锚定量, 倍数)     ← only §7 review changes it
-    档 = 位置(现价, 带)         ← daily, §6.2.1.6
+    档 = 位置(现价, 带)         ← daily, §6.2
     任何时候不得由档反推带。
 
 A band back-solved from an already-judged tier makes the daily auto-tiering
@@ -261,20 +261,20 @@ def check_row(row: dict) -> tuple[list[str], str]:
     problems: list[str] = []
     letter = tag_letter(row.get("strategy_tag", ""))
 
-    # §6.5.7（v1.47）：逐票档案的带**不受通用类型表约束**——它存在的理由正是通用口径
+    # §6.5.2（v1.47）：逐票档案的带**不受通用类型表约束**——它存在的理由正是通用口径
     # 对这家公司不成立（判例紫金矿业：F-2 取孰低在 PE 腿与 PB 腿间反复翻转，连改五版
     # 未稳）。用 F 的 anchor_metric 白名单去校验一条按定义不走 F 的带，是循环要求。
-    # 档案自身的可审计性由 §6.5.7 的必填列承担：band_method / band_derivation /
+    # 档案自身的可审计性由 §6.5.2 的必填列承担：band_method / band_derivation /
     # key_metrics / review_triggers / decided_by，缺任一列即档案不生效。
     if str(row.get("band_derivation", "") or "").strip() == "dossier":
         required = ("fair_price_low", "fair_price_high", "anchor_basis", "band_sensitivity")
         missing = [k for k in required if not str(row.get(k, "") or "").strip()]
         if missing:
-            return [f"检查7 逐票档案缺必填列：{'/'.join(missing)}（§6.5.7）"], "blocking"
+            return [f"检查7 逐票档案缺必填列：{'/'.join(missing)}（§6.5.2）"], "blocking"
         return [], "ok"
 
     if letter in RETIRED_TAGS:
-        problems.append(f"检查2 标签 {letter} 自 v1.28 起不是主标签（已降为{RETIRED_TAGS[letter]}），须按 §6.5.0 重贴")
+        problems.append(f"检查2 标签 {letter} 自 v1.28 起不是主标签（已降为{RETIRED_TAGS[letter]}），须按 §6.5 重贴")
         return problems, "blocking"
     spec = TYPE_TABLE.get(letter)
     if spec is None:
@@ -292,7 +292,7 @@ def check_row(row: dict) -> tuple[list[str], str]:
     if derivation == "fallback" or (not derivation and legacy):
         problems.append(f"检查6 band_derivation=fallback（档位反推带{'，' + legacy if legacy else ''}）")
     elif derivation and derivation not in ("model", "dossier"):
-        # `dossier`（§6.5.7 v1.47）是合法口径：带由逐票档案给出、脱离通用模型。
+        # `dossier`（§6.5.2 v1.47）是合法口径：带由逐票档案给出、脱离通用模型。
         # 它不是「档位反推带」——推导写在档案的 band_derivation 列里，可复算可审计。
         problems.append(f"检查6 band_derivation 非法值 '{derivation}'（只允许 model/dossier/fallback）")
 

@@ -113,7 +113,7 @@ def trade_fee(amount: float, day: str, side: str) -> float:
     FEES["paid"] += fee
     return fee
 
-# 安全边际按档位（§6.5.7.1.1：风险惩罚归决策层，不塞进 r）。**只作用于买入线。**
+# 安全边际按档位（§6.7：风险惩罚归决策层，不塞进 r）。**只作用于买入线。**
 MOS_BY_TIER = {"L1": 0.10, "L2": 0.20, "L3": 0.30}
 DEFAULT_TIER = "L2"
 
@@ -648,7 +648,7 @@ class Portfolio:
         return total
 
     def equity(self, prices: dict[str, float]) -> float:
-        """**净资产 N = 总资产 − 融资负债**（§9.7.1.1）。无杠杆时与旧口径完全一致。"""
+        """**净资产 N = 总资产 − 融资负债**（§9.3.1.1）。无杠杆时与旧口径完全一致。"""
         return self.gross(prices) - self.debt
 
     def margin_ratio(self, prices: dict[str, float]) -> float:
@@ -763,7 +763,7 @@ def update_stop_breach(price: float, stop: float, streak: int,
 
 
 def lot_ratio_ready(counters: dict, code: str, lot_value: float, tranche: float) -> bool:
-    """§9.7.3 比例冷却（用户 2026-08-10 指令）：一手价值是一档的 `x` 倍时，**成交一手后跳过随后
+    """§9.3.3 比例冷却（用户 2026-08-10 指令）：一手价值是一档的 `x` 倍时，**成交一手后跳过随后
     `round(x) − 1` 次合格机会**，即每 `round(x)` 次合格才动一手。
 
     为什么按「合格次数」而不是自然日：冷却的目的是让**平均速度等于一档/次**，而合格机会本身
@@ -872,8 +872,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
     **MOS 只管买、不管卖**——安全边际是「便宜到什么程度才敢下手」，卖出仍按带上沿。
-    这是 §6.5.7.1.1「估值层给 r、决策层给 MOS」那条分工的落地；此前 MOS 只算进带文件的
-    `max_buy_price` 列，回测一行都没引用（§15.2 第 2 条「成文未落地」，本轮补上）。
+    这是 §6.7「估值层给 r、决策层给 MOS」那条分工的落地；此前 MOS 只算进带文件的
+    `max_buy_price` 列，回测一行都没引用（§13 第 2 条「成文未落地」，本轮补上）。
 
     `price_stop`：给估值组也装上走势组那套「跌破建仓日 MA20 即清仓」。
     `value_stop`：**基本面退出**——内在价值自持有期峰值回落超过该比例即清仓。
@@ -976,7 +976,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
     prev_day = None
     margin_events: list[dict] = []
-    lot_counters: dict[str, int] = {}   # §9.7.3 比例冷却，买卖共用
+    lot_counters: dict[str, int] = {}   # §9.3.3 比例冷却，买卖共用
     min_ratio, min_ratio_day = float("inf"), ""
     credit_limit = 0.0
     prev_trading = {n: d for d, n in zip(days, days[1:])}
@@ -1256,7 +1256,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 stats[f"贵+破MA{liquidate_ma}·一键清仓"] += 1
                 continue
             # `no_value_sell`（用户 2026-08-15：「删除超过 P/V 之后的减仓规则」）：
-            # **整条估值减持路径关闭**（§9.7.2 第 4 步第①条）。此后卖出只剩三条：
+            # **整条估值减持路径关闭**（§9.3.2 第 4 步第①条）。此后卖出只剩三条：
             # ⓪建仓日均线止损、②出 §5 名单逐步清仓、③换仓。
             # **注意现行减持线 2.50 十八年只触发 9 次**，故这条的直接影响本就很小；
             # 真正的意义是把「贵了要不要减」这个判断从机械规则里彻底移除。
@@ -1370,7 +1370,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 只要 `MA20 > MA60`（趋势还在）就继续定投，不再要求 `收盘 > MA20`。
             # 新建仓不受影响，仍须 `收盘 > MA20 > MA60`。
             # 语义是「建仓那一刻要确认趋势成立，此后回踩不打断定投」；
-            # **它必然放大回撤**——回踩途中继续投钱，而止损仍是唯一的截断（见 §9.7.5）。
+            # **它必然放大回撤**——回踩途中继续投钱，而止损仍是唯一的截断（见 §9.3.5）。
             def _trend_ok(r):
                 ma = mas.get(r[0], {}).get(sig_day)
                 if not ma or not all(w in ma for w in trend_ma):
@@ -1588,7 +1588,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         #
         # 实现上**不另写一套下单逻辑**——只把够格的成员插到 `eligible` 最前面，整手取整、
         # 比例冷却、单票上限、建仓日止损、流水记账全部沿用下面那个循环。多写一套的风险
-        # 远大于收益（§15.2 第 3 条：同一件事写两遍，迟早两边不一样）。
+        # 远大于收益（§13 第 3 条：同一件事写两遍，迟早两边不一样）。
         quota_room = 0.0
         if quota_today:
             held = sum(lot.shares * marks[c] for c, lot in portfolio.lots.items()
@@ -1649,7 +1649,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     # 高价股（茅台一手 13 万）一档金额买不起一手。**不因此放弃建仓**，改为
                     # 每次买一手、隔 `min_lot_cooldown` 个交易日再买下一手（用户 2026-08-09 指令）。
                     # 冷却期是必需的：不设的话一手会天天买，等于把该股的定投速度放大到一档以上。
-                    # v2.77 起冷却由「自然日」改为「合格次数」（`lot_ratio_ready`，§9.7.3）；
+                    # v2.77 起冷却由「自然日」改为「合格次数」（`lot_ratio_ready`，§9.3.3）；
                     # `--min-lot-cooldown` 保留为旧口径，两者互斥，都不给则不建仓（原行为）。
                     if lot_ratio_cooldown:
                         ready = lot_ratio_ready(lot_counters, code, fill * lot_size, budget)
@@ -1731,7 +1731,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     marks[code] = last_price[code]
         # `--margin-ratchet`（纯研究开关，§12.70）：日终剩余现金先还融资，不留到下一笔买入。
         repay_debt(portfolio, margin_ratchet)
-        # **无单票上限的实际后果必须可量**（§9.7.1 明文不设单票上限）：逐日记下最大单股权重
+        # **无单票上限的实际后果必须可量**（§9.3.1 明文不设单票上限）：逐日记下最大单股权重
         # 与前三大合计，写进净值曲线。不记的话「集中度」只能靠事后从流水重建，而流水按构造
         # 缺部分减持（本次一并补上），重建值会系统性偏高。
         eq_now = portfolio.equity(marks)
@@ -2055,7 +2055,7 @@ def main() -> int:
                         help="full=加仓与新建仓同条件（缺省）；"
                              "ma-only=**已有持仓**只要 MA20>MA60 就继续定投，不再要求 收盘>MA20")
     parser.add_argument("--no-value-sell", action="store_true",
-                        help="删掉「`P/V` 过减持线就减一档」整条路径（§9.7.2 第 4 步第①条）。"
+                        help="删掉「`P/V` 过减持线就减一档」整条路径（§9.3.2 第 4 步第①条）。"
                              "此后卖出只剩：建仓日均线止损、出名单清仓、换仓")
     # 三个「反向开关」：BASE 串里已含 --no-value-sell / --swap-require-weak / --swap 这类
     # store_true，扫描器只能**追加**参数、无法删除，故各配一个同 dest 的反向旗（后出现者胜）。
@@ -2119,7 +2119,7 @@ def main() -> int:
     parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
     parser.add_argument("--lot-ratio-cooldown", action="store_true",
-                        help="§9.7.3 比例冷却：一手价值是一档的 x 倍时，成交一手后跳过 round(x)−1 次合格机会（买卖共用）")
+                        help="§9.3.3 比例冷却：一手价值是一档的 x 倍时，成交一手后跳过 round(x)−1 次合格机会（买卖共用）")
     parser.add_argument("--min-lot-cooldown", type=int, default=0, metavar="D",
                         help="高价股一档买不起一手时，改为每 D 个自然日买一手；0 表示跳过不买")
     parser.add_argument("--trade-log", type=Path, help="导出逐笔成交流水（人工核对用）")
@@ -2218,7 +2218,7 @@ def main() -> int:
     names, benchmark, risk_free = load_names(), load_benchmark(), load_risk_free()
     # 均线窗口按**本次实际用到的**收集，缺哪条算哪条。此前固定 (5,10,20,60,120,240)，
     # 传入未预计算的窗口（如 `--trend-ma 10 30`）会使条件恒假、**一笔交易都不产生却不报错**
-    # ——典型的静默失效（§15.2 第 3 条），2026-08-09 实测撞到后修正。
+    # ——典型的静默失效（§13 第 3 条），2026-08-09 实测撞到后修正。
     windows = sorted({5, 10, 20, 60, 120, 240} | set(args.trend_ma) | set(args.hold_strong_ma)
                      | set(args.sell_trend_ma) | ({args.liquidate_ma} if args.liquidate_ma else set())
                      | {args.dev_ma, args.stop_ma} | ({args.trend_exit_ma} if args.trend_exit_ma else set()))

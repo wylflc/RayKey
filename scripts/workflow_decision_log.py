@@ -22,7 +22,7 @@ def _read_workflow_version() -> str:
     Hard-coding it here let the constant drift 19 versions behind the changelog
     (stuck at v1.43 while the spec was at v1.62), and every decision-log row
     written in between carries the wrong version. The title line is the one
-    place a reader looks, so it is the truth; this parses it (§15.2 第 3 条).
+    place a reader looks, so it is the truth; this parses it (§13 第 3 条).
     """
     try:
         head = WORKFLOW_SPEC.read_text(encoding="utf-8").split("\n", 1)[0]
@@ -53,7 +53,7 @@ def version_sync_warning() -> str | None:
     「改了 changelog 就必须改正文版本行」。本函数就是那个检查。
 
     放在导入期而非 `__main__`：写决策日志的每个脚本都导入本模块，这样它在**每日跑批时**
-    可见（§15.2 第 2 条要求新规则附跑批时可见的落地校验），而不是只在有人专门跑自检时。
+    可见（§13 第 2 条要求新规则附跑批时可见的落地校验），而不是只在有人专门跑自检时。
     同步时一字不印，避免每日噪音。
     """
     spec = WORKFLOW_VERSION.rsplit("-v", 1)[-1] if "-v" in WORKFLOW_VERSION else ""
@@ -125,7 +125,7 @@ def append_decision_log(path: Path, rows: list[dict[str, object]]) -> None:
 #
 # 实测 2026-08-03：31,004 行里只有 87 行填了 supersedes，即这根线基本没接过。后果不是
 # 行数多，而是**给定一个业务键，无法判定哪一行是当前结论**。本函数把这件事变成可见的
-# 数字（§15.2 第 2 条：新规则须同时给出跑批时可见的命中数）。
+# 数字（§13 第 2 条：新规则须同时给出跑批时可见的命中数）。
 
 BUSINESS_KEY_FIELDS = ("as_of", "workflow_stage", "security_code", "decision_type")
 

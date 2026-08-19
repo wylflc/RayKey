@@ -114,7 +114,7 @@ DIVIDENDS_PATH = ROOT / "data/interim/a_share_dividends.csv"
 # 结论落在此文件，供建带引擎读取，使人工判断可复算、可审计，而不是散在正文里。
 MANUAL_REVALUATION = ROOT / "data/interim/manual_revaluation_2026-08-01.csv"
 
-# §6.5.7 逐票估值档案（v1.47，用户决定）：通用十类只作粗估，逐票精算落在档案里。
+# §6.5.2 逐票估值档案（v1.47，用户决定）：通用十类只作粗估，逐票精算落在档案里。
 # `bespoke = true` 的行**完全脱离通用模型**——不跑 A/C/D/F/H/… 任何一条口径，
 # 带只由档案给出。设立理由：紫金矿业在 F-2「取孰低」的 PE 腿与 PB 腿之间反复翻转，
 # 连改五版仍不稳定；对这类公司继续套通用公式，只会按下葫芦起了瓢。
@@ -434,7 +434,7 @@ def annual_rows(periods: list[dict]) -> list[dict]:
     return [p for p in periods if p.get("REPORT_TYPE") == "年报"]
 
 
-# §6.5.2.2（v1.46，结 OI-015 第 1 条，用户指令「对所有公司，都将业绩预告包含在业绩报告的范畴中」）
+# §6.4（v1.46，结 OI-015 第 1 条，用户指令「对所有公司，都将业绩预告包含在业绩报告的范畴中」）
 FORECAST_FIELD_BY_CODE = {"004": "PARENTNETPROFIT", "005": "KCFJCXSYJLR", "008": "TOTALOPERATEREVE"}
 FORECAST_GROWTH_CODES = {"001": "TOTALOPERATEREVE", "006": "TOTALOPERATEREVE"}
 FORECAST_MIN_ELAPSED = 0.5       # 公告日时报告期至少走完一半，否则算预测不算业绩
@@ -538,7 +538,7 @@ def forecast_periods(evidence: dict, as_of: str) -> list[dict]:
 
 
 def augmented_periods(evidence: dict, as_of: str) -> list[dict]:
-    """已披露期数 + 合成的预告/快报期数（§6.5.2.2）。"""
+    """已披露期数 + 合成的预告/快报期数（§6.4）。"""
     return forecast_periods(evidence, as_of) + (evidence.get("finance_periods") or [])
 
 
@@ -561,7 +561,7 @@ def ttm(periods: list[dict], field: str) -> float | None:
 
     单季 = 本期累计 − 同年上期累计（一季报本身即单季）。TTM = 最近四个单季之和。
 
-    §6.5.2.2 同口径保护：预告只给利润、不给营收是常态（实测 74 家有预告、仅 11 家
+    §6.4 同口径保护：预告只给利润、不给营收是常态（实测 74 家有预告、仅 11 家
     带营收）。若最新的合成期缺本字段，则本次调用**整体退回已披露期数**——同一个
     字段的 TTM 绝不半新半旧。跨字段的同口径由 `ttm_same_vintage()` 单独保证。
     """
@@ -601,7 +601,7 @@ def ttm(periods: list[dict], field: str) -> float | None:
     # 四单季差分要求四个季度连续可得，中间缺任一期即整体失败——次新股尤其常见：
     # 盛合晶微 2025 年上市，`finance_periods` 无 2025 三季报，TTM 因此返回 None，
     # 而它 FY2025 归母 9.21亿、Q1'26 1.91亿，TTM 明明可算（9.21+1.91−1.26 = 9.86亿）。
-    # 该判例由 §15.2 第 3 条的列覆盖自检（无 TTM 行清单）抓出。
+    # 该判例由 §13 第 3 条的列覆盖自检（无 TTM 行清单）抓出。
     annual = {p["REPORT_DATE"][:10]: p for p in rows if p["REPORT_DATE"][5:10] == "12-31"}
     ytd = [p for p in rows if p["REPORT_DATE"][5:10] != "12-31"]
     if annual and ytd:
@@ -616,12 +616,12 @@ def ttm(periods: list[dict], field: str) -> float | None:
 
 def reported_only(periods: list[dict]) -> list[dict]:
     """剔除合成的预告/快报期。分红率一类以**已披露年度**为分子的比值必须用它当分母，
-    否则分子停在上一年报、分母已滚入预告，分红率会被机械压低（§6.5.2.2）。"""
+    否则分子停在上一年报、分母已滚入预告，分红率会被机械压低（§6.4）。"""
     return [p for p in periods if not p.get("_forecast_notice")]
 
 
 def ttm_same_vintage(periods: list[dict], *fields: str) -> tuple[float | None, ...]:
-    """多个字段的 TTM，强制**同一口径批次**（§6.5.2.2）。
+    """多个字段的 TTM，强制**同一口径批次**（§6.4）。
 
     专供跨字段相除的场合——净利率 = 利润 ÷ 营收、现金转化 = 经营现金 ÷ 利润。
     预告普遍只给利润不给营收（74 家有预告、仅 11 家带营收），若利润取到预告口径
@@ -697,7 +697,7 @@ def c_to_a_signal(evidence: dict) -> tuple[bool, str]:
     """§6.5.3 C → A 迁出判据（v1.30）：三条须全部成立。
 
     ① 三年一致预期归母 CAGR < 12%  ② 近三年 ROE 均 ≥ 12%  ③ 经营现金流/净利润 ≥ 0.8
-    只满足 ① 的不迁 A——那是质量下滑，须回 §6.5.0 重走判定顺序。
+    只满足 ① 的不迁 A——那是质量下滑，须回 §6.5 重走判定顺序。
     「连续两次复核」由估值执行侧跨轮判断，本函数只给单轮读数。
     """
     profits = [consensus_median(evidence, i)[0] for i in range(3)]
@@ -710,7 +710,7 @@ def c_to_a_signal(evidence: dict) -> tuple[bool, str]:
     # §6.5.2.1 取数陷阱三：JYXJLYYSR 是**小数比率**（0.3644 = 36.44%），
     # 与同记录内的 XSJLL/ROEJQ（百分数）单位不同，不得再除以 100。
     ratios = [float(r["JYXJLYYSR"]) for r in rows if r.get("JYXJLYYSR") is not None]
-    # 现金转化是跨字段相除，须同口径（§6.5.2.2）
+    # 现金转化是跨字段相除，须同口径（§6.4）
     revenue, profit_ttm = ttm_same_vintage(
         augmented_periods(evidence, AS_OF_DATE), "TOTALOPERATEREVE", "PARENTNETPROFIT")
     cash_conv = None
@@ -762,7 +762,7 @@ def forward_present_value(code: str, anchor: float, year: int | None, as_of_year
 
 
 def ttm_augmented_profit(evidence: dict, as_of: str) -> float | None:
-    """已披露口径的 TTM 归母（含已结束报告期的预告/快报，§6.5.2.2）。"""
+    """已披露口径的 TTM 归母（含已结束报告期的预告/快报，§6.4）。"""
     return ttm(augmented_periods(evidence, as_of), "PARENTNETPROFIT")
 
 
@@ -775,7 +775,7 @@ def runrate_invariant(evidence: dict, as_of: str, anchor_earnings_yi: float | No
     **事实**（带所依据的盈利 vs 已披露盈利）上，而不是挂在带由哪条路径产生上。
 
     锚不是盈利口径的（净资产锚、市销率锚）显式返回「不适用」而非静默跳过——
-    静默跳过正是 §15.2 第 3 条点名的病。
+    静默跳过正是 §13 第 3 条点名的病。
     """
     t = ttm_augmented_profit(evidence, as_of)
     if not t or t <= 0:
@@ -795,7 +795,7 @@ def runrate_invariant(evidence: dict, as_of: str, anchor_earnings_yi: float | No
 def build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dict:
     """建带卡。**运行率不变量在此统一兜底**（v1.53）——`_build_card` 有多个 return 分支，
     逐个挂校验必然漏（v1.52 首版即漏掉 K primary Gordon 分支的 4 行，苏泊尔/杭氧股份/
-    长江电力/养元饮品 产出空的 `runrate_check`，属 §15.2 第 3 条的静默缺口）。
+    长江电力/养元饮品 产出空的 `runrate_check`，属 §13 第 3 条的静默缺口）。
     改为在唯一出口统一补：任何分支未给出结论的，在这里按盈利锚重算一次。
     """
     card = _build_card(code, name, tag_letter, quality_tier)
@@ -833,7 +833,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
         "anchor_quality": "primary",
         "upgrade_path": "",
         "band_is_floor": "",
-        "anchor_vintage": "",        # §6.5.2.2：锚是否用到已结束报告期的预告/快报
+        "anchor_vintage": "",        # §6.4：锚是否用到已结束报告期的预告/快报
         "method_divergence": "",     # §6.5.3：双口径中值背离比例（OI-016 的卖出抑制依据）
         "runrate_check": "",         # §6.5.4 运行率不变量（v1.52，OI-018）
         "cycle_assumption": "",
@@ -854,7 +854,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
         "needs_external": "",
         "note": "",
     }
-    # §6.5.7（v1.47）：bespoke 档案**完全脱离通用模型**——在标签分派之前就返回，
+    # §6.5.2（v1.47）：bespoke 档案**完全脱离通用模型**——在标签分派之前就返回，
     # 通用口径一条都不跑。用户决定：「对于反复处理不好的公司，标记为特殊公司，
     # 逐案例分析，不再使用相关行业的共用估值方法。」
     doc = dossier(code)
@@ -863,7 +863,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
             anchor_metric="dossier", anchor_scope="per_share", band_derivation="dossier",
             anchor_quality="primary", multiple_source="dossier",
             fair_price_low=doc.get("band_low", ""), fair_price_high=doc.get("band_high", ""),
-            anchor_basis=f"逐票档案（§6.5.7，脱离通用模型）：{doc.get('band_method','')}。"
+            anchor_basis=f"逐票档案（§6.5.2，脱离通用模型）：{doc.get('band_method','')}。"
                          f"{doc.get('band_derivation','')}"[:1200],
             band_sensitivity=f"跟踪指标：{doc.get('key_metrics','')}｜复核触发：{doc.get('review_triggers','')}"
                              f"｜定案：{doc.get('decided_by','')}（{doc.get('reviewed_at','')}）",
@@ -903,7 +903,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
     if shares:
         card["shares_out"] = f"{shares:.4f}"
 
-    # §6.5.2.2（v1.45，结 OI-015）：已披露期数 + 已结束报告期的预告/快报。
+    # §6.4（v1.45，结 OI-015）：已披露期数 + 已结束报告期的预告/快报。
     # 「业绩预告属于业绩报告」——一个已经结束的报告期的预告是已兑现盈利。
     periods = augmented_periods(evidence, AS_OF_DATE)
     band = evidence.get("valuation_band") or {}
@@ -930,7 +930,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
         distributable = sr_data["cash"] + sr_data["cancel_rate"] * (quote.get("total_market_cap") or 0)
         if distributable <= 0:
             return low, high, ""
-        # 分红为已披露年度口径，分母同口径（§6.5.2.2）
+        # 分红为已披露年度口径，分母同口径（§6.4）
         profit = ttm(reported_only(periods), "PARENTNETPROFIT")
         payout = (sr_data["cash"] / profit) if (profit and profit > 0) else None
         roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
@@ -967,7 +967,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
         使均值为负）。中位数天然抗离群年，营收缩放天然吸收规模变化。
         """
         margins = [float(r["XSJLL"]) for r in annuals if r.get("XSJLL") is not None]
-        # 净利率 = 利润 ÷ 营收，跨字段相除须同口径（§6.5.2.2）：预告普遍只给利润不给营收，
+        # 净利率 = 利润 ÷ 营收，跨字段相除须同口径（§6.4）：预告普遍只给利润不给营收，
         # 若利润取预告口径而营收停在已披露口径，净利率会被机械抬高、再乘回营收放大成虚高的带。
         revenue, profit_ttm = ttm_same_vintage(periods, "TOTALOPERATEREVE", "PARENTNETPROFIT")
         revenue_ttm = revenue
@@ -1105,7 +1105,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
         # A-1（§6.5.3 双口径强制，v1.34 结 OI-008）：股东回报 Gordon 口径
         if sr and anchor and multiple and shares:
             roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
-            # 分红为已披露年度口径，分母同口径（§6.5.2.2）
+            # 分红为已披露年度口径，分母同口径（§6.4）
             profit = ttm(reported_only(periods), "PARENTNETPROFIT")
             payout = (sr["cash"] / profit) if (profit and profit > 0) else None
             growth_raw = (statistics.median(roe_rows) / 100 * (1 - min(payout, 1.0))
@@ -1230,11 +1230,11 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
                          f"；g = 历史实现 3 年归母 CAGR {realized_cagr:.1%}（封顶 30% 后取 {capped:.1%}）"
                          f"；带系数即 PEG 1.0-1.5")
                 if capped <= 0:
-                    # 增长前提不成立 → 按 §6.5.0 重走判定顺序：净利率低于历史中枢=困境(E 口径)，
+                    # 增长前提不成立 → 按 §6.5 重走判定顺序：净利率低于历史中枢=困境(E 口径)，
                     # 否则=无增长但盈利稳定(A-2 口径)。两者都不要求增长。
                     anchor = multiple = None
                     margins = [float(r["XSJLL"]) for r in annuals if r.get("XSJLL") is not None]
-                    # 现净利率是跨字段相除，须同口径（§6.5.2.2）
+                    # 现净利率是跨字段相除，须同口径（§6.4）
                     margin_profit, revenue = ttm_same_vintage(periods, "KCFJCXSYJLR", "TOTALOPERATEREVE")
                     pe_med = band.get("pe_ttm_median")
                     current_margin = (margin_profit / revenue * 100) if (revenue and margin_profit) else None
@@ -1247,7 +1247,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
                             card["anchor_metric"] = "repaired_normalized_profit"
                             card["band_low_coef"], card["band_high_coef"] = (0.85, 1.00)
                             low_coef, high_coef = (0.85, 1.00)
-                            card["upgrade_path"] = "增长证伪，按 §6.5.0 复核应否改判 E 落难白马"
+                            card["upgrade_path"] = "增长证伪，按 §6.5 复核应否改判 E 落难白马"
                             basis = (f"C 增长前提不成立（历史实现 3 年 CAGR {realized_cagr:.1%} ≤0）→ 改按 E 修复口径："
                                      f"TTM 营收 {revenue/1e8:.2f}亿 × 历史中枢净利率 {mid_margin:.2f}%"
                                      f"（现净利率 {current_margin:.2f}%，处中枢 80% 以下=困境）"
@@ -1259,7 +1259,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
                             card["anchor_metric"] = "normalized_profit"
                             low_coef, high_coef = A2_COEFS.get(tier_key, (0.85, 1.05))
                             card["band_low_coef"], card["band_high_coef"] = low_coef, high_coef
-                            card["upgrade_path"] = "增长证伪，按 §6.5.0 复核应否改判 A 现金流复利"
+                            card["upgrade_path"] = "增长证伪，按 §6.5 复核应否改判 A 现金流复利"
                             basis = (f"C 增长前提不成立（历史实现 3 年 CAGR {realized_cagr:.1%} ≤0）→ 改按 A-2 口径："
                                      f"扣非归母 TTM {profit_ttm/1e8:.2f}亿 × 自身 5 年 PE 中位 {pe_med}"
                                      f"（现净利率 {current_margin:.2f}% 未低于中枢 {mid_margin:.2f}% 的 80%，属无增长而非困境）")
@@ -1325,7 +1325,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
         if sr and shares and sr["cash"] > 0:
             # K primary（v1.34 恢复）：Gordon DPS/(r−g)
             dps = sr["cash"] / 1e8 / shares
-            # 分红为已披露年度口径，分母同口径（§6.5.2.2）
+            # 分红为已披露年度口径，分母同口径（§6.4）
             profit = ttm(reported_only(periods), "PARENTNETPROFIT")
             payout = (sr["cash"] / profit) if (profit and profit > 0) else 1.0
             roe_rows = [float(r["ROEJQ"]) for r in annuals[:3] if r.get("ROEJQ") is not None]
@@ -1559,7 +1559,7 @@ def _build_card(code: str, name: str, tag_letter: str, quality_tier: str) -> dic
             # §6.5.4 运行率不变量（v1.52，OI-018）：对每条带生效，与 anchor_scope 无关
             _ae = anchor_abs / 1e8 if card["anchor_scope"] == "market_cap" else None
             card["runrate_check"], _rrn = runrate_invariant(evidence, AS_OF_DATE, _ae)
-            # §6.5.2.2：锚若用到已结束报告期的预告/快报，必须一眼可见——这是 OI-015
+            # §6.4：锚若用到已结束报告期的预告/快报，必须一眼可见——这是 OI-015
             # 的核心，锚的口径新旧决定了「贵」这个结论成不成立。
             anchor_field = ("KCFJCXSYJLR" if "扣非" in (basis or "") else "PARENTNETPROFIT")
             fc_note = forecast_note(periods, anchor_field) or forecast_note(periods, "TOTALOPERATEREVE")
@@ -1588,7 +1588,7 @@ def main() -> int:
     args = parser.parse_args()
 
     global AS_OF_DATE
-    AS_OF_DATE = args.as_of          # §6.5.2.2：只有 REPORT_DATE ≤ as_of 的预告/快报才合成
+    AS_OF_DATE = args.as_of          # §6.4：只有 REPORT_DATE ≤ as_of 的预告/快报才合成
 
     with args.tags.open(encoding="utf-8-sig") as handle:
         tags = list(csv.DictReader(handle))
@@ -1616,7 +1616,7 @@ def main() -> int:
     print(f"  带已算出           {computed}")
     print(f"  待外部取证         {external}")
     print(f"  取数失败/须人工补  {failed}")
-    # §15.2 第 3 条强制自检（v1.58）：**凡新增数据源或新增列，跑完必须核对非空行数**。
+    # §13 第 3 条强制自检（v1.58）：**凡新增数据源或新增列，跑完必须核对非空行数**。
     # 四次静默失效的共同签名都是「某列/某源整体为空而无人察觉」——apply 只写非空值、
     # `band_derivation` 被硬写、`runrate_check` 没进 CARD_FIELDS、北交所后缀查不到财务。
     # 全空列几乎一定是接线错误而不是业务事实，故一律高声报出。
@@ -1650,7 +1650,7 @@ def main() -> int:
         print(f"    ❌**一致性断言失败**：{len(missing)} 行 runrate_check=below_runrate 却未置 cycle_assumption —— "
               + "、".join(f"{c['security_code']}{c.get('security_name','')}" for c in missing[:10]))
     if alarms:
-        print(f"    ⓘ全空列（§15.2 第 3 条须逐列确认是否有行本该命中；本轮 below_runrate 命中 {len(should)} 行）："
+        print(f"    ⓘ全空列（§13 第 3 条须逐列确认是否有行本该命中；本轮 below_runrate 命中 {len(should)} 行）："
               + "、".join(alarms))
     # 数据源自检：财务期数为 0 的行——北交所判例正是全体为 0 而无提示
     noperiod = [c for c in cards if c.get("runrate_check") == "na_no_ttm"]
@@ -1659,7 +1659,7 @@ def main() -> int:
               + "、".join(f"{c['security_code']}{c.get('security_name','')}" for c in noperiod[:12])
               + ("…" if len(noperiod) > 12 else ""))
     # 全池建档后，上面这套列覆盖自检的**对象会消失**（通用行归零）——这正是 OI-018 的同型问题：
-    # 校验挂在「路径」上，路径退场校验就失效。故在此把自检切换到档案侧的 §6.5.7 必填列上。
+    # 校验挂在「路径」上，路径退场校验就失效。故在此把自检切换到档案侧的 §6.5.2 必填列上。
     dossiers = [c for c in cards if c.get("band_derivation") == "dossier"]
     if not generic:
         REQUIRED = ("fair_price_low", "fair_price_high", "anchor_basis", "band_sensitivity")
@@ -1673,7 +1673,7 @@ def main() -> int:
     vintage = sum(1 for c in cards if c.get("anchor_vintage"))
     # 通用路径的 anchor_vintage 会随建档归零，故同时统计档案推导里显式引用预告/快报的家数。
     fc_dossier = sum(1 for c in dossiers if "预告" in (c.get("anchor_basis") or "") or "快报" in (c.get("anchor_basis") or ""))
-    print(f"  锚含预告/快报      通用 {vintage}｜档案 {fc_dossier}（§6.5.2.2）")
+    print(f"  锚含预告/快报      通用 {vintage}｜档案 {fc_dossier}（§6.4）")
     # §6.5.6 落地校验（v1.46，结 OI-017）：真·下限带（按定义完全不含成长/管线/订单）
     # 必须有成长期权，否则它的完整价值永远缺一块。此前 §6.5.6 成文而**全池执行 0 次**，
     # 且没有任何环节报告过这件事——「成文即视为落地」正是 OI-002 与 OI-017 同型的病根。

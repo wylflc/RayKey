@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""把内在价值模型的带写入逐票档案（§6.5.7.3，v2.72 起为唯一带来源）。
+"""把内在价值模型的带写入逐票档案（§6.5.2.3，v2.72 起为唯一带来源）。
 
 为什么要有这一步
 ----------------
@@ -125,7 +125,7 @@ def main() -> int:
             (kept_stale if code in stale else kept_unvaluable).append(row["security_name"])
             continue
 
-        # §6.5.7.4 人工覆盖：模型算得出带、但该带**建立在不可比或已知错误的输入上**时，
+        # §6.5.2.4 人工覆盖：模型算得出带、但该带**建立在不可比或已知错误的输入上**时，
         # 仅靠 `bespoke` 保不住手工带——本脚本对有模型带的行是无条件改写的。
         # 判例：宏桥控股 2024 年资产注入 + FY2024/25 的 bps 偏大 10 倍，模型带 0.0974 对现价 19.2。
         # 覆盖表是唯一的例外落点，逐行须写明理由与失效条件。
@@ -135,7 +135,7 @@ def main() -> int:
             row["band_derivation"] = "manual_override"
             row["bespoke"] = "true"
             row["reviewed_at"] = ovr.get("reviewed_at") or row.get("reviewed_at", "")
-            row["band_method"] = (f"§6.5.7.4 人工覆盖（{ovr.get('reason_code')}）：{ovr.get('note')}"
+            row["band_method"] = (f"§6.5.2.4 人工覆盖（{ovr.get('reason_code')}）：{ovr.get('note')}"
                                   f"｜失效条件：{ovr.get('expires_when')}")
             overridden.append(row.get("security_name") or code)
             continue
@@ -158,7 +158,7 @@ def main() -> int:
         # 而本档现在装的正是模型带。设成 `false` 会让 `build_valuation_band_cards.py` 走通用路径
         # 把带覆盖掉——2026-08-10 首次落地时正是这么错的，17 只被重算成兜底 EPV 后判无法估值。
         row["bespoke"] = "true"
-        # v4.00：带来源分四条路径（§6.5.7.3），派生说明按路径写，不再一律套权益 DCF 的口径
+        # v4.00：带来源分四条路径（§6.5.2.3），派生说明按路径写，不再一律套权益 DCF 的口径
         roic_path = (band.get("roic_path") or "").strip()
         # 被 §6.3 第 5 条预告/快报叠加过的行**不能再宣称与回测同口径**——回测无历史预告面板。
         overlay = (band.get("forecast_overlay") or "").strip()
@@ -168,10 +168,10 @@ def main() -> int:
                 f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}"
                 f"（{band.get('forecast_source') or overlay}）｜"
                 f"**本行与回测 `valuation_ratio` 不同口径**，回测无历史预告面板，"
-                f"差异见 §6.5.7.1｜叠加前 IV {band.get('pre_overlay_iv') or '—'}"
+                f"差异见 §6.5.2.1｜叠加前 IV {band.get('pre_overlay_iv') or '—'}"
                 f"（报告期 {band.get('pre_overlay_report_date') or '—'}）｜")
         else:
-            common_head = (f"与 §9.7.1.2 回测所用带**同一套口径**。"
+            common_head = (f"与 §9.3.1.2 回测所用带**同一套口径**。"
                            f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜")
         common_tail = (f"**内在价值 {iv:.2f} 元**。带 = IV × [0.90, 1.10]，**中值恰为 IV**，"
                        f"故 `P/V = 收盘 ÷ 中值` 与回测的 `valuation_ratio` 逐位一致。")
@@ -181,11 +181,11 @@ def main() -> int:
             except (TypeError, ValueError):
                 return "—"
         if roic_path == "bank_divspread":
-            row["band_method"] = "银行·股利折现（§6.5.7.3）"
+            row["band_method"] = "银行·股利折现（§6.5.2.3）"
             row["band_derivation"] = (common_head
                 + "V = 近 12 个月每股现金分红 ÷ (十年国债 + 2%)｜" + common_tail)
         elif roic_path in ("growth", "zero_growth"):
-            row["band_method"] = "内在价值模型·ROIC 口径（§6.5.7.3）：NOPAT—投入资本—增量回报—WACC—EV−净负债"
+            row["band_method"] = "内在价值模型·ROIC 口径（§6.5.2.3）：NOPAT—投入资本—增量回报—WACC—EV−净负债"
             row["band_derivation"] = (common_head
                 + f"每股 NOPAT {band.get('nopat_ps', '—')}｜ROIC0 {_f('roic0')}｜"
                 + f"增量 ROIC {_f('incremental_roic')}｜再投资率 {_f('reinvestment_rate')}｜"
@@ -196,14 +196,14 @@ def main() -> int:
                    if roic_path == "zero_growth" else "")
                 + common_tail)
         else:
-            row["band_method"] = "内在价值模型·权益退路（§6.5.7.3：无三大报表时的权益 DCF）"
+            row["band_method"] = "内在价值模型·权益退路（§6.5.2.3：无三大报表时的权益 DCF）"
             row["band_derivation"] = (common_head
                 + f"eps0 {band.get('eps0', '—')}、roe0 {_f('roe0')}（{band.get('roe_source', '')}）｜"
                 + f"g0 {_f('g0')} = ROE × 留存率｜r {_f('r')}｜"
                 + f"g_T {_f('g_terminal')}、ROE_T {_f('roe_terminal')}｜" + common_tail)
         row["anchor_earnings_yi"] = ""      # 本模型按每股折现，不用亿元口径的利润锚
         row["reviewed_at"] = args.as_of
-        row["decided_by"] = "内在价值模型（§6.5.7.3 唯一带来源；v4.00 起 ROIC 口径）"
+        row["decided_by"] = "内在价值模型（§6.5.2.3 唯一带来源；v4.00 起 ROIC 口径）"
         note = (f"**{args.as_of} 换用 v4.00 ROIC 口径带**：原带 "
                 f"{old_low}~{old_high}" + (f"（中值 {old_mid:.2f}，为新带的 {old_mid / iv:.2f}x）"
                                            if old_mid else "") +
@@ -231,7 +231,7 @@ def main() -> int:
         writer.writeheader()
         writer.writerows(rows)
     if overridden:
-        print(f"  §6.5.7.4 人工覆盖 {len(overridden)} 只（见 data/processed/manual_band_overrides.csv）：{'、'.join(overridden)}")
+        print(f"  §6.5.2.4 人工覆盖 {len(overridden)} 只（见 data/processed/manual_band_overrides.csv）：{'、'.join(overridden)}")
     print(f"  写入 {args.dossiers}")
     return 0
 

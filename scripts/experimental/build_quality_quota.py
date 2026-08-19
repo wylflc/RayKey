@@ -12,7 +12,7 @@
 用法：
     python3 build_quality_quota.py --bands <估值带.csv> --panel <面板.csv> --top 0.20 --out <成员区间.csv>
 
-估值带须与回测实际在跑的那套同源（§9.7.1.2）；`roe0` 不受 `--n1`／`--roe-terminal-ratio`
+估值带须与回测实际在跑的那套同源（§9.3.1.2）；`roe0` 不受 `--n1`／`--roe-terminal-ratio`
 影响，故任一档的带文件都可以用。
 """
 import argparse

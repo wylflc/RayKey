@@ -13,7 +13,7 @@ once. Meanwhile the failures that actually happen had no coverage at all:
 * the whole market fails to fetch and the scan still exits 0
 * a decision-log row records a file the run never opened
 
-All three are the same defect class — §15.2 第 3 条「静默失效」, a failure that
+All three are the same defect class — §13 第 3 条「静默失效」, a failure that
 reads as a success. These tests lock the honest behaviour in.
 
 No network, no fixtures on disk: every case drives a pure function.
@@ -74,7 +74,7 @@ def case_no_quote_is_not_hold():
     """核心用例：取不到行情时动作必须是 `数据缺失`，绝不能是 `持有`。
 
     旧版落 `持有` 并在备注写「沿用上一交易日结论」，而脚本从不读上一日文件——
-    一只 `P/V` 已越过减持线、本该按 §9.7.2 减持的停牌股会显示为持有，
+    一只 `P/V` 已越过减持线、本该按 §9.3.2 减持的停牌股会显示为持有，
     在唯一的卖出规则上制造静默失效（v2.56 前该缺陷作用于割肉价，同型）。
     """
     row = run_tracker(None)
@@ -94,7 +94,7 @@ def case_no_quote_leaves_pv_empty():
 
 
 def case_pv_computed_against_band_mid():
-    """P/V 必须对带中值算（v2.56 §9.7 唯一判据），不是对带下沿或上沿。"""
+    """P/V 必须对带中值算（v2.56 §9.3 唯一判据），不是对带下沿或上沿。"""
     row = run_tracker(1800.0)  # 带 1600-2000，中值 1800 → P/V = 1.00
     if row["pv"] != "1.00":
         return [f"带中值 1800、现价 1800 应得 P/V=1.00，实得 `{row['pv']}`"]
@@ -113,7 +113,7 @@ def case_pv_over_trim_line_is_flagged_in_note():
     if row["pv"] != expect:
         return [f"应得 P/V={expect}，实得 `{row['pv']}`"]
     if f"{tracker.SELL_LINE:.2f}" not in str(row.get("note", "")):
-        return ["P/V 已越减持线却未在备注点名（§9.7.2 第四步）"]
+        return ["P/V 已越减持线却未在备注点名（§9.3.2 第四步）"]
     return []
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A 股财报日「价格与带背离 → 强制复带」检出（§7.5.6，结 OI-026）。
+"""A 股财报日「价格与带背离 → 强制复带」检出（§7.5.2，结 OI-026）。
 
 登记的不对称
 ------------
@@ -9,9 +9,9 @@ T+1 内必须复带，不得只让价格改档。**该触发的成因与市场�
 这条慢路径。两者一旦差出这个量级，现有机制只有「市场错了，等它回来」一个读法，**没有
 任何机制把这个缺口当成对带的反证**。
 
-而 A 股侧的 §7.3/§7.5.5 express 复核只由**披露事件**触发、同样不看价格反应，故同一盲区
+而 A 股侧的 §7.3/§7.5.1 express 复核只由**披露事件**触发、同样不看价格反应，故同一盲区
 在 261 家上原样存在——且 A 股的暴露面比海外大得多：海外 21 家一律不可买，A 股的档位
-直接决定 §6.2.1 矩阵的买入资格。
+直接决定 §6.2 矩阵的买入资格。
 
 用户 2026-08-07 裁定：**只对「持仓 + 当日可买」子集生效**（三个方向中的第②个）。
 
@@ -22,7 +22,7 @@ T+1 内必须复带，不得只让价格改档。**该触发的成因与市场�
   既不可执行，也没有对应的当日决策。
 * **阈值 |Δ| ≥ 7%**：沿用 §6.8 第 ③ 条的海外初始校准值，**明标为未校准值**。A 股有
   10%/20% 涨跌停制度，7% 在此可能偏敏感；本脚本每次运行打印实际触发家数，跑一个
-  披露季后按实测频次重定（改阈值先改 §7.5.5 正文）。
+  披露季后按实测频次重定（改阈值先改 §7.5.1 正文）。
 * **第二个条件不可省**：该价格必须把标的**推出当前带**（涨破带顶或跌穿带底）。只有
   |Δ| 大而仍在带内的，说明带本来就容得下这次重定价，不构成对带的反证。
 * **结论是「带待复核」，不是改带**：命中即在当日报告标注并按 §7.4 express 口径在 T+1
@@ -176,7 +176,7 @@ def run(as_of: date, lookback: int, timeout: float, universe: str = "subset") ->
 
     scope = (f"全池 {len(subset)} 只（**校准口径，非生效范围**）" if universe == "pool"
              else f"子集 {len(subset)} 只（持仓 {len(holdings)} + 当日可买 {len(buyable)}，去重后）")
-    print(f"§7.5.6 财报日价格背离检出（{as_of}，OI-026）｜{scope}"
+    print(f"§7.5.2 财报日价格背离检出（{as_of}，OI-026）｜{scope}"
           f"｜其中 {lookback} 日内有披露且有带的 {checked} 只")
     if not hits:
         print(f"  无命中（阈值 |Δ| ≥ {DIVERGENCE_THRESHOLD_PCT:g}% 且被推出带）")
@@ -194,7 +194,7 @@ def run(as_of: date, lookback: int, timeout: float, universe: str = "subset") ->
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="A 股财报日价格背离强制复带检出（§7.5.6，OI-026）")
+    parser = argparse.ArgumentParser(description="A 股财报日价格背离强制复带检出（§7.5.2，OI-026）")
     parser.add_argument("--as-of", required=True, help="交易日 YYYY-MM-DD")
     parser.add_argument("--lookback", type=int, default=10, help="披露回溯窗口（自然日，缺省 10）")
     parser.add_argument("--timeout", type=float, default=8.0)

@@ -4,10 +4,10 @@
 What this writes:
 
 * `quality_tier`  ← 分层表（修 OI-003 的数据半边：估值表自带的旧五档会让 L4 行被池物化静默丢弃）
-* `strategy_tag`  ← §6.5.0 判定顺序重贴的十一类标签
+* `strategy_tag`  ← §6.5 判定顺序重贴的十一类标签
 * 建带卡十二字段 ← `valuation_band_cards.csv`
 * `fair_price_low/high` ← 按 §6.5.1 复算的模型带
-* `valuation_tier` ← §6.2.1.6 现价对带的位置（审定档 = 建带当日按同一规则算出的档）
+* `valuation_tier` ← §6.2 现价对带的位置（审定档 = 建带当日按同一规则算出的档）
 
 锚定量取不到（外部取证缺失或研报覆盖 <3 家）的行按 §6.5.2.1 判**无法估值**并清空带
 ——不得用近似值凑数，更不得退回通用系数带。
@@ -86,7 +86,7 @@ def evidence_cutoff(code: str) -> tuple[str, str]:
     """证据文件里**最新披露的公告日与类型**（v1.42）。
 
     此前 `evidence_available_at` / `valuation_evidence_event` 从不由流水线刷新——早期用
-    一次性脚本回填后就冻住了，导致每次重新取证都对 §7.5.5 待复核队列不可见：证据里已有
+    一次性脚本回填后就冻住了，导致每次重新取证都对 §7.5.1 待复核队列不可见：证据里已有
     7 月中报/预告，账面仍写 4 月一季报，队列因此永远清不掉（判例：中国神华证据 07-15 /
     账面 04-25，宁德时代 07-25 / 04-16，金山办公 07-29 / 04-24）。
     """
@@ -235,7 +235,7 @@ def main() -> int:
                     row[field] = card[field]
             row["fair_price_low"], row["fair_price_high"] = low, high
             row["base_band_low"], row["base_band_high"] = low, high   # 本轮未计入成长期权
-            # 建带卡自报口径优先（§6.5.7 的 `dossier` 必须保留到下游，否则阅读版的
+            # 建带卡自报口径优先（§6.5.2 的 `dossier` 必须保留到下游，否则阅读版的
             # 「（档）」标记与池的档案识别都拿不到它）；仅在卡未标注时兜底为 model。
             row["band_derivation"] = card.get("band_derivation") or "model"
             row["fair_price_basis"] = (card.get("anchor_basis") or "")[:400]
@@ -266,13 +266,13 @@ def main() -> int:
             row["evidence_available_at"] = mb["available_at"][:10]
             row["valuation_evidence_event"] = REPORT_EVENT.get(mb["report_date"][5:10], "定期报告")
             row["valuation_reviewed_at"] = mb["available_at"][:10]
-            row["valuation_method"] = "内在价值模型（§6.5.7.3，v2.72 起唯一带来源）"
+            row["valuation_method"] = "内在价值模型（§6.5.2.3，v2.72 起唯一带来源）"
             continue
         cutoff_date, cutoff_event = evidence_cutoff(code)
         if cutoff_date:
             row["evidence_available_at"] = cutoff_date
             row["valuation_evidence_event"] = cutoff_event
-            # 复核日按实际证据日回填：设为今日会让 §7.5.5 队列静默为空（安全方向是宁可多入队列）
+            # 复核日按实际证据日回填：设为今日会让 §7.5.1 队列静默为空（安全方向是宁可多入队列）
             row["valuation_reviewed_at"] = cutoff_date
         else:
             row["valuation_reviewed_at"] = args.as_of

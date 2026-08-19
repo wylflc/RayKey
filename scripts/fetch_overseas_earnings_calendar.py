@@ -3,7 +3,7 @@
 
 为什么要有这个脚本
 ------------------
-§6.8 复核触发① 规定「各公司财报日已知者写入 `notes`，披露次日按 §7.3/§7.5.5 复核带与
+§6.8 复核触发① 规定「各公司财报日已知者写入 `notes`，披露次日按 §7.3/§7.5.1 复核带与
 档」——但**这条触发的全部载体是一个自由文本字段**：海外行既没有 A 股那样的披露物化文件
 （§6.7.8/§6.7.9），也不进 §9.1 第一步 1a 的机械覆盖（§6.8 边界第 2 条明文排除）。
 **后果是漏做不会被任何环节发现。**
@@ -35,7 +35,7 @@
   期末（`REPORT_DATE`）**不含公告日**，东财港股公告接口对本清单返回 0 行；港交所与
   KRX 的业绩时间表无稳定的结构化免密钥接口。故腾讯/泡泡玛特/美团/海底捞/三星电子/
   SK海力士共 6 行**仍为人工维护**，本脚本不覆盖、也不假装覆盖——`--apply` 只写它确实
-  查到的行，其余保持原值，并在末尾把「无财报日的行」逐行列出（§15.2 第 3 条：任何
+  查到的行，其余保持原值，并在末尾把「无财报日的行」逐行列出（§13 第 3 条：任何
   未覆盖都必须可见，不得静默）。
 
 产出与自检
@@ -123,7 +123,7 @@ def scan_nasdaq_calendar(as_of: date, back_days: int, fwd_days: int,
                 entry["fq"] = str(row.get("fiscalQuarterEnding", "") or "")
         time.sleep(pause)
     if failed:
-        # 抓取缺日必须可见：静默跳过会让「今天没查到」与「今天没人报」长得一样（§15.2 第 3 条）。
+        # 抓取缺日必须可见：静默跳过会让「今天没查到」与「今天没人报」长得一样（§13 第 3 条）。
         print(f"  **日历抓取失败 {len(failed)} 天**（该窗口内这些日期未覆盖）：{'、'.join(failed[:8])}"
               + ("…" if len(failed) > 8 else ""))
     return found
@@ -221,7 +221,7 @@ def print_overdue_report(rows: list[dict[str, str]], as_of: date) -> int:
     """打印逾期、缺日与临期清单，返回逾期只数。供每日跑批与本脚本共用。"""
     overdue, missing, upcoming = overdue_reviews(rows, as_of)
     if overdue:
-        print(f"  **§6.8 复核触发① 逾期 {len(overdue)} 只**（财报已披露而带与档未按 §7.3/§7.5.5 复核）：")
+        print(f"  **§6.8 复核触发① 逾期 {len(overdue)} 只**（财报已披露而带与档未按 §7.3/§7.5.1 复核）：")
         for item in sorted(overdue, key=lambda x: -int(x["days_overdue"])):
             print(f"    - {item['security_name']}（{item['market_type']}:{item['security_code']}）"
                   f"披露 {item['report_date']}，最后复核 {item['reviewed_at']}，**逾期 {item['days_overdue']} 天**")
@@ -229,7 +229,7 @@ def print_overdue_report(rows: list[dict[str, str]], as_of: date) -> int:
         print("  §6.8 复核触发①：无逾期")
     if upcoming:
         names = "、".join(f"{r.get('security_name','')}（{r.get('next_report_date','')}）" for r in upcoming)
-        print(f"  **今明两日财报 {len(upcoming)} 只**（披露次日须按 §7.5.5 express 复核）：{names}")
+        print(f"  **今明两日财报 {len(upcoming)} 只**（披露次日须按 §7.5.1 express 复核）：{names}")
     if missing:
         names = "、".join(f"{r.get('security_name','')}" for r in missing)
         print(f"  无财报日 {len(missing)} 只（该市无免密钥日历源，须人工维护 `last_report_date`）：{names}")

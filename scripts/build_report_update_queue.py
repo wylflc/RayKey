@@ -305,13 +305,13 @@ def parse_args() -> argparse.Namespace:
         "--forecasts",
         type=Path,
         default=DEFAULT_FORECASTS,
-        help="业绩预告物化文件（§6.7.8，每日经 §9.1 步骤 0 重抓）；缺失时仅按定期报告触发。",
+        help="业绩预告物化文件（§7.1，每日经 §9.1 步骤 0 重抓）；缺失时仅按定期报告触发。",
     )
     parser.add_argument(
         "--report-disclosures",
         type=Path,
         default=DEFAULT_DISCLOSURES,
-        help="定期报告/业绩快报披露物化文件（§6.7.9，每日经 §9.1 步骤 0 重抓）；缺失时退回报告期末比较口径。",
+        help="定期报告/业绩快报披露物化文件（§7.1，每日经 §9.1 步骤 0 重抓）；缺失时退回报告期末比较口径。",
     )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     return parser.parse_args()

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""股权资本成本的两个输入：无风险利率 R_f 与股权风险溢价 ERP（§6.5.7.1.1）。
+"""股权资本成本的两个输入：无风险利率 R_f 与股权风险溢价 ERP（§6.7）。
 
 为什么需要它
 ------------
-§6.5.7.1.1 把 `r` 由「按质量档位拍一个数」改成 `r = R_f + β·ERP`，并要求**逐期取当时的**
+§6.7 把 `r` 由「按质量档位拍一个数」改成 `r = R_f + β·ERP`，并要求**逐期取当时的**
 R_f 与 ERP——用 2026 年的利率回测 2017 年属 §12.4 前视。此前本仓库只有**一个**手抄的观测
 点（2026-08-07），`--r-mode market` 因此跑历史带时 399/399 全部拒绝。本脚本补上历史序列。
 
@@ -195,7 +195,7 @@ def monthly_erp_coverage(timeout: float) -> str | None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="取 R_f 与 ERP 历史序列（§6.5.7.1.1）")
+    parser = argparse.ArgumentParser(description="取 R_f 与 ERP 历史序列（§6.7）")
     parser.add_argument("--since", default="2010-01-01", help="起始日期，缺省 2010-01-01")
     parser.add_argument("--frequency", choices=("monthly", "daily"), default="monthly")
     parser.add_argument("--out", type=Path, default=OUT)

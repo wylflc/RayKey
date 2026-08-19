@@ -183,7 +183,7 @@ def main() -> int:
         got_codes = len({r["security_code"] for r in all_rows})
         print(f"  {kind}: {len(all_rows):,} 行、{got_codes}/{len(codes)} 只、{len(fields)} 列 → {path.name}")
 
-        # §15.2 第 3 条：新增数据源须核对非空行数与关键列覆盖
+        # §13 第 3 条：新增数据源须核对非空行数与关键列覆盖
         print(f"    关键列非空覆盖：", end="")
         for field in REQUIRED[kind]:
             filled = sum(1 for r in all_rows if (r.get(field) or "").strip())

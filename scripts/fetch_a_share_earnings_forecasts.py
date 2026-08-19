@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Materialize A-share earnings preannouncements (业绩预告) from Eastmoney.
 
-Feeds the §7.5.5 express-review queue and the pool refresh summary (§6.7.8).
+Feeds the §7.5.1 express-review queue and the pool refresh summary (§7.1).
 Re-run every scan day per §9.1 step 0 — disclosures arrive daily, and a stale
-file silently closes the §7.4/§7.5.5 event inlet. Raw-first: the full-market
+file silently closes the §7.4/§7.5.1 event inlet. Raw-first: the full-market
 forecast list for one report date is saved with provenance (retrieval time,
 source); consumers filter by their own code lists. Field notes (validated
 2026-07-17): PREDICT_FINANCE_CODE 004=归母净利, 005=扣非净利, 006=营业收入;

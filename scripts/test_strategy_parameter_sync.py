@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regression checks for the adopted §9.7 production parameters."""
+"""Regression checks for the adopted §9.3 production parameters."""
 
 from __future__ import annotations
 
@@ -21,13 +21,13 @@ def option_value(args: list[str], option: str) -> str:
 
 class StrategyParameterSyncTest(unittest.TestCase):
     def test_adopted_production_values(self) -> None:
-        self.assertEqual(daily_scan.SEC97_MAX_CORR, 0.70)
-        self.assertEqual(daily_scan.SEC97_TRANCHE_PCT, 0.05)
+        self.assertEqual(daily_scan.SEC93_MAX_CORR, 0.70)
+        self.assertEqual(daily_scan.SEC93_TRANCHE_PCT, 0.05)
 
     def test_backtest_baseline_matches_production(self) -> None:
         args = shlex.split(sweep.BASE)
-        self.assertEqual(float(option_value(args, "--max-corr")), daily_scan.SEC97_MAX_CORR)
-        self.assertEqual(float(option_value(args, "--x")) / 100, daily_scan.SEC97_TRANCHE_PCT)
+        self.assertEqual(float(option_value(args, "--max-corr")), daily_scan.SEC93_MAX_CORR)
+        self.assertEqual(float(option_value(args, "--x")) / 100, daily_scan.SEC93_TRANCHE_PCT)
 
     def test_workflow_current_table_matches_production(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")

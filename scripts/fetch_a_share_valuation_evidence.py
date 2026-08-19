@@ -152,7 +152,7 @@ def em_market_suffix(code: str) -> str:
     v1.57 修复：原实现只在 SH/SZ 二选一，北交所被归到 SZ，导致
     `SECUCODE="920982.SZ"` 查不到任何财务期数而接口**不报错、只返回空**——
     全池三只北交所股票（锦波生物 920982、民士达 920394、中科仪 920186）
-    的 `finance_periods` 长期为 0，而建带流程对此毫无提示（§15.2 第 3 条静默失效）。
+    的 `finance_periods` 长期为 0，而建带流程对此毫无提示（§13 第 3 条静默失效）。
     实测 `.BJ` 立即返回 8 期。
     """
     if code.startswith(("43", "83", "87", "92")):
@@ -450,7 +450,7 @@ MANUAL_FIELDS = ("recorded_at", "type", "period", "title", "source_url", "summar
 
 
 def load_manual_evidence(path: Path) -> list[dict[str, Any]]:
-    """读回上一版 JSON 里的 ``manual_evidence``（§6.5.7，v2.07）。
+    """读回上一版 JSON 里的 ``manual_evidence``（§6.5.2，v2.07）。
 
     东财接口不提供原件下载，外部取证（储量/在手订单/管线/分红预案/高频经营数据）
     由模型检索后**逐条写入本 key**，与接口抓取的结构化证据同处一份文件、同受
@@ -575,8 +575,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{code} {summary['security_name']}: {summary['fetch_status']} price={summary['quote_price']} peTTM={summary['pe_ttm_provider']}", file=sys.stderr)
 
     upsert_summary(args.summary, summaries)
-    # §6.5.7 落地校验：人工取证条目每轮打印结转数。抓取整体覆写 JSON，不结转即等于
-    # 每次抓取都静默删除人工录入的外部证据（§15.2 第 3 条的典型形态）。
+    # §6.5.2 落地校验：人工取证条目每轮打印结转数。抓取整体覆写 JSON，不结转即等于
+    # 每次抓取都静默删除人工录入的外部证据（§13 第 3 条的典型形态）。
     print(f"Fetched {len(summaries)} securities; manual_evidence 结转 {carried} 条; summary -> {args.summary}")
     return 0
 

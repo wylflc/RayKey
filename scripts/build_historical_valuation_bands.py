@@ -11,7 +11,7 @@
     data/raw/financials/<报告期>.csv     逐季财务（§12.4.2，含 notice_date）
     data/raw/corporate_actions/*.csv     分红送转（§12.4.1）
     data/raw/ohlcv/<代码>.csv            不复权日线（§12.4.1）
-        ↓  scripts/intrinsic_value.py（§6.5.7.2）
+        ↓  scripts/intrinsic_value.py（§6.5.2.2）
     每股 × 每个报告期 → 一条带；每股 × 每个交易日 → 一个估值状态
 
 **这一步的价值大于回测本身**：它是消除 §12.4 估值闸门前视豁免的前提——历史带从此可按
@@ -28,7 +28,7 @@
    **`available_at = max(所用各期的公告日)`**，不是本期公告日——否则就是 §12.4 前视。
 
 3. **`weightavg_roe = 0` 是缺失值伪装成数字**。九号公司 2019 年报净利 −4.5 亿、ROE 却
-   写 0。凡净利非零而 ROE 恰为 0 一律当缺失（§15.2 第 3 条：静默失效已复发五次）。
+   写 0。凡净利非零而 ROE 恰为 0 一律当缺失（§13 第 3 条：静默失效已复发五次）。
 
 4. **不复权价 × 送转 = 带与价不同基**，且基准日是**公告日不是报告期末**。亿联网络
    `2019-06-30` 报告公告于除权之后、BPS 由 12.46 直降 6.25，按期末起算会再除一次。
@@ -40,8 +40,8 @@
 
 口径选择（**这些是判断，不是数据，需用户确认**）
 ----------------------------------------------
-* `--r-mode tier`（缺省）：`r` 按 §6.5.7.1 分档中位 L1 8%／L2 10%／L3 13%，`ROE_T` 按
-  档位表。**已知问题见 §6.5.7.1.1**——它把质量惩罚写进 `r`，与 §6.2.1 的买入规则重复
+* `--r-mode tier`（缺省）：`r` 按 §6.5.2.1 分档中位 L1 8%／L2 10%／L3 13%，`ROE_T` 按
+  档位表。**已知问题见 §6.7**——它把质量惩罚写进 `r`，与 §6.2 的买入规则重复
   惩罚同一风险，实测制造出按档位分层的 2.6 倍价差。
 * `--r-mode market`：`r = R_f + β·ERP` 逐期取值，`ROE_T = r + 永续超额`，
   **且 `g_T` 被 `R_f` 封顶**。风险惩罚移交决策层 `MOS_BY_TIER`。
@@ -49,11 +49,11 @@
   利率序列见 §12.4.4（200 行月末观测，2010-2026）。**某期无当时可观测的利率即拒绝该带，
   不外推、不借用后来的利率**——用今天的利率回测七年前属 §12.4 前视。
 * `g_T` 缺省 3%（market 模式下再取 `min(3%, R_f)`），`N` = 10 年线性 fade。
-* **`N=10` 是衰减期不是高增长期**：§6.5.7.1 v1.56 硬规则限制的 `n1` 是「增速维持不变的
+* **`N=10` 是衰减期不是高增长期**：§6.5.2.1 v1.56 硬规则限制的 `n1` 是「增速维持不变的
   年数」，本模型 g 自第 1 年即开始衰减，`n1` 实为 0，故不与该规则冲突。
 * `roe0` 缺省走「长期锚 + 趋势识别 + 近期读数」（`trend_aware_roe`），不是纯中位。
 * `g0` 两种口径都算，默认用哪个见 `--g0-source`：
-  - `trailing`：归母净利 TTM 的三年 CAGR。**是外推**（§15.2 第 6 条的形态之一）。
+  - `trailing`：归母净利 TTM 的三年 CAGR。**是外推**（§13 第 6 条的形态之一）。
   - `sustainable`：`roe0 × (1 − 近三年派息率均值)`，即可内生维持的增长。**不外推**，
     且与模型的再投资关系自洽。
 * `incremental_roe = ΔEPS/ΔBPS` **只报不用**：全池实测 **56%** 的带其增量回报低于建模
@@ -104,15 +104,15 @@ OHLCV_DIR = ROOT / "data/raw/ohlcv"
 ACTIONS = ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv"
 TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 
-# §6.5.7.2：现值锚已含要求回报，系数取 [0.90, 1.10] 而非 [0.85, 1.05]（避免二次保守）。
+# §6.5.2.2：现值锚已含要求回报，系数取 [0.90, 1.10] 而非 [0.85, 1.05]（避免二次保守）。
 BAND_LOW_COEF, BAND_HIGH_COEF = 0.90, 1.10
 
 # --------------------------------------------------------- r 与终值参数
 #
 # 两套口径并存，由 `--r-mode` 选：
 #
-# `tier`（旧）：§6.5.7.1 的质量分档区间取中位。**已知问题**——它把「公司差、多要点回报」
-#   写进 r，而 §6.2.1 的档位买入规则又惩罚一次同一个风险，构成重复惩罚；且 L3 的 13%
+# `tier`（旧）：§6.5.2.1 的质量分档区间取中位。**已知问题**——它把「公司差、多要点回报」
+#   写进 r，而 §6.2 的档位买入规则又惩罚一次同一个风险，构成重复惩罚；且 L3 的 13%
 #   对应的是极高风险企业，不该因为只是「战术层」就自动赋值。
 #
 # `market`（新，2026-08-08 外部评审建议）：`r = R_f + β·ERP`，逐期取当时的 R_f 与 ERP。
@@ -142,7 +142,7 @@ BETA_BY_TIER = {"L1": 0.9, "L2": 1.0, "L3": 1.3}
 # （此时终值 PE 恰为 1/r，增长不创造价值）。正超额是**需要护城河证据**的强假设。
 TERMINAL_EXCESS_BY_TIER = {"L1": 0.06, "L2": 0.03, "L3": 0.0}
 
-# 安全边际属决策层，**不得再塞进 r**（否则与 §6.2.1 档位规则重复惩罚同一风险）。
+# 安全边际属决策层，**不得再塞进 r**（否则与 §6.2 档位规则重复惩罚同一风险）。
 MOS_BY_TIER = {"L1": 0.10, "L2": 0.20, "L3": 0.30}
 
 
@@ -872,7 +872,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 nopat_cyclical = len(ratios) >= 3 and trend_efficiency(ratios) < 0.35
             ratio0 = statistics.median(ratios)
             band.roic_nopat_mode = "median"
-            # **单边口径**（v2，镜像 §6.5.7.1 v2.90 的 `onesided_max λ`）：当期比率高于中位时
+            # **单边口径**（v2，镜像 §6.5.2.1 v2.90 的 `onesided_max λ`）：当期比率高于中位时
             # `ratio0 = 中位 + λ×(当期 − 中位)`——保留低谷保护（低于中位仍用中位），去掉高位惩罚。
             # 锚点诊断的直接动机：中际旭创 2018（壳→资产重组）当期比率远高于五年中位，
             # 纯中位给出每股 NOPAT 0.18、P/V=70 的荒唐读数；茅台一类快增长公司则被中位滞后约两年。
@@ -1393,7 +1393,7 @@ def report(all_bands: list[tuple[str, Band]], daily_counts: dict[str, int],
         return f"  {code} {names[code]:<8} {good:>2}/{len(group):<3} → {cover}{mark}"
 
     # 261 只时逐股列 261 行没人会看，只列**有问题的**；全通过也要明说，否则「查过了没问题」
-    # 与「压根没查」在报告上长得一样（§15.2 第 3 条）。
+    # 与「压根没查」在报告上长得一样（§13 第 3 条）。
     def broken(code: str) -> bool:
         group = per_stock[code]
         good = sum(1 for b in group if b.status == "ok")
@@ -1434,7 +1434,7 @@ def main() -> int:
                         default="sustainable",
                         help="trailing_fb = 优先已实现三年 CAGR、取不到时回落 sustainable（补齐覆盖）")
     parser.add_argument("--r-mode", choices=("tier", "market"), default="tier",
-                        help="tier=§6.5.7.1 分档中位（旧）；market=R_f+βERP 逐期取值（需利率序列）")
+                        help="tier=§6.5.2.1 分档中位（旧）；market=R_f+βERP 逐期取值（需利率序列）")
     parser.add_argument("--roe-lift", type=float, default=1.0, metavar="LAMBDA",
                         help="onesided_max 专用：roe0 = 归一化值 + λ·(当期 − 归一化值)，只对当期偏高的一侧生效。"
                              "λ=0 退回归一化、λ=1 即完全采信当期、λ>1 为外推（见 pick_roe0）")
@@ -1478,7 +1478,7 @@ def main() -> int:
                         choices=("median", "onesided_max", "conditional", "conditional3"),
                         default="median",
                         help="正常化 NOPAT 比率的口径：median=五年中位（v1）；onesided_max=当期高于"
-                             "中位时按 --roe-lift 的 λ 单边上抬（镜像 §6.5.7.1 v2.90），周期股除外；"
+                             "中位时按 --roe-lift 的 λ 单边上抬（镜像 §6.5.2.1 v2.90），周期股除外；"
                              "conditional=分型锚（§12.72，用户 2026-08-17 思路）——近三年比率单调上行"
                              "（增长态）且未触发周期守卫时**采信当期**，否则五年中位；"
                              "conditional3=同上但非增长态用**三年**中位。两档都建议配 --roic-cycle-guard peak")

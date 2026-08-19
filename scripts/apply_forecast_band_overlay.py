@@ -32,7 +32,7 @@ ROIC 模型的结构是：
 
 生产与回测的已知背离（重要）
 ----------------------------
-§6.5.7.1 原本要求「生产 `P/V` 与回测 `valuation_ratio` 逐位一致」。本脚本**有意打破**
+§6.5.2.1 原本要求「生产 `P/V` 与回测 `valuation_ratio` 逐位一致」。本脚本**有意打破**
 这条：回测宇宙没有历史预告面板（`fetch_a_share_earnings_forecasts.py` 只取当前报告期），
 无法在历史上复现预告。用户 2026-08-18 裁定：实盘能更快反映最新信息，没有理由不做。
 
@@ -229,7 +229,7 @@ def main() -> int:
                     default=ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv")
     ap.add_argument("--overrides", type=Path,
                     default=ROOT / "data/processed/manual_band_overrides.csv",
-                    help="§6.5.7.4 人工覆盖表；列内的行直接落带，且不再叠加预告")
+                    help="§6.5.2.4 人工覆盖表；列内的行直接落带，且不再叠加预告")
     ap.add_argument("--pool", type=Path, default=ROOT / "data/processed/a_share_core_valuation_pool.csv",
                     help="只用于按 总市值÷现价 交叉校验股本；缺失则跳过校验")
     ap.add_argument("--out", type=Path, default=None, help="缺省原地覆盖 --bands")
@@ -266,7 +266,7 @@ def main() -> int:
             for row in csv.DictReader(handle):
                 actions.setdefault((row.get("security_code") or "").strip(), []).append(row)
 
-    # §6.5.7.4 人工覆盖必须**同时落到生产带文件**，否则只改了展示层：
+    # §6.5.2.4 人工覆盖必须**同时落到生产带文件**，否则只改了展示层：
     # 扫描器的 `P/V` 读的是本文件，档案/池改了而这里没改，两层就会给出相反结论。
     # 判例：宏桥控股 2026-08-18 人工覆盖到 27.15-33.18（低估 +57%），
     # 而生产带仍是 0.1993，扫描器算出 `P/V` 96.3 并把它排除在合格集之外。
@@ -312,7 +312,7 @@ def main() -> int:
                     "pre_overlay_report_date": band_period,
                     "forecast_overlay": "manual_override",
                     "forecast_notice_date": ovr.get("reviewed_at", ""),
-                    "forecast_source": f"§6.5.7.4 人工覆盖（{ovr.get('reason_code')}）",
+                    "forecast_source": f"§6.5.2.4 人工覆盖（{ovr.get('reason_code')}）",
                     "bps_scale": "", "forecast_profit_yi": "",
                     "overlay_note": (f"人工覆盖，**不叠加预告**：{ovr.get('note')}"
                                      f"｜失效条件：{ovr.get('expires_when')}"),
@@ -399,7 +399,7 @@ def main() -> int:
         delta_bps = delta_profit / shares - dps
         new_bps = bps + delta_bps
         if new_bps <= 0:
-            skipped.append((name, f"叠加后每股净资产 {new_bps:.4f} ≤ 0，模型不可估，须走 §6.5.7.4 逐票建档"))
+            skipped.append((name, f"叠加后每股净资产 {new_bps:.4f} ≤ 0，模型不可估，须走 §6.5.2.4 逐票建档"))
             continue
         scale = new_bps / bps
 
@@ -462,7 +462,7 @@ def main() -> int:
             chg = f"{new / old - 1:+.1%}" if old else "—"
             print(f"  {name:<10}{old or 0:>10.2f}{new:>10.2f}{chg:>9}  {dprofit:>12.2f}  {label} {notice}")
     for name, when, lo, hi in override_applied:
-        print(f"  · §6.5.7.4 人工覆盖落生产带：{name} → {lo:.2f}-{hi:.2f}（{when}）")
+        print(f"  · §6.5.2.4 人工覆盖落生产带：{name} → {lo:.2f}-{hi:.2f}（{when}）")
     for name, label, notice in bank_cleared:
         print(f"  · 银行只推进证据日、带值不变：{name}（{label} {notice}）")
     for name, why in skipped:

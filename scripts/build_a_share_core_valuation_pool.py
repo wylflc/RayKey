@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Build the A-share core valuation pool.
 
-Materializes ALL worth_attention L1-L4 names (v1.04) into one pool CSV/MD for
-the daily scan. Since v1.05 the valuation tier is **price-auto-refreshed**
-(§6.2.1.6): the displayed/effective tier is derived每日 from spot price vs the
-reviewed fair band, with no manual review step — tier changes are simply
-reported in the daily scan entry. Reviews (§7: reports/预告/events) change the
-BAND; price changes the TIER; the §6.2.1 matrix maps tier to buy eligibility.
+Materializes ALL worth_attention L1-L3 names into one pool CSV/MD for the
+daily scan. The valuation tier is **price-auto-refreshed** (§6.2): the
+displayed/effective tier is derived每日 from spot price vs the reviewed fair
+band, with no manual review step — tier changes are simply reported in the
+daily scan entry. Reviews (§7: reports/预告/events) change the BAND; price
+changes the TIER. Tiers are display-only; buy eligibility is §9.3 + §10.1.
 
 This script does not create new valuation opinions: the band, the reviewed
 baseline tier (审定档) and reasons come from the valuation table.
@@ -18,7 +18,7 @@ previous snapshot (`data/interim/pool_effective_tiers.csv`) and logs one
 
 The same MD carries the 海外关注清单 appendix (§6.8): non-A-share names the user
 tracks, rendered from `overseas_watchlist_valuation.csv` with the identical
-§6.2.1.6 price-auto-tier logic but kept out of the pool CSV, out of the daily
+§6.2 price-auto-tier logic but kept out of the pool CSV, out of the daily
 volume/price scan and out of buy eligibility.
 """
 
@@ -48,19 +48,19 @@ DEFAULT_OVERSEAS = ROOT / "data/processed/overseas_watchlist_valuation.csv"
 DEFAULT_OVERSEAS_TIER_SNAPSHOT = ROOT / "data/interim/overseas_effective_tiers.csv"
 
 # 分层档位集合：池只物化 L1-L3（worth_attention 的分层全集；L4 属 documented_not_attention，
-# 不在 worth_attention 名单，不进池）。§6.2.1 三态矩阵已退役，矩阵机制随 v4.18 删除（OI-063）。
+# 不在 worth_attention 名单，不进池）。§6.2 三态矩阵已退役，矩阵机制随 v4.18 删除（OI-063）。
 POOL_TIERS = {"L1", "L2", "L3"}
 CORE_LAYER_TIERS = {"L1", "L2"}
 VALUATION_ORDER = ["低估", "较低估", "中性", "较高估", "高估"]
 # §6.2 价格自动定档阈值（修订先改工作流）。
 OVERVALUED_BAND_MULT = 1.2  # 带顶×1.2 以上 = 高估（沿 D 档 100-120% 惯例）
 DEEP_UNDERVALUED_UPSIDE = 0.40  # 带底以下且空间（区间中值/现价-1）>= 40% = 低估，否则较低估
-# 预告指标口径优先级：归母净利 > 扣非 > 营业收入（§6.7.8，仅作复核队列输入统计）。
+# 预告指标口径优先级：归母净利 > 扣非 > 营业收入（§7.1，仅作复核队列输入统计）。
 FORECAST_METRIC_PRIORITY = {"004": 0, "005": 1, "006": 2}
 
 
 def effective_valuation_tier(price: float | None, fair_low: float | None, fair_high: float | None) -> str | None:
-    """§6.2.1.6 价格自动定档：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；
+    """§6.2 价格自动定档：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；
     带底以下按空间 >=40% 分低估/较低估。双向均不限幅（v1.14）——跌得够深即可高估直达低估。
     无带或无价返回 None（调用方保留存档档位，如无法估值）。"""
     if not price or fair_low is None or fair_high is None or fair_low <= 0 or fair_high <= 0:
@@ -127,7 +127,7 @@ def build_pool(
     source_file: Path = DEFAULT_VALUATION,
 ) -> list[dict[str, str]]:
     """物化全量 worth_attention 为单一列表。pool_layer 仅 core（L1/L2）/ tactical（L3）/
-    excluded（无法估值）。买入资格只由 §9.7 与 §10.1 决定；三态矩阵列已随 v4.18 删除（OI-063）。"""
+    excluded（无法估值）。买入资格只由 §9.3 与 §10.1 决定；三态矩阵列已随 v4.18 删除（OI-063）。"""
     tier_by_code = {row["security_code"].zfill(6): row for row in tier_rows}
     output: list[dict[str, str]] = []
     skipped: list[str] = []
@@ -155,7 +155,7 @@ def build_pool(
         # 一条只能回答「便宜」不能回答「贵」的带，不是一条偏保守的带，是一条**没算完的带**；
         # 把它当估值挂在池里、再在卖出侧打补丁，等于用标注掩盖模型缺口。凡带按定义不能
         # 双向使用（下限带／周期假设未决）且**无逐票档案**的，一律判「无法估值」——
-        # 可见、随扫、无带即无 P/V 不进买卖判定、不自动定档，并进入 §6.5.7 建档队列。
+        # 可见、随扫、无带即无 P/V 不进买卖判定、不自动定档，并进入 §6.5.2 建档队列。
         undecidable = []
         if str(row.get("band_is_floor", "")).strip().lower() == "true":
             undecidable.append("下限带")
@@ -163,11 +163,11 @@ def build_pool(
             undecidable.append("周期假设未决")
         if undecidable and row.get("band_derivation") != "dossier":
             valuation_tier = "无法估值"
-            # 带必须一并清空，否则下游（持仓卖出扫描、§6.2.1.6 自动定档）会照旧用它
+            # 带必须一并清空，否则下游（持仓卖出扫描、§6.2 自动定档）会照旧用它
             # 反算档位，「无法估值」就只是个标签而不是状态。原值留在理由里供建档参考。
             ref = f"{row.get('fair_price_low','')}-{row.get('fair_price_high','')}"
             row["valuation_unvaluable_reason"] = (
-                "＋".join(undecidable) + f"（§6.5.7 待建档；原口径参考带 {ref}，按定义只能回答便宜、不能回答贵）")
+                "＋".join(undecidable) + f"（§6.5.2 待建档；原口径参考带 {ref}，按定义只能回答便宜、不能回答贵）")
             row["fair_price_low"] = row["fair_price_high"] = ""
         if not band_problems:
             band_status = "ok"
@@ -198,7 +198,7 @@ def build_pool(
                 "valuation_unvaluable_reason": row.get("valuation_unvaluable_reason", ""),
                 "anchor_vintage": row.get("anchor_vintage", ""),
                 "method_divergence": row.get("method_divergence", ""),
-                "runrate_check": row.get("runrate_check", ""),   # §6.5.4 不变量结论须可见（§15.2 第 3 条）
+                "runrate_check": row.get("runrate_check", ""),   # §6.5.4 不变量结论须可见（§13 第 3 条）
                 "cycle_assumption": row.get("cycle_assumption", ""),
                 "scenario_band_low": row.get("scenario_band_low", ""),
                 "scenario_band_high": row.get("scenario_band_high", ""),
@@ -261,7 +261,7 @@ def load_forecasts(path: Path) -> dict[str, dict[str, str]]:
 
 def forecasts_retrieved_on(path: Path) -> str:
     """预告物化文件的检索日（retrieved_at_utc 最大值的日期部分）；文件缺失返回空。
-    §6.7.8（v1.16）：检索日早于扫描日=数据过期，须按 §9.1 步骤 0 重抓。"""
+    §7.1：检索日早于扫描日=数据过期，须按 §9.1 步骤 0 重抓。"""
     if not path.exists():
         return ""
     stamps = [str(row.get("retrieved_at_utc") or "") for row in load_csv(path)]
@@ -272,8 +272,8 @@ DISCLOSURE_LABELS = {"periodic_report": "定期报告", "express_report": "快�
 
 
 def load_disclosures(path: Path) -> dict[str, dict[str, str]]:
-    """§6.7.9（v1.18）：每代码取 正式定期报告/业绩快报 中公告日最新的一行，
-    供 §7.5.5 待复核名单判定（与预告公告日取并集后的最大者比较估值时间）。"""
+    """§7.1：每代码取 正式定期报告/业绩快报 中公告日最新的一行，
+    供 §7.5.1 待复核名单判定（与预告公告日取并集后的最大者比较估值时间）。"""
     if not path.exists():
         return {}
     best: dict[str, dict[str, str]] = {}
@@ -288,7 +288,7 @@ def load_disclosures(path: Path) -> dict[str, dict[str, str]]:
 
 
 def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
-    """阅读版单元格：现价/空间/PE/PB 按行情快照刷新，档位按 §6.2.1.6 价格自动定档。"""
+    """阅读版单元格：现价/空间/PE/PB 按行情快照刷新，档位按 §6.2 价格自动定档。"""
     low = _to_float(row.get("fair_price_low"))
     high = _to_float(row.get("fair_price_high"))
     val_price = _to_float(row.get("valuation_price"))
@@ -301,7 +301,7 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     #
     # v2.03：`（档）` 标记删除。它原本区分「逐票档案带 vs 通用模型带」，但 v2.00 起
     # 全池已全部建档，且未建档的一律判「无法估值」并清空带——即「带非空 ⇔ 档案带」
-    # 恒成立，标记出现在 100% 的行上，不再区分任何东西（§15.2 第 3 条：恒真的标注
+    # 恒成立，标记出现在 100% 的行上，不再区分任何东西（§13 第 3 条：恒真的标注
     # 与恒亮的告警同型，都是没有信息量的噪声）。带的来源改由表头一句话统一说明。
     unvaluable = str(row.get("valuation_tier", "")) == "无法估值"
     if low is None or high is None or unvaluable:
@@ -316,7 +316,7 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
         upside = "0%" if pct == 0 else f"{pct:+d}%"
 
     stored = str(row.get("valuation_tier", ""))
-    # 无法估值无可靠带，不自动定档（§6.2.1.6）；其余按现价（缺失时按估值价）定档。
+    # 无法估值无可靠带，不自动定档（§6.2）；其余按现价（缺失时按估值价）定档。
     effective = stored if stored == "无法估值" else (effective_valuation_tier(ref_price, low, high) or stored)
 
     spot_pe = _to_float(quote.get("pe_ttm")) if quote else None
@@ -383,7 +383,7 @@ def build_overseas_section(
     quotes: dict[str, dict] | None = None,
     prev_tiers: dict[str, str] | None = None,
 ) -> tuple[list[str], dict[str, object]]:
-    """渲染 §6.8 海外关注清单附表：档位仍按 §6.2.1.6 现价自动定档，但不入池 CSV、
+    """渲染 §6.8 海外关注清单附表：档位仍按 §6.2 现价自动定档，但不入池 CSV、
     不入每日量价扫描、无买入资格。返回 (MD 行, {'changes', 'current_tiers'})。"""
     if not rows:
         return [], {"changes": [], "current_tiers": {}}
@@ -444,13 +444,13 @@ def build_overseas_section(
         "",
         f"用户长期关注但不在 A 股上市的公司，共 {len(rows)} 家，由 `data/processed/overseas_watchlist_valuation.csv` 渲染（§6.8）。",
         "",
-        "- **一律不进 §9.7 的候选池**：本清单不入 `a_share_core_valuation_pool.csv`、不进每日取数。它只回答「质量几档、该用什么模型、现价贵不贵」。",
+        "- **一律不进 §9.3 的候选池**：本清单不入 `a_share_core_valuation_pool.csv`、不进每日取数。它只回答「质量几档、该用什么模型、现价贵不贵」。",
         "- 质量分层（§5.7）与策略标签（§6.5）口径与 A 股完全一致，不降低门槛；本清单是用户点名的自选名单而非全市场筛选结果，故层级分布天然偏上，不适用 §5.7.1 的金字塔校准。",
         "- 行序与 A 股主表一致按**质量档 L1→L4**排列，同档内按**参考分降序**。",
-        "- 档位同样按 §6.2.1.6 现价自动定档（>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估），与审定档不同的行显示 `审定档→现档`。带只由证据复核修改。",
+        "- 档位同样按 §6.2 现价自动定档（>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估），与审定档不同的行显示 `审定档→现档`。带只由证据复核修改。",
         "- **市场与代码两列已按用户指令删除（2026-08-06）**：两者仍在 `overseas_watchlist_valuation.csv` 的 `market_type`/`security_code` 里，只是不进阅读版。**代价须知**：现价/合理价区间/空间均为各自**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较，而本表已不再逐行标出是哪个市场——数量级明显不同的行（如韩股六位数报价）靠公司名识别。行情同源腾讯快照（`scripts/overseas_quotes.py`）。",
         "- PE 为行情快照 TTM 口径：美股线不提供 PB、韩股线不提供 PE/PB，缺失列显示 —，判档依据见 CSV `fair_price_basis`（多数标的以归一化/中枢利润为锚，表观 PE 不作定档依据）。",
-        "- **参考分（§5.7.4）与合理价区间自 2026-08-03 起逐票建档产出**：参考分 = Q1×0.25+Q2×0.40+Q3×0.20+Q4×0.15−可信度扣分，**仅供同档内排序**，不改变任何资格、不构成买卖指令。每一条带由 `scripts/build_overseas_dossiers.py` 按 §6.5.7 的推导路径之一算出（派息折现隐含PE／三阶段DDM／PEG×ROE修正／中枢利润×戈登稳态PE／§6.5.2 J 隐含PB），输入与计算分离，逐票正文在 `data/companies/<代码>_<名称>/README.md`。**改带只能改输入**。",
+        "- **参考分（§5.7.4）与合理价区间自 2026-08-03 起逐票建档产出**：参考分 = Q1×0.25+Q2×0.40+Q3×0.20+Q4×0.15−可信度扣分，**仅供同档内排序**，不改变任何资格、不构成买卖指令。每一条带由 `scripts/build_overseas_dossiers.py` 按 §6.5.2 的推导路径之一算出（派息折现隐含PE／三阶段DDM／PEG×ROE修正／中枢利润×戈登稳态PE／§6.5.2 J 隐含PB），输入与计算分离，逐票正文在 `data/companies/<代码>_<名称>/README.md`。**改带只能改输入**。",
         "- 估值列为**无法估值**的行是 §6.5.5.2 的**建档未完成**（流程状态，不是估值结论）：其锚或兜底口径按定义不可算，档案已写明缺哪一个输入、以及什么条件下解锁建带。这类行不自动定档，合理价区间/空间/PE 均显示 —。",
         "",
         "| 名称 | 质量 | 参考分 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
@@ -489,7 +489,7 @@ def write_markdown(
     extra_sections: list[str] | None = None,
 ) -> dict[str, object]:
     """渲染单一列表阅读版 MD（v1.05）；返回 {'changes': 当日档位变化, 'drift': 现档≠审定档,
-    'forecast': 有预告代码, 'forecast_pending': §7.5.5 待复核名单（预告+快报+正式报告，v1.18）,
+    'forecast': 有预告代码, 'forecast_pending': §7.5.1 待复核名单（预告+快报+正式报告，v1.18）,
     'disclosure': 有快报/正式报告代码, 'current_tiers': {code: (name, tier)}}。"""
     path.parent.mkdir(parents=True, exist_ok=True)
     quotes = quotes or {}
@@ -538,8 +538,8 @@ def write_markdown(
         if drow:
             disclosure_codes.append(code)
         if frow or drow:
-            # §6.7.8/§6.7.9（v1.16/v1.18）：预告/快报/正式报告公告日晚于 max(估值时间, 估值证据日)
-            # = §7.5.5 待复核（缺失回退 pool_as_of）——同晚复核吸收次日戳披露的不再伪欠账。
+            # §7.1/§7.3：预告/快报/正式报告公告日晚于 max(估值时间, 估值证据日)
+            # = §7.5.1 待复核（缺失回退 pool_as_of）——同晚复核吸收次日戳披露的不再伪欠账。
             reviewed = max(
                 str(row.get("valuation_reviewed_at") or row.get("pool_as_of") or ""),
                 str(row.get("evidence_available_at") or ""),
@@ -556,7 +556,7 @@ def write_markdown(
         body.append(
             "| {security_code} | {security_name} | {quality_tier_label} | {quality_score} | ".format(**row)
             + str(cells["valuation_cell"])
-            + f" | {valuation_paths.get(str(row.get('security_code', '')).zfill(6), '手工带（§6.5.7.4）')} | "
+            + f" | {valuation_paths.get(str(row.get('security_code', '')).zfill(6), '手工带（§6.5.2.4）')} | "
             + f"{cells['price']} | "
             + f"{cells['band']} | {cells['upside']} | "
             + "{valuation_reviewed_at} | {valuation_evidence_event} |".format(
@@ -570,15 +570,15 @@ def write_markdown(
         "",
         f"生成日期：{as_of}｜{quote_line}",
         "",
-        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是全量 worth_attention 单一列表阅读版。**买卖由 §9.7 唯一决定**：买入线/减持线的取值只在工作流 §9.7.1 一处定，本表不复写数字；`P/V` = 现价 ÷ 合理价区间中值，与本表「空间」列互为倒数。**档位（低估/中性/高估等）只是展示标签，不决定能否买**。带为 **ROIC 口径**（§6.5.7.3，v4.00）：非金融按 NOPAT/投入资本/WACC 折现，银行按股利折现，「估值路径」列标明每条带怎么来的。",
+        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是全量 worth_attention 单一列表阅读版。**买卖由 §9.3 唯一决定**：买入线/减持线的取值只在工作流 §9.3.1 一处定，本表不复写数字；`P/V` = 现价 ÷ 合理价区间中值，与本表「空间」列互为倒数。**档位（低估/中性/高估等）只是展示标签，不决定能否买**。带为 **ROIC 口径**（§6.5.2.3，v4.00）：非金融按 NOPAT/投入资本/WACC 折现，银行按股利折现，「估值路径」列标明每条带怎么来的。",
         "",
-        "- **档位按现价自动定档（§6.2.1.6，无人工复核，双向不限幅）**：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`——**箭头左端是审定档（最近一次证据复核的结论），不是昨日档**，可能是多日累计漂移；当日发生的变化另见扫描报告与刷新日志。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
-        "- 现价为每日扫描时的行情快照；现价缺失（停牌/请求失败）的行沿用估值时点值。**PE/PB 两列已按用户指令删除（2026-08-17）**——表观倍数不参与定档也不参与买卖，定档只看现价对带（§6.2.1.6），带的来源见「估值路径」列；两列仍在 CSV 中。",
+        "- **档位按现价自动定档（§6.2，无人工复核，双向不限幅）**：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`——**箭头左端是审定档（最近一次证据复核的结论），不是昨日档**，可能是多日累计漂移；当日发生的变化另见扫描报告与刷新日志。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
+        "- 现价为每日扫描时的行情快照；现价缺失（停牌/请求失败）的行沿用估值时点值。**PE/PB 两列已按用户指令删除（2026-08-17）**——表观倍数不参与定档也不参与买卖，定档只看现价对带（§6.2），带的来源见「估值路径」列；两列仍在 CSV 中。",
         "- 空间 = 区间中值相对现价的涨跌幅，正数代表上行空间、负数代表现价已高于中值；原带位列与空间重复，已移除（v1.10）。",
-        "- **本表每一条带都可双向使用（v1.47）**：只能回答「便宜」不能回答「贵」的带（下限带、周期假设未决）不是偏保守的带，是**没算完的带**——一律判「无法估值」并进入 §6.5.7 建档队列；无带即无 `P/V`，该票当日不进 §9.7 的任何买卖判定。",
-        "- **每一条带都出自逐票估值档案（§6.5.7）**：带由该公司单独设计的方法给出，并约定了跟踪指标与复核触发条件（见 `data/processed/a_share_valuation_dossiers.csv`，人读正文在 `data/companies/<代码>_<名称>/README.md`）。v2.00 起全池全部建档，通用十一类（A/C/D/E/F/H/J/K/M/N/P）已退居分类标签，只用于分类、排序与同族比较，**不再参与任何一条带的计算**；新入池公司在建档之前一律判「无法估值」（带显示 —），不以通用公式顶一条带上去。**因此「带非空」即「档案带」**，v2.03 起不再逐行标「（档）」——一个出现在 100% 行上的标记不区分任何东西。",
-        "- 业绩预告不在本表展示（v1.09）：预告物化文件（§6.7.8）只作 §7.5.5 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
-        "- 合理价区间 = 模型内在价值 × [0.90, 1.10]，是估值的唯一输出锚（模型认可的公允中枢≈区间中值，空间列即按中值/现价计算）。「估值路径」列：ROIC·增长／ROIC·零增长＝§6.5.7.3 真口径；权益退路＝无三大报表时的权益 DCF；银行·股利折现＝§6.5.7.3 银行式；手工带＝§6.5.7.4 例外。",
+        "- **本表每一条带都可双向使用（v1.47）**：只能回答「便宜」不能回答「贵」的带（下限带、周期假设未决）不是偏保守的带，是**没算完的带**——一律判「无法估值」并进入 §6.5.2 建档队列；无带即无 `P/V`，该票当日不进 §9.3 的任何买卖判定。",
+        "- **每一条带都出自逐票估值档案（§6.5.2）**：带由该公司单独设计的方法给出，并约定了跟踪指标与复核触发条件（见 `data/processed/a_share_valuation_dossiers.csv`，人读正文在 `data/companies/<代码>_<名称>/README.md`）。v2.00 起全池全部建档，通用十一类（A/C/D/E/F/H/J/K/M/N/P）已退居分类标签，只用于分类、排序与同族比较，**不再参与任何一条带的计算**；新入池公司在建档之前一律判「无法估值」（带显示 —），不以通用公式顶一条带上去。**因此「带非空」即「档案带」**，v2.03 起不再逐行标「（档）」——一个出现在 100% 行上的标记不区分任何东西。",
+        "- 业绩预告不在本表展示（v1.09）：预告物化文件（§7.1）只作 §7.5.1 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
+        "- 合理价区间 = 模型内在价值 × [0.90, 1.10]，是估值的唯一输出锚（模型认可的公允中枢≈区间中值，空间列即按中值/现价计算）。「估值路径」列：ROIC·增长／ROIC·零增长＝§6.5.2.3 真口径；权益退路＝无三大报表时的权益 DCF；银行·股利折现＝§6.5.2.3 银行式；手工带＝§6.5.2.4 例外。",
         "- 估值时间 = 最近一次估值复核日（合理价区间的推导日）；估值事件 = 该次复核所依据的最新披露（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件）。档位每日按现价自动重算，带只在 §7 复核时更新——「价格改档、证据改带」。审定档、核心理由与复核时点价（`valuation_price`）见池 CSV。",
         *(
             ["- 文末附**海外关注清单**（非A股，§6.8）：只作质量与估值观察，不入本池 CSV、不进每日量价扫描、无买入资格。"]
@@ -689,13 +689,13 @@ def _freshness(retrieved: str, as_of: str, label: str) -> str:
 
 
 def forecast_summary(flags: dict[str, object], forecast_retrieved: str, as_of: str, disclosure_retrieved: str = "") -> str:
-    """§6.7.8/§6.7.9（v1.16/v1.18）刷新汇总的披露部分：预告与快报/正式报告覆盖数 +
-    各自检索日（过期加警告）+ §7.5.5 待复核名单本身（并集口径）。"""
+    """§7.1/§7.3刷新汇总的披露部分：预告与快报/正式报告覆盖数 +
+    各自检索日（过期加警告）+ §7.5.1 待复核名单本身（并集口径）。"""
     covered = len(list(flags.get("forecast") or []))
     disclosed = len(list(flags.get("disclosure") or []))
     pending = list(flags.get("forecast_pending") or [])
     shown = "、".join(pending[:40]) + (f" …等共 {len(pending)} 只" if len(pending) > 40 else "")
-    pending_part = f"；§7.5.5 待复核 {len(pending)} 只（公告日晚于估值时间）" + (f"：{shown}" if pending else "")
+    pending_part = f"；§7.5.1 待复核 {len(pending)} 只（公告日晚于估值时间）" + (f"：{shown}" if pending else "")
     return (
         f"业绩预告覆盖 {covered} 只{_freshness(forecast_retrieved, as_of, '预告')}"
         f"；快报/正式报告覆盖 {disclosed} 只{_freshness(disclosure_retrieved, as_of, '披露')}"
@@ -715,7 +715,7 @@ def log_price_refresh(
     overseas_flags: dict[str, object] | None = None,
     input_files: str = "",
 ) -> None:
-    """--md-only 现价刷新只写一行汇总日志：当日档位变化 + 披露覆盖与 §7.5.5 待复核名单。"""
+    """--md-only 现价刷新只写一行汇总日志：当日档位变化 + 披露覆盖与 §7.5.1 待复核名单。"""
     changes = list(flags.get("changes") or [])
     drift = list(flags.get("drift") or [])
     pending = list(flags.get("forecast_pending") or [])
@@ -789,7 +789,7 @@ def parse_args() -> argparse.Namespace:
         "--disclosures",
         type=Path,
         default=DEFAULT_DISCLOSURES,
-        help="定期报告/业绩快报披露物化文件（fetch_a_share_report_disclosures.py 输出，§6.7.9）；缺失时待复核名单仅按预告判定。",
+        help="定期报告/业绩快报披露物化文件（fetch_a_share_report_disclosures.py 输出，§7.1）；缺失时待复核名单仅按预告判定。",
     )
     parser.add_argument(
         "--tier-snapshot",
@@ -906,7 +906,7 @@ def main() -> None:
         log_price_refresh(
             args.log_file, args.as_of, len(quotes), len(rows), flags, forecast_retrieved,
             args.output_md, disclosure_retrieved, overseas_flags,
-            # 溯源：旧版此处写空串，刷新行看不出读了哪些文件（§15.2 第 3 条同型）。
+            # 溯源：旧版此处写空串，刷新行看不出读了哪些文件（§13 第 3 条同型）。
             input_files=";".join(_rel(p) for p in (
                 args.valuation, args.tiers, args.tier_snapshot, args.forecasts, args.disclosures
             )),

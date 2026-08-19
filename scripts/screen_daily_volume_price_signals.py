@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""每日行情取数（工作流 §8）＋ §9.7 机械执行层。
+"""每日行情取数（工作流 §8）＋ §9.3 机械执行层。
 
 v4.18 起本脚本只做判定所需的事：取收盘/MA20/MA60/成交额、算 `P/V`、
-§7.5 冻结排除、§9.7.2 排序-去相关-出买入计划、§8.6 缺口回溯（只报区间涨跌与放量峰值）。
+§7.5 冻结排除、§9.3.2 排序-去相关-出买入计划、§8.4 缺口回溯（只报区间涨跌与放量峰值）。
 已退役的信号分级/入场阶段/形态识别/市场状态/深度低估关注等展示机制于 v4.18 整体删除
 （OI-063，用户 2026-08-19 裁定）——那批代码不进任何买卖判定，历史结论沉淀在回测日志 §12.8。
 """
@@ -212,7 +212,7 @@ def quote_snapshot(rows: list[dict[str, float | str]]) -> dict[str, object]:
 
 
 def gap_review(rows: list[dict[str, float | str]], as_of: str, since: str) -> dict[str, object]:
-    """§8.6 缺口回溯：报告 since→as_of 之间未被扫描区间的交易日数、区间涨跌与最大放量。
+    """§8.4 缺口回溯：报告 since→as_of 之间未被扫描区间的交易日数、区间涨跌与最大放量。
 
     v4.18 起不再逐日回放信号（信号机制已删除，OI-063）；本函数只回答
     「隔了几天没扫、期间价格动了多少、有没有异常放量」。
@@ -294,7 +294,7 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = 
 
 
 def detect_last_scan(log_path: Path, as_of: str) -> str:
-    """§8.6：自动检出上一次扫描日——缺口回溯不能依赖人记得传 --since。"""
+    """§8.4：自动检出上一次扫描日——缺口回溯不能依赖人记得传 --since。"""
     if not log_path.exists():
         return ""
     dates = set()
@@ -346,7 +346,7 @@ def log_scan_decisions(
                 "as_of": as_of,
                 "security_code": row.get("security_code", ""),
                 "security_name": row.get("security_name", ""),
-                # decision_type 名称保持 daily_signal_state：detect_last_scan（§8.6 缺口回溯）
+                # decision_type 名称保持 daily_signal_state：detect_last_scan（§8.4 缺口回溯）
                 # 以它识别历史扫描日，改名会让回溯断链。
                 "decision_type": "daily_signal_state",
                 "decision_result": row.get("signal_state", ""),
@@ -366,7 +366,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--since",
         default="auto",
-        help='§8.6 缺口回溯起点。"auto"（缺省）从决策日志检出上次扫描日；'
+        help='§8.4 缺口回溯起点。"auto"（缺省）从决策日志检出上次扫描日；'
              '给具体日期则强制回溯该日之后；给空串关闭回溯。',
     )
     parser.add_argument("--as-of", required=True, help="Trading date in YYYY-MM-DD format.")
@@ -378,11 +378,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--symbols", default="", help="Optional comma-separated security codes to filter the input pool.")
     parser.add_argument("--timeout", type=float, default=8.0, help="Per-request network timeout in seconds.")
     parser.add_argument("--workers", type=int, default=8, help="Parallel data-provider requests.")
-    # ---- §9.7 机械执行层。三个都给才出买入计划。
+    # ---- §9.3 机械执行层。三个都给才出买入计划。
     parser.add_argument("--model-bands", type=Path, default=DEFAULT_MODEL_BANDS,
-                        help="批量模型带表；§9.7 的 P/V 用它，不用池里的逐票档案带")
+                        help="批量模型带表；§9.3 的 P/V 用它，不用池里的逐票档案带")
     parser.add_argument("--nav", type=float, default=0.0,
-                        help="当日净资产，用于定一档 = NAV × §9.7.1 的比例。不给则只算 P/V、不出买入计划")
+                        help="当日净资产，用于定一档 = NAV × §9.3.1 的比例。不给则只算 P/V、不出买入计划")
     parser.add_argument("--funds", type=float, default=None,
                         help="当日**可用资金 = 现金 + 未用授信**（OI-062）。买入计划以此为预算；"
                              "不给则退回「可用资金＝净资产」的旧估算并显著告警。满仓/带融资账户必须给。")
@@ -405,26 +405,26 @@ def load_blocked_codes(path: Path) -> set[str] | None:
     }
 
 
-# ------------------------------------------------------------------ §9.7 机械执行层
-# **口径一律来自 `docs/000_Ashare_workflow.md` §9.7，此处不另立标准。** 三处细节：
+# ------------------------------------------------------------------ §9.3 机械执行层
+# **口径一律来自 `docs/000_Ashare_workflow.md` §9.3，此处不另立标准。** 三处细节：
 #   * 走势闸门 `收 > MA20 > MA60` 用**前复权**序列（收盘与均线同尺度，除息不产生假信号）；
 #   * `P/V` = **未复权现价 ÷ 当日带**。本脚本的 `close` 取自 `fqt=1` 前复权序列，
 #     而前复权序列**锚在最新一根**，故 `--as-of` 为最近交易日时末根收盘即未复权现价，两者同尺度；
 #     **回溯历史日期时该等式不成立**，故本层只在 `--as-of` 为最新交易日时给出买入计划。
 #   * 银行走工作流 §6.5.1 的股利折现口径。
-SEC97_BUY_LINE = 0.9493        # §9.7.1 买入线
-SEC97_MAX_CORR = 0.70          # §9.7.1，252 日日收益率皮尔逊相关上限
-SEC97_SCAN_DEPTH = 40          # §9.7.2 第 3 步：相关性过滤时最多下扫多少名
-SEC97_TRANCHE_PCT = 0.05       # §9.7.1 单次买入比例
-SEC97_LOT = 100                # A 股一手
-SEC97_POSITION_CAP = None      # §9.7.1：v4.04 起**无单票上限**——用户 2026-08-17 裁定退役仓位控制，
+SEC93_BUY_LINE = 0.9493        # §9.3.1 买入线
+SEC93_MAX_CORR = 0.70          # §9.3.1，252 日日收益率皮尔逊相关上限
+SEC93_SCAN_DEPTH = 40          # §9.3.2 第 3 步：相关性过滤时最多下扫多少名
+SEC93_TRANCHE_PCT = 0.05       # §9.3.1 单次买入比例
+SEC93_LOT = 100                # A 股一手
+SEC93_POSITION_CAP = None      # §9.3.1：v4.04 起**无单票上限**——用户 2026-08-17 裁定退役仓位控制，
                                # 风险改由回撤与年化承担（§12.75）。None = 不设限，判定处直接跳过。
-SEC97_SELL_LINE = 2.5548       # §9.7.1「减持线」，v4.04 对齐解：P/V ≥ 线且收盘 < MA20 → 减一档。
-# ↑ 本脚本只做买入侧（§9.7.2 第 4 步卖出是人工），该常量是减持线数值的**脚本侧唯一落点**，
-#   供卖出侧人工核对引用——不是静默失效，是成文的分工（见工作流 §9.7.2 末段）。
-# §9.7.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
+SEC93_SELL_LINE = 2.5548       # §9.3.1「减持线」，v4.04 对齐解：P/V ≥ 线且收盘 < MA20 → 减一档。
+# ↑ 本脚本只做买入侧（§9.3.2 第 4 步卖出是人工），该常量是减持线数值的**脚本侧唯一落点**，
+#   供卖出侧人工核对引用——不是静默失效，是成文的分工（见工作流 §9.3.2 末段）。
+# §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
-SEC97_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
+SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
 BANK_RISK_PREMIUM = 0.02       # §12.31 股利折现的风险溢价
 
 
@@ -498,10 +498,10 @@ def pearson(returns: dict[str, list[float]], a: str, b: str) -> float:
 
 def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
                     as_of: str, rf: float) -> None:
-    """给每行挂上 §9.7 用的 `model_intrinsic_value` / `model_pv` / `model_band_source`。
+    """给每行挂上 §9.3 用的 `model_intrinsic_value` / `model_pv` / `model_band_source`。
 
     **与 §8 的 `fair_price_low/high`（逐票档案带）并存、互不覆盖**：档案带继续供
-    §6.2 自动定档用，模型带只供 §9.7 用。"""
+    §6.2 自动定档用，模型带只供 §9.3 用。"""
     for row in rows:
         code = str(row.get("security_code", "")).zfill(6)
         name = str(row.get("security_name", ""))
@@ -525,9 +525,9 @@ def load_holdings() -> dict[str, float]:
     """{代码: 持股数}。读不到就返回空——**空 dict 会让本函数退回 v3.00 口径**，
     故调用方必须把「有没有读到持仓」显示出来，不能静默。"""
     out: dict[str, float] = {}
-    if not SEC97_HOLDINGS.exists():
+    if not SEC93_HOLDINGS.exists():
         return out
-    with SEC97_HOLDINGS.open(newline="", encoding="utf-8-sig") as fh:
+    with SEC93_HOLDINGS.open(newline="", encoding="utf-8-sig") as fh:
         for r in csv.DictReader(fh):
             shares = to_float(r.get("current_shares"))
             if shares and shares > 0:
@@ -538,19 +538,19 @@ def load_holdings() -> dict[str, float]:
 def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float | None = None,
                          holdings: dict[str, float] | None = None,
                          blocked: set[str] | None = None) -> dict[str, object]:
-    """§9.7.2 第 3、5 步：按 `P/V` 升序、去相关、逐个买一档。
+    """§9.3.2 第 3、5 步：按 `P/V` 升序、去相关、逐个买一档。
 
-    §9.7.3 比例冷却：一手金额 > 一档时买一手，其后跳过 `round(x)−1` 次合格机会
+    §9.3.3 比例冷却：一手金额 > 一档时买一手，其后跳过 `round(x)−1` 次合格机会
     （本函数是单日快照，故只记 `cooldown_skips` 供次日跑批读，不在此处消费）。
 
     **两条与持仓有关的规则（v3.01/v3.02，OI-058／OI-059）**：
     - **走势条件分新旧**：新建仓须 `收盘 > MA20 > MA60`；**已有持仓的加仓只须 `MA20 > MA60`**。
-    - **单票上限**：买入后该票市值 ÷ N 超过 `SEC97_POSITION_CAP` 即跳过、顺位补下一名；
+    - **单票上限**：买入后该票市值 ÷ N 超过 `SEC93_POSITION_CAP` 即跳过、顺位补下一名；
       **只挡加仓，已有持仓因上涨越限不回削**。
     `holdings` 为空时两条都退化为原口径，故调用方须把「读到几只持仓」打出来。
     """
     holdings = holdings or {}
-    tranche = nav * SEC97_TRANCHE_PCT
+    tranche = nav * SEC93_TRANCHE_PCT
 
     def trend_ok(r) -> bool:
         c, m20, m60 = to_float(r.get("close")), to_float(r.get("ma20")), to_float(r.get("ma60"))
@@ -565,29 +565,29 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
         # 此前该门槛只存在于展示层，买入计划从未真正检查过它）。
         return (to_float(r.get("amount_ma20")) or 0.0) >= MIN_AMOUNT_MA20
 
-    # §9.7.2 第 1 步：排除 review_pending（§7.5 冻结）。此前冻结只改展示字段、
+    # §9.3.2 第 1 步：排除 review_pending（§7.5 冻结）。此前冻结只改展示字段、
     # 本函数不读它——冻结股照样进下扫序列（判例 2026-08-19：天山铝业冻结中仍参与排序，
     # 仅因相关性 0.72 被碰巧剔除）。「读起来在保护你、实际不保护任何东西」型，故在合格集处硬排除。
     blocked = blocked or set()
     frozen_out = [r for r in rows
                   if str(r["security_code"]).zfill(6) in blocked
-                  and isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC97_BUY_LINE
+                  and isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
                   and trend_ok(r)]
     illiquid_out = [r for r in rows
-                    if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC97_BUY_LINE
+                    if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
                     and trend_ok(r) and not liquid_ok(r)
                     and str(r["security_code"]).zfill(6) not in blocked]
     eligible = [
         r for r in rows
-        if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC97_BUY_LINE
+        if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
         and trend_ok(r) and liquid_ok(r)
         and str(r["security_code"]).zfill(6) not in blocked
     ]
     eligible.sort(key=lambda r: r["model_pv"])
     n_cheap = sum(1 for r in rows
-                  if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC97_BUY_LINE)
+                  if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE)
 
-    # **相关性基准必须含在手持仓**：§9.7.1 写的是「与**在手**/已选标的 ≤ 上限」，
+    # **相关性基准必须含在手持仓**：§9.3.1 写的是「与**在手**/已选标的 ≤ 上限」，
     # 判例：2026-08-17 持有山西汾酒时，与之相关 0.79 的古井贡酒曾被排在买入计划第 1 位。
     held_rows = [r for r in rows if str(r["security_code"]).zfill(6) in holdings]
     returns = daily_returns_window(
@@ -595,7 +595,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
         + [str(r["security_code"]).zfill(6) for r in held_rows])
     picked: list[dict] = []
     dropped: list[tuple[dict, float, str]] = []
-    for cand in eligible[:SEC97_SCAN_DEPTH]:
+    for cand in eligible[:SEC93_SCAN_DEPTH]:
         code = str(cand["security_code"]).zfill(6)
         worst, worst_name = 0.0, ""
         for held in held_rows + picked:
@@ -604,7 +604,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             value = pearson(returns, code, str(held["security_code"]).zfill(6))
             if value > worst:
                 worst, worst_name = value, str(held.get("security_name", ""))
-        if worst > SEC97_MAX_CORR:
+        if worst > SEC93_MAX_CORR:
             dropped.append((cand, worst, worst_name))
             continue
         picked.append(cand)
@@ -617,7 +617,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
         if price <= 0:
             continue
         code = str(cand["security_code"]).zfill(6)
-        lot_amount = price * SEC97_LOT
+        lot_amount = price * SEC93_LOT
         lots = int(tranche // lot_amount) if lot_amount <= tranche else 1
         cooldown = 0 if lot_amount <= tranche else round(lot_amount / tranche) - 1
         amount = lots * lot_amount
@@ -625,7 +625,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             continue
         # 单票上限：**按「买入后」的市值判**，与回测 `--position-cap` 逐字同义。
         held_value = holdings.get(code, 0.0) * price
-        if SEC97_POSITION_CAP and nav > 0 and (held_value + amount) / nav > SEC97_POSITION_CAP:
+        if SEC93_POSITION_CAP and nav > 0 and (held_value + amount) / nav > SEC93_POSITION_CAP:
             capped.append((cand, held_value / nav))
             continue
         cash -= amount
@@ -639,7 +639,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             "model_pv": cand["model_pv"],
             "model_band_source": cand.get("model_band_source", ""),
             "lots": lots,
-            "shares": lots * SEC97_LOT,
+            "shares": lots * SEC93_LOT,
             "amount": round(amount, 2),
             "cooldown_skips": cooldown,
         })
@@ -666,13 +666,13 @@ def report_section97(result: dict[str, object], nav: float, out_path: Path,
     for p in plan:
         p["trade_date"] = as_of
     invested = float(result["funds0"]) - result["cash"]
-    print(f"\n§9.7 机械执行：`P/V ≤ {SEC97_BUY_LINE}` 的 {result['n_cheap']} 只；"
+    print(f"\n§9.3 机械执行：`P/V ≤ {SEC93_BUY_LINE}` 的 {result['n_cheap']} 只；"
           f"再过走势条件的 **{len(result['eligible'])} 只**"
           f"（新建仓 `收>MA20>MA60`；**已持仓只须 `MA20>MA60`**，其中 {result['n_addon']} 只"
           f"是靠这条放宽进来的回踩加仓）；"
           f"流动性门槛（20日均额<{MIN_AMOUNT_MA20 / 1e8:.1f}亿）排除 {len(result.get('illiquid_out') or [])} 只；"
           f"§7.5 冻结硬排除 {len(result.get('frozen_out') or [])} 只；"
-          f"相关性 >{SEC97_MAX_CORR} 剔除 {len(dropped)} 只 → 买入 {len(plan)} 只")
+          f"相关性 >{SEC93_MAX_CORR} 剔除 {len(dropped)} 只 → 买入 {len(plan)} 只")
     for il in result.get("illiquid_out") or []:
         print(f"  [流动性排除·§10.1] {il.get('security_name','')} P/V {il['model_pv']:.2f}"
               f"｜20日均额 {(to_float(il.get('amount_ma20')) or 0.0) / 1e4:,.0f} 万")
@@ -683,19 +683,19 @@ def report_section97(result: dict[str, object], nav: float, out_path: Path,
         print("  ⚠ **没读到任何持仓**（data/processed/a_share_holdings.csv 缺失或为空）"
               "——加仓放宽会退回旧口径，买入计划不可直接照做")
     else:
-        cap_txt = f"单票上限 {SEC97_POSITION_CAP:.0%}（只挡加仓、不强制减持）" if SEC97_POSITION_CAP else "单票无上限（v4.04 退役）"
+        cap_txt = f"单票上限 {SEC93_POSITION_CAP:.0%}（只挡加仓、不强制减持）" if SEC93_POSITION_CAP else "单票无上限（v4.04 退役）"
         print(f"  持仓 {result['n_held']} 只已载入｜{cap_txt}")
     for cand, w in result["capped"]:
         print(f"  [单票上限挡下] {cand.get('security_name','')} "
               f"P/V {cand['model_pv']:.2f}｜现持仓已占净资产 {w:.1%}，再买一档将越过 "
-              f"{SEC97_POSITION_CAP:.0%}")
+              f"{SEC93_POSITION_CAP:.0%}")
     if result["funds_given"]:
         print(f"  一档 {result['tranche'] / 1e4:,.2f} 万｜**可用资金 {float(result['funds0']) / 1e4:,.2f} 万**"
               f"（现金＋未用授信）→ 投入 {invested / 1e4:,.2f} 万（占净资产 {invested / nav * 100:.1f}%）"
               f"｜余 {result['cash'] / 1e4:,.2f} 万")
     else:
         print(f"  一档 {result['tranche'] / 1e4:,.2f} 万｜⚠ **未给 `--funds`，按「可用资金＝净资产」估算**"
-              f"（OI-062：满仓/带融资账户上此计划资金上不可执行，买入须走 §9.7.2 换仓）"
+              f"（OI-062：满仓/带融资账户上此计划资金上不可执行，买入须走 §9.3.2 换仓）"
               f"｜投入 {invested / 1e4:,.1f} 万（仓位 {invested / nav * 100:.1f}%）｜余 {result['cash'] / 1e4:,.1f} 万")
     for i, p in enumerate(plan, 1):
         band = f"{p['model_intrinsic_value'] * 0.9:.2f}-{p['model_intrinsic_value'] * 1.1:.2f}" \
@@ -731,8 +731,8 @@ FIELDNAMES = [
     "fair_price_high",
     "band_position",
     "margin_of_safety",
-    # §9.7 用的模型带三列。**与 fair_price_low/high 并存不混用**：
-    # 前者是逐票档案带、供 §6.2 自动定档；这三列是批量模型带、供 §9.7 买入判定。
+    # §9.3 用的模型带三列。**与 fair_price_low/high 并存不混用**：
+    # 前者是逐票档案带、供 §6.2 自动定档；这三列是批量模型带、供 §9.3 买入判定。
     "model_intrinsic_value",
     "model_band_source",
     "model_pv",
@@ -766,30 +766,30 @@ def main() -> int:
     if since == "auto":
         since = detect_last_scan(args.log_file, args.as_of)
         if since:
-            print(f"§8.6 缺口回溯：检出上次扫描日 {since}，将回溯 {since}→{args.as_of} 区间")
+            print(f"§8.4 缺口回溯：检出上次扫描日 {since}，将回溯 {since}→{args.as_of} 区间")
         else:
-            print("§8.6 缺口回溯：未检出上次扫描日，本次按单日快照执行")
+            print("§8.4 缺口回溯：未检出上次扫描日，本次按单日快照执行")
     rows = scan(input_rows, args.as_of, symbols, args.timeout, args.workers, since)
     blocked = load_blocked_codes(args.review_queue)
     for row in rows:
         # §7.5 复核期买入冻结的可见性列；硬排除在 section97_entry_plan 内执行。
         row["review_frozen"] = bool(blocked) and str(row.get("security_code", "")).zfill(6) in (blocked or set())
 
-    # §9.7 的 P/V **必须在落盘之前挂上**：`FIELDNAMES` 里已经声明了那三列，
+    # §9.3 的 P/V **必须在落盘之前挂上**：`FIELDNAMES` 里已经声明了那三列，
     # 若等落盘后再算，写出去的就是三列空值。首版就踩过这一脚，靠落地校验（下方 priced 计数）当场发现。
     section97_ready = bool(args.model_bands and args.model_bands.exists())
     if section97_ready:
         bands = load_model_bands(args.model_bands, args.as_of)
         attach_model_pv(rows, bands, args.as_of, args.rf)
         priced = sum(1 for r in rows if isinstance(r.get("model_pv"), float))
-        print(f"§9.7 模型带：{len(bands)} 只有带，{priced}/{len(rows)} 只算出 P/V"
+        print(f"§9.3 模型带：{len(bands)} 只有带，{priced}/{len(rows)} 只算出 P/V"
               f"（银行走股利折现 rf={args.rf:.4%}+{BANK_RISK_PREMIUM:.0%}）")
         if priced < len(rows):
             missing = [str(r.get("security_name", "")) for r in rows
                        if not isinstance(r.get("model_pv"), float)][:8]
-            print(f"  **无带 {len(rows) - priced} 只**（§9.7 判定不到它们）：{'、'.join(missing)}")
+            print(f"  **无带 {len(rows) - priced} 只**（§9.3 判定不到它们）：{'、'.join(missing)}")
         if rows and not priced:
-            print("  **告警：model_pv 整列为空** —— 模型带与池对不上号，§9.7 本次等于没跑")
+            print("  **告警：model_pv 整列为空** —— 模型带与池对不上号，§9.3 本次等于没跑")
     write_csv(args.output_csv, rows, FIELDNAMES)
     review_note = (
         "复核冻结：已启用（读取更新队列）。" if blocked is not None else
@@ -805,16 +805,16 @@ def main() -> int:
     if rows and not scored:
         print("**告警：quality_score 整列为空** —— 池 CSV 未透传参考分，报告不得手填，先修池物化")
 
-    # §9.7 的买入计划（`attach_model_pv` 已在落盘前跑过，见上文）。
+    # §9.3 的买入计划（`attach_model_pv` 已在落盘前跑过，见上文）。
     if section97_ready:
         if args.nav > 0:
             report_section97(section97_entry_plan(rows, args.nav, args.funds, load_holdings(),
                                                   blocked or set()),
                              args.nav, args.plan_out, args.as_of)
         else:
-            print("§9.7 未给 --nav，只算 P/V 不出买入计划（一档以净资产为基数）")
+            print("§9.3 未给 --nav，只算 P/V 不出买入计划（一档以净资产为基数）")
     else:
-        print(f"§9.7 机械执行层未运行：模型带文件不存在（{args.model_bands}）。"
+        print(f"§9.3 机械执行层未运行：模型带文件不存在（{args.model_bands}）。"
               f"重建见 §6.7；不跑它则本次只产出 §8 的取数，**买入判定缺席**")
 
     return data_error_exit_code(rows)

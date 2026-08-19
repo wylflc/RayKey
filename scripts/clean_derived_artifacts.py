@@ -13,9 +13,9 @@
   `a_share_daily_g*`，以及 `_pit`／`_pit116`／`_pit91`／`_261L2` 后缀的逐日状态与带表）删除。
 
 **保留清单是硬编码的白名单**（`KEEP`），凡在其中者任何模式都不碰——
-它们是生产口径的落点与脚本缺省值，删了会让 §9.7.1.2 与日常扫描直接失效。
+它们是生产口径的落点与脚本缺省值，删了会让 §9.3.1.2 与日常扫描直接失效。
 
-缺省只报告，`--apply` 才动手。重建命令见 `docs/000_Ashare_workflow.md` §6.5.7.1 与 §9.7.1.2。
+缺省只报告，`--apply` 才动手。重建命令见 `docs/000_Ashare_workflow.md` §6.5.2.1 与 §9.3.1.2。
 
 用法：
     python3 scripts/clean_derived_artifacts.py                      # 报告两个区块
@@ -48,7 +48,7 @@ BANDS_PATTERN = re.compile(
 KEEP = {
     "a_share_historical_valuation_daily.csv",    # backtest_valuation_strategy.py 的 --daily-states 缺省
     "a_share_historical_valuation_bands.csv",    # build_valuation_band_cards.py 的输入
-    "a_share_daily_states_adopted.csv",          # §9.7.1.2 采纳口径（λ=2.0 + 银行股利折现）
+    "a_share_daily_states_adopted.csv",          # §9.3.1.2 采纳口径（λ=2.0 + 银行股利折现）
 }
 
 

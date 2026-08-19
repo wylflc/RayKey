@@ -31,7 +31,7 @@ OI-034 的回测方案（用户 2026-08-07 给定）第 1 步是：**对每个�
 东财 `RPT_LICO_FN_CPD`（业绩报表），与 `fetch_a_share_report_disclosures.py` 同源、同键名
 约定（报告期列名为 `REPORTDATE` 无下划线）。实测该表历史期可取，且含建带所需的全部输入：
 `PARENT_NETPROFIT`／`TOTAL_OPERATE_INCOME`／`BASIC_EPS`／`DEDUCT_BASIC_EPS`／`BPS`／
-**`WEIGHTAVG_ROE`**（§6.5.7.1 的核心输入）／`XSMLL` 毛利率／`MGJYXJJE` 每股经营现金流。
+**`WEIGHTAVG_ROE`**（§6.5.2.1 的核心输入）／`XSMLL` 毛利率／`MGJYXJJE` 每股经营现金流。
 
 用法::
 
@@ -209,7 +209,7 @@ def main() -> int:
               + "。这些期每个扫描日都必须重取，覆盖面到法定截止日才定型——"
                 "把它们当成完整数据用，等于系统性漏掉尚未披露的公司。")
 
-    # §15.2 第 3 条硬自检：新增数据源必须核对**非空行数**与**每列的非空覆盖**。
+    # §13 第 3 条硬自检：新增数据源必须核对**非空行数**与**每列的非空覆盖**。
     if counts:
         latest = max(counts)
         with (args.out_dir / f"{latest}.csv").open(newline="", encoding="utf-8") as handle:
