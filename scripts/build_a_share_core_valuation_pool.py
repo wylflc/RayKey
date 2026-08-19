@@ -47,41 +47,12 @@ DEFAULT_TIER_SNAPSHOT = ROOT / "data/interim/pool_effective_tiers.csv"
 DEFAULT_OVERSEAS = ROOT / "data/processed/overseas_watchlist_valuation.csv"
 DEFAULT_OVERSEAS_TIER_SNAPSHOT = ROOT / "data/interim/overseas_effective_tiers.csv"
 
-# §6.2.1 分层×估值三态矩阵（v1.27 三档重构）：可买 / 可持有 / 提醒卖出。
-TIER_ELIGIBLE_VALUATIONS = {
-    "L1": {"低估", "较低估", "中性"},
-    "L2": {"低估", "较低估"},
-    "L3": {"低估"},
-}
-# 可持有：不可新建仓/加仓，已持仓不因此卖出。
-TIER_HOLDABLE_VALUATIONS = {
-    "L1": {"较高估"},
-    "L2": {"中性"},
-    "L3": {"较低估"},
-}
-# 「提醒卖出」档的起点（该档及以上）。
-# v2.05 起本档是**纯标签**，不产生任何卖出提醒：§14 的估值卖出减仓梯已随该版退役
-# （§6.2.1 执行说明 1、§14.6 退役清单）。它只表示"现价已高到该档"，用途仅剩买入端
-# 判定与池 MD 展示。列名 trim_alert 是 v1.27 的历史命名，改名会动池 CSV 契约，故保留。
-TIER_TRIM_ALERT_FROM = {"L1": "高估", "L2": "较高估", "L3": "中性"}
-VALUATION_ORDER = ["低估", "较低估", "中性", "较高估", "高估"]
+# 分层档位集合：池只物化 L1-L3（worth_attention 的分层全集；L4 属 documented_not_attention，
+# 不在 worth_attention 名单，不进池）。§6.2.1 三态矩阵已退役，矩阵机制随 v4.18 删除（OI-063）。
+POOL_TIERS = {"L1", "L2", "L3"}
 CORE_LAYER_TIERS = {"L1", "L2"}
-WATCH_VALUATIONS = {"低估", "较低估", "中性", "较高估"}
-
-
-def matrix_state(tier: str, valuation: str) -> str:
-    """§6.2.1 三态：buyable / holdable / trim_alert / na。"""
-    if tier not in TIER_ELIGIBLE_VALUATIONS or valuation not in VALUATION_ORDER:
-        return "na"
-    if valuation in TIER_ELIGIBLE_VALUATIONS[tier]:
-        return "buyable"
-    if valuation in TIER_HOLDABLE_VALUATIONS[tier]:
-        return "holdable"
-    start = TIER_TRIM_ALERT_FROM[tier]
-    if VALUATION_ORDER.index(valuation) >= VALUATION_ORDER.index(start):
-        return "trim_alert"
-    return "na"
-# §6.2.1.6 价格自动定档阈值（v1.05 初始校准，修订先改工作流）。
+VALUATION_ORDER = ["低估", "较低估", "中性", "较高估", "高估"]
+# §6.2 价格自动定档阈值（修订先改工作流）。
 OVERVALUED_BAND_MULT = 1.2  # 带顶×1.2 以上 = 高估（沿 D 档 100-120% 惯例）
 DEEP_UNDERVALUED_UPSIDE = 0.40  # 带底以下且空间（区间中值/现价-1）>= 40% = 低估，否则较低估
 # 预告指标口径优先级：归母净利 > 扣非 > 营业收入（§6.7.8，仅作复核队列输入统计）。
@@ -155,10 +126,8 @@ def build_pool(
     as_of: str,
     source_file: Path = DEFAULT_VALUATION,
 ) -> list[dict[str, str]]:
-    """物化全量 worth_attention 为单一列表（v1.05）。v1.27 三档重构：
-    pool_layer 仅 core（L1/L2）/ tactical（L3）/ excluded（无法估值）——**watch_only 已退役**，
-    买入端只有二态。新增 matrix_state 记录审定档口径的三态（buyable/holdable/trim_alert）；
-    每日实际状态以扫描时的价格自动定档为准，本列仅作审计口径。"""
+    """物化全量 worth_attention 为单一列表。pool_layer 仅 core（L1/L2）/ tactical（L3）/
+    excluded（无法估值）。买入资格只由 §9.7 与 §10.1 决定；三态矩阵列已随 v4.18 删除（OI-063）。"""
     tier_by_code = {row["security_code"].zfill(6): row for row in tier_rows}
     output: list[dict[str, str]] = []
     skipped: list[str] = []
@@ -171,18 +140,16 @@ def build_pool(
         )
         valuation_tier = row.get("valuation_tier", "")
 
-        if quality_tier not in TIER_ELIGIBLE_VALUATIONS:
+        if quality_tier not in POOL_TIERS:
             # OI-003：**不得静默跳过**。旧口径遇到无法归入 L1/L2/L3 的行直接 continue，
-            # v1.27 三档重构后估值表仍带旧五档，12 行 L4 因此消失于池与每日扫描而无任何
-            # 提示——与「全量 worth_attention 统一扫描」的意图相反。现改为计数并上报。
+            # 12 行曾因此消失于池与每日扫描而无任何提示——与「全量 worth_attention 统一扫描」
+            # 的意图相反。现改为计数并上报。
             skipped.append(f"{code}{row.get('security_name','')}({quality_tier or '空'})")
             continue
-        state = matrix_state(quality_tier, valuation_tier)
 
-        # §6.7 要求 10/11（v1.28）：带必须是 §6.5.1 两形态之一算出的模型带。
-        # blocking（档位反推 / 已退役标签 / 复算不符）→ 降为可持有：不得新建仓加仓，
-        # 但不触发 §14 提醒卖出（反推带的偏差双向，只切买入侧是唯一不制造新错误动作的过渡态）。
-        # backfill（模型带、仅建带卡未回填）→ 限期登记义务，买入资格不变（同 §10.4 研究档案项）。
+        # §6.7：带必须是模型带（§6.5.1）。blocking（档位反推 / 已退役标签 / 复算不符）→
+        # band_status=rebuild_required：校验失败行冻结新增买入（§6.7 末段），修复后再物化。
+        # backfill（模型带、仅建带卡未回填）→ 限期登记义务，买入资格不变。
         band_problems, band_severity = check_band_card(row)
         # §6.5.5.1 第 3 条（v1.47 重写，用户决定）：**「不发卖出」这种状态不再允许存在**。
         # 一条只能回答「便宜」不能回答「贵」的带，不是一条偏保守的带，是一条**没算完的带**；
@@ -202,17 +169,14 @@ def build_pool(
             row["valuation_unvaluable_reason"] = (
                 "＋".join(undecidable) + f"（§6.5.7 待建档；原口径参考带 {ref}，按定义只能回答便宜、不能回答贵）")
             row["fair_price_low"] = row["fair_price_high"] = ""
-            state = matrix_state(quality_tier, valuation_tier)
         if not band_problems:
             band_status = "ok"
         elif band_severity == "blocking":
             band_status = "rebuild_required"
-            if state == "buyable":
-                state = "holdable"
         else:
             band_status = "backfill_due"
-        # v1.27：档位决定 core/tactical，与当日估值档无关；仅「无法估值」排除。
-        if state == "na":
+        # 分层决定 core/tactical，与当日估值档无关；仅「无法估值」（含空档）排除。
+        if valuation_tier not in VALUATION_ORDER:
             pool_layer = "excluded"
         else:
             pool_layer = "core" if quality_tier in CORE_LAYER_TIERS else "tactical"
@@ -227,7 +191,6 @@ def build_pool(
                 "quality_tier_label": row.get("quality_tier") or (tier_row or {}).get("quality_tier_label", ""),
                 "quality_score": (tier_row or {}).get("quality_score", ""),
                 "pool_layer": pool_layer,
-                "matrix_state": state,
                 "band_derivation": row.get("band_derivation", "") or ("fallback" if band_status == "rebuild_required" else ""),
                 "band_status": band_status,
                 "anchor_quality": row.get("anchor_quality", ""),
@@ -497,9 +460,6 @@ def build_overseas_section(
     return lines, {"changes": changes, "current_tiers": current_tiers}
 
 
-_RESEARCH_CACHE: dict[str, str] = {}
-
-
 def load_valuation_paths() -> dict[str, str]:
     """池模型带文件（v4.00 ROIC 口径）的 `roic_path` → 「估值路径」展示列。
 
@@ -516,22 +476,6 @@ def load_valuation_paths() -> dict[str, str]:
                 code = (row.get("security_code") or "").zfill(6)
                 out[code] = label.get((row.get("roic_path") or "").strip(), "权益退路")
     return out
-
-
-def _evidence_retrieved(code: str) -> str:
-    """证据文件的检索日（§7.4.1 研报触发只能靠新鲜度，不能靠研报发布日比较）。"""
-    if code in _RESEARCH_CACHE:
-        return _RESEARCH_CACHE[code]
-    path = ROOT / f"data/interim/valuation_evidence/{code}.json"
-    result = ""
-    if path.exists():
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-            result = (data.get("retrieved_at_utc") or "")[:10]
-        except Exception:                                  # noqa: BLE001
-            result = ""
-    _RESEARCH_CACHE[code] = result
-    return result
 
 
 def write_markdown(
@@ -904,7 +848,6 @@ def main() -> None:
         "quality_tier_label",
         "quality_score",
         "pool_layer",
-        "matrix_state",
         "band_derivation",
         "band_status",
         "anchor_quality",
