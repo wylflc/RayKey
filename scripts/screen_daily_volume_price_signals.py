@@ -412,14 +412,14 @@ def load_blocked_codes(path: Path) -> set[str] | None:
 #     而前复权序列**锚在最新一根**，故 `--as-of` 为最近交易日时末根收盘即未复权现价，两者同尺度；
 #     **回溯历史日期时该等式不成立**，故本层只在 `--as-of` 为最新交易日时给出买入计划。
 #   * 银行走工作流 §6.5.1 的股利折现口径。
-SEC93_BUY_LINE = 0.9493        # §9.3.1 买入线
+SEC93_BUY_LINE = 0.9528        # §9.3.1 买入线（v4.20 分红折算纪元对齐解，合格面 17.960%）
 SEC93_MAX_CORR = 0.70          # §9.3.1，252 日日收益率皮尔逊相关上限
 SEC93_SCAN_DEPTH = 40          # §9.3.2 第 3 步：相关性过滤时最多下扫多少名
 SEC93_TRANCHE_PCT = 0.05       # §9.3.1 单次买入比例
 SEC93_LOT = 100                # A 股一手
 SEC93_POSITION_CAP = None      # §9.3.1：v4.04 起**无单票上限**——用户 2026-08-17 裁定退役仓位控制，
                                # 风险改由回撤与年化承担（§12.75）。None = 不设限，判定处直接跳过。
-SEC93_SELL_LINE = 2.5548       # §9.3.1「减持线」，v4.04 对齐解：P/V ≥ 线且收盘 < MA20 → 减一档。
+SEC93_SELL_LINE = 2.5690       # §9.3.1「减持线」，v4.20 对齐解（上侧面 30.465%）：P/V ≥ 线且收盘 < MA20 → 减一档。
 # ↑ 本脚本只做买入侧（§9.3.2 第 4 步卖出是人工），该常量是减持线数值的**脚本侧唯一落点**，
 #   供卖出侧人工核对引用——不是静默失效，是成文的分工（见工作流 §9.3.2 末段）。
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
@@ -432,12 +432,21 @@ def is_bank(name: str) -> bool:
     return "银行" in name or name.endswith("行") or "农商" in name
 
 
+# 与 `apply_model_bands_to_dossiers.py --min-available` 同一阈值：早于它的模型带视为时点过旧。
+# v4.20（OI-068）前扫描器没有这道闸——档案层判「保留手工带」的 9 只，本层却继续拿
+# 2021-2024 的旧模型带算 `P/V`（石基信息用 2021-10 的带），两层给出相反口径。
+# 旧带在此硬排除：无带即无 `P/V`、不进 §9.3 任何判定，与「手工带须落 manual_band_overrides
+# 才能进交易层」（§6.5.2.4）闭合成同一条规则。
+MODEL_BAND_MIN_AVAILABLE = "2025-01-01"
+
+
 def load_model_bands(path: Path, as_of: str) -> dict[str, dict]:
     """批量模型带，逐票取 `available_at ≤ as_of` 的最新一条。
 
     **不能按报告期排序取最新**——未到披露日的带在当日不可用，那是后视。
     """
     latest: dict[str, tuple[str, dict]] = {}
+    stale: dict[str, tuple[str, str]] = {}
     with path.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
             status = row.get("status")
@@ -446,8 +455,17 @@ def load_model_bands(path: Path, as_of: str) -> dict[str, dict]:
             avail = row.get("band_available_at") or row.get("available_at") or ""
             code = (row.get("security_code") or "").zfill(6)
             if len(avail) == 10 and avail <= as_of and code:
+                if avail < MODEL_BAND_MIN_AVAILABLE:
+                    if code not in stale or avail >= stale[code][0]:
+                        stale[code] = (avail, str(row.get("security_name") or code))
+                    continue
                 if code not in latest or avail >= latest[code][0]:
                     latest[code] = (avail, row)
+    dropped = {c: v for c, v in stale.items() if c not in latest}
+    if dropped:
+        print(f"  [陈旧带排除·OI-068] 模型带早于 {MODEL_BAND_MIN_AVAILABLE} 共 {len(dropped)} 只，"
+              f"无 P/V 不进判定（与档案层「保留手工带」同一阈值）："
+              + "、".join(f"{n}({d})" for _, (d, n) in sorted(dropped.items())))
     return {code: row for code, (_, row) in latest.items()}
 
 

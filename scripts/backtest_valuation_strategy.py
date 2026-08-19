@@ -837,7 +837,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         stop_ma: int = 20, trend_stop: bool = True, entry_filter: str = "none",
         lump_sum: float = 0.0, swap: bool = False, swap_margin: float = 0.10,
         max_positions: int = MAX_POSITIONS, lows=None, day_index=None,
-        max_corr: float = 0.0, corr=None, tier_mode: str = "none",
+        max_corr: float = 0.0, corr=None, corr_conflict: str = "skip",
+        corr_strength_days: int = 126, tier_mode: str = "none",
         scan_depth: int = 40, min_upside: dict[str, float] | None = None,
         position_cap: float = 0.0, only_tiers: set[str] | None = None,
         universe: list[tuple[str, set[str]]] | None = None,
@@ -1561,22 +1562,81 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
         # ---- 相关性过滤：**贪心**地沿排序往下走，与已选/已持仓相关性超阈值的跳过，
         # 顺位补下一名（用户 2026-08-08：「第一和第五相关性很强则跳过第五，考虑第 21 名」）。
+        # OI-037（用户 2026-08-19 指令）：`--corr-conflict` 提供另两种处理——与**在手持仓**
+        # 强相关时不一律跳过，而是与最相关的那只二选一：`swap_space` 比便宜（候选 `P/V`
+        # 低出 `swap_margin` 才换）、`swap_strength` 比走势（近 N 日送转折算收益率更高者留），
+        # 换出方减一档、余仓不足一档清仓——与 §9.3.2 换仓同一卖出机制。
+        # 与**已选候选**（未持仓）冲突仍一律跳过：两只都没买时没有「换」的对象。
         if max_corr and corr is not None and not cluster_swap:
+            def trailing_return(code: str, upto: str, n: int) -> float | None:
+                rets = corr.returns.get(code)
+                days = corr._days.get(code)
+                if not rets or not days:
+                    return None
+                cut = bisect.bisect_right(days, upto)
+                if cut < n:
+                    return None
+                acc = 1.0
+                for d in days[cut - n: cut]:
+                    acc *= 1.0 + rets[d]
+                return acc - 1.0
+
             chosen, anchors = [], list(portfolio.lots)
+            corr_reduced: set[str] = set()
             for r in eligible[:scan_depth]:
                 if len(chosen) >= max_positions:
                     break
                 if r[0] in portfolio.lots:
                     chosen.append(r)          # 已持仓的继续加仓，不受相关性约束
                     continue
-                c = [corr.get(r[0], other, day) for other in anchors + [x[0] for x in chosen]]
-                if any(v is not None and v > max_corr for v in c):
-                    if r[0] in swap_targets:
-                        stats["换仓目标被相关性挡下"] += 1
-                        if swap_bypass_corr:
-                            chosen.append(r)
-                            continue
+                held_conf = [(v, other) for other in anchors if other != r[0]
+                             and (v := corr.get(r[0], other, day)) is not None and v > max_corr]
+                cand_conf = any((v := corr.get(r[0], x[0], day)) is not None and v > max_corr
+                                for x in chosen if x[0] not in portfolio.lots)
+                if not held_conf and not cand_conf:
+                    chosen.append(r)
                     continue
+                if r[0] in swap_targets:
+                    stats["换仓目标被相关性挡下"] += 1
+                    if swap_bypass_corr:
+                        chosen.append(r)
+                        continue
+                if corr_conflict == "skip" or cand_conf or not held_conf:
+                    continue
+                _, h = max(held_conf)                     # 与候选最相关的在手持仓
+                if h in corr_reduced or h in quota_hold_today or h not in portfolio.lots:
+                    continue
+                lot_h = portfolio.lots[h]
+                price_h = fill_price(h, marks.get(h))
+                if not price_h:
+                    continue
+                if corr_conflict == "swap_space":
+                    ratio_h = today[h][2] if h in today else None
+                    decided = ratio_h is not None and (ratio_h - r[3]) >= swap_margin
+                else:                                     # swap_strength
+                    rc = trailing_return(r[0], day, corr_strength_days)
+                    rh = trailing_return(h, day, corr_strength_days)
+                    decided = rc is not None and rh is not None and rc > rh
+                if not decided:
+                    continue
+                shares = sell_shares(budget / price_h, lot_h.shares, price_h, lot_size)
+                if not shares:
+                    continue
+                corr_reduced.add(h)
+                if shares < lot_h.shares * 0.999:
+                    stats[f"相关性冲突·{corr_conflict}·减一档"] += 1
+                    lot_h.shares -= shares
+                    portfolio.cash += shares * price_h - trade_fee(shares * price_h, day, "sell")
+                    lot_h.proceeds += shares * price_h
+                    lot_h.sells += 1
+                    turnover += shares * price_h
+                else:
+                    stats[f"相关性冲突·{corr_conflict}·余仓不足清仓"] += 1
+                    turnover += lot_h.shares * price_h
+                    close_lot(portfolio, h, day, price_h, ledger=ledger,
+                              reason=f"相关性冲突·{corr_conflict}：让位给{r[0]}")
+                    anchors.remove(h)
+                sell_count += 1
                 chosen.append(r)
             eligible = chosen
 
@@ -2012,6 +2072,13 @@ def main() -> int:
     parser.add_argument("--max-corr", type=float, default=0.0,
                         help="相关性上限，如 0.7；与已选/已持仓相关性超过它的候选跳过、顺位补下一名")
     parser.add_argument("--corr-window", type=int, default=252, help="相关性回看交易日数")
+    parser.add_argument("--corr-conflict", choices=("skip", "swap_space", "swap_strength"),
+                        default="skip",
+                        help="OI-037：与在手持仓强相关时的处理——skip=跳过（生产口径）；"
+                             "swap_space=候选 P/V 低出 swap-margin 即换出相关持仓一档；"
+                             "swap_strength=近 N 日走势更强者留（N 由 --corr-strength-days 给）")
+    parser.add_argument("--corr-strength-days", type=int, default=126,
+                        help="swap_strength 的走势回看交易日数（63≈3个月/126≈6个月/252≈1年）")
     parser.add_argument("--scan-depth", type=int, default=40, help="相关性过滤时最多往下扫多少名")
     parser.add_argument("--tier-mode", choices=("none", "bonus", "quota"), default="none",
                         help="bonus=L1空间+20pp/L2+10pp 后再排序；quota=各档位分别排序并给买入额度")
@@ -2271,6 +2338,9 @@ def main() -> int:
                      + ("_swap" if args.swap else "")
                      + ("" if args.trend_stop else "_nostop")
                      + (f"_corr{args.max_corr:g}" if args.max_corr else "")
+                     + (f"_ccf-{args.corr_conflict}"
+                        + (str(args.corr_strength_days) if args.corr_conflict == "swap_strength" else "")
+                        if args.corr_conflict != "skip" else "")
                      + ("_tranche" if args.trend_tranche else "")
                      + ("_sf" if args.sell_full else "")
                      + (f"_stp{args.stop_tranche:g}" if args.stop_partial else "")  # `_sp` 已被 --swap-partial 占用
@@ -2324,7 +2394,8 @@ def main() -> int:
                          lump_sum=args.lump_sum / 100.0, swap=args.swap,
                          swap_margin=args.swap_margin, max_positions=args.max_positions,
                          lows=lows, day_index=(day_lists, day_pos),
-                         max_corr=args.max_corr, corr=corr, tier_mode=args.tier_mode,
+                         max_corr=args.max_corr, corr=corr, corr_conflict=args.corr_conflict,
+                         corr_strength_days=args.corr_strength_days, tier_mode=args.tier_mode,
                          scan_depth=args.scan_depth,
                          min_upside=(dict(zip(("L1", "L2", "L3"), args.min_upside))
                                      if args.min_upside else None),

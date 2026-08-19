@@ -97,6 +97,10 @@ def main() -> int:
         names = {r["security_code"]: r["security_name"] for r in rows}
 
     panel = load_panel(args.financials_dir, codes)
+    # 订正层（OI-066）先于自洽核对生效：已登记的源侧错值不再逐轮报「严重」，
+    # 登记失效（源侧已订正）时反向告警。
+    from financials_corrections import apply_corrections, report as _corr_report
+    _corr_report(*apply_corrections(panel))
     actions = load_share_factors(args.corporate_actions)
     findings: list[dict] = []
 

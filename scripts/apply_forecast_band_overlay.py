@@ -67,7 +67,69 @@ BAND_LOW_COEF, BAND_HIGH_COEF = 0.90, 1.10
 # 叠加后新增的列。`forecast_overlay` 非空即表示本行已被叠加，用于幂等与下游识别。
 OVERLAY_COLS = ["forecast_overlay", "forecast_notice_date", "forecast_report_date",
                 "forecast_profit_yi", "forecast_source", "pre_overlay_iv",
-                "pre_overlay_report_date", "bps_scale", "overlay_note"]
+                "pre_overlay_report_date", "pre_overlay_notice_date", "bps_scale", "overlay_note",
+                # v4.20 除权归一化（OI-052/OI-039）：本文件的带值恒为**现价口径**，
+                # 三列记录归一化的量；`exright_note` 非空即已归一化（幂等标记）。
+                "exright_factor", "exright_cash", "exright_note"]
+
+
+def exright_normalize(band: dict, code_actions: list[dict], as_of: str) -> tuple[float, float] | None:
+    """把带值按公告日之后的除权事件折算到现价口径（v4.20，用户裁定「带跟随真实股价调整」）。
+
+    公式与交易所除权参考价一致：`v → (v − 现金红利) ÷ (1 + 送转比)`，事件按除权日顺序复合。
+    三类行三种窗口（避免与叠加的 `dps` 双重扣减）：
+      普通行           现金与送转都从带的**公告日**起算；
+      预告/快报叠加行  送转从**叠加前带的公告日**起算（叠加不改股本口径），
+                       现金从**预告报告期末**起算——(基线期, 预告期] 的分红已进叠加的 ΔBPS；
+      人工覆盖行       两者都从覆盖 `reviewed_at` 起算（覆盖值按当时现价口径给出）。
+    银行（股利折现）不折：其 V 逐日由近 12 个月分红重算，天然现价口径。
+    只调 `intrinsic_value`/`band_low`/`band_high`；`bps` 等基本面列保持报告口径。
+    """
+    path = (band.get("roic_path") or "").strip()
+    overlay = (band.get("forecast_overlay") or "").strip()
+    if path == "bank_divspread" or overlay == "bank_no_change" or band.get("exright_note"):
+        return None
+    if overlay == "manual_override":
+        split_since = cash_since = (band.get("available_at") or "")[:10]
+    elif overlay in ("forecast", "express"):
+        split_since = ((band.get("pre_overlay_notice_date") or "")[:10]
+                       or (band.get("forecast_notice_date") or "")[:10])
+        cash_since = (band.get("forecast_report_date") or "")[:10]
+    else:
+        split_since = cash_since = (band.get("notice_date") or "")[:10]
+    if not split_since or not cash_since:
+        return None
+    iv, lo, hi = (num(band.get("intrinsic_value")), num(band.get("band_low")),
+                  num(band.get("band_high")))
+    if iv is None or lo is None or hi is None:
+        return None
+    factor, cash_cum, hits = 1.0, 0.0, []
+    floor_since = min(split_since, cash_since)
+    for act in sorted(code_actions, key=lambda a: a.get("ex_dividend_date") or ""):
+        ex = (act.get("ex_dividend_date") or "").strip()[:10]
+        if not ex or ex <= floor_since or ex > as_of:
+            continue
+        cash = (num(act.get("cash_per_share")) or 0.0) if ex > cash_since else 0.0
+        ratio = (num(act.get("share_ratio")) or 0.0) if ex > split_since else 0.0
+        if cash == 0.0 and ratio == 0.0:
+            continue
+        iv, lo, hi = ((iv - cash) / (1 + ratio), (lo - cash) / (1 + ratio),
+                      (hi - cash) / (1 + ratio))
+        factor *= 1 + ratio
+        cash_cum = (cash_cum + cash) / (1 + ratio)
+        hits.append(f"{ex} 现金{cash:g}/送转{ratio:g}")
+    if not hits:
+        return None
+    if iv <= 0:
+        band["exright_note"] = f"⚠ 除权调整后 IV {iv:.4f} ≤ 0，未采用，须人工核对：{'；'.join(hits)}"
+        return None
+    old_iv = num(band.get("intrinsic_value")) or 0.0
+    band["intrinsic_value"], band["band_low"], band["band_high"] = (
+        f"{iv:.4f}", f"{lo:.4f}", f"{hi:.4f}")
+    band["exright_factor"] = f"{factor:.6f}"
+    band["exright_cash"] = f"{cash_cum:.4f}"
+    band["exright_note"] = f"除权归一化至 {as_of} 现价口径：{'；'.join(hits)}"
+    return old_iv, iv
 
 
 def num(value) -> float | None:
@@ -417,6 +479,8 @@ def main() -> int:
         band.update({
             "pre_overlay_iv": f"{old_iv:.4f}" if old_iv is not None else "",
             "pre_overlay_report_date": band_period,
+            # 叠加会把 notice_date 改写为预告公告日；除权归一化的送转窗口须锚在**叠加前**披露日
+            "pre_overlay_notice_date": (band.get("notice_date") or "")[:10],
             "forecast_overlay": ev["kind"],
             "forecast_notice_date": ev["notice_date"],
             "forecast_report_date": ev["report_date"],
@@ -446,13 +510,28 @@ def main() -> int:
         band["bps"] = f"{new_bps:.4f}"
         applied.append((name, old_iv, iv_new, ev["label"], ev["notice_date"], delta_profit / 1e8))
 
+    # ---- v4.20 除权归一化（OI-052/OI-039）：本文件写出的带值恒为现价口径 ----
+    exright_hits: list[tuple[str, float, float]] = []
+    for band in rows:
+        res = exright_normalize(band, actions.get((band.get("security_code") or "").strip(), []),
+                                args.as_of)
+        if res is not None:
+            exright_hits.append((band.get("security_name") or "", res[0], res[1]))
+
     out_path = args.out or args.bands
     with out_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=out_header)
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"预告／快报叠加（§6.3 第 5 条）as-of {args.as_of} → {out_path.name}")
+    print(f"预告／快报叠加（§6.4）as-of {args.as_of} → {out_path.name}")
+    if exright_hits:
+        exright_hits.sort(key=lambda h: h[2] / h[1] if h[1] else 1)
+        big = [h for h in exright_hits if h[1] and abs(h[2] / h[1] - 1) >= 0.05]
+        print(f"  除权归一化（v4.20，带跟随交易所除权调整）：{len(exright_hits)} 只折算到现价口径，"
+              f"其中变动 ≥5% 的 {len(big)} 只：" + "、".join(
+                  f"{n} {o:.2f}→{v:.2f}({v / o - 1:+.0%})" for n, o, v in big[:15])
+              + ("…" if len(big) > 15 else ""))
     print(f"  已叠加 {len(applied)} 只｜人工覆盖 {len(override_applied)} 只｜"
           f"银行只推证据日 {len(bank_cleared)} 只｜跳过 {len(skipped)} 只｜无证据或已叠加 {unchanged} 只")
     if applied:

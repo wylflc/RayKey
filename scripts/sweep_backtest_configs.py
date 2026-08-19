@@ -44,9 +44,8 @@ OUT_DIR = ROOT / "data/processed/backtest"
 #   `--roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak`）。
 # **宇宙 = v6b 面板**（`panel_moat_bank_v6b.csv`，287 代码/现役 222）：§5.4 全口径逐年判定 + 全银行子册，
 #   由 `verdicts_pit_moat_v6.csv` + `build_moat_panel.py` 确定性装配（§12.71，用户 2026-08-16 采纳）。
-# **三条线 0.9493/2.5548/0.1461 是现行生产值**。它们最初是 v4.04 的 §12.30 对齐解；
-# §12.80 修复区间消费后，实际在册面变为 17.96%/30.47%，故不得再把旧 19.09%/27.90% 当现状。
-# 本轮只审计、不擅自改生产线；换口径的对照臂均对齐到这份纠偏后的实际在册面。
+# **三条线 0.9528/2.5690/0.1466 是现行生产值**（v4.20 分红折算纪元的对齐解，
+# 在册合格面 17.960%/30.465%，508,453 个 (代码,日) 观测；前值 0.9493/2.5548/0.1461 属旧口径）。
 # **不给 `--position-cap`**：v4.04 起单票无上限（用户 2026-08-17 裁定退役仓位控制，§12.75）——缺省 0 即无上限。
 # **规则与估值共适配**——同一规则在不同估值与宇宙上可反转，换估值口径须全规则重扫，
 # 且**三条线一起重解到同一合格面**（§12.30，align_buy_line.py）。现行规则的逐项依据与读数见
@@ -64,7 +63,7 @@ BASE = (
     # **不给 `--margin-ratchet`**：该机制已于 2026-08-17 退役（§12.75），回测侧只作研究开关。
     "--capital 3000000 --credit-ratio 0.6 --credit-cap 1800000 "
     "--maintenance-ratio 1.30 --margin-rate 0.035 "
-    "--width 0.0507 --sell-line 2.5548 --swap-margin 0.1461 "
+    "--width 0.0472 --sell-line 2.5690 --swap-margin 0.1466 "
     "--stop-ma 60 --addon-trend ma-only --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv"

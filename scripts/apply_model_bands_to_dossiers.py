@@ -139,16 +139,17 @@ def main() -> int:
                                   f"｜失效条件：{ovr.get('expires_when')}")
             overridden.append(row.get("security_name") or code)
             continue
-        # **送转必须在这里再除一次**：`intrinsic_value` 是报告期口径的每股价值，而现价是不复权的。
-        # 该报告公告之后若发生送转，股数变了而 `IV` 没变，带就与价格不同基——带偏高一个送转比，
-        # `P/V` 相应偏低。回测面板的 `split_factor` 列做的正是这件事，生产侧此前漏做：
-        # 2026-08-10 复核发现 18 只不一致，全部是 1.30/1.40/1.45 三个送转比
-        # （兴齐眼药 2026-05-22 十送四点五，带 25.80 应为 17.80，`P/V` 1.66 实为 **2.41**）。
-        # `since` 取该期**公告日**而非报告期末，理由同 `split_factor` 的文档串。
-        factor = split_factor(actions.get(code, []), band["notice_date"], args.as_of)
+        # v4.20 起带文件在 `apply_forecast_band_overlay.py` 末段已做**除权归一化**（现金＋送转，
+        # `exright_note` 非空即已折算到现价口径，OI-052/OI-039）——此处不得再除一次。
+        # 仅当带文件未归一化（绕过 §6.7 链单跑本脚本）时退回旧口径：只折送转、锚在公告日
+        # （判例：兴齐眼药 2026-05-22 十送四点五，带 25.80 应为 17.80，`P/V` 1.66 实为 2.41）。
+        if (band.get("exright_note") or "").strip():
+            factor = 1.0
+        else:
+            factor = split_factor(actions.get(code, []), band["notice_date"], args.as_of)
         iv = float(band["intrinsic_value"]) / factor
         if factor != 1.0:
-            split_adj.append(f"{row['security_name']}÷{factor:g}")
+            split_adj.append(f"{row['security_name']}÷{factor:g}（带文件未归一化，退旧口径）")
         old_low, old_high = row["band_low"], row["band_high"]
         old_mid = (float(old_low) + float(old_high)) / 2 if old_low and old_high else None
 

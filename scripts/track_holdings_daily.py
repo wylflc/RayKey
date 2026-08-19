@@ -40,6 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from a_share_quotes import fetch_spot_quotes
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
+from screen_daily_volume_price_signals import SEC93_SELL_LINE, get_json, infer_secid
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,10 +49,10 @@ DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_holdings_tracking.csv"
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 
-# **减持线的唯一落点在 §9.3.1，这里只放一份副本**（v2.98 由 1.10 改为 2.50，用户 2026-08-14 指令）。
-# 此前本文件把 1.10 硬编码在五处，v2.89 改参数表时一处都没跟上——正是 v2.97 清掉的那类
-# 「同一个量抄在多处后各自漂移」。改这里之前先改 §9.3.1。
-SELL_LINE = 2.50
+# **减持线的唯一落点在 §9.3.1**；此处直接引用扫描器常量、不再抄数——v2.98 抄下的 2.50 在
+# v4.04 参数表改 2.5548 时没跟上（本文件漂移到 2026-08-19 才被发现，v4.20 修）。
+# 注意：§9.3.1 的减持是 `P/V ≥ 线 **且收盘 < MA20**`，本脚本不算均线，只报前半个条件。
+SELL_LINE = SEC93_SELL_LINE
 
 FIELDNAMES = [
     "as_of",
@@ -117,6 +118,90 @@ def effective_tier(close: float, low: float | None, high: float | None) -> tuple
     return ("低估" if (low + high) / 2 / close - 1 >= 0.40 else "较低估"), upside
 
 
+def beijing_now() -> datetime:
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo("Asia/Shanghai"))
+
+
+def fetch_raw_close(code: str, as_of: date, timeout: float) -> float | None:
+    """`as_of` 当日**不复权**收盘。当日无K线（未收盘/停牌/接口失败）返回 None。
+
+    主源腾讯 newfqkline 的 `day`（不复权）数组——东财 kline 端点对本机批量访问会整段断连
+    （2026-08-19 实测连扫描器同参查询也 RemoteDisconnected），故顺序与扫描器相反：腾讯为主。
+    """
+    import urllib.parse
+    from datetime import timedelta
+    from a_share_quotes import quote_symbol
+    symbol = quote_symbol(code, "")
+    start = (as_of - timedelta(days=14)).isoformat()
+    url = (f"https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
+           f"?param={symbol},day,{start},{as_of.isoformat()},15,")
+    try:
+        import urllib.request
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0",
+                                                   "Referer": "https://gu.qq.com/"})
+        import json as _json
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            payload = _json.loads(resp.read().decode("utf-8", "ignore"))
+        day_rows = ((payload.get("data") or {}).get(symbol) or {}).get("day") or []
+        for parts in day_rows:
+            if str(parts[0]) == as_of.isoformat():
+                return float(parts[2])
+    except OSError:
+        pass
+    # 备源：东财不复权日线
+    query = urllib.parse.urlencode({
+        "secid": infer_secid(code, ""),
+        "fields1": "f1,f2,f3,f4,f5,f6",
+        "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
+        "klt": "101", "fqt": "0",
+        "beg": start.replace("-", ""),
+        "end": as_of.isoformat().replace("-", ""), "lmt": "15",
+    })
+    try:
+        payload = get_json(f"https://push2his.eastmoney.com/api/qt/stock/kline/get?{query}", timeout)
+    except OSError:
+        return None
+    for line in (payload.get("data") or {}).get("klines") or []:
+        parts = line.split(",")
+        if parts[0] == as_of.isoformat():
+            return float(parts[2])
+    return None
+
+
+def resolve_prices(codes: list[str], as_of: date, timeout: float) -> tuple[dict[str, float], str]:
+    """OI-067（v4.20 修，用户裁定）：价格按 `--as-of` 取**当日不复权收盘**，不再取运行瞬间现价。
+
+    三种情形：①盘后/补跑历史日期——日线有 `as_of` 那根K线，取真实收盘（补跑从此可信）；
+    ②`as_of` 为当日且尚在盘中（北京 15:05 前）——日线未收，退实时现价并**显式标注「盘中价」**，
+    用户盘后重跑同一日期即自动覆盖为收盘；③当日盘后日线仍缺（接口延迟/停牌）——现价兜底并标注。
+    历史日期无K线一律「数据缺失」，**绝不拿今天的现价冒充历史收盘**（判例：2026-08-19 盘中
+    补跑 08-18，汾酒显示 118.97 实为 08-19 盘中价，真实 08-18 收盘 120.52）。
+    """
+    bj = beijing_now()
+    is_today = as_of == bj.date()
+    intraday = is_today and (bj.hour, bj.minute) < (15, 5)
+    out: dict[str, float] = {}
+    missing: list[str] = []
+    for code in codes:
+        close = None if intraday else fetch_raw_close(code, as_of, timeout)
+        if close is not None:
+            out[code] = close
+        else:
+            missing.append(code)
+    label = "收盘"
+    if missing and is_today:
+        spots = fetch_spot_quotes([(c, "") for c in missing], timeout=timeout)
+        for c in missing:
+            price = to_float((spots.get(c) or {}).get("price"))
+            if price is not None:
+                out[c] = price
+        label = "盘中价（北京 15:05 前运行，盘后重跑即覆盖为收盘）" if intraday else "现价兜底（当日K线未入库）"
+    elif missing:
+        label = "收盘（历史日期，无K线的按数据缺失处理）"
+    return out, label
+
+
 def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeout: float) -> list[dict[str, object]]:
     with holdings_file.open(newline="", encoding="utf-8") as handle:
         holdings = list(csv.DictReader(handle))
@@ -125,14 +210,15 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         holdings = [h for h in holdings if h["security_code"].zfill(6) in wanted]
 
     pool = load_pool(pool_file)
-    quotes = fetch_spot_quotes([(h["security_code"], "") for h in holdings], timeout=timeout)
+    prices, price_label = resolve_prices([h["security_code"].zfill(6) for h in holdings], as_of, timeout)
+    if price_label != "收盘":
+        print(f"  ⚠ 价格口径：{price_label}")
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
     rows: list[dict[str, object]] = []
     for h in holdings:
         code = h["security_code"].zfill(6)
-        quote = quotes.get(code) or {}
-        close = to_float(quote.get("price"))
+        close = prices.get(code)
         pool_row = pool.get(code)
         low = to_float(pool_row.get("fair_price_low")) if pool_row else None
         high = to_float(pool_row.get("fair_price_high")) if pool_row else None
@@ -156,7 +242,8 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         elif low is None or high is None:
             notes.append("池内无合理价区间（无法估值）：无 `P/V`，当日不进机械判定")
         elif pv is not None and pv >= SELL_LINE:
-            notes.append(f"**`P/V` {pv:.2f} ≥ {SELL_LINE:.2f}**：按 §9.3.2 第四步每日减持一档")
+            notes.append(f"**`P/V` {pv:.2f} ≥ {SELL_LINE:.4f}**：减持另须 `收盘 < MA20`"
+                         f"（§9.3.1 完整条件，均线见扫描器输出），两者同时成立才减一档")
 
         # §9.3.5 建仓日止损（v2.83）。**先判无行情**：没有收盘价就既不能说跌破、也不能
         # 说没跌破，落 `无行情` 而不是默认放行——与 `action` 的 `数据缺失` 同一条理由。
@@ -343,9 +430,9 @@ def main() -> None:
               f"——§9.3.5 对其不生效，须待清空后重新建仓时按新规则设定")
     if trim:
         names = "、".join(f"{r['security_name']}({r['pv']})" for r in trim)
-        print(f"  **P/V ≥ {SELL_LINE:.2f} 共 {len(trim)} 只**：{names}——按 §9.3.2 第四步每日减持一档")
+        print(f"  **P/V ≥ {SELL_LINE:.4f} 共 {len(trim)} 只**：{names}——另须 `收盘 < MA20`（§9.3.1）才减一档")
     else:
-        print(f"  P/V ≥ {SELL_LINE:.2f}：无")
+        print(f"  P/V ≥ {SELL_LINE:.4f}：无")
     if no_pv:
         print(f"  **P/V 未算出 {len(no_pv)} 只**：{'、'.join(str(r['security_name']) for r in no_pv)}（无行情或无带，当日不进 §9.3 判定）")
     if no_band:

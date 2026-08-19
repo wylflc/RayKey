@@ -193,7 +193,10 @@ def _num(value: str | None) -> float | None:
 
 
 def load_financials(codes: set[str] | None) -> dict[str, dict[str, dict]]:
-    """{代码: {报告期: 行}}。`codes=None` 取全市场。"""
+    """{代码: {报告期: 行}}。`codes=None` 取全市场。
+
+    读入后应用 `data/reference/financials_corrections.csv` 的订正层（OI-066）：
+    源侧确认错误的字段在内存替换，取数产物本身不改（改了会被强制重取覆盖）。"""
     out: dict[str, dict[str, dict]] = defaultdict(dict)
     for path in sorted(FIN_DIR.glob("*.csv")):
         with path.open(newline="", encoding="utf-8") as handle:
@@ -204,6 +207,8 @@ def load_financials(codes: set[str] | None) -> dict[str, dict[str, dict]]:
                 if not (row.get("notice_date") or "").strip():
                     continue  # §12.4：无公告日的行不可用于历史建带
                 out[code][row["report_date"]] = row
+    from financials_corrections import apply_corrections, report as _corr_report
+    _corr_report(*apply_corrections(out))
     return out
 
 
@@ -595,6 +600,34 @@ def trailing_cagr(series: dict[str, dict], period: str, years: int = 3) -> float
 
 
 # ------------------------------------------------------------------ 送转折算
+def exright_adjust(actions: list[dict], since: str, until: str,
+                   values: tuple[float, ...]) -> tuple[list[float], float, float]:
+    """`(since, until]` 内按交易所除权参考价公式逐事件调整带值：`v → (v − 现金红利) ÷ (1 + 送转比)`。
+
+    v4.20（OI-052/OI-039，用户 2026-08-19 裁定「带跟随真实股价的除权调整」）：此前只做送转、
+    不做现金分红——每个除息日股价下跳 `D` 而带不动，`P/V` 凭空下跳一次股息率，对高股息股
+    产生系统性假买入倾向。现金与送转按事件顺序复合，与交易所除权参考价同一公式。
+
+    锚取**公告日**（与 `split_factor` 同理，见其文档串）：报告披露时点通常已把已宣告分红
+    计入应付股利（A 股股东大会多在 5-6 月、早于除权），故公告日之前的除息不再重复扣。
+    已知残差：股东大会晚于报告期末且除息早于下一份报告公告的少数情形会漏扣一次 `D`，
+    方向为带偏高、量级一个股息率、窗口至下一份报告披露即闭合。
+
+    返回 (逐值调整后的列表, 累计送转因子, 累计现金——现金按各自后续送转折算到现价口径)。
+    """
+    factor, cash_cum = 1.0, 0.0
+    vals = list(values)
+    for action in actions:                      # load_actions 已按除权日排序
+        ex_date = action.get("ex_dividend_date") or ""
+        if since < ex_date <= until:
+            cash = _num(action.get("cash_per_share")) or 0.0
+            ratio = _num(action.get("share_ratio")) or 0.0
+            vals = [(v - cash) / (1.0 + ratio) for v in vals]
+            factor *= 1.0 + ratio
+            cash_cum = (cash_cum + cash) / (1.0 + ratio)
+    return vals, factor, cash_cum
+
+
 def split_factor(actions: list[dict], since: str, until: str) -> float:
     """`(since, until]` 内累计送转比：带需除以它才与不复权价同基（坑 4）。
 
@@ -1207,10 +1240,13 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
         if index < 0:
             continue
         band = usable[index]
-        # 坑 4：带按**公告时**的股本口径，价格是不复权的 → 按公告后的送转折算带
-        factor = split_factor(actions, band.notice_date, date)
-        low, high = band.band_low / factor, band.band_high / factor
-        value = band.value / factor
+        # 坑 4：带按**公告时**的股本口径，价格是不复权的 → 按公告后的除权事件折算带。
+        # v4.20 起现金分红与送转同折（OI-052/OI-039），公式与交易所除权参考价一致。
+        (low, value, high), factor, cash_cum = exright_adjust(
+            actions, band.notice_date, date, (band.band_low, band.value, band.band_high))
+        if value <= 0:
+            EXRIGHT_NEGATIVE.append(f"{code}@{date}")
+            continue
         out.append({
             "security_code": code,
             "date": date,
@@ -1218,6 +1254,7 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
             "band_report_date": band.report_date,
             "band_available_at": band.available_at,
             "split_factor": f"{factor:.6f}",
+            "cash_adjustment": f"{cash_cum:.4f}",
             "intrinsic_value": f"{value:.4f}",
             "band_low": f"{low:.4f}",
             "band_high": f"{high:.4f}",
@@ -1226,6 +1263,10 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
             "valuation_label": valuation_label(close, value),
         })
     return out
+
+
+# 现金调整把带穿到非正值的 (代码, 日) —— 不该发生，发生即须人工看（§13 第 3 条：不许静默）。
+EXRIGHT_NEGATIVE: list[str] = []
 
 
 # ------------------------------------------------------------------ 输出
@@ -1599,6 +1640,9 @@ def main() -> int:
     if daily_handle is not None:
         daily_handle.close()
         print(f"逐日状态已写入 {args.out_daily}（{daily_total:,} 行，流式）")
+        if EXRIGHT_NEGATIVE:
+            print(f"  ⚠ 现金除权调整把带穿到非正值 {len(EXRIGHT_NEGATIVE)} 个 (代码,日)，已跳过须人工看："
+                  f"{'、'.join(EXRIGHT_NEGATIVE[:8])}{'…' if len(EXRIGHT_NEGATIVE) > 8 else ''}")
 
     if args.out_bands:
         args.out_bands.parent.mkdir(parents=True, exist_ok=True)
