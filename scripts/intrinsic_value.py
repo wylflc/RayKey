@@ -36,8 +36,8 @@
 **修正三：内生融资增长约束（`max_retention`，缺省 1.0；2026-08-08 批量实测后加）**
 原式让 `ROE_t` 与 `g_t` 各自 fade，两条路径在尾部会打架：ROE 快速下行时，维持既定 g 所需
 的留存率会突破 100%。实测后果是显式期现值变**负**：景嘉微 2016 年报（ROE0 46.3%→终值
-10%、g0 25%）算出 `min_payout = −196%`、**终值占比 152%**。10 只样本 345 条带里
-**26% 出现负派息率**，不是边缘情形。
+10%、g0 25%）算出 `min_payout = −196%`、**终值占比 151%**（修正四后微变，原测 152%）。
+10 只样本 345 条带里 **26% 出现负派息率**，不是边缘情形。
 
 故缺省 `max_retention=1.0`：留存率触顶时把增速压到内生可支撑的水平
 （`g = (ROE_{t+1}/ROE_t)(1+ROE_t·b) − 1`）。`max_retention=None` 可关掉。
@@ -52,6 +52,24 @@
 **但那个负现值案例仍是真缺陷，与命名无关**：每股口径下把增发款当股东净流出扣掉、却**不同时
 计入增发带来的股份稀释**，是会计上的重复计量，而非一个可辩护的假设。修正后负派息率带
 **0/377**。
+
+**修正四：留存率的时间错位（2026-08-19 外部评审 P0-1，用户裁定当期修正）**
+--------------------------------------------------------------------------
+清洁盈余下第 t 年的可分配现金是 `E_t·(1 − b_t)`，其中 `b_t` 是**本年**留存率——
+出自本年利润、资金**下一年**的增长（`b_t = f(g_{t+1}, ROE_t, ROE_{t+1})`）。
+旧实现先算「达成本年 g_t 所需的**上年**留存率 b_{t-1}」（这一步是对的），
+却把 `1 − b_{t-1}` 当成了**本年**的派息率（`E_t·(1 − b_{t-1})`），整条现金流错位一年：
+
+* 显式期用的是 `b_0..b_{N-1}`，正确应为 `b_1..b_N`——`b_0` 出自估值日前已实现的 E_0，
+  本不进现金流；而末年 `b_N` 恰是终值稳态留存 `g_T/ROE_T`，旧实现让末年吃 fade
+  过渡期的高留存（常触顶到 1、派息为 0），与终值公式的稳态派息衔接**不连续**；
+* 按旧派息序列的留存额滚存净资产，**复现不出假设的利润路径**（内部不自洽，
+  见 `--self-test` 的清洁盈余重建检查——本修正的回归护栏）。
+
+修正后 `b_0` 仍作 g_1 的内生可行性约束（修正三的留存率上下限照常作用于它），
+只是不再充当任何一年的派息口径。稳态特例（ROE、g 恒定）两种时序逐位相同，
+闭式解 doctest 不变；fade 路径下典型方向是**旧实现偏低**（把早年高留存错配到
+更晚、基数更大的利润上）。
 
 **边界（照原式，写明不做什么）**
 原式第 11 节末尾指出：非金融企业更严谨应换 ROIC/NOPAT/FCFF/WACC，金融股才用 ROE+CoE。
@@ -179,33 +197,52 @@ def intrinsic_value(
     realized_g: list[float] = []
     clamped_years = 0
     explicit_pv = 0.0
-    eps_prev, roe_prev = eps0, roe0
-    for index, (roe_t, g_t) in enumerate(zip(roe_path, g_path), start=1):
-        # 本年利润：由「上一年的留存」决定，故先算达成 g_t 所需的上年留存率
-        b_prev = _required_retention(g_t, roe_prev, roe_t, consistent)
-        if max_retention is not None and b_prev > max_retention:
-            # 留存率超过上限 = 该增速须靠外部融资才能实现。**增长受 ROE 约束、不是自由参数**，
-            # 故把 g 压到内生可支撑的水平，而不是照发一个需要增发才成立的现金流。
-            b_prev = max_retention
-            g_t = _supportable_growth(b_prev, roe_prev, roe_t, consistent)
-            clamped_years += 1
-        elif min_retention is not None and b_prev < min_retention:
-            # 反向越界：`ROE_T > ROE_0` 时（低谷公司被假设回升到行业均值）留存率会变成**负数**，
-            # 即模型一边让利润增长、一边派息超过利润把净资产派小。这是从假设里凭空生出价值。
-            # 实测中国船舶 2019 各期 ROE0 仅 0.24%、终值被设为 r+3%≈10%，隐含 PE 高达 **391**。
-            # 与 max_retention 对称处理：把派息压到 100%，增速改由 ROE 回升本身支撑
-            # （b=0 时 `g = ROE_{t+1}/ROE_t − 1`，即「利润率修复驱动增长、不靠再投资」）。
-            b_prev = min_retention
-            g_t = _supportable_growth(b_prev, roe_prev, roe_t, consistent)
-            clamped_years += 1
-        payout = 1 - b_prev
+    total = len(roe_path)
+
+    def _clamped(b: float, roe_now: float, roe_next: float,
+                 g_target: float) -> tuple[float, float, bool]:
+        """修正三的留存率上下限。返回 (留存率, 实际可达成的下一年增速, 是否触界)。
+
+        上限：留存率超过 1 = 该增速须靠外部融资才能实现。**增长受 ROE 约束、不是自由参数**，
+        故把 g 压到内生可支撑的水平，而不是照发一个需要增发才成立的现金流。
+        下限：`ROE_T > ROE_0` 时（低谷公司被假设回升到行业均值）留存率会变成**负数**，
+        即模型一边让利润增长、一边派息超过利润把净资产派小——从假设里凭空生出价值。
+        实测中国船舶 2019 各期 ROE0 仅 0.24%、终值被设为 r+3%≈10%，隐含 PE 高达 **391**。
+        与上限对称：把派息压到 100%，增速改由 ROE 回升本身支撑（b=0 时
+        `g = ROE_{t+1}/ROE_t − 1`，即「利润率修复驱动增长、不靠再投资」）。
+        """
+        if max_retention is not None and b > max_retention:
+            return (max_retention,
+                    _supportable_growth(max_retention, roe_now, roe_next, consistent), True)
+        if min_retention is not None and b < min_retention:
+            return (min_retention,
+                    _supportable_growth(min_retention, roe_now, roe_next, consistent), True)
+        return b, g_target, False
+
+    # 年 0 的留存出自估值日前已实现的 E_0，不进现金流，但仍约束 g_1 的内生可行性（修正四）
+    b0 = _required_retention(g_path[0], roe0, roe_path[0], consistent)
+    _b0, g_incoming, hit = _clamped(b0, roe0, roe_path[0], g_path[0])
+    clamped_years += hit
+
+    eps_prev = eps0
+    for index, roe_t in enumerate(roe_path, start=1):
+        g_t = g_incoming
         eps_t = eps_prev * (1 + g_t)
-        pv = eps_t * payout / (1 + r) ** index
-        explicit_pv += pv
+        # 本年留存率 b_t 资金**下一年**的增长（修正四）；显式期末年的「下一年」即终值稳态首年
+        # ——线性 fade 时 ROE_N = ROE_T，末年留存恰为稳态的 g_T/ROE_T，与终值公式连续衔接。
+        if index < total:
+            g_target, roe_next = g_path[index], roe_path[index]
+        else:
+            g_target, roe_next = g_terminal, roe_terminal
+        b_t = _required_retention(g_target, roe_t, roe_next, consistent)
+        b_t, g_incoming, hit = _clamped(b_t, roe_t, roe_next, g_target)
+        clamped_years += hit
+        payout = 1 - b_t
+        explicit_pv += eps_t * payout / (1 + r) ** index
         eps_path.append(eps_t)
         payout_path.append(payout)
         realized_g.append(g_t)
-        eps_prev, roe_prev = eps_t, roe_t
+        eps_prev = eps_t
     g_path = realized_g
 
     # 终值：第 N 年后进入稳态（ROE_T、g_T 恒定），此时 b = g_T/ROE_T 正确无需修正
@@ -378,10 +415,10 @@ def self_test() -> int:
     checks.append(("加上限后派息率恒非负", bounded.min_payout >= -1e-12))
     checks.append(("加上限后终值占比落回 (0,1]", 0 < bounded.terminal_share <= 1.0))
     checks.append(("上限确实生效并记录了受限年数", bounded.clamped_years > 0))
-    # 方向是**上限后价值更高**（实测 4.614 → 5.703），且这是对的：无上限那版把「需要增发才
-    # 能实现的增长」当成股东掏出的现金逐年折现（显式期现值 −2.421），等于对股东罚了一笔他们
-    # 本会换到股份的钱。上限去掉的是这个虚假罚项，不是把负值粉饰掉——终值同时由 7.035 降到
-    # 4.505（增速被压低，EPS_N 由 3.312 降到 2.121），两侧都动了才是真修正。
+    # 方向是**上限后价值更高**（实测 4.662 → 5.796，修正四前为 4.614 → 5.703），且这是对的：
+    # 无上限那版把「需要增发才能实现的增长」当成股东掏出的现金逐年折现（显式期现值 −2.373），
+    # 等于对股东罚了一笔他们本会换到股份的钱。上限去掉的是这个虚假罚项，不是把负值粉饰掉——
+    # 终值同时由 7.035 降到 4.505（增速被压低，EPS_N 由 3.312 降到 2.121），两侧都动了才是真修正。
     checks.append(("上限去掉的是虚假罚项：显式期由负转正", unbounded.explicit_pv < 0 < bounded.explicit_pv))
     checks.append(("同时终值被压低（增速确实降了，不是单边抬价）",
                    bounded.terminal_pv < unbounded.terminal_pv))
@@ -390,6 +427,19 @@ def self_test() -> int:
         with_cap = intrinsic_value(1.0, 0.20, 0.05, 0.10, **kwargs).intrinsic_value
         without = intrinsic_value(1.0, 0.20, 0.05, 0.10, max_retention=None, **kwargs).intrinsic_value
         checks.append((f"未触顶时上限不改变结果 {kwargs}", abs(with_cap - without) < 1e-12))
+
+    # 3c. 修正四：清洁盈余重建。由实现的留存序列滚存净资产，必须精确复现假设的利润路径
+    # 与终值起点——旧实现（把 b_{t-1} 当本年派息口径）在此必然失败，是时序修正的回归护栏。
+    res4 = intrinsic_value(2.0, 0.16, 0.10, 0.10, roe_terminal=0.12, g_terminal=0.03)
+    checks.append(("清洁盈余重建用例全程未触留存率上下限（前提）", res4.clamped_years == 0))
+    book = 2.0 / 0.16                                     # B_{-1} = E_0/ROE_0
+    book += 2.0 * _required_retention(res4.g_path[0], 0.16, res4.roe_path[0], True)  # B_0
+    ok4 = True
+    for i, (roe_i, pay_i) in enumerate(zip(res4.roe_path, res4.payout_path)):
+        ok4 = ok4 and abs(res4.eps_path[i] - roe_i * book) < 1e-9    # E_t = ROE_t·B_{t-1}
+        book += res4.eps_path[i] * (1 - pay_i)                       # B_t = B_{t-1} + b_t·E_t
+    ok4 = ok4 and abs(0.12 * book - res4.eps_path[-1] * 1.03) < 1e-9  # E_{N+1} 两种算法一致
+    checks.append(("清洁盈余重建：留存额滚存的净资产精确复现利润路径与终值起点", ok4))
 
     # 4. 护栏必须报错而不是给个数
     def raises(fn) -> bool:
