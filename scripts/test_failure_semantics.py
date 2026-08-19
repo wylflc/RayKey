@@ -65,7 +65,9 @@ def run_tracker(price, *, pool=True, monkey_quotes=None):
     tracker.fetch_spot_quotes = lambda *a, **k: quotes
     # OI-067（v4.20）后历史日期走日线接口 `fetch_raw_close`，同样必须打桩——
     # 否则测试会拿真实收盘价盖掉 canned price（2026-08-19 实测 4 个用例因此假失败）。
-    tracker.fetch_raw_close = lambda code, as_of, timeout: price
+    # v4.25 起返回 (收盘, 当日MA60)；MA60 打桩为 None = 均线不可得，止损退回按锚判读，
+    # 与旧冻结口径逐位一致，故既有用例的语义不变。
+    tracker.fetch_raw_close = lambda code, as_of, timeout: (price, None)
     tracker.load_pool = lambda *a, **k: ({"600519": POOL_ROW} if pool else {})
     Path.open = lambda self, *a, **k: FakeFile()  # type: ignore[assignment]
     try:

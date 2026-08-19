@@ -3,21 +3,27 @@
 
 取代 `scan_holdings_sell_signals.py`。该脚本自 v2.56 起只做三件事：
 
-1. 读五列持仓清单（代码/名称/股数/成本价/**建仓日止损价**）；
+1. 读五列持仓清单（代码/名称/股数/成本价/**建仓日止损锚**）；
 2. 取当日现价，对照核心估值合格池刷新现档（§6.2）与空间；
 3. 算出 `P/V`（现价 ÷ 合理价区间中值），供 §9.3 的机械买卖判定消费；
-4. 比对收盘价与 `entry_stop_price`，命中即出 §9.3.5 的整仓清空提示。
+4. 比对收盘价与**生效止损线 = min(锚, 当日MA60)**（§9.3.1 v4.25），命中即出
+   §9.3.5 的整仓清空提示。
 
 **v2.56 移除的是滚动均线割肉**（原持仓侧割肉条款，该编号已随 v4.07 精简退出正文；依据回测 log §12.9.38：破 MA60／破 MA120
 三条口径五起点全负 −9.43 ~ −14.79pp）。随之移除的字段：`stop_loss_price`、
 `stop_hit`、`day_low`、`割肉提醒`。
 
 **v2.83 加回的 `entry_stop_price` 与它不是同一件事**（§9.3.5）：那条是**随均线
-移动**的割肉线，这条是**建仓日定死、永不上移**的固定价，回测里自始开启
+移动**的割肉线，这条是**建仓日定死、永不上移**的锚，回测里自始开启
 （`trend_stop` 缺省 `True`），关掉它五起点全负、中位 −2.46pp。两者唯一的共同点
 是都叫「止损」——**不得因为 v2.56 删过一个止损就把这个也删掉**。
 
-**本脚本不产生任何买卖结论。** 卖出只有 §9.3.2 第四步四条（⓪跌破建仓日止损
+**v4.25 的 min(锚, 当日MA60) 也不是 v2.56 那条滚动割肉的回归**：v2.56 的破线卖随均线
+**双向**移动（均线上行时割肉线跟着抬高，正是全负的那只手）；v4.25 的生效线**永不高于锚**
+——均线上移不抬线，只在均线跌破锚时向下豁免「大盘带着均线整体下移后冻结水位刻舟求剑」
+的假跌破（依据 §12.88.2/§12.89：滚5 +0.59pp、16/23、逐年中性、回撤换手略降）。
+
+**本脚本不产生任何买卖结论。** 卖出只有 §9.3.2 第四步四条（⓪跌破生效止损线
 整仓、①`P/V` 越过 §9.3.1 减持线且破 MA20 减一档、②出 §5 名单减一档、③换仓减一档），
 由执行侧按本脚本输出的 `pv` 与 `stop_hit` 计算。
 
@@ -60,7 +66,8 @@ FIELDNAMES = [
     "security_name",
     "current_shares",
     "cost_basis",
-    # §9.3.5（v2.83）：建仓日 MA20 定死的止损价，与 `stop_hit` 一并输出。留空 = 该票
+    # §9.3.5：建仓日定死的止损**锚**（成交日 MA60，买在线下退 MA20），与 `stop_hit` 一并输出；
+    # v4.25 起判读用生效线 = min(锚, 当日MA60)，本列始终存锚（除权时按 §11.4 调锚）。留空 = 该票
     # 不受本条约束（存量持仓过渡口径）。**留空必须能与"跌破了"区分开**，故 `stop_hit`
     # 用三取值而不是布尔——布尔的 False 会把"没设"和"没跌破"混成同一个格子。
     "entry_stop_price",
@@ -123,9 +130,12 @@ def beijing_now() -> datetime:
     return datetime.now(ZoneInfo("Asia/Shanghai"))
 
 
-def fetch_raw_close(code: str, as_of: date, timeout: float) -> float | None:
-    """`as_of` 当日**不复权**收盘。当日无K线（未收盘/停牌/接口失败）返回 None。
+def fetch_raw_close(code: str, as_of: date, timeout: float) -> tuple[float | None, float | None]:
+    """`as_of` 当日**不复权**收盘与当日 MA60，返回 `(收盘, MA60)`。
 
+    收盘：当日无K线（未收盘/停牌/接口失败）为 None。MA60（§9.3.1 v4.25 生效止损线
+    要用的当日均线）：截至 `as_of` 的最近 60 根不复权收盘均值，不足 60 根（新上市）为 None
+    ——与锚同为不复权口径，除权日的跳变两侧同源。
     主源腾讯 newfqkline 的 `day`（不复权）数组——东财 kline 端点对本机批量访问会整段断连
     （2026-08-19 实测连扫描器同参查询也 RemoteDisconnected），故顺序与扫描器相反：腾讯为主。
     """
@@ -133,9 +143,17 @@ def fetch_raw_close(code: str, as_of: date, timeout: float) -> float | None:
     from datetime import timedelta
     from a_share_quotes import quote_symbol
     symbol = quote_symbol(code, "")
-    start = (as_of - timedelta(days=14)).isoformat()
+    # 60 个交易日 ≈ 90 个自然日，节假日富余取 130 天窗口
+    start = (as_of - timedelta(days=130)).isoformat()
+
+    def digest(rows: list[list[str]]) -> tuple[float | None, float | None]:
+        closes = [(str(p[0]), float(p[2])) for p in rows if str(p[0]) <= as_of.isoformat()]
+        close = next((v for d, v in closes if d == as_of.isoformat()), None)
+        ma60 = (sum(v for _d, v in closes[-60:]) / 60) if len(closes) >= 60 else None
+        return close, ma60
+
     url = (f"https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
-           f"?param={symbol},day,{start},{as_of.isoformat()},15,")
+           f"?param={symbol},day,{start},{as_of.isoformat()},90,")
     try:
         import urllib.request
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0",
@@ -144,9 +162,10 @@ def fetch_raw_close(code: str, as_of: date, timeout: float) -> float | None:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             payload = _json.loads(resp.read().decode("utf-8", "ignore"))
         day_rows = ((payload.get("data") or {}).get(symbol) or {}).get("day") or []
-        for parts in day_rows:
-            if str(parts[0]) == as_of.isoformat():
-                return float(parts[2])
+        if day_rows:
+            close, ma60 = digest(day_rows)
+            if close is not None:
+                return close, ma60
     except OSError:
         pass
     # 备源：东财不复权日线
@@ -156,20 +175,18 @@ def fetch_raw_close(code: str, as_of: date, timeout: float) -> float | None:
         "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
         "klt": "101", "fqt": "0",
         "beg": start.replace("-", ""),
-        "end": as_of.isoformat().replace("-", ""), "lmt": "15",
+        "end": as_of.isoformat().replace("-", ""), "lmt": "90",
     })
     try:
         payload = get_json(f"https://push2his.eastmoney.com/api/qt/stock/kline/get?{query}", timeout)
     except OSError:
-        return None
-    for line in (payload.get("data") or {}).get("klines") or []:
-        parts = line.split(",")
-        if parts[0] == as_of.isoformat():
-            return float(parts[2])
-    return None
+        return None, None
+    rows = [line.split(",") for line in (payload.get("data") or {}).get("klines") or []]
+    return digest(rows) if rows else (None, None)
 
 
-def resolve_prices(codes: list[str], as_of: date, timeout: float) -> tuple[dict[str, float], str]:
+def resolve_prices(codes: list[str], as_of: date,
+                   timeout: float) -> tuple[dict[str, float], dict[str, float], str]:
     """OI-067（v4.20 修，用户裁定）：价格按 `--as-of` 取**当日不复权收盘**，不再取运行瞬间现价。
 
     三种情形：①盘后/补跑历史日期——日线有 `as_of` 那根K线，取真实收盘（补跑从此可信）；
@@ -182,9 +199,12 @@ def resolve_prices(codes: list[str], as_of: date, timeout: float) -> tuple[dict[
     is_today = as_of == bj.date()
     intraday = is_today and (bj.hour, bj.minute) < (15, 5)
     out: dict[str, float] = {}
+    ma60s: dict[str, float] = {}          # §9.3.1 v4.25 生效止损线的当日均线；取不到即缺席
     missing: list[str] = []
     for code in codes:
-        close = None if intraday else fetch_raw_close(code, as_of, timeout)
+        close, ma60 = (None, None) if intraday else fetch_raw_close(code, as_of, timeout)
+        if ma60 is not None:
+            ma60s[code] = ma60
         if close is not None:
             out[code] = close
         else:
@@ -199,7 +219,7 @@ def resolve_prices(codes: list[str], as_of: date, timeout: float) -> tuple[dict[
         label = "盘中价（北京 15:05 前运行，盘后重跑即覆盖为收盘）" if intraday else "现价兜底（当日K线未入库）"
     elif missing:
         label = "收盘（历史日期，无K线的按数据缺失处理）"
-    return out, label
+    return out, ma60s, label
 
 
 def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeout: float) -> list[dict[str, object]]:
@@ -210,7 +230,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         holdings = [h for h in holdings if h["security_code"].zfill(6) in wanted]
 
     pool = load_pool(pool_file)
-    prices, price_label = resolve_prices([h["security_code"].zfill(6) for h in holdings], as_of, timeout)
+    prices, ma60s, price_label = resolve_prices([h["security_code"].zfill(6) for h in holdings], as_of, timeout)
     if price_label != "收盘":
         print(f"  ⚠ 价格口径：{price_label}")
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -245,21 +265,36 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
             notes.append(f"**`P/V` {pv:.2f} ≥ {SELL_LINE:.4f}**：减持另须 `收盘 < MA20`"
                          f"（§9.3.1 完整条件，均线见扫描器输出），两者同时成立才减一档")
 
-        # §9.3.5 建仓日止损（v2.83）。**先判无行情**：没有收盘价就既不能说跌破、也不能
+        # §9.3.5 建仓日止损。**先判无行情**：没有收盘价就既不能说跌破、也不能
         # 说没跌破，落 `无行情` 而不是默认放行——与 `action` 的 `数据缺失` 同一条理由。
+        #
+        # v4.25（§9.3.1）：`entry_stop_price` 是**锚**，生效止损线 = min(锚, 当日同周期均线)
+        # ——均线下移时生效线跟随下移、上移不抬。持仓表不记锚的周期，本工具统一按当日
+        # MA60 取线（MA60 是缺省锚周期；罕见的 MA20 退档锚在此偏保守、提示可能偏早，
+        # 执行前按 §9.3.1 同周期人工复核）。当日均线不可得（盘中价/新上市不足 60 根）
+        # 时退回按锚判读并注明。
         entry_stop = to_float(h.get("entry_stop_price"))
+        ma60 = ma60s.get(code)
         if entry_stop is None:
             stop_hit = "未设"
         elif close is None:
             stop_hit = "无行情"
-        elif close < entry_stop:
-            stop_hit = "**已跌破**"
-            notes.append(
-                f"**收盘 {close:g} < 建仓日止损价 {entry_stop:g}**："
-                f"按 §9.3.5 次日尾盘**整仓清空**，先于 `P/V` 减持与换仓执行"
-            )
         else:
-            stop_hit = "否"
+            stop_line = min(entry_stop, ma60) if ma60 is not None else entry_stop
+            if close < stop_line:
+                stop_hit = "**已跌破**"
+                detail = (f"= min(锚 {entry_stop:g}, 当日MA60 {ma60:g})" if ma60 is not None
+                          else f"= 锚 {entry_stop:g}（当日均线不可得，按锚判读）")
+                notes.append(
+                    f"**收盘 {close:g} < 生效止损线 {stop_line:g}**（{detail}）："
+                    f"按 §9.3.5 次日尾盘**整仓清空**，先于 `P/V` 减持与换仓执行"
+                )
+            else:
+                stop_hit = "否"
+                if ma60 is not None and close < entry_stop:
+                    # 正是 v4.25 min 口径豁免的情形——旧冻结口径会在这里整仓清空，写明防误读
+                    notes.append(f"收盘 {close:g} 低于锚 {entry_stop:g} 但不低于当日MA60 "
+                                 f"{ma60:g}：按 §9.3.1 min 口径不触发止损")
 
         # §11.3 三取值（v2.56 删去 `割肉提醒`）。无行情时必须落 `数据缺失` 而非 `持有`：
         # `持有` 是唯一读起来像「已检查、没事」的取值，而没有现价恰恰意味着 `P/V` 没算过。
@@ -420,13 +455,15 @@ def main() -> None:
     unset = [r for r in rows if r["stop_hit"] == "未设"]
     blind = [r for r in rows if r["stop_hit"] == "无行情"]
     if stopped:
-        names = "、".join(f"{r['security_name']}(收 {r['close']} < 止损 {r['entry_stop_price']})" for r in stopped)
-        print(f"  **跌破建仓日止损 {len(stopped)} 只**：{names}——按 §9.3.5 次日尾盘**整仓清空**，先于减持与换仓")
+        names = "、".join(f"{r['security_name']}(收 {r['close']}，锚 {r['entry_stop_price']}，生效线见 note)"
+                          for r in stopped)
+        print(f"  **跌破生效止损线 {len(stopped)} 只**：{names}——按 §9.3.5 次日尾盘**整仓清空**，先于减持与换仓")
     else:
-        print(f"  跌破建仓日止损：无（已设止损价 {len(rows) - len(unset)}/{len(rows)} 只"
+        print(f"  跌破生效止损线（min(锚, 当日MA60)，§9.3.1 v4.25）：无"
+              f"（已设锚 {len(rows) - len(unset)}/{len(rows)} 只"
               + (f"，其中 {len(blind)} 只当日无行情无法比对" if blind else "") + "）")
     if unset:
-        print(f"  未设建仓日止损 {len(unset)} 只：{'、'.join(str(r['security_name']) for r in unset)}"
+        print(f"  未设止损锚 {len(unset)} 只：{'、'.join(str(r['security_name']) for r in unset)}"
               f"——§9.3.5 对其不生效，须待清空后重新建仓时按新规则设定")
     if trim:
         names = "、".join(f"{r['security_name']}({r['pv']})" for r in trim)

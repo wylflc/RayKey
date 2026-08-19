@@ -64,7 +64,9 @@ BASE = (
     "--capital 3000000 --credit-ratio 0.6 --credit-cap 1800000 "
     "--maintenance-ratio 1.30 --margin-rate 0.035 "
     "--width 0.0593 --sell-line 2.5236 --swap-margin 0.1447 "
-    "--stop-ma 60 --addon-trend ma-only --swap-require-weak "
+    # **止损线 = min(建仓日锚, 当日同周期均线)**（v4.25 用户裁定采纳，§12.88.2/§12.89：
+    # 滚5 +0.59pp、16/23、逐年中性；均线上移不抬线，非 v2.56 那条双向滚动割肉）。
+    "--stop-ma 60 --stop-line min_entry_current --addon-trend ma-only --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv"
 )
