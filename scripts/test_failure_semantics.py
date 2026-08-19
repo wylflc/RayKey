@@ -52,6 +52,7 @@ def run_tracker(price, *, pool=True, monkey_quotes=None):
     )
 
     real_fetch, real_load, real_open = tracker.fetch_spot_quotes, tracker.load_pool, Path.open
+    real_raw = tracker.fetch_raw_close
 
     class FakeFile:
         def __enter__(self):
@@ -62,12 +63,16 @@ def run_tracker(price, *, pool=True, monkey_quotes=None):
             return False
 
     tracker.fetch_spot_quotes = lambda *a, **k: quotes
+    # OI-067（v4.20）后历史日期走日线接口 `fetch_raw_close`，同样必须打桩——
+    # 否则测试会拿真实收盘价盖掉 canned price（2026-08-19 实测 4 个用例因此假失败）。
+    tracker.fetch_raw_close = lambda code, as_of, timeout: price
     tracker.load_pool = lambda *a, **k: ({"600519": POOL_ROW} if pool else {})
     Path.open = lambda self, *a, **k: FakeFile()  # type: ignore[assignment]
     try:
         return tracker.track(Path("x.csv"), Path("y.csv"), date(2026, 8, 3), "", 8.0)[0]
     finally:
         tracker.fetch_spot_quotes, tracker.load_pool, Path.open = real_fetch, real_load, real_open
+        tracker.fetch_raw_close = real_raw
 
 
 def case_no_quote_is_not_hold():
@@ -112,7 +117,7 @@ def case_pv_over_trim_line_is_flagged_in_note():
     expect = f"{price / 1800.0:.2f}"
     if row["pv"] != expect:
         return [f"应得 P/V={expect}，实得 `{row['pv']}`"]
-    if f"{tracker.SELL_LINE:.2f}" not in str(row.get("note", "")):
+    if f"{tracker.SELL_LINE:.4f}" not in str(row.get("note", "")):
         return ["P/V 已越减持线却未在备注点名（§9.3.2 第四步）"]
     return []
 
