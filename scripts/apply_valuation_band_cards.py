@@ -246,15 +246,15 @@ def main() -> int:
                 tier_moves.append(f"{code}{row.get('security_name','')} {previous}→{tier}")
             stats["band"] += 1
         else:
-            reason = card.get("needs_external") or card.get("note") or "锚定量不可得"
+            reason = card.get("needs_external") or card.get("note") or "锚定量不可得或模型判不可估"
             row["valuation_tier"] = "无法估值"
             row["fair_price_low"] = row["fair_price_high"] = ""
             row["base_band_low"] = row["base_band_high"] = ""
             row["band_derivation"] = ""
             row["anchor_metric"] = card.get("anchor_metric", "")
-            # v2.10：这条分支的语义是**建档未完成**（§6.5.5.2），不是「这家公司估不出来」。
-            # 已建档的行不会走到这里——建带卡有锚就一定进上面的分支。
-            row["fair_price_basis"] = f"§6.5.2.1 锚定量不可得，本票建档未完成（§6.5.5.2）：{reason}"
+            # 两种情形都落这里：①建档未完成（锚定量不可得）；②v4.22 统一口径——模型判
+            # 不可估或模型带过旧（档案带已被清空，OI-068）。带显示 —，无 P/V，不进 §9.3。
+            row["fair_price_basis"] = f"无法估值（§6.5.2.4 统一口径）：{reason}"
             stats["unvaluable"] += 1
 
         # v2.79：模型带行的「估值时间/估值事件」必须取**模型带的报告期**，不是取数证据的时点。

@@ -25,13 +25,13 @@
 那是逐票研究的结论，与用哪个模型算带无关，且 §7.4.1 的复核触发仍要用它。
 原带写入 `notes` 留痕，可追溯。
 
-什么情况下仍用手工带（`bespoke` 保持 true）
-------------------------------------------
-1. **模型判不可估**：`EPS0 ≤ 0` 或 `ROE0 ≤ 0`（亏损或归一化 ROE 为负）。
-   §6.5.5.2 明文要求此时转逐票推导，不得判「无法估值」。判例：寒武纪
-   2021-24 连亏四年，五年归一化 ROE 为负。
-2. **模型带时点过旧**（`--min-available` 之前）：主体重组后旧财报不可比。
-   判例：宏桥控股 2024 年资产注入，模型最新带停在 2012-10。
+模型给不出新带时的统一口径（v4.22，OI-068，用户 2026-08-19 裁定）
+------------------------------------------------------------------
+**不再保留手工带**。模型判不可估（亏损、护栏拒绝、零增长价值 ≤ 0）或最新 ok 带早于
+`--min-available` 的，一律**清空带并判「无法估值」**——可见、无 `P/V`、不进 §9.3 判定，
+模型重新可算后自动回归模型带。唯一例外是 §6.5.2.4 的主体不可比（宏桥型资产注入），
+走 `manual_band_overrides.csv` 覆盖表；旧 §6.5.5.2「不得判无法估值、须转逐票推导」
+的条款就此废止（它正是 11 只票挂着 2021-2024 年手工带混进档案层的来源）。
 
 用法
 ----
@@ -106,7 +106,7 @@ def main() -> int:
     ap.add_argument("--dossiers", type=Path, default=DOSSIERS)
     ap.add_argument("--as-of", required=True)
     ap.add_argument("--min-available", default="2025-01-01",
-                    help="模型带的 available_at 早于此即视为时点过旧，保留手工带")
+                    help="模型带的 available_at 早于此即视为时点过旧，判无法估值（v4.22 统一口径）")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -122,6 +122,30 @@ def main() -> int:
         code = row["security_code"]
         band = usable.get(code)
         if band is None:
+            ovr0 = OVERRIDES.get(code)
+            if ovr0:
+                row["band_low"], row["band_high"] = ovr0["band_low"], ovr0["band_high"]
+                row["band_derivation"] = "manual_override"
+                row["bespoke"] = "true"
+                row["reviewed_at"] = ovr0.get("reviewed_at") or row.get("reviewed_at", "")
+                row["band_method"] = (f"§6.5.2.4 人工覆盖（{ovr0.get('reason_code')}）：{ovr0.get('note')}"
+                                      f"｜失效条件：{ovr0.get('expires_when')}")
+                overridden.append(row.get("security_name") or code)
+                continue
+            # v4.22（OI-068 统一口径）：模型给不出新带 → 清空带、判无法估值（下游建带卡→
+            # 估值表自动落「无法估值」），不再保留手工带。原带写入 notes 留痕。
+            was = f"{row.get('band_low','')}~{row.get('band_high','')}"
+            if row.get("band_low") or row.get("band_high"):
+                note = f"**{args.as_of} 清除手工带（OI-068 统一口径 v4.22）**：原带 {was} 撤销，判无法估值。"
+                row["notes"] = note + ("｜" + row["notes"] if row.get("notes") else "")
+            row["band_low"] = row["band_high"] = ""
+            row["bespoke"] = "true"
+            row["band_derivation"] = "model_unvaluable"
+            row["band_method"] = ("无法估值·模型判不可估（§6.5.2.4 统一口径）："
+                                  + ("最新 ok 模型带早于时点门槛" if code in stale else "模型对各期均拒绝出带"))
+            row["decided_by"] = "内在价值模型（§6.5.2.3；模型重新可算后自动回归模型带）"
+            row["anchor_earnings_yi"] = ""
+            row["reviewed_at"] = args.as_of
             (kept_stale if code in stale else kept_unvaluable).append(row["security_name"])
             continue
 
@@ -216,9 +240,10 @@ def main() -> int:
     if split_adj:
         print(f"  送转折算 {len(split_adj)} 只：{'、'.join(split_adj)}")
     if kept_unvaluable:
-        print(f"  保留手工带·模型判不可估 {len(kept_unvaluable)} 只：{'、'.join(kept_unvaluable)}")
+        print(f"  判无法估值·模型不可估 {len(kept_unvaluable)} 只（手工带已清除，v4.22 统一口径）："
+              f"{'、'.join(kept_unvaluable)}")
     if kept_stale:
-        print(f"  保留手工带·模型带早于 {args.min_available} {len(kept_stale)} 只："
+        print(f"  判无法估值·模型带早于 {args.min_available} {len(kept_stale)} 只（手工带已清除）："
               f"{'、'.join(kept_stale)}")
     only_model = set(usable) - {r['security_code'] for r in rows}
     if only_model:

@@ -433,10 +433,8 @@ def is_bank(name: str) -> bool:
 
 
 # 与 `apply_model_bands_to_dossiers.py --min-available` 同一阈值：早于它的模型带视为时点过旧。
-# v4.20（OI-068）前扫描器没有这道闸——档案层判「保留手工带」的 9 只，本层却继续拿
-# 2021-2024 的旧模型带算 `P/V`（石基信息用 2021-10 的带），两层给出相反口径。
-# 旧带在此硬排除：无带即无 `P/V`、不进 §9.3 任何判定，与「手工带须落 manual_band_overrides
-# 才能进交易层」（§6.5.2.4）闭合成同一条规则。
+# v4.22（OI-068 统一口径）：陈旧带与模型判不可估的票在档案层判「无法估值」、在本层无 P/V
+# ——两层同一结论：可见、不进 §9.3 任何判定。人工带只剩 §6.5.2.4 主体不可比一种（走覆盖表）。
 MODEL_BAND_MIN_AVAILABLE = "2025-01-01"
 
 
@@ -464,7 +462,7 @@ def load_model_bands(path: Path, as_of: str) -> dict[str, dict]:
     dropped = {c: v for c, v in stale.items() if c not in latest}
     if dropped:
         print(f"  [陈旧带排除·OI-068] 模型带早于 {MODEL_BAND_MIN_AVAILABLE} 共 {len(dropped)} 只，"
-              f"无 P/V 不进判定（与档案层「保留手工带」同一阈值）："
+              f"无 P/V 不进判定（档案层同判无法估值，§6.5.2.4 统一口径）："
               + "、".join(f"{n}({d})" for _, (d, n) in sorted(dropped.items())))
     return {code: row for code, (_, row) in latest.items()}
 

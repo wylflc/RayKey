@@ -261,6 +261,12 @@ def check_row(row: dict) -> tuple[list[str], str]:
     problems: list[str] = []
     letter = tag_letter(row.get("strategy_tag", ""))
 
+    # v4.22（OI-068 统一口径）：「无法估值」是模型的诚实失败态——带已清空、无 P/V、
+    # 不进 §9.3 判定，**没有带可校验**。拿建带卡的锚白名单去量一条不存在的带，
+    # 只会制造恒亮的 blocking 告警（§13 第 3 条反形态）。
+    if str(row.get("valuation_tier", "")).strip() == "无法估值" and not str(row.get("fair_price_low", "")).strip():
+        return [], "ok"
+
     # §6.5.2（v1.47）：逐票档案的带**不受通用类型表约束**——它存在的理由正是通用口径
     # 对这家公司不成立（判例紫金矿业：F-2 取孰低在 PE 腿与 PB 腿间反复翻转，连改五版
     # 未稳）。用 F 的 anchor_metric 白名单去校验一条按定义不走 F 的带，是循环要求。
