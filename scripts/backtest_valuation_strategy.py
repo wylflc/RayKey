@@ -735,6 +735,11 @@ def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int) -> tuple[
     用户 2026-08-08 规则：**优先用 MA60；但若建仓时股价已在 MA60 下方，则退回 MA20。**
     理由是买在 MA60 之下时，拿 MA60 当止损等于**建仓即触发**——止损价高于成本价，
     这条止损不是保护而是立刻把仓位打掉。退回 MA20 才可能落在成本价下方。
+
+    **v4.26 起生产口径不再走到 MA20 退档**（用户 2026-08-20，§12.90）：信号日闸门
+    `收盘>MA20>MA60` 成立后 T+1 跳空破 MA60 时，几乎必然也破 MA20——退档锚仍高于
+    成本、次日即触发，没达成本函数声称的目的。生产 `BASE` 用 `--entry-below-ma60 skip`
+    直接放弃该笔建仓；本分支保留给 `--stop-ma 20` 研究口径与极端缺数据兜底。
     """
     if stop_ma == 20:
         return ma.get(20, 0.0), 20
@@ -846,7 +851,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         trend_tol: float = 0.0, exec_delay: int = 0, exec_price: str = "close",
         sell_trend_ma: tuple[int, ...] = (), sell_full: bool = False, stop_min_days: int = 0,
         stop_confirm_days: int = 1, stop_deep_pct: float = 0.0,
-        stop_line: str = "entry",
+        stop_line: str = "entry", entry_below_ma60: str = "ma20_stop",
         stop_partial: bool = False, stop_tranche: float = 1.0,
         liquidate_ma: int = 0, liquidate_days: int = 3,
         opens: dict[str, dict[str, float]] | None = None,
@@ -1694,6 +1699,16 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             tranche = trend_tranche and strategy == "trend"
             if ((strategy == "trend" and not tranche) or lump_sum) and code in portfolio.lots:
                 continue                      # 一笔建仓：不加仓
+            # 建仓日已破 MA60 → 跳过（用户 2026-08-20）：T 日闸门是 `收盘>MA20>MA60`，
+            # T+1 成交价若已低于当日 MA60，几乎必然也低于 MA20（均线单日几乎不动），
+            # 旧 MA20 退档锚仍高于成本、次日即触发——买入即割的纯 churn。该笔直接放弃，
+            # 资金顺位给下一名（与 §10.1 过滤同型）。只判**新建仓**：加仓不设锚、不受影响；
+            # 成交日停牌回落信号日价的情形闸门本就成立（exec 日无均线行），不在此列。
+            if entry_below_ma60 == "skip" and code not in portfolio.lots:
+                ma60_exec = (mas.get(code, {}).get(day) or {}).get(60, 0.0)
+                if ma60_exec and close < ma60_exec:
+                    stats["建仓日收盘<当日MA60·跳过"] += 1
+                    continue
             avail = buying_power(portfolio, credit_limit)
             if lump_sum:
                 amount = min(equity * lump_sum, avail)
@@ -2216,6 +2231,10 @@ def main() -> int:
     parser.add_argument("--stop-line", choices=("entry", "min_entry_current"), default="entry",
                         help="止损线口径：entry=建仓日冻结线（现行）；min_entry_current=min(建仓日线, "
                              "当日同周期均线)——均线下移时止损跟随下移、上移不抬线（用户 2026-08-19 实验）")
+    parser.add_argument("--entry-below-ma60", choices=("ma20_stop", "skip"), default="ma20_stop",
+                        help="新建仓成交日收盘 < 当日 MA60（信号日过闸后跳空所致）的处理："
+                             "ma20_stop=照买、锚退 MA20（旧行为）；skip=放弃该笔、资金顺位下一名"
+                             "（用户 2026-08-20：此时几乎必然也低于 MA20，退档锚仍高于成本、买入即割）")
     parser.add_argument("--sell-full", action="store_true",
                         help="P/V≥减持线（且过走势闸门）时整仓卖出，而非按一档减")
     parser.add_argument("--stop-partial", action="store_true",
@@ -2361,6 +2380,7 @@ def main() -> int:
                      + (f"_scd{args.stop_confirm_days}" if args.stop_confirm_days != 1 else "")
                      + (f"_sdp{args.stop_deep_pct * 100:g}" if args.stop_deep_pct else "")
                      + ("_slmin" if args.stop_line == "min_entry_current" else "")
+                     + ("_skipma60" if args.entry_below_ma60 == "skip" else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
                      + (f"_bf{args.buy_floor:g}" if args.buy_floor else "")
@@ -2419,6 +2439,7 @@ def main() -> int:
                          sell_full=args.sell_full, stop_min_days=args.stop_min_days,
                          stop_confirm_days=args.stop_confirm_days,
                          stop_deep_pct=args.stop_deep_pct, stop_line=args.stop_line,
+                         entry_below_ma60=args.entry_below_ma60,
                          stop_partial=args.stop_partial, stop_tranche=args.stop_tranche,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,

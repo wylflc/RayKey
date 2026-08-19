@@ -66,7 +66,10 @@ BASE = (
     "--width 0.0593 --sell-line 2.5236 --swap-margin 0.1447 "
     # **止损线 = min(建仓日锚, 当日同周期均线)**（v4.25 用户裁定采纳，§12.88.2/§12.89：
     # 滚5 +0.59pp、16/23、逐年中性；均线上移不抬线，非 v2.56 那条双向滚动割肉）。
-    "--stop-ma 60 --stop-line min_entry_current --addon-trend ma-only --swap-require-weak "
+    # **建仓日已破 MA60 → 跳过该笔**（v4.26 用户裁定，§12.90：T+1 跳空破 MA60 时几乎必然
+    # 也破 MA20，旧 MA20 退档锚仍高于成本、买入即割；23 起点配对差噪声级，长路径 15 年仅 5 次）。
+    "--stop-ma 60 --stop-line min_entry_current --entry-below-ma60 skip "
+    "--addon-trend ma-only --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv"
 )
