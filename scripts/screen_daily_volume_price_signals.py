@@ -370,6 +370,11 @@ def parse_args() -> argparse.Namespace:
              '给具体日期则强制回溯该日之后；给空串关闭回溯。',
     )
     parser.add_argument("--as-of", required=True, help="Trading date in YYYY-MM-DD format.")
+    parser.add_argument("--evidence-date", default="",
+                        help="证据日（北京当日历日，v4.27）：模型带 available_at 的可用性截止。"
+                             "晚间披露的报告官方戳次日，凌晨扫描时戳日 > 信号日——不给本参数则回退 "
+                             "--as-of（信号日）作截止，当晚吸收的新带会整只失带（§6.7/§7.5 v4.27）。"
+                             "每日生产扫描必须传北京当日历日；历史重放不传即旧口径。")
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--review-queue", type=Path, default=DEFAULT_REVIEW_QUEUE,
                         help="Report update queue CSV; pool stocks with buy_blocked=review_pending are frozen per §7.5.")
@@ -795,7 +800,7 @@ def main() -> int:
     # 若等落盘后再算，写出去的就是三列空值。首版就踩过这一脚，靠落地校验（下方 priced 计数）当场发现。
     section97_ready = bool(args.model_bands and args.model_bands.exists())
     if section97_ready:
-        bands = load_model_bands(args.model_bands, args.as_of)
+        bands = load_model_bands(args.model_bands, args.evidence_date or args.as_of)
         attach_model_pv(rows, bands, args.as_of, args.rf)
         priced = sum(1 for r in rows if isinstance(r.get("model_pv"), float))
         print(f"§9.3 模型带：{len(bands)} 只有带，{priced}/{len(rows)} 只算出 P/V"

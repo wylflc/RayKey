@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from a_share_quotes import fetch_spot_quotes
@@ -260,12 +260,24 @@ def load_forecasts(path: Path) -> dict[str, dict[str, str]]:
 
 
 def forecasts_retrieved_on(path: Path) -> str:
-    """预告物化文件的检索日（retrieved_at_utc 最大值的日期部分）；文件缺失返回空。
-    §7.1：检索日早于扫描日=数据过期，须按 §9.1 步骤 0 重抓。"""
+    """预告物化文件的检索日（retrieved_at_utc 最大值折算**北京日期**）；文件缺失返回空。
+    §7.1：检索日早于扫描日=数据过期，须按 §9.1 步骤 0 重抓。
+    必须折算时区再取日期部：扫描日与 §6.7 的 as-of 都是北京日历日，而戳是 UTC——
+    北京 00:00-08:00 之间 UTC 还在前一天，直接取 UTC 日期部会把刚抓的数据误报「过期」
+    （判例 2026-08-20 凌晨：v4.27 当晚吸收口径首跑即误报，预告/披露其实是 30 分钟前抓的）。"""
     if not path.exists():
         return ""
     stamps = [str(row.get("retrieved_at_utc") or "") for row in load_csv(path)]
-    return max(stamps)[:10] if stamps else ""
+    if not stamps:
+        return ""
+    latest = max(stamps)
+    try:
+        dt = datetime.fromisoformat(latest.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return (dt.astimezone(timezone(timedelta(hours=8)))).date().isoformat()
+    except ValueError:
+        return latest[:10]
 
 
 DISCLOSURE_LABELS = {"periodic_report": "定期报告", "express_report": "快报"}
