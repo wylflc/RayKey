@@ -1303,7 +1303,8 @@ def load_holdings() -> dict[str, float]:
 
 
 def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float | None = None,
-                         holdings: dict[str, float] | None = None) -> dict[str, object]:
+                         holdings: dict[str, float] | None = None,
+                         blocked: set[str] | None = None) -> dict[str, object]:
     """§9.7.2 第 3、5 步：按 `P/V` 升序、去相关、逐个买一档。
 
     §9.7.3 比例冷却：一手金额 > 一档时买一手，其后跳过 `round(x)−1` 次合格机会
@@ -1326,10 +1327,19 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             return True                      # 已持仓：只看均线排列
         return c > m20                       # 新建仓：还要站上 MA20
 
+    # §9.7.2 第 1 步：排除 review_pending（§7.5 冻结）。此前冻结只改 `signal_state` 展示字段、
+    # 本函数不读它——冻结股照样进下扫序列（判例 2026-08-19：天山铝业冻结中仍参与排序，
+    # 仅因相关性 0.72 被碰巧剔除）。「读起来在保护你、实际不保护任何东西」型，故在合格集处硬排除。
+    blocked = blocked or set()
+    frozen_out = [r for r in rows
+                  if str(r["security_code"]).zfill(6) in blocked
+                  and isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC97_BUY_LINE
+                  and trend_ok(r)]
     eligible = [
         r for r in rows
         if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC97_BUY_LINE
         and trend_ok(r)
+        and str(r["security_code"]).zfill(6) not in blocked
     ]
     eligible.sort(key=lambda r: r["model_pv"])
     n_cheap = sum(1 for r in rows
@@ -1395,6 +1405,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             "cooldown_skips": cooldown,
         })
     return {"plan": plan, "dropped": dropped, "eligible": eligible, "capped": capped,
+            "frozen_out": frozen_out,
             "n_cheap": n_cheap, "cash": cash, "tranche": tranche,
             "funds0": (nav if funds is None else max(funds, 0.0)), "funds_given": funds is not None,
             "n_held": len(holdings),
@@ -1420,7 +1431,11 @@ def report_section97(result: dict[str, object], nav: float, out_path: Path,
           f"再过走势条件的 **{len(result['eligible'])} 只**"
           f"（新建仓 `收>MA20>MA60`；**已持仓只须 `MA20>MA60`**，其中 {result['n_addon']} 只"
           f"是靠这条放宽进来的回踩加仓）；"
+          f"§7.5 冻结硬排除 {len(result.get('frozen_out') or [])} 只；"
           f"相关性 >{SEC97_MAX_CORR} 剔除 {len(dropped)} 只 → 买入 {len(plan)} 只")
+    for fz in result.get("frozen_out") or []:
+        print(f"  [冻结排除·review_pending] {fz.get('security_name','')} P/V {fz['model_pv']:.2f}"
+              f"（两闸已开，待 §6.7 重建解冻后按当日名次重入）")
     if result["n_held"] == 0:
         print("  ⚠ **没读到任何持仓**（data/processed/a_share_holdings.csv 缺失或为空）"
               "——加仓放宽会退回旧口径，买入计划不可直接照做")
@@ -1667,7 +1682,8 @@ def main() -> int:
     # §9.7 的买入计划（`attach_model_pv` 已在落盘前跑过，见上文）。
     if section97_ready:
         if args.nav > 0:
-            report_section97(section97_entry_plan(rows, args.nav, args.funds, load_holdings()),
+            report_section97(section97_entry_plan(rows, args.nav, args.funds, load_holdings(),
+                                                  blocked or set()),
                              args.nav, args.plan_out, args.as_of)
         else:
             print("§9.7 未给 --nav，只算 P/V 不出买入计划（一档以净资产为基数）")
