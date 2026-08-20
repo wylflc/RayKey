@@ -317,7 +317,7 @@ L4 不是 L3 的下一档连续刻度：L3 是弱护城河、仍在 `worth_atten
 #    除权事件（现金分红/送转）是第 4 步带归一化与第 2 步回测逐日状态的输入（v4.29，OI-077）。
 python3 scripts/fetch_a_share_quarterly_financials.py --as-of YYYY-MM-DD --since <当前报告期末>
 python3 scripts/fetch_a_share_financial_statements.py
-python3 scripts/fetch_ohlcv_history.py --as-of YYYY-MM-DD --actions-only   # 缺省范围＝池∪持仓，约 1 分钟；全市场加 --codes-file，只在全量重建前
+python3 scripts/fetch_ohlcv_history.py --as-of YYYY-MM-DD --actions-only   # 缺省范围＝核心池∪持仓（201 只，1-2 分钟）；档案层全员或全市场加 --codes-file，只在全量重建前
 
 # 2. 构建 ROIC 带与逐日状态
 python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
