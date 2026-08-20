@@ -634,6 +634,7 @@ class Lot:
     entry_stop: float = 0.0     # 建仓日止损价（见 entry_stop_price）
     entry_stop_ma: int = 0      # 实际采用的均线周期——买在 MA60 下方时会退回 20
     stop_breach_streak: int = 0 # 连续收盘跌破止损价的交易日数；站回止损价即归零
+    trail_peak: float = 0.0     # 上移锚（`--trail-ratio`）用的持有期价格峰值；除权日同步折算；开关关时恒 0
     peak_intrinsic: float = 0.0 # 持有期内内在价值的峰值——**基本面退出**按它的回撤触发
     exit_date: str = ""
     exit_reason: str = ""
@@ -735,6 +736,8 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
         lot.proceeds += cash
         credited += cash
         lot.shares *= (1 + ratio)
+        if lot.trail_peak > 0:          # 上移锚峰值按 §11.4 同式折算：(原值 − D) ÷ (1 + 送转比)
+            lot.trail_peak = max(0.0, (lot.trail_peak - cash_per_share) / (1 + ratio))
     return credited
 
 
@@ -887,7 +890,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         mkt: dict[str, float] | None = None, mkt_crash_days: int = 0,
         mkt_crash_pct: float = 0.10, mkt_trend_ma: int = 0,
         mkt_action: str = "block", mkt_release_ma: int = 20,
-        mkt_block_scope: str = "all") -> dict:
+        mkt_block_scope: str = "all", trail_ratio: float = 0.0) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -1170,6 +1173,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if not price:
                 continue
             lot.peak_price = max(lot.peak_price, price)
+            if trail_ratio:
+                lot.trail_peak = max(lot.trail_peak, price)   # 上移锚的峰值：只在开关开时维护
             if lot.peak_price > 0:
                 lot.max_drawdown = max(lot.max_drawdown, 1 - price / lot.peak_price)
             current_value = today.get(code, (None, None, None))[1]
@@ -1249,6 +1254,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 ma_cur = mas.get(code, {}).get(day, {}).get(lot.entry_stop_ma, 0.0)
                 if ma_cur:
                     stop_level = min(stop_level, ma_cur)
+            # `trail_ratio`（用户 2026-08-20：「给止损锚设一个上移机制，主要针对盈利比较大的股票，
+            # 锚_2 = max(锚_2, 当日股价×k)，止损价 = max(锚_2, min(锚, MA60))」）：锚_2 = k × 持有期峰价
+            # （逐日取 max 即等价于 k × 峰值），只升不降，除权日同步折算。k 越小，线越晚才咬住——
+            # k=2/3 要涨到比原锚高 50% 才开始生效，天然只作用于盈利大的仓位。
+            stop_tag = f"建仓日MA{lot.entry_stop_ma}"
+            if trail_ratio and lot.trail_peak > 0:
+                trail_level = lot.trail_peak * trail_ratio
+                if trail_level > stop_level:
+                    stop_level, stop_tag = trail_level, f"上移锚{trail_ratio:g}×峰价"
             stop_trigger = ""
             if stop_enabled:
                 lot.stop_breach_streak, stop_trigger = update_stop_breach(
@@ -1270,6 +1284,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 else:
                     trigger_reason = f"连续{lot.stop_breach_streak}日跌破"
                 stats[f"止损触发·{stop_trigger}"] += 1
+                if stop_tag.startswith("上移锚"):
+                    stats["止损触发·上移锚"] += 1
                 # `stop_partial`（用户 2026-08-14：「卖出改为定投式减仓」）：止损由**整仓清空**
                 # 改为**与定投同速、每日减一档**。这是当前策略里最后一条整仓路径——出名单清仓、
                 # `P/V` 减持、换仓三条早已是按档减，故本开关等于把卖出端整体对称到买入端。
@@ -1288,10 +1304,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         if shares >= lot.shares * 0.999:
                             turnover += lot.shares * price
                             close_lot(portfolio, code, day, price, ledger=ledger,
-                                      reason=f"{trigger_reason}建仓日MA{lot.entry_stop_ma}·减完清空")
+                                      reason=f"{trigger_reason}{stop_tag}·减完清空")
                         else:
                             log_partial_sell(ledger, day, code, shares, price,
-                                             f"{trigger_reason}建仓日MA{lot.entry_stop_ma}·减一档")
+                                             f"{trigger_reason}{stop_tag}·减一档")
                             lot.shares -= shares
                             portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                             lot.proceeds += shares * price
@@ -1302,7 +1318,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
                 close_lot(portfolio, code, day, price, ledger=ledger,
-                          reason=f"{trigger_reason}建仓日MA{lot.entry_stop_ma}止损")
+                          reason=f"{trigger_reason}{stop_tag}止损")
                 sell_count += 1
                 continue
             # 基本面退出：内在价值自峰值回落超阈值即清仓。**盯 V 不盯价**，故一只票可以
@@ -2321,6 +2337,9 @@ def main() -> int:
                         help="固定止损价须连续 N 个有收盘价的交易日被跌破才触发；1=原行为")
     parser.add_argument("--stop-deep-pct", type=float, default=0.0, metavar="P",
                         help="深跌旁路：收盘低于止损价 P 比例时立即触发，不等确认日；0=关闭，3%%填0.03")
+    parser.add_argument("--trail-ratio", type=float, default=0.0, metavar="K",
+                        help="上移锚（用户 2026-08-20 实验）：锚_2 = K × 持有期峰价（只升不降，除权同步折算），"
+                             "生效止损线 = max(锚_2, 现行止损线)。0=关（逐位不变）；例如 0.667")
     parser.add_argument("--stop-line", choices=("entry", "min_entry_current"), default="entry",
                         help="止损线口径：entry=建仓日冻结线（现行）；min_entry_current=min(建仓日线, "
                              "当日同周期均线)——均线下移时止损跟随下移、上移不抬线（用户 2026-08-19 实验）")
@@ -2483,6 +2502,7 @@ def main() -> int:
                      + (f"_scd{args.stop_confirm_days}" if args.stop_confirm_days != 1 else "")
                      + (f"_sdp{args.stop_deep_pct * 100:g}" if args.stop_deep_pct else "")
                      + ("_slmin" if args.stop_line == "min_entry_current" else "")
+                     + (f"_tr{args.trail_ratio:g}" if args.trail_ratio else "")
                      + ("_skipma60" if args.entry_below_ma60 == "skip" else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
@@ -2582,7 +2602,7 @@ def main() -> int:
                          mkt=mkt_series, mkt_crash_days=args.mkt_crash_days,
                          mkt_crash_pct=args.mkt_crash_pct, mkt_trend_ma=args.mkt_trend_ma,
                          mkt_action=args.mkt_action, mkt_release_ma=args.mkt_release_ma,
-                         mkt_block_scope=args.mkt_block_scope)
+                         mkt_block_scope=args.mkt_block_scope, trail_ratio=args.trail_ratio)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
