@@ -229,11 +229,15 @@ def main() -> int:
         row["anchor_earnings_yi"] = ""      # 本模型按每股折现，不用亿元口径的利润锚
         row["reviewed_at"] = args.as_of
         row["decided_by"] = "内在价值模型（§6.5.2.3 唯一带来源；v4.00 起 ROIC 口径）"
-        note = (f"**{args.as_of} 换用 v4.00 ROIC 口径带**：原带 "
-                f"{old_low}~{old_high}" + (f"（中值 {old_mid:.2f}，为新带的 {old_mid / iv:.2f}x）"
-                                           if old_mid else "") +
-                f" → {row['band_low']}~{row['band_high']}。依据 §12.66~§12.69。")
-        row["notes"] = note + ("｜" + row["notes"] if row["notes"] else "")
+        # v4.29：只在带值真的变了才留痕。此前每跑一次就追加一条「原带 X → X（1.00x）」，
+        # 272/280 份档案的 notes 被同一句话灌满（判例 2026-08-21：格力/牧原各 20+ 条零信息行），
+        # README 第一节随之不可读——留痕的对象是变化，不是跑批次数。
+        if (old_low, old_high) != (row["band_low"], row["band_high"]):
+            note = (f"**{args.as_of} 换用 v4.00 ROIC 口径带**：原带 "
+                    f"{old_low}~{old_high}" + (f"（中值 {old_mid:.2f}，为新带的 {old_mid / iv:.2f}x）"
+                                               if old_mid else "") +
+                    f" → {row['band_low']}~{row['band_high']}。依据 §12.66~§12.69。")
+            row["notes"] = note + ("｜" + row["notes"] if row["notes"] else "")
         applied.append(row["security_name"])
 
     print(f"档案 {len(rows)} 份｜**改用模型带 {len(applied)} 份**")

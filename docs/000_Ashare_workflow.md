@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.28
+# A股选股-估值-量价操作流程 v4.29
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -312,10 +312,12 @@ L4 不是 L3 的下一档连续刻度：L3 是弱护城河、仍在 `worth_atten
 **`--as-of` 一律取证据日（运行时的北京当日历日），不是扫描信号日**（v4.27，用户裁定）：A 股晚间披露的报告公告日官方戳次日；扫描在戳日凌晨执行时，证据日即戳日，新报告可入带。取信号日会把当晚披露全部挡在带外白冻结一天（判例：2026-08-19 晚 17 只中报戳 08-20，as-of 08-19 的链一只也吸收不了）。
 
 ```bash
-# 1. 刷新财务输入。**两份缺一不可**：
-#    逐季财务是模型的 TTM 锚（每个扫描日都可能变），三大报表只有年报（4 月后到次年才动）。
+# 1. 刷新财务输入与除权事件。**三份缺一不可**：
+#    逐季财务是模型的 TTM 锚（每个扫描日都可能变），三大报表只有年报（4 月后到次年才动），
+#    除权事件（现金分红/送转）是第 4 步带归一化与第 2 步回测逐日状态的输入（v4.29，OI-077）。
 python3 scripts/fetch_a_share_quarterly_financials.py --as-of YYYY-MM-DD --since <当前报告期末>
 python3 scripts/fetch_a_share_financial_statements.py
+python3 scripts/fetch_ohlcv_history.py --as-of YYYY-MM-DD --actions-only   # 缺省范围＝池∪持仓，约 1 分钟；全市场加 --codes-file，只在全量重建前
 
 # 2. 构建 ROIC 带与逐日状态
 python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
@@ -330,10 +332,11 @@ python3 scripts/rebuild_bank_bands.py divspread:0.02 \
   data/processed/roic_daily_raw.csv \
   data/processed/roic_bands.csv
 
-# 4. 生成池模型带 → 叠加预告/快报 → 写入逐票档案
+# 4. 生成池模型带 → 叠加预告/快报 → 写入逐票档案 → 重渲染 README
 python3 scripts/build_pool_model_bands.py --as-of YYYY-MM-DD
 python3 scripts/apply_forecast_band_overlay.py --as-of YYYY-MM-DD
 python3 scripts/apply_model_bands_to_dossiers.py --as-of YYYY-MM-DD
+python3 scripts/build_company_dossier_readmes.py   # 档案 CSV → README（§6.6「带变动后重渲染」，v4.29 起随链执行；--check 只验漂移）
 
 # 5. 档案 → 建带卡 → 估值表
 python3 scripts/build_valuation_band_cards.py \
@@ -357,7 +360,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --as-of YYYY-MM-DD
 披露窗未关时首次写下的那份必然只覆盖少数早披露公司，而残缺文件与完整文件在磁盘上无法区分。
 脚本自 v4.10 起对**披露窗未关的报告期强制重取**（不再由 `--refresh` 决定）并在结尾告警，
 但**跳过第 1 步仍会让整条链拿旧 TTM 重算一遍旧带**——判例：贵州茅台 2026-08-15 披露半年报，
-而池内该行停在 04-25 的一季报，根因就是这一步从未进入每日流程。
+而池内该行停在 04-25 的一季报，根因就是这一步从未进入每日流程。**除权事件库同理**（v4.29，OI-077）：判例 2026-08-21 紫金矿业一季度特别分红 08-21 除息、海尔智家/海康威视/影石创新同周除息，库停在 08-08 取数，4 只生产带漏归一化、`track_holdings_daily.py` 的当日除权检出按东财逐日查询与本库无关，故"检出无"与"带漏调"可同时发生。
 
 第 5.5 步只报异常不改数，**「严重」级须逐条处置后才继续**——一条倍数级的 `bps` 错误会静默改变 `P/V` 与买卖判定（判例：宏桥控股 FY2024/FY2025 的 `bps` 偏大约 10 倍，把 2026E PE 7.8 的票判成「高估」并藏出扫描之外）。任一步失败即停止；不得把旧估值表上的校验通过当成新带已生效。完成后核对模型带、档案、估值表和核心池的带值与日期一致。校验失败行冻结新增买入，修复后再物化。
 
