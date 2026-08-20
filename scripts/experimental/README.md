@@ -122,3 +122,15 @@ python3 scripts/experimental/align_buy_line.py <基准逐日> <基准线> <待�
 `scripts/build_historical_valuation_bands.py --roe-external CSV`：用外部预测的 ROE 覆盖 `roe0`，
 其余输入（折现率、终值 ROE、增长、护栏）一律沿用现行模型，故回测差异只能归因到 ROE 这一个输入。
 **不给该参数时行为逐位不变**，既往产出可复现。
+
+## 回撤路径剖析（2026-08-20，见回测日志 §12.92）
+
+| 文件 | 作用 |
+| --- | --- |
+| `drawdown_path.py` | 读一次**带产物**的回测（`*_equity.csv`、`*_trades.csv`、`--trade-log` 流水），列出全部回撤段，并对最深的几段给出峰/谷日账户结构、沪深300 与上证对照、峰→谷成交流水，以及用流水重建逐日股数（含送转）后的**老仓层／新钱层两层盈亏归因**与峰值日老仓明细（距生效止损线、离场日与原因） |
+
+```bash
+python3 scripts/backtest_valuation_strategy.py <BASE 全参数> --since 2009-11-01 \
+    --out-dir /tmp/bt_base --trade-log /tmp/bt_base/tradelog_base.csv      # 不要带 --no-artifacts
+python3 scripts/experimental/drawdown_path.py /tmp/bt_base --top 3
+```

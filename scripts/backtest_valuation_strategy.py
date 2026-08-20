@@ -450,6 +450,15 @@ def load_benchmark() -> dict[str, float]:
         return {r["date"]: float(r["close"]) for r in csv.DictReader(handle) if _num(r.get("close"))}
 
 
+def load_index_series(code: str) -> dict[str, float]:
+    """大盘围栏用的指数收盘序列 {日期: 收盘}。文件缺失返回空 dict，由调用方决定是否拒绝跑。"""
+    path = OHLCV_DIR / f"INDEX_{code}.csv"
+    if not path.exists():
+        return {}
+    with path.open(newline="", encoding="utf-8") as handle:
+        return {r["date"]: float(r["close"]) for r in csv.DictReader(handle) if _num(r.get("close"))}
+
+
 def load_risk_free() -> list[tuple[str, float]]:
     if not RATES.exists():
         return []
@@ -874,7 +883,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         pct_stop_when_rich: bool = False,
         addon_trend: str = "full", no_value_sell: bool = False,
         swap_require_weak: bool = False, swap_weak_ma: int = 20,
-        swap_out_min_pv: float = 0.0) -> dict:
+        swap_out_min_pv: float = 0.0,
+        mkt: dict[str, float] | None = None, mkt_crash_days: int = 0,
+        mkt_crash_pct: float = 0.10, mkt_trend_ma: int = 0,
+        mkt_action: str = "block", mkt_release_ma: int = 20,
+        mkt_block_scope: str = "all") -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -988,6 +1001,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     credit_limit = 0.0
     prev_trading = {n: d for d, n in zip(days, days[1:])}
     below_ma_run: dict[str, int] = {}      # 连续跌破 `liquidate_ma` 的天数，逐日累计
+    # ---- 大盘围栏（用户 2026-08-20）：指数序列只在开关打开时参与；关时本段不产生任何分支。
+    mkt_on = bool(mkt) and bool(mkt_crash_days or mkt_trend_ma)
+    mkt_state = False                      # 当前是否处于围栏态（触发后持续到解除条件成立）
+    if mkt_on:
+        mk_days = sorted(mkt)
+        mk_close = [mkt[d] for d in mk_days]
+
+        def mk_idx(d: str) -> int | None:
+            """信号日对应的指数下标：取 ≤ 信号日的最后一个指数交易日（两边都是 A 股日历，一般相等）。"""
+            i = bisect.bisect_right(mk_days, d) - 1
+            return i if i >= 0 else None
+
+        def mk_ma(i: int, n: int) -> float | None:
+            return sum(mk_close[i - n + 1:i + 1]) / n if n and i + 1 >= n else None
     for day in days:
         apply_corporate_actions(portfolio, day, actions)
 
@@ -1095,6 +1122,44 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             stats["**穿仓·净资产归零**"] += 1
             break
         budget = equity * x
+
+        # ---- 大盘围栏状态机（用户 2026-08-20）。判据全取**信号日**指数；动作落在成交日，与个股同序。
+        fence_on = False
+        if mkt_on:
+            i_mk = mk_idx(sig_day)
+            if i_mk is not None:
+                crash_hit = bool(mkt_crash_days) and i_mk >= mkt_crash_days and \
+                    mk_close[i_mk] / mk_close[i_mk - mkt_crash_days] - 1 <= -mkt_crash_pct
+                ma_t = mk_ma(i_mk, mkt_trend_ma) if mkt_trend_ma else None
+                bear_hit = ma_t is not None and mk_close[i_mk] < ma_t
+                if not mkt_state:
+                    if crash_hit or bear_hit:
+                        mkt_state = True
+                        stats["大盘围栏·触发"] += 1
+                        if mkt_action == "liquidate":
+                            # 整仓清空：按成交日价、计手续费、进流水，与止损清仓同一出口。
+                            for code in list(portfolio.lots):
+                                price = fill_price(code, marks.get(code))
+                                if not price:
+                                    continue
+                                turnover += portfolio.lots[code].shares * price
+                                close_lot(portfolio, code, day, price, ledger=ledger,
+                                          reason="大盘围栏·清仓")
+                                sell_count += 1
+                                stats["大盘围栏·清仓"] += 1
+                            marks = {c: p for c, p in marks.items() if c in portfolio.lots}
+                else:
+                    # 解除：速度围栏要「触发不再成立 且 指数站回 MA(R)」；趋势围栏要「指数回到 MA(M) 上」。
+                    ma_r = mk_ma(i_mk, mkt_release_ma) if mkt_crash_days else None
+                    crash_clear = (not mkt_crash_days) or (not crash_hit and ma_r is not None
+                                                           and mk_close[i_mk] > ma_r)
+                    trend_clear = (not mkt_trend_ma) or (not bear_hit)
+                    if crash_clear and trend_clear:
+                        mkt_state = False
+                        stats["大盘围栏·解除"] += 1
+            fence_on = mkt_state
+            if fence_on:
+                stats["大盘围栏·禁买日"] += 1
 
         # ---- 周期内回撤。**必须按价格算，不能按持仓市值算**：分批买入会推高市值、分批卖出
         # 会压低市值，两者都与价格无关。首版按市值算，结果三环集团 +8.5% 收益却报出
@@ -1343,6 +1408,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             stats["分位闸·当日合格"] += len(eligible)
         else:
             eligible = sorted((r for r in pool if r[3] <= buy_line(r[0])), key=_key)
+        # 大盘围栏态：合格集置空 → 换仓、簇内升级、相关性补位、定投买入全部无源可买；
+        # 卖出端（止损/减持/出名单）不受影响。只在开关打开时才可能为真。
+        if fence_on:
+            # `new` 范围：只拦新建仓，已持仓按原规则继续定投——检验「熊市里给老仓加仓」是不是围栏的代价来源。
+            eligible = ([] if mkt_block_scope == "all"
+                        else [r for r in eligible if r[0] in portfolio.lots])
         # `buy_floor`（用户 2026-08-14：「扩大买入阈值的范围，例如 0.8-1.2」的双边读法）：
         # 买入由单边上限改为**区间** `[buy_floor, buy_line]`，即**过分便宜的也不买**。
         # 动机是在「公平 P/V」口径下，`P/V` 远低于 1 未必是错杀，也可能是市场看对了
@@ -1665,7 +1736,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 比例冷却、单票上限、建仓日止损、流水记账全部沿用下面那个循环。多写一套的风险
         # 远大于收益（§13 第 3 条：同一件事写两遍，迟早两边不一样）。
         quota_room = 0.0
-        if quota_today:
+        if quota_today and not fence_on:
             held = sum(lot.shares * marks[c] for c, lot in portfolio.lots.items()
                        if c in quota_today and c in marks)
             quota_room = equity * quota_pct - held
@@ -2183,6 +2254,28 @@ def main() -> int:
                              "120=半年线、240=年线。与 --trend-exit-ma 的区别是它须同时满足 P/V 条件")
     parser.add_argument("--liquidate-days", type=int, default=3,
                         help="一键清仓要求的连续跌破天数")
+    # 大盘围栏（用户 2026-08-20：「发现大盘下跌幅度过大或连续大跌，进行清仓保护，看能否切断回撤」）。
+    # **纯研究开关，缺省全关、关时逐位不变**。两种触发（可同时开）、两种动作：
+    #   速度围栏：指数 N 日跌幅 ≥ P → 进入围栏态；解除须「触发不再成立 且 指数收盘 > MA(R)」。
+    #   趋势围栏：指数收盘 < 自身 MA(M) → 进入围栏态；收盘回到 MA(M) 之上即解除。
+    #   block     = 围栏态内禁止一切买入（新建仓、加仓、换仓目标），持仓仍按原规则止损/减持；
+    #   liquidate = 进入围栏态当日整仓清空（按成交日价），其后同 block。
+    # 判据一律用**信号日**的指数收盘与均线（与个股闸门同源，T+1 成交），不看成交日。
+    mk = parser.add_argument_group("大盘围栏（研究开关，缺省关闭）")
+    mk.add_argument("--mkt-index", default="000300",
+                    help="围栏所用指数代码，读 data/raw/ohlcv/INDEX_<代码>.csv（缺省沪深300）")
+    mk.add_argument("--mkt-crash-days", type=int, default=0, metavar="N",
+                    help="速度围栏：指数 N 个交易日跌幅 ≥ --mkt-crash-pct 即触发（0=关）")
+    mk.add_argument("--mkt-crash-pct", type=float, default=0.10, metavar="P",
+                    help="速度围栏的跌幅阈值（比例，0.10 即 10%%）")
+    mk.add_argument("--mkt-trend-ma", type=int, default=0, metavar="M",
+                    help="趋势围栏：指数收盘 < 自身 MA(M) 即触发（0=关）")
+    mk.add_argument("--mkt-action", choices=("block", "liquidate"), default="block",
+                    help="围栏态动作：block=只禁买；liquidate=进入围栏态当日整仓清空＋禁买")
+    mk.add_argument("--mkt-release-ma", type=int, default=20, metavar="R",
+                    help="速度围栏的解除条件之一：指数收盘 > MA(R)（趋势围栏按 MA(M) 自然解除）")
+    mk.add_argument("--mkt-block-scope", choices=("all", "new"), default="all",
+                    help="围栏态禁买范围：all=新建仓与加仓都禁；new=只禁新建仓，已持仓仍可按原规则加仓")
     parser.add_argument("--sell-trend-ma", nargs="*", type=int, default=[],
                         help="减持的前置走势闸门：给 `5 20` 表示还须 收盘<MA5<MA20 才按一档减。"
                              "空=原行为（纯估值触发）。只闸 P/V 减持，不闸出名单清仓与换仓")
@@ -2315,6 +2408,16 @@ def main() -> int:
              if args.exec_delay and args.exec_price == "open" else None)
     actions = load_actions()
     names, benchmark, risk_free = load_names(), load_benchmark(), load_risk_free()
+    mkt_series = None
+    if args.mkt_crash_days or args.mkt_trend_ma:
+        mkt_series = load_index_series(args.mkt_index)
+        if not mkt_series:
+            sys.exit(f"--mkt-* 开关已开但找不到指数文件 INDEX_{args.mkt_index}.csv——拒绝静默跑成无围栏")
+        print(f"  **大盘围栏**：指数 {args.mkt_index} {len(mkt_series):,} 日｜"
+              + (f"速度 {args.mkt_crash_days} 日跌 ≥{args.mkt_crash_pct:.0%}（解除须站回 MA{args.mkt_release_ma}）" if args.mkt_crash_days else "")
+              + ("＋" if args.mkt_crash_days and args.mkt_trend_ma else "")
+              + (f"趋势 收盘<MA{args.mkt_trend_ma}" if args.mkt_trend_ma else "")
+              + f"｜动作 {args.mkt_action}")
     # 均线窗口按**本次实际用到的**收集，缺哪条算哪条。此前固定 (5,10,20,60,120,240)，
     # 传入未预计算的窗口（如 `--trend-ma 10 30`）会使条件恒假、**一笔交易都不产生却不报错**
     # ——典型的静默失效（§13 第 3 条），2026-08-09 实测撞到后修正。
@@ -2411,6 +2514,13 @@ def main() -> int:
                      + (f"_rg{args.research_gate}{args.research_window}"
                         f"{'B' if args.research_missing == 'block' else ''}"
                         if args.research_gate != "off" else "")
+                     + ((f"_mk{args.mkt_index}"
+                         + (f"c{args.mkt_crash_days}p{args.mkt_crash_pct * 100:g}" if args.mkt_crash_days else "")
+                         + (f"t{args.mkt_trend_ma}" if args.mkt_trend_ma else "")
+                         + ("L" if args.mkt_action == "liquidate" else "B")
+                         + ("n" if args.mkt_block_scope == "new" else "")
+                         + (f"r{args.mkt_release_ma}" if args.mkt_crash_days else ""))
+                        if (args.mkt_crash_days or args.mkt_trend_ma) else "")
                      + args.label_suffix)
             if research is not None:
                 research.blocked.clear()
@@ -2468,7 +2578,11 @@ def main() -> int:
                          addon_trend=args.addon_trend, no_value_sell=args.no_value_sell,
                          swap_require_weak=args.swap_require_weak,
                          swap_weak_ma=args.swap_weak_ma,
-                         swap_out_min_pv=args.swap_out_min_pv)
+                         swap_out_min_pv=args.swap_out_min_pv,
+                         mkt=mkt_series, mkt_crash_days=args.mkt_crash_days,
+                         mkt_crash_pct=args.mkt_crash_pct, mkt_trend_ma=args.mkt_trend_ma,
+                         mkt_action=args.mkt_action, mkt_release_ma=args.mkt_release_ma,
+                         mkt_block_scope=args.mkt_block_scope)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
