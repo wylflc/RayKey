@@ -132,6 +132,12 @@ EXTERNAL_STATS: defaultdict[str, int] = defaultdict(int)
 ROIC_YEARS: dict[str, dict[str, "roic_inputs.RoicYear"]] = {}
 ROIC_STATS: defaultdict[str, int] = defaultdict(int)
 
+# `--moat-params CSV` 装载的逐票终值/衰减参数覆盖（OI-070 护城河补偿实验，2026-08-20）：
+# {代码: {"fade_years": int|None, "terminal_excess": float|None, "n1": int|None}}。
+# 缺省为空 dict，即所有既往产出逐位可复现；任何一列留空即沿用全局参数。
+MOAT_PARAMS: dict[str, dict[str, float | int | None]] = {}
+MOAT_STATS: defaultdict[str, int] = defaultdict(int)
+
 RATES_FILE = ROOT / "data/reference/cost_of_equity_inputs.csv"
 
 # β 初版按类型简化（评审给的量级）。**不用行情 raw beta**：小盘噪声、停牌、A 股风格切换
@@ -759,6 +765,27 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         g_terminal = min(args.g_terminal, terminal_growth_ceiling(rf))
     else:
         r, roe_t = params["r"], params["roe_terminal"]
+        # `--terminal-excess X`（研究开关，缺省 None＝原行为）：终值超额回报改为显式给定，
+        # `ROE_T = r + X`（roic 分支平移为 `ROIC_T = WACC + X`）。分档表里 L2 的 12% − 10% = 2pp
+        # 正是现行生产的隐含超额；显式化是为了能在不动 r 的前提下单独扫终值假设（OI-070 ②）。
+        if getattr(args, "terminal_excess", None) is not None:
+            roe_t = r + args.terminal_excess
+
+    # **逐票/分档参数覆盖**（`--moat-params CSV`，OI-070 护城河补偿实验）：只改终值超额与衰减年数
+    # 两个「护城河持续多久、终值超额多大」的参数，**不改 r、不改增长、不改分子**——护城河只经由
+    # 「超额回报持续多久」进入价值，绝不直接给好公司加倍数（评审五原则）。查不到的代码沿用全局。
+    n_years, n1_years = args.n, args.n1
+    override = MOAT_PARAMS.get(code)
+    if override:
+        if override.get("terminal_excess") is not None:
+            roe_t = r + override["terminal_excess"]
+        if override.get("fade_years") is not None:
+            n_years = int(override["fade_years"])
+        if override.get("n1") is not None:
+            n1_years = int(override["n1"])
+        MOAT_STATS["覆盖命中"] += 1
+    elif MOAT_PARAMS:
+        MOAT_STATS["无覆盖·沿用全局"] += 1
 
     band = Band(code, name, period, notice, available_at, "unavailable",
                 eps_ttm=eps.value if eps else None, roe_ttm=roe.value if roe else None,
@@ -1014,7 +1041,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             band.roe_terminal = roic_t
             try:
                 res = intrinsic_value(nopat_ps, roic0, g0, w, roe_terminal=roic_t,
-                                      g_terminal=g_terminal, n=args.n, n1=args.n1)
+                                      g_terminal=g_terminal, n=n_years, n1=n1_years)
             except ValuationError as exc:
                 band.status, band.reason = "rejected", str(exc)
                 return band
@@ -1097,7 +1124,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         band.roe_terminal = roe_t_ame
         try:
             res = intrinsic_value(oe0, iroe, g0, r, roe_terminal=roe_t_ame,
-                                  g_terminal=g_terminal, n=args.n, n1=args.n1)
+                                  g_terminal=g_terminal, n=n_years, n1=n1_years)
         except ValuationError as exc:
             band.status, band.reason = "rejected", str(exc)
             return band
@@ -1183,7 +1210,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
 
     try:
         result = intrinsic_value(eps0, roe0, g0, r, roe_terminal=roe_t,
-                                 g_terminal=g_terminal, n=args.n, n1=args.n1)
+                                 g_terminal=g_terminal, n=n_years, n1=n1_years)
     except ValuationError as exc:
         band.status, band.reason = "rejected", str(exc)
         return band
@@ -1496,6 +1523,13 @@ def main() -> int:
     parser.add_argument("--roe-terminal-ratio", type=float, metavar="K",
                         help="终值 ROE 改按公司自身定：ROE_T = K × roe0，夹在 "
                              "[g_T + min-terminal-spread, roe0] 内。缺省不启用（按分档常数）")
+    parser.add_argument("--terminal-excess", type=float, metavar="X",
+                        help="终值超额回报显式给定：ROE_T = r + X（roic 口径为 ROIC_T = WACC + X，仍 ≤ ROIC0）。"
+                             "缺省不启用＝按分档表（uniform L2 隐含 2pp）。研究开关（OI-070 ②）")
+    parser.add_argument("--moat-params", type=Path, metavar="CSV",
+                        help="逐票/分档终值参数覆盖（列：security_code,fade_years,terminal_excess,n1，"
+                             "空格即沿用全局）。只改「超额回报持续多久、终值超额多大」，不改 r/增长/分子。"
+                             "缺省不启用，既往产出逐位可复现。研究开关（OI-070 ①②）")
     parser.add_argument("--g0-cap", type=float, default=0.25, help="g0 上限，缺省 25%%")
     parser.add_argument("--g0-floor", type=float, default=0.0)
     parser.add_argument("--g0-shrink", type=float, default=1.0,
@@ -1574,6 +1608,21 @@ def main() -> int:
             seq.sort()
         print(f"外部 ROE 预测：{len(EXTERNAL_ROE)} 只、"
               f"{sum(len(v) for v in EXTERNAL_ROE.values()):,} 条 ← {args.roe_external}")
+    if args.moat_params:
+        with args.moat_params.open(encoding="utf-8-sig") as fh:
+            for r in csv.DictReader(fh):
+                code = (r.get("security_code") or "").strip().zfill(6)
+                if not code or code == "000000":
+                    continue
+                entry: dict[str, float | int | None] = {}
+                for key, cast in (("fade_years", int), ("terminal_excess", float), ("n1", int)):
+                    raw = (r.get(key) or "").strip()
+                    entry[key] = cast(float(raw)) if raw else None
+                MOAT_PARAMS[code] = entry
+        print(f"逐票终值参数覆盖：{len(MOAT_PARAMS)} 只 ← {args.moat_params}"
+              f"（fade_years/terminal_excess/n1 任一列给值即覆盖，空即沿用全局）")
+    if getattr(args, "terminal_excess", None) is not None:
+        print(f"**全局终值超额显式给定 {args.terminal_excess:+.1%}**（ROE_T/ROIC_T = r/WACC + 超额，≤ 起始回报）")
 
     tiers = load_tiers()
     financials = load_financials(set(codes))
@@ -1654,6 +1703,8 @@ def main() -> int:
 
     if EXTERNAL_ROE:
         print("外部 ROE 覆盖率：" + "｜".join(f"{k} {v:,}" for k, v in sorted(EXTERNAL_STATS.items())))
+    if MOAT_PARAMS:
+        print("逐票终值参数覆盖落地：" + "｜".join(f"{k} {v:,}" for k, v in sorted(MOAT_STATS.items())))
     if getattr(args, "dcf_peak_guard", 0):
         print(f"DCF peak 守卫（K={args.dcf_peak_guard:g}）："
               f"跳过单边上抬 {ROIC_STATS.get('DCF peak 守卫·不上抬', 0):,} 带")

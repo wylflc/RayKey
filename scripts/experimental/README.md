@@ -123,6 +123,25 @@ python3 scripts/experimental/align_buy_line.py <基准逐日> <基准线> <待�
 其余输入（折现率、终值 ROE、增长、护栏）一律沿用现行模型，故回测差异只能归因到 ROE 这一个输入。
 **不给该参数时行为逐位不变**，既往产出可复现。
 
+## 护城河终值补偿实验台（2026-08-20，见回测日志 §12.94；结论：终值超额杠杆干净但修不到买入区，分档/打分不含增量信息）
+
+| 文件 | 作用 |
+| --- | --- |
+| `moat_param_lab.py` | 单票：把同一只股票在不同终值参数下（`build_historical_valuation_bands.py --out-daily` 的多份逐日状态）的 `P/V` 并排——关键时点读数、逐年可买/减持区天数、月末 `P/V` 对其后 3/5 年**含分红再投**年化的校准（Spearman、各桶中位、对数线性拟合上前向恰等于要求回报的「公允 P/V」） |
+| `panel_tier_forward.py` | 全池：面板在册月末 `P/V` → 前向 3/5 年总回报，按 2026 年人工分档（含后视）分组报校准，并可落盘逐票统计（`--per-code-out`）供与 Q2/参考分做相关 |
+
+```bash
+python3 scripts/build_historical_valuation_bands.py --codes 600519 <§6.7 第 2 步全部参数> \
+    --terminal-excess 0.06 --out-daily /tmp/x/E6_daily.csv          # 或 --moat-params overrides.csv
+python3 scripts/experimental/moat_param_lab.py --code 600519 --states BASE=... E6=... \
+    --key-dates 2013-12-30 2018-10-30 2021-02-10 2024-09-18
+python3 scripts/experimental/panel_tier_forward.py --states data/processed/a_share_daily_states_adopted.csv \
+    --panel data/processed/pit_attention/panel_moat_bank_v6b.csv --exclude-banks --per-code-out /tmp/x/per_code.csv
+```
+
+生产脚本上为此开的两个口子（缺省关、既往产出逐位可复现）：`--terminal-excess X`（`ROE_T/ROIC_T = r/WACC + X`）、
+`--moat-params CSV`（逐票覆盖 `fade_years` / `terminal_excess` / `n1`，空列沿用全局）。
+
 ## 回撤路径剖析（2026-08-20，见回测日志 §12.92）
 
 | 文件 | 作用 |
