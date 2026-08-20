@@ -26,6 +26,10 @@
 2. **TTM 需要三期，而三期的公告日不一定都早于本期公告日**。TTM(Q1) = Q1 + 上年报 −
    上年 Q1，而年报常与一季报同期披露（甚至更晚）。故本脚本的生效日取
    **`available_at = max(所用各期的公告日)`**，不是本期公告日——否则就是 §12.4 前视。
+   **但逐日状态里带的生效日是 `available_at` 之前的最后一个交易日**（`--state-effective prev_trading_day`，
+   v4.28 用户裁定）：定期报告在非交易时段披露、官方戳次日，8.31 的公告 8.30 晚上已有，生产扫描在戳日凌晨
+   以 as-of=戳日 吸收、用 8.30 收盘出信号、8.31 执行（§6.7）；回测按同一口径，8.30 的状态行即用新带。
+   这不是前视——戳日凌晨该公告确已公开；旧口径（`notice`，公告日当天生效）只用于复现 v4.27 前的产物。
 
 3. **`weightavg_roe = 0` 是缺失值伪装成数字**。九号公司 2019 年报净利 −4.5 亿、ROE 却
    写 0。凡净利非零而 ROE 恰为 0 一律当缺失（§13 第 3 条：静默失效已复发五次）。
@@ -78,7 +82,7 @@ import csv
 import math
 import statistics
 import sys
-from bisect import bisect_right
+from bisect import bisect_left, bisect_right
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -1247,6 +1251,57 @@ def applicable_bands(bands: list[Band]) -> list[Band]:
     return kept
 
 
+# 逐日状态里「某一天用哪条带」的生效口径（`--state-effective`，v4.28 用户裁定）：
+#   prev_trading_day（缺省）：带自 **可得日之前的最后一个交易日** 起生效——A 股定期报告在非交易时段披露、
+#       官方公告日戳次日（8.31 的公告 8.30 晚上已有），生产扫描在戳日凌晨以 as-of=戳日 吸收并用 8.30 收盘出信号、
+#       8.31 执行（§6.7 v4.27）；回测须与之同构：8.30 的状态行即用新带。
+#   notice：带自公告日当天起生效（v4.27 及之前的旧口径，信号比生产晚一个交易日）。只用于复现旧产物。
+STATE_EFFECTIVE = "prev_trading_day"
+
+
+def effective_keys(usable: list[Band], prices: list[tuple[str, float]]) -> list[str]:
+    """每条带在逐日状态里的生效日（升序，与 `usable` 同序）。
+
+    `prev_trading_day`：该股价格序列里**严格早于** `available_at` 的最后一个交易日；可得日之前没有
+    交易日（上市首段）则退回 `available_at` 本身。同一间隙（如周六、周日、周一三个公告日）映射到同一个
+    周五——`applicable_bands` 已按报告期新者在后排序，`bisect_right` 取到的正是最新那条。
+    """
+    if STATE_EFFECTIVE != "prev_trading_day":
+        return [b.available_at for b in usable]
+    # 「前一交易日」按**市场日历**（上证指数行情日）取，不按个股自身日期：个股停牌时带仍应在
+    # 复牌首日起用（市场前一交易日 ≤ 复牌日，bisect 自然落到复牌首行），不该挂到停牌前最后一行。
+    days = MARKET_DAYS or [d for d, _ in prices]
+    keys = []
+    for b in usable:
+        j = bisect_left(days, b.available_at)            # 首个 ≥ available_at 的日历日下标
+        prev = days[j - 1] if j >= 1 else None
+        # 护栏（§12.4 前视）：日历里**没有** ≥ 可得日的交易日，说明行情库在该公告之前就断了
+        # （陈旧），此时只有「间隔 ≤ 4 个日历日」（周末/短假）才认前一交易日，否则退回可得日当天
+        # 生效（对陈旧序列即等于不出现）；日历覆盖到可得日之后的历史数据不受此限（长假亦可）。
+        covered = j < len(days)
+        if prev is not None and (covered or (_date(b.available_at) - _date(prev)).days <= 4):
+            keys.append(prev)
+        else:
+            keys.append(b.available_at)
+    return keys
+
+
+MARKET_DAYS: list[str] = []          # 上证指数行情日，`main()` 装载；空则退回个股自身日期
+MARKET_CALENDAR = OHLCV_DIR / "INDEX_000001.csv"
+
+
+def load_market_days() -> list[str]:
+    if not MARKET_CALENDAR.exists():
+        return []
+    with MARKET_CALENDAR.open(newline="", encoding="utf-8") as handle:
+        return sorted(r["date"] for r in csv.DictReader(handle) if r.get("date"))
+
+
+def _date(text: str):
+    from datetime import date
+    return date.fromisoformat(text)
+
+
 def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
                  actions: list[dict]) -> list[dict]:
     usable = applicable_bands(bands)
@@ -1260,7 +1315,9 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
     usable = [b for b in usable if b.report_date >= first_traded]
     if not usable:
         return []
-    keys = [b.available_at for b in usable]
+    # 生效日按 `--state-effective`（缺省「可得日前一交易日」，与生产扫描的当晚吸收同构）；
+    # `band_available_at` 列仍记录原始可得日，故该列可能晚于 `date` 一个交易日——这是口径的一部分。
+    keys = effective_keys(usable, prices)
     out = []
     for date, close in prices:
         index = bisect_right(keys, date) - 1
@@ -1575,9 +1632,22 @@ def main() -> int:
                              "（周期利润顶不外推）。缺省 0 = 关（现行生产行为）")
     parser.add_argument("--iroe-cap", type=float, default=0.40, metavar="X",
                         help="iROE 的上限，防止个别极端读数把估值推到发散；缺省 40%%")
+    parser.add_argument("--state-effective", choices=("prev_trading_day", "notice"),
+                        default="prev_trading_day",
+                        help="逐日状态里带的生效日：prev_trading_day=可得日前一交易日（缺省，v4.28，与生产"
+                             "扫描当晚吸收同构）；notice=公告日当天（v4.27 前旧口径，只用于复现旧产物）")
     parser.add_argument("--out-bands", type=Path)
     parser.add_argument("--out-daily", type=Path)
     args = parser.parse_args()
+    global STATE_EFFECTIVE
+    STATE_EFFECTIVE = args.state_effective
+    if STATE_EFFECTIVE == "prev_trading_day":
+        MARKET_DAYS[:] = load_market_days()
+        if MARKET_DAYS:
+            print(f"市场日历：{MARKET_CALENDAR.name} {len(MARKET_DAYS):,} 个交易日（{MARKET_DAYS[0]}~{MARKET_DAYS[-1]}）"
+                  f"——逐日状态生效日取可得日前一市场交易日")
+        else:
+            print(f"⚠ 未找到 {MARKET_CALENDAR.name}，前一交易日退回按个股自身日期")
 
     if args.sample:
         codes = list(SAMPLE_CODES)
@@ -1643,7 +1713,10 @@ def main() -> int:
         rows = sum(len(v) for v in ROIC_YEARS.values())
         print(f"三大报表：{len(ROIC_YEARS)}/{len(codes)} 只、{rows:,} 个财年")
     print(f"历史带重建：{len(codes)} 只｜报告期起点 {args.since}｜g0={args.g0_source}"
-          + (f"｜**分档统一为 {args.uniform_tier}**" if args.uniform_tier else ""))
+          + (f"｜**分档统一为 {args.uniform_tier}**" if args.uniform_tier else "")
+          + f"｜逐日状态生效日={args.state_effective}"
+          + ("（可得日前一交易日，与生产当晚吸收同构）" if args.state_effective == "prev_trading_day"
+             else "（**旧口径：公告日当天**，信号晚生产一个交易日）"))
 
     all_bands: list[tuple[str, Band]] = []
     band_rows: list[dict] = []
