@@ -142,6 +142,10 @@ python3 scripts/experimental/panel_tier_forward.py --states data/processed/a_sha
 生产脚本上为此开的两个口子（缺省关、既往产出逐位可复现）：`--terminal-excess X`（`ROE_T/ROIC_T = r/WACC + X`）、
 `--moat-params CSV`（逐票覆盖 `fade_years` / `terminal_excess` / `n1`，空列沿用全局）。
 
+决策层一侧（回测日志 §12.95，结论：凡进排序者全负、只放宽 L1 买入线弱正不过独立期，OI-070 据此关闭）：
+`backtest_valuation_strategy.py --tier-buy-scale L1=1.5[,L3=0.875]`／`--tier-sell-scale L1=1.5`（按 2026 分档给买入线／减持线乘倍数，
+缺省空＝逐位等于 BASE）；全决策折扣臂用「L1 的 `P/V` ÷m、V×m」的状态文件等价实现（与 §12.94 的带乘数同义，未另入库）。
+
 ## 回撤路径剖析（2026-08-20，见回测日志 §12.92）
 
 | 文件 | 作用 |

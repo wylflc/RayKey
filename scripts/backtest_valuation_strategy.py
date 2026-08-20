@@ -393,6 +393,19 @@ def load_tiers() -> dict[str, str]:
         return {r["security_code"]: r["quality_tier"] for r in csv.DictReader(handle)}
 
 
+def parse_tier_scale(text: str) -> dict[str, float] | None:
+    """`"L1=1.25,L3=0.875"` → `{"L1": 1.25, "L3": 0.875}`；空串 → None（原行为）。"""
+    text = (text or "").strip()
+    if not text:
+        return None
+    out: dict[str, float] = {}
+    for part in text.split(","):
+        tier, _, value = part.partition("=")
+        if tier.strip() and value.strip():
+            out[tier.strip()] = float(value)
+    return out or None
+
+
 def load_universe(path: Path) -> list[tuple[str, set[str]]]:
     """时点股票库：把成员区间展开为 ``[(变更日, {在册代码})]``。
 
@@ -890,8 +903,14 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         mkt: dict[str, float] | None = None, mkt_crash_days: int = 0,
         mkt_crash_pct: float = 0.10, mkt_trend_ma: int = 0,
         mkt_action: str = "block", mkt_release_ma: int = 20,
-        mkt_block_scope: str = "all", trail_ratio: float = 0.0) -> dict:
+        mkt_block_scope: str = "all", trail_ratio: float = 0.0,
+        tier_buy_scale: dict[str, float] | None = None,
+        tier_sell_scale: dict[str, float] | None = None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
+
+    `tier_buy_scale`／`tier_sell_scale`（研究开关，§12.95「护城河放到决策层」）：按档位给买入线／
+    减持线乘一个倍数（如 L1 ×1.25 = 强护城河少要安全边际、L3 ×0.875 = 多要），排序与换仓不动。
+    缺省 None ＝ 原行为逐位不变。档位来自 2026 年人工分档，含后视，读数只能作上界。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
     **MOS 只管买、不管卖**——安全边际是「便宜到什么程度才敢下手」，卖出仍按带上沿。
@@ -981,7 +1000,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     def buy_line(code: str) -> float:
         if use_mos:
             return 1.0 - MOS_BY_TIER.get(tiers.get(code, DEFAULT_TIER), width)
-        return 1.0 - width
+        line = 1.0 - width
+        if tier_buy_scale:
+            line *= tier_buy_scale.get(tiers.get(code, DEFAULT_TIER), 1.0)
+        return line
 
     # ---- 分位表预热：把 `since` 之前**已经发生过**的观测先灌进去。
     # 不预热的话每个起点都要空等 `quantile_min_obs` 天才有第一只可买票，而这段空窗
@@ -1077,7 +1099,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if gate == "self-pct":
                 p = pcts.get(code)
                 return p is not None and p >= sell_pct
-            return ratio is not None and ratio >= sell_line
+            line = sell_line
+            if tier_sell_scale:
+                line *= tier_sell_scale.get(tiers.get(code, DEFAULT_TIER), 1.0)
+            return ratio is not None and ratio >= line
         # 停牌股当日无价，**必须沿用最后成交价**——否则它会整只从净值里消失，
         # 复牌当天再凭空出现，资金曲线上是一对假的暴跌+暴涨。
         marks = {}
@@ -2163,6 +2188,10 @@ def main() -> int:
                         help="带的半宽 w：买入线 1−w、减持线 1+w。可给多个做敏感度")
     parser.add_argument("--use-mos", action="store_true",
                         help="买入线改按档位安全边际 1−MOS（L1 0.90/L2 0.80/L3 0.70）")
+    parser.add_argument("--tier-buy-scale", default="", metavar="L1=1.25,L3=0.875",
+                        help="研究开关（§12.95）：买入线按档位乘倍数，未列档位为 1.0；缺省空＝原行为")
+    parser.add_argument("--tier-sell-scale", default="", metavar="L1=1.5",
+                        help="研究开关（§12.95）：减持线按档位乘倍数，未列档位为 1.0；缺省空＝原行为")
     parser.add_argument("--price-stop", action="store_true", help="估值组也用建仓日均线止损")
     parser.add_argument("--stop-ma", type=int, choices=(20, 60), default=20,
                         help="止损均线周期；取 60 时，若建仓价已在 MA60 下方则自动退回 MA20")
@@ -2485,6 +2514,8 @@ def main() -> int:
                      + (f"_sma{'-'.join(map(str, args.sell_trend_ma))}" if args.sell_trend_ma else "")
                      + (f"_liq{args.liquidate_ma}d{args.liquidate_days}" if args.liquidate_ma else "")
                      + ("_mos" if args.use_mos else "")
+                     + (f"_tbs{args.tier_buy_scale.replace('=', '').replace(',', '_')}" if args.tier_buy_scale else "")
+                     + (f"_tss{args.tier_sell_scale.replace('=', '').replace(',', '_')}" if args.tier_sell_scale else "")
                      + (f"_ma{args.stop_ma}" if args.price_stop else "")
                      + (f"_vstop{args.value_stop:g}" if args.value_stop else "")
                      + ("_stab" if args.entry_filter == "stabilized" else "")
@@ -2602,7 +2633,9 @@ def main() -> int:
                          mkt=mkt_series, mkt_crash_days=args.mkt_crash_days,
                          mkt_crash_pct=args.mkt_crash_pct, mkt_trend_ma=args.mkt_trend_ma,
                          mkt_action=args.mkt_action, mkt_release_ma=args.mkt_release_ma,
-                         mkt_block_scope=args.mkt_block_scope, trail_ratio=args.trail_ratio)
+                         mkt_block_scope=args.mkt_block_scope, trail_ratio=args.trail_ratio,
+                         tier_buy_scale=parse_tier_scale(args.tier_buy_scale),
+                         tier_sell_scale=parse_tier_scale(args.tier_sell_scale))
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
