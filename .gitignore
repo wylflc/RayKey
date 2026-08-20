@@ -43,7 +43,7 @@ data/processed/hist_bands_*.csv
 data/processed/a_share_daily_g*.csv
 data/processed/a_share_historical_valuation_daily_*.csv
 data/processed/a_share_historical_valuation_bands_*.csv
-# ROIC 口径带与中间产物（v4.00 生产口径；重建三步见工作流 §9.7.1.2）
+# ROIC 口径带与中间产物（v4.00 生产口径；重建见工作流 §6.7 估值重建链）
 data/processed/roic_bands.csv
 data/processed/roic_daily_raw.csv
 

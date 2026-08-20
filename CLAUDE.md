@@ -4,12 +4,12 @@ Research and data analysis for listed companies in mainland China and Hong Kong 
 
 ## Where The Standards Live
 
-- **`docs/000_Ashare_workflow.md`** is the master execution spec for the entire A-share pipeline (quality triage → tiering → valuation pool → rolling post-disclosure updates → daily volume/price scan → daily holdings tracking). The pipeline **ends at buy candidates**: the pretrade gate and the sell scan both retired in v2.05 — whether to buy or sell, and how much, is the user's call. Route through its §0 task-routing table and execute the matching section without asking the user to re-explain the process. **Standards live only in that file.** If one looks wrong, edit it first (§15), then re-run — never override or restate its thresholds elsewhere.
-- **`docs/000_personal-investment-system-v1.zh.md`** is the governing standard for investment judgment: strategy classification, valuation/scenario method, and research obligations. **Its behavioural red lines, prohibitions, single-veto list and structural caps were all deleted 2026-08-18** — there is no interception protocol any more; execute instructions and report facts. Account-level constraints are down to two exogenous ones (broker credit line, 130% liquidation line, §4).
+- **`docs/000_Ashare_workflow.md`** is the master execution spec for the entire A-share pipeline. Route every pipeline task through its §0 task-routing table and execute the matching section without asking the user to re-explain the process. **Standards live only in that file** — if one looks wrong, edit it first, then re-run. Do not restate its content, thresholds, or section numbers anywhere else, this file included: the doc changes near-daily and restatements have repeatedly gone stale and misled sessions.
+- **`docs/000_personal-investment-system-v1.zh.md`** is the governing standard for investment judgment; single-company, stock-defence, watchlist, valuation, and position analysis follow it directly.
 - **`docs/Ashare_workflow_open_issues.md`** registers confirmed-but-unfixed defects. Check it before trusting a mechanism it lists.
-- For single-company, stock-defence, watchlist, valuation, or position-sizing analysis, use the project-level `stock-analysis` skill.
+- **`CONTEXT.md`** holds the stable domain vocabulary; **`docs/adr/`** holds architectural decisions.
 
-Treat the latest user request and committed project docs as the source of truth for current priorities. Do not turn transient requirements into reusable skill rules.
+Treat the latest user request and committed project docs as the source of truth for current priorities.
 
 ## Working Rules
 
