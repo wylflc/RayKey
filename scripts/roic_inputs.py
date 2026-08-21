@@ -39,7 +39,7 @@ from __future__ import annotations
 
 import csv
 import statistics
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -104,6 +104,7 @@ class RoicYear:
     cfo: float | None = None
     interest_expense: float = 0.0
     is_financial: bool = False
+    tax_rate_observed: bool = False   # True=税率来自本期 所得税/利润总额；False=利润总额非正时回退法定税率
 
 
 def load_statements(codes: set[str] | None = None,
@@ -161,6 +162,7 @@ def load_statements(codes: set[str] | None = None,
                     rate = income_tax / total_profit
                     lo, hi = TAX_RATE_BOUNDS
                     year.tax_rate = min(max(rate, lo), hi)
+                    year.tax_rate_observed = True
                 else:
                     year.tax_rate = DEFAULT_TAX_RATE
                 year.nopat = year.ebit * (1 - year.tax_rate)
@@ -222,6 +224,115 @@ def incremental_roic(history: list[RoicYear]) -> float | None:
     if delta_ic <= 0:
         return None
     return (new.nopat - old.nopat) / delta_ic
+
+
+def incremental_roic_multiwindow(history: list[RoicYear],
+                                 spans: tuple[int, ...] = (3, 5, 7)) -> float | None:
+    """多窗口稳健中位的增量 ROIC（OI-069 第 2 条候选，研究开关；§12.100 实测回测中性但不压噪声，不采纳）。
+
+    现行 `incremental_roic` 只看窗口首尾两点，任一端点被营运资金波动、并购、资本开支时间
+    错位或 ΔIC 趋零污染，读数就整段失真（全历史相邻年报带 |Δ增量ROIC| 中位 7.8pp、P90 59.5pp、
+    符号翻转 10.6%，回测日志 §12.99.1）。本函数对**同一终点、不同起点**的几个窗口（缺省 3/5/7 年，
+    历史不足时取可用年数）各算一次首尾 `ΔNOPAT/ΔIC`，只保留 ΔIC>0 的窗口，取**中位**——
+    单个坏端点最多毁掉一个窗口。窗口全部无定义时仍返回 None（语义与现行一致：资本腿不可算）。
+    `history` 须按调用方要求含更长的回看（建带侧给 `--roic-iroic-years`，缺省 7 年）。
+    """
+    ordered = [y for y in sorted(history, key=lambda y: y.period)
+               if y.nopat is not None and y.invested_capital is not None]
+    n = len(ordered)
+    if n < 2:
+        return None
+    values = []
+    for span in sorted({min(s, n) for s in spans}):
+        if span < 2:
+            continue
+        new, old = ordered[-1], ordered[-span]
+        delta_ic = new.invested_capital - old.invested_capital
+        if delta_ic <= 0:
+            continue
+        values.append((new.nopat - old.nopat) / delta_ic)
+    return statistics.median(values) if values else None
+
+
+def incremental_roic_allpairs(history: list[RoicYear]) -> float | None:
+    """全对中位的增量 ROIC（OI-069 第 2 条候选，研究开关；§12.100 实测不采纳）。
+
+    窗口内**任意两个财年** (i<j) 各算一次 `ΔNOPAT/ΔIC`（只保留 ΔIC>0 的对），取中位。与同终点多窗口
+    （`incremental_roic_multiwindow`）的区别：最新一年只参与 n−1 对而非全部窗口，单个坏端点——无论在
+    窗口哪一端——最多污染少数几对。§12.100.2 按报表实测（4,298 条年报带）：相邻年 |Δ| 中位 7.8pp→4.4pp、
+    P90 60pp→34pp、符号翻转 10.7%→5.6%，水平中位 0.189→0.194——**估计量本身**噪声减半、水平不动；但经
+    `g0 = max(资本腿, 增速腿)` 的凸性，重估只会把 trailing 来源的带往上推、把负 iROIC 翻成可用，
+    全市场 3,359 条带 g0 变动、2,332 条上调，23 起点滚5 −0.74pp（8/23）——按「不影响收益率」原则不采纳。
+    窗口由调用方给（建带侧 `--roic-iroic-years`，缺省 7 年）。
+    """
+    ordered = [y for y in sorted(history, key=lambda y: y.period)
+               if y.nopat is not None and y.invested_capital is not None]
+    values = []
+    for i in range(len(ordered)):
+        for j in range(i + 1, len(ordered)):
+            delta_ic = ordered[j].invested_capital - ordered[i].invested_capital
+            if delta_ic > 0:
+                values.append((ordered[j].nopat - ordered[i].nopat) / delta_ic)
+    return statistics.median(values) if values else None
+
+
+def incremental_roic_allpairs_guarded(history: list[RoicYear], base_years: int = 5) -> float | None:
+    """保覆盖的全对中位：只在**现行首尾口径可算**（近 `base_years` 年 ΔIC>0）时给出全对中位，否则仍 None。
+
+    §12.100.3 实测：不保覆盖的 `allpairs` 把 740 条 `ΔIC≤0` 的带从「资本腿不可算」变成可算、g0 由 0 上调，
+    叠加 `max(资本腿, 增速腿)` 的凸性，整体抬高 g0 水平（3,359 条带变动、2,332 条上调），滚5 −0.74pp；
+    本函数把覆盖钉在现行集合上，只替换可算处的估计值，隔离「压噪声」与「扩覆盖」两个效应。
+    实测仍 −0.72pp（8/23）：612 条带的 iROIC 由负转正、670 条资本腿升到增速腿之上，g0 只升不降——不采纳。
+    """
+    ordered = sorted(history, key=lambda y: y.period)
+    if incremental_roic(ordered[-base_years:]) is None:
+        return None
+    return incremental_roic_allpairs(history)
+
+
+def incremental_roic_regression(history: list[RoicYear], min_pairs: int = 3) -> float | None:
+    """回归口径的增量 ROIC：对窗口内逐年 `ΔNOPAT_t = α + β·ΔIC_t` 做 OLS，取 β（OI-069 第 2 条候选之二）。
+
+    每对相邻年份贡献一个点，≥ `min_pairs` 对且 ΔIC 有离散度才可算；β 可为负（由调用方按
+    `iroic > 0` 决定资本腿是否启用，与现行同规）。样本只有 4~6 个点，β 对离群年敏感，
+    故与多窗口中位并列实测而非直接采用。
+    """
+    ordered = [y for y in sorted(history, key=lambda y: y.period)
+               if y.nopat is not None and y.invested_capital is not None]
+    pairs = [(b.invested_capital - a.invested_capital, b.nopat - a.nopat)
+             for a, b in zip(ordered, ordered[1:])]
+    if len(pairs) < min_pairs:
+        return None
+    mx = statistics.mean(x for x, _ in pairs)
+    my = statistics.mean(y for _, y in pairs)
+    sxx = sum((x - mx) ** 2 for x, _ in pairs)
+    if sxx <= 0:
+        return None
+    sxy = sum((x - mx) * (y - my) for x, y in pairs)
+    return sxy / sxx
+
+
+def normalized_tax_rate(history: list[RoicYear]) -> float | None:
+    """窗口内**实际观测到**的年度税率（所得税/利润总额，已夹 [0,40%]）的中位（OI-069 第 5 条候选，研究开关）。
+
+    单期税率受递延税、一次性优惠、亏损年回退法定税率污染（§12.99.1：相邻年报带 |Δ税率| 中位 1.2pp、
+    P90 6.8pp）。取多年中位只压噪声、不移均值；但统一税率重算各年 NOPAT 等于把利润增速腿改成 EBIT 增速，
+    §12.100 实测 23 起点滚5 −3.31pp（5/23）、滚3回撤 39.1→41.5，不采纳。窗口内没有一个观测年时返回 None，
+    调用方保持现行逐年税率。
+    """
+    rates = [y.tax_rate for y in history if y.tax_rate_observed and y.tax_rate is not None]
+    return statistics.median(rates) if rates else None
+
+
+def with_tax_rate(history: list[RoicYear], tax_rate: float) -> list[RoicYear]:
+    """按统一税率重算每年 `NOPAT = EBIT × (1 − t)`，**返回副本**（`ROIC_YEARS` 在各时点的带之间共享，不可原地改）。"""
+    out = []
+    for y in history:
+        if y.ebit is None:
+            out.append(y)
+            continue
+        out.append(replace(y, tax_rate=tax_rate, nopat=y.ebit * (1 - tax_rate)))
+    return out
 
 
 def trailing_nopat_cagr(history: list[RoicYear], min_years: int = 3) -> float | None:

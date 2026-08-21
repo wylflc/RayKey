@@ -895,8 +895,35 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             # **不可以用「年报权益 ÷ 当期 BPS」反推股数**——年报权益一年内不变而 BPS 逐季变，
             # 分红除权当季 BPS 下跌会让隐含股数虚增。实测茅台每股 NOPAT 在年内
             # 39.42→43.57→40.11 来回摆动，摆幅全部来自六七月派息，不是经营变化。
+            # **税率归一化**（OI-069 第 5 条，`--roic-tax-mode median`，研究开关，§12.100 实测滚5 −3.31 不采纳）：窗口内观测年税率的中位
+            # 统一重算各年 NOPAT（副本，不碰共享的 ROIC_YEARS），比率锚、ROIC0、增量 ROIC、再投资率、
+            # 利润增速腿与 WACC 的税盾全部同源；窗口内无观测年时保持逐年税率。缺省 latest = 现行逐位行为。
+            tax_norm = None
+            if getattr(args, "roic_tax_mode", "latest") == "median":
+                tax_norm = roic_inputs.normalized_tax_rate(history)
+                if tax_norm is not None:
+                    history = roic_inputs.with_tax_rate(history, tax_norm)
+                    latest = max(history, key=lambda y: y.period)
             roic0 = roic_inputs.normalized_roic(history)
-            iroic = roic_inputs.incremental_roic(history)
+            # **增量 ROIC 口径**（OI-069 第 2 条，`--roic-iroic-mode`，研究开关，缺省 endpoint＝生产）：
+            # endpoint=窗口首尾；allpairs=窗口内任意两财年各算一次取中位（估计量噪声减半，但经
+            # `max(资本腿, 增速腿)` 只升不降地抬 g0，23 起点滚5 −0.7pp，§12.100 不采纳）；allpairs_guarded=
+            # 同上但只在首尾口径可算处给值（同样 −0.7pp）；multiwindow=3/5/7 年同终点多窗口取中位（回测中性、
+            # 但不压噪声）；regression=逐年 ΔNOPAT~ΔIC 的 OLS β（水平坍塌、回测为负）。endpoint 以外各档回看
+            # `--roic-iroic-years`（缺省 7）年，只影响资本腿的 iROIC，不动其它输入。
+            iroic_mode = getattr(args, "roic_iroic_mode", "endpoint")
+            if iroic_mode == "endpoint":
+                iroic = roic_inputs.incremental_roic(history)
+            else:
+                iroic_hist = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at,
+                                                      max(args.roe_years, args.roic_iroic_years))
+                if tax_norm is not None:
+                    iroic_hist = roic_inputs.with_tax_rate(iroic_hist, tax_norm)
+                iroic = {"multiwindow": roic_inputs.incremental_roic_multiwindow,
+                         "allpairs": roic_inputs.incremental_roic_allpairs,
+                         "allpairs_guarded": lambda h: roic_inputs.incremental_roic_allpairs_guarded(
+                             h, base_years=args.roe_years),
+                         "regression": roic_inputs.incremental_roic_regression}[iroic_mode](iroic_hist)
             rr = roic_inputs.reinvestment_rate(history)
             rd = roic_inputs.cost_of_debt(history)
             tax = latest.tax_rate if latest.tax_rate is not None else roic_inputs.DEFAULT_TAX_RATE
@@ -926,6 +953,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             if getattr(args, "roic_cycle_guard", "efficiency") == "peak":
                 long_hist = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at,
                                                      max(args.roe_years, 10))
+                if tax_norm is not None:
+                    long_hist = roic_inputs.with_tax_rate(long_hist, tax_norm)
                 long_ratios = [y.nopat / y.parent_equity
                                for y in sorted(long_hist, key=lambda x: x.period)
                                if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
@@ -1632,6 +1661,20 @@ def main() -> int:
                              "（周期利润顶不外推）。缺省 0 = 关（现行生产行为）")
     parser.add_argument("--iroe-cap", type=float, default=0.40, metavar="X",
                         help="iROE 的上限，防止个别极端读数把估值推到发散；缺省 40%%")
+    parser.add_argument("--roic-iroic-mode",
+                        choices=("endpoint", "multiwindow", "allpairs", "allpairs_guarded", "regression"),
+                        default="endpoint",
+                        help="增量 ROIC 的估计口径（OI-069 第 2 条，研究开关）：endpoint=窗口首尾 ΔNOPAT/ΔIC（生产）；"
+                             "allpairs=窗口内任意两财年各算一次、取中位（噪声减半但经 max() 抬高 g0，滚5 −0.74，§12.100 不采纳）；"
+                             "allpairs_guarded=同上但只在首尾口径可算处给值（滚5 −0.72，不采纳）；"
+                             "multiwindow=3/5/7 年同终点多窗口取中位（回测中性但不压噪声）；regression=逐年 ΔNOPAT~ΔIC 的 OLS "
+                             "斜率（水平坍塌、回测为负）。endpoint 以外各档回看 --roic-iroic-years 年")
+    parser.add_argument("--roic-iroic-years", type=int, default=7,
+                        help="multiwindow/regression 口径的回看年数，缺省 7（不少于 --roe-years）")
+    parser.add_argument("--roic-tax-mode", choices=("latest", "median"), default="latest",
+                        help="NOPAT 与 WACC 税盾用的税率（OI-069 第 5 条，研究开关）：latest=各年自己的单期税率、WACC 用"
+                             "最新年（生产）；median=窗口内观测年税率的中位统一重算各年 NOPAT（等于把增速腿改成 EBIT 增速，"
+                             "§12.100 实测滚5 −3.31／5/23，不采纳）")
     parser.add_argument("--state-effective", choices=("prev_trading_day", "notice"),
                         default="prev_trading_day",
                         help="逐日状态里带的生效日：prev_trading_day=可得日前一交易日（缺省，v4.28，与生产"

@@ -118,8 +118,20 @@ def model_assumptions(band: dict, mid: float, pv: float | None) -> str:
             tail += f"，即现价股息率 = 带口径要求收益率 ÷ {pv:.3f}"
         return head + tail + "；参数全文见第二节。"
     if path == "growth":
-        params = (f"g0 {_pct(band.get('g0'))}（增量 ROIC {_pct(band.get('incremental_roic'))} × "
-                  f"再投资率 {_pct(band.get('reinvestment_rate'))}）、WACC {_pct(band.get('wacc'))}、"
+        # g0 的来源按带文件 `roic_g_source` 如实写：hybrid 两腿取大，多数带由利润增速腿给出
+        # （§12.99.1：生产池 202 只 growth 带里 116 只），写成「增量 ROIC × 再投资率」是错的归因（OI-069 判例）。
+        src = (band.get("roic_g_source") or "").strip()
+        capital_leg = (f"资本腿 增量 ROIC {_pct(band.get('incremental_roic'))} × "
+                       f"再投资率 {_pct(band.get('reinvestment_rate'))}")
+        if src == "trailing":
+            g_note = f"利润增速腿＝NOPAT 五年 CAGR，高于{capital_leg}"
+        elif src == "capital":
+            g_note = capital_leg
+        elif src == "none":
+            g_note = "两腿皆不可算，按 0 增长"
+        else:
+            g_note = capital_leg
+        params = (f"g0 {_pct(band.get('g0'))}（{g_note}）、WACC {_pct(band.get('wacc'))}、"
                   f"终值占比 {_pct(band.get('terminal_share'), 1)}")
     elif path == "zero_growth":
         params = f"零增长永续 V = 每股 NOPAT ÷ WACC − 每股净负债，g0 0、WACC {_pct(band.get('wacc'))}"

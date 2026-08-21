@@ -211,10 +211,16 @@ def main() -> int:
                 + "V = 近 12 个月每股现金分红 ÷ (十年国债 + 2%)｜" + common_tail)
         elif roic_path in ("growth", "zero_growth"):
             row["band_method"] = "内在价值模型·ROIC 口径（§6.5.2.3）：NOPAT—投入资本—增量回报—WACC—EV−净负债"
+            # g0 的来源按带文件 `roic_g_source` 如实写（hybrid 两腿取大；生产池多数 growth 带由利润增速腿给出，
+            # 一律写成「增量ROIC × 再投资率」是 OI-069/OI-076 判例里的错误归因，v4.31 改）
+            g_src = (band.get("roic_g_source") or "").strip()
+            g_note = {"trailing": "利润增速腿（NOPAT 五年 CAGR）",
+                      "capital": "资本腿 min(增量ROIC, 40%) × 再投资率",
+                      "none": "两腿皆不可算，按 0"}.get(g_src, "min(增量ROIC, 40%) × 再投资率")
             row["band_derivation"] = (common_head
                 + f"每股 NOPAT {band.get('nopat_ps', '—')}｜ROIC0 {_f('roic0')}｜"
                 + f"增量 ROIC {_f('incremental_roic')}｜再投资率 {_f('reinvestment_rate')}｜"
-                + f"g0 {_f('g0')} = 增量ROIC × 再投资率｜WACC {_f('wacc')}｜"
+                + f"g0 {_f('g0')} = {g_note}｜WACC {_f('wacc')}｜"
                 + f"终值 ROIC {_f('roe_terminal')}、g_T {_f('g_terminal')}｜"
                 + f"每股净负债 {band.get('net_debt_ps', '—')}｜"
                 + ("**零增长永续**（增长输入不可用，V = NOPAT/WACC − 净负债）｜"
