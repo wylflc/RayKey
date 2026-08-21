@@ -407,6 +407,39 @@ def cost_of_debt(history: list[RoicYear]) -> float:
     return min(max(interest / (len(ordered) - 1) / avg_debt, lo), hi)
 
 
+# OI-071 ②（研究开关 `--rd-mode spread`）：rd = 无风险利率 + 信用利差，利差按**利息覆盖倍数**查表——
+# Damodaran 综合评级表（大市值档，2024 版）的覆盖倍数下限 → 利差；覆盖倍数按窗口合计 EBIT / 合计利息费用算（单年噪声大）。
+# 现行 `cost_of_debt` 是存量债务的历史成本（利息/平均有息负债），DCF 要的是边际融资成本，故有此候选。
+SPREAD_BY_COVERAGE = ((8.5, 0.0075), (6.5, 0.0100), (5.5, 0.0150), (4.25, 0.0180), (3.0, 0.0200),
+                      (2.5, 0.0225), (2.25, 0.0275), (2.0, 0.0325), (1.75, 0.0400), (1.5, 0.0500),
+                      (1.25, 0.0650), (0.8, 0.0800), (0.65, 0.1000), (0.2, 0.1150), (float("-inf"), 0.1500))
+
+
+def interest_coverage(history: list[RoicYear]) -> float | None:
+    """窗口合计 EBIT ÷ 合计利息费用；无利息费用（无债）返回 None（调用方按最高评级给最小利差）。"""
+    ordered = sorted(history, key=lambda y: y.period)
+    if len(ordered) < 2:
+        return None
+    interest = sum(y.interest_expense for y in ordered[1:])
+    ebit = sum(y.ebit for y in ordered[1:] if y.ebit is not None)
+    if interest <= 0:
+        return None
+    return ebit / interest
+
+
+def cost_of_debt_spread(history: list[RoicYear], risk_free: float) -> float:
+    """`rd = R_f + 利差(覆盖倍数)`，夹在 `COST_OF_DEBT_BOUNDS`；无债按最高评级（最小利差）。"""
+    coverage = interest_coverage(history)
+    spread = SPREAD_BY_COVERAGE[0][1]
+    if coverage is not None:
+        for floor, sp in SPREAD_BY_COVERAGE:
+            if coverage >= floor:
+                spread = sp
+                break
+    lo, hi = COST_OF_DEBT_BOUNDS
+    return min(max(risk_free + spread, lo), hi)
+
+
 def wacc(cost_equity: float, cost_debt: float, tax_rate: float,
          equity: float, debt: float) -> float:
     """`(E·re + D·rd·(1−t)) / (E+D)`，**账面权重**（用市值会循环，见模块头）。"""

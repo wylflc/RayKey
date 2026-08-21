@@ -19,9 +19,17 @@
               股息率−国债利差在全历史五档上单调（其后三年 −0.8%/+1.3%/+3.0%/+7.9%/+11.2%，
               三年为正比例 47%/57%/67%/83%/90%），是银行组唯一单调的候选
 
+  ri:COE|peer   **剩余收益**（OI-072 候选②，研究口径）：`V = BV0 + Σ_{t=1..10} (ROE_t − COE)·BV_{t−1}/(1+COE)^t + 终值`，
+              ROE 自 roe0 线性衰减到 `ROE_T = min(roe0, COE + 2pp)`（与主模型 ROIC_T = WACC + 2pp 同规），
+              BV 按留存 `1 − payout` 滚存，终值 `(ROE_T − COE)·BV_10 / (COE − g_T)`、`g_T = min(3%, ROE_T × 留存)`；
+              COE 取常数或 `peer`（滚动三年同业隐含 COE 中位，严格早于当日）。
+  ddm:COE|peer  **股利贴现**（OI-072 候选①）：同一条 ROE/BV 路径上 `DPS_t = ROE_t·BV_{t−1}·payout`，
+              `V = Σ DPS_t/(1+COE)^t + DPS_11/(COE − g_T)/(1+COE)^10`。
+              两者都用 ROE/BVPS/派息率而非只用 DPS，能区分「DPS 相同而 ROE 18% vs 7%」的两家银行。
+
 用法：
     python3 rebuild_bank_bands.py <模式> <输出文件> [逐日状态文件]
-    模式 = fixed:0.15 | peer | pbhist | divspread:0.02
+    模式 = fixed:0.15 | peer | pbhist | divspread:0.02 | ri:0.12 | ri:peer | ddm:0.12 | ddm:peer | ddm:peer:13（第三段 = fade 年数）
 
 第三个可选参数用于把同一口径施加到**别的逐日状态文件**上（例如护城河池与银行的并集），
 银行名单与基本面序列仍取自 pit116 面板与其估值带——银行的 bps/roe0/payout 与池子无关。
@@ -143,6 +151,52 @@ def own_pb(c, day):
     return statistics.median(x[1] for x in s[lo:hi]) if hi - lo >= 60 else None
 
 FIXED = float(mode.split(":")[1]) if mode.startswith("fixed:") else None
+PATH_MODE = mode.split(":")[0] if mode.startswith(("ri:", "ddm:")) else None      # OI-072 候选：ri / ddm
+PATH_COE = None
+FADE_YEARS = 10
+if PATH_MODE:
+    _parts = mode.split(":")
+    PATH_COE = None if _parts[1] == "peer" else float(_parts[1])
+    if len(_parts) > 2:                       # 第三段 = fade 年数（平台检查用，如 ddm:peer:13）
+        FADE_YEARS = int(_parts[2])
+TERMINAL_EXCESS = 0.02        # ROE_T = min(roe0, COE + 2pp)，与主模型 ROIC_T = WACC + 2pp 同规
+
+
+def roe_bv_path(bps, roe0, payout, coe):
+    """剩余收益／DDM 共用的 ROE、BV 路径：ROE 自 roe0 线性衰减到 ROE_T，BV 按留存滚存。
+    返回 (逐年 (roe_t, bv_prev) 列表, roe_T, g_T, bv_N)。"""
+    b = 1.0 - (payout if payout is not None else 0.30)
+    b = min(max(b, 0.0), 1.0)
+    roe_T = min(roe0, coe + TERMINAL_EXCESS)
+    g_T = min(G_CAP, roe_T * b)
+    path = []
+    bv = bps
+    for t in range(1, FADE_YEARS + 1):
+        roe_t = roe0 + (roe_T - roe0) * t / FADE_YEARS
+        path.append((roe_t, bv))
+        bv = bv * (1.0 + roe_t * b)
+    return path, roe_T, g_T, bv, b
+
+
+def ri_value(bps, roe0, payout, coe):
+    """剩余收益：V = BV0 + Σ (ROE_t − COE)·BV_{t−1}/(1+COE)^t + (ROE_T − COE)·BV_N/(COE − g_T)/(1+COE)^N。"""
+    path, roe_T, g_T, bv_N, _b = roe_bv_path(bps, roe0, payout, coe)
+    if coe - g_T < 0.02:
+        return None
+    pv = sum((roe_t - coe) * bv_prev / (1.0 + coe) ** t for t, (roe_t, bv_prev) in enumerate(path, start=1))
+    terminal = (roe_T - coe) * bv_N / (coe - g_T) / (1.0 + coe) ** FADE_YEARS
+    return bps + pv + terminal
+
+
+def ddm_value(bps, roe0, payout, coe):
+    """股利贴现：同一路径上 DPS_t = ROE_t·BV_{t−1}·payout，终值 DPS_{N+1}/(COE − g_T)。"""
+    path, roe_T, g_T, bv_N, b = roe_bv_path(bps, roe0, payout, coe)
+    pay = 1.0 - b
+    if coe - g_T < 0.02 or pay <= 0:
+        return None
+    pv = sum(roe_t * bv_prev * pay / (1.0 + coe) ** t for t, (roe_t, bv_prev) in enumerate(path, start=1))
+    terminal = roe_T * bv_N * pay / (coe - g_T) / (1.0 + coe) ** FADE_YEARS
+    return pv + terminal
 RP = float(mode.split(":")[1]) if mode.startswith("divspread:") else None
 
 # ---- 股利折现口径要用的两组序列 ----
@@ -214,6 +268,21 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
             v = dv / (r10 + RP)
             if v <= 0: n_dropped += 1; continue
             pb_star.append(v / bps)
+            r["intrinsic_value"] = f"{v:.4f}"
+            r["band_low"] = f"{v*0.9:.4f}"
+            r["band_high"] = f"{v*1.1:.4f}"
+            r["valuation_ratio"] = f"{px/v:.4f}"
+            r["upside_to_low"] = f"{v*0.9/px-1:.4f}"
+            w.writerow(r); n_rewritten += 1; continue
+        if PATH_MODE:
+            if roe0 is None or roe0 <= 0: n_dropped += 1; continue
+            coe = PATH_COE if PATH_COE is not None else peer_coe(d)
+            if coe is None: n_dropped += 1; continue
+            v = (ri_value if PATH_MODE == "ri" else ddm_value)(bps, roe0, payout, coe)
+            if v is None or v <= 0: n_dropped += 1; continue
+            pbs = v / bps
+            if not (0.05 < pbs < 15): n_dropped += 1; continue
+            pb_star.append(pbs)
             r["intrinsic_value"] = f"{v:.4f}"
             r["band_low"] = f"{v*0.9:.4f}"
             r["band_high"] = f"{v*1.1:.4f}"

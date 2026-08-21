@@ -768,6 +768,79 @@ class Band:
     terminal_share: float | None = None
     implied_pe: float | None = None
     min_payout: float | None = None
+    # ---- OI-074（v4.35）：输出列，不进任何交易判定 ----
+    v_bear: float | None = None               # 悲观敏感度值（g0×0.5、折现率+1pp、终值回报−1pp、fade 7 年、g_T−0.5pp）
+    v_bull: float | None = None               # 乐观敏感度值（g0×1.25 封顶、折现率−1pp、终值回报+1pp、fade 13 年、g_T+0.5pp）
+    valuation_quality_score: int | None = None   # 0-100：历史长度／回报稳定性／终值占比／路径与守卫／两腿一致度各 20 分
+    valuation_quality_notes: str = ""         # 各分项得分的短记号，便于逐行复核
+
+
+def _cv(values: list[float]) -> float | None:
+    """变异系数 σ/|均值|；观测 <3 或均值为 0 返回 None。"""
+    vals = [v for v in values if v is not None]
+    if len(vals) < 3:
+        return None
+    mean = statistics.fmean(vals)
+    if abs(mean) < 1e-12:
+        return None
+    return statistics.pstdev(vals) / abs(mean)
+
+
+def quality_score(history_years: int, return_cv: float | None, terminal_share: float | None,
+                  path_tag: str, leg_gap: float | None, legs: int) -> tuple[int, str]:
+    """估值质量分（OI-074 ①，0-100）：五个分项各 20 分，分项定义见工作流 §6.5.3。
+
+    * 历史长度：可用财年 ≥8 → 20；5~7 → 12；≤4 → 5
+    * 回报稳定性（逐年 ROIC／ROE 的变异系数）：≤0.25 → 20；≤0.50 → 12；其余或不可算 → 5
+    * 终值占比：≤0.60 → 20；≤0.75 → 12；其余 → 5
+    * 路径与守卫：growth 且未触 peak 守卫 → 20；growth 触守卫或 zero_growth → 10；equity_fallback → 5
+    * 两腿一致度（g 的资本腿 vs 增速腿；权益口径为 g_sustainable vs g_trailing）：两腿可算且差 ≤5pp → 20；≤10pp → 12；
+      只有一腿 → 12；差 >10pp 或两腿皆无 → 5
+    """
+    s_hist = 20 if history_years >= 8 else 12 if history_years >= 5 else 5
+    s_cv = 5 if return_cv is None else 20 if return_cv <= 0.25 else 12 if return_cv <= 0.50 else 5
+    s_term = 5 if terminal_share is None else 20 if terminal_share <= 0.60 else 12 if terminal_share <= 0.75 else 5
+    s_path = {"growth": 20, "growth_guarded": 10, "zero_growth": 10, "equity_fallback": 5}.get(path_tag, 5)
+    if legs >= 2 and leg_gap is not None:
+        s_leg = 20 if leg_gap <= 0.05 else 12 if leg_gap <= 0.10 else 5
+    elif legs == 1:
+        s_leg = 12
+    else:
+        s_leg = 5
+    total = s_hist + s_cv + s_term + s_path + s_leg
+    notes = f"hist{s_hist}/cv{s_cv}/term{s_term}/path{s_path}/legs{s_leg}"
+    return total, notes
+
+
+def sensitivity_values(eps0: float, roe0: float, g0: float, r: float, roe_t: float,
+                       g_terminal: float, n: int, n1: int, g0_cap: float, spread: float,
+                       less: float = 0.0) -> tuple[float | None, float | None]:
+    """Bear/Bull 敏感度值（OI-074 ②）：同一引擎、五个参数同向扰动；任一护栏拒绝即该侧为 None。
+    `less` 是要从企业价值里扣除的每股净负债（ROIC 口径），权益口径为 0。"""
+    out = []
+    for sign in (-1, +1):
+        g_adj = g0 * (0.5 if sign < 0 else 1.25)
+        g_adj = min(max(g_adj, 0.0), g0_cap)
+        r_adj = r + (0.01 if sign < 0 else -0.01)
+        gt_adj = g_terminal + (-0.005 if sign < 0 else 0.005)
+        if gt_adj < 0:
+            gt_adj = 0.0
+        t_adj = roe_t + (-0.01 if sign < 0 else 0.01)
+        if sign > 0:
+            t_adj = min(t_adj, roe0)           # 终值回报不高于起点（竞争侵蚀方向不变）
+        t_adj = max(t_adj, gt_adj + spread + 1e-6)
+        if r_adj <= gt_adj + 1e-6 or eps0 <= 0 or roe0 <= 0:
+            out.append(None)
+            continue
+        n_adj = max(3, n + (-3 if sign < 0 else 3))
+        try:
+            res = intrinsic_value(eps0, roe0, g_adj, r_adj, roe_terminal=t_adj,
+                                  g_terminal=gt_adj, n=n_adj, n1=n1)
+            value = res.intrinsic_value - less
+            out.append(value if value > 0 else None)
+        except ValuationError:
+            out.append(None)
+    return out[0], out[1]
 
 
 def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions: list[dict],
@@ -974,9 +1047,29 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                              h, base_years=args.roe_years),
                          "regression": roic_inputs.incremental_roic_regression}[iroic_mode](iroic_hist)
             rr = roic_inputs.reinvestment_rate(history)
-            rd = roic_inputs.cost_of_debt(history)
+            # OI-071 ②：债务成本口径（研究开关，缺省 historical＝生产）
+            rd = None
+            if getattr(args, "rd_mode", "historical") == "spread":
+                observed = rates_as_of(args.rates, available_at)
+                if observed is not None:
+                    rd = roic_inputs.cost_of_debt_spread(history, observed[0])
+                    ROIC_STATS["rd·国债+利差"] += 1
+                else:
+                    ROIC_STATS["rd·无当时利率观测退历史成本"] += 1
+            if rd is None:
+                rd = roic_inputs.cost_of_debt(history)
             tax = latest.tax_rate if latest.tax_rate is not None else roic_inputs.DEFAULT_TAX_RATE
-            w = roic_inputs.wacc(r, rd, tax, latest.total_equity or 0.0, latest.interest_debt)
+            # OI-071 ①：WACC 股权权重（研究开关，缺省 book＝生产）。市值 = 可得日收盘 × 股本估计，
+            # 股本 = 最新财年母公司权益 ÷ 该财年报告的 BPS，再乘该财年公告日→可得日的送转因子（同基）
+            equity_weight = latest.total_equity or 0.0
+            if getattr(args, "wacc_weights", "book") == "market":
+                mcap = market_cap_at(code, series, actions, latest, available_at)
+                if mcap:
+                    equity_weight = mcap + (latest.minority_equity or 0.0)
+                    ROIC_STATS["WACC·市值权重"] += 1
+                else:
+                    ROIC_STATS["WACC·市值不可得退账面"] += 1
+            w = roic_inputs.wacc(r, rd, tax, equity_weight, latest.interest_debt)
             band.roic0, band.incremental_roic, band.reinvestment_rate = roic0, iroic, rr
             band.wacc, band.cost_of_debt, band.tax_rate = w, rd, tax
             if latest.nopat is None or latest.nopat <= 0:
@@ -1043,6 +1136,12 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                                  and ratios[-1] > statistics.median(ratios))
                 else:
                     is_growth = len(ratios) >= 3 and ratios[-1] > ratios[-2] > ratios[-3]
+                # OI-073 ②（研究开关）：单调判据对幅度不敏感（0.10→0.101→0.102 与 0.10→0.15→0.22 同判），
+                # 加最小幅度条件「当期 > X × 窗口中位」，不满足退回非增长态口径。
+                min_ratio = getattr(args, "roic_growth_min_ratio", 0.0)
+                if is_growth and min_ratio and ratios[-1] <= min_ratio * statistics.median(ratios):
+                    is_growth = False
+                    ROIC_STATS["增长态·幅度不足退非增长口径"] += 1
                 if is_growth:
                     ratio0 = ratios[-1]
                     band.roic_nopat_mode = "ttm_growth"
@@ -1063,8 +1162,13 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             if nopat_ps <= 0:
                 band.status, band.reason = "rejected", "正常化每股 NOPAT 非正"
                 return band
-            # 零增长锚（框架 §1）：EV = NOPAT/WACC。
-            band.v_zero_growth = nopat_ps / w - net_debt_ps
+            # 零增长锚（框架 §1）：EV = NOPAT/WACC。OI-073 ④（研究开关 `--roic-zero-anchor fcff`）：
+            # 分子改 NOPAT×(1−窗口净再投资率)，净再投资率夹 [0, 0.5]（D&A 超过资本开支时不抬分子、资本最密集时最多砍半）。
+            zero_numerator = nopat_ps
+            if getattr(args, "roic_zero_anchor", "nopat") == "fcff" and rr is not None and rr > 0:
+                zero_numerator = nopat_ps * (1.0 - min(rr, 0.5))
+                ROIC_STATS["零增长锚·FCFF 分子"] += 1
+            band.v_zero_growth = zero_numerator / w - net_debt_ps
             growth_mode = getattr(args, "roic_growth", "capital")
             # v1（capital）：ROIC、再投资率、增量 ROIC 任一不可用 → 整条退零增长永续。
             # v2（hybrid）：**只有 ROIC0 不可用才退零增长**——ΔIC ≤ 0（现金牛把投入资本
@@ -1085,6 +1189,14 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 band.g0 = 0.0
                 if band.mos is not None:
                     band.max_buy_price = margin_of_safety(value, band.mos)
+                # OI-074：零增长锚只对折现率敏感（±1pp）
+                bear = zero_numerator / (w + 0.01) - net_debt_ps
+                bull = zero_numerator / max(w - 0.01, g_terminal + args.min_terminal_spread) - net_debt_ps
+                band.v_bear, band.v_bull = (bear if bear > 0 else None), (bull if bull > 0 else None)
+                ordered_hist = sorted(history, key=lambda x: x.period)
+                yearly = [roic_inputs.roic_of(y, prev) for prev, y in zip([None] + ordered_hist[:-1], ordered_hist)]
+                band.valuation_quality_score, band.valuation_quality_notes = quality_score(
+                    len(history), _cv([v for v in yearly if v is not None]), 1.0, "zero_growth", None, 0)
                 return band
             # 框架 §4：**资本驱动的增长 g = 增量ROIC × 再投资率**。
             # 再投资率夹在 [0,1]：>1 表示靠外部融资扩张，那部分增长不属于现有股东。
@@ -1138,6 +1250,18 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             band.band_low, band.band_high = BAND_LOW_COEF * value, BAND_HIGH_COEF * value
             # 终值占比按**企业价值**口径报（净负债不属于折现流）
             band.terminal_share, band.implied_pe = res.terminal_share, value / nopat_ps
+            # OI-074：敏感度带与质量分（输出列，不进判定）
+            band.v_bear, band.v_bull = sensitivity_values(
+                nopat_ps, roic0, g0, w, roic_t, g_terminal, n_years, n1_years,
+                args.g0_cap, args.min_terminal_spread, less=net_debt_ps)
+            ordered_hist = sorted(history, key=lambda x: x.period)
+            yearly = [roic_inputs.roic_of(y, prev) for prev, y in zip([None] + ordered_hist[:-1], ordered_hist)]
+            legs = sum(1 for g in (g_capital, g_trail if growth_mode == "hybrid" else None) if g is not None)
+            gap = (abs(g_capital - g_trail) if growth_mode == "hybrid" and g_capital is not None
+                   and g_trail is not None else None)
+            band.valuation_quality_score, band.valuation_quality_notes = quality_score(
+                len(history), _cv([v for v in yearly if v is not None]), res.terminal_share,
+                "growth_guarded" if nopat_cyclical else "growth", gap, legs)
             band.min_payout = res.min_payout
             if band.mos is not None:
                 band.max_buy_price = margin_of_safety(value, band.mos)
@@ -1304,6 +1428,15 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     band.terminal_share = result.terminal_share
     band.implied_pe = result.implied_pe
     band.min_payout = result.min_payout
+    # OI-074：敏感度带与质量分（输出列，不进判定）
+    band.v_bear, band.v_bull = sensitivity_values(
+        eps0, roe0, g0, r, roe_t, g_terminal, n_years, n1_years, args.g0_cap, args.min_terminal_spread)
+    roe_hist = [v for _p, v in annual_roe_series(series, available_at, max(args.roe_years, 10))]
+    legs_e = sum(1 for g in (band.g_sustainable, band.g_trailing) if g is not None)
+    gap_e = (abs(band.g_sustainable - band.g_trailing)
+             if band.g_sustainable is not None and band.g_trailing is not None else None)
+    band.valuation_quality_score, band.valuation_quality_notes = quality_score(
+        len(roe_hist), _cv(roe_hist), result.terminal_share, "equity_fallback", gap_e, legs_e)
     # 安全边际在**决策层**单独给出，不混进 r（否则同一个风险被惩罚两次）
     if band.mos is not None:
         band.max_buy_price = margin_of_safety(result.intrinsic_value, band.mos)
@@ -1430,6 +1563,65 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
 # 现金调整把带穿到非正值的 (代码, 日) —— 不该发生，发生即须人工看（§13 第 3 条：不许静默）。
 EXRIGHT_NEGATIVE: list[str] = []
 
+# OI-074 ③：每只的 (代码, 最新 ok 带路径, NOPAT 口径, 市值代理)；结尾按路径打印只数、市值占比与行业集中度，
+# 防某类公司因数据问题系统性换模型而不可见。行业取 `a_share_company_analysis_index.csv` 的门类（去掉字母前缀）。
+PATH_STATS: list[tuple[str, str, str | None, float | None]] = []
+INDUSTRY_FILE = ROOT / "data/processed/a_share_company_analysis_index.csv"
+
+
+def load_industries() -> dict[str, str]:
+    if not INDUSTRY_FILE.exists():
+        return {}
+    out = {}
+    with INDUSTRY_FILE.open(newline="", encoding="utf-8-sig") as fh:
+        for r in csv.DictReader(fh):
+            ind = (r.get("industry") or "").strip()
+            if ind and ind[0].isascii() and ind[0].isalpha():
+                ind = ind[1:].strip()            # 「C 制造业」与「制造业」归一
+            out[(r.get("security_code") or "").zfill(6)] = ind or "未知"
+    return out
+
+
+def print_path_distribution() -> None:
+    """OI-074 ③：按最新 ok 带路径打印只数、市值占比（有市值代理的部分）与前三行业。"""
+    if not PATH_STATS:
+        return
+    from collections import Counter
+    industries = load_industries()
+    by_path: dict[str, list] = defaultdict(list)
+    for code, path, mode, mcap in PATH_STATS:
+        key = f"{path}（peak 守卫）" if mode == "cyclical_median" and path == "growth" else path
+        by_path[key].append((code, mcap, industries.get(code, "未知")))
+    total_n = len(PATH_STATS)
+    total_mcap = sum(m for _c, _p, _m, m in PATH_STATS if m) or 0.0
+    print(f"路径分布（每只最新 ok 带，{total_n:,} 只；市值占比按有市值代理的 {sum(1 for x in PATH_STATS if x[3]):,} 只算）：")
+    for key, items in sorted(by_path.items(), key=lambda kv: -len(kv[1])):
+        mcap = sum(m for _c, m, _i in items if m)
+        top = Counter(i for _c, _m, i in items).most_common(3)
+        print(f"  {key}: {len(items):,} 只（{len(items) / total_n:.1%}）｜市值占比 {mcap / total_mcap if total_mcap else 0:.1%}"
+              f"｜行业前三 " + "、".join(f"{name} {n}" for name, n in top))
+
+
+# OI-071 ①：`--wacc-weights market` 要在建带时读该股的不复权收盘；主循环在建带前把本只的价格序列放这里。
+CURRENT_PRICES: dict[str, list[tuple[str, float]]] = {}
+
+
+def market_cap_at(code: str, series: dict[str, dict], actions: list[dict],
+                  latest, available_at: str) -> float | None:
+    """可得日市值（元）：可得日前最后一个收盘 × 股本估计；股本 = 最新财年母公司权益 ÷ 该财年 BPS × 该财年公告日→可得日送转因子。"""
+    prices = CURRENT_PRICES.get(code)
+    row = series.get(latest.period)
+    if not prices or not row or not latest.parent_equity or latest.parent_equity <= 0:
+        return None
+    bps_year = _num(row.get("bps"))
+    if not bps_year or bps_year <= 0:
+        return None
+    shares = latest.parent_equity / bps_year * split_factor(actions, row["notice_date"], available_at)
+    i = bisect_right(prices, (available_at, float("inf"))) - 1
+    if i < 0:
+        return None
+    return prices[i][1] * shares
+
 
 # ------------------------------------------------------------------ 输出
 BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", "notice_date",
@@ -1444,7 +1636,8 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
                "r_mode", "rf", "erp", "beta", "r", "g_terminal", "roe_terminal",
                "intrinsic_value", "band_low", "band_high", "mos", "max_buy_price",
-               "implied_pe", "pe_on_ttm_eps", "terminal_share", "min_payout"]
+               "implied_pe", "pe_on_ttm_eps", "terminal_share", "min_payout",
+               "v_bear", "v_bull", "valuation_quality_score", "valuation_quality_notes"]
 
 
 def band_row(band: Band, tier: str) -> dict:
@@ -1487,6 +1680,9 @@ def band_row(band: Band, tier: str) -> dict:
         "band_high": fmt(band.band_high), "implied_pe": fmt(band.implied_pe, 2),
         "pe_on_ttm_eps": fmt(pe_ttm, 2),
         "terminal_share": fmt(band.terminal_share), "min_payout": fmt(band.min_payout),
+        "v_bear": fmt(band.v_bear), "v_bull": fmt(band.v_bull),
+        "valuation_quality_score": "" if band.valuation_quality_score is None else str(band.valuation_quality_score),
+        "valuation_quality_notes": band.valuation_quality_notes or "",
     }
 
 
@@ -1732,6 +1928,17 @@ def main() -> int:
                         default="prev_trading_day",
                         help="逐日状态里带的生效日：prev_trading_day=可得日前一交易日（缺省，v4.28，与生产"
                              "扫描当晚吸收同构）；notice=公告日当天（v4.27 前旧口径，只用于复现旧产物）")
+    parser.add_argument("--wacc-weights", choices=("book", "market"), default="book",
+                        help="WACC 权重（OI-071 ①，研究开关）：book=账面（缺省，生产）；market=可得日市值×(1+可得日前送转)"
+                             "作股权权重（按带期报告的 BPS 反推股本），市值不可得退账面")
+    parser.add_argument("--rd-mode", choices=("historical", "spread"), default="historical",
+                        help="债务成本（OI-071 ②，研究开关）：historical=利息/平均有息负债夹 2~12%%（缺省，生产）；"
+                             "spread=可得日十年国债 + 按利息覆盖倍数查表的信用利差（无当时利率观测退 historical）")
+    parser.add_argument("--roic-growth-min-ratio", type=float, default=0.0, metavar="X",
+                        help="增长态最小幅度条件（OI-073 ②，研究开关）：增长态还须 当期比率 > X × 窗口中位（如 1.10）；0=关（缺省）")
+    parser.add_argument("--roic-zero-anchor", choices=("nopat", "fcff"), default="nopat",
+                        help="零增长锚分子（OI-073 ④，研究开关）：nopat=NOPAT/WACC（缺省，隐含 D&A=维持性资本开支）；"
+                             "fcff=NOPAT×(1−窗口净再投资率，夹 [0,0.5])/WACC")
     parser.add_argument("--notice-cap", choices=("statutory", "off"), default="statutory",
                         help="公告日封顶（OI-042 建带侧）：statutory=逐季财务与三大报表的公告日在装载时改为"
                              " min(记录公告日, 法定截止日)（缺省）；off=按东财记录日原样（只用于复现旧产物）")
@@ -1851,11 +2058,28 @@ def main() -> int:
         tier = args.uniform_tier or (tiers.get(code) or {}).get("quality_tier") or DEFAULT_TIER
         name = next(iter(series.values()))["security_name"]
         periods = sorted(p for p in series if p >= args.since)
+        prices = load_ohlcv(code)
+        CURRENT_PRICES.clear()
+        if args.wacc_weights == "market":
+            CURRENT_PRICES[code] = prices
         bands = [build_band(code, name, tier, series, actions.get(code, []), p, args) for p in periods]
         all_bands.extend((code, b) for b in bands)
         band_rows.extend(band_row(b, tier) for b in bands)
-
-        prices = load_ohlcv(code)
+        # OI-074 ③：路径分布统计的原料——每只的最新 ok 带路径、市值代理（末日收盘 × 隐含股本）
+        latest_ok = max((b for b in bands if b.status == "ok"),
+                        key=lambda b: (b.available_at, b.report_date), default=None)
+        if latest_ok is not None and prices:
+            mcap = None
+            annual_rows = [series[q] for q in sorted(series)
+                           if q.endswith("-12-31") and series[q]["notice_date"] <= prices[-1][0]]
+            if annual_rows:
+                last_row = annual_rows[-1]
+                np_, eps_ = _num(last_row.get("parent_netprofit")), _num(last_row.get("basic_eps"))
+                if np_ and eps_ and np_ * eps_ > 0:
+                    shares = abs(np_ / eps_) * split_factor(actions.get(code, []), last_row["notice_date"], prices[-1][0])
+                    mcap = prices[-1][1] * shares
+            PATH_STATS.append((code, latest_ok.roic_path or ("equity_fallback" if args.value_model == "roic" else "dcf"),
+                               latest_ok.roic_nopat_mode, mcap))
         states = daily_states(code, bands, prices, actions.get(code, []))
         daily_counts[code] = len(states)
         # 分母须与 `daily_states` 用**同一套**可用带（含坑 5 的上市前口径剔除），否则上市前
@@ -1900,6 +2124,7 @@ def main() -> int:
         total = sum(paths.values()) or 1
         print("ROIC 口径落地路径：" + "｜".join(
             f"{k} {v:,}（{v / total:.1%}）" for k, v in sorted(paths.items())))
+        print_path_distribution()
         if ROIC_STATS:
             print("  退回原因：" + "｜".join(f"{k} {v:,}" for k, v in sorted(ROIC_STATS.items())))
         # **退回比例是读结论的前提**：退回的行走的还是旧口径，A/B 差异只来自真正走 ROIC 的那部分
