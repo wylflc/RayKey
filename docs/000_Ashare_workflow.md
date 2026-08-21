@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.29
+# A股选股-估值-量价操作流程 v4.30
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -283,7 +283,7 @@ L4 不是 L3 的下一档连续刻度：L3 是弱护城河、仍在 `worth_atten
 
 ##### 6.5.2.3 生产带落地
 
-`data/processed/a_share_pool_model_bands_adopted.csv` 是生产模型带唯一来源，**其带值恒为现价口径**：§6.7 第 4 步的叠加脚本末段按带公告日之后的除权事件（现金＋送转）归一化，`exright_note` 列非空即已折算（v4.20，OI-052/OI-039）。逐票档案只承载研究结论和当前带；`apply_model_bands_to_dossiers.py` 只覆盖带相关字段，保留 `key_metrics`、`review_triggers`、高频指标和研究备注。
+`data/processed/a_share_pool_model_bands_adopted.csv` 是生产模型带唯一来源，**其带值恒为现价口径**：§6.7 第 4 步的叠加脚本末段按带公告日之后的除权事件（现金＋送转）归一化，`exright_note` 列非空即已折算（v4.20，OI-052/OI-039）。逐票档案只承载研究结论和当前带；`apply_model_bands_to_dossiers.py` 只覆盖带相关字段，保留 `key_metrics`、`review_triggers`、高频指标和研究备注。README 第八节「现价隐含了什么」的首段由 `build_company_dossier_readmes.py` 按生产带与池内现价机械生成（`现价 ÷ 中值 = P/V`、路径与增长/折现假设、归一化盈利倍数），`implied_growth_years` 只承载手写的可证伪命题与方法分歧，不得再写带中枢、隐含年数反解或任何带值（v4.30，OI-078；判例 OI-076① 格力手写中枢 51 元 vs 生产带 85.29）。
 
 生产 `P/V` 与回测 `valuation_ratio` 必须逐位一致（成文例外只剩 §6.4 叠加行）。**晚间披露报告的当晚吸收两侧同构**（v4.28，用户裁定）：生产在公告日戳的前一晚即用新带出信号；回测逐日状态里每条带自**可得日之前的最后一个市场交易日**起生效（`build_historical_valuation_bands.py --state-effective prev_trading_day`，缺省；前一交易日按上证指数日历取，行情库在该公告前已断的陈旧序列退回可得日生效），即 8.31 戳的公告在 8.30 的状态行已生效、指导 8.31 执行。旧口径（公告日当天生效）只用于复现 v4.27 前的产物。早于 `2025-01-01` 的陈旧模型带不进任何一层：扫描器无 `P/V`、档案层判「无法估值」（§6.5.2.4 统一口径，OI-068），两层同一结论。
 

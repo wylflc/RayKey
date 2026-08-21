@@ -4,6 +4,15 @@
 CSV 是机器可读的唯一真值来源；README 是人读正文，章节顺序固定、不得逐票自由发挥
 （§6.5.2「格式统一」）。本脚本把这一条从约定变成可复算的渲染，避免逐份手写产生漂移。
 
+第八节「现价隐含了什么」（v4.30，OI-078）
+--------------------------------------
+首段由本脚本按**生产带与池内现价**机械生成：`现价 ÷ 生产带中值 = P/V`、带与档位、带所走的
+§6.5.1 路径及其增长/折现假设、V 与现价各自对应的归一化盈利倍数。数据与带同源（档案带列 +
+`a_share_pool_model_bands_adopted.csv` + 核心池现价），随 §6.7 第 4 步每次重渲染自动更新。
+`implied_growth_years` 列只承载**手写的可证伪命题与方法分歧**，不得再写带中枢、隐含年数反解
+或任何带值——判例 OI-076① 格力：手写中枢 51 元 vs 生产带 85.29；2026-08-21 清理前 121/280 份
+仍含建档时的「本档中枢」。
+
 用法：python3 scripts/build_company_dossier_readmes.py [--check]
   --check 只比对不写盘，有差异时以退出码 1 结束。
 """
@@ -15,8 +24,14 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from apply_model_bands_to_dossiers import latest_model_bands  # noqa: E402
+
 DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
+ADOPTED = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
+# 与 apply_model_bands_to_dossiers.py --min-available 缺省一致（§6.5.2.3 时点门槛）
+MIN_AVAILABLE = "2025-01-01"
 
 HEADER = """# {name}（{code}）估值档案
 
@@ -50,6 +65,18 @@ FOOTER = """
 BESPOKE_ON = "`bespoke = true`——带只由本档给出，通用十类模型不参与计算。"
 BESPOKE_OFF = "`bespoke = false`——本档只补充跟踪指标与复核触发，带仍由通用模型给出。"
 
+PATH_LABEL = {
+    "growth": "内在价值模型 ROIC 口径（growth 路径）",
+    "zero_growth": "内在价值模型零增长锚（zero_growth 路径）",
+    "equity_fallback": "内在价值模型权益退路（equity_fallback 路径）",
+    "bank_divspread": "银行股利折现（bank_divspread 路径）",
+}
+EARNINGS_LABEL = {"growth": "归一化每股 NOPAT", "zero_growth": "归一化每股 NOPAT",
+                  "equity_fallback": "归一化 EPS"}
+HANDWRITTEN_LABEL = "**手写：可证伪命题与方法分歧**（不作为带；带与 `P/V` 以上段为准）："
+PV_RULE = ("`P/V` 高于 1 的部分是市场比模型多付的增长/回报预期，低于 1 则相反；分歧不改带"
+           "（§6.5.2.2 档案不得覆盖模型参数），只能由新证据经 §7.4 复核触发重算。")
+
 
 def bullets(raw: str, seps: str = "；;") -> list[str]:
     """把 CSV 里以 ；/; 分隔的字段拆成条目。"""
@@ -61,7 +88,103 @@ def bullets(raw: str, seps: str = "；;") -> list[str]:
     return [item.strip() for item in text.split(seps[0]) if item.strip()]
 
 
-def render(row: dict, pool: dict) -> str:
+def _num(raw) -> float | None:
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def _pct(raw, digits: int = 2) -> str:
+    val = _num(raw)
+    return f"{val:.{digits}%}" if val is not None else "—"
+
+
+def model_assumptions(band: dict, mid: float, pv: float | None) -> str:
+    """第八节第二句：带所走的路径、增长/折现假设、V 与现价各自对应的归一化盈利倍数。
+
+    `implied_pe`/`pe_on_ttm_eps` 是建带时按**除权归一化前**的 V 算的（V_pre ÷ 归一化每股盈利）；
+    归一化后 V = V_pre ÷ factor − cash（`exright_factor`/`exright_cash`），每股盈利同除 factor，
+    故现价口径的倍数 = 文件值 × V ÷ (V + cash)，factor 自行约掉。
+    """
+    path = (band.get("roic_path") or "").strip()
+    overlay = (band.get("forecast_overlay") or "").strip()
+    head = f"生产带按 §6.5.1 唯一口径由{PATH_LABEL.get(path, path or '—')}给出"
+    if overlay in ("forecast", "express"):
+        head += "（§6.4 预告/快报叠加行，正式报告披露后由机械带取代）"
+    if path == "bank_divspread":
+        tail = "：V = 近 12 个月每股现金分红 ÷（十年国债 + 2%）"
+        if pv:
+            tail += f"，即现价股息率 = 带口径要求收益率 ÷ {pv:.3f}"
+        return head + tail + "；参数全文见第二节。"
+    if path == "growth":
+        params = (f"g0 {_pct(band.get('g0'))}（增量 ROIC {_pct(band.get('incremental_roic'))} × "
+                  f"再投资率 {_pct(band.get('reinvestment_rate'))}）、WACC {_pct(band.get('wacc'))}、"
+                  f"终值占比 {_pct(band.get('terminal_share'), 1)}")
+    elif path == "zero_growth":
+        params = f"零增长永续 V = 每股 NOPAT ÷ WACC − 每股净负债，g0 0、WACC {_pct(band.get('wacc'))}"
+    elif path == "equity_fallback":
+        payout = _num(band.get("payout"))
+        params = (f"g0 {_pct(band.get('g0'))} = roe0 {_pct(band.get('roe0'))} × "
+                  + (f"(1 − 派息率 {payout:.0%})" if payout is not None else "留存率")
+                  + f"、r {_pct(band.get('r'))}、终值占比 {_pct(band.get('terminal_share'), 1)}")
+    else:
+        params = "参数见第二节"
+    text = head + "：" + params
+    implied_pe, pe_ttm = _num(band.get("implied_pe")), _num(band.get("pe_on_ttm_eps"))
+    if implied_pe and path in EARNINGS_LABEL:
+        cash = _num(band.get("exright_cash")) or 0.0
+        scale = mid / (mid + cash) if mid + cash > 0 else 1.0
+        model_pe = implied_pe * scale
+        text += f"；V 对应{EARNINGS_LABEL[path]} {model_pe:.1f}×"
+        if pe_ttm:
+            text += f"（TTM EPS {pe_ttm * scale:.1f}×）"
+        if pv:
+            text += f"，现价对应 {pv * model_pe:.1f}×"
+            if pe_ttm:
+                text += f"（TTM {pv * pe_ttm * scale:.1f}×）"
+    return text + "；参数全文见第二节。"
+
+
+def implied_lead(row: dict, meta: dict, band: dict | None) -> tuple[str, bool]:
+    """第八节机械首段。返回 (文本, 是否因 IV 与档案中值不符而略去模型参数)。"""
+    low, high = _num(row.get("band_low")), _num(row.get("band_high"))
+    price, as_of = _num(meta.get("valuation_price")), (meta.get("valuation_price_as_of") or "").strip()
+    if low is None or high is None:
+        reason = (row.get("band_method") or "模型判不可估").strip()
+        if reason.startswith("无法估值·"):
+            reason = reason[len("无法估值·"):]
+        text = f"**无法估值**——{reason}。"
+        if price:
+            text += f"现价 {price:g}（{as_of}）；"
+        text += "无带、无 `P/V`，不进 §9.3 判定；模型重新可算后自动回归模型带（§6.5.2.4）。"
+        return text, False
+    mid = (low + high) / 2
+    manual = (row.get("band_derivation") or "").strip() == "manual_override"
+    band_name = "人工覆盖带" if manual else "生产带"
+    if price:
+        pv = price / mid
+        text = (f"现价 {price:g}（{as_of}）÷ {band_name}中值 V {mid:.2f} = **{pv:.3f}**"
+                f"（带 {low:.2f}~{high:.2f}，档位{meta.get('valuation_tier') or '—'}）。")
+    else:
+        pv = None
+        text = (f"{band_name} {low:.2f}~{high:.2f}（中值 V {mid:.2f}）；本档当前不在核心池估值表内，"
+                "无现价口径与 `P/V`，不进 §9.3 判定。")
+    if manual:
+        return text + "带为 §6.5.2.4 人工覆盖（推导与失效条件见第二节）。", False
+    skipped = False
+    if band is not None:
+        iv = _num(band.get("intrinsic_value"))
+        if iv is not None and abs(iv - mid) <= 0.005 * mid:
+            text += model_assumptions(band, mid, pv)
+        else:
+            skipped = True
+    if pv:
+        text += PV_RULE
+    return text, skipped
+
+
+def render(row: dict, pool: dict, bands: dict) -> tuple[str, bool]:
     code = row["security_code"]
     meta = pool.get(code, {})
     tier = meta.get("quality_tier", "")
@@ -105,12 +228,14 @@ def render(row: dict, pool: dict) -> str:
             continue
         parts.append(f"\n## {title}\n\n" + "\n".join(f"- {item}" for item in items) + "\n")
 
+    lead, skipped = implied_lead(row, meta, bands.get(code))
+    parts.append(f"\n## 八、现价隐含了什么\n\n{lead}\n")
     implied = (row.get("implied_growth_years") or "").strip()
     if implied:
-        parts.append(f"\n## 八、现价隐含了什么\n\n{implied}\n")
+        parts.append(f"\n{HANDWRITTEN_LABEL}{implied}\n")
 
     parts.append(FOOTER)
-    return "".join(parts)
+    return "".join(parts), skipped
 
 
 def main() -> int:
@@ -122,8 +247,13 @@ def main() -> int:
         pool = {r["security_code"]: r for r in csv.DictReader(handle)}
     with DOSSIERS.open(encoding="utf-8-sig") as handle:
         rows = list(csv.DictReader(handle))
+    bands: dict[str, dict] = {}
+    if ADOPTED.exists():
+        bands, _stale = latest_model_bands(ADOPTED, MIN_AVAILABLE)
+    else:
+        print(f"  ⚠ 缺 {ADOPTED.relative_to(ROOT)}，第八节只按档案带渲染、不写模型参数")
 
-    changed, missing_dir = [], []
+    changed, missing_dir, param_skipped = [], [], []
     for row in rows:
         target = ROOT / (row.get("dossier_dir") or "").strip()
         if not row.get("dossier_dir"):
@@ -131,7 +261,9 @@ def main() -> int:
             continue
         target.mkdir(parents=True, exist_ok=True)
         path = target / "README.md"
-        text = render(row, pool)
+        text, skipped = render(row, pool, bands)
+        if skipped:
+            param_skipped.append(row["security_code"])
         if not path.exists() or path.read_text(encoding="utf-8") != text:
             changed.append(row["security_code"])
             if not args.check:
@@ -140,6 +272,9 @@ def main() -> int:
     print(f"档案 {len(rows)} 份，{'需更新' if args.check else '已写入'} {len(changed)} 份")
     if changed:
         print("  " + " ".join(changed[:40]) + (" …" if len(changed) > 40 else ""))
+    if param_skipped:
+        print(f"  ⚠ 第八节略去模型参数（带文件 IV 与档案中值不符，档案未随 §6.7 第 4 步更新？）"
+              f"{len(param_skipped)} 份：{' '.join(param_skipped)}")
     if missing_dir:
         print(f"  ❌ 缺 dossier_dir：{' '.join(missing_dir)}")
         return 1
