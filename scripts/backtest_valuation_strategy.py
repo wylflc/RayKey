@@ -28,9 +28,10 @@
    `data/processed/pit_attention/universe_panel_yearly.csv` 逐年时点名单后年化
    **23.68% → 13.41%（−10.27pp）**，其中「换池子」−4.99pp、「加时点」−5.28pp
    （回测日志 §12.25.3）。**不给 `--universe-file` 的读数一律含此前视。**
-2. **幸存者偏差（不可测，非本脚本能修）**。本仓库行情库 5,210 个文件**无一在 2026 年前
-   终止**，财务库同样查无退市公司——长航油运、康得新、信威、华锐风电等九只已知退市股
-   在两侧均不存在。**故任何配置都测不到退市造成的偏误**，需外部数据源，见 OI-040。
+2. **幸存者偏差（数据侧已补，判定侧见协议）**。2026-08-11 起行情库含 344 只退市股（`data/raw/a_share_delisted_roster.csv`，
+   深交所名册＋腾讯探测）、逐季财务 339 只、逐日状态 297 只；时点判定队列建在「现存＋退市」全口径上（168 只退市股有财务签名、
+   入队判毕，1 只入选面板）。本脚本对退市持仓按协议 §8「末个交易日收盘价平仓」：名册内代码在末个交易日之后的第一个交易日按
+   最后成交价整仓清出（`退市·末日收盘平仓`），不再冻结在账上。残余偏差见 OI-040（三表缺失→退市股只能走权益口径；判定者后视）。
 3. **交易成本缺省不计**，须显式打开。`--fee-preset user` 即用户券商口径（佣金万一、最低
    5 元、印花税 0.05% 单边卖出、过户费 0.001% 双边）；`--fee-stamp-mode historical` 另按
    成交日取历史印花税率（2007-05-30~2008-04-23 曾达 0.3% 双边）。**不打开时高换手参数被系
@@ -63,6 +64,17 @@ DAILY_STATES = ROOT / "data/processed/a_share_historical_valuation_daily.csv"
 OHLCV_DIR = ROOT / "data/raw/ohlcv"
 RESEARCH_DIR = ROOT / "data/raw/research_reports"
 ACTIONS = ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv"
+DELISTED_ROSTER = ROOT / "data/raw/a_share_delisted_roster.csv"   # OI-040：退市名册（代码 → 末个交易日）
+DELISTED_LAST: dict[str, str] = {}
+
+
+def load_delisted() -> dict[str, str]:
+    """{代码: 末个交易日}。名册缺失即空——此时退市持仓只能冻结在最后成交价上（旧行为），并在结尾告警。"""
+    if not DELISTED_ROSTER.exists():
+        return {}
+    with DELISTED_ROSTER.open(newline="", encoding="utf-8-sig") as handle:
+        return {(r.get("security_code") or "").zfill(6): (r.get("last_trade_date") or "")
+                for r in csv.DictReader(handle) if (r.get("last_trade_date") or "")}
 RATES = ROOT / "data/reference/cost_of_equity_inputs.csv"
 BENCHMARK = ROOT / "data/raw/ohlcv/INDEX_000300.csv"
 OUT_DIR = ROOT / "data/processed/backtest"
@@ -1181,6 +1193,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 last_price[code] = price
             if code in last_price:
                 marks[code] = last_price[code]
+        # OI-040／协议 §8：退市 ≠ 归零也 ≠ 永远冻结——名册内代码过了末个交易日即按最后成交价整仓清出
+        # （失败退市者末价已含退市整理期崩塌，吸收合并者末价≈换股对价；本仓库无换股比例，不跟踪存续主体）。
+        for code in [c for c in portfolio.lots if c in DELISTED_LAST and day > DELISTED_LAST[c] and c in last_price]:
+            turnover += portfolio.lots[code].shares * last_price[code]
+            close_lot(portfolio, code, day, last_price[code], ledger=ledger, reason="退市·末日收盘平仓")
+            marks.pop(code, None)
+            stats["退市·末日收盘平仓"] += 1
         # ---- 成交价口径（用户 2026-08-10）：`exec_delay=1` 表示「T 日收盘算信号、T+1 日成交」。
         # **只改成交价，不改判据**——合格集、`P/V`、均线、盯市净值一律仍用 T 日收盘，
         # 因为信号本来就定义在 T 日收盘上；改的只是这笔单实际以什么价格成交。
@@ -2530,6 +2549,7 @@ def main() -> int:
     opens = (load_opens({r[0] for rows in states.values() for r in rows})
              if args.exec_delay and args.exec_price == "open" else None)
     actions = load_actions()
+    DELISTED_LAST.update(load_delisted())
     names, benchmark, risk_free = load_names(), load_benchmark(), load_risk_free()
     mkt_series = None
     if args.mkt_crash_days or args.mkt_trend_ma:
@@ -2773,8 +2793,11 @@ def main() -> int:
               "已实测其代价——2010-05~2026-08 同区间，改用逐年时点股票库后年化 "
               "**23.68% → 13.41%（−10.27pp）**（回测日志 §12.25.3）。"
               "本次未给 `--universe-file`，故本轮读数含该前视。")
-    print("⚠ **幸存者偏差（无法修）**：本仓库行情与财务两侧均不含退市公司"
-          "（5,210 个行情文件无一在 2026 年前终止），任何配置都测不到它——见 OI-040。")
+    if DELISTED_LAST:
+        print(f"退市处置：名册 {len(DELISTED_LAST):,} 只，过末个交易日的持仓按最后成交价整仓清出（协议 §8）；"
+              "退市股三表缺失只能走权益口径、判定者后视不可消除——残余偏差见 OI-040。")
+    else:
+        print("⚠ 退市名册缺失（data/raw/a_share_delisted_roster.csv）：退市持仓将冻结在最后成交价上，读数含幸存者偏差——见 OI-040。")
     if FEES["commission"] or FEES["min_fee"] or FEES["stamp"] or FEES["stamp_mode"] == "historical":
         stamp = ("按成交日历史税率（含早年双边征收）" if FEES["stamp_mode"] == "historical"
                  else f"{FEES['stamp']*1e4:.1f}‱ 单边卖出")
