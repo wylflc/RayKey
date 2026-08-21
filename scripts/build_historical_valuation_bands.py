@@ -26,6 +26,8 @@
 2. **TTM 需要三期，而三期的公告日不一定都早于本期公告日**。TTM(Q1) = Q1 + 上年报 −
    上年 Q1，而年报常与一季报同期披露（甚至更晚）。故本脚本的生效日取
    **`available_at = max(所用各期的公告日)`**，不是本期公告日——否则就是 §12.4 前视。
+   **公告日本身先按法定截止日封顶**（`--notice-cap statutory`，缺省，OI-042 建带侧）：东财对 1998-2015
+   报告期普遍记成次年同期报告的公告日，不封顶则早年带晚约一年可用、与 2016 年后不同口径。
    **但逐日状态里带的生效日是 `available_at` 之前的最后一个交易日**（`--state-effective prev_trading_day`，
    v4.28 用户裁定）：定期报告在非交易时段披露、官方戳次日，8.31 的公告 8.30 晚上已有，生产扫描在戳日凌晨
    以 as-of=戳日 吸收、用 8.30 收盘出信号、8.31 执行（§6.7）；回测按同一口径，8.30 的状态行即用新带。
@@ -91,6 +93,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import roic_inputs  # noqa: E402
+from disclosure_dates import available_at as statutory_available_at  # noqa: E402
 
 from intrinsic_value import (  # noqa: E402
     DEFAULT_G_TERMINAL,
@@ -202,11 +205,19 @@ def _num(value: str | None) -> float | None:
         return None
 
 
-def load_financials(codes: set[str] | None) -> dict[str, dict[str, dict]]:
+def load_financials(codes: set[str] | None, notice_cap: bool = True) -> dict[str, dict[str, dict]]:
     """{代码: {报告期: 行}}。`codes=None` 取全市场。
 
     读入后应用 `data/reference/financials_corrections.csv` 的订正层（OI-066）：
-    源侧确认错误的字段在内存替换，取数产物本身不改（改了会被强制重取覆盖）。"""
+    源侧确认错误的字段在内存替换，取数产物本身不改（改了会被强制重取覆盖）。
+
+    `notice_cap`（OI-042 建带侧，缺省开）：`notice_date` 在装载时改为可得日
+    `min(记录公告日, 法定截止日)`（`disclosure_dates.available_at`，与判定侧同一实现）。东财对
+    1998-2015 报告期普遍记的是**次年同期报告的公告日**（年报 70.6% 超截止日、封顶量中位 354 天），
+    2016 年起仍有 6.7%~12.3% 的行偏移整一年；不封顶则带在早年晚约一年才可用、跨期比较不对等。
+    下游 `available_at = max(所用各期公告日)`、`fiscal_years_before`、除权锚（`split_factor`／
+    `exright_adjust` 的 `since`）全部读这一列，故只需在此一处改。原始记录日保留在 `notice_date_raw`。
+    封顶行数计入 `roic_inputs.CAP_STATS`（`financials_rows`／`financials_capped`）。"""
     out: dict[str, dict[str, dict]] = defaultdict(dict)
     for path in sorted(FIN_DIR.glob("*.csv")):
         with path.open(newline="", encoding="utf-8") as handle:
@@ -214,8 +225,16 @@ def load_financials(codes: set[str] | None) -> dict[str, dict[str, dict]]:
                 code = row["security_code"]
                 if codes is not None and code not in codes:
                     continue
-                if not (row.get("notice_date") or "").strip():
+                notice = (row.get("notice_date") or "").strip()
+                if not notice:
                     continue  # §12.4：无公告日的行不可用于历史建带
+                roic_inputs.CAP_STATS["financials_rows"] += 1
+                row["notice_date_raw"] = notice
+                if notice_cap:
+                    capped = statutory_available_at(row["report_date"], notice)
+                    if capped != notice:
+                        roic_inputs.CAP_STATS["financials_capped"] += 1
+                        row["notice_date"] = capped
                 out[code][row["report_date"]] = row
     from financials_corrections import apply_corrections, report as _corr_report
     _corr_report(*apply_corrections(out))
@@ -550,7 +569,13 @@ def pick_roe0(mode: str, normalized: float, roe_ttm_value: float | None,
 
 def incremental_roe(series: dict[str, dict], actions: list[dict], available_at: str,
                     span: int = 4) -> float | None:
-    """增量股东回报 `ΔEPS / ΔBPS`——**新投进去的一块钱赚回多少**。
+    """`incremental_roe_detail` 的取值部分（调用方不需要折算判定时用）。"""
+    return incremental_roe_detail(series, actions, available_at, span)[0]
+
+
+def incremental_roe_detail(series: dict[str, dict], actions: list[dict], available_at: str,
+                           span: int = 4) -> tuple[float | None, str]:
+    """增量股东回报 `ΔEPS / ΔBPS`——**新投进去的一块钱赚回多少**。返回 `(值, eps_old 折算判定)`。
 
     为什么必须单看它（外部评审 2026-08-08 提出，本仓库现有字段刚好够算）：
     `g = ROE × b` 隐含「新增资本能继续赚到与存量相同的 ROE」，这对多数非金融公司不成立。
@@ -558,22 +583,44 @@ def incremental_roe(series: dict[str, dict], actions: list[dict], available_at: 
     历史平均 ROE 只是它的一个有偏代理。
 
     两期的每股口径若跨过送转并不同基，故按公告日之间的累计送转比把旧期折算回来再相减。
+
+    **OI-041（v4.32 修）：东财 `basic_eps` 在部分期已按后续送转折算过，而 `bps` 不折算**
+    （160 个公司-年抽样与新浪「加权每股收益」相符 86.6%，不符者多为送转期；判例 002369·2010
+    东财 0.37 = 新浪摊薄 0.7395 ÷ 2，对应 2011-05 的 10 转 10）。对已折算的期再除一次 `factor`
+    会把 `eps_old` 压得过小、`ΔEPS` 与本列偏高。本地判据不依赖外部源：两期「归母净利 ÷ 每股收益」
+    的**隐含股本之比** `jump`——`eps_old` 未折算时 `jump ≈ factor`，已折算时 `jump ≈ 1`（股本跳升
+    已被折进 EPS），按对数距离取近者；`factor = 1`（期间无送转）时两种口径无区别、不判。
+    判定结果记入 `incremental_roe_basis`（`raw`＝除 factor／`pre_adjusted`＝不除／`n/a`＝无送转或不可判），
+    计数进 `IROE_BASIS_STATS`。
     """
     annuals = fiscal_years_before(series, available_at, span + 1)
     if len(annuals) < span + 1:
-        return None
+        return None, ""
     new_period, old_period = annuals[0], annuals[-1]
     new_row, old_row = series[new_period], series[old_period]
     factor = split_factor(actions, old_row["notice_date"], new_row["notice_date"])
     eps_new, eps_old = _num(new_row.get("basic_eps")), _num(old_row.get("basic_eps"))
     bps_new, bps_old = _num(new_row.get("bps")), _num(old_row.get("bps"))
     if None in (eps_new, eps_old, bps_new, bps_old):
-        return None
-    delta_eps = eps_new - eps_old / factor
+        return None, ""
+    eps_factor, basis = factor, "n/a"
+    if factor > 1.0 + 1e-9:
+        basis = "raw"
+        np_new, np_old = _num(new_row.get("parent_netprofit")), _num(old_row.get("parent_netprofit"))
+        if (np_new and np_old and eps_new and eps_old
+                and np_new * eps_new > 0 and np_old * eps_old > 0):      # 净利与 EPS 同号才有隐含股本
+            jump = (np_new / eps_new) / (np_old / eps_old)
+            if jump > 0 and abs(math.log(jump) - math.log(factor)) > abs(math.log(jump)):
+                eps_factor, basis = 1.0, "pre_adjusted"
+    IROE_BASIS_STATS[basis] += 1
+    delta_eps = eps_new - eps_old / eps_factor
     delta_bps = bps_new - bps_old / factor
     if delta_bps <= 0:
-        return None   # 净资产未增长时增量回报无定义（回购／分红超过留存）
-    return delta_eps / delta_bps
+        return None, basis   # 净资产未增长时增量回报无定义（回购／分红超过留存）
+    return delta_eps / delta_bps, basis
+
+
+IROE_BASIS_STATS: dict[str, int] = defaultdict(int)   # OI-041：eps_old 折算判定计数（raw / pre_adjusted / n/a）
 
 
 # ------------------------------------------------------------------ 输入推导
@@ -692,6 +739,7 @@ class Band:
     roe_window: int | None = None
     roe_sigma: float | None = None
     incremental_roe: float | None = None
+    incremental_roe_basis: str = ""   # OI-041：raw / pre_adjusted / n/a（见 incremental_roe 文档串）
     # ---- All Money Is Equal 口径的字段（--value-model ame）----
     cash_roe0: float | None = None            # 正常化现金 ROE = 每股经营现金流 ÷ BPS
     owner_earnings0: float | None = None      # 每股 Owner Earnings（现金口径）
@@ -791,13 +839,14 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     elif MOAT_PARAMS:
         MOAT_STATS["无覆盖·沿用全局"] += 1
 
+    iroe_value, iroe_basis = incremental_roe_detail(series, actions, available_at)
     band = Band(code, name, period, notice, available_at, "unavailable",
                 eps_ttm=eps.value if eps else None, roe_ttm=roe.value if roe else None,
                 roe_source=roe_source, bps=bps,
                 g_trailing=trailing_cagr(series, period), r=r, r_mode=args.r_mode,
                 rf=rf, erp=erp, beta=beta, g_terminal=g_terminal, roe_terminal=roe_t,
                 mos=MOS_BY_TIER.get(tier),
-                incremental_roe=incremental_roe(series, actions, available_at))
+                incremental_roe=iroe_value, incremental_roe_basis=iroe_basis)
 
     # 归一化口径：ROE 取近五年年度中位（结构参数），EPS 由清洁盈余 E = ROE×B 反推。
     # 这样两个输入天然自洽，且不把周期低谷的读数外推十年（见 normalized_roe 文档）。
@@ -1387,7 +1436,7 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "available_at", "status", "reason", "eps_ttm", "roe_ttm", "roe_source", "bps",
                "eps0", "roe0", "roe_anchor", "roe_trend", "roe0_normalized", "roe0_mode",
                "growth_confirmed", "roe_window", "roe_efficiency",
-               "incremental_roe", "cash_roe0", "owner_earnings0", "v_zero_growth",
+               "incremental_roe", "incremental_roe_basis", "cash_roe0", "owner_earnings0", "v_zero_growth",
                "incremental_roe_used", "ame_path",
                "nopat_ps", "roic0", "incremental_roic", "reinvestment_rate", "wacc",
                "cost_of_debt", "tax_rate", "net_debt_ps", "ev_ps",
@@ -1413,6 +1462,7 @@ def band_row(band: Band, tier: str) -> dict:
         "roe0_normalized": fmt(band.roe0_normalized, 6), "roe0_mode": band.roe0_mode,
         "roe_window": "" if band.roe_window is None else str(band.roe_window),
         "roe_efficiency": fmt(band.roe_sigma), "incremental_roe": fmt(band.incremental_roe),
+        "incremental_roe_basis": band.incremental_roe_basis or "",
         "cash_roe0": fmt(band.cash_roe0), "owner_earnings0": fmt(band.owner_earnings0),
         "v_zero_growth": fmt(band.v_zero_growth),
         "incremental_roe_used": fmt(band.incremental_roe_used),
@@ -1511,6 +1561,9 @@ def report(all_bands: list[tuple[str, Band]], daily_counts: dict[str, int],
         print(f"按周期股拉长窗口（走势单调度<{CYCLICAL_EFFICIENCY:.0%}）：{len(cyc)}/{len(ok)}"
               f"（{len(cyc)/len(ok):.0%}）")
         pairs = [(b.incremental_roe, b.roe0) for b in ok if b.incremental_roe is not None and b.roe0]
+        if IROE_BASIS_STATS:
+            print("增量 ROE 的 eps_old 折算判定（OI-041）：" + "｜".join(
+                f"{k} {v:,}" for k, v in sorted(IROE_BASIS_STATS.items())))
         if pairs:
             gaps = sorted(inc - roe for inc, roe in pairs)
             below = sum(1 for inc, roe in pairs if inc < roe)
@@ -1679,6 +1732,9 @@ def main() -> int:
                         default="prev_trading_day",
                         help="逐日状态里带的生效日：prev_trading_day=可得日前一交易日（缺省，v4.28，与生产"
                              "扫描当晚吸收同构）；notice=公告日当天（v4.27 前旧口径，只用于复现旧产物）")
+    parser.add_argument("--notice-cap", choices=("statutory", "off"), default="statutory",
+                        help="公告日封顶（OI-042 建带侧）：statutory=逐季财务与三大报表的公告日在装载时改为"
+                             " min(记录公告日, 法定截止日)（缺省）；off=按东财记录日原样（只用于复现旧产物）")
     parser.add_argument("--out-bands", type=Path)
     parser.add_argument("--out-daily", type=Path)
     args = parser.parse_args()
@@ -1738,7 +1794,7 @@ def main() -> int:
         print(f"**全局终值超额显式给定 {args.terminal_excess:+.1%}**（ROE_T/ROIC_T = r/WACC + 超额，≤ 起始回报）")
 
     tiers = load_tiers()
-    financials = load_financials(set(codes))
+    financials = load_financials(set(codes), notice_cap=(args.notice_cap == "statutory"))
     actions = load_actions()
     if args.value_model == "roic":
         # `--roe-terminal-ratio` 改的是 `roe_t`，而 roic 分支在它生效**之前**就返回了，
@@ -1748,7 +1804,8 @@ def main() -> int:
                   "请去掉后重跑，避免读成「测过了」")
             return 1
         ROIC_YEARS.update(roic_inputs.load_statements(set(codes), args.statements_dir,
-                                                      ic_floor=args.roic_ic_floor))
+                                                      ic_floor=args.roic_ic_floor,
+                                                      notice_cap=(args.notice_cap == "statutory")))
         if not ROIC_YEARS:
             print(f"**{args.statements_dir} 无三大报表**，roic 口径无法建带。"
                   f"先跑 scripts/fetch_a_share_financial_statements.py")
@@ -1760,6 +1817,17 @@ def main() -> int:
           + f"｜逐日状态生效日={args.state_effective}"
           + ("（可得日前一交易日，与生产当晚吸收同构）" if args.state_effective == "prev_trading_day"
              else "（**旧口径：公告日当天**，信号晚生产一个交易日）"))
+    if args.notice_cap == "statutory":
+        cap = roic_inputs.CAP_STATS
+        parts = []
+        for label, rows_key, cap_key, unit in (("逐季财务", "financials_rows", "financials_capped", "行"),
+                                               ("三大报表", "statements_rows", "statements_capped", "财年")):
+            rows, capped = cap.get(rows_key, 0), cap.get(cap_key, 0)
+            parts.append(f"{label} {capped:,}/{rows:,} {unit}（{capped / rows:.1%}）" if rows
+                         else f"{label} 0 {unit}")
+        print("公告日封顶（OI-042，min(记录公告日, 法定截止日)）：" + "｜".join(parts))
+    else:
+        print("⚠ --notice-cap off：公告日按东财记录日原样（1998-2015 报告期普遍晚一年可用，OI-042），只用于复现旧产物")
 
     all_bands: list[tuple[str, Band]] = []
     band_rows: list[dict] = []

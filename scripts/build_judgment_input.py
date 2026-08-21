@@ -55,27 +55,8 @@ def _num(text):
         return None
 
 
-# 法定披露截止日：年报次年 4/30、一季报当年 4/30、半年报 8/31、三季报 10/31。
-_DEADLINE = {"12-31": (1, 4, 30), "03-31": (0, 4, 30), "06-30": (0, 8, 31), "09-30": (0, 10, 31)}
-
-
-def available_at(report_date: str, notice_date: str) -> str:
-    """可见日 = `min(记录公告日, 法定截止日)`。
-
-    **为什么必须封顶**：东财 `notice_date` 对 1998-2015 的报告期存在系统性偏移——
-    年报中位滞后 456~473 天（正常 113 天），93% 超过 400 天，判例 600104 的
-    2001/2002/2003 年报分别记为 2003-03-26 / 2004-03-03 / 2005-02-05，**每期填的
-    都是次年年报的公告日**。不封顶则「as-of 2002」实际看到 2004 年 3 月的信息。
-    按法规该期数据在截止日必然已公开，故封顶**不引入前视**，只纠正偏移
-    （全库 33.2% 的年报行被封顶，中位提前 352 天）。见 OI-042。
-    """
-    key = report_date[5:]
-    spec = _DEADLINE.get(key)
-    if not spec or len(notice_date) != 10:
-        return notice_date
-    offset, month, day = spec
-    deadline = f"{int(report_date[:4]) + offset:04d}-{month:02d}-{day:02d}"
-    return min(notice_date, deadline)
+# 可得日 = min(记录公告日, 法定截止日)——唯一实现在 `disclosure_dates.py`（OI-042，判定侧与建带侧共用）。
+from disclosure_dates import available_at  # noqa: E402
 
 
 def secucode(code: str) -> str:

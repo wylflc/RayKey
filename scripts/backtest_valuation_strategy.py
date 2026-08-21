@@ -608,7 +608,7 @@ def stabilized(flags: dict[str, bool], days: list[str], index: dict[str, int],
 
 
 def moving_averages(series: dict[str, float], windows=(5, 10, 20, 60, 120, 240)) -> dict[str, dict[int, float]]:
-    """逐日均线。走势组的入场与止损都要用。"""
+    """逐日均线（**不复权收盘**直接平均；`--ma-basis raw` 的旧口径，只用于复现 v4.31 前的读数）。"""
     days = sorted(series)
     values = [series[d] for d in days]
     out: dict[str, dict[int, float]] = {}
@@ -620,6 +620,59 @@ def moving_averages(series: dict[str, float], windows=(5, 10, 20, 60, 120, 240))
                 total -= values[index - window]
             if index >= window - 1:
                 out.setdefault(days[index], {})[window] = total / window
+    return out
+
+
+def exright_affine(days: list[str], events: dict[str, tuple[float, float]]) -> tuple[list[float], list[float]]:
+    """每个交易日「当日口径 → 末日口径」的仿射映射 `q = A·p + B`（除权折算的累积形式）。
+
+    除权日 `e` 的事件 `(D, r)` 把 `e` 之前任一日的价格折到 `e` 当日口径：`p → (p − D)/(1 + r)`
+    （§11.4 交易所除权参考价公式，与 `apply_corporate_actions` 对持仓锚的折算同式）。自末日向前
+    累乘即可得到每一日到末日的复合映射；同一映射反过来用，就能把末日口径的均值折回任意一日的口径。
+    """
+    n = len(days)
+    scale, shift = [1.0] * n, [0.0] * n
+    a, b = 1.0, 0.0
+    for i in range(n - 1, -1, -1):
+        scale[i], shift[i] = a, b
+        event = events.get(days[i])
+        if event:                               # 第 i 日除权：i 之前的日子多一层 (p − D)/(1 + r)
+            cash, ratio = event
+            a, b = a / (1.0 + ratio), b - a * cash / (1.0 + ratio)
+    return scale, shift
+
+
+def adjusted_close_series(series: dict[str, float], events: dict[str, tuple[float, float]]) -> dict[str, float]:
+    """前复权收盘（锚在序列末日）：创新低等跨日比较要在同一口径下做（OI-054）。"""
+    days = sorted(series)
+    scale, shift = exright_affine(days, events)
+    return {d: scale[i] * series[d] + shift[i] for i, d in enumerate(days)}
+
+
+def adjusted_moving_averages(series: dict[str, float], events: dict[str, tuple[float, float]],
+                             windows=(5, 10, 20, 60, 120, 240)) -> dict[str, dict[int, float]]:
+    """逐日均线，**前复权口径、折回当日股本/分红基准**（OI-054，`--ma-basis adjusted`，缺省）。
+
+    窗口内每个历史收盘先折算到**当日**口径再平均，结果与当日不复权收盘同尺度，可直接比较
+    `收盘 > MA20 > MA60`、`min(锚, 当日 MA60)`——与实盘扫描器的前复权均线闸门同基。此前的
+    `moving_averages` 在不复权价上直接平均：10 送 10 当天原始价腰斩而 MA20/MA60 要二十／六十个
+    交易日才跟上，其间 `收 > MA20` 恒假（买入被挡）、`收 < MA20` 恒真（减持闸门常开），止损线
+    `min(锚, 当日 MA60)` 里的均线项也偏高一倍。实现：先把全序列映射到末日口径算滚动均值，再用
+    仿射映射的逆把每日均值折回该日口径（仿射映射与求均值可交换，故逐日折回与逐窗折算等价）。
+    没有除权事件的股票与旧函数逐位相同。
+    """
+    days = sorted(series)
+    scale, shift = exright_affine(days, events)
+    adjusted = [scale[i] * series[d] + shift[i] for i, d in enumerate(days)]
+    out: dict[str, dict[int, float]] = {}
+    for window in windows:
+        total = 0.0
+        for index, value in enumerate(adjusted):
+            total += value
+            if index >= window:
+                total -= adjusted[index - window]
+            if index >= window - 1:
+                out.setdefault(days[index], {})[window] = (total / window - shift[index]) / scale[index]
     return out
 
 
@@ -735,8 +788,15 @@ def force_liquidate(portfolio: Portfolio, day: str, marks: dict[str, float],
 
 
 def apply_corporate_actions(portfolio: Portfolio, day: str,
-                            actions: dict[str, dict[str, tuple[float, float]]]) -> float:
-    """除权日调股数、派息入现金。**不做这步整个回测就是错的**（穿越 10 转 10 会凭空亏一半）。"""
+                            actions: dict[str, dict[str, tuple[float, float]]],
+                            adjust_stops: bool = True) -> float:
+    """除权日调股数、派息入现金。**不做这步整个回测就是错的**（穿越 10 转 10 会凭空亏一半）。
+
+    `adjust_stops`（OI-054，缺省开）：建仓日止损锚 `entry_stop` 与持有期峰价 `peak_price` 按 §11.4
+    同式折算 `(原值 − D) ÷ (1 + 送转比)`——§9.3.5 对实盘早已如此规定（「除权除息按 §11.4 同因子
+    调整锚」），回测侧此前漏做：10 送 10 当天原始价腰斩而锚不动，整仓被当成「跌破止损」清空。
+    `frozen`（`--exright-stop frozen`）只用于复现 v4.31 前的读数。
+    """
     credited = 0.0
     for code, lot in portfolio.lots.items():
         event = actions.get(code, {}).get(day)
@@ -751,6 +811,14 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
         lot.shares *= (1 + ratio)
         if lot.trail_peak > 0:          # 上移锚峰值按 §11.4 同式折算：(原值 − D) ÷ (1 + 送转比)
             lot.trail_peak = max(0.0, (lot.trail_peak - cash_per_share) / (1 + ratio))
+        if adjust_stops:
+            if lot.entry_stop > 0:
+                adjusted = (lot.entry_stop - cash_per_share) / (1 + ratio)
+                # 锚为 0 表示「无止损」（falsy 短路），折算不得把一条活着的止损线静默折没——
+                # 现金红利高于锚价本身的极端情形只折送转、不扣现金
+                lot.entry_stop = adjusted if adjusted > 0 else lot.entry_stop / (1 + ratio)
+            if lot.peak_price > 0:
+                lot.peak_price = max(0.0, (lot.peak_price - cash_per_share) / (1 + ratio))
     return credited
 
 
@@ -905,7 +973,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         mkt_action: str = "block", mkt_release_ma: int = 20,
         mkt_block_scope: str = "all", trail_ratio: float = 0.0,
         tier_buy_scale: dict[str, float] | None = None,
-        tier_sell_scale: dict[str, float] | None = None) -> dict:
+        tier_sell_scale: dict[str, float] | None = None,
+        exright_stop: str = "adjust") -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `tier_buy_scale`／`tier_sell_scale`（研究开关，§12.95「护城河放到决策层」）：按档位给买入线／
@@ -1041,7 +1110,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         def mk_ma(i: int, n: int) -> float | None:
             return sum(mk_close[i - n + 1:i + 1]) / n if n and i + 1 >= n else None
     for day in days:
-        apply_corporate_actions(portfolio, day, actions)
+        apply_corporate_actions(portfolio, day, actions, adjust_stops=(exright_stop == "adjust"))
 
         # ---- 融资计息（不需要价格，故放在循环头）----
         if portfolio.debt > 0 and margin_rate > 0 and prev_day:
@@ -2376,6 +2445,12 @@ def main() -> int:
                         help="新建仓成交日收盘 < 当日 MA60（信号日过闸后跳空所致）的处理："
                              "ma20_stop=照买、锚退 MA20（旧行为）；skip=放弃该笔、资金顺位下一名"
                              "（用户 2026-08-20：此时几乎必然也低于 MA20，退档锚仍高于成本、买入即割）")
+    parser.add_argument("--ma-basis", choices=("adjusted", "raw"), default="adjusted",
+                        help="均线与创新低判据的价格口径（OI-054）：adjusted=前复权、折回当日口径（缺省，与实盘"
+                             "扫描器同基）；raw=不复权直接平均（v4.31 前旧口径，除权后 20/60 个交易日内均线错位）")
+    parser.add_argument("--exright-stop", choices=("adjust", "frozen"), default="adjust",
+                        help="除权日对建仓止损锚与持有期峰价的处理（OI-054）：adjust=按 §11.4 同式折算（缺省，"
+                             "§9.3.5 实盘规则）；frozen=不动（v4.31 前旧口径，送转日会把整仓当跌破清空）")
     parser.add_argument("--sell-full", action="store_true",
                         help="P/V≥减持线（且过走势闸门）时整仓卖出，而非按一档减")
     parser.add_argument("--stop-partial", action="store_true",
@@ -2472,9 +2547,22 @@ def main() -> int:
     windows = sorted({5, 10, 20, 60, 120, 240} | set(args.trend_ma) | set(args.hold_strong_ma)
                      | set(args.sell_trend_ma) | ({args.liquidate_ma} if args.liquidate_ma else set())
                      | {args.dev_ma, args.stop_ma} | ({args.trend_exit_ma} if args.trend_exit_ma else set()))
-    mas = {code: moving_averages(series, tuple(w for w in windows if w > 0))
-           for code, series in prices.items()}
-    lows = {code: new_low_flags(series) for code, series in prices.items()}
+    ma_windows = tuple(w for w in windows if w > 0)
+    if args.ma_basis == "adjusted":
+        # OI-054：均线与创新低在**前复权口径**上算（折回当日口径），与实盘扫描器的前复权闸门同基；
+        # 没有除权事件的股票与旧函数逐位相同。
+        mas = {code: adjusted_moving_averages(series, actions.get(code, {}), ma_windows)
+               for code, series in prices.items()}
+        lows = {code: new_low_flags(adjusted_close_series(series, actions.get(code, {})))
+                for code, series in prices.items()}
+    else:
+        print("⚠ --ma-basis raw：均线在不复权价上直接平均（v4.31 前旧口径，除权后均线错位），只用于复现旧读数",
+              file=sys.stderr)
+        mas = {code: moving_averages(series, ma_windows) for code, series in prices.items()}
+        lows = {code: new_low_flags(series) for code, series in prices.items()}
+    if args.exright_stop == "frozen":
+        print("⚠ --exright-stop frozen：除权日不折算止损锚（v4.31 前旧口径，送转日会误触发整仓清空），只用于复现旧读数",
+              file=sys.stderr)
     day_lists = {code: sorted(series) for code, series in prices.items()}
     day_pos = {code: {d: i for i, d in enumerate(ds)} for code, ds in day_lists.items()}
     corr = Correlations(daily_returns(prices, actions), args.corr_window) if args.max_corr else None
@@ -2535,6 +2623,8 @@ def main() -> int:
                      + ("_slmin" if args.stop_line == "min_entry_current" else "")
                      + (f"_tr{args.trail_ratio:g}" if args.trail_ratio else "")
                      + ("_skipma60" if args.entry_below_ma60 == "skip" else "")
+                     + ("_rawma" if args.ma_basis == "raw" else "")
+                     + ("_frzstop" if args.exright_stop == "frozen" else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")
                      + (f"_bf{args.buy_floor:g}" if args.buy_floor else "")
@@ -2600,7 +2690,7 @@ def main() -> int:
                          sell_full=args.sell_full, stop_min_days=args.stop_min_days,
                          stop_confirm_days=args.stop_confirm_days,
                          stop_deep_pct=args.stop_deep_pct, stop_line=args.stop_line,
-                         entry_below_ma60=args.entry_below_ma60,
+                         entry_below_ma60=args.entry_below_ma60, exright_stop=args.exright_stop,
                          stop_partial=args.stop_partial, stop_tranche=args.stop_tranche,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,

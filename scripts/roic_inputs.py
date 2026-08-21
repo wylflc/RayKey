@@ -39,8 +39,13 @@ from __future__ import annotations
 
 import csv
 import statistics
+from collections import Counter
 from dataclasses import dataclass, replace
 from pathlib import Path
+
+from disclosure_dates import available_at
+
+CAP_STATS: Counter = Counter()   # 公告日封顶统计（OI-042），建带器结尾打印
 
 ROOT = Path(__file__).resolve().parents[1]
 STMT_DIR = ROOT / "data/raw/financials_statements"
@@ -109,8 +114,14 @@ class RoicYear:
 
 def load_statements(codes: set[str] | None = None,
                     stmt_dir: Path = STMT_DIR,
-                    ic_floor: float = 0.0) -> dict[str, dict[str, RoicYear]]:
+                    ic_floor: float = 0.0,
+                    notice_cap: bool = True) -> dict[str, dict[str, RoicYear]]:
     """读三大报表 → `{代码: {财年: RoicYear}}`。缺表即返回空，由调用方降级。
+
+    `notice_cap`（OI-042，缺省开）：财年公告日按 `disclosure_dates.available_at` 封顶到法定截止日
+    （次年 4/30）——东财三表的 `NOTICE_DATE` 对 1998-2015 财年普遍记成次年年报公告日（2026-08-21
+    量测 57.4% 的年报行超过截止日、封顶量中位 344 天），不封顶则 ROIC 历史窗在早年整体晚一年可用。
+    封顶行数计入 `CAP_STATS["statements_capped"]`，总行数计入 `CAP_STATS["statements_rows"]`。
 
     `ic_floor`：投入资本下限 = `ic_floor × 总权益`。**v1 缺省 0（不启用）**。
     动机（§12.67 锚点诊断）：`IC = 有息负债 + 权益 − 超额现金` 对现金极厚的公司会趋零，
@@ -142,6 +153,12 @@ def load_statements(codes: set[str] | None = None,
             notice = max((p.get("NOTICE_DATE") or "")[:10] for p in parts.values())
             if not notice:
                 continue
+            CAP_STATS["statements_rows"] += 1
+            if notice_cap:
+                capped = available_at(period, notice)
+                if capped != notice:
+                    CAP_STATS["statements_capped"] += 1
+                notice = capped
             year = RoicYear(period=period, notice_date=notice)
             year.is_financial = any(
                 (p.get("org_table") or "").startswith(FINANCIAL_TABLE_PREFIXES)
