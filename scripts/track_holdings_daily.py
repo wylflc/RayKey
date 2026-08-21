@@ -131,14 +131,20 @@ def beijing_now() -> datetime:
     return datetime.now(ZoneInfo("Asia/Shanghai"))
 
 
+MA60_BASIS: dict[str, str] = {}     # 代码 → "qfq"（前复权，§8.3 口径）/ "raw"（前复权源不可用时的不复权兜底）
+
+
 def fetch_raw_close(code: str, as_of: date, timeout: float) -> tuple[float | None, float | None]:
     """`as_of` 当日**不复权**收盘与当日 MA60，返回 `(收盘, MA60)`。
 
     收盘：当日无K线（未收盘/停牌/接口失败）为 None。MA60（§9.3.1 v4.25 生效止损线
-    要用的当日均线）：截至 `as_of` 的最近 60 根不复权收盘均值，不足 60 根（新上市）为 None
-    ——与锚同为不复权口径，除权日的跳变两侧同源。
-    主源腾讯 newfqkline 的 `day`（不复权）数组——东财 kline 端点对本机批量访问会整段断连
-    （2026-08-19 实测连扫描器同参查询也 RemoteDisconnected），故顺序与扫描器相反：腾讯为主。
+    要用的当日均线）：截至 `as_of` 的最近 60 根**前复权**收盘均值（§8.3 口径，v4.32，OI-080）
+    ——前复权序列锚在最新一根，末根即当日不复权收盘，故均值与当日价、与已按 §11.4 折算过的锚
+    同尺度；此前按不复权收盘平均，除息后 60 个交易日内均线项偏高约一个股息率。不足 60 根
+    （新上市）为 None；前复权序列取不到时退回不复权均值并记 `MA60_BASIS[code] = "raw"`（报告注明）。
+    主源腾讯 newfqkline（`day` 不复权给收盘、`qfqday` 前复权给均线）——东财 kline 端点对本机
+    批量访问会整段断连（2026-08-19 实测连扫描器同参查询也 RemoteDisconnected），故腾讯为主；
+    腾讯前复权序列可能滞后一个交易日，按扫描器同法用不复权末根补齐。
     """
     import urllib.parse
     from datetime import timedelta
@@ -146,44 +152,75 @@ def fetch_raw_close(code: str, as_of: date, timeout: float) -> tuple[float | Non
     symbol = quote_symbol(code, "")
     # 60 个交易日 ≈ 90 个自然日，节假日富余取 130 天窗口
     start = (as_of - timedelta(days=130)).isoformat()
+    as_of_text = as_of.isoformat()
 
-    def digest(rows: list[list[str]]) -> tuple[float | None, float | None]:
-        closes = [(str(p[0]), float(p[2])) for p in rows if str(p[0]) <= as_of.isoformat()]
-        close = next((v for d, v in closes if d == as_of.isoformat()), None)
-        ma60 = (sum(v for _d, v in closes[-60:]) / 60) if len(closes) >= 60 else None
-        return close, ma60
+    def closes_of(rows: list[list[str]]) -> list[tuple[str, float]]:
+        return [(str(p[0]), float(p[2])) for p in rows if str(p[0]) <= as_of_text]
 
-    url = (f"https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
-           f"?param={symbol},day,{start},{as_of.isoformat()},90,")
-    try:
+    def ma60_of(closes: list[tuple[str, float]]) -> float | None:
+        return (sum(v for _d, v in closes[-60:]) / 60) if len(closes) >= 60 else None
+
+    def tencent(fq: str) -> list[list[str]]:
+        import json as _json
         import urllib.request
+        url = (f"https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
+               f"?param={symbol},day,{start},{as_of_text},90,{fq}")
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0",
                                                    "Referer": "https://gu.qq.com/"})
-        import json as _json
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             payload = _json.loads(resp.read().decode("utf-8", "ignore"))
-        day_rows = ((payload.get("data") or {}).get(symbol) or {}).get("day") or []
-        if day_rows:
-            close, ma60 = digest(day_rows)
+        data = (payload.get("data") or {}).get(symbol) or {}
+        return data.get("qfqday" if fq else "day") or []
+
+    def finish(raw_closes: list[tuple[str, float]], adj_closes: list[tuple[str, float]] | None):
+        close = next((v for d, v in raw_closes if d == as_of_text), None)
+        if adj_closes:
+            # 前复权末根滞后时，用不复权后续各根补齐（前复权锚在最新一根，补上的末根与其同尺度）
+            last_adj = adj_closes[-1][0]
+            adj_closes = adj_closes + [(d, v) for d, v in raw_closes if d > last_adj]
+            ma60 = ma60_of(adj_closes)
+            MA60_BASIS[code] = "qfq"
+        else:
+            ma60 = ma60_of(raw_closes)
+            MA60_BASIS[code] = "raw"
+        return close, ma60
+
+    try:
+        raw_rows = tencent("")
+        if raw_rows:
+            try:
+                adj_rows = tencent("qfq")
+            except OSError:
+                adj_rows = []
+            close, ma60 = finish(closes_of(raw_rows), closes_of(adj_rows) or None)
             if close is not None:
                 return close, ma60
     except OSError:
         pass
-    # 备源：东财不复权日线
-    query = urllib.parse.urlencode({
-        "secid": infer_secid(code, ""),
-        "fields1": "f1,f2,f3,f4,f5,f6",
-        "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
-        "klt": "101", "fqt": "0",
-        "beg": start.replace("-", ""),
-        "end": as_of.isoformat().replace("-", ""), "lmt": "90",
-    })
-    try:
+    # 备源：东财日线（fqt=0 不复权给收盘，fqt=1 前复权给均线）
+    def eastmoney(fqt: str) -> list[list[str]]:
+        query = urllib.parse.urlencode({
+            "secid": infer_secid(code, ""),
+            "fields1": "f1,f2,f3,f4,f5,f6",
+            "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
+            "klt": "101", "fqt": fqt,
+            "beg": start.replace("-", ""),
+            "end": as_of_text.replace("-", ""), "lmt": "90",
+        })
         payload = get_json(f"https://push2his.eastmoney.com/api/qt/stock/kline/get?{query}", timeout)
+        return [line.split(",") for line in (payload.get("data") or {}).get("klines") or []]
+
+    try:
+        raw_rows = eastmoney("0")
     except OSError:
         return None, None
-    rows = [line.split(",") for line in (payload.get("data") or {}).get("klines") or []]
-    return digest(rows) if rows else (None, None)
+    if not raw_rows:
+        return None, None
+    try:
+        adj_rows = eastmoney("1")
+    except OSError:
+        adj_rows = []
+    return finish(closes_of(raw_rows), closes_of(adj_rows) or None)
 
 
 def resolve_prices(codes: list[str], as_of: date,
@@ -284,7 +321,8 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
             stop_line = min(entry_stop, ma60) if ma60 is not None else entry_stop
             if close < stop_line:
                 stop_hit = "**已跌破**"
-                detail = (f"= min(锚 {entry_stop:g}, 当日MA60 {ma60:g})" if ma60 is not None
+                ma_tag = "当日MA60" if MA60_BASIS.get(code) != "raw" else "当日MA60(不复权兜底，前复权源不可用)"
+                detail = (f"= min(锚 {entry_stop:g}, {ma_tag} {ma60:g})" if ma60 is not None
                           else f"= 锚 {entry_stop:g}（当日均线不可得，按锚判读）")
                 notes.append(
                     f"**收盘 {close:g} < 生效止损线 {stop_line:g}**（{detail}）："
@@ -294,7 +332,8 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
                 stop_hit = "否"
                 if ma60 is not None and close < entry_stop:
                     # 正是 v4.25 min 口径豁免的情形——旧冻结口径会在这里整仓清空，写明防误读
-                    notes.append(f"收盘 {close:g} 低于锚 {entry_stop:g} 但不低于当日MA60 "
+                    ma_tag = "当日MA60" if MA60_BASIS.get(code) != "raw" else "当日MA60(不复权兜底)"
+                    notes.append(f"收盘 {close:g} 低于锚 {entry_stop:g} 但不低于{ma_tag} "
                                  f"{ma60:g}：按 §9.3.1 min 口径不触发止损")
 
         # §11.3 三取值（v2.56 删去 `割肉提醒`）。无行情时必须落 `数据缺失` 而非 `持有`：
