@@ -2256,6 +2256,9 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "总收益": final / capital - 1, "年化": cagr,
             "年化波动": vol, "最大回撤": worst, "回撤区间": f"{dd_start}~{dd_end}",
             "Calmar": cagr / worst if worst else float("nan"), "Sharpe": sharpe,
+            # 融资尾部（2026-08-22 授信比例扫描起加，纯追加列；无杠杆时 0／inf）
+            "强平次数": len(result.get("margin_events") or []),
+            "最低担保比例": result.get("min_margin_ratio", float("inf")),
             "平均仓位": exposure, "周期数": len(closed),
             "胜率": len(wins) / len(closed) if closed else float("nan"),
             "盈亏比": (statistics.fmean([p for p in profits if p > 0]) /
