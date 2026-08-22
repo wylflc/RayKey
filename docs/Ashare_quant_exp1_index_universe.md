@@ -148,7 +148,18 @@
 
 ## 5. 解读
 
-（待结果齐后写：按 §12.1 只说"按哪条标准、在哪个宇宙、差多少"，不说"最优"。）
+1. **按滚动 5 年年化中位这条主标准，去掉护城河筛选之后，同一套估值与交易规则在"指数式"宇宙上的读数是：
+   时点沪深 300 代理 10%（有融资）/ 8.5%（无融资），中证 500/1000 代理与全市场代理 −4%~−21%；护城河面板是 43.9% / 40.1%。**
+   23（或 12）个起点里没有一个起点宽基高于基准。三条线按同一合格面对齐后结论不变。
+2. 差距不来自杠杆：去杠杆后基准只降 4pp，宽基臂仍为负或个位数。也不来自幸存者偏差的反方向——
+   幸存者名单 `hs300_now` 反而有 41.5%（与时点代理差 31pp，那一段才是幸存者偏差）。
+3. 与回测日志 §12.36.3（护城河池上"纯走势"与有估值闸只差 0.9pp、换池值 6pp）同一结论的另一面：
+   **这套规则的收益来自股票池，估值带与量价触发本身在宽基上没有正的预期**——宽基上合格集更大、换手翻倍（8~16 次/年），
+   止损与换仓路径频繁触发，模型机械生成的带把大量没有质量支撑的"便宜"股票排到前面。
+4. 沪深 300 价格指数同起点滚 5 年中位 0.5%（全收益约 3%）；时点沪深 300 代理上的 8.5%（无融资）高于指数本身，
+   但 12 个起点中 0 个高于基准、逐年为正只 61%、滚 3 年回撤 36%，不构成"可用的无选股替代"。
+5. 本实验的已知偏差（不改变量级）：市值代理不是真实成分股、不剔 ST、抽样子集每档只有 140~330 只（a/b 两套抽样的差异见 §6）、
+   对齐臂与无融资臂只跑 12 个年度起点。
 
 ## 6. 追加记录
 
@@ -161,15 +172,25 @@
 # 股票库（约 2 分钟）
 python3 scripts/experimental/build_cap_rank_universe.py --out-dir data/processed/experiments/universes \
     --first-year 2008 --salts a,b --samples "cap_top300:50,cap_301_800:40,cap_801_1800:30,cap_all:15"
-# 逐日状态子集（一遍 1.9 GB，约 3 分钟）
+# 逐日状态子集（一遍 1.9 GB，约 3 分钟；产物 gitignore，每份 0.3~0.6 GB）
 python3 scripts/experimental/subset_daily_states.py data/processed/a_share_daily_states_adopted.csv \
     --out-dir data/processed/experiments/states data/processed/experiments/universes/cap_*_s*.csv \
     data/processed/experiments/universes/*_now.csv
-# 线对齐（每个宇宙一次）
+# 线对齐（每个宇宙一次，解已写入 §4.2 与 configs/aligned_arms.txt）
 python3 scripts/experimental/align_buy_line.py data/processed/a_share_daily_states_adopted.csv \
     data/processed/experiments/states/states_cap_top300_s50.csv --base-line 0.9434 --sell-line 2.5008 --swap-margin 0.1451 \
     --base-panel data/processed/pit_attention/panel_moat_bank_v6b.csv --panel data/processed/experiments/universes/cap_top300_s50.csv
-# 扫描
-python3 scripts/sweep_backtest_configs.py data/processed/experiments/exp_a/configs/prod_lines.txt \
-    --out data/processed/experiments/exp_a/sweep_prod_lines.txt --workers 1 --title "实验A·现行三线"
+# 扫描（全部 --workers 1；并集 ≥ 600 只的臂峰值 3~4 GB，不得与其他重作业并发）
+#   现行三线：BASE 23 起点 + 主臂 23 起点（读数 sweep_base23.txt / sweep_prod_arms_a.txt）
+python3 scripts/sweep_backtest_configs.py data/processed/experiments/exp_a/configs/prod_lines.txt --out <out> --workers 1
+#   对齐三线 / 无融资 / b 抽样：12 个年度起点
+ANNUAL="2009-11-01,2010-11-01,2011-11-01,2012-11-01,2013-11-01,2014-11-01,2015-11-01,2016-11-01,2017-11-01,2018-11-01,2019-11-01,2020-11-01"
+python3 scripts/sweep_backtest_configs.py data/processed/experiments/exp_a/configs/aligned_arms.txt --out data/processed/experiments/exp_a/sweep_aligned_arms.txt --workers 1 --starts "$ANNUAL"
+python3 scripts/sweep_backtest_configs.py data/processed/experiments/exp_a/configs/nolev_arms.txt --out data/processed/experiments/exp_a/sweep_nolev_arms.txt --workers 1 --starts "$ANNUAL"
+python3 scripts/sweep_backtest_configs.py data/processed/experiments/exp_a/configs/prod_arms_b2.txt --out data/processed/experiments/exp_a/sweep_prod_arms_b.txt --workers 1 --starts "$ANNUAL"
+#   出对照表：把 BASE 读数与各臂读数拼成一个文件再 --report
+cat data/processed/experiments/exp_a/sweep_base23.txt data/processed/experiments/exp_a/sweep_prod_arms_a.txt > /tmp/combined.txt
+python3 scripts/sweep_backtest_configs.py --report --out /tmp/combined.txt --title "实验A"
 ```
+
+扫描耗时（本机 8 GB、1 并发）：BASE 23 起点约 55 分钟（全市场状态文件），每个子集臂 23 起点约 20~25 分钟。

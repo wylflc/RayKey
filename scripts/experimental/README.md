@@ -157,3 +157,12 @@ python3 scripts/backtest_valuation_strategy.py <BASE 全参数> --since 2009-11-
     --out-dir /tmp/bt_base --trade-log /tmp/bt_base/tradelog_base.csv      # 不要带 --no-artifacts
 python3 scripts/experimental/drawdown_path.py /tmp/bt_base --top 3
 ```
+
+## 实验 A/B：无选股与纯量价（结论见 `docs/Ashare_quant_exp1_index_universe.md`、`docs/Ashare_quant_exp2_volume_price.md`）
+
+| 文件 | 作用 |
+| --- | --- |
+| `build_cap_rank_universe.py` | 时点总市值排名的指数类股票库（沪深 300／中证 500／中证 1000／全市场代理）＋按代码持久的哈希抽样子集，格式同 `panel_moat_bank_v6b.csv` |
+| `subset_daily_states.py` | 把全市场逐日估值状态按若干面板的代码并集切成子集文件（只为回测提速，逐位等价） |
+| `vp_signal_lab.py` | 量价信号实验室：事件研究（事件等权 / 按日等权、同日市场基准、MFE）＋ 随机抽样持有组合模拟（含费、挂单止盈、安慰剂）。**依赖 numpy，本机用 `python3.11`（miniconda）运行** |
+
