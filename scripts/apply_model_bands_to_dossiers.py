@@ -139,10 +139,21 @@ def main() -> int:
 
     OVERRIDES = load_overrides()
     applied, kept_unvaluable, kept_stale, split_adj = [], [], [], []
+    near_zero: set[str] = set()
     overridden: list[str] = []
     for row in rows:
         code = row["security_code"]
         band = usable.get(code)
+        # v4.55：IV 趋零的「ok」带（零增长永续价值≈净负债，判例 云南锗业 IV 0.0003）写成 0.00~0.00 无意义，
+        # 按 §6.5.2.4 统一口径判无法估值（与拒绝出带同处理）。
+        if band is not None:
+            try:
+                if float(band.get("intrinsic_value") or 0) < 0.01:
+                    band = None
+                    stale.pop(code, None)
+                    near_zero.add(code)
+            except (TypeError, ValueError):
+                band = None
         if band is None:
             ovr0 = OVERRIDES.get(code)
             if ovr0:
@@ -164,7 +175,9 @@ def main() -> int:
             row["bespoke"] = "true"
             row["band_derivation"] = "model_unvaluable"
             row["band_method"] = ("无法估值·模型判不可估（§6.5.2.4 统一口径）："
-                                  + ("最新 ok 模型带早于时点门槛" if code in stale else "模型对各期均拒绝出带"))
+                                  + ("最新 ok 模型带早于时点门槛" if code in stale
+                                     else "模型价值趋零（零增长永续价值≈净负债，IV<0.01）" if code in near_zero
+                                     else "模型对各期均拒绝出带"))
             row["decided_by"] = "内在价值模型（§6.5.2.3；模型重新可算后自动回归模型带）"
             row["anchor_earnings_yi"] = ""
             row["reviewed_at"] = args.as_of
