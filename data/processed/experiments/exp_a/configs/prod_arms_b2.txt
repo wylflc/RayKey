@@ -1,0 +1,4 @@
+T300s50b|--universe-file data/processed/experiments/universes/cap_top300_s50_b.csv --daily-states data/processed/experiments/states/states_cap_top300_s50_b.csv
+ALLs15b|--universe-file data/processed/experiments/universes/cap_all_s15_b.csv --daily-states data/processed/experiments/states/states_cap_all_s15_b.csv
+M500s40b|--universe-file data/processed/experiments/universes/cap_301_800_s40_b.csv --daily-states data/processed/experiments/states/states_cap_301_800_s40_b.csv
+S1000s30b|--universe-file data/processed/experiments/universes/cap_801_1800_s30_b.csv --daily-states data/processed/experiments/states/states_cap_801_1800_s30_b.csv
