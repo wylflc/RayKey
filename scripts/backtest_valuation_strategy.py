@@ -713,6 +713,7 @@ class Lot:
     entry_stop_ma: int = 0      # 实际采用的均线周期——买在 MA60 下方时会退回 20
     stop_breach_streak: int = 0 # 连续收盘跌破止损价的交易日数；站回止损价即归零
     trail_peak: float = 0.0     # 上移锚（`--trail-ratio`）用的持有期价格峰值；除权日同步折算；开关关时恒 0
+    avg_cost: float = 0.0       # 持仓均价：买入按股数加权、减持不变、除权日与锚同式折算（`--addon-max-gain`／`--gain-sell` 用）
     peak_intrinsic: float = 0.0 # 持有期内内在价值的峰值——**基本面退出**按它的回撤触发
     exit_date: str = ""
     exit_reason: str = ""
@@ -823,6 +824,9 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
         lot.shares *= (1 + ratio)
         if lot.trail_peak > 0:          # 上移锚峰值按 §11.4 同式折算：(原值 − D) ÷ (1 + 送转比)
             lot.trail_peak = max(0.0, (lot.trail_peak - cash_per_share) / (1 + ratio))
+        if lot.avg_cost > 0:           # 持仓均价与锚同式折算；现金红利高于均价的极端情形只折送转
+            adjusted_cost = (lot.avg_cost - cash_per_share) / (1 + ratio)
+            lot.avg_cost = adjusted_cost if adjusted_cost > 0 else lot.avg_cost / (1 + ratio)
         if adjust_stops:
             if lot.entry_stop > 0:
                 adjusted = (lot.entry_stop - cash_per_share) / (1 + ratio)
@@ -986,7 +990,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         mkt_block_scope: str = "all", trail_ratio: float = 0.0,
         tier_buy_scale: dict[str, float] | None = None,
         tier_sell_scale: dict[str, float] | None = None,
-        exright_stop: str = "adjust") -> dict:
+        exright_stop: str = "adjust", addon_max_gain: float = 0.0,
+        gain_sell: float = 0.0, gain_sell_mode: str = "gated",
+        swap_trigger: str = "cash") -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `tier_buy_scale`／`tier_sell_scale`（研究开关，§12.95「护城河放到决策层」）：按档位给买入线／
@@ -1470,27 +1476,36 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # ⓪建仓日均线止损、②出 §5 名单逐步清仓、③换仓。
             # **注意现行减持线 2.50 十八年只触发 9 次**，故这条的直接影响本就很小；
             # 真正的意义是把「贵了要不要减」这个判断从机械规则里彻底移除。
-            if not no_value_sell and is_rich(code, ratio) and sell_trend_ma:
+            # `gain_sell`（用户 2026-08-22 实验）：**信号日收盘 ≥ 持仓均价 × (1 + G) 也算「该减」**——
+            # 与 `P/V ≥ 减持线` 走同一条减一档路径。`gated`＝同样过走势闸门（`sell_trend_ma`）；
+            # `ungated`＝不过闸门，涨幅达标即每日减一档直到跌回线下或减完。0＝关（逐位不变）。
+            value_rich = (not no_value_sell) and is_rich(code, ratio)
+            gain_hit = bool(gain_sell) and lot.avg_cost > 0 and \
+                (today.get(code, (None,))[0] or price) >= lot.avg_cost * (1.0 + gain_sell)
+            if not value_rich and not gain_hit:
+                continue
+            sell_tag = rich_tag if value_rich else f"涨幅≥{gain_sell:.0%}"
+            if sell_trend_ma and not (gain_hit and gain_sell_mode == "ungated"):
                 sig_close = today.get(code, (None,))[0]
                 ma_s = mas.get(code, {}).get(sig_day, {})
                 if not sig_close or not all(w in ma_s for w in sell_trend_ma):
                     continue                       # 均线不全 → 不减，等数据齐
                 seq = [sig_close] + [ma_s[w] for w in sell_trend_ma]
                 if not all(a < b for a, b in zip(seq, seq[1:])):
-                    stats["减持被走势闸门挡下"] += 1
+                    stats["减持被走势闸门挡下" if value_rich else "涨幅减持被走势闸门挡下"] += 1
                     continue
-            if is_rich(code, ratio) and not no_value_sell:
+            if value_rich or gain_hit:
                 # `sell_full`（用户 2026-08-12）：触发即整仓卖出，不按一档减。
                 # 与 `--dev-sell-min` / `--liquidate-ma` 的区别是它仍只看 P/V 与走势闸门，
                 # 不另加均线条件——即「符合卖出条件就一次性卖完」的直译。
                 if sell_full:
-                    stats["P/V≥减持线·整仓卖出"] += 1
+                    stats["P/V≥减持线·整仓卖出" if value_rich else f"{sell_tag}·整仓卖出"] += 1
                     turnover += lot.shares * price
                     close_lot(portfolio, code, day, price, ledger=ledger,
-                              reason=f"{rich_tag}整仓卖出")
+                              reason=f"{sell_tag}整仓卖出")
                     sell_count += 1
                     continue
-                stats["P/V≥减持线·减一档"] += 1
+                stats["P/V≥减持线·减一档" if value_rich else f"{sell_tag}·减一档"] += 1
                 shares = sell_shares(budget / price, lot.shares, price, lot_size)
                 if (not shares and lot_ratio_cooldown and lot_size
                         and lot.shares >= lot_size
@@ -1501,9 +1516,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 if shares >= lot.shares * 0.999:
                     turnover += lot.shares * price
-                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"{rich_tag}清空")
+                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"{sell_tag}清空")
                 else:
-                    log_partial_sell(ledger, day, code, shares, price, f"{rich_tag}·减一档")
+                    log_partial_sell(ledger, day, code, shares, price, f"{sell_tag}·减一档")
                     lot.shares -= shares
                     portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                     lot.proceeds += shares * price
@@ -1695,7 +1710,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             for code, close, value, ratio in eligible[:max_positions]:
                 if code in portfolio.lots:
                     continue
-                blocked = portfolio.cash < (lump_sum or budget) or len(portfolio.lots) >= max_positions
+                # `swap_trigger`（用户 2026-08-22 追问）：`cash`＝现行，**现金**不足一档即触发换仓，不看剩余授信；
+                # `power`＝按 §10.2 可用资金（现金＋剩余授信）判——授信还有余量时先融资买、不换仓。
+                funds = buying_power(portfolio, credit_limit) if swap_trigger == "power" else portfolio.cash
+                blocked = funds < (lump_sum or budget) or len(portfolio.lots) >= max_positions
                 if not blocked:
                     break
                 # 配置通道的持仓**不作为换仓的卖出源**——否则通道刚买进来就会被主排序换掉，
@@ -1722,13 +1740,31 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         and (not swap_out_min_pv or today[c][2] >= swap_out_min_pv)
                         and c not in quota_hold_today
                         and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
-                if not held:
-                    break
-                worst_ratio, worst = max(held)
-                cand_score = (pcts[code] if gate == "self-pct" else
-                              (scores.get(code, ratio) if rank_mode != "pv" else ratio))
-                if worst_ratio - cand_score < swap_margin:
-                    break
+                # `gain_sell`（用户 2026-08-22 实验）：**涨幅 ≥ G 的持仓也是换仓卖出源**——不比 P/V 边际，
+                # 取涨幅最大的一只让位（当日已减过的不重复选）；`gated` 沿用 `swap_require_weak` 的弱势要求，
+                # `ungated` 不要求。没有这类持仓时回到现行的「最贵且弱势」选法。
+                gain_src = []
+                if gain_sell:
+                    for c, l in portfolio.lots.items():
+                        if (c not in today or l.avg_cost <= 0 or c in quota_hold_today
+                                or c in reduced_today or today[c][0] < l.avg_cost * (1.0 + gain_sell)):
+                            continue
+                        if gain_sell_mode == "gated" and swap_require_weak:
+                            _m = mas.get(c, {}).get(sig_day, {})
+                            if _m.get(swap_weak_ma) is None or today[c][0] >= _m[swap_weak_ma]:
+                                continue
+                        gain_src.append((today[c][0] / l.avg_cost, c))
+                if gain_src:
+                    worst = max(gain_src)[1]
+                    stats[f"涨幅≥{gain_sell:.0%}·换仓让位"] += 1
+                else:
+                    if not held:
+                        break
+                    worst_ratio, worst = max(held)
+                    cand_score = (pcts[code] if gate == "self-pct" else
+                                  (scores.get(code, ratio) if rank_mode != "pv" else ratio))
+                    if worst_ratio - cand_score < swap_margin:
+                        break
                 price = fill_price(worst, marks.get(worst))
                 if not price:
                     break
@@ -1909,6 +1945,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if ma60_exec and close < ma60_exec:
                     stats["建仓日收盘<当日MA60·跳过"] += 1
                     continue
+            # `addon_max_gain`（用户 2026-08-22 实验）：**信号日收盘 ≥ 持仓均价 × (1 + G) 不再加仓**，
+            # 资金顺位下一名；新建仓不受影响。0＝关（逐位不变）。
+            if addon_max_gain and code in portfolio.lots:
+                _held = portfolio.lots[code]
+                if _held.avg_cost > 0 and close >= _held.avg_cost * (1.0 + addon_max_gain):
+                    stats[f"加仓·涨幅≥{addon_max_gain:.0%}·跳过"] += 1
+                    continue
             avail = buying_power(portfolio, credit_limit)
             if lump_sum:
                 amount = min(equity * lump_sum, avail)
@@ -1980,6 +2023,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                           entry_upside=value / fill - 1, peak_intrinsic=value)
                 lot.entry_stop, lot.entry_stop_ma = entry_stop_price(ma, close, stop_ma)
                 portfolio.lots[code] = lot
+            lot.avg_cost = ((lot.avg_cost * lot.shares + amount) / (lot.shares + shares)
+                            if lot.shares + shares > 0 else 0.0)   # 持仓均价：买入加权、减持不变
             lot.shares += shares
             lot.invested += amount
             lot.buys += 1
@@ -2457,6 +2502,14 @@ def main() -> int:
     parser.add_argument("--trail-ratio", type=float, default=0.0, metavar="K",
                         help="上移锚（用户 2026-08-20 实验）：锚_2 = K × 持有期峰价（只升不降，除权同步折算），"
                              "生效止损线 = max(锚_2, 现行止损线)。0=关（逐位不变）；例如 0.667")
+    parser.add_argument("--addon-max-gain", type=float, default=0.0, metavar="G",
+                        help="研究开关（用户 2026-08-22）：信号日收盘 ≥ 持仓均价×(1+G) 的持仓不再加仓；0=关。例 0.5")
+    parser.add_argument("--gain-sell", type=float, default=0.0, metavar="G",
+                        help="研究开关（用户 2026-08-22）：信号日收盘 ≥ 持仓均价×(1+G) 即触发减一档并可作换仓卖出源；0=关。例 1.0")
+    parser.add_argument("--gain-sell-mode", choices=("gated", "ungated"), default="gated",
+                        help="gated=涨幅减持／换仓同样过走势闸门（收<MA20 / 弱势）；ungated=不过闸门")
+    parser.add_argument("--swap-trigger", choices=("cash", "power"), default="cash",
+                        help="换仓触发口径：cash=现金不足一档即换（现行）；power=现金＋剩余授信不足一档才换")
     parser.add_argument("--stop-line", choices=("entry", "min_entry_current"), default="entry",
                         help="止损线口径：entry=建仓日冻结线（现行）；min_entry_current=min(建仓日线, "
                              "当日同周期均线)——均线下移时止损跟随下移、上移不抬线（用户 2026-08-19 实验）")
@@ -2642,6 +2695,9 @@ def main() -> int:
                      + (f"_sdp{args.stop_deep_pct * 100:g}" if args.stop_deep_pct else "")
                      + ("_slmin" if args.stop_line == "min_entry_current" else "")
                      + (f"_tr{args.trail_ratio:g}" if args.trail_ratio else "")
+                     + (f"_ag{args.addon_max_gain:g}" if args.addon_max_gain else "")
+                     + (f"_gs{args.gain_sell:g}{'u' if args.gain_sell_mode == 'ungated' else ''}" if args.gain_sell else "")
+                     + ("_swp" if args.swap_trigger == "power" else "")
                      + ("_skipma60" if args.entry_below_ma60 == "skip" else "")
                      + ("_rawma" if args.ma_basis == "raw" else "")
                      + ("_frzstop" if args.exright_stop == "frozen" else "")
@@ -2745,7 +2801,9 @@ def main() -> int:
                          mkt_action=args.mkt_action, mkt_release_ma=args.mkt_release_ma,
                          mkt_block_scope=args.mkt_block_scope, trail_ratio=args.trail_ratio,
                          tier_buy_scale=parse_tier_scale(args.tier_buy_scale),
-                         tier_sell_scale=parse_tier_scale(args.tier_sell_scale))
+                         tier_sell_scale=parse_tier_scale(args.tier_sell_scale),
+                         addon_max_gain=args.addon_max_gain, gain_sell=args.gain_sell,
+                         gain_sell_mode=args.gain_sell_mode, swap_trigger=args.swap_trigger)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
