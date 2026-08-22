@@ -1235,7 +1235,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # ---- 融资：按当日净资产重定授信额度，并查担保比例 ----
         if credit_ratio > 0:
             net_now = portfolio.equity(marks)
-            # 授信随当日净资产重定、封顶 credit_cap（§10.2，用户 2026-08-22 裁定 OI-080）：
+            # 授信随当日净资产重定、封顶 credit_cap（§10.2，用户 2026-08-22 裁定 OI-081）：
             # `repay`（缺省）＝额度就是 min(净资产×比例, 上限)，负债超出的部分在当日常规卖出（止损／减持／出名单）
             # 之后先用现金偿还（`repay_over_limit`），剩余现金＋剩余授信才可买入；换仓卖出款留给置换买入（见换仓段注释）；
             # `keep`＝v4.39 前的旧口径——额度取 max(已用负债, …)，下调不强制还款，只用于复现旧读数。
@@ -1542,7 +1542,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     turnover += shares * price
                 sell_count += 1
 
-        # ---- 常规卖出之后、换仓与买入之前：负债超出当日额度的部分先用现金偿还（§10.2，OI-080）
+        # ---- 常规卖出之后、换仓与买入之前：负债超出当日额度的部分先用现金偿还（§10.2，OI-081）
         if credit_over_limit == "repay" and credit_ratio > 0:
             if repay_over_limit(portfolio, credit_limit) > 0:
                 stats["超额授信·卖出款先还"] += 1
@@ -1738,7 +1738,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             for code, close, value, ratio in eligible[:max_positions]:
                 if code in portfolio.lots:
                     continue
-                # `swap_trigger`（OI-080，用户 2026-08-22 裁定）：`power`（缺省）＝按 §10.2 可用资金
+                # `swap_trigger`（OI-081，用户 2026-08-22 裁定）：`power`（缺省）＝按 §10.2 可用资金
                 # （现金＋剩余授信）不足一档才换仓——授信还有余量时先融资买；`cash`＝v4.39 前旧口径，
                 # 只看现金、不计剩余授信，只用于复现旧读数。
                 funds = buying_power(portfolio, credit_limit) if swap_trigger == "power" else portfolio.cash
@@ -2540,10 +2540,10 @@ def main() -> int:
     parser.add_argument("--gain-sell-mode", choices=("gated", "ungated"), default="gated",
                         help="gated=涨幅减持／换仓同样过走势闸门（收<MA20 / 弱势）；ungated=不过闸门")
     parser.add_argument("--swap-trigger", choices=("cash", "power"), default="power",
-                        help="换仓触发口径（OI-080）：power=现金＋剩余授信不足一档才换（§10.2 可用资金，缺省）；"
+                        help="换仓触发口径（OI-081）：power=现金＋剩余授信不足一档才换（§10.2 可用资金，缺省）；"
                              "cash=只看现金（v4.39 前旧口径，复现旧读数用）")
     parser.add_argument("--credit-over-limit", choices=("repay", "keep"), default="repay",
-                        help="负债超过当日授信额度的处理（OI-080）：repay=卖出款先偿还超额、不可新增买入（§10.2，缺省）；"
+                        help="负债超过当日授信额度的处理（OI-081）：repay=卖出款先偿还超额、不可新增买入（§10.2，缺省）；"
                              "keep=额度取 max(已用负债, 额度)、不强制还款（v4.39 前旧口径，复现旧读数用）")
     parser.add_argument("--stop-line", choices=("entry", "min_entry_current"), default="entry",
                         help="止损线口径：entry=建仓日冻结线（现行）；min_entry_current=min(建仓日线, "
