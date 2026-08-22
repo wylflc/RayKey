@@ -72,7 +72,7 @@ PATH_LABEL = {
     "growth": "内在价值模型 ROIC 口径（growth 路径）",
     "zero_growth": "内在价值模型零增长锚（zero_growth 路径）",
     "equity_fallback": "内在价值模型权益退路（equity_fallback 路径）",
-    "bank_divspread": "银行股利折现（bank_divspread 路径）",
+    "bank_divspread": "银行/保险股利折现（bank_divspread 路径）",
 }
 EARNINGS_LABEL = {"growth": "归一化每股 NOPAT", "zero_growth": "归一化每股 NOPAT",
                   "equity_fallback": "归一化 EPS"}

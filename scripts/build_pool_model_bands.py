@@ -21,16 +21,20 @@ import csv
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys
+sys.path.insert(0, str(ROOT / "scripts"))
 POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 BANDS = ROOT / "data/processed/roic_bands.csv"
 STATES = ROOT / "data/processed/a_share_daily_states_adopted.csv"
 OUT = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
 
 
-def is_bank(name: str) -> bool:
-    # 「银」单字会把兴业银锡(000426)这类矿业股误判成银行（2026-08-16 踩中，
-    # 估值路径被错标为股利折现）；收紧为「银行/农商」全词。
-    return "银行" in name or "农商" in name
+from divspread_names import is_divspread_financial   # v4.56：银行＋保险同一判定（OI-085）
+
+
+def is_bank(name: str, code: str = "") -> bool:
+    # 「银」单字会把兴业银锡(000426)这类矿业股误判成银行（2026-08-16 踩中）；判定统一在 divspread_names。
+    return is_divspread_financial(code, name)
 
 
 def main() -> int:
@@ -78,7 +82,7 @@ def main() -> int:
                 best[code] = row
 
     # 银行：V 换成采纳逐日状态最后一行的股利折现值
-    bank_codes = {c for c, n in pool.items() if is_bank(n)}
+    bank_codes = {c for c, n in pool.items() if is_bank(n, c)}
     bank_last: dict[str, dict] = {}
     with a.states.open(newline="", encoding="utf-8") as fh:
         for row in csv.DictReader(fh):

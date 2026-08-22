@@ -28,6 +28,9 @@ from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append
 
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys as _sys
+_sys.path.insert(0, str(ROOT / "scripts"))
+from divspread_names import is_divspread_financial  # noqa: E402  v4.56 银行＋保险股利折现判定
 DEFAULT_INPUT = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
@@ -457,8 +460,9 @@ SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
 BANK_RISK_PREMIUM = 0.02       # §12.31 股利折现的风险溢价
 
 
-def is_bank(name: str) -> bool:
-    return "银行" in name or name.endswith("行") or "农商" in name
+def is_bank(name: str, code: str = "") -> bool:
+    """银行与保险走股利折现（v4.56 起含保险，OI-085 用户裁定①；判定统一在 divspread_names）。"""
+    return is_divspread_financial(code, name)
 
 
 # 与 `apply_model_bands_to_dossiers.py --min-available` 同一阈值：早于它的模型带视为时点过旧。
@@ -551,7 +555,7 @@ def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
         code = str(row.get("security_code", "")).zfill(6)
         name = str(row.get("security_name", ""))
         intrinsic, source = None, ""
-        if is_bank(name):
+        if is_bank(name, code):
             intrinsic = bank_dividend_intrinsic(code, as_of, rf)
             if intrinsic:
                 source = "股利折现"
@@ -841,7 +845,7 @@ def main() -> int:
         attach_model_pv(rows, bands, args.as_of, args.rf)
         priced = sum(1 for r in rows if isinstance(r.get("model_pv"), float))
         print(f"§9.3 模型带：{len(bands)} 只有带，{priced}/{len(rows)} 只算出 P/V"
-              f"（银行走股利折现 rf={args.rf:.4%}+{BANK_RISK_PREMIUM:.0%}）")
+              f"（银行与保险走股利折现 rf={args.rf:.4%}+{BANK_RISK_PREMIUM:.0%}）")
         if priced < len(rows):
             missing = [str(r.get("security_name", "")) for r in rows
                        if not isinstance(r.get("model_pv"), float)][:8]

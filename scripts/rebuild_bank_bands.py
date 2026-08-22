@@ -60,11 +60,13 @@ OUT = sys.argv[2] if len(sys.argv) > 2 else f"{ROOT}/data/processed/vd_pit116_bk
 name = {}
 for r in csv.DictReader(open(PANEL, encoding="utf-8")):
     name[r["security_code"]] = r["security_name"]
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from divspread_names import is_divspread_financial   # v4.56：银行＋保险同一判定（OI-085 用户裁定①）
 def is_bank(c):
-    n = name.get(c, "")
-    return ("银行" in n) or n.endswith("行") or "农商" in n
+    return is_divspread_financial(c, name.get(c, ""))
 BANKS = {c for c in name if is_bank(c)}
-print(f"银行 {len(BANKS)} 只｜模式 {mode}")
+print(f"银行与保险 {len(BANKS)} 只（保险按 divspread_names.INSURER_CODES）｜模式 {mode}")
 
 # ---- 每只银行按可得日排列的 (bps, roe0, payout) ----
 seq = collections.defaultdict(list)
