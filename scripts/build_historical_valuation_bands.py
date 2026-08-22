@@ -1080,6 +1080,15 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             ratios = [y.nopat / y.parent_equity
                       for y in sorted(history, key=lambda x: x.period)
                       if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
+            # OI-082 研究开关（用户 2026-08-23，海外先行后 A 股 A/B）：`--roic-nopat-anchor per_share`
+            # 把各年比率一律相对**最新**母公司权益（× 当期 BPS 即「各年 NOPAT 按当前股数折每股」），
+            # 回购缩水/留存增长造成的权益基数变化不再进入分子归一化；周期守卫则用「权益＋库存股」
+            # （已回购未注销）作分母。缺省 ratio_bps＝现行，逐位不变。
+            anchor_mode = getattr(args, "roic_nopat_anchor", "ratio_bps")
+            if anchor_mode == "per_share":
+                ratios = [y.nopat / latest.parent_equity
+                          for y in sorted(history, key=lambda x: x.period)
+                          if y.nopat is not None]
             if not ratios:
                 band.status, band.reason = "rejected", "无可用的 NOPAT/母公司权益比率"
                 return band
@@ -1097,7 +1106,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                                                      max(args.roe_years, 10))
                 if tax_norm is not None:
                     long_hist = roic_inputs.with_tax_rate(long_hist, tax_norm)
-                long_ratios = [y.nopat / y.parent_equity
+                long_ratios = [y.nopat / (y.parent_equity + (y.treasury_shares if anchor_mode == "per_share" else 0.0))
                                for y in sorted(long_hist, key=lambda x: x.period)
                                if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
                 nopat_cyclical = (len(long_ratios) >= 4 and long_ratios[-1] > 0
@@ -1884,6 +1893,9 @@ def main() -> int:
     parser.add_argument("--roic-ic-floor", type=float, default=0.0, metavar="K",
                         help="投入资本下限 = K×总权益，挡住现金厚公司 IC 趋零导致的 ROIC 发散"
                              "（格力 2018 实测 793.7%%）。缺省 0 = v1 行为")
+    parser.add_argument("--roic-nopat-anchor", choices=("ratio_bps", "per_share"), default="ratio_bps",
+                        help="OI-082 研究开关：ratio_bps=各年 NOPAT/当年权益 的比率×当期 BPS（现行）；"
+                             "per_share=各年 NOPAT/最新权益×BPS（＝按当前股数折每股），周期守卫分母加库存股")
     parser.add_argument("--roic-nopat-source",
                         choices=("median", "onesided_max", "conditional", "conditional3"),
                         default="median",

@@ -108,6 +108,7 @@ class RoicYear:
     working_capital: float | None = None
     cfo: float | None = None
     interest_expense: float = 0.0
+    treasury_shares: float = 0.0      # 库存股（已回购未注销，资产负债表 TREASURY_SHARES；OI-082 周期守卫的权益回加项）
     is_financial: bool = False
     tax_rate_observed: bool = False   # True=税率来自本期 所得税/利润总额；False=利润总额非正时回退法定税率
 
@@ -167,6 +168,7 @@ def load_statements(codes: set[str] | None = None,
             year.total_equity = _num(bal.get("TOTAL_EQUITY"))
             year.parent_equity = _num(bal.get("TOTAL_PARENT_EQUITY"))
             year.minority_equity = _num(bal.get("MINORITY_EQUITY")) or 0.0
+            year.treasury_shares = _num(bal.get("TREASURY_SHARES")) or 0.0
             year.interest_debt = _sum(bal, DEBT_FIELDS)
             # 利息费用：新准则单列 `FE_INTEREST_EXPENSE`，早年只有财务费用净额
             year.interest_expense = (_num(inc.get("FE_INTEREST_EXPENSE"))
