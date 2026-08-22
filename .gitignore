@@ -84,3 +84,11 @@ data/processed/roiccond3h_states.csv
 data/processed/roicmed_bands.csv
 data/processed/roicmed_daily_raw.csv
 data/processed/roicmed_states.csv
+
+# ---------------------------------------------------------------- 实验 A/B（docs/Ashare_quant_exp1_*.md / exp2_*.md）
+# 逐日状态按实验股票库切出的子集（每份 0.3~0.6 GB，由 scripts/experimental/subset_daily_states.py 一条命令重建）
+data/processed/experiments/states/
+# 实验 B 行情缓存（numpy npz，约 0.7 GB，由 vp_signal_lab.py 自动重建）
+data/interim/exp_b_market_cache.npz
+# 实验 A 全市场合格股票库（7.6 MB，build_cap_rank_universe.py 一条命令重建；抽样子集与各带照常入库）
+data/processed/experiments/universes/cap_all.csv

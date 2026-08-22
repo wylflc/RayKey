@@ -1,0 +1,124 @@
+# 实验 A：无选股——指数类宇宙 × 现行估值与交易规则
+
+> 登记日 2026-08-22。**研究性质**：本实验不替代现行策略（基准宇宙、三线、规则见 `docs/000_Ashare_workflow.md` §9.3.1），
+> 只回答一个问题：**不做护城河筛选，直接把现行估值计算与操作规则套在"指数式"股票库上，收益率是什么量级**。
+> 数据集、已试方法与结果全部记录在本文件；后续新增臂追加在 §6。
+
+## 1. 问题与边界
+
+* 现行基准：`panel_moat_bank_v6b.csv`（287 代码／现役 222，§5.4 护城河判定 + 全银行）× ROIC 口径带 × §9.3 规则，
+  23 起点滚 5 年年化中位 **43.86%**（v4.34 基准读数，回测日志 §12.102）。
+* 本实验把**宇宙**换成不含任何质量判断的市值分层股票库，其余（估值带、买入线、止损、换仓、融资口径、费用、T+1 执行）逐字沿用 BASE。
+* 指数类宇宙与护城河面板的 `P/V` 分布不同，故每个宇宙跑**两套线**：①现行三线原样（0.9434 / 2.5008 / 0.1451）；
+  ②按 §12.1 线对齐规则重解到同一合格面（下侧 17.968%、上侧 30.443%）的三线（`scripts/experimental/align_buy_line.py`）。
+* 另加**无融资**臂（`--credit-ratio 0 --credit-cap 0`），把"策略"与"杠杆爆仓"分开看——首轮探针已见杠杆在宽基上被打穿（§4.0）。
+
+## 2. 数据集
+
+| 项 | 取值 |
+| --- | --- |
+| 行情 | `data/raw/ohlcv/`：5,545 只 A 股不复权日线（含 344 只已退市，`a_share_delisted_roster.csv`），末日 2026-08-07；除权事件 `data/raw/corporate_actions/a_share_corporate_actions.csv`（53,504 行，2026-08-22 刷新） |
+| 估值 | `data/processed/a_share_daily_states_adopted.csv`：全市场 5,572 只逐日 ROIC 口径带 + 银行股利折现（§6.7 链 2026-08-22 重建，公告日封顶、前复权均线纪元 v4.32~v4.38）；**非护城河公司的带与池内公司用同一套模型机械生成，没有人工复核** |
+| 财务 | `data/raw/financials/<报告期>.csv` 120 期（1996Q1~2026H1，全市场，含退市公司） |
+| 股票库 | 见 §2.1–§2.2，`data/processed/experiments/universes/` |
+| 回测引擎 | `scripts/backtest_valuation_strategy.py` + `scripts/sweep_backtest_configs.py` 的 `BASE`（v4.38），只改 `--universe-file` / `--daily-states`（子集文件，逐位等价） |
+| 起点 | 标准 23 个半年起点（2009-11 … 2020-11），到 2026-08-07 |
+
+### 2.1 时点市值分层股票库（主臂，无幸存者偏差）
+
+真实的沪深 300／中证 500／中证 1000 **历史**成分股（含纳入、剔除日）没有免密钥可用的来源（中证官网 Excel 403、legulegu 400、
+本机 akshare 1.14.81 已删除 `index_stock_hist`），只有**当前**成分股可得。指数按自由流通市值排名、半年调整，故用
+`scripts/experimental/build_cap_rank_universe.py` 构造**总市值排名代理**：
+
+* 排名日 R = 每年 6 月、12 月最后一个交易日（2008-06-30 起，共 37 个）；新档自 R 的下一交易日生效，到下一个 R 当日止。
+* 总市值 = R 日收盘 × 股本；股本 = 公告日 ≤ R 的最新一期财报 `归母净利润 ÷ 基本 EPS`（财务表无股本字段；
+  实测 6 家与东财总股本差 −5%~+7%：平安银行 207 vs 194 亿股、茅台 12.5 vs 12.5、格力 55.8 vs 56.0、牧原 55.3 vs 57.7、宁德 45.5 vs 46.3、中芯 80.0 vs 85.6）。
+* 入选资格：R 日前 10 个自然日内有收盘（剔长期停牌）、上市满 250 个交易日、有股本。**不剔 ST**（无历史 ST 状态）。
+* 带：`cap_top300`（1~300 ≈ 沪深 300）、`cap_301_800`（≈ 中证 500）、`cap_801_1800`（≈ 中证 1000）、`cap_all`（全部合格，"无选股"本义）。
+
+**内存约束决定了主臂是抽样子集**：回测引擎按股票库**历年并集**把全历史行情、均线、相关性收益率全部驻留内存，
+实测并集 288 只峰值 1.38 GB、772 只 2.98 GB、**1,205 只 6.07 GB**（每只约 3.3~4 MB），而本机 8 GB、作业预算 5 GB（CLAUDE.md）。
+各带 2008~2026 并集：top300 1,205、301-800 2,503、801-1800 3,747、all 5,394——除 top300 外全都放不下，top300 也超预算。
+故主臂用**按代码持久的哈希抽样**（`md5(salt+code) % 100 < pct`）：同一只股票只要在带内就一直在子集里，子集在任一时点
+都是该带成员的无偏随机子样本，并集≈带并集 × pct。两套盐（a/b）各跑一遍以量化抽样噪声。
+
+| 子集 | 每档只数 | 并集 | 对应状态子集 |
+| --- | ---: | ---: | --- |
+| `cap_top300_s50` / `_b` | 143~171 / 139~164 | 609 / 587 | `data/processed/experiments/states/states_<名>.csv` |
+| `cap_301_800_s40` / `_b` | 178~226 / 171~203 | 960 / 979 | 同上 |
+| `cap_801_1800_s30` / `_b` | 164~325 / 149~317 | 1,107 / 1,093 | 同上 |
+| `cap_all_s15` / `_b` | 204~809 / 180~758 | 845 / 798 | 同上 |
+
+`membership_stats.csv` 记录每档人数与换手率。
+
+### 2.2 当前成分股（参照臂，**幸存者名单**）
+
+`akshare.index_stock_cons("000300"/"000905"/"000852")`（2026-08-22 取，源为新浪）给出当前 300/500/1000 只及其**纳入日期**；
+以纳入日期为 `effective_from`、无 `effective_to` 写成 `hs300_now.csv` / `zz500_now.csv` / `zz1000_now.csv`。
+这是"今天还在指数里的公司"——被剔除、退市的全不在，且早年档只有寥寥数只（沪深 300 的 2005 年档 26 只，中证 1000 自 2014-10 起），
+**只能作偏乐观的上界参照，不作结论依据**。
+
+## 3. 方法
+
+* 扫描：`python3 scripts/sweep_backtest_configs.py <配置> --out <读数> --workers 1`（并集 ≥ 600 只的臂峰值 3~4 GB，不并发）。
+  配置文件：`data/processed/experiments/exp_a/configs/`；读数与对照表：同目录 `sweep_*.txt` / `report_*.txt`。
+* 读数口径与现行一致（§12.1）：23 起点滚动 5 年年化中位为主，滚 3 年、逐年为辅；Δ 为相对同一次扫描里 `BASE` 臂（护城河面板）的逐起点配对差中位与正号数；
+  同时报滚 3 年回撤、换手、仓位。抽样子集 a/b 两臂的差异≈抽样噪声带。
+* 线对齐解（`align_buy_line.py`，基准 v6b 面板 511,488 个在册观测，下侧 17.968% / 上侧 30.443%）：见 §4.2 表。
+
+## 4. 结果
+
+### 4.0 单次探针（2015-05-01 起，一条路径，BASE 规则含融资）
+
+| 宇宙 | 并集 | 期末（本金 300 万） | 年化 | 最大回撤 | 备注 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `hs300_now`（当前沪深 300 幸存者） | 288 | 3,123 万 | +23.2% | **79.5%** | 幸存者偏差上界；回撤来自 2015 下半年杠杆 |
+| `zz1000_now`（当前中证 1000 幸存者） | 772 | 59.8 万 | **−13.4%** | **96.3%** | 融资账户被打穿 |
+| `cap_top300`（全量 1,205 并集，6.07 GB） | 1,205 | 49.7 万 | **−14.8%** | **96.8%** | 同上；故后续主臂改抽样 |
+
+同一规则在护城河面板上 2015-05 起的路径并无此类爆仓（基准 23 起点滚 3 回撤中位 35.6%）。
+
+### 4.1 现行三线（0.9434 / 2.5008 / 0.1451），23 起点
+
+（扫描进行中——`data/processed/experiments/exp_a/sweep_prod_lines.txt`；完成后填表）
+
+### 4.2 线对齐后的三线
+
+| 宇宙 | 在册观测 | 买入线 | 减持线 | 换仓改善 |
+| --- | ---: | ---: | ---: | ---: |
+| 基准 v6b | 511,488 | 0.9434 | 2.5008 | 0.1451 |
+| `cap_top300_s50` | 671,848 | 0.7967 | 2.3762 | 0.1225 |
+
+（其余宇宙对齐中，见 `data/processed/experiments/exp_a/align.log`）
+
+### 4.3 无融资臂
+
+（待跑）
+
+## 5. 解读
+
+（待结果齐后写：按 §12.1 只说"按哪条标准、在哪个宇宙、差多少"，不说"最优"。）
+
+## 6. 追加记录
+
+| 日期 | 臂 | 改动 | 结论 |
+| --- | --- | --- | --- |
+
+## 7. 复现
+
+```bash
+# 股票库（约 2 分钟）
+python3 scripts/experimental/build_cap_rank_universe.py --out-dir data/processed/experiments/universes \
+    --first-year 2008 --salts a,b --samples "cap_top300:50,cap_301_800:40,cap_801_1800:30,cap_all:15"
+# 逐日状态子集（一遍 1.9 GB，约 3 分钟）
+python3 scripts/experimental/subset_daily_states.py data/processed/a_share_daily_states_adopted.csv \
+    --out-dir data/processed/experiments/states data/processed/experiments/universes/cap_*_s*.csv \
+    data/processed/experiments/universes/*_now.csv
+# 线对齐（每个宇宙一次）
+python3 scripts/experimental/align_buy_line.py data/processed/a_share_daily_states_adopted.csv \
+    data/processed/experiments/states/states_cap_top300_s50.csv --base-line 0.9434 --sell-line 2.5008 --swap-margin 0.1451 \
+    --base-panel data/processed/pit_attention/panel_moat_bank_v6b.csv --panel data/processed/experiments/universes/cap_top300_s50.csv
+# 扫描
+python3 scripts/sweep_backtest_configs.py data/processed/experiments/exp_a/configs/prod_lines.txt \
+    --out data/processed/experiments/exp_a/sweep_prod_lines.txt --workers 1 --title "实验A·现行三线"
+```

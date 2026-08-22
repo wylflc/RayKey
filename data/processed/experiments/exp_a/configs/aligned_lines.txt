@@ -1,0 +1,8 @@
+# 实验 A：同一宇宙，三线按 §12.1 对齐到基准合格面（下侧 17.968%／上侧 30.443%）；对齐解见 docs/Ashare_quant_exp1_index_universe.md §4.2
+BASE|
+T300s50a_al|--universe-file data/processed/experiments/universes/cap_top300_s50.csv --daily-states data/processed/experiments/states/states_cap_top300_s50.csv --width 0.2033 --sell-line 2.3762 --swap-margin 0.1225
+M500s40a_al|--universe-file data/processed/experiments/universes/cap_301_800_s40.csv --daily-states data/processed/experiments/states/states_cap_301_800_s40.csv --width 0.0928 --sell-line 2.9913 --swap-margin 0.1395
+S1000s30a_al|--universe-file data/processed/experiments/universes/cap_801_1800_s30.csv --daily-states data/processed/experiments/states/states_cap_801_1800_s30.csv --width 0.0296 --sell-line 3.5194 --swap-margin 0.1493
+ALLs15a_al|--universe-file data/processed/experiments/universes/cap_all_s15.csv --daily-states data/processed/experiments/states/states_cap_all_s15.csv --width 0.0302 --sell-line 3.4312 --swap-margin 0.1492
+HS300now_al|--universe-file data/processed/experiments/universes/hs300_now.csv --daily-states data/processed/experiments/states/states_hs300_now.csv --width 0.2415 --sell-line 2.2869 --swap-margin 0.1167
+ZZ1000now_al|--universe-file data/processed/experiments/universes/zz1000_now.csv --daily-states data/processed/experiments/states/states_zz1000_now.csv --width 0.0352 --sell-line 3.0346 --swap-margin 0.1484
