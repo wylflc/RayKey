@@ -491,8 +491,17 @@ def event_study(m: Market, panel: Panel, sig: np.ndarray, label: str, years: lis
         ok = ~np.isnan(f)
         f, exc, x = f[ok], exc[ok], x[ok]
         if len(f):
+            # 按日等权（每日先对当日事件取均值，再对有事件的日子取均值）——对应"每天随机抽 K 只"的组合权重，
+            # 与按事件等权的差距就是"信号在时间上扎堆"的效应
+            fz = np.where(ev, fw, np.nan)
+            with np.errstate(all="ignore"):
+                day_mean = np.nanmean(fz, axis=0)
+            day_ok = ~np.isnan(day_mean)
+            dw_mean = float(np.mean(day_mean[day_ok])) if day_ok.any() else float("nan")
+            dw_exc = float(np.mean((day_mean - panel.mkt(H))[day_ok])) if day_ok.any() else float("nan")
             rows.append({
-                "signal": label, "H": H, "N": int(len(f)),
+                "signal": label, "H": H, "N": int(len(f)), "days": int(day_ok.sum()),
+                "dw_mean": dw_mean, "dw_excess": dw_exc,
                 "mean": float(np.mean(f)), "median": float(np.median(f)), "win": float(np.mean(f > 0)),
                 "p_ge_2": float(np.mean(f >= 0.02)), "p_ge_5": float(np.mean(f >= 0.05)),
                 "mean_excess": float(np.mean(exc)), "excess_win": float(np.mean(exc > 0)),
@@ -686,11 +695,12 @@ def main() -> None:
             all_rows += rows; all_yrows += yrows
             print(f"\n## {label}｜宇宙 {uni_label}｜入场 T+1 {args.entry}")
             print(f"{'H':>3} {'N':>9} {'均值':>8} {'中位':>8} {'胜率':>7} {'≥2%':>7} {'≥5%':>7} {'超额均值':>9} {'超额胜率':>9} {'市场均值':>9} "
-                  + " ".join(f"{'曾≥' + str(int(t * 100)) + '%':>8}" for t in TARGETS))
+                  + " ".join(f"{'曾≥' + str(int(t * 100)) + '%':>8}" for t in TARGETS) + f" {'日权均值':>9} {'日权超额':>9}")
             for r in rows:
                 print(f"{r['H']:>3} {r['N']:>9,} {fmt_pct(r['mean']):>8} {fmt_pct(r['median']):>8} {fmt_pct(r['win']):>7} "
                       f"{fmt_pct(r['p_ge_2']):>7} {fmt_pct(r['p_ge_5']):>7} {fmt_pct(r['mean_excess']):>9} {fmt_pct(r['excess_win']):>9} {fmt_pct(r['mkt_mean']):>9} "
-                      + " ".join(f"{fmt_pct(r[f'mfe_ge_{int(t * 100)}']):>8}" for t in TARGETS))
+                      + " ".join(f"{fmt_pct(r[f'mfe_ge_{int(t * 100)}']):>8}" for t in TARGETS)
+                      + f" {fmt_pct(r['dw_mean']):>9} {fmt_pct(r['dw_excess']):>9}")
             print("  逐年（H=20）：" + "；".join(
                 f"{r['year']} N={r['N']:,} 均{fmt_pct(r.get('mean20'))} 胜{fmt_pct(r.get('win20'))} 超{fmt_pct(r.get('excess20'))}"
                 for r in yrows if r["N"]))
