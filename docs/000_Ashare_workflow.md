@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.44
+# A股选股-估值-量价操作流程 v4.45
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -384,13 +384,19 @@ python3 scripts/build_a_share_core_valuation_pool.py \
 
 ### 6.8 海外关注清单
 
-港股、美股和韩股只作为观察附表，不写入 A 股核心池，也不进入 §9.3。质量判断沿用 §5，估值遵守价格独立、证据改带和可证伪原则；交易货币不得跨市场直接比较。
+港股、美股和韩股只作为观察附表，不写入 A 股核心池，也不进入 §9.3。质量判断沿用 §5，估值遵守价格独立、证据改带和可证伪原则；交易货币不得跨市场直接比较（`P/V` 可以）。
+
+**估值口径与 A 股相同（v4.45，用户 2026-08-23 指令）**：合理估值按 §6.5.2.3 的 ROIC 口径由三大报表重算（`build_historical_valuation_bands.py --value-model roic` 的生产参数逐项同式），r = 美债 10Y ＋ β×经营地 Damodaran ERP（β 按档与 A 股同表），报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（伯克希尔）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」，旧档案带只作参考文本。三表来源：美股 SEC XBRL companyfacts、港股东财 HK F10（`data/raw/overseas_statements/` 不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。
 
 ```bash
 python3 scripts/fetch_overseas_earnings_calendar.py --as-of YYYY-MM-DD --apply
 python3 scripts/fetch_overseas_earnings_calendar.py --as-of YYYY-MM-DD --check-only
+python3 scripts/fetch_overseas_statements.py [--refresh]                  # 三表 → overseas_roic_years.csv（年报后重取）
+python3 scripts/build_overseas_roic_bands.py --as-of YYYY-MM-DD            # ROIC 口径合理估值 → overseas_watchlist_valuation.csv ＋ README「ROIC 口径估值」节
 python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --as-of YYYY-MM-DD
 ```
+
+阅读版 `000_a_share_core_valuation_pool.md` 两表列：代码／名称／质量／参考分／估值／估值路径／现价／**合理估值 V**／**`P/V`**／估值时间／估值事件（2026-08-23 起；合理价区间、空间、策略标签、PE、PB 移出阅读版，仍在 CSV）。
 
 海外标的的报告日、证据日、带、档位和不可买状态维护在 `data/processed/overseas_watchlist_valuation.csv`。无日历源的市场必须人工维护日期并显式显示缺口。
 

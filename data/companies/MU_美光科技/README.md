@@ -27,3 +27,9 @@ DRAM/NAND 合约价月度方向；三寡头合计资本开支指引；HBM 产能
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·增长（§6.5.2.3 同口径）；带 121.40~148.38 USD；审定档 高估。
+
+ROIC·增长（§6.5.2.3 同口径，财年 2021~2025，SEC companyfacts us-gaap）：NOPAT/母公司权益 比率 0.165（ttm_growth）× BPS 48.15 = NOPAT/股 7.957；ROIC0 14.3%；WACC 8.19%（r 9.20% = rf 4.74% + β1.0×ERP 4.46%；rd 4.17%；t 12%；账面权重）；增长 g0=17.6%（来源 capital：资本腿 17.6%=min(增量ROIC 20.1%,40%)×再投资率 88%，增速腿 —），ROIC_T=min(WACC+档位超额, ROIC0)=11.2%，g_T=3.0%，fade 10 年，终值占比 86%；净负债/股 2.252（有息负债−超额现金＋少数股东权益）；**V = 134.893 USD/普通股** → **134.89 USD**；带 = V×[0.90,1.10]。标签：capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cash_invest=AvailableForSaleSecuritiesDebtSecuritiesCurrent;cfo=NetCashProvidedByUsedInOperatingActivities+NetCashProvidedByUsedInOperatingActivitiesContinuingOperations;dep_amort=DepreciationDepletionAndAmortization+Depreciation;income_tax=Incom

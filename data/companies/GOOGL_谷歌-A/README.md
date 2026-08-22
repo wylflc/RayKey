@@ -27,3 +27,9 @@ Q1 90：搜索广告近零边际成本、现金转化极优。Q2 88：搜索默�
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·增长（§6.5.2.3 同口径）；带 212.65~259.91 USD；审定档 高估。
+
+ROIC·增长（§6.5.2.3 同口径，财年 2021~2025，SEC companyfacts us-gaap）：NOPAT/母公司权益 比率 0.320（ttm_growth）× BPS 33.95 = NOPAT/股 10.857；ROIC0 44.6%；WACC 8.01%（r 8.75% = rf 4.74% + β0.9×ERP 4.46%；rd 2.00%；t 17%；账面权重）；增长 g0=19.5%（来源 trailing：资本腿 10.5%=min(增量ROIC 26.6%,40%)×再投资率 40%，增速腿 19.5%），ROIC_T=min(WACC+档位超额, ROIC0)=14.0%，g_T=3.0%，fade 10 年，终值占比 85%；净负债/股 -5.744（有息负债−超额现金＋少数股东权益）；**V = 236.280 USD/普通股** → **236.28 USD**；带 = V×[0.90,1.10]。标签：capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cash_invest=MarketableSecuritiesCurrent;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=Depreciation;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpense+InterestExpenseNonoperating;lt_debt_current=LongTermDebtCurrent;lt_d

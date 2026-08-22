@@ -37,3 +37,9 @@ Q1 62：整车制造重资产、单车成本对规模与产能利用率高度敏
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-06
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·增长（§6.5.2.3 同口径）；带 22.55~27.56 USD；审定档 高估。
+
+ROIC·增长（§6.5.2.3 同口径，财年 2021~2025，SEC companyfacts us-gaap）：NOPAT/母公司权益 比率 0.102（median3）× BPS 23.28 = NOPAT/股 2.373；ROIC0 29.9%；WACC 9.90%（r 10.54% = rf 4.74% + β1.3×ERP 4.46%；rd 4.61%；t 27%；账面权重）；增长 g0=0.0%（来源 none：资本腿 —=min(增量ROIC -6.4%,40%)×再投资率 61%，增速腿 —），ROIC_T=min(WACC+档位超额, ROIC0)=9.9%，g_T=3.0%，fade 10 年，终值占比 62%；净负债/股 -9.450（有息负债−超额现金＋少数股东权益）；**V = 25.053 USD/普通股** → **25.05 USD**；带 = V×[0.90,1.10]。标签：capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cash_invest=MarketableSecuritiesCurrent+ShortTermInvestments;cfo=NetCashProvidedByUsedInOperatingActivities+NetCashProvidedByUsedInOperatingActivitiesContinuingOperations;dep_amort=DepreciationDepletionAndAmortization+DepreciationAndAmortization+

@@ -27,3 +27,9 @@ Q1 74：平台模式现金流优良、货币化率稳定，但即时零售把它
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·增长（§6.5.2.3 同口径）；带 48.83~59.69 HKD；审定档 高估。
+
+ROIC·增长（§6.5.2.3 同口径，财年 2022~2026，eastmoney HK F10 (RPT_HKF10_FN_*_PC, DATE_TYPE_CODE=001)）：NOPAT/母公司权益 比率 0.103（median3）× BPS 55.69 = NOPAT/股 5.715；ROIC0 7.2%；WACC 8.87%（r 9.75% = rf 4.74% + β1.0×ERP 5.01%；rd 4.83%；t 23%；账面权重）；增长 g0=25.0%（来源 trailing：资本腿 9.4%=min(增量ROIC 37.7%,40%)×再投资率 25%，增速腿 26.3%），ROIC_T=min(WACC+档位超额, ROIC0)=7.2%，g_T=3.0%，fade 10 年，终值占比 87%；净负债/股 7.276（有息负债−超额现金＋少数股东权益）；**V = 46.510 CNY/普通股**；报表币 CNY → 交易币 HKD 汇率 1.1666 → **54.26 HKD**；带 = V×[0.90,1.10]。标签：capex=cashflow:购建固定资产;cash=balance:现金及等价物;cfo=cashflow:经营业务现金净额;dep_amort=cashflow:加:折旧及摊销;income_tax=income:税项;interest_expense=income:融资成本;lt_loan=balance:长期贷款;minority_equity=balance:少数股东权益;notes_c=balance:应付票据;notes_nc=balance:应付票据(非流动);operating_income=income:经营溢利;parent_equity=balance:股东权益;pretax=income:除税前溢利;revenue=income:营业额;st_loan=balance:短期贷款;total_equity=balance:总权益

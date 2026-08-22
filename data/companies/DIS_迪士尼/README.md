@@ -27,3 +27,9 @@ Q1 70：乐园重资产、内容投入刚性，但 IP 授权与体验业务定�
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-07
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·零增长（§6.5.2.3 同口径）；带 10.24~12.51 USD；审定档 高估。
+
+ROIC·零增长（§6.5.2.3 同口径，财年 2021~2025，SEC companyfacts us-gaap）：NOPAT/母公司权益 比率 0.046（cyclical_median，周期守卫命中）× BPS 60.67 = NOPAT/股 2.786；ROIC0 3.1%；WACC 7.94%（r 9.20% = rf 4.74% + β1.0×ERP 4.46%；rd 4.50%；t 0%；账面权重）；零增长：V = NOPAT/股 ÷ WACC − 净负债/股；净负债/股 23.723（有息负债−超额现金＋少数股东权益）；**V = 11.373 USD/普通股** → **11.37 USD**；带 = V×[0.90,1.10]。标签：capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cfo=NetCashProvidedByUsedInOperatingActivities+NetCashProvidedByUsedInOperatingActivitiesContinuingOperations;dep_amort=DepreciationDepletionAndAmortization+Depreciation;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpense;lt_debt_

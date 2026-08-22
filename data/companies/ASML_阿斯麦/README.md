@@ -27,3 +27,9 @@ EUV/High-NA 季度出货台数；在手订单（book-to-bill，阈值 <1.0 连�
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·增长（§6.5.2.3 同口径）；带 489.62~598.43 USD；审定档 高估。
+
+ROIC·增长（§6.5.2.3 同口径，财年 2021~2025，SEC companyfacts us-gaap）：NOPAT/母公司权益 比率 0.484（median3）× BPS 50.43 = NOPAT/股 24.402；ROIC0 81.3%；WACC 7.40%（r 8.55% = rf 4.74% + β0.9×ERP 4.23%；rd 2.74%；t 18%；账面权重）；增长 g0=14.7%（来源 trailing：资本腿 5.0%=min(增量ROIC 98.2%,40%)×再投资率 13%，增速腿 14.7%），ROIC_T=min(WACC+档位超额, ROIC0)=13.4%，g_T=3.0%，fade 10 年，终值占比 76%；净负债/股 -21.285（有息负债−超额现金＋少数股东权益）；**V = 465.018 EUR/普通股**；报表币 EUR → 交易币 USD 汇率 1.1699 → **544.03 USD**；带 = V×[0.90,1.10]。标签：capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cash_invest=AvailableForSaleSecuritiesDebtSecuritiesCurrent;cfo=NetCashProvidedByUsedInOperatingActivities+NetCashProvidedByUsedInOperatingActivitiesContinuingOperations;dep_amort=DepreciationDepletionAndAmortization+DepreciationAndAmortization+D

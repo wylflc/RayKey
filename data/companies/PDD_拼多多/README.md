@@ -27,3 +27,9 @@ Q1 76：轻资产平台、负营运资本、货币化效率极高。Q2 64：低�
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·增长（§6.5.2.3 同口径）；带 186.73~228.22 USD；审定档 低估。
+
+ROIC·增长（§6.5.2.3 同口径，财年 2021~2025，SEC companyfacts us-gaap）：NOPAT/母公司权益 比率 0.321（median3）× BPS 69.72 = NOPAT/股 22.363；ROIC0 50.8%；WACC 9.88%（r 9.88% = rf 4.74% + β1.0×ERP 5.14%；rd 4.50%；t 18%；账面权重）；增长 g0=25.0%（来源 trailing：资本腿 —=min(增量ROIC —,40%)×再投资率 -1%，增速腿 73.4%），ROIC_T=min(WACC+档位超额, ROIC0)=12.9%，g_T=3.0%，fade 10 年，终值占比 82%；净负债/股 -28.045（有息负债−超额现金＋少数股东权益）；**V = 348.586 CNY/普通股**；报表币 CNY → 交易币 USD 汇率 0.1488，每 ADR 4 股 → **207.47 USD**；带 = V×[0.90,1.10]。标签：capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cash_invest=MarketableSecuritiesCurrent+ShortTermInvestments+AvailableForSaleSecuritiesDebtSecuritiesCurrent;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=DepreciationAndAmortization+Depreciation;income_tax=IncomeTaxExpenseBenefit;inte

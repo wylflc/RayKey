@@ -27,3 +27,9 @@ Q1 88：晶圆代工重资产但定价权极强、预付款模式优良。Q2 92�
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·增长（§6.5.2.3 同口径）；带 138.38~169.13 USD；审定档 高估。
+
+ROIC·增长（§6.5.2.3 同口径，财年 2020~2024，SEC companyfacts ifrs-full）：NOPAT/母公司权益 比率 0.275（median3）× BPS 163.68 = NOPAT/股 44.974；ROIC0 47.2%；WACC 9.26%（r 9.25% = rf 4.74% + β0.9×ERP 5.01%；rd 12.00%；t 18%；账面权重）；增长 g0=25.0%（来源 capital：资本腿 40.0%=min(增量ROIC 64.8%,40%)×再投资率 105%，增速腿 22.2%），ROIC_T=min(WACC+档位超额, ROIC0)=15.3%，g_T=3.0%，fade 10 年，终值占比 84%；净负债/股 -74.943（有息负债−超额现金＋少数股东权益）；**V = 978.233 TWD/普通股**；报表币 TWD → 交易币 USD 汇率 0.0314，每 ADR 5 股 → **153.75 USD**；带 = V×[0.90,1.10]。标签：capex=PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities;cash=CashAndCashEquivalents;cash_invest=CurrentFinancialAssetsAtFairValueThroughProfitOrLoss+OtherCurrentFinancialAssets;cfo=CashFlowsFromUsedInOperatingActivities;income_tax=IncomeTaxExpenseContinuingOperations;interest_expense=FinanceCosts;lt_debt_current=CurrentPortionOfLongtermBorrowings;lt_debt_noncurrent=LongtermBorrowi

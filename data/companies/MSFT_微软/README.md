@@ -27,3 +27,9 @@ Azure 收入增速（阈值：<25% 即下修 g）；资本开支占经营现金�
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·增长（§6.5.2.3 同口径）；带 308.32~376.84 USD；审定档 高估。
+
+ROIC·增长（§6.5.2.3 同口径，财年 2022~2026，SEC companyfacts us-gaap）：NOPAT/母公司权益 比率 0.308（median3）× BPS 59.36 = NOPAT/股 18.276；ROIC0 45.7%；WACC 8.40%（r 8.75% = rf 4.74% + β0.9×ERP 4.46%；rd 5.57%；t 19%；账面权重）；增长 g0=17.4%（来源 trailing：资本腿 8.8%=min(增量ROIC 20.8%,40%)×再投资率 42%，增速腿 17.4%），ROIC_T=min(WACC+档位超额, ROIC0)=14.4%，g_T=3.0%，fade 10 年，终值占比 82%；净负债/股 -4.013（有息负债−超额现金＋少数股东权益）；**V = 342.580 USD/普通股** → **342.58 USD**；带 = V×[0.90,1.10]。标签：capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cash_invest=ShortTermInvestments;cfo=NetCashProvidedByUsedInOperatingActivities+NetCashProvidedByUsedInOperatingActivitiesContinuingOperations;dep_amort=Depreciation;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpense+InterestExpe

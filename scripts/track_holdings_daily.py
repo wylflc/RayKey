@@ -312,6 +312,9 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         if gain is not None and gain >= GAIN_SELL:
             notes.append(f"**较持仓均价 {cost:g} 涨幅 {gain:.0%} ≥ {GAIN_SELL:.0%}**：减持另须 `收盘 < MA20`"
                          f"（§9.3.1 涨幅行）；资金不足时优先作换仓卖出源（涨幅最大者先）")
+        elif cost is None or cost <= 0:
+            # §13 第 3 条：判据缺失必须显式落字，不能静默等同「未触发」。
+            notes.append("**持仓均价未填**（`cost_basis` 空）：§9.3.1 涨幅减持行无法判定，请按 §11.2 补填（买入加权、除权按 §11.4 折算）")
 
         # §9.3.5 建仓日止损。**先判无行情**：没有收盘价就既不能说跌破、也不能
         # 说没跌破，落 `无行情` 而不是默认放行——与 `action` 的 `数据缺失` 同一条理由。
@@ -526,6 +529,9 @@ def main() -> None:
         print(f"  **P/V ≥ {SELL_LINE:.4f} 共 {len(trim)} 只**：{names}——另须 `收盘 < MA20`（§9.3.1）才减一档")
     else:
         print(f"  P/V ≥ {SELL_LINE:.4f}：无")
+    no_cost = [r for r in rows if not (to_float(r.get("cost_basis")) or 0) > 0]
+    if no_cost:
+        print(f"  **持仓均价未填 {len(no_cost)} 只**：{'、'.join(str(r['security_name']) for r in no_cost)}——§9.3.1 涨幅减持行对其无法判定，请补 `cost_basis`（§11.2）")
     if gain_trim:
         names = "、".join(f"{r['security_name']}(+{g:.0%})" for g, r in gain_trim)
         print(f"  **较持仓均价涨幅 ≥ {GAIN_SELL:.0%} 共 {len(gain_trim)} 只**：{names}——另须 `收盘 < MA20`（§9.3.1 涨幅行）才减一档；"

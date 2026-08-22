@@ -27,3 +27,9 @@ Q1 66：重资产制造、周期性明显，但特种材料的配方与工艺积
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·增长（§6.5.2.3 同口径）；带 18.96~23.17 USD；审定档 高估。
+
+ROIC·增长（§6.5.2.3 同口径，财年 2021~2025，SEC companyfacts us-gaap）：NOPAT/母公司权益 比率 0.134（cyclical_median，周期守卫命中）× BPS 13.56 = NOPAT/股 1.819；ROIC0 9.1%；WACC 6.95%（r 9.20% = rf 4.74% + β1.0×ERP 4.46%；rd 4.33%；t 15%；账面权重）；增长 g0=0.0%（来源 none：资本腿 —=min(增量ROIC -6.5%,40%)×再投资率 -94%，增速腿 —），ROIC_T=min(WACC+档位超额, ROIC0)=9.1%，g_T=3.0%，fade 10 年，终值占比 64%；净负债/股 8.864（有息负债−超额现金＋少数股东权益）；**V = 21.062 USD/普通股** → **21.06 USD**；带 = V×[0.90,1.10]。标签：capex=PaymentsToAcquireProductiveAssets;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cfo=NetCashProvidedByUsedInOperatingActivities+NetCashProvidedByUsedInOperatingActivitiesContinuingOperations;dep_amort=Depreciation;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpenseNonoperating+InterestAndDebtExpense;lt_debt_current=Lon

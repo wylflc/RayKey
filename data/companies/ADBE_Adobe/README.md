@@ -27,3 +27,9 @@ Q1 84：订阅制递延收入、极高毛利、近零边际成本。Q2 76：创�
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·增长（§6.5.2.3 同口径）；带 91.74~112.12 USD；审定档 高估。
+
+ROIC·增长（§6.5.2.3 同口径，财年 2021~2025，SEC companyfacts us-gaap）：NOPAT/母公司权益 比率 0.345（cyclical_median，周期守卫命中）× BPS 27.22 = NOPAT/股 9.385；ROIC0 43.9%；WACC 6.98%（r 9.20% = rf 4.74% + β1.0×ERP 4.46%；rd 3.46%；t 18%；账面权重）；增长 g0=0.0%（来源 none：资本腿 —=min(增量ROIC —,40%)×再投资率 -10%，增速腿 —），ROIC_T=min(WACC+档位超额, ROIC0)=10.0%，g_T=3.0%，fade 10 年，终值占比 72%；净负债/股 0.212（有息负债−超额现金＋少数股东权益）；**V = 101.930 USD/普通股** → **101.93 USD**；带 = V×[0.90,1.10]。标签：capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cash_invest=ShortTermInvestments;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=DepreciationDepletionAndAmortization+DepreciationAndAmortization;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpense+InterestExpenseNonopera

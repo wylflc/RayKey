@@ -326,6 +326,11 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     else:
         pct = round(((low + high) / 2 / ref_price - 1) * 100)
         upside = "0%" if pct == 0 else f"{pct:+d}%"
+    # 2026-08-23 用户指令：阅读版改列**合理估值 V**（= 区间中值 = 模型内在价值）与 **P/V**（现价 ÷ V，
+    # 与 §9.3 同一口径、三位小数），合理价区间／空间两列移出阅读版（仍在 CSV；定档仍按带与空间，§6.2）。
+    mid = (low + high) / 2 if (low is not None and high is not None and not unvaluable) else None
+    fair_value = f"{mid:.2f}" if mid else "—"
+    pv = f"{ref_price / mid:.3f}" if (mid and ref_price) else "—"
 
     stored = str(row.get("valuation_tier", ""))
     # 无法估值无可靠带，不自动定档（§6.2）；其余按现价（缺失时按估值价）定档。
@@ -338,6 +343,9 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
         "price": f"{spot:.2f}" if spot else "—",
         "band": band,
         "upside": upside,
+        "fair_value": fair_value,
+        "fair_value_num": mid,
+        "pv": pv,
         "pe": f"{spot_pe:.2f}" if spot_pe else str(row.get("valuation_pe_ttm") or "—"),
         "pb": f"{spot_pb:.2f}" if spot_pb else str(row.get("valuation_pb") or "—"),
         "effective_tier": effective,
@@ -427,15 +435,16 @@ def build_overseas_section(
         if prev and prev != effective:
             changes.append(f"{row['security_name']} {prev}→{effective}")
         spot = _to_float((quote or {}).get("price"))
-        price_cell = _fmt_number(spot if spot else _to_float(row.get("valuation_price")), currency)
+        ref_price = spot if spot else _to_float(row.get("valuation_price"))
+        price_cell = _fmt_number(ref_price, currency)
         low, high = _to_float(row.get("fair_price_low")), _to_float(row.get("fair_price_high"))
-        if low is None or high is None:
-            band_cell = "—"
-        elif currency == "KRW":
-            band_cell = f"{_fmt_number(low, currency)}-{_fmt_number(high, currency)}"
-        else:
-            # 与 A 股主表一致：带原样透传估值表字符串，不重新格式化位数。
-            band_cell = f"{row['fair_price_low']}-{row['fair_price_high']}"
+        unvaluable = str(row.get("valuation_tier", "")) == "无法估值"
+        mid = (low + high) / 2 if (low is not None and high is not None and not unvaluable) else None
+        fair_cell = _fmt_number(mid, currency) if mid else "—"
+        pv_cell = f"{ref_price / mid:.3f}" if (mid and ref_price) else "—"
+        # 估值路径：ROIC 口径原样；旧通用路径取「：」前的方法名；无带即无法估值。
+        method = str(row.get("band_method") or row.get("valuation_method") or "")
+        path_cell = method if method.startswith("ROIC") else (method.split("：")[0] if method else "—")
         body.append(
             # 参考分（§5.7.4）与 A 股主表同列位：质量档之后、估值档之前。海外清单
             # 2026-08-03 起逐票打分，此前该列不存在（附表只有质量档、无档内序位）。
@@ -446,8 +455,8 @@ def build_overseas_section(
                 tier=row.get("quality_tier", "—"),
                 score=row.get("quality_score") or "—",
             )
-            + f"{cells['valuation_cell']} | {row.get('strategy_tag', '—')} | "
-            + f"{price_cell} | {band_cell} | {cells['upside']} | {cells['pe']} | {cells['pb']} | "
+            + f"{cells['valuation_cell']} | {path_cell} | "
+            + f"{price_cell} | {fair_cell} | {pv_cell} | "
             + f"{row.get('valuation_reviewed_at') or '—'} | {row.get('valuation_evidence_event') or '—'} |"
         )
     lines = [
@@ -460,13 +469,13 @@ def build_overseas_section(
         "- 质量分层（§5.7）与策略标签（§6.5）口径与 A 股完全一致，不降低门槛；本清单是用户点名的自选名单而非全市场筛选结果，故层级分布天然偏上，不适用 §5.7.1 的金字塔校准。",
         "- 行序与 A 股主表一致按**质量档 L1→L4**排列，同档内按**参考分降序**。",
         "- 档位同样按 §6.2 现价自动定档（>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估），与审定档不同的行显示 `审定档→现档`。带只由证据复核修改。",
-        "- **市场与代码两列已按用户指令删除（2026-08-06）**：两者仍在 `overseas_watchlist_valuation.csv` 的 `market_type`/`security_code` 里，只是不进阅读版。**代价须知**：现价/合理价区间/空间均为各自**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较，而本表已不再逐行标出是哪个市场——数量级明显不同的行（如韩股六位数报价）靠公司名识别。行情同源腾讯快照（`scripts/overseas_quotes.py`）。",
-        "- PE 为行情快照 TTM 口径：美股线不提供 PB、韩股线不提供 PE/PB，缺失列显示 —，判档依据见 CSV `fair_price_basis`（多数标的以归一化/中枢利润为锚，表观 PE 不作定档依据）。",
+        "- **市场与代码两列已按用户指令删除（2026-08-06）**：两者仍在 `overseas_watchlist_valuation.csv` 的 `market_type`/`security_code` 里，只是不进阅读版。**代价须知**：现价与合理估值均为各自**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较（`P/V` 可以），而本表已不再逐行标出是哪个市场——数量级明显不同的行（如韩股六位数报价）靠公司名识别。行情同源腾讯快照（`scripts/overseas_quotes.py`）。",
+        "- 列与 A 股主表同构（2026-08-23 用户指令）：**合理估值 = 模型内在价值 V、`P/V` = 现价 ÷ V**；策略标签、合理价区间、空间、PE、PB 移出阅读版，仍在 CSV（`strategy_tag`／`fair_price_low/high`／`valuation_pe_ttm`／`valuation_pb`）。现价与合理估值为各自交易货币，`P/V` 无量纲、可跨市场比较。",
         "- **参考分（§5.7.4）与合理价区间自 2026-08-03 起逐票建档产出**：参考分 = Q1×0.25+Q2×0.40+Q3×0.20+Q4×0.15−可信度扣分，**仅供同档内排序**，不改变任何资格、不构成买卖指令。每一条带由 `scripts/build_overseas_dossiers.py` 按 §6.5.2 的推导路径之一算出（派息折现隐含PE／三阶段DDM／PEG×ROE修正／中枢利润×戈登稳态PE／§6.5.2 J 隐含PB），输入与计算分离，逐票正文在 `data/companies/<代码>_<名称>/README.md`。**改带只能改输入**。",
-        "- 估值列为**无法估值**的行是 §6.5.5.2 的**建档未完成**（流程状态，不是估值结论）：其锚或兜底口径按定义不可算，档案已写明缺哪一个输入、以及什么条件下解锁建带。这类行不自动定档，合理价区间/空间/PE 均显示 —。",
+        "- 估值列为**无法估值**的行是 §6.5.5.2 的**建档未完成**（流程状态，不是估值结论）：其锚或兜底口径按定义不可算，档案已写明缺哪一个输入、以及什么条件下解锁建带。这类行不自动定档，合理估值／`P/V` 显示 —。",
         "",
-        "| 名称 | 质量 | 参考分 | 估值 | 策略 | 现价 | 合理价区间 | 空间 | PE | PB | 估值时间 | 估值事件 |",
-        "| --- | --- | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+        "| 名称 | 质量 | 参考分 | 估值 | 估值路径 | 现价 | 合理估值 | P/V | 估值时间 | 估值事件 |",
+        "| --- | --- | ---: | --- | --- | ---: | ---: | ---: | --- | --- |",
         *body,
     ]
     return lines, {"changes": changes, "current_tiers": current_tiers}
@@ -523,7 +532,7 @@ def write_markdown(
     quote_line = (
         f"现价更新：{format_quote_time(quotes)}（腾讯行情快照，{len(quotes)}/{len(rows)} 只成功）"
         if quotes
-        else "现价未刷新（--quotes skip；现价/空间/档位按估值时点价展示）"
+        else "现价未刷新（--quotes skip；现价/P/V/档位按估值时点价展示）"
     )
     changes: list[str] = []
     drift: list[str] = []
@@ -570,7 +579,7 @@ def write_markdown(
             + str(cells["valuation_cell"])
             + f" | {valuation_paths.get(str(row.get('security_code', '')).zfill(6), '手工带（§6.5.2.4）')} | "
             + f"{cells['price']} | "
-            + f"{cells['band']} | {cells['upside']} | "
+            + f"{cells['fair_value']} | {cells['pv']} | "
             + "{valuation_reviewed_at} | {valuation_evidence_event} |".format(
                 valuation_reviewed_at=row.get("valuation_reviewed_at") or "—",
                 valuation_evidence_event=row.get("valuation_evidence_event") or "—",
@@ -582,15 +591,15 @@ def write_markdown(
         "",
         f"生成日期：{as_of}｜{quote_line}",
         "",
-        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是全量 worth_attention 单一列表阅读版。**买卖由 §9.3 唯一决定**：买入线/减持线的取值只在工作流 §9.3.1 一处定，本表不复写数字；`P/V` = 现价 ÷ 合理价区间中值，与本表「空间」列互为倒数。**档位（低估/中性/高估等）只是展示标签，不决定能否买**。带为 **ROIC 口径**（§6.5.2.3，v4.00）：非金融按 NOPAT/投入资本/WACC 折现，银行按股利折现，「估值路径」列标明每条带怎么来的。",
+        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是全量 worth_attention 单一列表阅读版。**买卖由 §9.3 唯一决定**：买入线/减持线的取值只在工作流 §9.3.1 一处定，本表不复写数字；`P/V` = 现价 ÷ 合理估值（V，模型内在价值），与 §9.3 同一口径。**档位（低估/中性/高估等）只是展示标签，不决定能否买**。带为 **ROIC 口径**（§6.5.2.3，v4.00）：非金融按 NOPAT/投入资本/WACC 折现，银行按股利折现，「估值路径」列标明每条带怎么来的。",
         "",
         "- **档位按现价自动定档（§6.2，无人工复核，双向不限幅）**：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`——**箭头左端是审定档（最近一次证据复核的结论），不是昨日档**，可能是多日累计漂移；当日发生的变化另见扫描报告与刷新日志。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
         "- 现价为每日扫描时的行情快照；现价缺失（停牌/请求失败）的行沿用估值时点值。**PE/PB 两列已按用户指令删除（2026-08-17）**——表观倍数不参与定档也不参与买卖，定档只看现价对带（§6.2），带的来源见「估值路径」列；两列仍在 CSV 中。",
-        "- 空间 = 区间中值相对现价的涨跌幅，正数代表上行空间、负数代表现价已高于中值；原带位列与空间重复，已移除（v1.10）。",
+        "- **合理估值 = 模型内在价值 V**（= 合理价区间中值）；**`P/V` = 现价 ÷ V**（三位小数）。合理价区间／空间两列于 2026-08-23 按用户指令移出阅读版（参考价值不大），仍在池 CSV（`fair_price_low/high`）；定档仍按带与空间（§6.2，空间 = V/现价 − 1）。",
         "- **本表每一条带都可双向使用（v1.47）**：只能回答「便宜」不能回答「贵」的带（下限带、周期假设未决）不是偏保守的带，是**没算完的带**——一律判「无法估值」并进入 §6.5.2 建档队列；无带即无 `P/V`，该票当日不进 §9.3 的任何买卖判定。",
         "- **每一条带都出自逐票估值档案（§6.5.2）**：带由该公司单独设计的方法给出，并约定了跟踪指标与复核触发条件（见 `data/processed/a_share_valuation_dossiers.csv`，人读正文在 `data/companies/<代码>_<名称>/README.md`）。v2.00 起全池全部建档，通用十一类（A/C/D/E/F/H/J/K/M/N/P）已退居分类标签，只用于分类、排序与同族比较，**不再参与任何一条带的计算**；新入池公司在建档之前一律判「无法估值」（带显示 —），不以通用公式顶一条带上去。**因此「带非空」即「档案带」**，v2.03 起不再逐行标「（档）」——一个出现在 100% 行上的标记不区分任何东西。",
         "- 业绩预告不在本表展示（v1.09）：预告物化文件（§7.1）只作 §7.5.1 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
-        "- 合理价区间 = 模型内在价值 × [0.90, 1.10]，是估值的唯一输出锚（模型认可的公允中枢≈区间中值，空间列即按中值/现价计算）。「估值路径」列：ROIC·增长／ROIC·零增长＝§6.5.2.3 真口径；权益退路＝无三大报表时的权益 DCF；银行·股利折现＝§6.5.2.3 银行式；手工带＝§6.5.2.4 例外。",
+        "- 合理价区间 = 模型内在价值 × [0.90, 1.10]，是估值的唯一输出锚（模型认可的公允中枢＝区间中值＝本表合理估值）。「估值路径」列：ROIC·增长／ROIC·零增长＝§6.5.2.3 真口径；权益退路＝无三大报表时的权益 DCF；银行·股利折现＝§6.5.2.3 银行式；手工带＝§6.5.2.4 例外。",
         "- 估值时间 = 最近一次估值复核日（合理价区间的推导日）；估值事件 = 该次复核所依据的最新披露（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件）。档位每日按现价自动重算，带只在 §7 复核时更新——「价格改档、证据改带」。审定档、核心理由与复核时点价（`valuation_price`）见池 CSV。",
         *(
             ["- 文末附**海外关注清单**（非A股，§6.8）：只作质量与估值观察，不入本池 CSV、不进每日量价扫描、无买入资格。"]
@@ -598,7 +607,7 @@ def write_markdown(
             else []
         ),
         "",
-        "| 代码 | 名称 | 质量 | 参考分 | 估值 | 估值路径 | 现价 | 合理价区间 | 空间 | 估值时间 | 估值事件 |",
+        "| 代码 | 名称 | 质量 | 参考分 | 估值 | 估值路径 | 现价 | 合理估值 | P/V | 估值时间 | 估值事件 |",
         "| --- | --- | --- | ---: | --- | --- | ---: | ---: | ---: | --- | --- |",
         *body,
         *(extra_sections or []),

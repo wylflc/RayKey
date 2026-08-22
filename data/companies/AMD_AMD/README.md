@@ -27,3 +27,9 @@ Q1 80：无晶圆厂、毛利率随数据中心占比抬升，资本强度低；
 
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-06
+
+## ROIC 口径估值（§6.5.2.3 同口径）
+
+更新 2026-08-23（`scripts/build_overseas_roic_bands.py`）。方法：ROIC·零增长（§6.5.2.3 同口径）；带 29.71~36.31 USD；审定档 高估。
+
+ROIC·零增长（§6.5.2.3 同口径，财年 2021~2025，SEC companyfacts us-gaap）：NOPAT/母公司权益 比率 0.068（ttm_growth）× BPS 38.51 = NOPAT/股 2.627；ROIC0 4.6%；WACC 8.91%（r 9.20% = rf 4.74% + β1.0×ERP 4.46%；rd 4.41%；t 0%；账面权重）；零增长：V = NOPAT/股 ÷ WACC − 净负债/股；净负债/股 -3.523（有息负债−超额现金＋少数股东权益）；**V = 33.009 USD/普通股** → **33.01 USD**；带 = V×[0.90,1.10]。标签：capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cash_invest=MarketableSecuritiesCurrent+ShortTermInvestments+AvailableForSaleSecuritiesDebtSecuritiesCurrent;cfo=NetCashProvidedByUsedInOperatingActivities+NetCashProvidedByUsedInOperatingActivitiesContinuingOperations;dep_amort=DepreciationDeple

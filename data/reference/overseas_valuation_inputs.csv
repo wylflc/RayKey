@@ -1,0 +1,16 @@
+key,value,unit,as_of,source,note
+rf_usd,0.0474,ratio,2026-08-21,US Treasury daily par yield curve 10Y (home.treasury.gov daily-treasury-rates.csv 2026),美股／美元 ADR 的无风险利率；港股（HKD 联系汇率）亦用此值
+erp_us,0.0446,ratio,2026-08,Damodaran ctryprem.xlsx「ERPs by country」United States Total ERP（fetched 2026-08-23）,美股 r = rf + β×ERP（β 按档 L1 0.9／L2 1.0／L3 1.3，与 A 股同表）
+erp_hk,0.0501,ratio,2026-08,Damodaran ctryprem.xlsx Hong Kong Total ERP,港股
+erp_cn,0.0514,ratio,2026-08,Damodaran ctryprem.xlsx China Total ERP,中概 ADR（PDD）按经营地取中国 ERP
+erp_tw,0.0501,ratio,2026-08,Damodaran ctryprem.xlsx Taiwan Total ERP,台积电 ADR 按经营地取台湾 ERP
+erp_nl,0.0423,ratio,2026-08,Damodaran ctryprem.xlsx Netherlands Total ERP,阿斯麦 ADR 按经营地取荷兰 ERP
+erp_kr,0.0487,ratio,2026-08,Damodaran ctryprem.xlsx Korea Total ERP,韩股（当前无三表取数源，未用）
+fx_usd_cny,6.7206,CNY per USD,2026-08-21,ECB via api.frankfurter.dev (base USD),人民币报表→美元 ADR（拼多多）
+fx_usd_hkd,7.8405,HKD per USD,2026-08-21,ECB via api.frankfurter.dev (base USD),
+fx_usd_eur,0.85477,EUR per USD,2026-08-21,ECB via api.frankfurter.dev (base USD),欧元报表→美元（阿斯麦）
+fx_usd_twd,31.8124,TWD per USD,2026-08-22,open.er-api.com v6 latest USD（ECB 不含 TWD）,新台币报表→美元 ADR（台积电，1 ADR = 5 普通股）
+fx_cny_hkd,1.16664,HKD per CNY,2026-08-21,推算 = fx_usd_hkd ÷ fx_usd_cny（ECB 08-21）,港股人民币报表→港币股价
+tax_default_us,0.21,ratio,,美国联邦法定税率,利润总额非正时的回退税率（A 股用 25%）
+tax_default_hk,0.165,ratio,,香港利得税,
+tax_default_other,0.25,ratio,,其它市场回退,
