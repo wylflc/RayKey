@@ -4,7 +4,9 @@
 与 `build_historical_valuation_bands.py --value-model roic`（生产参数：conditional3／hybrid／peak 守卫）逐项同式：
   history = 最近 5 个财年（至少 3 年）；ROIC0 = 归一化 ROIC；增量 ROIC（端点）；再投资率；
   rd = 历史利息/有息负债（夹 2%~12%，缺省 4.5%）；税率 = 最新财年观测；WACC 账面权重；
-  NOPAT/母公司权益 比率：中位／增长态取最新／周期守卫（峰值 > 1.6×中位 → 中位）；
+  **每股 NOPAT 锚（v4.47，OI-082 海外先行）**：各年 NOPAT ÷ **最新稀释股数**（送转/拆股自动消除、回购缩股不进历史），
+  增长态（近 3 年严格上升）取最新、否则取近 3 年中位；周期守卫比较 **NOPAT/(母公司权益＋累计回购)** 的最新值 vs 10 年中位
+  （> 1.6× → 周期峰 → 取 5 年中位每股 NOPAT）——回购造成的权益缩水不再被读成周期峰（A 股引擎仍用 NOPAT/权益×BPS，待 §12.1 A/B）；
   g0 = max(min(增量ROIC,40%)×再投资率, NOPAT 3 年 CAGR) 夹 [0,25%]；ROIC_T = min(WACC + 档位终值超额, ROIC0)；
   g_T = min(3%, 无风险利率)；fade 10 年；每股价值 = intrinsic_value(NOPAT/股) − 净负债/股；带 = V × [0.90, 1.10]。
 差别（成文于此，不藏在代码里）：
@@ -87,6 +89,8 @@ def load_years() -> dict[str, list[roic_inputs.RoicYear]]:
         y.capex, y.dep_amort, y.cfo = _f(r["capex"]) or 0.0, _f(r["dep_amort"]) or 0.0, _f(r["cfo"])
         y.interest_expense = _f(r["interest_expense"]) or 0.0
         y.shares = _f(r["shares"])  # type: ignore[attr-defined]
+        y.buybacks = _f(r.get("buybacks")) or 0.0  # type: ignore[attr-defined]
+        y.dividends_paid = _f(r.get("dividends_paid")) or 0.0  # type: ignore[attr-defined]
         out.setdefault(r["security_code"], []).append(y)
         meta[r["security_code"]] = {"ccy": r["report_currency"], "source": r["source"], "tags": r["tags_used"]}
     for code in out:
@@ -121,23 +125,31 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
         res["reason"] = "母公司权益非正，股数法无法折每股"; return res
     if latest.nopat is None or latest.nopat <= 0:
         res["reason"] = f"最新财年 NOPAT={latest.nopat/1e9:.2f}b ≤ 0：息税前利润非正，按现金折现无意义（A 股同规，须走 §6.5.5.2 逐票建档）"; return res
-    ratios = [y.nopat / y.parent_equity for y in history if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
-    if not ratios:
-        res["reason"] = "无可用的 NOPAT/母公司权益比率"; return res
+    # ---- OI-082（v4.47，海外先行）：每股 NOPAT 锚 = 各年 NOPAT ÷ 最新稀释股数；周期守卫用回购回加后的权益比率
     long_hist = years[-10:]
-    long_ratios = [y.nopat / y.parent_equity for y in long_hist if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
+    cum = 0.0
+    adj_ratio_by_period: dict[str, float] = {}
+    for y in long_hist:                      # 累计回购自 10 年窗首年起回加，逐年恢复被回购削掉的权益基数
+        cum += getattr(y, "buybacks", 0.0) or 0.0
+        if y.nopat is not None and y.parent_equity is not None and (y.parent_equity + cum) > 0:
+            adj_ratio_by_period[y.period] = y.nopat / (y.parent_equity + cum)
+    long_ratios = [adj_ratio_by_period[y.period] for y in long_hist if y.period in adj_ratio_by_period]
     nopat_cyclical = (len(long_ratios) >= 4 and long_ratios[-1] > 0 and long_ratios[-1] > PEAK_K * statistics.median(long_ratios))
-    ratio0, mode = statistics.median(ratios), "median"
-    if not nopat_cyclical:
-        is_growth = len(ratios) >= 3 and ratios[-1] > ratios[-2] > ratios[-3]
-        if is_growth:
-            ratio0, mode = ratios[-1], "ttm_growth"
-        elif len(ratios) >= 3:
-            ratio0, mode = statistics.median(ratios[-3:]), "median3"
+    nps = [y.nopat / shares for y in history if y.nopat is not None]
+    if not nps:
+        res["reason"] = "无可用的每股 NOPAT"; return res
+    if nopat_cyclical:
+        nopat_ps, mode = statistics.median(nps), "cyclical_median"
+    elif len(nps) >= 3 and nps[-1] > nps[-2] > nps[-3]:
+        nopat_ps, mode = nps[-1], "ttm_growth"
+    elif len(nps) >= 3:
+        nopat_ps, mode = statistics.median(nps[-3:]), "median3"
     else:
-        mode = "cyclical_median"
+        nopat_ps, mode = statistics.median(nps), "median"
+    ratios = long_ratios[-len(history):]
+    ratio0 = nopat_ps / (latest.parent_equity / shares) if latest.parent_equity else float("nan")
     bps = latest.parent_equity / shares
-    nopat_ps = ratio0 * bps
+    cum_buyback_latest = cum
     net_debt_ps = (latest.interest_debt - latest.excess_cash + latest.minority_equity) / shares
     if nopat_ps <= 0:
         res["reason"] = "正常化每股 NOPAT 非正"; return res
@@ -145,7 +157,10 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     roic_ok = roic0 is not None and roic0 > g_terminal + MIN_TERMINAL_SPREAD
     common = dict(r=r, rf=rf, erp=erp, beta=beta, rd=rd, tax=tax, wacc=w, roic0=roic0, iroic=iroic, rr=rr,
                   ratio0=ratio0, mode=mode, nopat_ps=nopat_ps, net_debt_ps=net_debt_ps, bps=bps, shares=shares,
-                  g_terminal=g_terminal, cyclical=nopat_cyclical, years=[y.period[:4] for y in history], v_zero=v_zero)
+                  g_terminal=g_terminal, cyclical=nopat_cyclical, years=[y.period[:4] for y in history], v_zero=v_zero,
+                  nps=nps, adj_ratio_latest=(long_ratios[-1] if long_ratios else None),
+                  adj_ratio_median=(statistics.median(long_ratios) if long_ratios else None),
+                  cum_buybacks=cum_buyback_latest, buyback_latest=getattr(latest, "buybacks", 0.0) or 0.0)
     if not roic_ok:
         if v_zero <= 0:
             res["reason"] = f"零增长股权价值 {v_zero:.2f} ≤ 0：净负债超过零增长企业价值"; res.update(common); return res
@@ -184,8 +199,12 @@ def derivation_text(code: str, r: dict, meta: dict, cfg: dict, fx: float, value_
     g_line = ("零增长：V = NOPAT/股 ÷ WACC − 净负债/股" if r["path"] == "zero_growth" else
               f"增长 g0={r['g0']:.1%}（来源 {r['g_src']}：资本腿 {('%.1f%%' % (r['g_capital']*100)) if r.get('g_capital') is not None else '—'}=min(增量ROIC {('%.1f%%' % (r['iroic']*100)) if r['iroic'] is not None else '—'},40%)×再投资率 {('%.0f%%' % (r['rr']*100)) if r['rr'] is not None else '—'}，增速腿 {('%.1f%%' % (r['g_trail']*100)) if r.get('g_trail') is not None else '—'}），ROIC_T=min(WACC+档位超额, ROIC0)={r['roic_t']:.1%}，g_T={r['g_terminal']:.1%}，fade {N_FADE} 年，终值占比 {r['terminal_share']:.0%}")
     fx_line = (f"；报表币 {ccy_report} → 交易币 {cfg['ccy']} 汇率 {fx:.4f}" + (f"，每 ADR {cfg['adr']} 股" if cfg['adr'] != 1 else "")) if (ccy_report != cfg["ccy"] or cfg["adr"] != 1) else ""
+    nps_txt = "／".join(f"{v:.2f}" for v in r["nps"])
+    guard_txt = (f"周期守卫 NOPAT/(权益＋累计回购 {r['cum_buybacks']/1e9:.1f}b)：最新 {r['adj_ratio_latest']:.3f} vs 10 年中位 {r['adj_ratio_median']:.3f}"
+                 f"（{'命中→取 5 年中位' if r['cyclical'] else '未命中'}）" if r.get("adj_ratio_latest") is not None else "周期守卫：无可比比率")
     return (f"ROIC·{'增长' if r['path']=='growth' else '零增长'}（§6.5.2.3 同口径，财年 {r['years'][0]}~{r['years'][-1]}，{meta.get('source','')}）："
-            f"NOPAT/母公司权益 比率 {r['ratio0']:.3f}（{r['mode']}{'，周期守卫命中' if r['cyclical'] else ''}）× BPS {r['bps']:.2f} = NOPAT/股 {r['nopat_ps']:.3f}；"
+            f"每股 NOPAT 锚（v4.47 OI-082：各年 NOPAT ÷ 最新稀释股数 {r['shares']/1e6:,.0f}m）序列 {nps_txt} → 取 **{r['nopat_ps']:.3f}**（{r['mode']}）；{guard_txt}；"
+            f"最新年回购 {r['buyback_latest']/1e9:.1f}b；BPS {r['bps']:.2f}；"
             f"ROIC0 {r['roic0']:.1%}；WACC {r['wacc']:.2%}（r {r['r']:.2%} = rf {r['rf']:.2%} + β{r['beta']}×ERP {r['erp']:.2%}；rd {r['rd']:.2%}；t {r['tax']:.0%}；账面权重）；{g_line}；"
             f"净负债/股 {r['net_debt_ps']:.3f}（有息负债−超额现金＋少数股东权益）；**V = {r['value']:.3f} {ccy_report}/普通股**{fx_line}"
             + (f" → **{value_trade:,.2f} {cfg['ccy']}**" if value_trade else "") + f"；带 = V×[0.90,1.10]。标签：{meta.get('tags','')[:400]}")

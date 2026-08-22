@@ -44,7 +44,7 @@ TAX_DEFAULT = {"US": 0.21, "HK": 0.165}
 FIELDS = ["market", "security_code", "security_name", "period", "fiscal_year", "notice_date", "report_currency",
           "revenue", "operating_income", "pretax", "income_tax", "interest_expense", "ebit", "tax_rate", "tax_rate_observed",
           "nopat", "total_equity", "parent_equity", "minority_equity", "interest_debt", "cash_like", "excess_cash",
-          "invested_capital", "capex", "dep_amort", "cfo", "shares", "tags_used", "source"]
+          "invested_capital", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid", "tags_used", "source"]
 
 GAAP = {
     "revenue": ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "SalesRevenueNet",
@@ -70,6 +70,9 @@ GAAP = {
     "cfo": ["NetCashProvidedByUsedInOperatingActivities", "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"],
     "shares": ["WeightedAverageNumberOfDilutedSharesOutstanding", "WeightedAverageNumberOfSharesOutstandingBasic"],
     "shares_instant": ["CommonStockSharesOutstanding"],
+    # OI-082：回购与分红现金流（回购用于权益回加，分红只作展示）
+    "buybacks": ["PaymentsForRepurchaseOfCommonStock", "PaymentsForRepurchaseOfEquity"],
+    "dividends_paid": ["PaymentsOfDividends", "PaymentsOfDividendsCommonStock", "PaymentsOfOrdinaryDividends"],
 }
 IFRS = {
     "revenue": ["Revenue", "RevenueFromSaleOfGoods", "RevenueFromContractsWithCustomers"],
@@ -91,8 +94,10 @@ IFRS = {
     "cfo": ["CashFlowsFromUsedInOperatingActivities"],
     "shares": ["AdjustedWeightedAverageShares", "WeightedAverageShares"],
     "shares_instant": ["NumberOfSharesOutstanding", "NumberOfSharesIssued"],
+    "buybacks": ["PaymentsToAcquireOrRedeemEntitysShares"],
+    "dividends_paid": ["DividendsPaidClassifiedAsFinancingActivities", "DividendsPaid"],
 }
-DURATION = {"revenue", "operating_income", "pretax", "income_tax", "interest_expense", "capex", "dep_amort", "cfo", "shares"}
+DURATION = {"revenue", "operating_income", "pretax", "income_tax", "interest_expense", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid"}
 HK_ITEMS = {
     "revenue": ("income", ["营业额", "营运收入"]),
     "operating_income": ("income", ["经营溢利"]),
@@ -111,6 +116,8 @@ HK_ITEMS = {
     "capex": ("cashflow", ["购建固定资产"]),
     "dep_amort": ("cashflow", ["加:折旧及摊销"]),
     "cfo": ("cashflow", ["经营业务现金净额"]),
+    "buybacks": ("cashflow", ["回购股份"]),
+    "dividends_paid": ("cashflow", ["已付股息(融资)", "已付股息"]),
 }
 
 
@@ -227,7 +234,8 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
         shares = v("shares") or v("shares_instant")
         rows.append(_build_row("US", symbol, name, end, end, ccy or "USD", rev, opinc, pretax, taxv, intexp,
                                total_eq, parent_eq, minority, debt, cash, v("capex") or 0.0, v("dep_amort") or 0.0,
-                               v("cfo"), shares, tags, src, TAX_DEFAULT["US"]))
+                               v("cfo"), shares, tags, src, TAX_DEFAULT["US"],
+                               buybacks=abs(v("buybacks") or 0.0), dividends=abs(v("dividends_paid") or 0.0)))
     return rows
 
 
@@ -295,12 +303,13 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
                                None if taxv is None else abs(taxv), intexp, pick(period, "total_equity"), pick(period, "parent_equity"),
                                pick(period, "minority_equity") or 0.0, debt, cash, abs(pick(period, "capex") or 0.0),
                                pick(period, "dep_amort") or 0.0, pick(period, "cfo"), shares, tags,
-                               "eastmoney HK F10 (RPT_HKF10_FN_*_PC, DATE_TYPE_CODE=001)", TAX_DEFAULT["HK"]))
+                               "eastmoney HK F10 (RPT_HKF10_FN_*_PC, DATE_TYPE_CODE=001)", TAX_DEFAULT["HK"],
+                               buybacks=abs(pick(period, "buybacks") or 0.0), dividends=abs(pick(period, "dividends_paid") or 0.0)))
     return rows
 
 
 def _build_row(market, code, name, period, notice, ccy, rev, opinc, pretax, taxv, intexp, total_eq, parent_eq, minority,
-               debt, cash, capex, dep, cfo, shares, tags, src, tax_default) -> dict:
+               debt, cash, capex, dep, cfo, shares, tags, src, tax_default, buybacks=0.0, dividends=0.0) -> dict:
     # 与 roic_inputs.load_statements 同式
     ebit = (pretax + intexp) if pretax is not None else opinc
     if pretax is not None and pretax > 0 and taxv is not None:
@@ -320,6 +329,7 @@ def _build_row(market, code, name, period, notice, ccy, rev, opinc, pretax, taxv
         "interest_debt": debt, "cash_like": cash, "excess_cash": excess,
         "invested_capital": ic if (ic is not None and ic > 0) else None,
         "capex": capex, "dep_amort": dep, "cfo": cfo, "shares": shares,
+        "buybacks": buybacks, "dividends_paid": dividends,
         "tags_used": ";".join(f"{k}={v}" for k, v in sorted(tags.items())), "source": src,
     }
 
