@@ -369,6 +369,29 @@ def sig_low_vol_pullback(ctx: Ctx, ma: int = 20, k: float = 0.6, n: int = 20) ->
     return (a > ctx.ma(60)) & (np.abs(m.c / a - 1.0) <= 0.02) & (m.v <= k * ctx.vma(n))
 
 
+def rolling_min(x: np.ndarray, n: int) -> np.ndarray:
+    return -rolling_max(-x, n)
+
+
+def sig_dry_pullback_vol_up(ctx: Ctx, ma: int = 60, look: int = 10, tol: float = 0.02, brk: float = 0.03,
+                            dry: float = 0.7, r: float = 0.02, k: float = 1.5) -> np.ndarray:
+    """缩量回踩均线后放量阳线（用户 2026-08-22 提出）：
+    ① 均线上行（MA_ma 今日 > look 日前）且回踩前收盘在均线上方（look+1 日前收盘 > 当时 MA）；
+    ② 最近 look 日（不含今日）内最低价触及均线附近：min(低/MA) ≤ 1+tol，且期间收盘未有效跌破：min(收/MA) ≥ 1−brk；
+    ③ 缩量：回踩期均量 ≤ dry × 回踩前的 20 日均量（look+1 日前止）；
+    ④ 今日放量阳线：收>开、涨幅 ≥ r、成交量 ≥ k × 回踩期均量，且收盘 ≥ MA。"""
+    m = ctx.m
+    a = ctx.ma(ma)
+    low_ratio = rolling_min(shift(m.l / a, 1), look)          # 过去 look 日 低/MA 的最小值
+    close_ratio = rolling_min(shift(m.c / a, 1), look)
+    v_pull = shift(rolling_mean(m.v, look), 1)                # 回踩期均量（不含今日）
+    v_before = shift(rolling_mean(m.v, 20), look + 1)         # 回踩前 20 日均量
+    rising = a > shift(a, look)
+    above_before = shift(m.c, look + 1) > shift(a, look + 1)
+    return (rising & above_before & (low_ratio <= 1 + tol) & (close_ratio >= 1 - brk)
+            & (v_pull <= dry * v_before) & (m.c > m.o) & (ctx.ret() >= r) & (m.v >= k * v_pull) & (m.c >= a))
+
+
 def sig_any(ctx: Ctx) -> np.ndarray:
     """安慰剂：全部可交易股票日（无信号的随机基线）。"""
     return np.ones(ctx.m.c.shape, bool)
@@ -379,7 +402,8 @@ SIGNALS = {
     "ma_pullback": sig_ma_pullback, "breakout": sig_breakout, "limit_up": sig_limit_up,
     "gap_up": sig_gap_up, "golden_cross": sig_golden_cross, "three_up": sig_three_up,
     "vol_down": sig_vol_down, "drawdown_rebound": sig_drawdown_rebound, "oversold_ma": sig_oversold_ma,
-    "n_down": sig_n_down, "low_vol_pullback": sig_low_vol_pullback, "any": sig_any,
+    "n_down": sig_n_down, "low_vol_pullback": sig_low_vol_pullback,
+    "dry_pullback_vol_up": sig_dry_pullback_vol_up, "any": sig_any,
 }
 
 
