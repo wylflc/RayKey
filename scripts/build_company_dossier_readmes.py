@@ -30,6 +30,9 @@ from apply_model_bands_to_dossiers import latest_model_bands  # noqa: E402
 DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 ADOPTED = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
+TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
+TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"
+TRIAGE_CLASS: dict[str, str] = {}   # v4.54（OI-083）：分层/标签改读分层表，池外档案（L4／boundary）同样可得
 # 与 apply_model_bands_to_dossiers.py --min-available 缺省一致（§6.5.2.3 时点门槛）
 MIN_AVAILABLE = "2025-01-01"
 
@@ -196,12 +199,20 @@ def implied_lead(row: dict, meta: dict, band: dict | None) -> tuple[str, bool]:
     return text, skipped
 
 
-def render(row: dict, pool: dict, bands: dict) -> tuple[str, bool]:
+def render(row: dict, pool: dict, bands: dict, tiers: dict | None = None) -> tuple[str, bool]:
     code = row["security_code"]
     meta = pool.get(code, {})
-    tier = meta.get("quality_tier", "")
-    score = meta.get("quality_score", "")
-    tier_line = f"{tier}（参考分 {score}）" if tier and score else (tier or "—")
+    tmeta = (tiers or {}).get(code, {})
+    tier = tmeta.get("quality_tier") or meta.get("quality_tier", "")
+    score = tmeta.get("quality_score") or meta.get("quality_score", "")
+    if tier and score:
+        tier_line = f"{tier}（参考分 {score}）"
+    elif tier:
+        tier_line = tier
+    else:
+        # 池外且无分层行（boundary_pending 点名档案）：按三类表写明类别，不评分是 §5.7 硬规则 1
+        tri_class = (TRIAGE_CLASS or {}).get(code, "")
+        tier_line = f"{tri_class}（不评分）" if tri_class else "—"
     anchor = (row.get("anchor_earnings_yi") or "").strip()
     anchor_line = f"{anchor} 亿元" if anchor else "—（非盈利口径）"
 
@@ -210,7 +221,7 @@ def render(row: dict, pool: dict, bands: dict) -> tuple[str, bool]:
         code=code,
         bespoke_line=BESPOKE_ON if str(row.get("bespoke", "")).strip().lower() == "true" else BESPOKE_OFF,
         tier_line=tier_line,
-        tag=meta.get("strategy_tag", "—"),
+        tag=meta.get("strategy_tag") or tmeta.get("primary_strategy_tag") or "—",
         band_low=row["band_low"],
         band_high=row["band_high"],
         band_method=row["band_method"],
@@ -257,6 +268,13 @@ def main() -> int:
 
     with POOL.open(encoding="utf-8-sig") as handle:
         pool = {r["security_code"]: r for r in csv.DictReader(handle)}
+    if TRIAGE.exists():
+        with TRIAGE.open(encoding="utf-8-sig") as handle:
+            TRIAGE_CLASS.update({r["security_code"]: r.get("attention_class", "") for r in csv.DictReader(handle)})
+    tiers: dict[str, dict] = {}
+    if TIERS.exists():
+        with TIERS.open(encoding="utf-8-sig") as handle:
+            tiers = {r["security_code"]: r for r in csv.DictReader(handle)}
     with DOSSIERS.open(encoding="utf-8-sig") as handle:
         rows = list(csv.DictReader(handle))
     bands: dict[str, dict] = {}
@@ -273,7 +291,7 @@ def main() -> int:
             continue
         target.mkdir(parents=True, exist_ok=True)
         path = target / "README.md"
-        text, skipped = render(row, pool, bands)
+        text, skipped = render(row, pool, bands, tiers)
         if skipped:
             param_skipped.append(row["security_code"])
         if not path.exists() or path.read_text(encoding="utf-8") != text:

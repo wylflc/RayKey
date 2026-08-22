@@ -60,7 +60,8 @@ from build_historical_valuation_bands import load_actions, split_factor  # noqa:
 DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 
 
-def latest_model_bands(path: Path, min_available: str) -> tuple[dict, dict]:
+def latest_model_bands(path: Path, min_available: str, codes: set[str] | None = None,
+                       as_of: str | None = None) -> tuple[dict, dict]:
     """每只取最新且可用的一条。返回 (可用带, 被时点门槛挡下的)。
 
     **排序键必须是 `(available_at, report_date)` 两项**：A 股年报与一季报绝大多数在同一天
@@ -72,6 +73,10 @@ def latest_model_bands(path: Path, min_available: str) -> tuple[dict, dict]:
     """
     best: dict[str, dict] = {}
     for row in csv.DictReader(path.open(newline="", encoding="utf-8-sig")):
+        if codes is not None and row.get("security_code") not in codes:
+            continue                                  # v4.54：全市场带文件只看池外档案代码
+        if as_of and (row.get("available_at") or "")[:10] > as_of:
+            continue
         if row.get("status") != "ok":
             continue
         try:
@@ -103,6 +108,9 @@ def main() -> int:
     # v2.72 DCF 时代的一次性物化，2026-08-17 曾以缺省身份把 8-10 的陈旧带写回档案（当日发现即修）。
     ap.add_argument("--bands", type=Path,
                     default=ROOT / "data/processed/a_share_pool_model_bands_adopted.csv")
+    ap.add_argument("--archive-bands", type=Path, default=ROOT / "data/processed/roic_bands.csv",
+                    help="池外档案（L4／boundary 点名档案，§6.1 只落档案）的带来源：生产带文件只含池成员（v4.54，OI-083），"
+                         "不在其中的档案行直接从全市场模型带取最新 ok 带；给空串关闭")
     ap.add_argument("--dossiers", type=Path, default=DOSSIERS)
     ap.add_argument("--as-of", required=True)
     ap.add_argument("--min-available", default="2025-01-01",
@@ -113,6 +121,20 @@ def main() -> int:
     usable, stale = latest_model_bands(args.bands, args.min_available)
     rows = list(csv.DictReader(args.dossiers.open(newline="", encoding="utf-8-sig")))
     header = list(rows[0].keys())
+    # v4.54（OI-083）：生产带文件只含池成员；池外档案行（documented_not_attention／boundary 点名档案）
+    # 直接从全市场模型带取最新 ok 带——只落档案，不写生产带文件，不进 §9.3。
+    archive_codes = {r["security_code"] for r in rows} - set(usable) - set(stale)
+    archive_used: list[str] = []
+    if archive_codes and str(args.archive_bands) and args.archive_bands.exists():
+        a_usable, a_stale = latest_model_bands(args.archive_bands, args.min_available,
+                                               codes=archive_codes, as_of=args.as_of)
+        for c in archive_codes:
+            if c in a_usable:
+                usable[c] = a_usable[c]; archive_used.append(c)
+            elif c in a_stale:
+                stale[c] = a_stale[c]
+        print(f"  池外档案带（直接取自 {args.archive_bands.name}，不落生产带文件）：可用 {len(archive_used)} 只、"
+              f"过旧 {sum(1 for c in archive_codes if c in a_stale)} 只、无带 {len(archive_codes) - len(archive_used) - sum(1 for c in archive_codes if c in a_stale)} 只")
     actions = load_actions()
 
     OVERRIDES = load_overrides()
@@ -187,6 +209,8 @@ def main() -> int:
         roic_path = (band.get("roic_path") or "").strip()
         # 被 §6.3 第 5 条预告/快报叠加过的行**不能再宣称与回测同口径**——回测无历史预告面板。
         overlay = (band.get("forecast_overlay") or "").strip()
+        archive_tag = ("**池外档案带**（§6.1：只落档案、不落生产带文件、不进 §9.3；直接取自全市场模型带）｜"
+                       if code in archive_used else "")
         if overlay:
             common_head = (
                 f"**预告/快报口径（§6.3 第 5 条叠加，正式报告披露后由机械带取代）**："
@@ -196,7 +220,7 @@ def main() -> int:
                 f"差异见 §6.5.2.1｜叠加前 IV {band.get('pre_overlay_iv') or '—'}"
                 f"（报告期 {band.get('pre_overlay_report_date') or '—'}）｜")
         else:
-            common_head = (f"与 §9.3.1.2 回测所用带**同一套口径**。"
+            common_head = (archive_tag + f"与 §9.3.1.2 回测所用带**同一套口径**。"
                            f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜")
         common_tail = (f"**内在价值 {iv:.2f} 元**。带 = IV × [0.90, 1.10]，**中值恰为 IV**，"
                        f"故 `P/V = 收盘 ÷ 中值` 与回测的 `valuation_ratio` 逐位一致。")

@@ -45,16 +45,20 @@ def main() -> int:
     with a.pool.open(encoding="utf-8-sig") as fh:
         pool = {r["security_code"].zfill(6): r.get("security_name", "")
                 for r in csv.DictReader(fh) if r.get("security_code")}
-    # 成员 = 池 ∪ 逐票档案（档案含高估/无法估值的观察行，apply 那步要给全部 273 份供带；
-    # 只给池 181 会让约 90 份观察行档案被误判「模型判不可估」而滞留手工带——首跑踩中）
-    dossiers = ROOT / "data/processed/a_share_valuation_dossiers.csv"
-    if dossiers.exists():
-        with dossiers.open(encoding="utf-8-sig") as fh:
+    # 成员 = 池（v4.54，OI-083 用户指令）：分层表 worth_attention 的 L1-L3 ∪ 池 CSV。
+    # 此前并入逐票档案是为了给池外观察行档案供带（apply 只读本文件），代价是 L4/boundary 点名
+    # 档案的带也进了生产带文件，与 §6.1「只落档案、不落生产带文件」不符；现由
+    # `apply_model_bands_to_dossiers.py` 对池外档案直接读 roic_bands.csv，本文件只写池成员。
+    tiers = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
+    if tiers.exists():
+        with tiers.open(encoding="utf-8-sig") as fh:
             for r in csv.DictReader(fh):
                 c = (r.get("security_code") or "").zfill(6)
-                if c and c != "000000" and c not in pool:
+                if (c and c != "000000" and c not in pool
+                        and (r.get("attention_class") or "worth_attention") == "worth_attention"
+                        and (r.get("quality_tier") or "") in ("L1", "L2", "L3")):
                     pool[c] = r.get("security_name", "")
-    print(f"成员 {len(pool)} 只 ← 池 ∪ 档案")
+    print(f"成员 {len(pool)} 只 ← 池（分层表 L1-L3 ∪ 池 CSV；池外档案不进生产带文件）")
 
     best: dict[str, dict] = {}
     fields: list[str] = []
