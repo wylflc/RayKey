@@ -392,6 +392,21 @@ def sig_dry_pullback_vol_up(ctx: Ctx, ma: int = 60, look: int = 10, tol: float =
             & (v_pull <= dry * v_before) & (m.c > m.o) & (ctx.ret() >= r) & (m.v >= k * v_pull) & (m.c >= a))
 
 
+def sig_limit_up_dry_pullback(ctx: Ctx, r: float = 0.095, k: float = 2.0, dry: float = 0.7,
+                              pull_min: float = -0.06, pull_max: float = 0.0, yin: int = 0) -> np.ndarray:
+    """放量涨停后次日缩量回调（用户 2026-08-22 提出）：
+    前一日涨幅 ≥ r 且成交量 ≥ k × 其前 20 日均量；当日涨跌幅在 [pull_min, pull_max] 内（缺省收跌但不超过 −6%），
+    当日成交量 ≤ dry × 前一日成交量；yin=1 时另要求当日收阴（收<开）。"""
+    m = ctx.m
+    ret = ctx.ret()
+    prev_ret, prev_v = shift(ret, 1), shift(m.v, 1)
+    prev_vma = shift(ctx.vma(20), 1)                 # 前一日的"前 20 日均量"
+    ok = (prev_ret >= r) & (prev_v >= k * prev_vma) & (ret >= pull_min) & (ret <= pull_max) & (m.v <= dry * prev_v)
+    if yin:
+        ok &= m.c < m.o
+    return ok
+
+
 def sig_any(ctx: Ctx) -> np.ndarray:
     """安慰剂：全部可交易股票日（无信号的随机基线）。"""
     return np.ones(ctx.m.c.shape, bool)
@@ -403,7 +418,7 @@ SIGNALS = {
     "gap_up": sig_gap_up, "golden_cross": sig_golden_cross, "three_up": sig_three_up,
     "vol_down": sig_vol_down, "drawdown_rebound": sig_drawdown_rebound, "oversold_ma": sig_oversold_ma,
     "n_down": sig_n_down, "low_vol_pullback": sig_low_vol_pullback,
-    "dry_pullback_vol_up": sig_dry_pullback_vol_up, "any": sig_any,
+    "dry_pullback_vol_up": sig_dry_pullback_vol_up, "limit_up_dry_pullback": sig_limit_up_dry_pullback, "any": sig_any,
 }
 
 
