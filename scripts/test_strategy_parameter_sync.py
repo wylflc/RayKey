@@ -51,6 +51,25 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn(f"| 减持 | `P/V ≥ {daily_scan.SEC93_SELL_LINE:.4f}` 且", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)
         self.assertIn("授信 = 净资产 × 60%，不设金额上限", workflow)
+        self.assertTrue(daily_scan.SEC93_L3_TACTICAL_GATE)
+        self.assertIn("| L3 战术闸门 | `quality_tier = L3` 且分层表 `tactical_thesis` 为空或判「无／暂无／不可买」者不进合格集", workflow)
+
+    def test_l3_tactical_gate_reads_tiers(self) -> None:
+        import csv, tempfile
+        from pathlib import Path
+        rows = [
+            {"security_code": "1", "quality_tier": "L3", "tactical_thesis": ""},
+            {"security_code": "2", "quality_tier": "L3", "tactical_thesis": "**无**。理由"},
+            {"security_code": "3", "quality_tier": "L3", "tactical_thesis": "暂无战术理由"},
+            {"security_code": "4", "quality_tier": "L3", "tactical_thesis": "**有（条件式）**：..."},
+            {"security_code": "5", "quality_tier": "L2", "tactical_thesis": ""},
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tiers.csv"
+            with path.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+                writer.writeheader(); writer.writerows(rows)
+            self.assertEqual(daily_scan.load_tactical_gate_codes(path), {"000001", "000002", "000003"})
 
 
 if __name__ == "__main__":

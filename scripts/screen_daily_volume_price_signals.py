@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import re
 import math
 import json
 import sys
@@ -397,6 +398,23 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def load_tactical_gate_codes(path: Path | None = None) -> set[str]:
+    """§9.3.1 L3 战术闸门（v4.53）：分层表中 quality_tier=L3 且 tactical_thesis 为空或以「无／暂无／不可买」开头的代码。
+    rubric §8 把 tactical_thesis 定为「L3 买入前置」，v4.18 删矩阵后一直无人读取（OI-084）；现按用户裁定①在合格集硬排除。"""
+    path = path or SEC93_TIERS
+    if not SEC93_L3_TACTICAL_GATE or not path.exists():
+        return set()
+    out: set[str] = set()
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            if (row.get("quality_tier") or "").strip() != "L3":
+                continue
+            thesis = (row.get("tactical_thesis") or "").strip()
+            if not thesis or SEC93_TACTICAL_NONE.match(thesis):
+                out.add(row["security_code"].zfill(6))
+    return out
+
+
 def load_blocked_codes(path: Path) -> set[str] | None:
     """§7.5 复核期买入冻结：更新队列中 buy_blocked=review_pending 的代码；文件缺失返回 None（未启用）。"""
     if not path.exists():
@@ -425,6 +443,9 @@ SEC93_LOT = 100                # A 股一手
 SEC93_POSITION_CAP = None      # §9.3.1：v4.04 起**无单票上限**——用户 2026-08-17 裁定退役仓位控制，
                                # 风险改由回撤与年化承担（§12.75）。None = 不设限，判定处直接跳过。
 SEC93_SELL_LINE = 2.5008       # §9.3.1「减持线」，v4.34 对齐解（上侧面 30.443%；2.49~2.52 回测逐位无差）：P/V ≥ 线且收盘 < MA20 → 减一档。
+SEC93_L3_TACTICAL_GATE = True   # §9.3.1「L3 战术闸门」（v4.53，OI-084 用户裁定①）：L3 且分层表 tactical_thesis 为空或判「无」者不进合格集（新建仓与加仓同）
+SEC93_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
+SEC93_TACTICAL_NONE = re.compile(r"^\W*(无|暂无|不可买)")   # 判「无战术理由」的写法
 SEC93_GAIN_SELL = 1.25         # §9.3.1「涨幅减持」（v4.44 用户采纳，回测日志 §12.110/§12.113）：收盘较持仓均价涨幅 ≥ 125%（收盘 ≥ 均价×2.25）
                                # 且收盘 < MA20 → 减一档；资金不足时该类持仓优先作换仓卖出源（涨幅最大者先）。持仓均价 = 买入按股数加权、
                                # 减持不变、除权按 §11.4 折算（持仓表 cost_basis）。回测落点 `--gain-sell 1.25`（gated）。
@@ -561,7 +582,8 @@ def load_holdings() -> dict[str, float]:
 
 def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float | None = None,
                          holdings: dict[str, float] | None = None,
-                         blocked: set[str] | None = None) -> dict[str, object]:
+                         blocked: set[str] | None = None,
+                         tactical_gated: set[str] | None = None) -> dict[str, object]:
     """§9.3.2 第 3、5 步：按 `P/V` 升序、去相关、逐个买一档。
 
     §9.3.3 比例冷却：一手金额 > 一档时买一手，其后跳过 `round(x)−1` 次合格机会
@@ -601,11 +623,19 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
                     if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
                     and trend_ok(r) and not liquid_ok(r)
                     and str(r["security_code"]).zfill(6) not in blocked]
+    # §9.3.1 L3 战术闸门（v4.53）：L3 无战术理由不进合格集（新建仓与加仓同），与冻结同为硬排除。
+    tactical_gated = tactical_gated or set()
+    tactical_out = [r for r in rows
+                    if str(r["security_code"]).zfill(6) in tactical_gated
+                    and isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
+                    and trend_ok(r) and liquid_ok(r)
+                    and str(r["security_code"]).zfill(6) not in blocked]
     eligible = [
         r for r in rows
         if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
         and trend_ok(r) and liquid_ok(r)
         and str(r["security_code"]).zfill(6) not in blocked
+        and str(r["security_code"]).zfill(6) not in tactical_gated
     ]
     eligible.sort(key=lambda r: r["model_pv"])
     n_cheap = sum(1 for r in rows
@@ -668,7 +698,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             "cooldown_skips": cooldown,
         })
     return {"plan": plan, "dropped": dropped, "eligible": eligible, "capped": capped,
-            "frozen_out": frozen_out, "illiquid_out": illiquid_out,
+            "frozen_out": frozen_out, "illiquid_out": illiquid_out, "tactical_out": tactical_out,
             "n_cheap": n_cheap, "cash": cash, "tranche": tranche,
             "funds0": (nav if funds is None else max(funds, 0.0)), "funds_given": funds is not None,
             "n_held": len(holdings),
@@ -696,10 +726,14 @@ def report_section97(result: dict[str, object], nav: float, out_path: Path,
           f"是靠这条放宽进来的回踩加仓）；"
           f"流动性门槛（20日均额<{MIN_AMOUNT_MA20 / 1e8:.1f}亿）排除 {len(result.get('illiquid_out') or [])} 只；"
           f"§7.5 冻结硬排除 {len(result.get('frozen_out') or [])} 只；"
+          f"L3 战术闸门排除 {len(result.get('tactical_out') or [])} 只；"
           f"相关性 >{SEC93_MAX_CORR} 剔除 {len(dropped)} 只 → 买入 {len(plan)} 只")
     for il in result.get("illiquid_out") or []:
         print(f"  [流动性排除·§10.1] {il.get('security_name','')} P/V {il['model_pv']:.2f}"
               f"｜20日均额 {(to_float(il.get('amount_ma20')) or 0.0) / 1e4:,.0f} 万")
+    for tg in result.get("tactical_out") or []:
+        print(f"  [L3 战术闸门排除·§9.3.1] {tg.get('security_name','')} P/V {tg['model_pv']:.2f}"
+              f"（分层表 tactical_thesis 为空或判「无」；补判为条件式战术理由后按当日名次重入）")
     for fz in result.get("frozen_out") or []:
         print(f"  [冻结排除·review_pending] {fz.get('security_name','')} P/V {fz['model_pv']:.2f}"
               f"（两闸已开，待 §6.7 重建解冻后按当日名次重入）")
@@ -833,7 +867,7 @@ def main() -> int:
     if section97_ready:
         if args.nav > 0:
             report_section97(section97_entry_plan(rows, args.nav, args.funds, load_holdings(),
-                                                  blocked or set()),
+                                                  blocked or set(), load_tactical_gate_codes()),
                              args.nav, args.plan_out, args.as_of)
         else:
             print("§9.3 未给 --nav，只算 P/V 不出买入计划（一档以净资产为基数）")
