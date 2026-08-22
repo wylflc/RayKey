@@ -9,7 +9,13 @@
 
 ## 待处理（2 项）
 
-### OI-083｜缺陷：档案 README 渲染器的分层/标签读自核心池，L4（documented_not_attention）档案显示「—」
+### OI-084｜待裁定：`tactical_thesis`（L3 战术理由）成文为「L3 买入前置」，但无任何生产脚本读取
+
+`docs/Ashare_quality_rubric.md` §8 定义 `tactical_thesis` 为「战术理由（L3 买入前置）」，v2.17 为当时 9 家 L3 回填（5 家判「无战术理由」并写明「按 §6.2.1 即使落低估档亦不可买」）。v4.18（OI-063）删除 §6.2 分层×估值矩阵后，`screen_daily_volume_price_signals.py` 不再区分 L3，且从未读取该列——L3 与 L1/L2 同一套 `P/V`/走势判定。现状（2026-08-23）：16 家 L3 中 5 行有值（养元饮品「无」、乖宝宠物/炬华科技/中创智领条件式、沃格光电 L4 不可买），11 行为空（§12.71 入池的 L3 等）。两种修法待裁定：①落地——扫描器对 L3 增加「`tactical_thesis` 为空或判『无』则不进合格集」，并给空行补判；②退役——rubric 删除「买入前置」字样，列只作研究备注。未裁定前列为研究字段，不影响判定。
+
+### OI-083｜缺陷：档案 README 渲染器的分层/标签读自核心池，L4（documented_not_attention）档案显示「—」；生产带文件含池外档案行
+
+补注（2026-08-23）：`build_pool_model_bands.py` 成员＝池∪档案，故 L4（沃格光电）与 boundary_pending 点名档案（艾力斯、中远海控、特变电工、戈碧迦）的带也写进了 `a_share_pool_model_bands_adopted.csv`（v4.52 时 285 行 vs 池 203 行），与 §6.1「documented_not_attention 的带只落档案、不落生产带文件」不符；扫描宇宙取自池 CSV，判定层无影响。修法：adopted 只写池成员，档案带由 `apply_model_bands_to_dossiers.py` 直接读 `roic_bands.csv`。
 
 2026-08-23 首个 L4 行（沃格光电 603773）落地时发现：`build_company_dossier_readmes.py` 的「质量分层／行业分类标签」取自池物化结果，L4 不入池故渲染为「—」，而分层表已有 L4 36 分与 `l4_since`。修法：渲染器改读 `a_share_watchlist_quality_tiers.csv`（池外行同样可得）。不影响任何判定层；待顺手修。
 
