@@ -1237,7 +1237,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             net_now = portfolio.equity(marks)
             # 授信随当日净资产重定、封顶 credit_cap（§10.2，用户 2026-08-22 裁定 OI-081）：
             # `repay`（缺省）＝额度就是 min(净资产×比例, 上限)，负债超出的部分在当日常规卖出（止损／减持／出名单）
-            # 之后先用现金偿还（`repay_over_limit`），剩余现金＋剩余授信才可买入；换仓卖出款留给置换买入（见换仓段注释）；
+            # 之后先用现金偿还（`repay_over_limit`），换仓卖出款同样先还（用户 2026-08-22 裁定），剩余现金＋剩余授信才可买入；
             # `keep`＝v4.39 前的旧口径——额度取 max(已用负债, …)，下调不强制还款，只用于复现旧读数。
             credit_limit = min(max(net_now, 0.0) * credit_ratio, credit_cap)
             if credit_over_limit == "keep":
@@ -1727,11 +1727,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 簇内升级之后仍保留原换仓作为**兜底**：用户方案里「没有强相关持仓就直接建仓或加仓」
         # 隐含了「有钱」这个前提，而簇内升级是自筹资金的（卖一只买一只），**不产生新增现金**。
         # 缺了兜底，资金打满后组合就冻住——实测换手由 200.9% 塌到 17.6%、买入 2145→474 笔。
-        # 超额授信期间（常规卖出款还过仍超额）：剩余授信为 0、现金为 0 → 不可能新增买入；换仓照常触发——
-        # 换仓是「卖一档弱势持仓、买一档更便宜候选」的置换，不新增负债，其卖出款**留给那笔买入**而不先还款。
-        # 两个反例都实测过：换仓款也先还款 → 想买的票买不进、下一名候选再触发卖一档，在低点连环去杠杆
-        # （2019-05 起点 72 次整仓卖出、单票 169% 净资产）；超额期间禁止换仓 → 计息让负债每天高出额度几百元、
-        # 满仓无现金即永久冻结（2011-11 长路径 3,221 个禁买日、期末 1.30 → 0.73 亿）。
+        # 超额授信期间（常规卖出款还过仍超额）：剩余授信为 0、现金为 0 → 不可能新增买入；换仓照常触发，
+        # 但换仓卖出款**同样先还超额负债**（用户 2026-08-22 裁定：「这是融资的代价——净资产下跌、想换仓，
+        # 就会出现卖出后因授信降低而无法买入；必须先保证负债不超过净资产×60%，才可以进行任何其他买入」）。
+        # 实际效果：超额期间每日卖出一档弱势持仓去还款、买不进新票，直到负债回到额度内——这是杠杆账户
+        # 在回撤里的真实去杠杆过程（2019-05 起点实测期末 2,762 → 763 万）。曾试过的「换仓款留给置换买入」
+        # 口径已按用户裁定撤回。
         if credit_over_limit == "repay" and credit_ratio > 0 and portfolio.debt > credit_limit + 1e-6:
             stats["超额授信·当日无新增买入"] += 1
         if swap and eligible:
@@ -1828,6 +1829,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓{swap_tag}：让位给空间更大的{code}")
                 sell_count += 1
                 swap_targets.add(code)
+        # 换仓卖出款同样先还超额负债（§10.2，用户 2026-08-22 裁定），再进入买入段
+        if credit_over_limit == "repay" and credit_ratio > 0:
+            if repay_over_limit(portfolio, credit_limit) > 0:
+                stats["超额授信·换仓款先还"] += 1
         # ---- 档位排序偏置（用户 2026-08-08）
         if tier_mode == "bonus":
             eligible.sort(key=lambda r: -(1.0 / r[3] + TIER_BONUS.get(tiers.get(r[0], DEFAULT_TIER), 0.0)))
