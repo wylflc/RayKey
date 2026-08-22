@@ -766,6 +766,18 @@ def draw_credit(portfolio: Portfolio, need: float, limit: float) -> float:
     return min(need, portfolio.cash)
 
 
+def repay_over_limit(portfolio: Portfolio, limit: float) -> float:
+    """§10.2：「负债超过授信额度时不可新增买入，卖出款先偿还超额负债」——用手头现金先把负债压回当日额度内。
+    只用现金、不强制卖券（强制平仓仍只在 130% 线）；现金不够时余下超额留待后续卖出款（换仓卖出同样先还）。"""
+    excess = portfolio.debt - limit
+    if excess <= 0 or portfolio.cash <= 0:
+        return 0.0
+    pay = min(portfolio.cash, excess)
+    portfolio.cash -= pay
+    portfolio.debt -= pay
+    return pay
+
+
 def repay_debt(portfolio: Portfolio, ratchet: bool) -> None:
     """日终把剩余现金优先偿还融资（`--margin-ratchet`，纯研究开关，见 §12.70）。"""
     if not ratchet or portfolio.debt <= 0 or portfolio.cash <= 0:
@@ -992,7 +1004,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         tier_sell_scale: dict[str, float] | None = None,
         exright_stop: str = "adjust", addon_max_gain: float = 0.0,
         gain_sell: float = 0.0, gain_sell_mode: str = "gated",
-        swap_trigger: str = "cash") -> dict:
+        swap_trigger: str = "power", credit_over_limit: str = "repay") -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `tier_buy_scale`／`tier_sell_scale`（研究开关，§12.95「护城河放到决策层」）：按档位给买入线／
@@ -1223,9 +1235,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # ---- 融资：按当日净资产重定授信额度，并查担保比例 ----
         if credit_ratio > 0:
             net_now = portfolio.equity(marks)
-            # 授信随净资产变动、封顶 credit_cap；**已用额度不因限额下调而被强制归还**，
-            # 只是不能再新增——现实中券商下调授信也是这个次序。
-            credit_limit = max(portfolio.debt, min(max(net_now, 0.0) * credit_ratio, credit_cap))
+            # 授信随当日净资产重定、封顶 credit_cap（§10.2，用户 2026-08-22 裁定 OI-080）：
+            # `repay`（缺省）＝额度就是 min(净资产×比例, 上限)，负债超出的部分在当日常规卖出（止损／减持／出名单）
+            # 之后先用现金偿还（`repay_over_limit`），剩余现金＋剩余授信才可买入；换仓卖出款留给置换买入（见换仓段注释）；
+            # `keep`＝v4.39 前的旧口径——额度取 max(已用负债, …)，下调不强制还款，只用于复现旧读数。
+            credit_limit = min(max(net_now, 0.0) * credit_ratio, credit_cap)
+            if credit_over_limit == "keep":
+                credit_limit = max(portfolio.debt, credit_limit)
             ratio_now = portfolio.margin_ratio(marks)
             if portfolio.debt > 0 and ratio_now < min_ratio:
                 min_ratio, min_ratio_day = ratio_now, day
@@ -1526,6 +1542,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     turnover += shares * price
                 sell_count += 1
 
+        # ---- 常规卖出之后、换仓与买入之前：负债超出当日额度的部分先用现金偿还（§10.2，OI-080）
+        if credit_over_limit == "repay" and credit_ratio > 0:
+            if repay_over_limit(portfolio, credit_limit) > 0:
+                stats["超额授信·卖出款先还"] += 1
+
         # ---- 买入：合格集为空则持币（用户 2026-08-08 裁定），**不硬凑前十**
         pool = states[sig_day] if members is None else [r for r in states[sig_day] if r[0] in members]
         # 配置通道的当日成员（见下方买入段）。**必须在换仓之前算好**——换仓要用它把通道持仓
@@ -1706,12 +1727,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 簇内升级之后仍保留原换仓作为**兜底**：用户方案里「没有强相关持仓就直接建仓或加仓」
         # 隐含了「有钱」这个前提，而簇内升级是自筹资金的（卖一只买一只），**不产生新增现金**。
         # 缺了兜底，资金打满后组合就冻住——实测换手由 200.9% 塌到 17.6%、买入 2145→474 笔。
+        # 超额授信期间（常规卖出款还过仍超额）：剩余授信为 0、现金为 0 → 不可能新增买入；换仓照常触发——
+        # 换仓是「卖一档弱势持仓、买一档更便宜候选」的置换，不新增负债，其卖出款**留给那笔买入**而不先还款。
+        # 两个反例都实测过：换仓款也先还款 → 想买的票买不进、下一名候选再触发卖一档，在低点连环去杠杆
+        # （2019-05 起点 72 次整仓卖出、单票 169% 净资产）；超额期间禁止换仓 → 计息让负债每天高出额度几百元、
+        # 满仓无现金即永久冻结（2011-11 长路径 3,221 个禁买日、期末 1.30 → 0.73 亿）。
+        if credit_over_limit == "repay" and credit_ratio > 0 and portfolio.debt > credit_limit + 1e-6:
+            stats["超额授信·当日无新增买入"] += 1
         if swap and eligible:
             for code, close, value, ratio in eligible[:max_positions]:
                 if code in portfolio.lots:
                     continue
-                # `swap_trigger`（用户 2026-08-22 追问）：`cash`＝现行，**现金**不足一档即触发换仓，不看剩余授信；
-                # `power`＝按 §10.2 可用资金（现金＋剩余授信）判——授信还有余量时先融资买、不换仓。
+                # `swap_trigger`（OI-080，用户 2026-08-22 裁定）：`power`（缺省）＝按 §10.2 可用资金
+                # （现金＋剩余授信）不足一档才换仓——授信还有余量时先融资买；`cash`＝v4.39 前旧口径，
+                # 只看现金、不计剩余授信，只用于复现旧读数。
                 funds = buying_power(portfolio, credit_limit) if swap_trigger == "power" else portfolio.cash
                 blocked = funds < (lump_sum or budget) or len(portfolio.lots) >= max_positions
                 if not blocked:
@@ -1754,8 +1783,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                             if _m.get(swap_weak_ma) is None or today[c][0] >= _m[swap_weak_ma]:
                                 continue
                         gain_src.append((today[c][0] / l.avg_cost, c))
+                swap_tag = ""
                 if gain_src:
                     worst = max(gain_src)[1]
+                    swap_tag = f"·涨幅≥{gain_sell:.0%}让位"
                     stats[f"涨幅≥{gain_sell:.0%}·换仓让位"] += 1
                 else:
                     if not held:
@@ -1789,12 +1820,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     lot_worst.proceeds += shares * price
                     lot_worst.sells += 1
                     turnover += shares * price
-                    log_partial_sell(ledger, day, worst, shares, price, f"换仓·减一档：让位给{code}")
+                    log_partial_sell(ledger, day, worst, shares, price, f"换仓·减一档{swap_tag}：让位给{code}")
                     reduced_today.add(worst)
                 else:
                     stats["换仓·整仓卖出"] += 1
                     turnover += lot_worst.shares * price
-                    close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓：让位给空间更大的{code}")
+                    close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓{swap_tag}：让位给空间更大的{code}")
                 sell_count += 1
                 swap_targets.add(code)
         # ---- 档位排序偏置（用户 2026-08-08）
@@ -2508,8 +2539,12 @@ def main() -> int:
                         help="研究开关（用户 2026-08-22）：信号日收盘 ≥ 持仓均价×(1+G) 即触发减一档并可作换仓卖出源；0=关。例 1.0")
     parser.add_argument("--gain-sell-mode", choices=("gated", "ungated"), default="gated",
                         help="gated=涨幅减持／换仓同样过走势闸门（收<MA20 / 弱势）；ungated=不过闸门")
-    parser.add_argument("--swap-trigger", choices=("cash", "power"), default="cash",
-                        help="换仓触发口径：cash=现金不足一档即换（现行）；power=现金＋剩余授信不足一档才换")
+    parser.add_argument("--swap-trigger", choices=("cash", "power"), default="power",
+                        help="换仓触发口径（OI-080）：power=现金＋剩余授信不足一档才换（§10.2 可用资金，缺省）；"
+                             "cash=只看现金（v4.39 前旧口径，复现旧读数用）")
+    parser.add_argument("--credit-over-limit", choices=("repay", "keep"), default="repay",
+                        help="负债超过当日授信额度的处理（OI-080）：repay=卖出款先偿还超额、不可新增买入（§10.2，缺省）；"
+                             "keep=额度取 max(已用负债, 额度)、不强制还款（v4.39 前旧口径，复现旧读数用）")
     parser.add_argument("--stop-line", choices=("entry", "min_entry_current"), default="entry",
                         help="止损线口径：entry=建仓日冻结线（现行）；min_entry_current=min(建仓日线, "
                              "当日同周期均线)——均线下移时止损跟随下移、上移不抬线（用户 2026-08-19 实验）")
@@ -2697,7 +2732,8 @@ def main() -> int:
                      + (f"_tr{args.trail_ratio:g}" if args.trail_ratio else "")
                      + (f"_ag{args.addon_max_gain:g}" if args.addon_max_gain else "")
                      + (f"_gs{args.gain_sell:g}{'u' if args.gain_sell_mode == 'ungated' else ''}" if args.gain_sell else "")
-                     + ("_swp" if args.swap_trigger == "power" else "")
+                     + ("_swc" if args.swap_trigger == "cash" else "")
+                     + ("_colk" if args.credit_over_limit == "keep" else "")
                      + ("_skipma60" if args.entry_below_ma60 == "skip" else "")
                      + ("_rawma" if args.ma_basis == "raw" else "")
                      + ("_frzstop" if args.exright_stop == "frozen" else "")
@@ -2803,7 +2839,8 @@ def main() -> int:
                          tier_buy_scale=parse_tier_scale(args.tier_buy_scale),
                          tier_sell_scale=parse_tier_scale(args.tier_sell_scale),
                          addon_max_gain=args.addon_max_gain, gain_sell=args.gain_sell,
-                         gain_sell_mode=args.gain_sell_mode, swap_trigger=args.swap_trigger)
+                         gain_sell_mode=args.gain_sell_mode, swap_trigger=args.swap_trigger,
+                         credit_over_limit=args.credit_over_limit)
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
