@@ -33,6 +33,15 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(float(option_value(args, "--sell-line")), daily_scan.SEC93_SELL_LINE)
         import track_holdings_daily
         self.assertEqual(track_holdings_daily.SELL_LINE, daily_scan.SEC93_SELL_LINE)
+        # v4.44：涨幅减持 125%（gated）与融资口径（60%、不设金额上限）
+        self.assertEqual(daily_scan.SEC93_GAIN_SELL, 1.25)
+        self.assertEqual(float(option_value(args, "--gain-sell")), daily_scan.SEC93_GAIN_SELL)
+        self.assertEqual(option_value(args, "--gain-sell-mode"), "gated")
+        self.assertEqual(track_holdings_daily.GAIN_SELL, daily_scan.SEC93_GAIN_SELL)
+        self.assertEqual(float(option_value(args, "--credit-ratio")), 0.6)
+        self.assertGreaterEqual(float(option_value(args, "--credit-cap")), 1e11)   # 不设金额上限
+        self.assertEqual(option_value(args, "--swap-trigger"), "power")
+        self.assertEqual(option_value(args, "--credit-over-limit"), "repay")
 
     def test_workflow_current_table_matches_production(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
@@ -40,6 +49,8 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn("| 单次买入 | 当日净资产 `N × 5.0%` |", workflow)
         self.assertIn(f"| 买入线 | `P/V ≤ {daily_scan.SEC93_BUY_LINE:.4f}` |", workflow)
         self.assertIn(f"| 减持 | `P/V ≥ {daily_scan.SEC93_SELL_LINE:.4f}` 且", workflow)
+        self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)
+        self.assertIn("授信 = 净资产 × 60%，不设金额上限", workflow)
 
 
 if __name__ == "__main__":

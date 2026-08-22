@@ -24,7 +24,7 @@
 的假跌破（依据 §12.88.2/§12.89：滚5 +0.59pp、16/23、逐年中性、回撤换手略降）。
 
 **本脚本不产生任何买卖结论。** 卖出只有 §9.3.2 第四步四条（⓪跌破生效止损线
-整仓、①`P/V` 越过 §9.3.1 减持线且破 MA20 减一档、②出 §5 名单减一档、③换仓减一档），
+整仓、①`P/V` 越过 §9.3.1 减持线且破 MA20 减一档、①′ 较持仓均价涨幅 ≥125% 且破 MA20 减一档（v4.44）、②出 §5 名单减一档、③换仓减一档），
 由执行侧按本脚本输出的 `pv` 与 `stop_hit` 计算。
 
 **刻意不做**的事（退役清单，现由工作流 §11.1 的边界承担）——盈亏、权重、仓位占比、单笔风险、
@@ -46,7 +46,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from a_share_quotes import fetch_spot_quotes
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
-from screen_daily_volume_price_signals import SEC93_SELL_LINE, get_json, infer_secid
+from screen_daily_volume_price_signals import SEC93_GAIN_SELL, SEC93_SELL_LINE, get_json, infer_secid
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,6 +59,9 @@ DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 # v4.04 参数表改 2.5548 时没跟上（本文件漂移到 2026-08-19 才被发现，v4.20 修）。
 # 注意：§9.3.1 的减持是 `P/V ≥ 线 **且收盘 < MA20**`，本脚本不算均线，只报前半个条件。
 SELL_LINE = SEC93_SELL_LINE
+# §9.3.1 涨幅减持（v4.44）：收盘较持仓均价（`cost_basis`，按 §11.4 折算）涨幅 ≥ 125% 且收盘 < MA20 → 减一档；
+# 资金不足时优先作换仓卖出源。与 P/V 减持同型：本脚本只报前半个条件（涨幅），MA20 见扫描器输出。
+GAIN_SELL = SEC93_GAIN_SELL
 
 FIELDNAMES = [
     "as_of",
@@ -302,6 +305,13 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         elif pv is not None and pv >= SELL_LINE:
             notes.append(f"**`P/V` {pv:.2f} ≥ {SELL_LINE:.4f}**：减持另须 `收盘 < MA20`"
                          f"（§9.3.1 完整条件，均线见扫描器输出），两者同时成立才减一档")
+        # §9.3.1 涨幅减持（v4.44）：与 P/V 行并列的第二条减持触发，判据是持仓均价而非估值带，
+        # 故无带／无 P/V 的票也要判（只要有收盘价与成本）。
+        cost = to_float(h.get("cost_basis"))
+        gain = (close / cost - 1.0) if (close is not None and cost is not None and cost > 0) else None
+        if gain is not None and gain >= GAIN_SELL:
+            notes.append(f"**较持仓均价 {cost:g} 涨幅 {gain:.0%} ≥ {GAIN_SELL:.0%}**：减持另须 `收盘 < MA20`"
+                         f"（§9.3.1 涨幅行）；资金不足时优先作换仓卖出源（涨幅最大者先）")
 
         # §9.3.5 建仓日止损。**先判无行情**：没有收盘价就既不能说跌破、也不能
         # 说没跌破，落 `无行情` 而不是默认放行——与 `action` 的 `数据缺失` 同一条理由。
@@ -483,6 +493,12 @@ def main() -> None:
     log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv, args.valuation_pool)
 
     trim = [r for r in rows if r["pv"] and float(r["pv"]) >= SELL_LINE]
+    gain_trim = []
+    for r in rows:
+        c, k = to_float(r.get("close")), to_float(r.get("cost_basis"))
+        if c is not None and k is not None and k > 0 and c / k - 1.0 >= GAIN_SELL:
+            gain_trim.append((c / k - 1.0, r))
+    gain_trim.sort(key=lambda t: -t[0])
     no_pv = [r for r in rows if not str(r["pv"]).strip()]
     no_band = [r for r in rows if not r["fair_price_low"]]
     print(f"tracked {len(rows)} holdings as of {as_of}")
@@ -510,6 +526,12 @@ def main() -> None:
         print(f"  **P/V ≥ {SELL_LINE:.4f} 共 {len(trim)} 只**：{names}——另须 `收盘 < MA20`（§9.3.1）才减一档")
     else:
         print(f"  P/V ≥ {SELL_LINE:.4f}：无")
+    if gain_trim:
+        names = "、".join(f"{r['security_name']}(+{g:.0%})" for g, r in gain_trim)
+        print(f"  **较持仓均价涨幅 ≥ {GAIN_SELL:.0%} 共 {len(gain_trim)} 只**：{names}——另须 `收盘 < MA20`（§9.3.1 涨幅行）才减一档；"
+              f"资金不足时按此顺序优先作换仓卖出源")
+    else:
+        print(f"  较持仓均价涨幅 ≥ {GAIN_SELL:.0%}：无")
     if no_pv:
         print(f"  **P/V 未算出 {len(no_pv)} 只**：{'、'.join(str(r['security_name']) for r in no_pv)}（无行情或无带，当日不进 §9.3 判定）")
     if no_band:
