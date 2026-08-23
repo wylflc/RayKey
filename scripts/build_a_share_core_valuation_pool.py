@@ -34,6 +34,8 @@ from fetch_overseas_earnings_calendar import print_overdue_report
 from overseas_quotes import fetch_overseas_quotes
 from validate_valuation_bands import check_row as check_band_card
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
+from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
+MODEL_BANDS = load_model_bands()
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -326,11 +328,18 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     else:
         pct = round(((low + high) / 2 / ref_price - 1) * 100)
         upside = "0%" if pct == 0 else f"{pct:+d}%"
-    # 2026-08-23 用户指令：阅读版改列**合理估值 V**（= 区间中值 = 模型内在价值）与 **P/V**（现价 ÷ V，
-    # 与 §9.3 同一口径、三位小数），合理价区间／空间两列移出阅读版（仍在 CSV；定档仍按带与空间，§6.2）。
+    # 2026-08-23 用户指令：阅读版改列**合理估值 V**（= 区间中值 = 模型内在价值）与 **P/V**（§3 定义：ROIC 路径为
+    # (现价+每股净负债)÷每股企业价值、其余 现价÷V，与 §9.3 同一口径、三位小数），合理价区间／空间两列移出阅读版（仍在 CSV；定档仍按带与空间，§6.2）。
     mid = (low + high) / 2 if (low is not None and high is not None and not unvaluable) else None
     fair_value = f"{mid:.2f}" if mid else "—"
-    pv = f"{ref_price / mid:.3f}" if (mid and ref_price) else "—"
+    # v4.62（OI-091）：P/V 按 `pv_ratio.trading_pv`（ROIC 路径 (现价+净负债)÷EV），生产带行缺失时退回 现价÷V
+    pv_val = None
+    if mid and ref_price:
+        band_row = MODEL_BANDS.get(str(row.get("security_code", "")).zfill(6))
+        pv_val = trading_pv(ref_price, band_row) if band_row else None
+        if pv_val is None:
+            pv_val = ref_price / mid
+    pv = f"{pv_val:.3f}" if pv_val is not None else "—"
 
     stored = str(row.get("valuation_tier", ""))
     # 无法估值无可靠带，不自动定档（§6.2）；其余按现价（缺失时按估值价）定档。

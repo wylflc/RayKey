@@ -270,7 +270,7 @@ def main() -> int:
             common_head = (archive_tag + f"与 §9.3.1.2 回测所用带**同一套口径**。"
                            f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜")
         common_tail = (f"**内在价值 {iv:.2f} 元**。带 = IV × [0.90, 1.10]，**中值恰为 IV**，"
-                       f"故 `P/V = 收盘 ÷ 中值` 与回测的 `valuation_ratio` 逐位一致。")
+                       f"故 `P/V`（§3：ROIC 路径 (现价+每股净负债)÷每股企业价值，其余 现价÷中值）与回测的 `valuation_ratio` 逐位一致。")
         def _f(key, fmt="{:.2%}"):
             try:
                 return fmt.format(float(band.get(key) or 0))

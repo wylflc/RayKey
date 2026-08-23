@@ -831,6 +831,25 @@ def dividends_total(actions: list[dict], since: str, until: str, shares_end: flo
     return total
 
 
+def ttm_profit_factor(series: dict[str, dict], period: str, latest) -> float:
+    """OI-090：`归母净利 TTM ÷ 最新年报归母净利`。TTM = 年报 + 本期 YTD − 上年同期 YTD（季报行）；年报行恒为 1。
+    只在本期报告年 = 最新年报年 + 1 时计算（年报滞后一年以上不外推）；任一项缺失或年报净利 ≤ 0 返回 1。"""
+    if period.endswith("-12-31") or latest is None:
+        return 1.0
+    annual = getattr(latest, "parent_netprofit", None)
+    if annual is None or annual <= 0:
+        return 1.0
+    if int(period[:4]) != int(latest.period[:4]) + 1:
+        return 1.0
+    row = series.get(period)
+    prev = series.get(f"{int(period[:4]) - 1}{period[4:]}")
+    ytd = _num(row.get("parent_netprofit")) if row else None
+    ytd_prev = _num(prev.get("parent_netprofit")) if prev else None
+    if ytd is None or ytd_prev is None:
+        return 1.0
+    return (annual + ytd - ytd_prev) / annual
+
+
 EXT_EQUITY_STATS: dict[str, int] = defaultdict(int)     # §13 第 3 条：各退化模式计数，建带结尾打印
 EXT_EQUITY_TOP: list[tuple[float, str, str, str]] = []   # (|x|/BPS, 代码, 名称, 报告期) 最新带中超阈值者
 
@@ -1118,6 +1137,10 @@ class Band:
     # ---- OI-088（v4.61）：两道判据的连续权重，只读列 ----
     peak_weight: float = 0.0                  # 周期守卫坡道权重 w∈[0,1]：比率锚 = (1−w)×非周期锚 + w×窗口中位；增速腿 ×(1−w)
     growth_trust: float = 0.0                 # 增长态信任度 λ∈{0,½,1}：非周期锚 = 三年中位 + λ×(当期 − 三年中位)
+    # ---- OI-089/OI-090（v4.62）----
+    trough_weight: float = 0.0                # 谷底对称守卫坡道权重 v∈[0,1]（当期比率 ≤ 十年中位/1.3 起按比例归一化到五年中位，≤ 1/1.9 全按中位）
+    ttm_factor: float = 1.0                   # 季报期间 归母净利 TTM ÷ 年报归母净利（年报行 1）；当期比率 = 年报最新比率 × 该因子
+    growth_damp: float = 1.0                  # 增速腿折减 d = min(1, NOPAT_最新/上年) × min(1, TTM 因子)
 
 
 def _cv(values: list[float]) -> float | None:
@@ -1485,6 +1508,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             # * peak：**当前比率 > K × 十年长窗中位**。要防的从来不是「有来回」，
             #   是「把极端高位的利润外推十年」——直接量它。牧原 2020 ≈3× 长窗中位 → 拦下；
             #   茅台 2018 ≈1.1× → 放行。K 由 --roic-peak-k 给。
+            peak_s, long_ratios = None, []
             if getattr(args, "roic_cycle_guard", "efficiency") == "peak":
                 long_hist = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at,
                                                      max(args.roe_years, 10))
@@ -1507,13 +1531,21 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     peak_w = 1.0 if peak_s > args.roic_peak_k else 0.0
                 else:
                     peak_w = min(1.0, max(0.0, (peak_s - (args.roic_peak_k - ramp)) / (2 * ramp)))
+                # v4.62（OI-090 追溯发现）：**谷底对称守卫**——当期比率低到十年中位的 1/K 以下同样按五年中位归一化
+                # （峰谷同一口径：天齐锂业 2024 利润归零年若只用三年中位，中位落在前两年的景气年、锚反而在景气位）。
+                trough_w = 0.0
+                if peak_s is not None and peak_s > 0 and ramp > 0:
+                    trough_w = min(1.0, max(0.0, (1.0 / peak_s - (args.roic_peak_k - ramp)) / (2 * ramp)))
+                elif peak_s is not None and peak_s > 0:
+                    trough_w = 1.0 if 1.0 / peak_s > args.roic_peak_k else 0.0
                 nopat_cyclical = peak_w >= 0.5
             else:
                 nopat_cyclical = len(ratios) >= 3 and trend_efficiency(ratios) < 0.35
                 peak_w = 1.0 if nopat_cyclical else 0.0
-            band.peak_weight = peak_w
+                trough_w = 0.0
+            band.peak_weight, band.trough_weight = peak_w, trough_w
             ratio0 = statistics.median(ratios)
-            ratio_cyc = ratio0                         # 周期态锚：窗口内比率中位
+            ratio_cyc = ratio0                         # 周期态锚：窗口内比率中位（峰与谷同用）
             band.roic_nopat_mode = "median"
             # **单边口径**（v2，镜像 §6.5.2.1 v2.90 的 `onesided_max λ`）：当期比率高于中位时
             # `ratio0 = 中位 + λ×(当期 − 中位)`——保留低谷保护（低于中位仍用中位），去掉高位惩罚。
@@ -1562,16 +1594,37 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     ratio_noncyc = statistics.median(ratios) + trust * (ratios[-1] - statistics.median(ratios))
                 else:
                     ratio_noncyc = ratio0
-                # 峰值坡道：在非周期锚与周期锚（窗口中位）之间按 peak_w 线性混合（w=0／1 即旧的两个分支）
-                ratio0 = (1.0 - peak_w) * ratio_noncyc + peak_w * ratio_cyc
-                if peak_w >= 1.0:
-                    band.roic_nopat_mode = "cyclical_median"
-                elif peak_w <= 0.0 and trust >= 1.0:
+                # OI-090（v4.62）：季报期间「当期」= 年报最新比率 × (归母净利 TTM ÷ 年报归母净利)，信任度 λ 与三年/五年中位
+                # 仍取年报；峰值坡道 w 按 TTM 当期重算（利润冲顶当季即被守卫看到，牧原 2020 型；崩塌当季即进锚，天齐 2024 型）。
+                # 年报行 f=1 与旧式逐位相同；f 不可算（年报净利 ≤0、季报缺行、年报滞后一年以上）则 f=1。
+                f_ttm = ttm_profit_factor(series, period, latest) if getattr(args, "ttm_current", "on") == "on" else 1.0
+                band.ttm_factor = f_ttm
+                if len(ratios) >= 3 and f_ttm != 1.0:
+                    r_cur = ratios[-1] * f_ttm
+                    if peak_s is not None and statistics.median(long_ratios) > 0:
+                        s_cur = r_cur / statistics.median(long_ratios)
+                        if ramp <= 0:
+                            peak_w = 1.0 if s_cur > args.roic_peak_k else 0.0
+                            trough_w = 1.0 if (s_cur > 0 and 1.0 / s_cur > args.roic_peak_k) else 0.0
+                        else:
+                            peak_w = min(1.0, max(0.0, (s_cur - (args.roic_peak_k - ramp)) / (2 * ramp)))
+                            trough_w = (min(1.0, max(0.0, (1.0 / s_cur - (args.roic_peak_k - ramp)) / (2 * ramp)))
+                                        if s_cur > 0 else 1.0)
+                        band.peak_weight, band.trough_weight = peak_w, trough_w
+                        nopat_cyclical = peak_w >= 0.5
+                    base3 = statistics.median(ratios[-3:]) if nopat_src == "conditional3" else statistics.median(ratios)
+                    ratio_noncyc = base3 + trust * (r_cur - base3)
+                # 峰／谷坡道：在非周期锚与窗口中位之间按 w = max(峰权重, 谷权重) 线性混合（w=0／1 即旧的两个分支）
+                w_any = max(peak_w, trough_w)
+                ratio0 = (1.0 - w_any) * ratio_noncyc + w_any * ratio_cyc
+                if w_any >= 1.0:
+                    band.roic_nopat_mode = "cyclical_median" if peak_w >= trough_w else "trough_median"
+                elif w_any <= 0.0 and trust >= 1.0:
                     band.roic_nopat_mode = "ttm_growth"
-                elif peak_w <= 0.0 and trust <= 0.0:
+                elif w_any <= 0.0 and trust <= 0.0:
                     band.roic_nopat_mode = "median3"
                 else:
-                    band.roic_nopat_mode = f"blend(λ={trust:.1f},w={peak_w:.2f})"
+                    band.roic_nopat_mode = f"blend(λ={trust:.1f},w={peak_w:.2f},v={trough_w:.2f})"
                     ROIC_STATS["OI-088 坡道/分级混合锚"] += 1
             if nopat_cyclical:
                 ROIC_STATS["NOPAT 周期守卫·按中位（w≥0.5）"] += 1
@@ -1631,6 +1684,13 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     band.status, band.reason = "rejected", (
                         f"零增长股权价值 {value:.2f} ≤ 0：净负债超过零增长企业价值")
                     return band
+                thin_max = getattr(args, "thin_equity_max", 0.5)
+                if thin_max and net_debt_ps > 0 and (zero_numerator / w) > 0 and net_debt_ps / (zero_numerator / w) >= thin_max:
+                    band.status, band.reason = "rejected", (
+                        f"薄权益：每股净负债 {net_debt_ps:.2f} ≥ {thin_max:.0%} × 每股企业价值 {zero_numerator / w:.2f}，"
+                        f"股权价值为两大数之差不可估（OI-091）")
+                    EXT_EQUITY_STATS["薄权益守卫·拒绝"] += 1
+                    return band
                 band.status, band.value, band.roic_path = "ok", value, "zero_growth"
                 band.band_low, band.band_high = BAND_LOW_COEF * value, BAND_HIGH_COEF * value
                 band.terminal_share, band.implied_pe = 1.0, value / nopat_ps
@@ -1657,10 +1717,21 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 # 五年翻倍）。利润增速本身是它的直接观测，乘 `--roic-trail-weight` 衰减。
                 # **周期股守卫同样作用于这条腿**（利润顶的高增速不外推）。
                 # OI-088（v4.61）：增速腿按峰值坡道连续折减 ×(1 − peak_w)，不再在阈值处整条切断
+                # OI-089（v4.62）：再按「最新一年利润回落比例」连续折减 d = min(1, NOPAT_最新/NOPAT_上年) × min(1, TTM因子)——
+                # 五年 CAGR 是回看的，最新一年（及季报 TTM）回落多少，外推就按同比例打折（天齐 2024：25%→2%；比亚迪 2025：25%→22%）。
+                # 窗口加长（7 年）虽把年报间 |Δg| >10pp 的比例从 13.7% 压到 7.4%，却让利润顶之后仍外推增长期增速（神火 2025 23% vs 0%），
+                # 按合理性否决；3/5/7 年多窗口取中位不压噪声（13.9%），亦不取。
                 g_trail = None
                 cagr = roic_inputs.trailing_nopat_cagr(history)
+                damp = 1.0
+                if getattr(args, "growth_damp", "on") == "on":
+                    ordered_np = [y.nopat for y in sorted(history, key=lambda x: x.period) if y.nopat is not None]
+                    if len(ordered_np) >= 2 and ordered_np[-1] > 0 and ordered_np[-2] > 0:
+                        damp = min(1.0, ordered_np[-1] / ordered_np[-2])
+                    damp *= max(0.0, min(1.0, band.ttm_factor if band.ttm_factor is not None else 1.0))
+                band.growth_damp = damp
                 if cagr is not None and cagr > 0 and (1.0 - band.peak_weight) > 0:
-                    g_trail = cagr * args.roic_trail_weight * (1.0 - band.peak_weight)
+                    g_trail = cagr * args.roic_trail_weight * (1.0 - band.peak_weight) * damp
                 candidates = [g for g in (g_capital, g_trail) if g is not None]
                 g0_raw = max(candidates) if candidates else 0.0
                 band.roic_g_source = ("trailing" if g_trail is not None
@@ -1693,6 +1764,15 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 band.status, band.reason = "rejected", (
                     f"股权价值 {value:.2f} ≤ 0：净负债 {net_debt_ps:.2f} 超过企业价值 "
                     f"{res.intrinsic_value:.2f}，须走 §6.5.5.2 逐票建档")
+                return band
+            thin_max = getattr(args, "thin_equity_max", 0.5)
+            if thin_max and net_debt_ps > 0 and res.intrinsic_value > 0 and net_debt_ps / res.intrinsic_value >= thin_max:
+                # OI-091（v4.62）：薄权益守卫——净负债 ≥ 50% 企业价值时每股价值是两个大数之差（EV 10% 的误差 → 股权 ≥20%，超出 ±10% 带宽），
+                # 读数是噪声不是估值（兖矿能源 2014-19 P/V 0.24~94、比亚迪 2012-16 9~226）；按 §6.5.2.4 判无法估值、不进 §9.3。
+                band.status, band.reason = "rejected", (
+                    f"薄权益：每股净负债 {net_debt_ps:.2f} ≥ {thin_max:.0%} × 每股企业价值 {res.intrinsic_value:.2f}，"
+                    f"股权价值为两大数之差不可估（OI-091）")
+                EXT_EQUITY_STATS["薄权益守卫·拒绝"] += 1
                 return band
             band.status, band.value, band.roic_path = "ok", value, "growth"
             band.band_low, band.band_high = BAND_LOW_COEF * value, BAND_HIGH_COEF * value
@@ -2001,6 +2081,19 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
         if value <= 0:
             EXRIGHT_NEGATIVE.append(f"{code}@{date}")
             continue
+        # OI-091（v4.62）：`valuation_ratio` 改为**企业层面**的比价 `(现价 + 每股净负债) ÷ 每股企业价值`——
+        # 与 现价÷V 在 1 处相同，但对杠杆公司不再把企业价值的估计误差按 EV/V 倍放大到股权（兖矿 2014-19 P/V 0.24~94、
+        # 比亚迪 2012-16 9~226 的根因），等价于「要求的折扣随杠杆同倍放大」；无净负债口径的路径（权益退路、银行）退回 现价÷V。
+        # 企业价值只随送转折算（EV ÷ 送转因子），现金分红不改 EV（V −D，净负债 +D）。`pv_equity` 列保留旧口径供对照。
+        ev_base = band.ev_ps
+        if ev_base is None and band.net_debt_ps is not None and band.value is not None:
+            ev_base = band.value + band.net_debt_ps
+        ev_day = ev_base / factor if (ev_base is not None and ev_base > 0 and factor > 0) else None
+        pv_equity = close / value
+        if PV_BASIS == "ev" and ev_day is not None and ev_day > 0:
+            ratio = (close + (ev_day - value)) / ev_day
+        else:
+            ratio = pv_equity
         out.append({
             "security_code": code,
             "date": date,
@@ -2012,11 +2105,16 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
             "intrinsic_value": f"{value:.4f}",
             "band_low": f"{low:.4f}",
             "band_high": f"{high:.4f}",
-            "valuation_ratio": f"{close / value:.4f}",
+            "valuation_ratio": f"{ratio:.4f}",
             "upside_to_low": f"{low / close - 1:.4f}",
             "valuation_label": valuation_label(close, value),
+            "ev_ps": f"{ev_day:.4f}" if ev_day is not None else "",
+            "pv_equity": f"{pv_equity:.4f}",
         })
     return out
+
+
+PV_BASIS = "equity"   # OI-091：逐日状态 valuation_ratio 的口径（main 按 --pv-basis 设置；ev 为研究口径）
 
 
 # 现金调整把带穿到非正值的 (代码, 日) —— 不该发生，发生即须人工看（§13 第 3 条：不许静默）。
@@ -2099,7 +2197,7 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "v_bear", "v_bull", "valuation_quality_score", "valuation_quality_notes",
                # v4.59 股本口径（§6.5.1，OI-086/OI-087）
                "bps_operating", "external_equity_ps", "external_equity_cum_ps", "shares_est",
-               "bps_basis_date", "equity_anchor_mode", "peak_weight", "growth_trust"]
+               "bps_basis_date", "equity_anchor_mode", "peak_weight", "growth_trust", "trough_weight", "ttm_factor", "growth_damp"]
 
 
 def band_row(band: Band, tier: str) -> dict:
@@ -2150,6 +2248,7 @@ def band_row(band: Band, tier: str) -> dict:
         "shares_est": "" if band.shares_est is None else f"{band.shares_est:.0f}",
         "bps_basis_date": band.bps_basis_date or "", "equity_anchor_mode": band.equity_anchor_mode or "",
         "peak_weight": fmt(band.peak_weight, 3), "growth_trust": fmt(band.growth_trust, 2),
+        "trough_weight": fmt(band.trough_weight, 3), "ttm_factor": fmt(band.ttm_factor, 4), "growth_damp": fmt(band.growth_damp, 4),
     }
 
 
@@ -2389,6 +2488,14 @@ def main() -> int:
     parser.add_argument("--roic-cycle-guard", choices=("efficiency", "peak"), default="efficiency",
                         help="周期守卫的探测器：efficiency=走势单调度<35%%（镜像 DCF 臂）；"
                              "peak=当前比率>K×十年中位（防的是把高位利润外推，锚点实测更准）")
+    parser.add_argument("--ttm-current", choices=("on", "off"), default="on",
+                        help="OI-090（v4.62）：季报期间当期比率 = 年报最新比率 × 归母净利TTM/年报净利、守卫按其重算；off=旧式只动 BPS（缺省 on＝生产）")
+    parser.add_argument("--growth-damp", choices=("on", "off"), default="on",
+                        help="OI-089（v4.62）：增速腿 × min(1, NOPAT_最新/上年) × min(1, TTM 因子)；off=旧式（缺省 on＝生产）")
+    parser.add_argument("--pv-basis", choices=("ev", "equity"), default="equity",
+                        help="研究开关（OI-091 实测否决，回测日志 §12.120）：ev=(现价+每股净负债)÷每股企业价值；equity=现价÷V（缺省＝生产）")
+    parser.add_argument("--thin-equity-max", type=float, default=0.5,
+                        help="OI-091（v4.62）：净负债 ≥ 该比例×企业价值的带判「薄权益·不可估」（rejected，无 P/V）；0=关")
     parser.add_argument("--roic-peak-ramp", type=float, default=0.3, metavar="R",
                         help="OI-088（v4.61）：周期守卫坡道半宽——当期比率/十年中位 在 (K−R, K+R) 之间按比例从不是峰过渡到完全按中位；"
                              "0 = 旧的单点阈值（缺省 0.3＝生产）")
@@ -2436,6 +2543,8 @@ def main() -> int:
     parser.add_argument("--out-bands", type=Path)
     parser.add_argument("--out-daily", type=Path)
     args = parser.parse_args()
+    global PV_BASIS
+    PV_BASIS = getattr(args, "pv_basis", "ev")
     global STATE_EFFECTIVE
     STATE_EFFECTIVE = args.state_effective
     if STATE_EFFECTIVE == "prev_trading_day":

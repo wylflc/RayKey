@@ -25,6 +25,7 @@ from typing import Iterable
 from a_share_quotes import quote_symbol
 from build_a_share_core_valuation_pool import effective_valuation_tier
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
+from pv_ratio import trading_pv  # noqa: E402  v4.62 OI-091：P/V 唯一实现
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -438,14 +439,14 @@ def load_blocked_codes(path: Path) -> set[str] | None:
 #     而前复权序列**锚在最新一根**，故 `--as-of` 为最近交易日时末根收盘即未复权现价，两者同尺度；
 #     **回溯历史日期时该等式不成立**，故本层只在 `--as-of` 为最新交易日时给出买入计划。
 #   * 银行走工作流 §6.5.1 的股利折现口径。
-SEC93_BUY_LINE = 0.9505        # §9.3.1 买入线（v4.61：连续判据纪元对齐解、保留四位小数，用户 2026-08-23 裁定「三线按对齐解」；合格面 17.622%，回测日志 §12.119；v4.60 为 0.9503、v4.34 为 0.9434）
+SEC93_BUY_LINE = 0.9343        # §9.3.1 买入线（v4.62：季度当期化纪元对齐解、保留四位小数，用户裁定「三线按对齐解」；合格面 17.622%，回测日志 §12.120；v4.61 为 0.9505、v4.34 为 0.9434）
 SEC93_MAX_CORR = 0.70          # §9.3.1，252 日日收益率皮尔逊相关上限
 SEC93_SCAN_DEPTH = 40          # §9.3.2 第 3 步：相关性过滤时最多下扫多少名
 SEC93_TRANCHE_PCT = 0.05       # §9.3.1 单次买入比例
 SEC93_LOT = 100                # A 股一手
 SEC93_POSITION_CAP = None      # §9.3.1：v4.04 起**无单票上限**——用户 2026-08-17 裁定退役仓位控制，
                                # 风险改由回撤与年化承担（§12.75）。None = 不设限，判定处直接跳过。
-SEC93_SELL_LINE = 2.5263       # §9.3.1「减持线」，v4.61 连续判据纪元对齐解（上侧面 30.857%；v4.60 为 2.5238、v4.34 为 2.5008）：P/V ≥ 线且收盘 < MA20 → 减一档。
+SEC93_SELL_LINE = 2.4671       # §9.3.1「减持线」，v4.62 季度当期化纪元对齐解（上侧面 30.858%；v4.61 为 2.5263、v4.34 为 2.5008）：P/V ≥ 线且收盘 < MA20 → 减一档。
 SEC93_L3_TACTICAL_GATE = True   # §9.3.1「L3 战术闸门」（v4.53，OI-084 用户裁定①）：L3 且分层表 tactical_thesis 为空或判「无」者不进合格集（新建仓与加仓同）
 SEC93_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 SEC93_TACTICAL_NONE = re.compile(r"^\W*(无|暂无|不可买)")   # 判「无战术理由」的写法
@@ -566,8 +567,15 @@ def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
         close = to_float(row.get("close"))
         row["model_intrinsic_value"] = round(intrinsic, 4) if intrinsic else ""
         row["model_band_source"] = source
-        row["model_pv"] = (round(close / intrinsic, 4)
-                           if close and intrinsic and intrinsic > 0 else "")
+        # v4.62（OI-091）：P/V 走 `pv_ratio.trading_pv`——ROIC 路径为 (现价+每股净负债)÷每股企业价值，其余 现价÷V
+        if close and intrinsic and intrinsic > 0:
+            if source.startswith("模型带") and code in bands:
+                pv_value = trading_pv(close, bands[code])
+            else:
+                pv_value = close / intrinsic
+            row["model_pv"] = round(pv_value, 4) if pv_value is not None else ""
+        else:
+            row["model_pv"] = ""
 
 
 def load_holdings() -> dict[str, float]:

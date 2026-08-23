@@ -275,6 +275,8 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
             r["band_high"] = f"{v*1.1:.4f}"
             r["valuation_ratio"] = f"{px/v:.4f}"
             r["upside_to_low"] = f"{v*0.9/px-1:.4f}"
+            if "pv_equity" in r: r["pv_equity"] = f"{px/v:.4f}"   # v4.62：股利折现无企业价值口径，两列同值
+            if "ev_ps" in r: r["ev_ps"] = ""
             w.writerow(r); n_rewritten += 1; continue
         if PATH_MODE:
             if roe0 is None or roe0 <= 0: n_dropped += 1; continue
@@ -290,6 +292,8 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
             r["band_high"] = f"{v*1.1:.4f}"
             r["valuation_ratio"] = f"{px/v:.4f}"
             r["upside_to_low"] = f"{v*0.9/px-1:.4f}"
+            if "pv_equity" in r: r["pv_equity"] = f"{px/v:.4f}"
+            if "ev_ps" in r: r["ev_ps"] = ""
             w.writerow(r); n_rewritten += 1; continue
         if mode == "pbhist":
             pbs = own_pb(c, d)
@@ -312,6 +316,8 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         r["band_high"] = f"{v*1.1:.4f}"
         r["valuation_ratio"] = f"{px/v:.4f}"
         r["upside_to_low"] = f"{v*0.9/px-1:.4f}"
+        if "pv_equity" in r: r["pv_equity"] = f"{px/v:.4f}"
+        if "ev_ps" in r: r["ev_ps"] = ""
         w.writerow(r); n_rewritten += 1
 print(f"银行行重写 {n_rewritten:,}｜丢弃 {n_dropped:,}｜非银行原样保留 {n_kept:,}")
 if pb_star:

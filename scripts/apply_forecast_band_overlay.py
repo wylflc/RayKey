@@ -130,6 +130,15 @@ def exright_normalize(band: dict, code_actions: list[dict], as_of: str) -> tuple
     old_iv = num(band.get("intrinsic_value")) or 0.0
     band["intrinsic_value"], band["band_low"], band["band_high"] = (
         f"{iv:.4f}", f"{lo:.4f}", f"{hi:.4f}")
+    # v4.62（OI-091）：企业价值只随送转折算（现金分红不改 EV），净负债 = EV − V 随之重算，供 `pv_ratio.trading_pv` 用
+    ev_raw = num(band.get("ev_ps"))
+    nd_raw = num(band.get("net_debt_ps"))
+    if ev_raw is None and nd_raw is not None:
+        ev_raw = old_iv + nd_raw
+    if ev_raw is not None:
+        ev_adj = ev_raw / factor
+        band["ev_ps"] = f"{ev_adj:.4f}"
+        band["net_debt_ps"] = f"{ev_adj - iv:.4f}"
     band["exright_factor"] = f"{factor:.6f}"
     band["exright_cash"] = f"{cash_cum:.4f}"
     band["exright_note"] = f"除权归一化至 {as_of} 现价口径：{'；'.join(hits)}"

@@ -48,6 +48,7 @@ from a_share_quotes import fetch_spot_quotes
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
 from screen_daily_volume_price_signals import SEC93_GAIN_SELL, SEC93_SELL_LINE, get_json, infer_secid
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
+from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
@@ -59,6 +60,7 @@ DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 # v4.04 参数表改 2.5548 时没跟上（本文件漂移到 2026-08-19 才被发现，v4.20 修）。
 # 注意：§9.3.1 的减持是 `P/V ≥ 线 **且收盘 < MA20**`，本脚本不算均线，只报前半个条件。
 SELL_LINE = SEC93_SELL_LINE
+MODEL_BANDS = load_model_bands()   # v4.62 OI-091：P/V 的净负债/企业价值来自生产带行
 # §9.3.1 涨幅减持（v4.44）：收盘较持仓均价（`cost_basis`，按 §11.4 折算）涨幅 ≥ 125% 且收盘 < MA20 → 减一档；
 # 资金不足时优先作换仓卖出源。与 P/V 减持同型：本脚本只报前半个条件（涨幅），MA20 见扫描器输出。
 GAIN_SELL = SEC93_GAIN_SELL
@@ -289,10 +291,14 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
             tier, upside = effective_tier(close, low, high)
 
         # §9.3 唯一判据（v2.56）：V 取带中值；带缺失则 pv 留空，该票当日不进任何机械判定。
+        # v4.62（OI-091）：有生产带行时按 `pv_ratio.trading_pv`（ROIC 路径为 (现价+净负债)÷EV），否则退回 现价÷中值。
         pv = None
         if close is not None and low is not None and high is not None:
             mid = (low + high) / 2
-            if mid > 0:
+            band_row = MODEL_BANDS.get(str(code).zfill(6)) if MODEL_BANDS else None
+            if band_row is not None:
+                pv = trading_pv(close, band_row)
+            if pv is None and mid > 0:
                 pv = close / mid
 
         notes: list[str] = []

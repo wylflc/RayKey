@@ -25,6 +25,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+from pv_ratio import pv_formula_note, trading_pv  # noqa: E402  v4.62 OI-091
 from apply_model_bands_to_dossiers import latest_model_bands  # noqa: E402
 
 DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
@@ -178,9 +179,19 @@ def implied_lead(row: dict, meta: dict, band: dict | None) -> tuple[str, bool]:
     manual = (row.get("band_derivation") or "").strip() == "manual_override"
     band_name = "人工覆盖带" if manual else "生产带"
     if price:
-        pv = price / mid
-        text = (f"现价 {price:g}（{as_of}）÷ {band_name}中值 V {mid:.2f} = **{pv:.3f}**"
-                f"（带 {low:.2f}~{high:.2f}，档位{meta.get('valuation_tier') or '—'}）。")
+        # v4.62（OI-091）：P/V 按 `pv_ratio.trading_pv`；ROIC 路径写明 (现价+净负债)÷EV，其余 现价÷V
+        pv = trading_pv(price, band) if band is not None else None
+        if pv is None:
+            pv = price / mid
+        formula = pv_formula_note(band) if band is not None else "现价÷V"
+        if formula.startswith("(现价"):
+            nd = _num(band.get("net_debt_ps")) or 0.0
+            ev = _num(band.get("ev_ps")) or (mid + nd)
+            text = (f"现价 {price:g}（{as_of}）对 {band_name}中值 V {mid:.2f}：`P/V` = (现价 + 每股净负债 {nd:.2f}) ÷ 每股企业价值 {ev:.2f} = **{pv:.3f}**"
+                    f"（现价÷V = {price / mid:.3f}；带 {low:.2f}~{high:.2f}，档位{meta.get('valuation_tier') or '—'}）。")
+        else:
+            text = (f"现价 {price:g}（{as_of}）÷ {band_name}中值 V {mid:.2f} = **{pv:.3f}**"
+                    f"（带 {low:.2f}~{high:.2f}，档位{meta.get('valuation_tier') or '—'}）。")
     else:
         pv = None
         text = (f"{band_name} {low:.2f}~{high:.2f}（中值 V {mid:.2f}）；本档当前不在核心池估值表内，"
