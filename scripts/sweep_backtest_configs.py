@@ -108,7 +108,7 @@ BASE = (
     # **v4.44（用户 2026-08-22 裁定）**：授信比例保持 60%、**不设金额上限**（`--credit-cap` 给极大数）；
     # 同日采纳**涨幅减持** `--gain-sell 1.25 --gain-sell-mode gated`（收盘 ≥ 持仓均价×2.25 且收 < MA20 → 减一档，
     # 并优先作换仓卖出源；§12.110/§12.113）。生产落点 SEC93_GAIN_SELL（扫描器常量）＋ track_holdings_daily 提示。
-    "--capital 3000000 --credit-ratio 0.6 --credit-cap 999999999999 "
+    "--capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 "
     "--maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay "
     "--gain-sell 1.25 --gain-sell-mode gated "
     # **v4.61 三线 = 连续判据纪元对齐解 0.9505/2.5263/0.1462**（用户 2026-08-23 裁定「三线按对齐解」，回测日志 §12.119；

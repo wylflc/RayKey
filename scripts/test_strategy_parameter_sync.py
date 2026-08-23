@@ -38,7 +38,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(float(option_value(args, "--gain-sell")), daily_scan.SEC93_GAIN_SELL)
         self.assertEqual(option_value(args, "--gain-sell-mode"), "gated")
         self.assertEqual(track_holdings_daily.GAIN_SELL, daily_scan.SEC93_GAIN_SELL)
-        self.assertEqual(float(option_value(args, "--credit-ratio")), 0.6)
+        self.assertEqual(float(option_value(args, "--credit-ratio")), 0.666)
         self.assertGreaterEqual(float(option_value(args, "--credit-cap")), 1e11)   # 不设金额上限
         self.assertEqual(option_value(args, "--swap-trigger"), "power")
         self.assertEqual(option_value(args, "--credit-over-limit"), "repay")
@@ -53,7 +53,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn(f"| 买入线 | `P/V ≤ {daily_scan.SEC93_BUY_LINE:.4f}` |", workflow)
         self.assertIn(f"| 减持 | `P/V ≥ {daily_scan.SEC93_SELL_LINE:.4f}` 且", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)
-        self.assertIn("授信 = 净资产 × 60%，不设金额上限", workflow)
+        self.assertIn("授信 = 净资产 × 66.6%，不设金额上限", workflow)
         self.assertIn(f"| 单票机械上限 | 单票市值 ÷ 当日净资产 `N` ≥ {daily_scan.SEC93_POSITION_CAP:.0%} 时不再加仓", workflow)
         self.assertTrue(daily_scan.SEC93_L3_TACTICAL_GATE)
         self.assertIn("| L3 战术闸门 | `quality_tier = L3` 且分层表 `tactical_thesis` 为空或判「无／暂无／不可买」者不进合格集", workflow)
