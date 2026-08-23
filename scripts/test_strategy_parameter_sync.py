@@ -42,6 +42,9 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertGreaterEqual(float(option_value(args, "--credit-cap")), 1e11)   # 不设金额上限
         self.assertEqual(option_value(args, "--swap-trigger"), "power")
         self.assertEqual(option_value(args, "--credit-over-limit"), "repay")
+        # v4.64：单票机械上限 60%（只挡加仓），生产常量与回测 BASE 同值
+        self.assertEqual(daily_scan.SEC93_POSITION_CAP, 0.60)
+        self.assertEqual(float(option_value(args, "--position-cap")), daily_scan.SEC93_POSITION_CAP)
 
     def test_workflow_current_table_matches_production(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
@@ -51,6 +54,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn(f"| 减持 | `P/V ≥ {daily_scan.SEC93_SELL_LINE:.4f}` 且", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)
         self.assertIn("授信 = 净资产 × 60%，不设金额上限", workflow)
+        self.assertIn(f"| 单票机械上限 | 单票市值 ÷ 当日净资产 `N` ≥ {daily_scan.SEC93_POSITION_CAP:.0%} 时不再加仓", workflow)
         self.assertTrue(daily_scan.SEC93_L3_TACTICAL_GATE)
         self.assertIn("| L3 战术闸门 | `quality_tier = L3` 且分层表 `tactical_thesis` 为空或判「无／暂无／不可买」者不进合格集", workflow)
 

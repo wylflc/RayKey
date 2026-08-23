@@ -444,8 +444,10 @@ SEC93_MAX_CORR = 0.70          # §9.3.1，252 日日收益率皮尔逊相关上
 SEC93_SCAN_DEPTH = 40          # §9.3.2 第 3 步：相关性过滤时最多下扫多少名
 SEC93_TRANCHE_PCT = 0.05       # §9.3.1 单次买入比例
 SEC93_LOT = 100                # A 股一手
-SEC93_POSITION_CAP = None      # §9.3.1：v4.04 起**无单票上限**——用户 2026-08-17 裁定退役仓位控制，
-                               # 风险改由回撤与年化承担（§12.75）。None = 不设限，判定处直接跳过。
+SEC93_POSITION_CAP = 0.60      # §9.3.1「单票机械上限」（v4.64，用户 2026-08-23 裁定 60%；回测日志 §12.123）：
+                               # 持仓市值 ÷ 当日净资产 N ≥ 60% 不再加仓，不足时本档只补到 60%（可小于一档、按手向下取整）；
+                               # **只挡加仓、不触发任何卖出**，上涨越限不回削；新建仓与换仓目标（必为未持仓票）不受影响。
+                               # None = 不设限（v4.04~v4.63 旧口径，§12.75）。与回测 `--position-cap` 同语义。
 SEC93_SELL_LINE = 2.4671       # §9.3.1「减持线」，v4.62 季度当期化纪元对齐解（上侧面 30.858%；v4.61 为 2.5263、v4.34 为 2.5008）：P/V ≥ 线且收盘 < MA20 → 减一档。
 SEC93_L3_TACTICAL_GATE = True   # §9.3.1「L3 战术闸门」（v4.53，OI-084 用户裁定①）：L3 且分层表 tactical_thesis 为空或判「无」者不进合格集（新建仓与加仓同）
 SEC93_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
@@ -603,8 +605,8 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
 
     **两条与持仓有关的规则（v3.01/v3.02，OI-058／OI-059）**：
     - **走势条件分新旧**：新建仓须 `收盘 > MA20 > MA60`；**已有持仓的加仓只须 `MA20 > MA60`**。
-    - **单票上限**：买入后该票市值 ÷ N 超过 `SEC93_POSITION_CAP` 即跳过、顺位补下一名；
-      **只挡加仓，已有持仓因上涨越限不回削**。
+    - **单票上限**（v4.64 = 60%）：现持仓市值 ÷ N ≥ 上限即跳过、顺位补下一名；不足时本档只补到上限；
+      **只挡加仓，不触发卖出，已有持仓因上涨越限不回削**。
     `holdings` 为空时两条都退化为原口径，故调用方须把「读到几只持仓」打出来。
     """
     holdings = holdings or {}
@@ -684,16 +686,30 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             continue
         code = str(cand["security_code"]).zfill(6)
         lot_amount = price * SEC93_LOT
-        lots = int(tranche // lot_amount) if lot_amount <= tranche else 1
-        cooldown = 0 if lot_amount <= tranche else round(lot_amount / tranche) - 1
-        amount = lots * lot_amount
-        if lots <= 0 or amount > cash:
-            continue
-        # 单票上限：**按「买入后」的市值判**，与回测 `--position-cap` 逐字同义。
+        if lot_amount <= tranche:
+            budget, cooldown = tranche, 0
+        else:                                   # 高价股：一档买不起一手 → 买一手、比例冷却（§9.3.3）
+            budget, cooldown = lot_amount, round(lot_amount / tranche) - 1
+        # **可用资金不足一档 → 买到用尽**（v4.64 对齐回测 `amount = min(一档, 可用资金)`；此前扫描器
+        # 遇「一档 > 可用」整笔跳过，与回测不同步——按 §9.3.1「资金用尽即停」与 §9.3.1.2 同步原则改正）。
+        budget = min(budget, cash)
+        # 单票上限（v4.64）：与回测 `--position-cap` 同语义——`room = N × 上限 − 现持仓市值`，
+        # room ≤ 0 跳过；room 不足一档时本档只补到上限。**只挡加仓**：已有持仓因上涨越限不回削；
+        # 新建仓 held_value = 0、一档 5% 远低于上限，不受影响。
         held_value = holdings.get(code, 0.0) * price
-        if SEC93_POSITION_CAP and nav > 0 and (held_value + amount) / nav > SEC93_POSITION_CAP:
-            capped.append((cand, held_value / nav))
+        room = None
+        if SEC93_POSITION_CAP and nav > 0:
+            room = nav * SEC93_POSITION_CAP - held_value
+            if room <= 0:
+                capped.append((cand, held_value / nav))
+                continue
+            budget = min(budget, room)
+        lots = int(budget // lot_amount)          # 按一手向下取整，不为迁就整手提高档位（§9.3.1.1）
+        if lots <= 0:
+            if room is not None and room < lot_amount:
+                capped.append((cand, held_value / nav))
             continue
+        amount = lots * lot_amount
         cash -= amount
         plan.append({
             "trade_date": "",   # 由 report_section97 统一填信号日（OI-065：无日期列则文件无法自证时点）
@@ -753,12 +769,12 @@ def report_section97(result: dict[str, object], nav: float, out_path: Path,
         print("  ⚠ **没读到任何持仓**（data/processed/a_share_holdings.csv 缺失或为空）"
               "——加仓放宽会退回旧口径，买入计划不可直接照做")
     else:
-        cap_txt = f"单票上限 {SEC93_POSITION_CAP:.0%}（只挡加仓、不强制减持）" if SEC93_POSITION_CAP else "单票无上限（v4.04 退役）"
+        cap_txt = f"单票上限 {SEC93_POSITION_CAP:.0%}（只挡加仓、不触发卖出；v4.64）" if SEC93_POSITION_CAP else "单票无上限"
         print(f"  持仓 {result['n_held']} 只已载入｜{cap_txt}")
     for cand, w in result["capped"]:
         print(f"  [单票上限挡下] {cand.get('security_name','')} "
-              f"P/V {cand['model_pv']:.2f}｜现持仓已占净资产 {w:.1%}，再买一档将越过 "
-              f"{SEC93_POSITION_CAP:.0%}")
+              f"P/V {cand['model_pv']:.2f}｜现持仓已占净资产 {w:.1%}，已达/不足一手可补至 "
+              f"{SEC93_POSITION_CAP:.0%} 上限，不加仓")
     if result["funds_given"]:
         print(f"  一档 {result['tranche'] / 1e4:,.2f} 万｜**可用资金 {float(result['funds0']) / 1e4:,.2f} 万**"
               f"（现金＋未用授信）→ 投入 {invested / 1e4:,.2f} 万（占净资产 {invested / nav * 100:.1f}%）"
