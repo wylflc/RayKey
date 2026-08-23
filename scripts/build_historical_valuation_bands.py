@@ -1115,6 +1115,9 @@ class Band:
     shares_est: float | None = None           # 当期股数估计（股）
     bps_basis_date: str = ""                  # 本行 BPS 的股本基准日（报告期末或公告日）；逐日展开与除权归一化的送转窗口自此起算
     equity_anchor_mode: str = ""              # annual_row／shares_ref／shares_eps／no_ref_row／…（退化原因）
+    # ---- OI-088（v4.61）：两道判据的连续权重，只读列 ----
+    peak_weight: float = 0.0                  # 周期守卫坡道权重 w∈[0,1]：比率锚 = (1−w)×非周期锚 + w×窗口中位；增速腿 ×(1−w)
+    growth_trust: float = 0.0                 # 增长态信任度 λ∈{0,½,1}：非周期锚 = 三年中位 + λ×(当期 − 三年中位)
 
 
 def _cv(values: list[float]) -> float | None:
@@ -1492,12 +1495,25 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 long_ratios = [y.nopat / (e_op(y) + (y.treasury_shares if anchor_mode == "per_share" else 0.0))
                                for y in sorted(long_hist, key=lambda x: x.period)
                                if y.nopat is not None and e_op(y) is not None]
-                nopat_cyclical = (len(long_ratios) >= 4 and long_ratios[-1] > 0
-                                  and long_ratios[-1] > args.roic_peak_k
-                                  * statistics.median(long_ratios))
+                peak_s = None
+                if len(long_ratios) >= 4 and long_ratios[-1] > 0 and statistics.median(long_ratios) > 0:
+                    peak_s = long_ratios[-1] / statistics.median(long_ratios)
+                # OI-088（v4.61）：守卫由硬阈值改为**线性坡道**——`当期比率/十年中位` 在 (K−ramp, K+ramp) 之间按比例
+                # 从「不是峰」过渡到「完全按中位」；ramp=0 即旧的单点阈值。K 仍为 --roic-peak-k（1.6）。
+                ramp = getattr(args, "roic_peak_ramp", 0.3)
+                if peak_s is None:
+                    peak_w = 0.0
+                elif ramp <= 0:
+                    peak_w = 1.0 if peak_s > args.roic_peak_k else 0.0
+                else:
+                    peak_w = min(1.0, max(0.0, (peak_s - (args.roic_peak_k - ramp)) / (2 * ramp)))
+                nopat_cyclical = peak_w >= 0.5
             else:
                 nopat_cyclical = len(ratios) >= 3 and trend_efficiency(ratios) < 0.35
+                peak_w = 1.0 if nopat_cyclical else 0.0
+            band.peak_weight = peak_w
             ratio0 = statistics.median(ratios)
+            ratio_cyc = ratio0                         # 周期态锚：窗口内比率中位
             band.roic_nopat_mode = "median"
             # **单边口径**（v2，镜像 §6.5.2.1 v2.90 的 `onesided_max λ`）：当期比率高于中位时
             # `ratio0 = 中位 + λ×(当期 − 中位)`——保留低谷保护（低于中位仍用中位），去掉高位惩罚。
@@ -1509,7 +1525,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 if current > ratio0:
                     ratio0 = ratio0 + args.roe_lift * (current - ratio0)
                     band.roic_nopat_mode = "onesided"
-            elif nopat_src in ("conditional", "conditional3") and not nopat_cyclical:
+            elif nopat_src in ("conditional", "conditional3"):
                 # 分型锚（§12.72）：增长态 → 采信当期（§12.36.2 已证「上行时采信当期」是正确方向、
                 # 缩短窗口整体是反的）；非增长态（波动/下行）→ conditional 用五年中位、conditional3 用三年中位。
                 # 周期守卫命中的仍然只吃中位——顶部外推的保护优先于分型。
@@ -1519,30 +1535,46 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 #   而多数真成长股都有这样的年份。
                 # * soft：近三期里**两次上行**（含末期上行）且**当期高于窗口中位**。放宽的是
                 #   「单调」这一条，没有放宽「当期确实更高」——后者才是采信当期的前提。
+                # * graded（OI-088，v4.61 缺省）：近两次变动里上行的次数 ÷ 2 = 采信当期的**信任度 λ**∈{0, ½, 1}，
+                #   锚 = 三年中位 + λ×(当期 − 三年中位)；两次都上行 = 旧 ttm_growth，都不上行 = 旧 median3，一升一降取中。
                 rising = 0
                 if len(ratios) >= 3:
                     rising = sum(1 for i in (-1, -2) if ratios[i] > ratios[i - 1])
-                if getattr(args, "roic_cond_detect", "strict") == "soft":
-                    is_growth = (len(ratios) >= 3 and rising >= 2
-                                 and ratios[-1] > ratios[-2]
-                                 and ratios[-1] > statistics.median(ratios))
+                detect = getattr(args, "roic_cond_detect", "graded")
+                if detect == "soft":
+                    trust = 1.0 if (len(ratios) >= 3 and rising >= 2 and ratios[-1] > ratios[-2]
+                                    and ratios[-1] > statistics.median(ratios)) else 0.0
+                elif detect == "graded":
+                    trust = rising / 2.0 if len(ratios) >= 3 else 0.0
                 else:
-                    is_growth = len(ratios) >= 3 and ratios[-1] > ratios[-2] > ratios[-3]
+                    trust = 1.0 if (len(ratios) >= 3 and ratios[-1] > ratios[-2] > ratios[-3]) else 0.0
                 # OI-073 ②（研究开关）：单调判据对幅度不敏感（0.10→0.101→0.102 与 0.10→0.15→0.22 同判），
                 # 加最小幅度条件「当期 > X × 窗口中位」，不满足退回非增长态口径。
                 min_ratio = getattr(args, "roic_growth_min_ratio", 0.0)
-                if is_growth and min_ratio and ratios[-1] <= min_ratio * statistics.median(ratios):
-                    is_growth = False
+                if trust > 0 and min_ratio and ratios[-1] <= min_ratio * statistics.median(ratios):
+                    trust = 0.0
                     ROIC_STATS["增长态·幅度不足退非增长口径"] += 1
-                if is_growth:
-                    ratio0 = ratios[-1]
+                band.growth_trust = trust
+                if nopat_src == "conditional3" and len(ratios) >= 3:
+                    base3 = statistics.median(ratios[-3:])
+                    ratio_noncyc = base3 + trust * (ratios[-1] - base3)
+                elif len(ratios) >= 3:
+                    ratio_noncyc = statistics.median(ratios) + trust * (ratios[-1] - statistics.median(ratios))
+                else:
+                    ratio_noncyc = ratio0
+                # 峰值坡道：在非周期锚与周期锚（窗口中位）之间按 peak_w 线性混合（w=0／1 即旧的两个分支）
+                ratio0 = (1.0 - peak_w) * ratio_noncyc + peak_w * ratio_cyc
+                if peak_w >= 1.0:
+                    band.roic_nopat_mode = "cyclical_median"
+                elif peak_w <= 0.0 and trust >= 1.0:
                     band.roic_nopat_mode = "ttm_growth"
-                elif nopat_src == "conditional3" and len(ratios) >= 3:
-                    ratio0 = statistics.median(ratios[-3:])
+                elif peak_w <= 0.0 and trust <= 0.0:
                     band.roic_nopat_mode = "median3"
+                else:
+                    band.roic_nopat_mode = f"blend(λ={trust:.1f},w={peak_w:.2f})"
+                    ROIC_STATS["OI-088 坡道/分级混合锚"] += 1
             if nopat_cyclical:
-                band.roic_nopat_mode = "cyclical_median"
-                ROIC_STATS["NOPAT 周期守卫·按中位"] += 1
+                ROIC_STATS["NOPAT 周期守卫·按中位（w≥0.5）"] += 1
             # §6.5.1 第 1/3 条（v4.59，OI-086）：分子锚乘**经营账面** `BPS_op = BPS − x − X_cum/股数`，
             # 最新年报之后的外生权益 x 按面值进每股净现金；年报已计入的累计外生权益 X_cum 的现金已在
             # 年报超额现金里（按经营账面同比例缩放），不另加。增发与回购注销同式、符号相反。
@@ -1624,11 +1656,11 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 # 资金驱动的利润增长在净再投资≈0 时照样发生（茅台 2018 RR=−16.6% 而利润
                 # 五年翻倍）。利润增速本身是它的直接观测，乘 `--roic-trail-weight` 衰减。
                 # **周期股守卫同样作用于这条腿**（利润顶的高增速不外推）。
+                # OI-088（v4.61）：增速腿按峰值坡道连续折减 ×(1 − peak_w)，不再在阈值处整条切断
                 g_trail = None
-                if not nopat_cyclical:
-                    cagr = roic_inputs.trailing_nopat_cagr(history)
-                    if cagr is not None and cagr > 0:
-                        g_trail = cagr * args.roic_trail_weight
+                cagr = roic_inputs.trailing_nopat_cagr(history)
+                if cagr is not None and cagr > 0 and (1.0 - band.peak_weight) > 0:
+                    g_trail = cagr * args.roic_trail_weight * (1.0 - band.peak_weight)
                 candidates = [g for g in (g_capital, g_trail) if g is not None]
                 g0_raw = max(candidates) if candidates else 0.0
                 band.roic_g_source = ("trailing" if g_trail is not None
@@ -1677,7 +1709,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                    and g_trail is not None else None)
             band.valuation_quality_score, band.valuation_quality_notes = quality_score(
                 len(history), _cv([v for v in yearly if v is not None]), res.terminal_share,
-                "growth_guarded" if nopat_cyclical else "growth", gap, legs)
+                "growth_guarded" if band.peak_weight >= 0.5 else "growth", gap, legs)
             band.min_payout = res.min_payout
             if band.mos is not None:
                 band.max_buy_price = margin_of_safety(value, band.mos)
@@ -2067,7 +2099,7 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "v_bear", "v_bull", "valuation_quality_score", "valuation_quality_notes",
                # v4.59 股本口径（§6.5.1，OI-086/OI-087）
                "bps_operating", "external_equity_ps", "external_equity_cum_ps", "shares_est",
-               "bps_basis_date", "equity_anchor_mode"]
+               "bps_basis_date", "equity_anchor_mode", "peak_weight", "growth_trust"]
 
 
 def band_row(band: Band, tier: str) -> dict:
@@ -2117,6 +2149,7 @@ def band_row(band: Band, tier: str) -> dict:
         "external_equity_cum_ps": fmt(band.external_equity_cum_ps),
         "shares_est": "" if band.shares_est is None else f"{band.shares_est:.0f}",
         "bps_basis_date": band.bps_basis_date or "", "equity_anchor_mode": band.equity_anchor_mode or "",
+        "peak_weight": fmt(band.peak_weight, 3), "growth_trust": fmt(band.growth_trust, 2),
     }
 
 
@@ -2344,9 +2377,10 @@ def main() -> int:
                              "conditional=分型锚（§12.72，用户 2026-08-17 思路）——近三年比率单调上行"
                              "（增长态）且未触发周期守卫时**采信当期**，否则五年中位；"
                              "conditional3=同上但非增长态用**三年**中位。两档都建议配 --roic-cycle-guard peak")
-    parser.add_argument("--roic-cond-detect", choices=("strict", "soft"), default="strict",
-                        help="conditional/conditional3 的增长态判别：strict=近三期严格单调上行；"
-                             "soft=近三期两次上行且当期高于窗口中位（放宽单调，不放宽「当期更高」）")
+    parser.add_argument("--roic-cond-detect", choices=("strict", "soft", "graded"), default="graded",
+                        help="conditional/conditional3 的增长态判别：graded（OI-088，v4.61 缺省）=近两次变动中上行次数÷2 为信任度 λ，"
+                             "锚=三年中位+λ×(当期−三年中位)；strict=近三期严格单调上行才采信当期（v4.60 前）；"
+                             "soft=近三期两次上行且当期高于窗口中位")
     parser.add_argument("--roic-growth", choices=("capital", "hybrid"), default="capital",
                         help="g 的口径：capital=增量ROIC×再投资率（v1，资本驱动）；hybrid=与利润"
                              "增速两条腿取大（资本自由的增长不再被判 0），周期股只走资本腿")
@@ -2355,6 +2389,9 @@ def main() -> int:
     parser.add_argument("--roic-cycle-guard", choices=("efficiency", "peak"), default="efficiency",
                         help="周期守卫的探测器：efficiency=走势单调度<35%%（镜像 DCF 臂）；"
                              "peak=当前比率>K×十年中位（防的是把高位利润外推，锚点实测更准）")
+    parser.add_argument("--roic-peak-ramp", type=float, default=0.3, metavar="R",
+                        help="OI-088（v4.61）：周期守卫坡道半宽——当期比率/十年中位 在 (K−R, K+R) 之间按比例从不是峰过渡到完全按中位；"
+                             "0 = 旧的单点阈值（缺省 0.3＝生产）")
     parser.add_argument("--roic-peak-k", type=float, default=1.6, metavar="K",
                         help="peak 守卫的倍数阈值，缺省 1.6")
     parser.add_argument("--dcf-peak-guard", type=float, default=0.0, metavar="K",
