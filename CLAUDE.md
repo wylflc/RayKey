@@ -14,6 +14,7 @@ Treat the latest user request and committed project docs as the source of truth 
 ## Working Rules
 
 - Read the relevant files before editing — especially `README.md`, `CONTEXT.md`, existing ADRs, and nearby code.
+- **`docs/000_Ashare_workflow.md` is execution-only（用户多次强调）**: write only what to do — commands, thresholds, procedures, file paths. Never add rationale/motivation（"因为/否则/这保证"）, judgment cases（判例）, version/date/ruling provenance（"（v4.xx，用户 YYYY-MM-DD 裁定）"）, superseded-behavior comparisons（"v4.xx 前…已对齐"）, rejected alternatives, or measured snapshots. That content goes to the changelog, backtest log, open-issues register, or decision log instead. Before committing any edit to that file, grep the added lines for 判例／裁定／指令／此前／旧口径／已于／实测／v4. and strip every hit.
 - Keep changes scoped to the request and match the repository's existing style.
 - Do not add dependencies, data providers, databases, schedulers, or external services unless the request clearly needs them.
 - `docs/xzy/` holds another person's investment-system materials. Do not use or reference it in analysis unless the user explicitly cites it.
