@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.60
+# A股选股-估值-量价操作流程 v4.61
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -261,7 +261,7 @@ L4 不是 L3 的下一档连续刻度：L3 是弱护城河、仍在 `worth_atten
 
 生产估值只有一个入口（§6.7 建带命令），但按输入可得性与企业性质分四条成文路径，带文件 `roic_path` 列逐行自证——**equity_fallback 覆盖约四分之一的池子（2026-08-19 快照 65/278），不是边缘例外**，读跨票比较结论时须先看该列：
 
-1. **growth（主路径：非金融且三大报表 ≥3 个财年）**——ROIC/FCFF 内在价值：NOPAT、投入资本、增量 ROIC（五年窗首尾 `ΔNOPAT/ΔIC`）、再投资率、WACC、增长衰减和净负债共同生成每股价值；`g0` 取资本腿 `min(增量 ROIC, 40%) × 再投资率` 与利润增速腿（NOPAT 五年 CAGR）之**大者**、夹 `[0, 25%]`，带文件 `roic_g_source` 列标明实际来源（生产池多数 growth 带由增速腿给出，不得一律写成「增量 ROIC × 再投资率」，OI-069/OI-076 判例）；终值 `ROIC_T = min(WACC + 2pp, ROIC0)`。增量 ROIC／税率的稳健化口径（多窗口、全对中位、回归、多年中位税率）已于 v4.31 按 §12.1 实测全部不采纳，只留研究开关（回测日志 §12.99/§12.100）。
+1. **growth（主路径：非金融且三大报表 ≥3 个财年）**——ROIC/FCFF 内在价值：NOPAT、投入资本、增量 ROIC（五年窗首尾 `ΔNOPAT/ΔIC`）、再投资率、WACC、增长衰减和净负债共同生成每股价值；`g0` 取资本腿 `min(增量 ROIC, 40%) × 再投资率` 与利润增速腿（NOPAT 五年 CAGR）之**大者**、夹 `[0, 25%]`，带文件 `roic_g_source` 列标明实际来源（生产池多数 growth 带由增速腿给出，不得一律写成「增量 ROIC × 再投资率」，OI-069/OI-076 判例）；终值 `ROIC_T = min(WACC + 2pp, ROIC0)`。**每股 NOPAT 的归一化比率 `ratio0`（v4.61，OI-088，两道判据都是连续权重、不再是硬阈值）**：①**增长态信任度** `λ = 近两次年度变动中上行的次数 ÷ 2 ∈ {0, ½, 1}`，非周期锚 `= 三年比率中位 + λ × (当期比率 − 三年中位)`（两次都上行即采信当期，都不上行即三年中位，一升一降取中）；②**周期守卫坡道** `w = clip((当期比率 ÷ 十年中位 − 1.3) ÷ 0.6, 0, 1)`（中心仍是实测过的 K=1.6、半宽 0.3；十年中位 ≤ 0 时 w = 0），`ratio0 = (1−w) × 非周期锚 + w × 五年比率中位`，利润增速腿 `× (1−w)`；带文件 `peak_weight`／`growth_trust` 两列留痕，`roic_nopat_mode` 在两端仍记 `ttm_growth`／`median3`／`cyclical_median`、中间记 `blend(λ,w)`。判例：紫金矿业 2025 年报 `当期/十年中位` 1.63 在旧阈值下整条切到中位（V 41.5→26.0），坡道下 w=0.55 得 33.3；比亚迪 2025 年报利润回落 20% 而旧式 V +136%（守卫释放＋增速腿整条重启），分级后 +84%（增速腿的峰后重启另见 OI-089）。增量 ROIC／税率的稳健化口径（多窗口、全对中位、回归、多年中位税率）已于 v4.31 按 §12.1 实测全部不采纳，只留研究开关（回测日志 §12.99/§12.100）。
 2. **zero_growth**——`ROIC0` 距 `g_T` 不足利差护栏时退零增长锚：`V = 每股NOPAT ÷ WACC − 每股净负债`。
 3. **equity_fallback（非银行金融企业；无三大报表者）**——同一折现引擎喂权益口径：`roe0 = 归一化ROE + 2×(TTM − 归一化ROE)`（仅当期高于归一化时上抬，onesided_max λ=2）、`eps0 = roe0 × BPS_op`（清洁盈余；`BPS_op` 与外生权益见下文股本口径段）、`g0 = roe0 × (1 − 近三年派息率)` 夹 `[0, 25%]`、`ROE_T = min(12%, roe0)`。
 4. **bank_divspread（银行与保险）**——`V = 近12个月每股现金分红 ÷（十年期国债收益率 + 2%）`；分红滚动窗口按除权日逐日重算（只回看），天然现价口径，故除权归一化对银行/保险行跳过（§6.5.2.3）。**保险自 v4.56 起照搬银行口径**（OI-085 用户裁定①；A 股上市保险名单与银行名称判定统一在 `scripts/divspread_names.py`，中国平安按代码进入、不按「平安」字样匹配）。
@@ -344,6 +344,7 @@ python3 scripts/fetch_ohlcv_history.py --as-of YYYY-MM-DD --actions-only   # 缺
 python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 --since 2002-01-01 \
   --roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak \
+  --roic-cond-detect graded --roic-peak-ramp 0.3 \
   --out-bands data/processed/roic_bands.csv \
   --out-daily data/processed/roic_daily_raw.csv
 
