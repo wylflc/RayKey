@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.66
+# A股选股-估值-量价操作流程 v4.67
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -51,7 +51,7 @@
 | 核心估值池 | `data/processed/a_share_core_valuation_pool.csv` |
 | 核心池阅读版 | `data/processed/000_a_share_core_valuation_pool.md` |
 | 持仓 | `data/processed/a_share_holdings.csv` |
-| 账户快照与授信台账 | `data/processed/portfolio_account_snapshot.csv`；授信额度按 §10.2 比例口径计算，`credit_line_cny` 列只记录券商实际授信作对照 |
+| 账户快照 | `data/processed/portfolio_account_snapshot.csv`；授信额度按 §10.2 比例口径计算（`credit_line_cny` 列已退役，仅存历史数据） |
 | 每日买入计划 | `data/processed/daily_entry_plan.csv` |
 | 每日持仓跟踪 | `data/processed/daily_holdings_tracking.csv` |
 | 每日阅读日志 | `data/processed/000_daily_scan_log.md` |
