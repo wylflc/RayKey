@@ -1005,7 +1005,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         tier_sell_scale: dict[str, float] | None = None,
         exright_stop: str = "adjust", addon_max_gain: float = 0.0,
         gain_sell: float = 0.0, gain_sell_mode: str = "gated",
-        swap_trigger: str = "power", credit_over_limit: str = "repay") -> dict:
+        swap_trigger: str = "power", credit_over_limit: str = "repay",
+        candidate_log=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
     `tier_buy_scale`／`tier_sell_scale`（研究开关，§12.95「护城河放到决策层」）：按档位给买入线／
@@ -1634,6 +1635,21 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     return True                      # 已持仓：只看均线排列，不看价格位置
                 return r[1] > ma[trend_ma[0]] * k
             eligible = [r for r in eligible if _trend_ok(r)]
+        if candidate_log is not None:
+            # 研究开关（`--candidate-log`，2026-08-23 集中度核对）：记下当日合格集前十的排序，供
+            # 「rank 1 vs rank 2~5 前向收益」事件研究。**按严格判据**（收盘>MA20>MA60）记，
+            # 不沿用持仓加仓的 ma-only 放宽，使记录与组合路径无关；相关性过滤在其后、也不进记录。
+            _k = 1.0 - trend_tol
+            _strict = []
+            for r in eligible:
+                _ma = mas.get(r[0], {}).get(sig_day) or {}
+                if strategy == "trend" and entry_mode in ("trend", "both") and trend_ma \
+                        and not (trend_ma[0] in _ma and r[1] > _ma[trend_ma[0]] * _k):
+                    continue
+                _strict.append(r)
+            for _rank, r in enumerate(_strict[:10], 1):
+                candidate_log.writerow([sig_day, day, _rank, r[0], f"{r[1]:.4f}", f"{r[2]:.4f}",
+                                        f"{r[3]:.4f}", int(r[0] in portfolio.lots), len(_strict)])
         if entry_filter == "stabilized" and lows is not None:
             eligible = [r for r in eligible
                         if stabilized(lows.get(r[0], {}), day_index[0].get(r[0], []),
@@ -2588,6 +2604,8 @@ def main() -> int:
     parser.add_argument("--min-lot-cooldown", type=int, default=0, metavar="D",
                         help="高价股一档买不起一手时，改为每 D 个自然日买一手；0 表示跳过不买")
     parser.add_argument("--trade-log", type=Path, help="导出逐笔成交流水（人工核对用）")
+    parser.add_argument("--candidate-log", type=Path,
+                        help="研究开关：逐信号日记录合格集前十的排序（严格走势判据，与组合路径无关），供 rank 1 vs rank 2~5 前向收益事件研究；只在单跑分析时用")
     parser.add_argument("--no-artifacts", dest="artifacts", action="store_false",
                         help="不落 *_trades/_equity/_periods 三份逐条产物，只写 summary。"
                              "参数扫描一律加它——逐年收益与净值曲线只在单跑分析时才用得到")
@@ -2850,6 +2868,13 @@ def main() -> int:
                 research.blocked.clear()
             run_stats = collections.Counter()
             ledger = [] if args.trade_log else None
+            cand_handle = cand_writer = None
+            if args.candidate_log:
+                args.candidate_log.parent.mkdir(parents=True, exist_ok=True)
+                cand_handle = args.candidate_log.open("w", newline="", encoding="utf-8")
+                cand_writer = csv.writer(cand_handle)
+                cand_writer.writerow(["signal_date", "exec_date", "rank", "security_code", "close",
+                                      "intrinsic_value", "pv", "held", "eligible_n"])
             result = run(strategy, x / 100.0, states, prices, actions, mas,
                          args.since, args.until, args.capital, width=width, tiers=tiers,
                          credit_ratio=args.credit_ratio, credit_cap=args.credit_cap,
@@ -2911,7 +2936,11 @@ def main() -> int:
                          tier_sell_scale=parse_tier_scale(args.tier_sell_scale),
                          addon_max_gain=args.addon_max_gain, gain_sell=args.gain_sell,
                          gain_sell_mode=args.gain_sell_mode, swap_trigger=args.swap_trigger,
-                         credit_over_limit=args.credit_over_limit)
+                         credit_over_limit=args.credit_over_limit,
+                         candidate_log=cand_writer)
+            if cand_handle is not None:
+                cand_handle.close()
+                print(f"    合格集排序记录 → {args.candidate_log}")
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue
