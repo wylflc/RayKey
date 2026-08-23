@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import calendar
 import csv
 import math
 import statistics
@@ -2149,28 +2150,73 @@ def max_drawdown(curve) -> tuple[float, str, str]:
     return worst, start, end
 
 
-def rolling_calmar(curve, years: int = 3, step: int = 20) -> list[tuple[str, float, float, float]]:
-    """滚动 `years` 年窗口的 (窗口末日, 窗口年化, 窗口最大回撤, 窗口 Calmar)。
+def month_end_indices(curve) -> list[int]:
+    """每个自然月最后一个交易日在净值曲线里的下标（滚动窗口的锚点）。
+
+    曲线末尾那个月只有在「本月剩余日历日全是周末」时才算月末——`--until 2026-08-07` 这种
+    截断处的残月不是月末，不能当窗口末日（否则最后一个窗口短了三周还按整月记）。
+    """
+    idx = [i for i in range(len(curve) - 1) if curve[i][0][:7] != curve[i + 1][0][:7]]
+    if curve:
+        last = date.fromisoformat(curve[-1][0])
+        days_in_month = calendar.monthrange(last.year, last.month)[1]
+        if all(date(last.year, last.month, d).weekday() >= 5
+               for d in range(last.day + 1, days_in_month + 1)):
+            idx.append(len(curve) - 1)
+    return idx
+
+
+def rolling_windows(curve, years: int = 3,
+                    risk_free: list[tuple[str, float]] | None = None) -> list[dict]:
+    """滚动 `years` 年窗口，**月末锚定**：窗口末日 = 每个自然月最后一个交易日，窗口首日 =
+    `years×12` 个月前同月的最后一个交易日（收益从首日收盘算起），年化指数用实际日历年数
+    （天数/365.25），回撤与 Sharpe 用窗口内**逐日**净值（月末净值会低估日内回撤，本策略带授信
+    与 130% 平仓线，日度才真实）。每个窗口给 {end, start, cagr, mdd, calmar, sharpe}。
+
+    用户 2026-08-23 裁定由「起点后每 20 个交易日推一格、窗长 5×244 个交易日」改为月末锚定：
+    去掉 244 天/年的假设（A 股一年 242~250 个交易日，旧窗长与 5 个日历年差 ±2 周），并让
+    23 个起点、各臂的窗口末日完全对齐——同一日历窗口可以跨起点去重比较。
 
     **与全期 Calmar 的区别要说清**：`summarize` 里的 `Calmar = 全期CAGR / 全期最大回撤`，
     它只有**一个**观测值，且分母是整段历史里最深的那一次——起点稍微一动就可能换成另一次
     崩盘，数值随之跳变（§12.9.2 已实测过这种路径敏感）。滚动口径给出**一串**观测值，
-    可以看中位数与分布，比单点稳得多。
+    可以看中位数与分布，比单点稳得多。但窗口 59/60 重叠，不是独立样本（§12.1 第 5 款）。
     """
-    window = years * TRADING_DAYS
-    out = []
-    for end in range(window, len(curve), step):
-        seg = curve[end - window:end]
-        first, last = seg[0][1], seg[-1][1]
+    ends = month_end_indices(curve)
+    by_month = {curve[i][0][:7]: i for i in ends}
+    rf_dates = [d for d, _ in risk_free] if risk_free else []
+    rf_vals = [r for _, r in risk_free] if risk_free else []
+    rf_all = statistics.fmean(rf_vals) if rf_vals else 0.0
+    out: list[dict] = []
+    for i in ends:
+        end_day = curve[i][0]
+        y, m = int(end_day[:4]), int(end_day[5:7])
+        j = by_month.get(f"{y - years:04d}-{m:02d}")
+        if j is None:
+            continue
+        first, last = curve[j][1], curve[i][1]
         if first <= 0 or last <= 0:
             continue
-        cagr = (last / first) ** (1 / years) - 1
-        peak, worst = -1.0, 0.0
-        for _d, equity, *_r in seg:
+        start_day = curve[j][0]
+        span = (date.fromisoformat(end_day) - date.fromisoformat(start_day)).days / 365.25
+        cagr = (last / first) ** (1 / span) - 1
+        peak, worst, prev, rets = -1.0, 0.0, 0.0, []
+        for _d, equity, *_r in curve[j:i + 1]:
             peak = max(peak, equity)
             if peak > 0:
                 worst = max(worst, 1 - equity / peak)
-        out.append((seg[-1][0], cagr, worst, cagr / worst if worst > 0 else float("nan")))
+            if prev > 0:
+                rets.append(equity / prev - 1)
+            prev = equity
+        vol = statistics.pstdev(rets) * math.sqrt(TRADING_DAYS) if len(rets) > 2 else float("nan")
+        if rf_dates:
+            lo, hi = bisect.bisect_left(rf_dates, start_day), bisect.bisect_right(rf_dates, end_day)
+            rf = statistics.fmean(rf_vals[lo:hi]) if hi > lo else rf_all
+        else:
+            rf = 0.0
+        out.append({"end": end_day, "start": start_day, "cagr": cagr, "mdd": worst,
+                    "calmar": cagr / worst if worst > 0 else float("nan"),
+                    "sharpe": (cagr - rf) / vol if vol == vol and vol > 0 else float("nan")})
     return out
 
 
@@ -2203,23 +2249,35 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             bench_cagr = (pair[-1][1] / pair[0][1]) ** (1 / bench_years) - 1
             bench = f"{bench_cagr:.2%}（同期超额 {cagr - bench_cagr:+.2%}）"
 
-    roll = rolling_calmar(curve)
-    roll_c = sorted(r[3] for r in roll if r[3] == r[3])
-    roll_d = sorted(r[2] for r in roll)
-    roll_g = sorted(r[1] for r in roll)
-    # ---- 用户 2026-08-15 指定的三条读数口径：滚动 3 年 / 滚动 5 年 / 逐年。
+    # ---- 滚动口径（用户 2026-08-15 指定三条读数：滚动 3 年 / 滚动 5 年 / 逐年；
+    # 2026-08-23 改月末锚定并补 P25／最差／滚动 Sharpe，§12.1 第 2 款）。
     # **不再用「某年至今的总收益」判优劣**——那条读数被起点单点决定，
     # 一次崩盘落在窗口内外就能翻转结论（§12.1 多起点纪律的动机就是它）。
-    roll5 = rolling_calmar(curve, years=5)
-    r5g = sorted(r[1] for r in roll5)
-    r5d = sorted(r[2] for r in roll5)
-    r5c = sorted(r[3] for r in roll5 if r[3] == r[3])
-    # 滚动 10 年（用户 2026-08-15）：**只有 2009-11 那条长跑够长**，
-    # 23 个起点里 2016-11 之后的起点一个 10 年窗口都凑不出，故该列在多数臂上是空的
-    # ——**空不等于差，读表时不要把 nan 当成 0**。
-    roll10 = rolling_calmar(curve, years=10)
-    r10g = sorted(r[1] for r in roll10)
-    r10d = sorted(r[2] for r in roll10)
+    # 主读数 = 滚 5 年 CAGR 中位；坏情形 = 滚 5 年 CAGR P25（140 个月末窗里 P10 只有 14 个观测，
+    # P25 更稳）；最差值只有描述意义（它就是历史上最差那一段 5 年，各臂几乎同一事件）；
+    # 滚 5 回撤中位作闸门、负窗口占比作否决项（60% 授信下几乎恒为 0，没有排序区分力）。
+    def _stats(windows):
+        g = sorted(w["cagr"] for w in windows)
+        d = sorted(w["mdd"] for w in windows)
+        c = sorted(w["calmar"] for w in windows if w["calmar"] == w["calmar"])
+        sh = sorted(w["sharpe"] for w in windows if w["sharpe"] == w["sharpe"])
+        nan = float("nan")
+        return {"年化中位": statistics.median(g) if g else nan,
+                "年化P25": g[len(g) // 4] if g else nan,
+                "年化P10": g[len(g) // 10] if g else nan,
+                "年化最差": g[0] if g else nan,
+                "回撤中位": statistics.median(d) if d else nan,
+                "Calmar中位": statistics.median(c) if c else nan,
+                "Calmar_P10": c[len(c) // 10] if c else nan,
+                "Calmar_P90": c[-max(1, len(c) // 10)] if c else nan,
+                "Sharpe中位": statistics.median(sh) if sh else nan,
+                "为负的窗口占比": (sum(1 for v in g if v < 0) / len(g)) if g else nan,
+                "窗口数": len(windows)}
+    s3 = _stats(rolling_windows(curve, years=3, risk_free=risk_free))
+    s5 = _stats(rolling_windows(curve, years=5, risk_free=risk_free))
+    # 滚动 10 年：**只有 2009-11 那几条长跑够长**，23 个起点里 2016-11 之后的起点一个 10 年
+    # 窗口都凑不出，故该列在多数臂上是空的——**空不等于差，读表时不要把 nan 当成 0**。
+    s10 = _stats(rolling_windows(curve, years=10, risk_free=risk_free))
     # 逐年：**只取完整自然年**。起点在 11 月、终点在 8 月，首尾两个残年会把
     # 「两个月的涨幅」当成一年的年化混进中位数里，那是口径错误不是业绩。
     yearly = period_returns(curve, key=lambda d: d[:4])
@@ -2229,24 +2287,29 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             and not (y == last_y and curve[-1][0][5:] < "12-20")]
     yg = sorted(v for _y, v in full)
     return {"策略": name, "期末资产": final,
-            "滚动3年Calmar中位": statistics.median(roll_c) if roll_c else float("nan"),
-            "滚动3年Calmar_P10": roll_c[len(roll_c)//10] if roll_c else float("nan"),
-            "滚动3年Calmar_P90": roll_c[-max(1,len(roll_c)//10)] if roll_c else float("nan"),
-            "滚动3年回撤中位": statistics.median(roll_d) if roll_d else float("nan"),
-            "滚动3年年化中位": statistics.median(roll_g) if roll_g else float("nan"),
-            "滚动3年为负的窗口占比": (sum(1 for g in roll_g if g < 0)/len(roll_g)) if roll_g else float("nan"),
-            "滚动窗口数": len(roll),
-            "滚动5年年化中位": statistics.median(r5g) if r5g else float("nan"),
-            "滚动5年年化P10": r5g[len(r5g)//10] if r5g else float("nan"),
-            "滚动5年回撤中位": statistics.median(r5d) if r5d else float("nan"),
-            "滚动5年Calmar中位": statistics.median(r5c) if r5c else float("nan"),
-            "滚动5年为负的窗口占比": (sum(1 for g in r5g if g < 0)/len(r5g)) if r5g else float("nan"),
-            "滚动5年窗口数": len(roll5),
-            "滚动10年年化中位": statistics.median(r10g) if r10g else float("nan"),
-            "滚动10年年化P10": r10g[len(r10g)//10] if r10g else float("nan"),
-            "滚动10年回撤中位": statistics.median(r10d) if r10d else float("nan"),
-            "滚动10年为负的窗口占比": (sum(1 for g in r10g if g < 0)/len(r10g)) if r10g else float("nan"),
-            "滚动10年窗口数": len(roll10),
+            "滚动3年Calmar中位": s3["Calmar中位"],
+            "滚动3年Calmar_P10": s3["Calmar_P10"],
+            "滚动3年Calmar_P90": s3["Calmar_P90"],
+            "滚动3年Sharpe中位": s3["Sharpe中位"],
+            "滚动3年回撤中位": s3["回撤中位"],
+            "滚动3年年化中位": s3["年化中位"],
+            "滚动3年年化P25": s3["年化P25"],
+            "滚动3年为负的窗口占比": s3["为负的窗口占比"],
+            "滚动窗口数": s3["窗口数"],
+            "滚动5年年化中位": s5["年化中位"],
+            "滚动5年年化P25": s5["年化P25"],
+            "滚动5年年化P10": s5["年化P10"],
+            "滚动5年年化最差": s5["年化最差"],
+            "滚动5年回撤中位": s5["回撤中位"],
+            "滚动5年Calmar中位": s5["Calmar中位"],
+            "滚动5年Sharpe中位": s5["Sharpe中位"],
+            "滚动5年为负的窗口占比": s5["为负的窗口占比"],
+            "滚动5年窗口数": s5["窗口数"],
+            "滚动10年年化中位": s10["年化中位"],
+            "滚动10年年化P10": s10["年化P10"],
+            "滚动10年回撤中位": s10["回撤中位"],
+            "滚动10年为负的窗口占比": s10["为负的窗口占比"],
+            "滚动10年窗口数": s10["窗口数"],
             "逐年收益中位": statistics.median(yg) if yg else float("nan"),
             "逐年收益均值": statistics.fmean(yg) if yg else float("nan"),
             "逐年最差": yg[0] if yg else float("nan"),
