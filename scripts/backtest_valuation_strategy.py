@@ -714,6 +714,8 @@ class Lot:
     entry_stop_ma: int = 0      # 实际采用的均线周期——买在 MA60 下方时会退回 20
     stop_breach_streak: int = 0 # 连续收盘跌破止损价的交易日数；站回止损价即归零
     trail_peak: float = 0.0     # 上移锚（`--trail-ratio`）用的持有期价格峰值；除权日同步折算；开关关时恒 0
+    lock_level: float = 0.0     # 盈利锁定线（`--profit-lock`）：收益达 x 后抬到 持仓均价×η，只升不降；除权日与锚同式折算；开关关时恒 0
+    lock_eta: float = 0.0       # 设定当前锁定线的 η（流水标签用）
     avg_cost: float = 0.0       # 持仓均价：买入按股数加权、减持不变、除权日与锚同式折算（`--addon-max-gain`／`--gain-sell` 用）
     peak_intrinsic: float = 0.0 # 持有期内内在价值的峰值——**基本面退出**按它的回撤触发
     exit_date: str = ""
@@ -837,6 +839,9 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
         lot.shares *= (1 + ratio)
         if lot.trail_peak > 0:          # 上移锚峰值按 §11.4 同式折算：(原值 − D) ÷ (1 + 送转比)
             lot.trail_peak = max(0.0, (lot.trail_peak - cash_per_share) / (1 + ratio))
+        if lot.lock_level > 0:          # 盈利锁定线与锚同式折算；现金红利高于线价的极端情形只折送转
+            adjusted_lock = (lot.lock_level - cash_per_share) / (1 + ratio)
+            lot.lock_level = adjusted_lock if adjusted_lock > 0 else lot.lock_level / (1 + ratio)
         if lot.avg_cost > 0:           # 持仓均价与锚同式折算；现金红利高于均价的极端情形只折送转
             adjusted_cost = (lot.avg_cost - cash_per_share) / (1 + ratio)
             lot.avg_cost = adjusted_cost if adjusted_cost > 0 else lot.avg_cost / (1 + ratio)
@@ -1001,6 +1006,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         mkt_crash_pct: float = 0.10, mkt_trend_ma: int = 0,
         mkt_action: str = "block", mkt_release_ma: int = 20,
         mkt_block_scope: str = "all", trail_ratio: float = 0.0,
+        profit_lock: tuple[tuple[float, float], ...] = (),
         tier_buy_scale: dict[str, float] | None = None,
         tier_sell_scale: dict[str, float] | None = None,
         exright_stop: str = "adjust", addon_max_gain: float = 0.0,
@@ -1400,6 +1406,17 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 trail_level = lot.trail_peak * trail_ratio
                 if trail_level > stop_level:
                     stop_level, stop_tag = trail_level, f"上移锚{trail_ratio:g}×峰价"
+            # `profit_lock`（用户 2026-08-24 实验：「收益超过 x% 后，止损线上调为成本线×η」）：信号日收盘 ≥ 持仓均价×(1+x)
+            # 即把锁定线抬到 持仓均价×η——只升不降（加仓抬高均价后按新均价重判，满足条件才再抬），除权日与锚同式折算；
+            # 生效止损线 = max(现行 min(锚, 当日均线)[, 上移锚], 锁定线)。阶梯 x1:η1,x2:η2 逐级抬高。与 `--trail-ratio`
+            # 的区别：锁定线盯**成本**不盯峰价，涨得再多也只守住 η×成本，不随峰值上移。
+            if profit_lock and lot.avg_cost > 0:
+                sig_close = today.get(code, (None,))[0] or price
+                for gain_x, eta in profit_lock:
+                    if sig_close >= lot.avg_cost * (1.0 + gain_x) and lot.avg_cost * eta > lot.lock_level:
+                        lot.lock_level, lot.lock_eta = lot.avg_cost * eta, eta
+                if lot.lock_level > stop_level:
+                    stop_level, stop_tag = lot.lock_level, f"盈利锁定{lot.lock_eta:g}×成本"
             stop_trigger = ""
             if stop_enabled:
                 lot.stop_breach_streak, stop_trigger = update_stop_breach(
@@ -1423,6 +1440,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 stats[f"止损触发·{stop_trigger}"] += 1
                 if stop_tag.startswith("上移锚"):
                     stats["止损触发·上移锚"] += 1
+                if stop_tag.startswith("盈利锁定"):
+                    stats["止损触发·盈利锁定"] += 1
                 # `stop_partial`（用户 2026-08-14：「卖出改为定投式减仓」）：止损由**整仓清空**
                 # 改为**与定投同速、每日减一档**。这是当前策略里最后一条整仓路径——出名单清仓、
                 # `P/V` 减持、换仓三条早已是按档减，故本开关等于把卖出端整体对称到买入端。
@@ -2622,6 +2641,9 @@ def main() -> int:
     parser.add_argument("--trail-ratio", type=float, default=0.0, metavar="K",
                         help="上移锚（用户 2026-08-20 实验）：锚_2 = K × 持有期峰价（只升不降，除权同步折算），"
                              "生效止损线 = max(锚_2, 现行止损线)。0=关（逐位不变）；例如 0.667")
+    parser.add_argument("--profit-lock", default="", metavar="X:ETA[,X:ETA...]",
+                        help="盈利锁定（用户 2026-08-24 实验）：信号日收盘 ≥ 持仓均价×(1+X) 后，止损线抬到 持仓均价×ETA（只升不降，"
+                             "除权同步折算），生效止损线 = max(现行线, 锁定线)；阶梯用逗号分隔。空=关（逐位不变）。例 1.0:1.5")
     parser.add_argument("--addon-max-gain", type=float, default=0.0, metavar="G",
                         help="研究开关（用户 2026-08-22）：信号日收盘 ≥ 持仓均价×(1+G) 的持仓不再加仓；0=关。例 0.5")
     parser.add_argument("--gain-sell", type=float, default=0.0, metavar="G",
@@ -2681,6 +2703,19 @@ def main() -> int:
         sys.exit("--stop-confirm-days 须为 ≥1 的交易日数")
     if not 0 <= args.stop_deep_pct < 1:
         sys.exit("--stop-deep-pct 是比例，须落在 [0,1)，例如 3% 填 0.03")
+    profit_lock: tuple[tuple[float, float], ...] = ()
+    if args.profit_lock:
+        steps = []
+        for item in args.profit_lock.split(","):
+            try:
+                x_s, eta_s = item.split(":")
+                x, eta = float(x_s), float(eta_s)
+            except ValueError:
+                sys.exit(f"--profit-lock 格式须为 X:ETA[,X:ETA...]，收到 {args.profit_lock!r}")
+            if x <= 0 or eta <= 0 or eta >= 1 + x:
+                sys.exit(f"--profit-lock 每级须满足 X>0、0<ETA<1+X（否则设线当天即触发），收到 {item!r}")
+            steps.append((x, eta))
+        profit_lock = tuple(sorted(steps))
 
     if args.fee_preset == "user":       # 用户 2026-08-12 提供的券商口径
         args.commission = args.commission or 0.0001
@@ -2819,6 +2854,7 @@ def main() -> int:
                      + (f"_sdp{args.stop_deep_pct * 100:g}" if args.stop_deep_pct else "")
                      + ("_slmin" if args.stop_line == "min_entry_current" else "")
                      + (f"_tr{args.trail_ratio:g}" if args.trail_ratio else "")
+                     + (("_pl" + args.profit_lock.replace(":", "at").replace(",", "_")) if args.profit_lock else "")
                      + (f"_ag{args.addon_max_gain:g}" if args.addon_max_gain else "")
                      + (f"_gs{args.gain_sell:g}{'u' if args.gain_sell_mode == 'ungated' else ''}" if args.gain_sell else "")
                      + ("_swc" if args.swap_trigger == "cash" else "")
@@ -2932,6 +2968,7 @@ def main() -> int:
                          mkt_crash_pct=args.mkt_crash_pct, mkt_trend_ma=args.mkt_trend_ma,
                          mkt_action=args.mkt_action, mkt_release_ma=args.mkt_release_ma,
                          mkt_block_scope=args.mkt_block_scope, trail_ratio=args.trail_ratio,
+                         profit_lock=profit_lock,
                          tier_buy_scale=parse_tier_scale(args.tier_buy_scale),
                          tier_sell_scale=parse_tier_scale(args.tier_sell_scale),
                          addon_max_gain=args.addon_max_gain, gain_sell=args.gain_sell,
