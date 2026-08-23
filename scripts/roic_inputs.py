@@ -109,6 +109,8 @@ class RoicYear:
     cfo: float | None = None
     interest_expense: float = 0.0
     treasury_shares: float = 0.0      # 库存股（已回购未注销，资产负债表 TREASURY_SHARES；OI-082 周期守卫的权益回加项）
+    parent_netprofit: float | None = None   # 归母净利（利润表 PARENT_NETPROFIT）——§6.5.1 股本口径：年报间外生权益 X = ΔE − (综合收益 − 分红)
+    parent_tci: float | None = None         # 归母综合收益总额（PARENT_TCI）；缺失时 X 的留存项退回归母净利
     is_financial: bool = False
     tax_rate_observed: bool = False   # True=税率来自本期 所得税/利润总额；False=利润总额非正时回退法定税率
 
@@ -165,6 +167,8 @@ def load_statements(codes: set[str] | None = None,
                 (p.get("org_table") or "").startswith(FINANCIAL_TABLE_PREFIXES)
                 for p in parts.values())
             year.revenue = _num(inc.get("TOTAL_OPERATE_INCOME"))
+            year.parent_netprofit = _num(inc.get("PARENT_NETPROFIT"))
+            year.parent_tci = _num(inc.get("PARENT_TCI"))
             year.total_equity = _num(bal.get("TOTAL_EQUITY"))
             year.parent_equity = _num(bal.get("TOTAL_PARENT_EQUITY"))
             year.minority_equity = _num(bal.get("MINORITY_EQUITY")) or 0.0

@@ -97,6 +97,10 @@ def exright_normalize(band: dict, code_actions: list[dict], as_of: str) -> tuple
         cash_since = (band.get("forecast_report_date") or "")[:10]
     else:
         split_since = cash_since = (band.get("notice_date") or "")[:10]
+    # v4.59（OI-087，§6.5.1 第 5 条）：送转窗口自带所用 BPS 的**股本基准日**起算（多为报告期末——送转落在期末与
+    # 公告日之间时东财 BPS 多未反映），叠加不改股本口径，故叠加行同样取该列；现金窗口不变。人工覆盖行仍按覆盖日。
+    if overlay != "manual_override" and (band.get("bps_basis_date") or "").strip():
+        split_since = band["bps_basis_date"].strip()[:10]
     if not split_since or not cash_since:
         return None
     iv, lo, hi = (num(band.get("intrinsic_value")), num(band.get("band_low")),
@@ -250,10 +254,10 @@ def recompute(band: dict, scale: float) -> tuple[float | None, float, str] | Non
 
     三条路径都**严格线性于各自的盈利输入**，故直接乘 `scale` 即可，不必重算 DCF：
 
-    - `growth` / `zero_growth`：`nopat_ps = ratio0 × bps` → 企业价值线性 →
+    - `growth` / `zero_growth`：`nopat_ps = ratio0 × bps_operating` → 企业价值线性 →
       `IV = ev_ps×scale − net_debt_ps`（净负债不缩放，它不随利润等比变动）。
-    - `equity_fallback`（无三大报表或金融企业退回的权益口径）：`eps0 = roe0 × bps`，
-      直接给出股权价值、不减净负债 → `IV = IV×scale`。
+    - `equity_fallback`（无三大报表或金融企业退回的权益口径）：`eps0 = roe0 × bps_operating`，
+      直接给出股权价值、不减净负债 → `IV = (IV − x)×scale + x`（x 为外生权益/股，v4.59）。
 
     线性性已数值验证：`intrinsic_value` 对首参数一次齐次（216 组参数零违反），
     故乘 `scale` 与「按新输入重算」逐位等价，且避开了带文件四位小数的舍入误差。
@@ -263,7 +267,9 @@ def recompute(band: dict, scale: float) -> tuple[float | None, float, str] | Non
         iv, eps0 = num(band.get("intrinsic_value")), num(band.get("eps0"))
         if iv is None or eps0 is None or eps0 <= 0:
             return None
-        return None, iv * scale, "eps0"
+        # v4.59：权益路径 `V = V(eps0) + x`，只有盈利折现部分随经营账面缩放，外生权益 x 按面值不动
+        x_ps = num(band.get("external_equity_ps")) or 0.0
+        return None, (iv - x_ps) * scale + x_ps, "eps0"
     if path in ("growth", "zero_growth"):
         nopat, net_debt = num(band.get("nopat_ps")), num(band.get("net_debt_ps"))
         ev_ps = num(band.get("ev_ps"))
@@ -463,7 +469,16 @@ def main() -> int:
         if new_bps <= 0:
             skipped.append((name, f"叠加后每股净资产 {new_bps:.4f} ≤ 0，模型不可估，须走 §6.5.2.4 逐票建档"))
             continue
-        scale = new_bps / bps
+        # v4.59（§6.5.1 第 1 条）：分子锚乘的是**经营账面** `bps_operating`（= BPS − 外生权益），留存增量只放大经营账面，
+        # 外生权益 x 不动；无该列（旧带文件）退回按 BPS 缩放。
+        bps_op = num(band.get("bps_operating")) or bps
+        if bps_op <= 0:
+            bps_op = bps
+        new_bps_op = bps_op + delta_bps
+        if new_bps_op <= 0:
+            skipped.append((name, f"叠加后经营账面 {new_bps_op:.4f} ≤ 0，模型不可估，须走 §6.5.2.4 逐票建档"))
+            continue
+        scale = new_bps_op / bps_op
 
         res = recompute(band, scale)
         if res is None:
@@ -508,6 +523,8 @@ def main() -> int:
         if scaled_now is not None:
             band[scaled_field] = f"{scaled_now * scale:.4f}"
         band["bps"] = f"{new_bps:.4f}"
+        if band.get("bps_operating"):
+            band["bps_operating"] = f"{new_bps_op:.4f}"
         applied.append((name, old_iv, iv_new, ev["label"], ev["notice_date"], delta_profit / 1e8))
 
     # ---- v4.20 除权归一化（OI-052/OI-039）：本文件写出的带值恒为现价口径 ----

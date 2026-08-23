@@ -238,7 +238,8 @@ def main() -> int:
         if (band.get("exright_note") or "").strip():
             factor = 1.0
         else:
-            factor = split_factor(actions.get(code, []), band["notice_date"], args.as_of)
+            factor = split_factor(actions.get(code, []),
+                                  (band.get("bps_basis_date") or "").strip() or band["notice_date"], args.as_of)
         iv = float(band["intrinsic_value"]) / factor
         if factor != 1.0:
             split_adj.append(f"{row['security_name']}÷{factor:g}（带文件未归一化，退旧口径）")

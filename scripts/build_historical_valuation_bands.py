@@ -658,7 +658,7 @@ def trailing_cagr(series: dict[str, dict], period: str, years: int = 3) -> float
 
 # ------------------------------------------------------------------ 送转折算
 def exright_adjust(actions: list[dict], since: str, until: str,
-                   values: tuple[float, ...]) -> tuple[list[float], float, float]:
+                   values: tuple[float, ...], split_since: str | None = None) -> tuple[list[float], float, float]:
     """`(since, until]` 内按交易所除权参考价公式逐事件调整带值：`v → (v − 现金红利) ÷ (1 + 送转比)`。
 
     v4.20（OI-052/OI-039，用户 2026-08-19 裁定「带跟随真实股价的除权调整」）：此前只做送转、
@@ -671,14 +671,21 @@ def exright_adjust(actions: list[dict], since: str, until: str,
     方向为带偏高、量级一个股息率、窗口至下一份报告披露即闭合。
 
     返回 (逐值调整后的列表, 累计送转因子, 累计现金——现金按各自后续送转折算到现价口径)。
+
+    v4.59（OI-087，§6.5.1 第 5 条）：送转窗口与现金窗口**分开锚**——`split_since` 为带所用 BPS 的股本基准日
+    （`row_basis_date`，多为报告期末），现金仍自 `since`（公告日）起；缺省 `split_since = since`（旧口径）。
     """
+    split_since = since if split_since is None else split_since
+    floor_since = min(since, split_since)
     factor, cash_cum = 1.0, 0.0
     vals = list(values)
     for action in actions:                      # load_actions 已按除权日排序
         ex_date = action.get("ex_dividend_date") or ""
-        if since < ex_date <= until:
-            cash = _num(action.get("cash_per_share")) or 0.0
-            ratio = _num(action.get("share_ratio")) or 0.0
+        if floor_since < ex_date <= until:
+            cash = (_num(action.get("cash_per_share")) or 0.0) if ex_date > since else 0.0
+            ratio = (_num(action.get("share_ratio")) or 0.0) if ex_date > split_since else 0.0
+            if cash == 0.0 and ratio == 0.0:
+                continue
             vals = [(v - cash) / (1.0 + ratio) for v in vals]
             factor *= 1.0 + ratio
             cash_cum = (cash_cum + cash) / (1.0 + ratio)
@@ -699,6 +706,334 @@ def split_factor(actions: list[dict], since: str, until: str) -> float:
         if since < ex_date <= until:
             factor *= 1.0 + (_num(action.get("share_ratio")) or 0.0)
     return factor
+
+
+# ------------------------------------------------------------------ 股本口径（v4.59，§6.5.1「每股锚的股本口径」，OI-086/OI-087）
+def row_basis_date(series: dict[str, dict], period: str, actions: list[dict]) -> str:
+    """本行 BPS 所用股本的**基准日**（OI-087）——送转除权日落在 (报告期末, 公告日] 时，东财的 BPS 多数仍按
+    期末股本列示（池内 2019 年起 26 例中 17 例，比亚迪 2025 中报 10 送 8 转 12 即是），少数已按公告日股本
+    （亿联网络 2019 中报）。旧链一律假定公告日，前者的带整段高估 (1+送转比) 倍直到下一份报告。
+
+    判定只用本行与上一行的 BPS：`r = 本行/上一行`，`f` = (期末, 公告日] 内送转因子，`g` = 上一行基准日到本期末
+    之间的送转因子（上一行未反映、本期末已反映）。`|ln(r·g·f)| < |ln(r·g)|` 即本行已按除权后股本列示 → 基准 =
+    公告日；否则基准 = 报告期末。无送转落在该窗口时两者等价，返回公告日；无上一行或数据不可用按会计常态取期末。
+    结果缓存在行内 `bps_basis_date`（同一 series 内多次调用不重算）。"""
+    row = series.get(period)
+    if row is None:
+        return period
+    cached = row.get("bps_basis_date")
+    if cached:
+        return cached
+    notice = (row.get("notice_date") or period)[:10]
+    f = split_factor(actions, period, notice)
+    basis = notice
+    if f > 1.0 + 1e-9:
+        basis = period
+        prev_periods = [q for q in series if q < period]
+        if prev_periods:
+            prev = max(prev_periods)
+            bps_prev, bps_now = effective_bps(series, prev, actions), effective_bps(series, period, actions)
+            if bps_prev and bps_now and bps_prev > 0 and bps_now > 0:
+                g = split_factor(actions, row_basis_date(series, prev, actions), period)
+                r = bps_now / bps_prev
+                if abs(math.log(r * g * f)) < abs(math.log(r * g)):
+                    basis = notice
+    row["bps_basis_date"] = basis
+    return basis
+
+
+def bps_restated_factor(series: dict[str, dict], period: str, actions: list[dict]) -> float:
+    """东财对部分年报行（多为 2017 年前）按**后来的**送转把 BPS 折到之后的股本（海螺水泥 2009 年报 BPS 5.43 = 16.3 ÷ 3；
+    v6b 面板 5,360 个年报→下一行对照里 109 例、2019 年后每年 ≤3 例），相邻季报行不折。用上一行核对：
+    `本行 BPS ÷ (上一行 BPS ÷ g)`（g = 上一行基准日到本期末的送转）若 ≈ 1/L——L 为本行公告日之后某个累计送转因子、
+    ≥1.2、对数距离 <0.08，且与「未重述」的距离 >0.12——判重述 L 倍并返回 L，否则 1.0。只查年报行；结果缓存在行内。"""
+    row = series.get(period)
+    if row is None or not period.endswith("-12-31"):
+        return 1.0
+    cached = row.get("bps_restated_factor")
+    if cached:
+        return float(cached)
+    factor = 1.0
+    prev_periods = [q for q in series if q < period]
+    bps_now = _num(row.get("bps"))
+    if prev_periods and bps_now and bps_now > 0:
+        prev = max(prev_periods)
+        bps_prev = _num(series[prev].get("bps"))
+        if bps_prev and bps_prev > 0:
+            notice = (row.get("notice_date") or period)[:10]
+            g = split_factor(actions, row_basis_date(series, prev, actions), period)
+            r = bps_now / (bps_prev / g)
+            plain = abs(math.log(r))
+            cum, best, best_dist = 1.0, 1.0, plain
+            for action in actions:
+                ex = (action.get("ex_dividend_date") or "")[:10]
+                ratio = _num(action.get("share_ratio")) or 0.0
+                if ex > notice and ratio > 0:
+                    cum *= 1.0 + ratio
+                    dist = abs(math.log(r * cum))
+                    if cum >= 1.2 and dist < best_dist:
+                        best, best_dist = cum, dist
+            if best > 1.0 and best_dist < 0.08 and plain > 0.12:
+                factor = best
+    row["bps_restated_factor"] = f"{factor:.6f}"
+    return factor
+
+
+def effective_bps(series: dict[str, dict], period: str, actions: list[dict]) -> float | None:
+    """本行 BPS 折回**当时**股本口径（年报行若被东财按后来送转重述则乘回 `bps_restated_factor`）。"""
+    row = series.get(period)
+    bps = _num(row.get("bps")) if row else None
+    if not bps or bps <= 0:
+        return None
+    return bps * bps_restated_factor(series, period, actions)
+
+
+def shares_at_period_end(series: dict[str, dict], actions: list[dict], period: str,
+                         equity: float | None) -> float | None:
+    """年报期末股数：`母公司权益 ÷ 该行 BPS`，再把该行 BPS 的股本基准折回期末（基准为公告日时除以
+    (期末, 公告日] 的送转因子）。`equity` 为空（无三大报表）时退回 `|归母净利 ÷ EPS|`（加权平均股数，
+    只在二阶项里使用）。"""
+    row = series.get(period)
+    if row is None:
+        return None
+    bps = effective_bps(series, period, actions)
+    if not bps or bps <= 0:
+        return None
+    if equity is not None and equity > 0:
+        shares = equity / bps
+    else:
+        np_, eps_ = _num(row.get("parent_netprofit")), _num(row.get("basic_eps"))
+        if not np_ or not eps_ or np_ * eps_ <= 0:
+            return None
+        shares = abs(np_ / eps_)
+    basis = row_basis_date(series, period, actions)
+    return shares / split_factor(actions, period, basis)
+
+
+def dividends_total(actions: list[dict], since: str, until: str, shares_end: float | None,
+                    end_period: str) -> float | None:
+    """`(since, until]` 内现金分红**总额**（元）：每笔 `每股现金 × 除权日股数`，股数 = 期末股数 × 期末到除权日
+    （不含该笔自身送转）的送转因子。`shares_end` 为 `end_period` 期末股数；不可得返回 None。"""
+    if shares_end is None:
+        return None
+    total, f = 0.0, 1.0
+    for action in actions:                      # 已按除权日排序
+        ex = (action.get("ex_dividend_date") or "")[:10]
+        if not ex or ex <= end_period:
+            continue
+        if ex > until:
+            break
+        cash = _num(action.get("cash_per_share")) or 0.0
+        ratio = _num(action.get("share_ratio")) or 0.0
+        if since < ex:
+            total += cash * shares_end * f
+        f *= 1.0 + ratio
+    return total
+
+
+EXT_EQUITY_STATS: dict[str, int] = defaultdict(int)     # §13 第 3 条：各退化模式计数，建带结尾打印
+EXT_EQUITY_TOP: list[tuple[float, str, str, str]] = []   # (|x|/BPS, 代码, 名称, 报告期) 最新带中超阈值者
+
+
+def external_equity_intra(series: dict[str, dict], actions: list[dict], period: str,
+                          ref_period: str | None, ref_equity: float | None
+                          ) -> tuple[float, float | None, str, str]:
+    """§6.5.1 第 1 条：最新年报之后的**外生权益/股** `x` 与当期股数估计。
+
+    `x = BPS_当期 − (年报母公司权益 + 其后归母净利 − 其后现金分红) ÷ 当期股数`；年报行 `x = 0`。
+    股数 = 年报期末股数 × 基准日间送转因子；「归母净利 ÷ EPS」隐含股数仅在与之明显不符（>3%）且不能用
+    本行之后的送转重述解释时采用（东财会按后来的送转重述历史 EPS 而不重述 BPS，比亚迪 2024 年报 EPS 4.61
+    = 13.84 ÷ 3）。返回 `(x_ps, shares_now, bps_basis_now, mode)`；不可算时 `x = 0` 并由 mode 说明。"""
+    row = series.get(period)
+    bps_now = effective_bps(series, period, actions) if row else None
+    if row is None or not bps_now or bps_now <= 0:
+        return 0.0, None, period, "no_bps"
+    notice_now = (row.get("notice_date") or period)[:10]
+    basis_now = row_basis_date(series, period, actions)
+    if not ref_period or ref_period not in series:
+        return 0.0, None, basis_now, "no_ref_row"
+    ref_row = series[ref_period]
+    ref_notice = (ref_row.get("notice_date") or ref_period)[:10]
+    shares_ref = shares_at_period_end(series, actions, ref_period, ref_equity)
+    if shares_ref is None or shares_ref <= 0:
+        return 0.0, None, basis_now, "no_ref_shares"
+    if ref_equity is None or ref_equity <= 0:
+        bps_ref = effective_bps(series, ref_period, actions) or 0.0
+        ref_equity = bps_ref * shares_ref * split_factor(actions, ref_period,
+                                                         row_basis_date(series, ref_period, actions))
+    if period == ref_period:
+        return 0.0, shares_ref * split_factor(actions, ref_period, basis_now), basis_now, "annual_row"
+    if period < ref_period:
+        return 0.0, shares_ref, basis_now, "ref_after_period"
+    shares_assumed = shares_ref * split_factor(actions, ref_period, basis_now)
+    # 其后归母净利：年报之间的整年取各年报行，本期取 YTD
+    np_since = 0.0
+    for year in range(int(ref_period[:4]) + 1, int(period[:4])):
+        full = series.get(f"{year}-12-31")
+        np_full = _num(full.get("parent_netprofit")) if full else None
+        if np_full is None:
+            return 0.0, shares_assumed, basis_now, "np_gap"
+        np_since += np_full
+    np_ytd = _num(row.get("parent_netprofit"))
+    if np_ytd is None:
+        return 0.0, shares_assumed, basis_now, "np_gap"
+    np_since += np_ytd
+    # 其后现金分红（每股，折到本行 BPS 基准）：窗口 (年报公告日, 本期公告日]——已宣告分红在期末多已计入应付股利
+    _vals, _f, cash_cum = exright_adjust(actions, ref_notice, notice_now, ())
+    div_ps = cash_cum * split_factor(actions, basis_now, notice_now)
+    # 股数：年报期末 × 送转 为缺省（`shares_ref`）；用「归母净利 ÷ EPS」的隐含股数**相对年报行的变化倍数**
+    # 承接稀释／注销（`shares_eps`）——只比倍数、不比水平：E/BPS 与 净利/EPS 的水平可差 5~10%（其他权益
+    # 工具、加权平均），但两者都按同一倍数动；且东财会按后来的送转重述历史 EPS（比亚迪 2024 年报 4.61 =
+    # 13.84 ÷ 3）而不重述 BPS，故先把「年报公告日之后各次送转的累计因子及其倒数」里最近的一个除掉，
+    # 余下的倍数超过 3% 才算真实的股数变化。
+    shares_now, mode = shares_assumed, "shares_ref"
+    x_assumed = bps_now - (ref_equity + np_since) / shares_assumed + div_ps
+    np_row, eps_row = np_ytd, _num(row.get("basic_eps"))
+    np_ref, eps_ref = _num(ref_row.get("parent_netprofit")), _num(ref_row.get("basic_eps"))
+    # 三道守卫（全市场实测后加）：①EPS 精度——按该行 EPS 的小数位数估舍入误差，相对误差 >2% 的行不用
+    #   （用友 2021Q1 净利 −0.13 亿 / EPS −0.01 → 隐含股数 13 亿，实为 33 亿）；②账面先动——股数真变了（增发/注销）
+    #   账面必同时动，|x_假定| < 3% BPS 时不承认股数变化；③方向一致——增发 x>0 且股数增、注销 x<0 且股数减。
+    if (np_row and eps_row and np_row * eps_row > 0
+            and np_ref and eps_ref and np_ref * eps_ref > 0
+            and _eps_precise(row.get("basic_eps")) and _eps_precise(ref_row.get("basic_eps"))
+            and abs(x_assumed) >= 0.03 * bps_now):
+        rho = abs(np_row / eps_row) / abs(np_ref / eps_ref)
+        candidates = [1.0]
+        cum = 1.0
+        for action in actions:
+            ex = (action.get("ex_dividend_date") or "")[:10]
+            ratio = _num(action.get("share_ratio")) or 0.0
+            if ex > ref_notice and ratio > 0:
+                cum *= 1.0 + ratio
+                candidates.extend((cum, 1.0 / cum))
+        nearest = min(candidates, key=lambda c: abs(math.log(rho / c)))
+        rho_adj = rho / nearest
+        if abs(math.log(rho_adj)) > math.log(1.03) and (rho_adj > 1.0) == (x_assumed > 0):
+            shares_now, mode = shares_assumed * rho_adj, "shares_eps"
+    x_ps = bps_now - (ref_equity + np_since) / shares_now + div_ps
+    # 合理性边界：增发最多把经营账面压到 5% BPS（IPO 募资 20 倍于上市前账面已是极端）；一个季度内流出超过
+    # 四分之一账面的「注销」基本是主体重述／数据错位（云南白药 2019Q1 吸收合并重述、徐工 2022Q1、兖矿 2023Q3），
+    # A 股没有单季注销/特别分红 >25% 账面的真实案例，不可验证即不调整（记 x_implausible_negative）。
+    if x_ps > 0.95 * bps_now:
+        x_ps, mode = 0.95 * bps_now, mode + ",x_capped"
+    elif x_ps < -0.25 * bps_now:
+        return 0.0, shares_assumed, basis_now, "x_implausible_negative"
+    return x_ps, shares_now, basis_now, mode
+
+
+def _eps_precise(text: str | None, max_rel_error: float = 0.02) -> bool:
+    """EPS 字符串的舍入误差（半个最小刻度）相对其绝对值是否 ≤ `max_rel_error`。"""
+    raw = (text or "").strip()
+    if not raw:
+        return False
+    try:
+        value = abs(float(raw))
+    except ValueError:
+        return False
+    decimals = len(raw.split(".")[1]) if "." in raw else 0
+    if value <= 0:
+        return False
+    return 0.5 * 10 ** (-decimals) / value <= max_rel_error
+
+
+EXTERNAL_EQUITY_MIN_FRACTION = 0.05   # §6.5.1 第 2 条：|X_y| ≥ 5% 上年母公司权益才计为外生权益（低于视为 OCI 等非事件残差）
+OPERATING_BOOK_MIN_FRACTION = 0.20    # §6.5.1 第 2 条：经营账面 E − X_cum 低于 20% 账面即判结构断点，比率窗口自该年重起
+
+
+def annual_external_equity(history: list, series: dict[str, dict], actions: list[dict],
+                           min_fraction: float = EXTERNAL_EQUITY_MIN_FRACTION,
+                           book_floor: float = OPERATING_BOOK_MIN_FRACTION
+                           ) -> tuple[dict[str, float], str, str | None]:
+    """§6.5.1 第 2 条：窗口内各年报的**累计外生权益** `X_{y0→y}`（总额，元；首年为 0）。
+    `X_y = ΔE − (归母综合收益 − 现金分红)`，综合收益缺失用归母净利；分红总额 = 每股现金 × 除权日股数。
+    **只计 |X_y| ≥ `min_fraction` × 上年母公司权益的年份**——池内 2010 年起 2,711 个公司-年的 |X|/E 中位 1.2%、
+    P75 6%、P90 38%：1~3% 是 OCI／股份支付／准则重述一类非事件残差，留在经营账面；IPO／增发／借壳／注销都在 10% 以上。
+    **结构断点**：某年经营账面 `E_y − X_cum_y` 低于 `book_floor` × `E_y`（或 ≤ 0）——破产重整/债转股把权益打穿后再注资
+    （盐湖股份 2019-2020）、募资数倍于原账面的极端 IPO——此后「经营账面」不再可辨，自该年重起累计（X_cum 归零）并返回
+    断点年，调用方把比率窗口截到断点之后（业务变更年重切窗口，与 §12.71.2 同理）。
+    返回 `({报告期: X_cum}, 备注, 断点报告期或 None)`；某年留存项不可得时该年 X 记 0（备注记 `earn_gap`／`div_gap`）。"""
+    ordered = sorted(history, key=lambda y: y.period)
+    out: dict[str, float] = {}
+    if not ordered:
+        return out, "", None
+    out[ordered[0].period] = 0.0
+    cum, notes = 0.0, set()
+    neg_cum = 0.0
+    raises: list[list[float]] = []                         # 每笔增发 [金额, 增发前一年超额现金, 此后超额现金增量的最小值]
+    out["_deduct"] = {ordered[0].period: 0.0}            # 各年应从账面摘掉的外生权益（未花的募资＋注销），operating_equity 用
+    # 各年期末股数：先按各年自己的行算，缺的先向后（下一已知年 ÷ 期间送转）再向前补，分红总额才不缺年
+    shares: dict[str, float] = {}
+    for year in ordered:
+        val = shares_at_period_end(series, actions, year.period, year.parent_equity)
+        if val:
+            shares[year.period] = val
+    for i, year in enumerate(ordered):
+        if year.period in shares:
+            continue
+        for later in ordered[i + 1:]:
+            if later.period in shares:
+                shares[year.period] = shares[later.period] / split_factor(actions, year.period, later.period)
+                notes.add("shares_backfill")
+                break
+        else:
+            for earlier in reversed(ordered[:i]):
+                if earlier.period in shares:
+                    shares[year.period] = shares[earlier.period] * split_factor(actions, earlier.period, year.period)
+                    notes.add("shares_carry")
+                    break
+    prev = ordered[0]
+    break_period = None
+    if ordered[0].parent_equity is None or ordered[0].parent_equity <= 0:
+        break_period = ordered[0].period
+    for year in ordered[1:]:
+        x_year = 0.0
+        if (year.parent_equity is not None and prev.parent_equity is not None):
+            earn = year.parent_tci if year.parent_tci is not None else year.parent_netprofit
+            if earn is None:
+                notes.add("earn_gap")
+            else:
+                div = dividends_total(actions, prev.notice_date, year.notice_date,
+                                      shares.get(prev.period), prev.period)
+                if div is None:
+                    div = 0.0
+                    notes.add("div_gap")
+                x_year = (year.parent_equity - prev.parent_equity) - (earn - div)
+                if prev.parent_equity > 0 and abs(x_year) < min_fraction * prev.parent_equity:
+                    x_year = 0.0
+        else:
+            notes.add("equity_gap")
+        cum += x_year
+        neg_cum += min(x_year, 0.0)
+        cash_now = getattr(year, "excess_cash", 0.0) or 0.0
+        if x_year > 0:
+            raises.append([x_year, getattr(prev, "excess_cash", 0.0) or 0.0, float("inf")])
+        # 先进先出：每笔募资只在「超额现金较募资前一年持续高出的部分」内算未花（一旦回落即视为已投入经营，
+        # 之后再积累的现金是经营所得）；与 ROIC 路径「投入资本剔除超额现金」同一口径
+        idle = 0.0
+        for item in raises:
+            item[2] = min(item[2], max(0.0, cash_now - item[1]))
+            idle += min(item[0], item[2])
+        equity = year.parent_equity
+        if equity is None or equity <= 0 or equity - cum < book_floor * equity:
+            # 经营账面不可辨：自本年重起（本年 X_cum = 0），比率窗口截到本年之后
+            cum, neg_cum, raises, idle, break_period = 0.0, 0.0, [], 0.0, year.period
+            notes.add("book_break")
+        out[year.period] = cum
+        out["_deduct"][year.period] = idle + neg_cum
+        prev = year
+    return out, ",".join(sorted(notes)), break_period
+
+
+def operating_equity(year, x_cum: dict[str, float], base_year=None) -> float | None:
+    """§6.5.1 第 2 条的**经营账面** `E_op = E − 未花的募资 − 累计注销`（`annual_external_equity` 的 `_deduct`）。
+    增发只在**仍以超额现金形态留在账上**的部分内不算经营账面（东鹏 2026 H 股募资堆在现金池里；东鹏 2021 IPO、
+    洛阳钼业 2017 年 180 亿定增都已投入产能/矿山，就是经营资本），判法为先进先出：募资后超额现金一旦回落到募资前
+    水平即视为已花；回购注销的现金已流出，经营账面按注销前计。"""
+    if year.parent_equity is None:
+        return None
+    deduct = x_cum.get("_deduct", {}).get(year.period, 0.0)
+    value_ = year.parent_equity - deduct
+    return value_ if value_ > 0 else None
 
 
 # ------------------------------------------------------------------ 建带
@@ -773,6 +1108,13 @@ class Band:
     v_bull: float | None = None               # 乐观敏感度值（g0×1.25 封顶、折现率−1pp、终值回报+1pp、fade 13 年、g_T+0.5pp）
     valuation_quality_score: int | None = None   # 0-100：历史长度／回报稳定性／终值占比／路径与守卫／两腿一致度各 20 分
     valuation_quality_notes: str = ""         # 各分项得分的短记号，便于逐行复核
+    # ---- v4.59 股本口径（§6.5.1「每股锚的股本口径」，OI-086/OI-087）----
+    bps_operating: float | None = None        # 经营账面/股 = BPS − 外生权益/股 − 窗口内累计外生权益/股；分子锚乘的是它
+    external_equity_ps: float | None = None   # 最新年报之后的外生权益/股 x（增发＋／回购注销−），按面值进每股净现金
+    external_equity_cum_ps: float | None = None  # 比率窗口首年以来、年报已计入的累计外生权益/股（ROIC 路径）
+    shares_est: float | None = None           # 当期股数估计（股）
+    bps_basis_date: str = ""                  # 本行 BPS 的股本基准日（报告期末或公告日）；逐日展开与除权归一化的送转窗口自此起算
+    equity_anchor_mode: str = ""              # annual_row／shares_ref／shares_eps／no_ref_row／…（退化原因）
 
 
 def _cv(values: list[float]) -> float | None:
@@ -850,7 +1192,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
 
     eps = ttm(series, period, "basic_eps")
     roe, roe_source = derive_roe(series, period, eps)
-    bps = _num(series[period].get("bps"))
+    bps = effective_bps(series, period, actions)      # v4.59：年报行被东财按后来送转重述时折回当时股本口径
 
     # 坑 2：生效日 = **所用**各期公告日的最大值。归一化口径只用本期 BPS 与更早的年报 ROE，
     # 故其生效日就是本期公告日；TTM 口径要用上年年报，才可能被推后。
@@ -921,6 +1263,19 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 mos=MOS_BY_TIER.get(tier),
                 incremental_roe=iroe_value, incremental_roe_basis=iroe_basis)
 
+    # §6.5.1 第 1/3 条（v4.59，OI-086）权益口径：最新年报之后的外生权益 x 不进清洁盈余的账面，
+    # `eps0 = roe0 × (BPS − x)`，x 按面值加回股权价值。年报为无三大报表时的参照（股数用 净利÷EPS，只进二阶项）；
+    # 跨年残差（年报已计入的增发/注销）权益路径不做，成文于 §6.5.1。ROIC 路径随后用三大报表重算并覆盖这几列。
+    eq_ref = fiscal_years_before(series, available_at, 1)
+    x_eq, shares_eq, basis_eq, mode_eq = external_equity_intra(
+        series, actions, period, eq_ref[0] if eq_ref else None, None)
+    bps_op_eq = bps if bps is None else bps - x_eq
+    if bps is not None and bps > 0 and bps_op_eq <= 0:
+        EXT_EQUITY_STATS["经营账面非正退回 BPS（权益口径）"] += 1
+        x_eq, bps_op_eq, mode_eq = 0.0, bps, mode_eq + ",bps_op_nonpositive_fallback"
+    band.bps_operating, band.external_equity_ps = bps_op_eq, x_eq
+    band.shares_est, band.bps_basis_date, band.equity_anchor_mode = shares_eq, basis_eq, mode_eq
+
     # 归一化口径：ROE 取近五年年度中位（结构参数），EPS 由清洁盈余 E = ROE×B 反推。
     # 这样两个输入天然自洽，且不把周期低谷的读数外推十年（见 normalized_roe 文档）。
     if args.roe_source == "ttm":
@@ -961,8 +1316,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                                                  roe.value if roe else None, band.roe_trend,
                                                  args.roe_lift)
         # **eps0 一律走清洁盈余 `E = ROE×B`**，与 normalized 臂同式——单边口径改的只有
-        # 「roe0 取哪一侧」这一个自由度，若同时换 EPS 口径就分不清差异来自哪一处。
-        eps0 = roe0 * bps
+        # 「roe0 取哪一侧」这一个自由度，若同时换 EPS 口径就分不清差异来自哪一处。B 为经营账面（v4.59）。
+        eps0 = roe0 * bps_op_eq
     # 外部 ROE 覆盖（实验用）：只换 roe0 这一个输入，EPS 仍走清洁盈余 E=ROE×B，
     # 折现率、终值、护栏全部沿用现行模型——这样回测差异只能归因到 ROE 预测本身。
     ext = EXTERNAL_ROE.get(code) if EXTERNAL_ROE else None
@@ -973,7 +1328,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             band.roe0_mode = "external"
             EXTERNAL_STATS["命中"] += 1
             if bps is not None and bps > 0:
-                eps0 = roe0 * bps
+                eps0 = roe0 * bps_op_eq
         else:
             EXTERNAL_STATS["无当期预测"] += 1
     elif EXTERNAL_ROE:
@@ -1027,6 +1382,32 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     history = roic_inputs.with_tax_rate(history, tax_norm)
                     latest = max(history, key=lambda y: y.period)
             roic0 = roic_inputs.normalized_roic(history)
+            # §6.5.1 第 2 条（v4.59，OI-086）：年报间外生权益按 `X_y = ΔE − (综合收益 − 分红)` 逐年识别，
+            # 比率窗口与十年守卫窗口内各年比率一律按**经营账面** `E_y − X_{y0→y}` 计（y0 = 十年窗首年），
+            # 使「比率 × 当期经营账面」只承接留存增长。窗口里的比率本来就各按自己年份的账面算，
+            # 外生权益（IPO/增发/转股/回购注销）却会让前后年份的账面不可比——这里把它从账面里摘掉。
+            long_hist_all = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at,
+                                                     max(args.roe_years, 10))
+            x_cum, x_note, book_break = annual_external_equity(
+                long_hist_all, series, actions,
+                getattr(args, "ext_equity_min_frac", EXTERNAL_EQUITY_MIN_FRACTION))
+            if book_break is not None:
+                # 结构断点（破产重整/债转股/极端募资）：比率窗口与十年守卫窗口都截到断点年起（业务变更年重切窗口）
+                history = [y for y in history if y.period >= book_break]
+                EXT_EQUITY_STATS["年报间 X·结构断点重切窗口"] += 1
+                if not history:
+                    band.reason = f"结构断点 {book_break} 之后无可用财年"
+                    return band
+                latest = max(history, key=lambda y: y.period)
+            base_year = min((y for y in long_hist_all if book_break is None or y.period >= book_break),
+                            key=lambda y: y.period, default=None)
+            def e_op(year) -> float | None:
+                return operating_equity(year, x_cum, base_year)
+            if e_op(latest) is None and latest.parent_equity and latest.parent_equity > 0:
+                # 累计外生权益吃光账面（大额增发后持续亏损）：退回不调整并留痕，不让比率分母为零
+                x_cum, x_note = {}, (x_note + ",eop_nonpositive").strip(",")
+                EXT_EQUITY_STATS["年报间 X·经营账面非正退回不调整"] += 1
+            band.external_equity_cum_ps = None   # 每股值在股数可得后填
             # **增量 ROIC 口径**（OI-069 第 2 条，`--roic-iroic-mode`，研究开关，缺省 endpoint＝生产）：
             # endpoint=窗口首尾；allpairs=窗口内任意两财年各算一次取中位（估计量噪声减半，但经
             # `max(资本腿, 增速腿)` 只升不降地抬 g0，23 起点滚5 −0.7pp，§12.100 不采纳）；allpairs_guarded=
@@ -1077,9 +1458,9 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     f"NOPAT={latest.nopat}: 息税前利润非正，按现金折现无意义，须走 §6.5.5.2 逐票建档")
                 return band
             # 正常化 NOPAT：与 ROIC 同窗口取**比率**中位再乘 BPS，避免把单年高点/低谷外推十年
-            ratios = [y.nopat / y.parent_equity
+            ratios = [y.nopat / e_op(y)
                       for y in sorted(history, key=lambda x: x.period)
-                      if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
+                      if y.nopat is not None and e_op(y) is not None]
             # OI-082 研究开关（用户 2026-08-23，海外先行后 A 股 A/B）：`--roic-nopat-anchor per_share`
             # 把各年比率一律相对**最新**母公司权益（× 当期 BPS 即「各年 NOPAT 按当前股数折每股」），
             # 回购缩水/留存增长造成的权益基数变化不再进入分子归一化；周期守卫则用「权益＋库存股」
@@ -1104,11 +1485,13 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             if getattr(args, "roic_cycle_guard", "efficiency") == "peak":
                 long_hist = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at,
                                                      max(args.roe_years, 10))
+                if book_break is not None:
+                    long_hist = [y for y in long_hist if y.period >= book_break]
                 if tax_norm is not None:
                     long_hist = roic_inputs.with_tax_rate(long_hist, tax_norm)
-                long_ratios = [y.nopat / (y.parent_equity + (y.treasury_shares if anchor_mode == "per_share" else 0.0))
+                long_ratios = [y.nopat / (e_op(y) + (y.treasury_shares if anchor_mode == "per_share" else 0.0))
                                for y in sorted(long_hist, key=lambda x: x.period)
-                               if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
+                               if y.nopat is not None and e_op(y) is not None]
                 nopat_cyclical = (len(long_ratios) >= 4 and long_ratios[-1] > 0
                                   and long_ratios[-1] > args.roic_peak_k
                                   * statistics.median(long_ratios))
@@ -1160,13 +1543,37 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             if nopat_cyclical:
                 band.roic_nopat_mode = "cyclical_median"
                 ROIC_STATS["NOPAT 周期守卫·按中位"] += 1
-            nopat_ps = ratio0 * bps
+            # §6.5.1 第 1/3 条（v4.59，OI-086）：分子锚乘**经营账面** `BPS_op = BPS − x − X_cum/股数`，
+            # 最新年报之后的外生权益 x 按面值进每股净现金；年报已计入的累计外生权益 X_cum 的现金已在
+            # 年报超额现金里（按经营账面同比例缩放），不另加。增发与回购注销同式、符号相反。
+            x_ps, shares_now, basis_now, x_mode = external_equity_intra(
+                series, actions, period, latest.period, latest.parent_equity)
+            e_op_ref = e_op(latest) or latest.parent_equity
+            x_cum_ps = 0.0
+            applied = latest.parent_equity - e_op_ref          # 年报已计入、实际从经营账面摘掉的外生权益（未花的募资＋注销）
+            if abs(applied) > 1e-9 and shares_now:
+                x_cum_ps = applied / shares_now
+            elif abs(applied) > 1e-9:
+                x_mode = (x_mode + ",xcum_no_shares")
+                EXT_EQUITY_STATS["年报间 X·无股数不能折每股"] += 1
+            bps_op = bps - x_ps - x_cum_ps
+            if bps_op <= 0:
+                # 外生权益超过当期账面（数据错位或口径不符）：退回不调整并留痕（§13 第 3 条不静默）
+                EXT_EQUITY_STATS["经营账面非正退回 BPS"] += 1
+                x_ps, x_cum_ps, bps_op, x_mode = 0.0, 0.0, bps, x_mode + ",bps_op_nonpositive_fallback"
+            band.bps_operating, band.external_equity_ps = bps_op, x_ps
+            band.external_equity_cum_ps, band.shares_est = x_cum_ps, shares_now
+            band.bps_basis_date, band.equity_anchor_mode = basis_now, (x_mode + ("|" + x_note if x_note else ""))
+            EXT_EQUITY_STATS[f"模式·{x_mode.split(',')[0]}"] += 1
+            if abs(x_ps) > 0.05 * bps:
+                EXT_EQUITY_STATS["|x|>5%BPS 的带"] += 1
+            nopat_ps = ratio0 * bps_op
             band.nopat_ps = nopat_ps
             if latest.cfo is not None:
                 band.owner_earnings_true_ps = (
-                    (latest.cfo - latest.dep_amort) / latest.parent_equity * bps)
+                    (latest.cfo - latest.dep_amort) / e_op_ref * bps_op)
             net_debt_ps = ((latest.interest_debt - latest.excess_cash
-                            + latest.minority_equity) / latest.parent_equity * bps)
+                            + latest.minority_equity) / e_op_ref * bps_op) - x_ps
             band.net_debt_ps = net_debt_ps
             if nopat_ps <= 0:
                 band.status, band.reason = "rejected", "正常化每股 NOPAT 非正"
@@ -1431,15 +1838,25 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         return band
 
     band.status = "ok"
-    band.value = result.intrinsic_value
-    band.band_low = BAND_LOW_COEF * result.intrinsic_value
-    band.band_high = BAND_HIGH_COEF * result.intrinsic_value
+    # v4.59：外生权益 x 按面值加回（§6.5.1 第 3 条）；等于把「增发拿到的现金／回购付出的现金」记在股权价值里
+    equity_value = result.intrinsic_value + x_eq
+    if equity_value <= 0:
+        band.status, band.reason = "rejected", (
+            f"股权价值 {equity_value:.2f} ≤ 0：外生权益 {x_eq:.2f}/股 使盈利折现值转负")
+        return band
+    band.value = equity_value
+    band.band_low = BAND_LOW_COEF * equity_value
+    band.band_high = BAND_HIGH_COEF * equity_value
     band.terminal_share = result.terminal_share
     band.implied_pe = result.implied_pe
     band.min_payout = result.min_payout
+    EXT_EQUITY_STATS[f"模式·{mode_eq.split(',')[0]}（权益口径）"] += 1
+    if bps and abs(x_eq) > 0.05 * bps:
+        EXT_EQUITY_STATS["|x|>5%BPS 的带（权益口径）"] += 1
     # OI-074：敏感度带与质量分（输出列，不进判定）
     band.v_bear, band.v_bull = sensitivity_values(
-        eps0, roe0, g0, r, roe_t, g_terminal, n_years, n1_years, args.g0_cap, args.min_terminal_spread)
+        eps0, roe0, g0, r, roe_t, g_terminal, n_years, n1_years, args.g0_cap, args.min_terminal_spread,
+        less=-x_eq)
     roe_hist = [v for _p, v in annual_roe_series(series, available_at, max(args.roe_years, 10))]
     legs_e = sum(1 for g in (band.g_sustainable, band.g_trailing) if g is not None)
     gap_e = (abs(band.g_sustainable - band.g_trailing)
@@ -1448,7 +1865,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         len(roe_hist), _cv(roe_hist), result.terminal_share, "equity_fallback", gap_e, legs_e)
     # 安全边际在**决策层**单独给出，不混进 r（否则同一个风险被惩罚两次）
     if band.mos is not None:
-        band.max_buy_price = margin_of_safety(result.intrinsic_value, band.mos)
+        band.max_buy_price = margin_of_safety(equity_value, band.mos)
     return band
 
 
@@ -1547,7 +1964,8 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
         # 坑 4：带按**公告时**的股本口径，价格是不复权的 → 按公告后的除权事件折算带。
         # v4.20 起现金分红与送转同折（OI-052/OI-039），公式与交易所除权参考价一致。
         (low, value, high), factor, cash_cum = exright_adjust(
-            actions, band.notice_date, date, (band.band_low, band.value, band.band_high))
+            actions, band.notice_date, date, (band.band_low, band.value, band.band_high),
+            split_since=band.bps_basis_date or band.notice_date)
         if value <= 0:
             EXRIGHT_NEGATIVE.append(f"{code}@{date}")
             continue
@@ -1646,7 +2064,10 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "r_mode", "rf", "erp", "beta", "r", "g_terminal", "roe_terminal",
                "intrinsic_value", "band_low", "band_high", "mos", "max_buy_price",
                "implied_pe", "pe_on_ttm_eps", "terminal_share", "min_payout",
-               "v_bear", "v_bull", "valuation_quality_score", "valuation_quality_notes"]
+               "v_bear", "v_bull", "valuation_quality_score", "valuation_quality_notes",
+               # v4.59 股本口径（§6.5.1，OI-086/OI-087）
+               "bps_operating", "external_equity_ps", "external_equity_cum_ps", "shares_est",
+               "bps_basis_date", "equity_anchor_mode"]
 
 
 def band_row(band: Band, tier: str) -> dict:
@@ -1692,6 +2113,10 @@ def band_row(band: Band, tier: str) -> dict:
         "v_bear": fmt(band.v_bear), "v_bull": fmt(band.v_bull),
         "valuation_quality_score": "" if band.valuation_quality_score is None else str(band.valuation_quality_score),
         "valuation_quality_notes": band.valuation_quality_notes or "",
+        "bps_operating": fmt(band.bps_operating), "external_equity_ps": fmt(band.external_equity_ps),
+        "external_equity_cum_ps": fmt(band.external_equity_cum_ps),
+        "shares_est": "" if band.shares_est is None else f"{band.shares_est:.0f}",
+        "bps_basis_date": band.bps_basis_date or "", "equity_anchor_mode": band.equity_anchor_mode or "",
     }
 
 
@@ -1769,6 +2194,21 @@ def report(all_bands: list[tuple[str, Band]], daily_counts: dict[str, int],
         if IROE_BASIS_STATS:
             print("增量 ROE 的 eps_old 折算判定（OI-041）：" + "｜".join(
                 f"{k} {v:,}" for k, v in sorted(IROE_BASIS_STATS.items())))
+        # §6.5.1 股本口径（v4.59，OI-086/OI-087）：|x|/BPS 分布、超阈值名单与退化模式计数（§13 第 3 条非空覆盖校验）
+        xs = sorted(abs(b.external_equity_ps) / b.bps for b in ok
+                    if b.external_equity_ps is not None and b.bps)
+        if xs:
+            n_x = len(xs)
+            print(f"外生权益 |x|/BPS（{n_x:,} 条 ok 带）：中位 {xs[n_x // 2]:.2%}｜P90 {xs[n_x * 9 // 10]:.2%}｜"
+                  f"P99 {xs[n_x * 99 // 100]:.2%}｜>5% {sum(1 for v in xs if v > 0.05):,}｜>20% {sum(1 for v in xs if v > 0.2):,}")
+            basis_pre = sum(1 for b in ok if b.bps_basis_date and b.bps_basis_date == b.report_date)
+            print(f"BPS 股本基准 = 报告期末（送转落在期末与公告日之间且未反映）：{basis_pre:,} 条 ok 带")
+        if EXT_EQUITY_STATS:
+            print("股本口径模式计数：" + "｜".join(f"{k} {v:,}" for k, v in sorted(EXT_EQUITY_STATS.items())))
+        if EXT_EQUITY_TOP:
+            top = sorted(EXT_EQUITY_TOP, reverse=True)[:12]
+            print("最新带 |x|/BPS > 10% 的股票（前 12）：" + "；".join(
+                f"{name}({code}) {pct:+.0%}@{rep}" for pct, code, name, rep in top))
         if pairs:
             gaps = sorted(inc - roe for inc, roe in pairs)
             below = sum(1 for inc, roe in pairs if inc < roe)
@@ -1940,6 +2380,8 @@ def main() -> int:
                         default="prev_trading_day",
                         help="逐日状态里带的生效日：prev_trading_day=可得日前一交易日（缺省，v4.28，与生产"
                              "扫描当晚吸收同构）；notice=公告日当天（v4.27 前旧口径，只用于复现旧产物）")
+    parser.add_argument("--ext-equity-min-frac", type=float, default=EXTERNAL_EQUITY_MIN_FRACTION,
+                        help="§6.5.1 第 2 条：年度外生权益 |X_y| 低于该比例×上年母公司权益即视为非事件残差不计（缺省 0.05＝生产）")
     parser.add_argument("--wacc-weights", choices=("book", "market"), default="book",
                         help="WACC 权重（OI-071 ①，研究开关）：book=账面（缺省，生产）；market=可得日市值×(1+可得日前送转)"
                              "作股权权重（按带期报告的 BPS 反推股本），市值不可得退账面")
@@ -2092,6 +2534,10 @@ def main() -> int:
                     mcap = prices[-1][1] * shares
             PATH_STATS.append((code, latest_ok.roic_path or ("equity_fallback" if args.value_model == "roic" else "dcf"),
                                latest_ok.roic_nopat_mode, mcap))
+        if latest_ok is not None and latest_ok.external_equity_ps is not None and latest_ok.bps:
+            pct = latest_ok.external_equity_ps / latest_ok.bps
+            if abs(pct) > 0.10:
+                EXT_EQUITY_TOP.append((pct, code, name, latest_ok.report_date))
         states = daily_states(code, bands, prices, actions.get(code, []))
         daily_counts[code] = len(states)
         # 分母须与 `daily_states` 用**同一套**可用带（含坑 5 的上市前口径剔除），否则上市前
