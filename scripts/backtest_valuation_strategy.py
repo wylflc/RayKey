@@ -1080,7 +1080,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         fill_missing: str = "skip", dividend_tax: bool = False, swap_repeat: str = "skip",
         gain_sell: float = 0.0, gain_sell_mode: str = "gated",
         swap_trigger: str = "power", credit_over_limit: str = "repay",
-        swap_held_trigger: bool = False,
+        swap_held_trigger: bool = False, swap_proceeds: str = "pv",
         candidate_log=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
@@ -1848,6 +1848,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 用户 2026-08-09 追问的正是这个口径。`swap_bypass_corr` 打开后，已经为之腾过位的候选
         # 豁免相关性检查：既然已经付出了卖出的代价，就该买到它。
         swap_targets: set[str] = set()
+        swap_target_order: list[str] = []    # 触发顺序（`swap_proceeds=target` 时买入段先按此顺序买）
         reduced_today: set[str] = set()      # 同一只每日最多被换仓减一档，防止一天削十次
         # 簇内升级之后仍保留原换仓作为**兜底**：用户方案里「没有强相关持仓就直接建仓或加仓」
         # 隐含了「有钱」这个前提，而簇内升级是自筹资金的（卖一只买一只），**不产生新增现金**。
@@ -1959,6 +1960,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     turnover += lot_worst.shares * price
                     close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓{swap_tag}：让位给空间更大的{code}")
                 sell_count += 1
+                if code not in swap_targets:
+                    swap_target_order.append(code)
                 swap_targets.add(code)
         # 换仓卖出款同样先还超额负债（§10.2，用户 2026-08-22 裁定），再进入买入段
         if credit_over_limit == "repay" and credit_ratio > 0:
@@ -1977,6 +1980,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     used[t] += 1
             picked += [r for r in eligible if r not in picked]
             eligible = picked
+        # `swap_proceeds`（OI-101 研究开关，用户 2026-08-25）：`target`＝谁触发换仓就先买谁——
+        # 触发卖出的候选按触发顺序排到买入段队首，余款再按 `P/V` 顺序；缺省 `pv`＝卖出款一律按 `P/V` 升序流向。
+        if swap_proceeds == "target" and swap_target_order:
+            by_code_r = {r[0]: r for r in eligible}
+            front = [by_code_r[c] for c in swap_target_order if c in by_code_r]
+            eligible = front + [r for r in eligible if r[0] not in swap_targets]
 
         # ---- 相关性过滤：**贪心**地沿排序往下走，与已选/已持仓相关性超阈值的跳过，
         # 顺位补下一名（用户 2026-08-08：「第一和第五相关性很强则跳过第五，考虑第 21 名」）。
@@ -2754,6 +2763,8 @@ def main() -> int:
                         help="研究开关（用户 2026-08-22）：信号日收盘 ≥ 持仓均价×(1+G) 即触发减一档并可作换仓卖出源；0=关。例 1.0")
     parser.add_argument("--gain-sell-mode", choices=("gated", "ungated"), default="gated",
                         help="gated=涨幅减持／换仓同样过走势闸门（收<MA20 / 弱势）；ungated=不过闸门")
+    parser.add_argument("--swap-proceeds", choices=("pv", "target"), default="pv",
+                        help="OI-101 研究开关：换仓卖出款去向——pv=按 P/V 升序买（缺省）；target=谁触发换仓先买谁，余款再按 P/V")
     parser.add_argument("--swap-held-trigger", action="store_true",
                         help="OI-101 研究开关：已持仓候选想加仓而资金不足时也触发换仓（缺省只由未持仓候选触发）")
     parser.add_argument("--swap-trigger", choices=("cash", "power"), default="power",
@@ -3020,6 +3031,7 @@ def main() -> int:
                      + (f"_only{args.only_tiers}" if args.only_tiers else "")
                      + ("_sp" if args.swap_partial else "")
                      + ("_sht" if args.swap_held_trigger else "")
+                     + ("_spt" if args.swap_proceeds == "target" else "")
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
                      + (f"_ml{args.min_lot_cooldown}" if args.min_lot_cooldown else "")
                      + ("_lrc" if args.lot_ratio_cooldown else "")
@@ -3112,6 +3124,7 @@ def main() -> int:
                          addon_max_gain=args.addon_max_gain, gain_sell=args.gain_sell,
                          gain_sell_mode=args.gain_sell_mode, swap_trigger=args.swap_trigger,
                          credit_over_limit=args.credit_over_limit, swap_held_trigger=args.swap_held_trigger,
+                         swap_proceeds=args.swap_proceeds,
                          candidate_log=cand_writer)
             if cand_handle is not None:
                 cand_handle.close()
