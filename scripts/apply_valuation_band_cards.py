@@ -265,7 +265,10 @@ def main() -> int:
         if mb:
             row["evidence_available_at"] = mb["available_at"][:10]
             row["valuation_evidence_event"] = REPORT_EVENT.get(mb["report_date"][5:10], "定期报告")
-            row["valuation_reviewed_at"] = mb["available_at"][:10]
+            # 复核日 = 模型最近评估过的报告期可得日（含护栏拒绝行，`model_evaluated_at`）：
+            # 采纳带停在更早 ok 行（护栏连续拒绝／无法估值）时，已评估的新报告期不再重复入队。
+            row["valuation_reviewed_at"] = max(mb["available_at"][:10],
+                                               (mb.get("model_evaluated_at") or "")[:10])
             row["valuation_method"] = "内在价值模型（§6.5.2.3，v2.72 起唯一带来源）"
             continue
         cutoff_date, cutoff_event = evidence_cutoff(code)

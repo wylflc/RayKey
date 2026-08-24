@@ -65,16 +65,21 @@ def main() -> int:
     print(f"成员 {len(pool)} 只 ← 池（分层表 L1-L3 ∪ 池 CSV；池外档案不进生产带文件）")
 
     best: dict[str, dict] = {}
+    evaluated: dict[str, str] = {}
     fields: list[str] = []
     with a.bands.open(encoding="utf-8-sig") as fh:
         reader = csv.DictReader(fh)
         fields = list(reader.fieldnames or [])
         for row in reader:
             code = row["security_code"].zfill(6)
-            if code not in pool or row.get("status") != "ok":
-                continue
             avail = row.get("available_at") or ""
-            if not avail or avail > a.as_of:
+            if code not in pool or not avail or avail > a.as_of:
+                continue
+            # 模型最近评估过的报告期可得日（含护栏拒绝行）：§7.3 估值复核日读它，
+            # 采纳带停在更早 ok 行时不再把已评估的新报告期重复入队。
+            if avail > evaluated.get(code, ""):
+                evaluated[code] = avail
+            if row.get("status") != "ok":
                 continue
             key = (avail, row.get("report_date") or "")
             if code not in best or key > (best[code].get("available_at", ""),
@@ -99,6 +104,11 @@ def main() -> int:
             row["band_low"], row["band_high"] = f"{v * 0.90:.4f}", f"{v * 1.10:.4f}"
             row["roic_path"] = "bank_divspread"
             replaced += 1
+
+    if "model_evaluated_at" not in fields:
+        fields.append("model_evaluated_at")
+    for c, row in best.items():
+        row["model_evaluated_at"] = max(evaluated.get(c, ""), row.get("available_at") or "")
 
     missing = sorted(set(pool) - set(best))
     with a.out.open("w", newline="", encoding="utf-8") as fh:

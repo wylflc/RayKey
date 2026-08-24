@@ -1,3 +1,3 @@
 trade_date,security_code,security_name,quality_tier,close,model_intrinsic_value,model_pv,model_band_source,lots,shares,amount,cooldown_skips
 2026-08-24,000651,格力电器,L2,41.45,82.6167,0.5017,模型带·2026-03-31,33,3300,136785.0,0
-2026-08-24,603529,爱玛科技,L2,21.8,32.0472,0.6802,模型带·2026-03-31,13,1300,28340.0,0
+2026-08-24,603529,爱玛科技,L2,21.8,31.6182,0.6895,模型带·2026-06-30,62,6200,135160.0,0

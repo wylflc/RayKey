@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.81
+# A股选股-估值-量价操作流程 v4.82
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -456,6 +456,8 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 ### 7.3 估值复核触发
 
 预告、快报或正式定期报告的公告日晚于 `max(valuation_reviewed_at, evidence_available_at)`，即进入估值复核，不先判断幅度是否重大。披露文件缺失时才用报告期末兜底。
+
+`valuation_reviewed_at` 取生产带文件 `model_evaluated_at`（模型最近评估过的报告期可得日，含护栏拒绝行）与采纳带可得日的较大者；`evidence_available_at` 取采纳带可得日。
 
 ### 7.4 事件复核触发
 
