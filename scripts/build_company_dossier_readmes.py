@@ -117,7 +117,7 @@ def model_assumptions(band: dict, mid: float, pv: float | None) -> str:
     if overlay in ("forecast", "express"):
         head += "（§6.4 预告/快报叠加行，正式报告披露后由机械带取代）"
     if path == "bank_divspread":
-        tail = "：V = 近 12 个月每股现金分红 ÷（十年国债 + 2%）"
+        tail = "：V = 最近已知完整财年每股现金分红 ÷（十年国债 + 2%）"
         if pv:
             tail += f"，即现价股息率 = 带口径要求收益率 ÷ {pv:.3f}"
         return head + tail + "；参数全文见第二节。"

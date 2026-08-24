@@ -142,7 +142,7 @@ def main() -> int:
     # v4.54（OI-083）：生产带文件只含池成员；池外档案行（documented_not_attention／boundary 点名档案）
     # 直接从全市场模型带取最新 ok 带——只落档案，不写生产带文件，不进 §9.3。
     archive_codes = {r["security_code"] for r in rows} - set(usable) - set(stale)
-    near_zero_div: set[str] = set()   # 银行/保险无近 12 个月分红 → 无法估值
+    near_zero_div: set[str] = set()   # 银行/保险无已知完整财年分红 → 无法估值
     archive_used: list[str] = []
     if archive_codes and str(args.archive_bands) and args.archive_bands.exists():
         a_usable, a_stale = latest_model_bands(args.archive_bands, args.min_available,
@@ -152,8 +152,8 @@ def main() -> int:
                 usable[c] = a_usable[c]; archive_used.append(c)
             elif c in a_stale:
                 stale[c] = a_stale[c]
-        # v4.56（OI-085）：池外档案里的银行/保险同样走股利折现（V = 近 12 个月每股现金分红 ÷（十年国债＋2%）），
-        # 与池内 build_pool_model_bands 的改写同式；rf 取 cost_of_equity_inputs 最新一行。
+        # v4.56（OI-085）：池外档案里的银行/保险同样走股利折现（V = 最近已知完整财年每股现金分红 ÷（十年国债＋2%），
+        # 分子口径 divspread_dividend），与池内 build_pool_model_bands 的改写同式；rf 取 cost_of_equity_inputs 最新一行。
         names = {r["security_code"]: r.get("security_name", "") for r in rows}
         rf = latest_rf()
         for c in list(archive_used):
@@ -161,7 +161,7 @@ def main() -> int:
                 v = bank_dividend_intrinsic(c, args.as_of, rf) if rf is not None else None
                 if v:
                     b = dict(usable[c]); b["intrinsic_value"] = f"{v:.4f}"; b["roic_path"] = "bank_divspread"
-                    b["exright_note"] = "股利折现逐日口径（分子为近 12 个月分红，不折）"; b["forecast_overlay"] = ""
+                    b["exright_note"] = "股利折现口径（分子为最近已知完整财年分红，不折）"; b["forecast_overlay"] = ""
                     usable[c] = b
                 else:
                     usable.pop(c, None); archive_used.remove(c); near_zero_div.add(c)
@@ -209,7 +209,7 @@ def main() -> int:
             row["band_method"] = ("无法估值·模型判不可估（§6.5.2.4 统一口径）："
                                   + ("最新 ok 模型带早于时点门槛" if code in stale
                                      else "模型价值趋零（零增长永续价值≈净负债，IV<0.01）" if code in near_zero
-                                     else "银行/保险股利折现：近 12 个月无现金分红" if code in near_zero_div
+                                     else "银行/保险股利折现：无已知完整财年现金分红" if code in near_zero_div
                                      else "模型对各期均拒绝出带"))
             row["decided_by"] = "内在价值模型（§6.5.2.3；模型重新可算后自动回归模型带）"
             row["anchor_earnings_yi"] = ""
@@ -279,7 +279,7 @@ def main() -> int:
         if roic_path == "bank_divspread":
             row["band_method"] = "银行/保险·股利折现（§6.5.2.3）"
             row["band_derivation"] = (common_head
-                + "V = 近 12 个月每股现金分红 ÷ (十年国债 + 2%)｜" + common_tail)
+                + "V = 最近已知完整财年每股现金分红 ÷ (十年国债 + 2%)｜" + common_tail)
         elif roic_path in ("growth", "zero_growth"):
             row["band_method"] = "内在价值模型·ROIC 口径（§6.5.2.3）：NOPAT—投入资本—增量回报—WACC—EV−净负债"
             # g0 的来源按带文件 `roic_g_source` 如实写（hybrid 两腿取大；生产池多数 growth 带由利润增速腿给出，

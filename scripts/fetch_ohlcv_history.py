@@ -15,7 +15,7 @@
 ----
 * ``data/raw/ohlcv/<代码>.csv``——不复权日线：``date,open,close,high,low,volume``（逐票一文件，增量追加）
 * ``data/raw/corporate_actions/a_share_corporate_actions.csv``——全部除权除息事件：
-  ``security_code,ex_dividend_date,cash_per_share,share_ratio,plan,report_date``
+  ``security_code,ex_dividend_date,cash_per_share,share_ratio,plan,report_date,plan_notice_date,progress``
 
 两者分开存是有意的：**价格是观测，事件是事实**，前者天天变、后者只在除权日新增一行。
 合起来才能算总收益率，任何一份单独都不够。
@@ -67,7 +67,12 @@ HEADERS = {"User-Agent": "Mozilla/5.0", "Referer": "https://data.eastmoney.com/"
 MAX_BARS_PER_CALL = 640          # 实测上限，见模块 docstring
 OHLCV_FIELDS = ["date", "open", "close", "high", "low", "volume"]
 ACTION_FIELDS = ["security_code", "security_name", "ex_dividend_date",
-                 "cash_per_share", "share_ratio", "plan", "report_date"]
+                 "cash_per_share", "share_ratio", "plan", "report_date",
+                 "plan_notice_date", "progress"]
+# `plan_notice_date` = 董事会预案公告日（东财 `PLAN_NOTICE_DATE`）——股利折现的分红可得日（`divspread_dividend`）。
+# **预案已公告、尚未除权的分红也落盘**（`ex_dividend_date` 为空、`progress` 记东财进度）：除权侧的
+# 读者一律按「除权日为空即跳过」处理，股利折现侧则从预案公告日起计入。同一代码重取时旧的预案行整体清掉，
+# 由本次取到的行（已实施则带除权日）接替，预案作废即消失。
 
 
 # 北交所代码段：430/83x/87x/88x 是老三板转来的，**920 是 2023 年后新发的**。
@@ -147,7 +152,7 @@ def fetch_full_history(sid: str, until: date, since: date | None, timeout: float
 def fetch_actions(code: str, timeout: float) -> list[dict[str, str]]:
     query = urllib.parse.urlencode({
         "reportName": "RPT_SHAREBONUS_DET",
-        "columns": ("SECURITY_CODE,SECURITY_NAME_ABBR,REPORT_DATE,EX_DIVIDEND_DATE,"
+        "columns": ("SECURITY_CODE,SECURITY_NAME_ABBR,REPORT_DATE,EX_DIVIDEND_DATE,PLAN_NOTICE_DATE,"
                     "PRETAX_BONUS_RMB,BONUS_RATIO,IT_RATIO,IMPL_PLAN_PROFILE,ASSIGN_PROGRESS"),
         "pageSize": "200",
         "sortColumns": "EX_DIVIDEND_DATE",
@@ -162,11 +167,12 @@ def fetch_actions(code: str, timeout: float) -> list[dict[str, str]]:
     out = []
     for row in rows:
         ex = (row.get("EX_DIVIDEND_DATE") or "")[:10]
-        if not ex:
-            continue                            # 只有预案、尚未实施：没有除权日就不是事件
+        plan_notice = (row.get("PLAN_NOTICE_DATE") or "")[:10]
         cash = float(row.get("PRETAX_BONUS_RMB") or 0) / 10
         share = (float(row.get("BONUS_RATIO") or 0) + float(row.get("IT_RATIO") or 0)) / 10
         if not cash and not share:
+            continue                            # 只预披露「拟分红」、无金额：既不是事件也不是分子
+        if not ex and not plan_notice:
             continue
         out.append({
             "security_code": code.zfill(6),
@@ -176,8 +182,18 @@ def fetch_actions(code: str, timeout: float) -> list[dict[str, str]]:
             "share_ratio": f"{share:.6f}",
             "plan": row.get("IMPL_PLAN_PROFILE", ""),
             "report_date": (row.get("REPORT_DATE") or "")[:10],
+            "plan_notice_date": plan_notice,
+            "progress": row.get("ASSIGN_PROGRESS", "") or "",
         })
     return out
+
+
+def action_key(action: dict[str, str]) -> tuple[str, str]:
+    """除权事件按 (代码, 除权日) 去重；预案行无除权日，按 (代码, plan:报告期:预案日) 去重。"""
+    ex = action.get("ex_dividend_date") or ""
+    if ex:
+        return (action["security_code"], ex)
+    return (action["security_code"], f"plan:{action.get('report_date', '')}:{action.get('plan_notice_date', '')}")
 
 
 # --------------------------------------------------------------- 主流程
@@ -243,9 +259,12 @@ def main() -> int:
         写盘所以一根没丢。同一次运行里两种写法、两种结局，正是 §13 第 3 条那类「丢了数据
         不报警」的成因——故这里改为每批落盘。
         """
-        merged = {(a["security_code"], a["ex_dividend_date"]): a for a in load_csv(actions_path)
-                  if a.get("security_code")}
-        merged.update({(a["security_code"], a["ex_dividend_date"]): a for a in actions})
+        refetched = {a["security_code"] for a in actions}
+        merged = {action_key(a): a for a in load_csv(actions_path)
+                  if a.get("security_code")
+                  # 本批重取到的代码：旧预案行整体清掉，由本次取到的行接替（已实施→带除权日；作废→消失）
+                  and not (a["security_code"] in refetched and not (a.get("ex_dividend_date") or ""))}
+        merged.update({action_key(a): a for a in actions})
         with actions_path.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=ACTION_FIELDS)
             writer.writeheader()

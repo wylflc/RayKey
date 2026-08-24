@@ -19,6 +19,7 @@ import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Iterable
 
@@ -530,20 +531,18 @@ def load_model_bands(path: Path, as_of: str) -> dict[str, dict]:
     return {code: row for code, (_, row) in latest.items()}
 
 
+@lru_cache(maxsize=1)
+def _dividend_distributions() -> dict[str, list]:
+    from divspread_dividend import load_distributions
+    return load_distributions()
+
+
 def bank_dividend_intrinsic(code: str, as_of: str, rf: float) -> float | None:
-    """§12.31：`V = 近 12 个月每股现金分红 ÷ (十年国债 + 2%)`。无分红返回 None。"""
-    total = 0.0
-    low = f"{int(as_of[:4]) - 1}{as_of[4:]}"
-    for path in sorted((ROOT / "data/raw/corporate_actions").glob("*.csv")):
-        with path.open(newline="", encoding="utf-8") as handle:
-            for row in csv.DictReader(handle):
-                if (row.get("security_code") or "").zfill(6) != code:
-                    continue
-                day = row.get("ex_dividend_date") or ""
-                value = to_float(row.get("cash_per_share")) or 0.0
-                if len(day) == 10 and low < day <= as_of and value > 0:
-                    total += value
-    return total / (rf + BANK_RISK_PREMIUM) if total > 0 else None
+    """§12.31：`V = 最近已知完整财年每股现金分红 ÷ (十年国债 + 2%)`（分子口径 `divspread_dividend`，
+    与 `rebuild_bank_bands.py` 历史逐日同一实现）。无分红返回 None。"""
+    from divspread_dividend import annual_dividend, dividend_value
+    got = annual_dividend(_dividend_distributions().get(code.zfill(6), []), as_of)
+    return dividend_value(got[0], rf, BANK_RISK_PREMIUM) if got else None
 
 
 # §9.3.1 相关性的数据源（OI-093）：扫描当日逐票已取的前复权K线（`scan_one` 落入本表），

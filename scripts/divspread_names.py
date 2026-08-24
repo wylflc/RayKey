@@ -11,9 +11,13 @@ from __future__ import annotations
 INSURER_CODES = {"601318", "601319", "601336", "601601", "601628"}   # 平安、人保、新华、太保、国寿
 
 
+BANK_NAMES_WITHOUT_KEYWORD = {"张家港行"}   # 42 家 A 股上市银行里唯一名称既无「银行」也无「农商」者
+
+
 def is_bank_name(name: str) -> bool:
+    # 不按「以行结尾」判：世联行／任子行／华致酒行／喜悦智行／永安行／三人行都不是银行（OI-099 前误中）。
     n = name or ""
-    return ("银行" in n) or n.endswith("行") or ("农商" in n)
+    return ("银行" in n) or ("农商" in n) or n in BANK_NAMES_WITHOUT_KEYWORD
 
 
 def is_insurer(code: str, name: str = "") -> bool:
@@ -22,5 +26,5 @@ def is_insurer(code: str, name: str = "") -> bool:
 
 
 def is_divspread_financial(code: str, name: str = "") -> bool:
-    """银行或保险：估值走 V = 近 12 个月每股现金分红 ÷（十年国债 + 2%）。"""
+    """银行或保险：估值走 V = 最近已知完整财年每股现金分红 ÷（十年国债 + 2%）（分子见 `divspread_dividend`）。"""
     return is_bank_name(name) or is_insurer(code, name)

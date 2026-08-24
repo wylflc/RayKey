@@ -14,7 +14,9 @@
   peer        COE 取**滚动窗口内同业隐含 COE 的中位**，窗口严格早于当日（分布不是当日点位，
               合乎 §6.3 的价格独立性硬约束）
   pbhist      PB* 直接取该行**滚动窗口内自身 PB 的中位**，完全不经 ROE
-  divspread:RP  股利折现：`V = 近 12 个月每股现金分红 ÷ (十年国债 + RP)`，
+  divspread:RP  股利折现：`V = 最近已知完整财年每股现金分红 ÷ (十年国债 + RP)`（分子口径见
+              `divspread_dividend.py`：按所属报告期归财年、自预案公告日可得；OI-099 前为近 365 天
+              除权求和，两笔年度分红相隔不足一年时翻倍再腰斩），
               即「股息率要比国债高出 RP 才算合理价」。实测（§12.31）该口径的
               股息率−国债利差在全历史五档上单调（其后三年 −0.8%/+1.3%/+3.0%/+7.9%/+11.2%，
               三年为正比例 47%/57%/67%/83%/90%），是银行组唯一单调的候选
@@ -214,35 +216,18 @@ if RP is not None:
     RFS.sort()
 RFD = [x[0] for x in RFS]
 
-DIV = collections.defaultdict(list)
-if RP is not None:
-    import glob as _glob
-    for f in _glob.glob(f"{ROOT}/data/raw/corporate_actions/*.csv"):
-        for r in csv.DictReader(open(f, encoding="utf-8")):
-            d = r.get("ex_dividend_date") or ""
-            if len(d) != 10:
-                continue
-            try:
-                v = float(r.get("cash_per_share") or 0)
-            except ValueError:
-                v = 0.0
-            if v > 0:
-                DIV[r["security_code"]].append((d, v))
-    for c in DIV:
-        DIV[c].sort()
+from divspread_dividend import load_distributions, annual_dividend   # OI-099：分子 = 最近已知完整财年分红
+from intrinsic_value import valuation_label
+DIV = load_distributions(codes=BANKS) if RP is not None else {}
 
 def rf_at(day):
     i = bisect.bisect_right(RFD, day) - 1
     return RFS[i][1] if i >= 0 else None
 
-def div_ttm(c, day):
-    """近 12 个月已除权的每股现金分红——只回看，无前视。"""
-    s = DIV.get(c)
-    if not s:
-        return 0.0
-    ds = [x[0] for x in s]
-    lo = _shift(day, 365)
-    return sum(x[1] for x in s[bisect.bisect_left(ds, lo):bisect.bisect_right(ds, day)])
+def div_annual(c, day):
+    """`day` 时点最近一个已知完整财年的每股现金分红合计（按预案公告日可得，只回看）。"""
+    got = annual_dividend(DIV.get(c, []), day)
+    return got[0] if got else 0.0
 
 # ---- 第二遍：重写银行行 ----
 n_rewritten = n_kept = n_dropped = 0
@@ -267,7 +252,7 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         if not bps or bps <= 0:
             n_dropped += 1; continue
         if RP is not None:
-            r10 = rf_at(d); dv = div_ttm(c, d)
+            r10 = rf_at(d); dv = div_annual(c, d)
             if r10 is None or dv <= 0: n_dropped += 1; continue
             v = dv / (r10 + RP)
             if v <= 0: n_dropped += 1; continue
@@ -277,6 +262,7 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
             r["band_high"] = f"{v*1.1:.4f}"
             r["valuation_ratio"] = f"{px/v:.4f}"
             r["upside_to_low"] = f"{v*0.9/px-1:.4f}"
+            if "valuation_label" in r: r["valuation_label"] = valuation_label(px, v)   # OI-099：标签随 V 同步改写
             if "pv_equity" in r: r["pv_equity"] = f"{px/v:.4f}"   # v4.62：股利折现无企业价值口径，两列同值
             if "ev_ps" in r: r["ev_ps"] = ""
             w.writerow(r); n_rewritten += 1; continue
@@ -294,6 +280,7 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
             r["band_high"] = f"{v*1.1:.4f}"
             r["valuation_ratio"] = f"{px/v:.4f}"
             r["upside_to_low"] = f"{v*0.9/px-1:.4f}"
+            if "valuation_label" in r: r["valuation_label"] = valuation_label(px, v)
             if "pv_equity" in r: r["pv_equity"] = f"{px/v:.4f}"
             if "ev_ps" in r: r["ev_ps"] = ""
             w.writerow(r); n_rewritten += 1; continue
