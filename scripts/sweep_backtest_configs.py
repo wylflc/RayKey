@@ -77,12 +77,12 @@ BASE = (
     "--width 0.0657 --sell-line 2.4671 --swap-margin 0.1437 "
     # **止损线 = min(建仓日锚, 当日同周期均线)**（v4.25 用户裁定采纳，§12.88.2/§12.89：
     # 滚5 +0.59pp、16/23、逐年中性；均线上移不抬线，非 v2.56 那条双向滚动割肉）。
-    # **建仓日已破 MA60 → 跳过该笔**（v4.26 用户裁定，§12.90：T+1 跳空破 MA60 时几乎必然
-    # 也破 MA20，旧 MA20 退档锚仍高于成本、买入即割；23 起点配对差噪声级，长路径 15 年仅 5 次）。
-    "--stop-ma 60 --stop-line min_entry_current --entry-below-ma60 skip "
+    # **建仓不设放弃规则**（v4.69 用户裁定取消，§12.126 追问检验：`skip` 与 `ma20_stop`
+    # 23 起点配对差全读数 0.00、15 年仅触发 4~5 次）：照买，T 日收盘低于成交日 MA60 时锚退 MA20。
+    "--stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma20_stop "
     # **OI-092 三处成文差异 23 起点 A/B（§12.126，2026-08-24）**：成文口径三臂主读数全负
     # （`skip_fill` −0.76、`--stop-basis signal` −0.42、`--residual-clear tranche` −0.44，合并 −1.41），
-    # §9.3 成文改从实现（v4.68），读数与纪元不变；三开关缺省即现行，显式写出以防缺省漂移。
+    # §9.3 成文改从实现（v4.68）；三开关缺省即现行，显式写出以防缺省漂移。
     "--stop-basis exec --residual-clear lot "
     "--position-cap 0.6 "
     "--addon-trend ma-only --swap-require-weak "

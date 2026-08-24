@@ -46,7 +46,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(daily_scan.SEC93_POSITION_CAP, 0.60)
         self.assertEqual(float(option_value(args, "--position-cap")), daily_scan.SEC93_POSITION_CAP)
         # v4.68（OI-092，§12.126）：三处时点/阈值口径显式入 BASE，防缺省漂移
-        self.assertEqual(option_value(args, "--entry-below-ma60"), "skip")
+        self.assertEqual(option_value(args, "--entry-below-ma60"), "ma20_stop")
         self.assertEqual(option_value(args, "--stop-basis"), "exec")
         self.assertEqual(option_value(args, "--residual-clear"), "lot")
 
@@ -59,8 +59,8 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)
         self.assertIn("授信 = 净资产 × 66.6%，不设金额上限", workflow)
         self.assertIn(f"| 单票机械上限 | 单票市值 ÷ 当日净资产 `N` ≥ {daily_scan.SEC93_POSITION_CAP:.0%} 时不再加仓", workflow)
-        # v4.68（OI-092）：§9.3 成文与回测实现同口径的三处关键句
-        self.assertIn("T 日收盘 < 成交日（T+1）MA60 时该笔放弃", workflow)
+        # v4.68/v4.69（OI-092）：§9.3 成文与回测实现同口径的关键句
+        self.assertIn("| 新建仓走势 | T 日 `收盘 > MA20 > MA60` |", workflow)
         self.assertIn("现价跌破当日生效线即**当日**整仓清空", workflow)
         self.assertIn("任何减档后的余仓不足一手时清空", workflow)
         self.assertTrue(daily_scan.SEC93_L3_TACTICAL_GATE)

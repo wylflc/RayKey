@@ -851,10 +851,8 @@ def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int) -> tuple[
     理由是买在 MA60 之下时，拿 MA60 当止损等于**建仓即触发**——止损价高于成本价，
     这条止损不是保护而是立刻把仓位打掉。退回 MA20 才可能落在成本价下方。
 
-    **v4.26 起生产口径不再走到 MA20 退档**（用户 2026-08-20，§12.90）：信号日闸门
-    `收盘>MA20>MA60` 成立后 T+1 跳空破 MA60 时，几乎必然也破 MA20——退档锚仍高于
-    成本、次日即触发，没达成本函数声称的目的。生产 `BASE` 用 `--entry-below-ma60 skip`
-    直接放弃该笔建仓；本分支保留给 `--stop-ma 20` 研究口径与极端缺数据兜底。
+    v4.69 起生产口径即本分支（`--entry-below-ma60 ma20_stop`，照买、退档 MA20）；
+    放弃式 `skip`/`skip_fill` 为研究口径（§12.126：`skip` 与本分支噪声级、`skip_fill` 主读数 −0.76）。
     """
     if stop_ma == 20:
         return ma.get(20, 0.0), 20
@@ -2009,11 +2007,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             tranche = trend_tranche and strategy == "trend"
             if ((strategy == "trend" and not tranche) or lump_sum) and code in portfolio.lots:
                 continue                      # 一笔建仓：不加仓
-            # 建仓跳过（用户 2026-08-20）：只判**新建仓**，加仓不设锚、不受影响；该笔放弃后
-            # 资金顺位给下一名（与 §10.1 过滤同型）。成交日停牌回落信号日价的情形不在此列
-            # （exec 日无均线行）。`skip`（现行，§9.3.1 走势行）：T 日收盘对成交日 MA60；
-            # `skip_fill`（OI-092① 研究口径，§12.126 A/B 主读数 −0.76 不采纳）：成交日收盘
-            # （`fill`）对成交日 MA60，触发频次远高于 skip。
+            # 建仓放弃（研究口径，v4.69 起现行为 `ma20_stop`＝照买、锚退 MA20，本分支不进）：
+            # 只判**新建仓**，加仓不设锚、不受影响；放弃后资金顺位给下一名。成交日停牌回落
+            # 信号日价的情形不在此列（exec 日无均线行）。`skip`：T 日收盘对成交日 MA60
+            # （与 ma20_stop 噪声级，§12.126）；`skip_fill`：成交日收盘（`fill`）对成交日 MA60
+            # （OI-092①，§12.126 主读数 −0.76 不采纳），触发频次远高于 skip。
             if entry_below_ma60 in ("skip", "skip_fill") and code not in portfolio.lots:
                 ma60_exec = (mas.get(code, {}).get(day) or {}).get(60, 0.0)
                 ref = fill if entry_below_ma60 == "skip_fill" else close
@@ -2666,11 +2664,9 @@ def main() -> int:
                              "当日同周期均线)——均线下移时止损跟随下移、上移不抬线（用户 2026-08-19 实验）")
     parser.add_argument("--entry-below-ma60", choices=("ma20_stop", "skip", "skip_fill"),
                         default="ma20_stop",
-                        help="新建仓成交日收盘 < 当日 MA60（信号日过闸后跳空所致）的处理："
-                             "ma20_stop=照买、锚退 MA20（旧行为）；skip=放弃该笔、资金顺位下一名"
-                             "（用户 2026-08-20：此时几乎必然也低于 MA20，退档锚仍高于成本、买入即割）。"
-                             "skip 判 T 日收盘对成交日 MA60（现行，§9.3.1 走势行）；"
-                             "skip_fill 判成交日收盘对成交日 MA60（OI-092① 研究口径，§12.126 不采纳）")
+                        help="新建仓信号日过闸后跳空破 MA60 的处理：ma20_stop=照买、锚退 MA20"
+                             "（现行，v4.69）；skip=T 日收盘对成交日 MA60 放弃（研究口径，与现行噪声级）；"
+                             "skip_fill=成交日收盘对成交日 MA60 放弃（OI-092① 研究口径，§12.126 不采纳）")
     parser.add_argument("--stop-basis", choices=("exec", "signal"), default="exec",
                         help="止损判据时点（OI-092②）：exec=成交日收盘对成交日均线、同日判同日卖"
                              "（现行，§9.3.1 止损行）；signal=T 日收盘对 T 日均线判、T+1 按成交价卖"
