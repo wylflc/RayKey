@@ -346,7 +346,8 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
                           else f"= 锚 {entry_stop:g}（当日均线不可得，按锚判读）")
                 notes.append(
                     f"**收盘 {close:g} < 生效止损线 {stop_line:g}**（{detail}）："
-                    f"按 §9.3.5 次日尾盘**整仓清空**，先于 `P/V` 减持与换仓执行"
+                    f"按 §9.3.1 止损行次日尾盘以现价对当日生效线（min(锚, 当日MA60)）复核，"
+                    f"仍跌破即**当日整仓清空**，先于 `P/V` 减持与换仓执行"
                 )
             else:
                 stop_hit = "否"

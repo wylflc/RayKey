@@ -80,6 +80,10 @@ BASE = (
     # **建仓日已破 MA60 → 跳过该笔**（v4.26 用户裁定，§12.90：T+1 跳空破 MA60 时几乎必然
     # 也破 MA20，旧 MA20 退档锚仍高于成本、买入即割；23 起点配对差噪声级，长路径 15 年仅 5 次）。
     "--stop-ma 60 --stop-line min_entry_current --entry-below-ma60 skip "
+    # **OI-092 三处成文差异 23 起点 A/B（§12.126，2026-08-24）**：成文口径三臂主读数全负
+    # （`skip_fill` −0.76、`--stop-basis signal` −0.42、`--residual-clear tranche` −0.44，合并 −1.41），
+    # §9.3 成文改从实现（v4.68），读数与纪元不变；三开关缺省即现行，显式写出以防缺省漂移。
+    "--stop-basis exec --residual-clear lot "
     "--position-cap 0.6 "
     "--addon-trend ma-only --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "

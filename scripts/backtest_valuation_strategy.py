@@ -905,9 +905,12 @@ def lot_ratio_ready(counters: dict, code: str, lot_value: float, tranche: float)
     return True
 
 
-def sell_shares(target: float, held: float, price: float, lot_size: int) -> float:
+def sell_shares(target: float, held: float, price: float, lot_size: int,
+                clear_floor: float = 0.0) -> float:
     """分批卖出的股数：按手向下取整。**剩余不足一手则整笔卖出**——A 股允许零股卖出，
-    但不允许留着买不回来的零头当仓位管理。返回 0 表示本次不动。"""
+    但不允许留着买不回来的零头当仓位管理。`clear_floor`（股数）抬高清空阈值：
+    `--residual-clear tranche` 传入一档股数，余仓不足一档即整笔卖出（OI-092③ 研究口径，
+    §9.3.2 第 4 步现行为不足一手）。返回 0 表示本次不动。"""
     if not lot_size:
         return min(held, target)
     want = min(held, target)
@@ -915,7 +918,7 @@ def sell_shares(target: float, held: float, price: float, lot_size: int) -> floa
     if lots_n <= 0:
         return 0.0
     shares = lots_n * lot_size
-    return held if held - shares < lot_size else shares
+    return held if held - shares < max(lot_size, clear_floor) else shares
 
 
 def log_partial_sell(ledger: list | None, day: str, code: str, shares: float,
@@ -967,6 +970,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         sell_trend_ma: tuple[int, ...] = (), sell_full: bool = False, stop_min_days: int = 0,
         stop_confirm_days: int = 1, stop_deep_pct: float = 0.0,
         stop_line: str = "entry", entry_below_ma60: str = "ma20_stop",
+        stop_basis: str = "exec", residual_clear: str = "lot",
         stop_partial: bool = False, stop_tranche: float = 1.0,
         liquidate_ma: int = 0, liquidate_days: int = 3,
         opens: dict[str, dict[str, float]] | None = None,
@@ -1119,6 +1123,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     min_ratio, min_ratio_day = float("inf"), ""
     credit_limit = 0.0
     prev_trading = {n: d for d, n in zip(days, days[1:])}
+    # `residual_clear`（OI-092③）：减档后余仓清空阈值。`lot`（现行，§9.3.2 第 4 步）＝不足一手
+    # 才清空；`tranche`（研究口径，§12.126 A/B 主读数 −0.44 不采纳）＝传一档股数给 `sell_shares`、
+    # 不足一档即清空。`budget` 在日循环内每日重算，lambda 晚绑定读的正是当日值。
+    res_floor = (lambda p: budget / p) if residual_clear == "tranche" else (lambda p: 0.0)
     below_ma_run: dict[str, int] = {}      # 连续跌破 `liquidate_ma` 的天数，逐日累计
     # ---- 大盘围栏（用户 2026-08-20）：指数序列只在开关打开时参与；关时本段不产生任何分支。
     mkt_on = bool(mkt) and bool(mkt_crash_days or mkt_trend_ma)
@@ -1214,8 +1222,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             marks.pop(code, None)
             stats["退市·末日收盘平仓"] += 1
         # ---- 成交价口径（用户 2026-08-10）：`exec_delay=1` 表示「T 日收盘算信号、T+1 日成交」。
-        # **只改成交价，不改判据**——合格集、`P/V`、均线、盯市净值一律仍用 T 日收盘，
-        # 因为信号本来就定义在 T 日收盘上；改的只是这笔单实际以什么价格成交。
+        # 买入/减持/换仓判据（合格集、`P/V`、走势与减持闸门）用 T 日收盘——信号本来就定义在
+        # T 日收盘上；止损判据按 `--stop-basis`（现行 exec：成交日收盘对成交日均线）、建仓跳过
+        # 按 `--entry-below-ma60`（现行 skip：T 日收盘对成交日 MA60）各有自己的时点口径
+        # （OI-092 A/B，§12.126）；盯市净值用当日收盘（停牌沿用末价）。
         # T+1 无价（停牌/最后一日）时回落到 T 日收盘并计数，不静默丢弃该笔。
         def fill_price(code: str, fallback: float | None) -> float | None:
             if exec_delay == 0:
@@ -1325,7 +1335,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 按与减持同一速度卖，不一次性砸出——一年一次的换库若全额出清，会在每年 5 月
             # 制造一次集中抛售，测出来的是流动性冲击而不是规则优劣。
             if members is not None and code not in members:
-                shares = sell_shares(budget / price, lot.shares, price, lot_size)
+                shares = sell_shares(budget / price, lot.shares, price, lot_size, res_floor(price))
                 if (not shares and lot_ratio_cooldown and lot_size
                         and lot.shares >= lot_size
                         and lot_ratio_ready(lot_counters, code, price * lot_size, budget)):
@@ -1379,9 +1389,14 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # **min(建仓日冻结线, 当日同周期均线)**——均线跌到冻结线之下时止损跟随下移（放宽），
             # 均线上移不抬线（`entry` 为旧冻结口径；现行为 `min_entry_current`（BASE））。周期取该仓实际采用的
             # `entry_stop_ma`（买在 MA60 下方退 MA20 的仓，比较的也是当日 MA20，不混周期）。
+            # `stop_basis`（OI-092②）：`exec`（现行，§9.3.1 止损行）＝成交日收盘对成交日均线、
+            # 同日判同日卖；`signal`（研究口径，§12.126 A/B 主读数 −0.42 不采纳）＝T 日收盘对
+            # T 日均线判、T+1 按成交价卖。信号日无收盘（停牌）则当日不判，跌破计数保持不动。
+            judge_day = sig_day if stop_basis == "signal" else day
+            judge_price = today.get(code, (None,))[0] if stop_basis == "signal" else price
             stop_level = lot.entry_stop
             if stop_line == "min_entry_current" and lot.entry_stop and lot.entry_stop_ma:
-                ma_cur = mas.get(code, {}).get(day, {}).get(lot.entry_stop_ma, 0.0)
+                ma_cur = mas.get(code, {}).get(judge_day, {}).get(lot.entry_stop_ma, 0.0)
                 if ma_cur:
                     stop_level = min(stop_level, ma_cur)
             # `trail_ratio`（用户 2026-08-20：「给止损锚设一个上移机制，主要针对盈利比较大的股票，
@@ -1405,12 +1420,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if lot.lock_level > stop_level:
                     stop_level, stop_tag = lot.lock_level, f"盈利锁定{lot.lock_eta:g}×成本"
             stop_trigger = ""
-            if stop_enabled:
+            if stop_enabled and judge_price:
                 lot.stop_breach_streak, stop_trigger = update_stop_breach(
-                    price, stop_level, lot.stop_breach_streak,
+                    judge_price, stop_level, lot.stop_breach_streak,
                     stop_confirm_days, stop_deep_pct,
                 )
-            else:
+            elif not stop_enabled:
                 lot.stop_breach_streak = 0
             if pct_stop_when_rich and not is_rich(code, ratio):
                 if stop_level and price < stop_level:
@@ -1437,7 +1452,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if stop_partial:
                     # `stop_tranche` 是减仓速度的倍数：1.0 = 与定投同速，∞ = 退回整仓清空。
                     # 用它做剂量-反应，检验「减得慢」到底是不是 STP 变差的原因。
-                    shares = sell_shares(budget * stop_tranche / price, lot.shares, price, lot_size)
+                    shares = sell_shares(budget * stop_tranche / price, lot.shares, price, lot_size, res_floor(price))
                     if (not shares and lot_ratio_cooldown and lot_size
                             and lot.shares >= lot_size
                             and lot_ratio_ready(lot_counters, code, price * lot_size, budget)):
@@ -1530,7 +1545,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     sell_count += 1
                     continue
                 stats["P/V≥减持线·减一档" if value_rich else f"{sell_tag}·减一档"] += 1
-                shares = sell_shares(budget / price, lot.shares, price, lot_size)
+                shares = sell_shares(budget / price, lot.shares, price, lot_size, res_floor(price))
                 if (not shares and lot_ratio_cooldown and lot_size
                         and lot.shares >= lot_size
                         and lot_ratio_ready(lot_counters, code, price * lot_size, budget)):
@@ -1710,7 +1725,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # §12.3 里正在复利的仓位。`cluster_reduced` 保证同一只每日至多被削一档。
                 lot_w = portfolio.lots[worst]
                 if swap_partial and worst not in cluster_reduced:
-                    shares = sell_shares(budget / price, lot_w.shares, price, lot_size)
+                    shares = sell_shares(budget / price, lot_w.shares, price, lot_size, res_floor(price))
                     if (not shares and lot_ratio_cooldown and lot_size
                             and lot_w.shares >= lot_size
                             and lot_ratio_ready(lot_counters, worst, price * lot_size, budget)):
@@ -1829,7 +1844,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # 只会每天空转地削持仓。故槽位满时仍整仓卖出。
                 lot_worst = portfolio.lots[worst]
                 partial = swap_partial and len(portfolio.lots) < max_positions and worst not in reduced_today
-                shares = (sell_shares(budget / price, lot_worst.shares, price, lot_size)
+                shares = (sell_shares(budget / price, lot_worst.shares, price, lot_size, res_floor(price))
                           if partial else lot_worst.shares)
                 if (partial and not shares and lot_ratio_cooldown and lot_size
                         and lot_worst.shares >= lot_size
@@ -1875,7 +1890,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # OI-037（用户 2026-08-19 指令）：`--corr-conflict` 提供另两种处理——与**在手持仓**
         # 强相关时不一律跳过，而是与最相关的那只二选一：`swap_space` 比便宜（候选 `P/V`
         # 低出 `swap_margin` 才换）、`swap_strength` 比走势（近 N 日送转折算收益率更高者留），
-        # 换出方减一档、余仓不足一档清仓——与 §9.3.2 换仓同一卖出机制。
+        # 换出方减一档、余仓不足一手清仓——与 §9.3.2 换仓同一卖出机制。
         # 与**已选候选**（未持仓）冲突仍一律跳过：两只都没买时没有「换」的对象。
         if max_corr and corr is not None and not cluster_swap:
             def trailing_return(code: str, upto: str, n: int) -> float | None:
@@ -1929,7 +1944,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     decided = rc is not None and rh is not None and rc > rh
                 if not decided:
                     continue
-                shares = sell_shares(budget / price_h, lot_h.shares, price_h, lot_size)
+                shares = sell_shares(budget / price_h, lot_h.shares, price_h, lot_size, res_floor(price_h))
                 if not shares:
                     continue
                 corr_reduced.add(h)
@@ -1994,14 +2009,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             tranche = trend_tranche and strategy == "trend"
             if ((strategy == "trend" and not tranche) or lump_sum) and code in portfolio.lots:
                 continue                      # 一笔建仓：不加仓
-            # 建仓日已破 MA60 → 跳过（用户 2026-08-20）：T 日闸门是 `收盘>MA20>MA60`，
-            # T+1 成交价若已低于当日 MA60，几乎必然也低于 MA20（均线单日几乎不动），
-            # 旧 MA20 退档锚仍高于成本、次日即触发——买入即割的纯 churn。该笔直接放弃，
-            # 资金顺位给下一名（与 §10.1 过滤同型）。只判**新建仓**：加仓不设锚、不受影响；
-            # 成交日停牌回落信号日价的情形闸门本就成立（exec 日无均线行），不在此列。
-            if entry_below_ma60 == "skip" and code not in portfolio.lots:
+            # 建仓跳过（用户 2026-08-20）：只判**新建仓**，加仓不设锚、不受影响；该笔放弃后
+            # 资金顺位给下一名（与 §10.1 过滤同型）。成交日停牌回落信号日价的情形不在此列
+            # （exec 日无均线行）。`skip`（现行，§9.3.1 走势行）：T 日收盘对成交日 MA60；
+            # `skip_fill`（OI-092① 研究口径，§12.126 A/B 主读数 −0.76 不采纳）：成交日收盘
+            # （`fill`）对成交日 MA60，触发频次远高于 skip。
+            if entry_below_ma60 in ("skip", "skip_fill") and code not in portfolio.lots:
                 ma60_exec = (mas.get(code, {}).get(day) or {}).get(60, 0.0)
-                if ma60_exec and close < ma60_exec:
+                ref = fill if entry_below_ma60 == "skip_fill" else close
+                if ma60_exec and ref < ma60_exec:
                     stats["建仓日收盘<当日MA60·跳过"] += 1
                     continue
             # `addon_max_gain`（用户 2026-08-22 实验）：**信号日收盘 ≥ 持仓均价 × (1 + G) 不再加仓**，
@@ -2080,7 +2096,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 lot = Lot(code=code, entry_date=day, entry_ratio=ratio, entry_value=value,
                           entry_band_low=(1 - width) * value, entry_band_high=(1 + width) * value,
                           entry_upside=value / fill - 1, peak_intrinsic=value)
-                lot.entry_stop, lot.entry_stop_ma = entry_stop_price(ma, close, stop_ma)
+                lot.entry_stop, lot.entry_stop_ma = entry_stop_price(
+                    ma, fill if entry_below_ma60 == "skip_fill" else close, stop_ma)
                 portfolio.lots[code] = lot
             lot.avg_cost = ((lot.avg_cost * lot.shares + amount) / (lot.shares + shares)
                             if lot.shares + shares > 0 else 0.0)   # 持仓均价：买入加权、减持不变
@@ -2427,7 +2444,8 @@ def main() -> int:
     parser.add_argument("--x", type=float, nargs="+", default=[1.0, 0.5, 0.1],
                         help="每次调仓占总资产的百分比，可给多个做参数扫描")
     parser.add_argument("--since", default="2000-01-01")
-    parser.add_argument("--until", default="2026-08-07")
+    # 缺省不设截止——跑满逐日状态文件的末行（OI-092④：此前硬编码日期，行情库前进后会静默截断）。
+    parser.add_argument("--until", default="9999-12-31")
     parser.add_argument("--capital", type=float, default=INITIAL_CAPITAL)
     mg = parser.add_argument_group("融资（杠杆）")
     mg.add_argument("--credit-ratio", type=float, default=0.0,
@@ -2646,10 +2664,20 @@ def main() -> int:
     parser.add_argument("--stop-line", choices=("entry", "min_entry_current"), default="entry",
                         help="止损线口径：entry=建仓日冻结线（旧）；min_entry_current=min(建仓日线, "
                              "当日同周期均线)——均线下移时止损跟随下移、上移不抬线（用户 2026-08-19 实验）")
-    parser.add_argument("--entry-below-ma60", choices=("ma20_stop", "skip"), default="ma20_stop",
+    parser.add_argument("--entry-below-ma60", choices=("ma20_stop", "skip", "skip_fill"),
+                        default="ma20_stop",
                         help="新建仓成交日收盘 < 当日 MA60（信号日过闸后跳空所致）的处理："
                              "ma20_stop=照买、锚退 MA20（旧行为）；skip=放弃该笔、资金顺位下一名"
-                             "（用户 2026-08-20：此时几乎必然也低于 MA20，退档锚仍高于成本、买入即割）")
+                             "（用户 2026-08-20：此时几乎必然也低于 MA20，退档锚仍高于成本、买入即割）。"
+                             "skip 判 T 日收盘对成交日 MA60（现行，§9.3.1 走势行）；"
+                             "skip_fill 判成交日收盘对成交日 MA60（OI-092① 研究口径，§12.126 不采纳）")
+    parser.add_argument("--stop-basis", choices=("exec", "signal"), default="exec",
+                        help="止损判据时点（OI-092②）：exec=成交日收盘对成交日均线、同日判同日卖"
+                             "（现行，§9.3.1 止损行）；signal=T 日收盘对 T 日均线判、T+1 按成交价卖"
+                             "（研究口径，§12.126 不采纳）")
+    parser.add_argument("--residual-clear", choices=("lot", "tranche"), default="lot",
+                        help="减档后余仓清空阈值（OI-092③）：lot=不足一手才清（现行，§9.3.2 第 4 步）；"
+                             "tranche=不足一档即清空（研究口径，§12.126 不采纳）")
     parser.add_argument("--ma-basis", choices=("adjusted", "raw"), default="adjusted",
                         help="均线与创新低判据的价格口径（OI-054）：adjusted=前复权、折回当日口径（缺省，与实盘"
                              "扫描器同基）；raw=不复权直接平均（v4.31 前旧口径，除权后 20/60 个交易日内均线错位）")
@@ -2847,6 +2875,9 @@ def main() -> int:
                      + ("_swc" if args.swap_trigger == "cash" else "")
                      + ("_colk" if args.credit_over_limit == "keep" else "")
                      + ("_skipma60" if args.entry_below_ma60 == "skip" else "")
+                     + ("_skipfill" if args.entry_below_ma60 == "skip_fill" else "")
+                     + ("_stopsig" if args.stop_basis == "signal" else "")
+                     + ("_rct" if args.residual_clear == "tranche" else "")
                      + ("_rawma" if args.ma_basis == "raw" else "")
                      + ("_frzstop" if args.exright_stop == "frozen" else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
@@ -2922,6 +2953,7 @@ def main() -> int:
                          stop_confirm_days=args.stop_confirm_days,
                          stop_deep_pct=args.stop_deep_pct, stop_line=args.stop_line,
                          entry_below_ma60=args.entry_below_ma60, exright_stop=args.exright_stop,
+                         stop_basis=args.stop_basis, residual_clear=args.residual_clear,
                          stop_partial=args.stop_partial, stop_tranche=args.stop_tranche,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,
