@@ -15,7 +15,7 @@
 
 用法：
     python3 scripts/experimental/fix_panel_entry_lookahead.py \
-        --panel data/processed/pit_attention/panel_moat_bank_v4.csv \
+        --panel data/archive/pit-judgment-2026-08/panel_moat_bank_v4.csv \
         --out   data/processed/pit_attention/panel_moat_bank_v5.csv
 """
 import argparse

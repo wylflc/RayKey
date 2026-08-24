@@ -28,7 +28,7 @@ import csv, glob, collections, statistics, argparse, os, sys, bisect
 ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
 FIN = f"{ROOT}/data/raw/financials"
 SEC = f"{ROOT}/data/raw/a_share_securities.csv"
-MOAT = f"{ROOT}/data/processed/pit_attention/verdicts_panel.csv"
+MOAT = f"{ROOT}/data/archive/pit-judgment-2026-08/verdicts_panel.csv"
 
 
 def num(x):

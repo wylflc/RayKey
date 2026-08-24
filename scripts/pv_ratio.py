@@ -33,14 +33,6 @@ def trading_pv(price: float | None, band: dict, basis: str = "equity") -> float 
     return price / iv
 
 
-def pv_equity(price: float | None, band: dict) -> float | None:
-    """旧口径 `现价 ÷ V`，只作对照展示。"""
-    iv = _num(band.get("intrinsic_value"))
-    if price is None or iv is None or iv <= 0:
-        return None
-    return price / iv
-
-
 def load_model_bands(path=None) -> dict[str, dict]:
     """{代码: 生产带行}（`data/processed/a_share_pool_model_bands_adopted.csv`）；读不到返回空 dict。"""
     import csv

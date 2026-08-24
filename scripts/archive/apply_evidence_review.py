@@ -8,7 +8,7 @@ status: verified | verified_stronger | verified_with_caveat | corrected | reexam
 import csv, os, re, tempfile, collections, datetime
 
 CSV = 'data/processed/a_share_quality_scores_v2.csv'
-LOG = 'data/interim/evidence_review_log.md'
+LOG = 'data/archive/completed-queues/evidence_review_log.md'
 W = (.25, .40, .20, .15)
 
 def _ero_block(fl):

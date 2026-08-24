@@ -17,7 +17,7 @@ T+1 内必须复带，不得只让价格改档。**该触发的成因与市场�
 
 口径
 ----
-* **子集**：全部持仓 ∪ 当日 `matrix_state = buyable` 的池内股票。理由是决策后果——
+* **子集**：全部持仓 ∪ 当日可买（最近一次扫描中 `model_pv ≤ 买入线` 且 `收>MA20>MA60`）。理由是决策后果——
   持仓的卖出侧无冻结保护，可买股票的档位直接决定当天能不能下单；其余 200 余家逐日判定
   既不可执行，也没有对应的当日决策。
 * **阈值 |Δ| ≥ 7%**：沿用 §6.8 第 ③ 条的海外初始校准值，**明标为未校准值**。A 股有
@@ -146,7 +146,23 @@ def divergence_for(code: str, exchange: str, notice: str, as_of: date,
 def run(as_of: date, lookback: int, timeout: float, universe: str = "subset") -> list[dict[str, object]]:
     pool = {row["security_code"].zfill(6): row for row in load_csv(DEFAULT_POOL)}
     holdings = {row["security_code"].zfill(6) for row in load_csv(DEFAULT_HOLDINGS)}
-    buyable = {code for code, row in pool.items() if row.get("matrix_state") == "buyable"}
+    # 「当日可买」取最近一次扫描落盘的候选表（§8.2 产物）：model_pv ≤ 买入线且收>MA20>MA60。
+    # （旧口径读池表 `matrix_state=="buyable"`——该列随三态矩阵 v1.27 退役后恒空，子集因此只剩持仓。）
+    buyable: set[str] = set()
+    cand_rows = load_csv(ROOT / "data/processed/daily_buy_candidates.csv")
+    scan_day = max((r.get("trade_date", "") for r in cand_rows), default="")
+    for r in cand_rows:
+        if r.get("trade_date") != scan_day or str(r.get("review_frozen", "")).lower() == "true":
+            continue
+        try:
+            pv, close, ma20, ma60 = (float(r["model_pv"]), float(r["close"]),
+                                     float(r["ma20"]), float(r["ma60"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+        if pv <= S.SEC93_BUY_LINE and close > ma20 > ma60:
+            buyable.add(str(r.get("security_code", "")).zfill(6))
+    if scan_day:
+        print(f"  当日可买子集取自最近一次扫描（trade_date={scan_day}，{len(buyable)} 只）")
     # `--universe pool` 只用于**阈值校准**（测全池触发频次），不是生效范围。
     # 生效范围由用户 2026-08-07 裁定为「持仓 + 当日可买」，见模块 docstring。
     subset = sorted(pool) if universe == "pool" else sorted(holdings | buyable)
@@ -170,7 +186,7 @@ def run(as_of: date, lookback: int, timeout: float, universe: str = "subset") ->
                 "security_name": row.get("security_name", ""),
                 "disclosure_kind": notice[1],
                 "in_holdings": code in holdings,
-                "matrix_state": row.get("matrix_state", ""),
+                "buyable": code in buyable,
             })
             hits.append(result)
 
@@ -185,7 +201,7 @@ def run(as_of: date, lookback: int, timeout: float, universe: str = "subset") ->
     print(f"  **带待复核 {len(hits)} 只**（T+1 内按 §7.4 express 口径复带，不得只让价格改档）：")
     for hit in sorted(hits, key=lambda h: -abs(float(h["delta_pct"]))):
         low, high = hit["band"]                                # type: ignore[misc]
-        tag = "持仓" if hit["in_holdings"] else hit["matrix_state"]
+        tag = "持仓" if hit["in_holdings"] else ("可买" if hit.get("buyable") else "池内")
         print(f"    - {hit['security_name']}（{hit['security_code']}，{tag}）"
               f"{hit['disclosure_kind']} 公告日 {hit['notice_date']}："
               f"{hit['before_close']:g} → {hit['after_close']:g}（{hit['after_date']}）"

@@ -45,7 +45,7 @@ import json
 import time
 import urllib.parse
 import urllib.request
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -178,55 +178,6 @@ def fetch_actions(code: str, timeout: float) -> list[dict[str, str]]:
             "report_date": (row.get("REPORT_DATE") or "")[:10],
         })
     return out
-
-
-# --------------------------------------------------------------- 复权与收益率
-def cumulative_factors(bars: list[dict[str, str]], actions: list[dict[str, str]]) -> dict[str, float]:
-    """由原始价 + 除权事件重建**后复权累计因子** `A(t)`：复权价 = 原始价 × A(t)。
-
-    除权日 D 的理论开盘参考价 `P_ex = (P_前收 − 每股现金) / (1 + 每股送转)`，故价格序列在 D
-    处有一个不代表损益的跳空。令 `f_D = P_ex / P_前收`，把 D 及其之后的所有价格乘以 `1/f_D`
-    的累计积，跳空即被抹平，**相邻两点的比值就是真实的总收益率**（含分红再投资）。
-
-    用后复权而不是前复权：前复权要把历史价往下摊，累计分红超过早年股价时会摊成负数
-    （实测茅台 2015 年前复权开盘价 −129.35），而后复权只会把近端放大，永远为正。
-
-    >>> bars = [{"date": "2026-01-01", "close": "10"}, {"date": "2026-01-02", "close": "9"}]
-    >>> acts = [{"ex_dividend_date": "2026-01-02", "cash_per_share": "1", "share_ratio": "0"}]
-    >>> f = cumulative_factors(bars, acts)
-    >>> round(f["2026-01-02"] * 9 / (f["2026-01-01"] * 10) - 1, 10)   # 除权当天真实收益为 0
-    0.0
-    """
-    closes = {bar["date"]: float(bar["close"]) for bar in bars if bar.get("close")}
-    dates = sorted(closes)
-    by_ex: dict[str, tuple[float, float]] = {}
-    for action in actions:
-        ex = action["ex_dividend_date"]
-        by_ex[ex] = (float(action.get("cash_per_share") or 0), float(action.get("share_ratio") or 0))
-
-    factors: dict[str, float] = {}
-    running = 1.0
-    prev_date = None
-    for day in dates:
-        if day in by_ex and prev_date is not None:
-            cash, share = by_ex[day]
-            prev_close = closes[prev_date]
-            p_ex = (prev_close - cash) / (1 + share)
-            if p_ex > 0:
-                running *= prev_close / p_ex
-        factors[day] = running
-        prev_date = day
-    return factors
-
-
-def total_return(bars: list[dict[str, str]], actions: list[dict[str, str]],
-                 start: str, end: str) -> float | None:
-    """`start → end` 的总收益率（已含分红与送转）。两端须都有 bar，否则返回 None。"""
-    closes = {bar["date"]: float(bar["close"]) for bar in bars if bar.get("close")}
-    if start not in closes or end not in closes:
-        return None
-    factors = cumulative_factors(bars, actions)
-    return (closes[end] * factors[end]) / (closes[start] * factors[start]) - 1
 
 
 # --------------------------------------------------------------- 主流程

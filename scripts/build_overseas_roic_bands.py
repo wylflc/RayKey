@@ -124,7 +124,7 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     if latest.parent_equity is None or latest.parent_equity <= 0:
         res["reason"] = "母公司权益非正，股数法无法折每股"; return res
     if latest.nopat is None or latest.nopat <= 0:
-        res["reason"] = f"最新财年 NOPAT={latest.nopat/1e9:.2f}b ≤ 0：息税前利润非正，按现金折现无意义（A 股同规，须走 §6.5.5.2 逐票建档）"; return res
+        res["reason"] = f"最新财年 NOPAT={latest.nopat/1e9:.2f}b ≤ 0：息税前利润非正，按现金折现无意义（A 股同规，按 §6.5.2.4 判无法估值）"; return res
     # ---- OI-082（v4.47，海外先行）：每股 NOPAT 锚 = 各年 NOPAT ÷ 最新稀释股数；周期守卫用回购回加后的权益比率
     long_hist = years[-10:]
     cum = 0.0

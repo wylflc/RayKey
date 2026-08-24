@@ -60,7 +60,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from intrinsic_value import intrinsic_value  # noqa: E402
+from financials_corrections import apply_corrections as _apply_corr, report as _corr_report  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 BAND_LOW_COEF, BAND_HIGH_COEF = 0.90, 1.10
@@ -163,6 +163,7 @@ def load_financials(fin_dir: Path) -> dict[str, dict[str, dict]]:
                 code = (row.get("security_code") or "").strip()
                 if code:
                     out.setdefault(code, {})[period] = row
+    _corr_report(*_apply_corr(out))   # OI-066 订正层：与建带引擎同源，内存替换
     return out
 
 

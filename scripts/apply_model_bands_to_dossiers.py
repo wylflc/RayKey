@@ -22,7 +22,7 @@
 **只覆盖带相关的六列**（`band_low`/`band_high`/`band_method`/`band_derivation`/
 `anchor_earnings_yi`/`reviewed_at`）。`key_metrics`、`hf_indicators`、
 `next_earnings_check`、`review_triggers`、`dossier_dir`、`notes` 原样保留——
-那是逐票研究的结论，与用哪个模型算带无关，且 §7.4.1 的复核触发仍要用它。
+那是逐票研究的结论，与用哪个模型算带无关，且 §7.4 的复核触发仍要用它。
 原带写入 `notes` 留痕，可追溯。
 
 模型给不出新带时的统一口径（v4.22，OI-068，用户 2026-08-19 裁定）
@@ -142,6 +142,7 @@ def main() -> int:
     # v4.54（OI-083）：生产带文件只含池成员；池外档案行（documented_not_attention／boundary 点名档案）
     # 直接从全市场模型带取最新 ok 带——只落档案，不写生产带文件，不进 §9.3。
     archive_codes = {r["security_code"] for r in rows} - set(usable) - set(stale)
+    near_zero_div: set[str] = set()   # 银行/保险无近 12 个月分红 → 无法估值
     archive_used: list[str] = []
     if archive_codes and str(args.archive_bands) and args.archive_bands.exists():
         a_usable, a_stale = latest_model_bands(args.archive_bands, args.min_available,
@@ -171,7 +172,6 @@ def main() -> int:
     OVERRIDES = load_overrides()
     applied, kept_unvaluable, kept_stale, split_adj = [], [], [], []
     near_zero: set[str] = set()
-    near_zero_div: set[str] = set()   # 银行/保险无近 12 个月分红 → 无法估值
     overridden: list[str] = []
     for row in rows:
         code = row["security_code"]
@@ -254,13 +254,13 @@ def main() -> int:
         row["bespoke"] = "true"
         # v4.00：带来源分四条路径（§6.5.2.3），派生说明按路径写，不再一律套权益 DCF 的口径
         roic_path = (band.get("roic_path") or "").strip()
-        # 被 §6.3 第 5 条预告/快报叠加过的行**不能再宣称与回测同口径**——回测无历史预告面板。
+        # 被 §6.4 预告/快报叠加过的行**不能再宣称与回测同口径**——回测无历史预告面板。
         overlay = (band.get("forecast_overlay") or "").strip()
         archive_tag = ("**池外档案带**（§6.1：只落档案、不落生产带文件、不进 §9.3；直接取自全市场模型带）｜"
                        if code in archive_used else "")
         if overlay:
             common_head = (
-                f"**预告/快报口径（§6.3 第 5 条叠加，正式报告披露后由机械带取代）**："
+                f"**预告/快报口径（§6.4 叠加，正式报告披露后由机械带取代）**："
                 f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}"
                 f"（{band.get('forecast_source') or overlay}）｜"
                 f"**本行与回测 `valuation_ratio` 不同口径**，回测无历史预告面板，"
@@ -270,7 +270,7 @@ def main() -> int:
             common_head = (archive_tag + f"与 §9.3.1.2 回测所用带**同一套口径**。"
                            f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜")
         common_tail = (f"**内在价值 {iv:.2f} 元**。带 = IV × [0.90, 1.10]，**中值恰为 IV**，"
-                       f"故 `P/V`（§3：ROIC 路径 (现价+每股净负债)÷每股企业价值，其余 现价÷中值）与回测的 `valuation_ratio` 逐位一致。")
+                       f"故 `P/V` = 现价 ÷ V（`scripts/pv_ratio.py` 唯一实现）与回测的 `valuation_ratio` 逐位一致。")
         def _f(key, fmt="{:.2%}"):
             try:
                 return fmt.format(float(band.get(key) or 0))

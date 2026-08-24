@@ -2,10 +2,10 @@
 """生成 §6.7 链条的池模型带文件（v4.00：ROIC 口径），供 apply→校验→池物化与日线扫描消费。
 
 职责（§6.5.2.3 的落点）：
-1. 从 `roic_bands.csv`（§9.3.1.2 三步重建的第②步产物）取**池内每只**的最新 `ok` 带
+1. 从 `roic_bands.csv`（§6.7 第 2 步产物）取**池内每只**的最新 `ok` 带
    （排序键 `(available_at, report_date)`，与 `apply_model_bands_to_dossiers.py` 同规）；
 2. **银行行的 V 改写为股利折现值**——取自采纳逐日状态最后一行的 `intrinsic_value`
-   （§9.3.1.2 第③步已把 divspread 烙进去，且已按送转折算到现价基准；银行近年无送转，
+   （§6.7 第 3 步已把 divspread 烙进去，且已按送转折算到现价基准；银行近年无送转，
    与 apply 的报告期基准假设不冲突）；
 3. 写 `a_share_pool_model_bands_adopted.csv`。**列 = roic_bands 的原列**（含 `roic_path`／
    `nopat_ps`／`wacc` 等），下游按列名取用，多列无害。

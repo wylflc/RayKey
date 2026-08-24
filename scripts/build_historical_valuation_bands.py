@@ -69,7 +69,7 @@
   （中国船舶 2019 各期 ROE0 仅 0.24%，曾据此算出隐含 PE **391**）；②`ROE_T` 须高出 `g_T`
   至少 `--min-terminal-spread`（缺省 2pp）——逼近时派息率 `1−g_T/ROE_T` 趋零、估值对分母
   任意敏感（芒果超媒 2017-09-30 算出 0.60，下期资产注入后变 27.32，**45 倍跳变**）。
-  两条都命中的公司会被拒，**正确地转去 §6.5.5.2 逐票建档**。
+  两条都命中的公司会被拒，**按 §6.5.2.4 判无法估值**。
 
 用法::
 
@@ -1481,7 +1481,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             band.wacc, band.cost_of_debt, band.tax_rate = w, rd, tax
             if latest.nopat is None or latest.nopat <= 0:
                 band.status, band.reason = "rejected", (
-                    f"NOPAT={latest.nopat}: 息税前利润非正，按现金折现无意义，须走 §6.5.5.2 逐票建档")
+                    f"NOPAT={latest.nopat}: 息税前利润非正，按现金折现无意义，按 §6.5.2.4 判无法估值")
                 return band
             # 正常化 NOPAT：与 ROIC 同窗口取**比率**中位再乘 BPS，避免把单年高点/低谷外推十年
             ratios = [y.nopat / e_op(y)
@@ -1763,7 +1763,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             if value <= 0:
                 band.status, band.reason = "rejected", (
                     f"股权价值 {value:.2f} ≤ 0：净负债 {net_debt_ps:.2f} 超过企业价值 "
-                    f"{res.intrinsic_value:.2f}，须走 §6.5.5.2 逐票建档")
+                    f"{res.intrinsic_value:.2f}，按 §6.5.2.4 判无法估值")
                 return band
             thin_max = getattr(args, "thin_equity_max", 0.5)
             if thin_max and net_debt_ps > 0 and res.intrinsic_value > 0 and net_debt_ps / res.intrinsic_value >= thin_max:
@@ -1817,7 +1817,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         if croe0 <= 0 or bps <= 0:
             band.status, band.reason = "rejected", (
                 f"正常化现金 ROE={croe0:.2%} 非正：经营现金长期为负，按现金折现无意义，"
-                f"须走 §6.5.5.2 逐票建档")
+                f"按 §6.5.2.4 判无法估值")
             return band
         oe0 = croe0 * bps
         iroe = incremental_roe(series, actions, available_at)
@@ -1876,7 +1876,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     # 回升到行业均值——实测中国船舶 2019 各期 ROE0 仅 **0.24%**、终值被设为约 10%，
     # 模型据此算出隐含 PE **391**，价值全部来自那个没有证据的复苏假设。
     # 压到 `min(ROE_T, ROE0)` 后，这类公司多半会被下面的 `ROE_T > g_T` 护栏拦掉，
-    # **正确地转去 §6.5.5.2 逐票建档**——低谷反转本就不该由批量模型定价。
+    # **按 §6.5.2.4 判无法估值**——低谷反转本就不该由批量模型定价。
     roe_t = min(roe_t, roe0) if roe0 > 0 else roe_t
 
     # **公司特定的终值 ROE**（`--roe-terminal-ratio K`，2026-08-15 用户指令）：`ROE_T = K × roe0`，
@@ -1901,7 +1901,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         band.status = "rejected"
         band.reason = (f"ROE_T={roe_t:.2%} 距 g_T={g_terminal:.2%} 不足 "
                        f"{args.min_terminal_spread:.1%}：可分配现金趋零、估值对分母任意敏感，"
-                       f"须走 §6.5.5.2 逐票建档")
+                       f"按 §6.5.2.4 判无法估值")
         return band
 
     # 亏损与负 ROE 是**经济学上的拒绝**，不是数据缺失——先判，免得混进「输入不全」把
@@ -1909,7 +1909,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     if eps0 <= 0 or roe0 <= 0:
         band.status = "rejected"
         band.reason = (f"EPS0={eps0:.4f}／ROE0={roe0:.2%} 非正：按盈利折现无意义，"
-                       f"须走 §6.5.5.2 逐票建档")
+                       f"按 §6.5.2.4 判无法估值")
         return band
 
     # g_sustainable 必须用**模型实际采用的 roe0**，否则归一化了 ROE 却拿周期读数算增长，

@@ -55,9 +55,9 @@ def fetch_one(code: str, timeout: float = 15.0) -> list[dict]:
     return ((payload.get("result") or {}).get("data")) or []
 
 
-# --------------------------------------------------------------- 除权除息日检出（§14.4，结 OI-030）
+# --------------------------------------------------------------- 除权除息日检出（工作流 §11.4，结 OI-030）
 #
-# §14.4 要求「除权除息日**必须在当日跟踪前**按除权除息因子机械调整**估值带**与
+# §11.4 要求「除权除息日按交易所除权参考价公式调整带、止损价与 `cost_basis`」与
 # `cost_basis`」，但全流程原先没有任何一处会去发现「今天是某只持仓的除权除息日」——清单
 # 手工维护、§9.1 五步里没有这一步、`track_holdings_daily.py` 也不读除权数据。
 #
@@ -68,9 +68,8 @@ def fetch_one(code: str, timeout: float = 15.0) -> list[dict]:
 # 代价是双向的：现金分红当日产生假警报，而送转/配股（因子远大于分红）当日会反向产生**假安全**
 # ——调整后的割肉价本应大幅下移，未调整则显示为「远未触及」。
 #
-# 用户 2026-08-07 裁定按「检出 + 提示，不自动改」修：脚本负责发现并算出建议值，
-# **写回仍由维护者完成**（§14.4 原文即「调整由维护者完成」，且带的上下沿是
-# Tier-0 字段，自动改写的风险高于它消除的风险）。
+# 检出 + 提示、不自动改：脚本负责发现并算出建议值，持仓表的写回由维护者完成（§11.4：
+# 带由建带链机械维护，持仓表是人工侧）。
 
 EX_DIV_COLUMNS = (
     "SECURITY_CODE,SECURITY_NAME_ABBR,EX_DIVIDEND_DATE,IMPL_PLAN_PROFILE,"
@@ -117,7 +116,7 @@ def fetch_ex_dividend_events(as_of: str, timeout: float = 15.0) -> dict[str, dic
 def adjust_for_ex_dividend(price: float, cash_per_share: float, share_ratio: float) -> float:
     """除权除息价格换算：`(原价 − 每股现金红利) ÷ (1 + 每股送转比例)`。
 
-    该换算是**价格口径换算**，不属于任何规则变更（§14.4 明文，不触发 R4）。
+    该换算是**价格口径换算**（§11.4 的交易所除权参考价公式），不属于任何规则变更。
     """
     return (price - cash_per_share) / (1 + share_ratio)
 

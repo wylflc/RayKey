@@ -5,7 +5,7 @@
 
 1. 读五列持仓清单（代码/名称/股数/成本价/**建仓日止损锚**）；
 2. 取当日现价，对照核心估值合格池刷新现档（§6.2）与空间；
-3. 算出 `P/V`（现价 ÷ 合理价区间中值），供 §9.3 的机械买卖判定消费；
+3. 算出 `P/V`（现价 ÷ 生产带 V，`pv_ratio.trading_pv`；带缺失退回带中值），供 §9.3 的机械买卖判定消费；
 4. 比对收盘价与**生效止损线 = min(锚, 当日MA60)**（§9.3.1 v4.25），命中即出
    §9.3.5 的整仓清空提示。
 
@@ -46,6 +46,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from a_share_quotes import fetch_spot_quotes
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
+from build_a_share_core_valuation_pool import DEEP_UNDERVALUED_UPSIDE, OVERVALUED_BAND_MULT
 from screen_daily_volume_price_signals import SEC93_GAIN_SELL, SEC93_SELL_LINE, get_json, infer_secid
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
@@ -87,7 +88,7 @@ FIELDNAMES = [
     "fair_price_low",
     "fair_price_high",
     "upside",
-    # §9.3 的唯一买卖判据（v2.56）：pv = 现价 ÷ 合理价区间中值；两条线的取值只在 §9.3.1 定。
+    # §9.3 的唯一买卖判据：pv = 现价 ÷ 生产带 V（带缺失退回带中值）；两条线的取值只在 §9.3.1 定。
     # 与 upside 是同一个量的倒数关系（pv = 1/(1+upside)），但阈值定在 pv 上，故必须直接输出，
     # 不让读者每天心算倒数。
     "pv",
@@ -115,20 +116,20 @@ def effective_tier(close: float, low: float | None, high: float | None) -> tuple
     """§6.2 价格自动定档 + 空间（区间中值/现价 − 1）。带缺失时返回空档与空空间。
 
     v2.11（用户指令）：第五列由「带位」改为「空间」。带位（带内X%／低于带底-X%／越带顶+X%）
-    与空间是同一件事的两种写法，而空间与池阅读版、§9.6 名单同口径且可直接比较——池 MD 早在
+    与空间是同一件事的两种写法，而空间与池阅读版同口径且可直接比较——池 MD 早在
     v1.10 就以同样理由删掉了带位列，持仓表此前一直没跟上。
     """
     if low is None or high is None or high <= 0 or close <= 0:
         return "", ""
     pct = round(((low + high) / 2 / close - 1) * 100)
     upside = "0%" if pct == 0 else f"{pct:+d}%"
-    if close > 1.2 * high:
+    if close > OVERVALUED_BAND_MULT * high:
         return "高估", upside
     if close > high:
         return "较高估", upside
     if close >= low:
         return "中性", upside
-    return ("低估" if (low + high) / 2 / close - 1 >= 0.40 else "较低估"), upside
+    return ("低估" if (low + high) / 2 / close - 1 >= DEEP_UNDERVALUED_UPSIDE else "较低估"), upside
 
 
 def beijing_now() -> datetime:
@@ -456,7 +457,7 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
         row = by_code[code]
         cash, ratio = float(event["cash_per_share"]), float(event["share_ratio"])  # type: ignore[arg-type]
         print(f"    - {row['security_name']}（{code}）{event['plan']}")
-        # `entry_stop_price` 与前三项一起调（§11.3）。**漏调它的后果比漏调带更立即**：
+        # `entry_stop_price` 与前三项一起调（§11.4）。**漏调它的后果比漏调带更立即**：
         # 送转后价格按因子下跳而止损价不动，次日必然「跌破」，直接触发一次错误的整仓清仓。
         for label, field in (("成本价", "cost_basis"), ("带下沿", "fair_price_low"),
                              ("带上沿", "fair_price_high"), ("**建仓日止损价**", "entry_stop_price")):
@@ -469,7 +470,7 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
         if ratio:
             print(f"        送转比例 {ratio:g}/股：`current_shares` 同须按 §11.4 调整")
         print("        注：`entry_stop_price` 的调整**须持久化**——它是历史时点价格，"
-              "没有任何重建会重新算它（带的 `−D` 则到下次基本面重建即抹掉，见 §11.3）")
+              "没有任何重建会重新算它（带的除权归一化由建带链机械维护，见 §11.4）")
         print("        ⚠ 建议值须人工核对后写回，两条都要核："
               "①**本检出不知道你调过没有**——清单里没有记录调整状态的字段，若本日已按 §11.4 调过，"
               "忽略本行，再调一次就是重复除权；"

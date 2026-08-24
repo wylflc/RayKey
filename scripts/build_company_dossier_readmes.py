@@ -42,7 +42,7 @@ HEADER = """# {name}（{code}）估值档案
 > §6.5.2 逐票估值档案**主分析文档**。**目的：确定本公司的合理估值区间，用于判定股价低估/高估程度。**
 > 带的机器可读副本在 `data/processed/a_share_valuation_dossiers.csv`（建带引擎只读该 CSV），两者须一致。
 > {bespoke_line}
-> **更新义务（§7.4.1）**：定期报告／业绩预告快报／研报／高频经营数据／产业政策／技术发布任一变化 →
+> **更新义务（§7.4）**：定期报告／业绩预告快报／研报／高频经营数据／产业政策／技术发布任一变化 →
 > 先更新本档、再重算带、并把 `reviewed_at` 改为当日。
 
 | 项 | 值 |
@@ -62,11 +62,11 @@ FOOTER = """
 `ycmx`、业绩预告/快报、历史估值分位；含 `retrieved_at_utc` 与 `source_urls`，可复算）。
 **人工取证**：接口不提供的输入（储量、在手订单、管线阶段、分红预案、高频经营数据）由复核者检索后
 写入同一 JSON 的 `manual_evidence`（逐条含录入日/类型/期间/标题/来源URL/摘要/用途），每轮抓取结转不清空。
-研报逐份跟踪见 `research_ledger.md`（§6.6.1 台账口径，若已建立）。
+研报逐份跟踪见 `research_ledger.md`（研究台账，若已建立）。
 **v2.07 起不再设 `sources/` 原件目录**——东财无原件下载接口，该机制成文后执行 0 次（§6.5.2）。
 """
 
-BESPOKE_ON = "`bespoke = true`——带只由本档给出，通用十类模型不参与计算。"
+BESPOKE_ON = "`bespoke = true`——带只由本档给出（§6.5.1 生产模型带）。"
 BESPOKE_OFF = "`bespoke = false`——本档只补充跟踪指标与复核触发，带仍由通用模型给出。"
 
 PATH_LABEL = {
@@ -248,7 +248,7 @@ def render(row: dict, pool: dict, bands: dict, tiers: dict | None = None) -> tup
 
     override = (row.get("runrate_override_reason") or "").strip()
     if override:
-        parts.append(f"\n## 三、§6.5.4 运行率不变量\n\n{override}\n")
+        parts.append(f"\n## 三、运行率核对\n\n{override}\n")
 
     sections = [
         ("四、下一个业绩核对点", row.get("next_earnings_check"), "；;"),

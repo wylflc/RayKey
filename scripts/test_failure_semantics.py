@@ -53,6 +53,8 @@ def run_tracker(price, *, pool=True, monkey_quotes=None):
 
     real_fetch, real_load, real_open = tracker.fetch_spot_quotes, tracker.load_pool, Path.open
     real_raw = tracker.fetch_raw_close
+    real_bands = tracker.MODEL_BANDS
+    tracker.MODEL_BANDS = {}   # 桩掉生产带：无带行 → pv 退回带中值（有带行时走 pv_ratio.trading_pv，v4.62/OI-091）
 
     class FakeFile:
         def __enter__(self):
@@ -75,6 +77,7 @@ def run_tracker(price, *, pool=True, monkey_quotes=None):
     finally:
         tracker.fetch_spot_quotes, tracker.load_pool, Path.open = real_fetch, real_load, real_open
         tracker.fetch_raw_close = real_raw
+        tracker.MODEL_BANDS = real_bands
 
 
 def case_no_quote_is_not_hold():
@@ -101,7 +104,7 @@ def case_no_quote_leaves_pv_empty():
 
 
 def case_pv_computed_against_band_mid():
-    """P/V 必须对带中值算（v2.56 §9.3 唯一判据），不是对带下沿或上沿。"""
+    """无生产带行时 P/V 退回带中值（有带行走 `pv_ratio.trading_pv`，v4.62/OI-091），不是对带下沿或上沿。"""
     row = run_tracker(1800.0)  # 带 1600-2000，中值 1800 → P/V = 1.00
     if row["pv"] != "1.00":
         return [f"带中值 1800、现价 1800 应得 P/V=1.00，实得 `{row['pv']}`"]

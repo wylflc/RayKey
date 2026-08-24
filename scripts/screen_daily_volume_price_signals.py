@@ -29,8 +29,7 @@ from pv_ratio import trading_pv  # noqa: E402  v4.62 OI-091：P/V 唯一实现
 
 
 ROOT = Path(__file__).resolve().parents[1]
-import sys as _sys
-_sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "scripts"))
 from divspread_names import is_divspread_financial  # noqa: E402  v4.56 银行＋保险股利折现判定
 DEFAULT_INPUT = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
@@ -206,9 +205,6 @@ def quote_snapshot(rows: list[dict[str, float | str]]) -> dict[str, object]:
         "signal_state": "ok",
         "trade_date": row["date"],
         "close": float(row["close"]),
-        "high": row["high"],
-        "low": row["low"],
-        "pct_chg": row["pct_chg"],
         "amount": row["amount"],
         "ma20": float(row["ma20"]),
         "ma60": float(row["ma60"]),
@@ -396,8 +392,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--funds", type=float, default=None,
                         help="当日**可用资金 = 现金 + 未用授信**（OI-062）。买入计划以此为预算；"
                              "不给则退回「可用资金＝净资产」的旧估算并显著告警。满仓/带融资账户必须给。")
-    parser.add_argument("--rf", type=float, default=0.017114,
-                        help="十年国债收益率，银行股利折现用（§12.31）")
+    parser.add_argument("--rf", type=float, default=_default_rf(),
+                        help="十年国债收益率，银行股利折现用（§6.5.1 第 4 条）；"
+                             "缺省取 data/reference/cost_of_equity_inputs.csv 最新一行，与 rebuild_bank_bands 同源")
     parser.add_argument("--plan-out", type=Path, default=DEFAULT_PLAN_OUT)
     return parser.parse_args()
 
@@ -460,6 +457,16 @@ SEC93_GAIN_SELL = 1.25         # §9.3.1「涨幅减持」（v4.44 用户采纳�
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
+def _default_rf() -> float:
+    """十年国债收益率缺省：data/reference/cost_of_equity_inputs.csv 最新一行；读不到退最后手抄值。"""
+    try:
+        with (ROOT / "data/reference/cost_of_equity_inputs.csv").open(encoding="utf-8") as fh:
+            rows = [r for r in csv.reader(fh) if r and r[0][:2] == "20"]
+        return float(rows[-1][1])
+    except (OSError, ValueError, IndexError):
+        return 0.017114
+
+
 BANK_RISK_PREMIUM = 0.02       # §12.31 股利折现的风险溢价
 
 
@@ -594,7 +601,7 @@ def load_holdings() -> dict[str, float]:
     return out
 
 
-def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float | None = None,
+def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float | None = None,
                          holdings: dict[str, float] | None = None,
                          blocked: set[str] | None = None,
                          tactical_gated: set[str] | None = None) -> dict[str, object]:
@@ -712,7 +719,7 @@ def section97_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
         amount = lots * lot_amount
         cash -= amount
         plan.append({
-            "trade_date": "",   # 由 report_section97 统一填信号日（OI-065：无日期列则文件无法自证时点）
+            "trade_date": "",   # 由 report_section93 统一填信号日（OI-065：无日期列则文件无法自证时点）
             "security_code": str(cand["security_code"]).zfill(6),
             "security_name": cand.get("security_name", ""),
             "quality_tier": cand.get("quality_tier", ""),
@@ -742,7 +749,7 @@ PLAN_FIELDS = ["trade_date", "security_code", "security_name", "quality_tier", "
                "lots", "shares", "amount", "cooldown_skips"]
 
 
-def report_section97(result: dict[str, object], nav: float, out_path: Path,
+def report_section93(result: dict[str, object], nav: float, out_path: Path,
                      as_of: str = "") -> None:
     plan, dropped = result["plan"], result["dropped"]
     for p in plan:
@@ -832,9 +839,6 @@ FIELDNAMES = [
     "gap_max_vol_ratio",
     "gap_max_vol_day",
     "close",
-    "high",
-    "low",
-    "pct_chg",
     "amount",
     "ma20",
     "ma60",
@@ -858,13 +862,13 @@ def main() -> int:
     rows = scan(input_rows, args.as_of, symbols, args.timeout, args.workers, since)
     blocked = load_blocked_codes(args.review_queue)
     for row in rows:
-        # §7.5 复核期买入冻结的可见性列；硬排除在 section97_entry_plan 内执行。
+        # §7.5 复核期买入冻结的可见性列；硬排除在 section93_entry_plan 内执行。
         row["review_frozen"] = bool(blocked) and str(row.get("security_code", "")).zfill(6) in (blocked or set())
 
     # §9.3 的 P/V **必须在落盘之前挂上**：`FIELDNAMES` 里已经声明了那三列，
     # 若等落盘后再算，写出去的就是三列空值。首版就踩过这一脚，靠落地校验（下方 priced 计数）当场发现。
-    section97_ready = bool(args.model_bands and args.model_bands.exists())
-    if section97_ready:
+    section93_ready = bool(args.model_bands and args.model_bands.exists())
+    if section93_ready:
         bands = load_model_bands(args.model_bands, args.evidence_date or args.as_of)
         attach_model_pv(rows, bands, args.as_of, args.rf)
         priced = sum(1 for r in rows if isinstance(r.get("model_pv"), float))
@@ -892,9 +896,9 @@ def main() -> int:
         print("**告警：quality_score 整列为空** —— 池 CSV 未透传参考分，报告不得手填，先修池物化")
 
     # §9.3 的买入计划（`attach_model_pv` 已在落盘前跑过，见上文）。
-    if section97_ready:
+    if section93_ready:
         if args.nav > 0:
-            report_section97(section97_entry_plan(rows, args.nav, args.funds, load_holdings(),
+            report_section93(section93_entry_plan(rows, args.nav, args.funds, load_holdings(),
                                                   blocked or set(), load_tactical_gate_codes()),
                              args.nav, args.plan_out, args.as_of)
         else:

@@ -33,7 +33,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(float(option_value(args, "--sell-line")), daily_scan.SEC93_SELL_LINE)
         import track_holdings_daily
         self.assertEqual(track_holdings_daily.SELL_LINE, daily_scan.SEC93_SELL_LINE)
-        # v4.44：涨幅减持 125%（gated）与融资口径（60%、不设金额上限）
+        # v4.44：涨幅减持 125%（gated）与融资口径（66.6%、不设金额上限）
         self.assertEqual(daily_scan.SEC93_GAIN_SELL, 1.25)
         self.assertEqual(float(option_value(args, "--gain-sell")), daily_scan.SEC93_GAIN_SELL)
         self.assertEqual(option_value(args, "--gain-sell-mode"), "gated")

@@ -25,7 +25,7 @@
 """
 import csv, sys, os, bisect, collections, argparse
 ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
-PANEL = f"{ROOT}/data/processed/pit_attention/universe_panel_pit_v2.csv"
+PANEL = f"{ROOT}/data/archive/pit-judgment-2026-08/universe_panel_pit_v2.csv"
 BANDS = f"{ROOT}/data/processed/a_share_historical_valuation_bands_pit116.csv"
 DAILY = f"{ROOT}/data/processed/a_share_historical_valuation_daily_pit116.csv"
 

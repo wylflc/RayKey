@@ -34,7 +34,7 @@ from backtest_valuation_strategy import (ResearchGate, load_actions, load_prices
                                          load_research, load_universe)
 
 ROOT = Path(__file__).resolve().parents[1]
-UNIVERSE = ROOT / "data/processed/pit_attention/universe_panel_yearly.csv"
+UNIVERSE = ROOT / "data/archive/pit-judgment-2026-08/universe_panel_yearly.csv"
 
 
 def forward_return(days: list[str], series: dict[str, float], events, start: str, horizon: int):

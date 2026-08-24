@@ -4,7 +4,7 @@
 This is the enforcement half of workflow v1.28. The written standard alone does
 not survive a change of model or agent — what survives is a mechanical check
 that a band can be **recomputed** from its declared inputs, plus the rule that a
-band which cannot be recomputed does not confer buy eligibility (§6.7 要求 10/11).
+band which cannot be recomputed does not confer buy eligibility（旧 v1.28 §6.7 要求 10/11；现行带全为 dossier 行，类型表校验只对遗留行生效）.
 
 The check that matters is the direction of causation (§6.6 分工恒等式)::
 
@@ -13,23 +13,23 @@ The check that matters is the direction of causation (§6.6 分工恒等式)::
     任何时候不得由档反推带。
 
 A band back-solved from an already-judged tier makes the daily auto-tiering
-circular (``档 = 位置(现价, 反推(档))``) and silently turns the §14 trim ladder
+circular (``档 = 位置(现价, 反推(档))``) and silently turns the retired trim ladder
 into a cost anchor. Legacy rows of exactly that shape are detected here by
 recomputing them against the undocumented ladder they used, so the migration
 list is produced from evidence rather than from trust.
 
-Six checks (§6.7 要求 10):
+Six checks（旧 v1.28 §6.7 要求 10）:
 
 1. 建带卡五槽非空
-2. ``anchor_metric`` ↔ ``strategy_tag`` mapping legal (§6.5.2)
+2. ``anchor_metric`` ↔ ``strategy_tag`` mapping legal（旧 §6.5.2 类型表）
 3. ``band_low_coef`` / ``band_high_coef`` equal the type-table values
-4. recomputed band within ±2% of the stored band (§6.5.1 two shapes)
-5. ``multiple_or_rate`` inside the §6.5.4 allowed range
+4. recomputed band within ±2% of the stored band（旧 §6.5.1 两种形态）
+5. ``multiple_or_rate`` inside the 旧 §6.5.4 allowed range
 6. ``band_derivation == "model"``
-7. §6.5.6 成长期权的五条硬约束（仅当该票计入了期权时生效）
+7. 旧 §6.5.6 成长期权的五条硬约束（仅当该票计入了期权时生效）
 
 Rows failing any check go to ``valuation_rebuild_queue.csv``, ordered
-持仓 → 当前可买 → 其余 (§6.7 要求 11).
+持仓 → 当前可买 → 其余（旧 §6.7 要求 11）.
 
 Usage::
 
@@ -134,7 +134,7 @@ MULTIPLE_SOURCES = {
     "doc_table",
 }
 
-# --- §6.5.4 参数允许区间（只校验可机械判定的几项）---------------------------
+# --- 旧 §6.5.4 参数允许区间（遗留行校验；只校验可机械判定的几项）-----------------
 # g/COE/r 的上下限；PE 的分位约束需要历史序列，留给估值执行侧，本脚本不校验。
 RATE_LIMITS = {
     "K": (0.030 - 0.035, 0.045),  # r − g 的可能范围（r 3.0%-4.5%，g ≤ 3.5%）
@@ -214,7 +214,7 @@ def detect_legacy_fallback(row: dict) -> str | None:
 
 
 def recompute_band(row: dict, shape: int) -> tuple[float, float] | None:
-    """§6.5.1 两种形态的复算。返回 (low, high) 或 None（输入不全）。"""
+    """旧口径两种形态的复算（遗留行校验用）。返回 (low, high) 或 None（输入不全）。"""
     anchor = to_float(row.get("anchor_value"))
     if anchor is None:
         return None
@@ -256,7 +256,7 @@ def check_row(row: dict) -> tuple[list[str], str]:
                   have not been written yet. That is a registration lag, not a
                   missing band — the same distinction v1.25/v1.26 drew for
                   割肉价登记时滞 and 伪欠账. Time-bound obligation, does not
-                  block buying (§10.4 研究档案项同构).
+                  block buying.
     """
     problems: list[str] = []
     letter = tag_letter(row.get("strategy_tag", ""))
@@ -346,7 +346,7 @@ def check_row(row: dict) -> tuple[list[str], str]:
                         f"{stored[0]:.4g}-{stored[1]:.4g} 偏差 {max(dev_low, dev_high):.1%} > 2%"
                     )
 
-            # 检查 5：倍数/折现率落在 §6.5.4 允许区间
+            # 检查 5：倍数/折现率落在旧 §6.5.4 允许区间
             source = str(row.get("multiple_source", "") or "").strip()
             if source and source not in MULTIPLE_SOURCES:
                 problems.append(f"检查5 multiple_source 非法值 '{source}'，允许 {sorted(MULTIPLE_SOURCES)}")
@@ -355,7 +355,7 @@ def check_row(row: dict) -> tuple[list[str], str]:
                 limits = RATE_LIMITS.get(letter)
                 if rates and limits and not (limits[0] <= rates[0] <= limits[1] and limits[0] <= rates[1] <= limits[1]):
                     problems.append(
-                        f"检查5 rate {rates[0]:.3f}~{rates[1]:.3f} 超出 §6.5.4 区间 {limits[0]:.3f}~{limits[1]:.3f}"
+                        f"检查5 rate {rates[0]:.3f}~{rates[1]:.3f} 超出旧 §6.5.4 区间 {limits[0]:.3f}~{limits[1]:.3f}"
                     )
             g_value = to_float(row.get("perpetual_growth"))
             if g_value is not None and g_value > MAX_PERPETUAL_G:
@@ -479,8 +479,8 @@ def main() -> int:
         for item in blocking[:8]:
             print(f"    [{item['priority_reason']}] {item['security_code']} {item['security_name']}"
                   f" — {item['violations'][:100]}")
-        print("\n  处置口径（§6.7 要求 11）：blocking 行降为「可持有」——不得新建仓/加仓，"
-              "但不触发 §14 提醒卖出；重建后自动恢复。backfill 行按限期义务补登，买入资格不变。")
+        print("\n  处置口径（旧 §6.7 要求 11）：blocking 行降为「可持有」——不得新建仓/加仓；"
+              "重建后自动恢复。backfill 行按限期义务补登，买入资格不变。")
 
     if not args.no_log:
         append_decision_log(

@@ -3,19 +3,18 @@
 **为什么需要它**：本仓库的实验产物增长极快——
 `backtest_valuation_strategy.py` 每跑一次落四个文件，一轮参数扫描是几百次运行；
 `build_historical_valuation_bands.py` 每个模型变体落一份 50~140MB 的逐日状态。
-2026-08-14 清理前，`data/processed` 有 **5.7 万个文件、8.5 GB**，其中 98% 是这两类。
-
 **两个区块，各自可单独跑**：
 
 - `backtest`：`data/processed/backtest/` 下的 `_equity`／`_trades`／`_periods` 三类删除；
   所有 `summary*.csv` 归并成 `scan_summaries.csv`（多一列 `扫描标签`，并集列头、缺列留空，**一个数字都不丢**）。
 - `bands`：`data/processed/` 下一次性估值带变体（`vd_*`／`vb_*`／`hd_*`／`hb_*`／`hist_daily_*`／
-  `a_share_daily_g*`，以及 `_pit`／`_pit116`／`_pit91`／`_261L2` 后缀的逐日状态与带表）删除。
+  `a_share_daily_g*`、退役的 `a_share_historical_valuation_*`、`dcf_*`／`roiccond*`／`roicmed_*` 实验臂、
+  `diag_*` 诊断集）删除，并清空实验缓存目录 `metric_states/`、`experiments/states/` 与 `exp_b_market_cache.npz`。
 
 **保留清单是硬编码的白名单**（`KEEP`），凡在其中者任何模式都不碰——
 它们是生产口径的落点与脚本缺省值，删了会让 §9.3.1.2 与日常扫描直接失效。
 
-缺省只报告，`--apply` 才动手。重建命令见 `docs/000_Ashare_workflow.md` §6.5.2.1 与 §9.3.1.2。
+缺省只报告，`--apply` 才动手。重建命令见 `docs/000_Ashare_workflow.md` §6.7 与 §9.3.1.2。
 
 用法：
     python3 scripts/clean_derived_artifacts.py                      # 报告两个区块
@@ -42,14 +41,26 @@ BACKTEST_KEEP = {"summary.csv", MERGED.name}
 # 一次性估值带变体。**注意 `vd_`/`vb_` 前缀下有生产文件，靠 KEEP 白名单挡住。**
 BANDS_PATTERN = re.compile(
     r"^(vd_|vb_|hd_|hb_|hist_daily_|hist_bands_|a_share_daily_g)"
-    r"|^a_share_historical_valuation_(daily|bands)_(pit|pit116|pit91|261L2)\.csv$"
+    r"|^a_share_historical_valuation_(daily|bands)(_(pit|pit116|pit91|261L2))?\.csv$"
+    # §12.66~§12.69 的估值引擎实验臂（dcf / roiccond* / roicmed），每臂三份 1.7~2 GB
+    r"|^(dcf|ame|roiccond[0-9a-z]*|roicmed)_(bands|daily_raw|states)\.csv$"
+    # notebooks/valuation_band_vs_price.ipynb 的诊断集（notebook 第二格一条命令重建）
+    r"|^diag_(daily_states|bands)\.csv$"
 )
-# 生产口径的落点与脚本缺省值——**任何模式都不得删**。
+# 生产口径的落点（§6.7 第 2/3 步产物、§9.3.1.2 回测输入）——**任何模式都不得删**。
 KEEP = {
-    "a_share_historical_valuation_daily.csv",    # backtest_valuation_strategy.py 的 --daily-states 缺省
-    "a_share_historical_valuation_bands.csv",    # build_valuation_band_cards.py 的输入
-    "a_share_daily_states_adopted.csv",          # §9.3.1.2 采纳口径（λ=2.0 + 银行股利折现）
+    "roic_bands.csv",
+    "roic_daily_raw.csv",
+    "a_share_daily_states_adopted.csv",
 }
+# 实验缓存目录/文件：整目录可由对应脚本一条命令重建（scripts/experimental/README.md）。
+EXPERIMENT_DIRS = (
+    PROCESSED / "metric_states",              # scripts/archive/build_metric_states.py
+    PROCESSED / "experiments" / "states",     # scripts/experimental/subset_daily_states.py
+)
+EXPERIMENT_FILES = (
+    ROOT / "data/interim/exp_b_market_cache.npz",   # scripts/experimental/vp_signal_lab.py 自动重建
+)
 
 
 def human(n: int) -> str:
@@ -73,6 +84,17 @@ def collect_backtest():
 def collect_bands():
     return [e for e in os.scandir(PROCESSED)
             if e.is_file() and e.name not in KEEP and BANDS_PATTERN.match(e.name)]
+
+
+def collect_experiments():
+    found = []
+    for d in EXPERIMENT_DIRS:
+        if d.is_dir():
+            found += [e for e in os.scandir(d) if e.is_file()]
+    for f in EXPERIMENT_FILES:
+        if f.is_file():
+            found += [e for e in os.scandir(f.parent) if e.is_file() and e.name == f.name]
+    return found
 
 
 def merge_summaries(files):
@@ -142,6 +164,11 @@ def main():
         print(f"  待删 {len(doomed):,} 个 {human(size(doomed))}"
               + (f" → 已删 {remove(doomed, args.apply):,} 个" if args.apply else "  （未加 --apply）"))
         print(f"  白名单保留：{'、'.join(sorted(KEEP))}")
+        cache = collect_experiments()
+        freed += size(cache)
+        print(f"  实验缓存（metric_states/、experiments/states/、exp_b_market_cache.npz）"
+              f" 待删 {len(cache):,} 个 {human(size(cache))}"
+              + (f" → 已删 {remove(cache, args.apply):,} 个" if args.apply else "  （未加 --apply）"))
 
     print(f"\n合计{'已释放' if args.apply else '可释放'} {human(freed)}")
 

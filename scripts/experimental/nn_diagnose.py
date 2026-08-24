@@ -20,7 +20,7 @@ FEATS = d["feats"]; rows = d["rows"]
 # ---------- 时点面板成员：(code, obs) 必须落在该股在册区间内 ----------
 def panel_spans():
     spans = collections.defaultdict(list)
-    for r in csv.DictReader(open(f"{ROOT}/data/processed/pit_attention/universe_panel_pit_v2.csv",
+    for r in csv.DictReader(open(f"{ROOT}/data/archive/pit-judgment-2026-08/universe_panel_pit_v2.csv",
                                  encoding="utf-8")):
         spans[r["security_code"]].append((r["effective_from"], r["effective_to"] or "2099-12-31"))
     for c in spans:

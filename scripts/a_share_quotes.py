@@ -40,12 +40,7 @@ def _to_float(value: str) -> float | None:
 def fetch_spot_quotes(
     items: list[tuple[str, str]], timeout: float = 8.0
 ) -> dict[str, dict[str, float | str | None]]:
-    """items: (code, exchange) 列表 → {6位代码: {price, quote_time, pe_ttm, pb, market_cap_yi,
-    day_high, day_low}}。
-
-    `day_low` 是 §14.3 第 1 条「盘中触及即为最终信号，不等收盘」的输入：只比收盘价会漏掉
-    盘中破位、尾盘收回的那一类，而那正是 Tier-0 规则最需要抓住的一天（判例：九号公司
-    2026-08-07 除权后割肉价 39.78，最低 39.39 触及、收盘 40.09 收回）。
+    """items: (code, exchange) 列表 → {6位代码: {price, quote_time, pe_ttm, pb, market_cap_yi}}。
 
     请求失败的分片和停牌(价格为0)的代码不出现在结果里；调用方按"缺失即沿用旧值"降级。
     """
@@ -79,7 +74,5 @@ def fetch_spot_quotes(
                 "pe_ttm": _to_float(fields[39]),
                 "market_cap_yi": _to_float(fields[45]),
                 "pb": _to_float(fields[46]),
-                "day_high": _to_float(fields[33]),
-                "day_low": _to_float(fields[34]),
             }
     return quotes

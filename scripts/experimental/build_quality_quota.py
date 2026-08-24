@@ -28,7 +28,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bands", type=Path, required=True, help="估值带（须含 roe0 与 available_at）")
     ap.add_argument("--panel", type=Path,
-                    default=ROOT / "data/processed/pit_attention/panel_moat_bank_v4.csv")
+                    default=ROOT / "data/archive/pit-judgment-2026-08/panel_moat_bank_v4.csv")
     ap.add_argument("--top", type=float, default=0.20, help="取该档面板内 roe0 的前多少比例")
     ap.add_argument("--out", type=Path, required=True)
     a = ap.parse_args()

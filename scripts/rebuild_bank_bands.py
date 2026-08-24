@@ -1,18 +1,18 @@
-"""按 §6.5.2.1 的 J-金融资本型口径给银行重算估值带，其余股票逐位不动。
+"""银行/保险股利折现覆盖（工作流 §6.5.1 第 4 条）：按金融资本型口径给银行重算估值带，其余股票逐位不动。
 
 **动机**（回测日志 §12.30）：现行批量历史带对银行用的是通用 DCF、L2 分档 `r=10%`，
 而由 `PB=(ROE−g)/(COE−g)` 反解出的**市场隐含 COE 中位 17.0%**（2011 年起长期 16.5%~22.6%），
 非银行只有 7.7%。用 10% 折现一门市场要求 17% 回报的生意，数学上必然恒判「便宜」——
 实测银行有 **90% 的在册交易日** `P/V ≤ 0.90`，其中 72% 的月度观测落在 `P/V < 0.60`。
 
-§6.5.2.1 早已写明「同业隐含 COE 中位数优先——A 股银行长期以 PB<1 交易，隐含 COE
+旧 §6.5.2.1 曾写明「同业隐含 COE 中位数优先——A 股银行长期以 PB<1 交易，隐含 COE
 显著高于教科书 ERP，用低 ERP 会系统性地把银行判成低估」，但该条只作用于 J 类逐票建档，
 **从未作用于批量历史带**。本脚本把它补上。
 
 三种口径（都只改银行行）：
   fixed:COE   PB* = (roe0 − g)/(COE − g)，COE 为给定常数
   peer        COE 取**滚动窗口内同业隐含 COE 的中位**，窗口严格早于当日（分布不是当日点位，
-              合乎 §6.5.5 的价格独立性硬约束）
+              合乎 §6.3 的价格独立性硬约束）
   pbhist      PB* 直接取该行**滚动窗口内自身 PB 的中位**，完全不经 ROE
   divspread:RP  股利折现：`V = 近 12 个月每股现金分红 ÷ (十年国债 + RP)`，
               即「股息率要比国债高出 RP 才算合理价」。实测（§12.31）该口径的
@@ -31,12 +31,13 @@
     python3 rebuild_bank_bands.py <模式> <输出文件> [逐日状态文件]
     模式 = fixed:0.15 | peer | pbhist | divspread:0.02 | ri:0.12 | ri:peer | ddm:0.12 | ddm:peer | ddm:peer:13（第三段 = fade 年数）
 
-第三个可选参数用于把同一口径施加到**别的逐日状态文件**上（例如护城河池与银行的并集），
-银行名单与基本面序列仍取自 pit116 面板与其估值带——银行的 bps/roe0/payout 与池子无关。
+第三个可选参数用于把同一口径施加到**别的逐日状态文件**上（例如护城河池与银行的并集）；
+银行/保险名单按全市场证券名单（`data/raw/a_share_securities.csv`）用 `divspread_names` 判定，
+基本面序列取自第四个参数给的估值带——与池子无关。
 """
 import csv, sys, os, bisect, collections, statistics
 ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
-PANEL = f"{ROOT}/data/processed/pit_attention/universe_panel_pit_v2.csv"
+SECURITIES = f"{ROOT}/data/raw/a_share_securities.csv"
 BANDS = f"{ROOT}/data/processed/a_share_historical_valuation_bands_pit116.csv"
 DAILY = f"{ROOT}/data/processed/a_share_historical_valuation_daily_pit116.csv"
 if len(sys.argv) > 3:
@@ -58,10 +59,9 @@ mode = sys.argv[1] if len(sys.argv) > 1 else "peer"
 OUT = sys.argv[2] if len(sys.argv) > 2 else f"{ROOT}/data/processed/vd_pit116_bkpeer.csv"
 
 name = {}
-for r in csv.DictReader(open(PANEL, encoding="utf-8")):
-    name[r["security_code"]] = r["security_name"]
-import sys as _sys, os as _os
-_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+for r in csv.DictReader(open(SECURITIES, encoding="utf-8-sig")):
+    name[r["security_code"].zfill(6)] = r["security_name"]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from divspread_names import is_divspread_financial   # v4.56：银行＋保险同一判定（OI-085 用户裁定①）
 def is_bank(c):
     return is_divspread_financial(c, name.get(c, ""))
@@ -97,9 +97,11 @@ def growth(roe0, payout):
     return min(G_CAP, roe0 * (1 - (payout if payout is not None else 0.30)))
 
 # ---- 第一遍：逐（银行,交易日）算隐含 COE 与 PB，供滚动窗口取中位 ----
+# 只有 peer / pbhist / *:peer 模式用得到；divspread（§6.7 第 3 步生产模式）跳过这遍 2 GB 全读。
+_needs_peer_pass = mode == "peer" or mode.startswith("pbhist") or ":peer" in mode
 hist_coe = []          # (日期, 隐含COE)  全体银行汇总，按日期排序
 hist_pb = collections.defaultdict(list)   # 代码 -> [(日期, PB)]
-for r in csv.DictReader(open(DAILY, encoding="utf-8")):
+for r in (csv.DictReader(open(DAILY, encoding="utf-8")) if _needs_peer_pass else ()):
     c = r["security_code"]
     if c not in BANKS:
         continue

@@ -30,12 +30,13 @@
 
 **不做无差别 ALL 落盘的例外**：本脚本保留全部非 `_YOY` 列。理由是四套表的列名互不相同
 （银行有 `ACCEPT_DEPOSIT`／`LOAN_ADVANCE`，通用表没有），手工枚举四套白名单必然
-**静默漏掉银行的关键列**；而本表只覆盖面板 211 只、年报约 5,000 行，落全列也只有个位数 MB。
+**静默漏掉银行的关键列**；而本表只覆盖回测宇宙与分层表数百只、年报数千行，落全列也只有个位数 MB。
 `_YOY` 列是纯派生（同比率），一律丢弃。
 
 用法::
 
-    python3 scripts/fetch_a_share_financial_statements.py --panel data/processed/pit_attention/panel_moat_bank_v5.csv
+    python3 scripts/fetch_a_share_financial_statements.py            # 缺省：回测宇宙 v6b ∪ 分层表全体
+    python3 scripts/fetch_a_share_financial_statements.py --panel data/processed/pit_attention/panel_moat_bank_v6b.csv
     python3 scripts/fetch_a_share_financial_statements.py --codes 600519 601166 --refresh
 """
 from __future__ import annotations
@@ -52,7 +53,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "data/raw/financials_statements"
-PANEL = ROOT / "data/processed/pit_attention/panel_moat_bank_v5.csv"
+PANELS = (ROOT / "data/processed/pit_attention/panel_moat_bank_v6b.csv",
+          ROOT / "data/processed/a_share_watchlist_quality_tiers.csv")
 API = "https://datacenter.eastmoney.com/securities/api/data/v1/get"
 HEADERS = {"User-Agent": "Mozilla/5.0",
            "Referer": "https://emweb.securities.eastmoney.com/"}
@@ -124,7 +126,8 @@ def normalise(rows: list[dict], code: str, table: str) -> list[dict]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="三大报表全量历史取数（ROIC/FCFF 前置）")
-    parser.add_argument("--panel", type=Path, default=PANEL)
+    parser.add_argument("--panel", type=Path, nargs="+", default=list(PANELS),
+                        help="取这些名单文件里 security_code 的并集，缺省＝回测宇宙 ∪ 分层表")
     parser.add_argument("--codes", nargs="*", help="只取这些代码，缺省取面板全体")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
     parser.add_argument("--refresh", action="store_true", help="重取已有文件")
@@ -135,8 +138,11 @@ def main() -> int:
     if args.codes:
         codes = sorted({c.zfill(6) for c in args.codes})
     else:
-        with args.panel.open(encoding="utf-8-sig") as handle:
-            codes = sorted({r["security_code"].zfill(6) for r in csv.DictReader(handle)})
+        codes = set()
+        for panel in args.panel:
+            with panel.open(encoding="utf-8-sig") as handle:
+                codes |= {r["security_code"].zfill(6) for r in csv.DictReader(handle)}
+        codes = sorted(codes)
     args.out_dir.mkdir(parents=True, exist_ok=True)
     print(f"三大报表取数：{len(codes)} 只 × {len(STATEMENTS)} 张表｜"
           f"落点 {args.out_dir if args.out_dir.is_absolute() and ROOT not in args.out_dir.parents else args.out_dir.relative_to(ROOT)}/")
@@ -145,11 +151,19 @@ def main() -> int:
     tables_used: dict[str, int] = {}
     for kind, candidates in STATEMENTS.items():
         path = args.out_dir / f"{kind}.csv"
+        existing_rows: list[dict] = []
+        todo = codes
         if path.exists() and not args.refresh:
-            print(f"  {kind}: 已存在，跳过（--refresh 重取）")
-            continue
-        all_rows: list[dict] = []
-        for index, code in enumerate(codes, start=1):
+            with path.open(encoding="utf-8-sig", newline="") as handle:
+                existing_rows = list(csv.DictReader(handle))
+            have = {r.get("security_code", "") for r in existing_rows}
+            todo = [c for c in codes if c not in have]
+            if not todo:
+                print(f"  {kind}: 名单 {len(codes)} 只已全部在库，跳过（--refresh 全量重取）")
+                continue
+            print(f"  {kind}: 已有 {len(have)} 只，增量补取 {len(todo)} 只")
+        all_rows: list[dict] = list(existing_rows)
+        for index, code in enumerate(todo, start=1):
             rows: list[dict] = []
             for table in candidates:
                 got, error = fetch(table, code, args.timeout)
@@ -165,7 +179,7 @@ def main() -> int:
                 failures.append(f"{code}/{kind}：**四套表全空**")
             all_rows.extend(rows)
             if index % 25 == 0:
-                print(f"    {kind} {index}/{len(codes)}｜累计 {len(all_rows):,} 行")
+                print(f"    {kind} {index}/{len(todo)}｜累计 {len(all_rows):,} 行")
             time.sleep(args.pause)
 
         if not all_rows:
@@ -181,7 +195,7 @@ def main() -> int:
             writer.writeheader()
             writer.writerows(all_rows)
         got_codes = len({r["security_code"] for r in all_rows})
-        print(f"  {kind}: {len(all_rows):,} 行、{got_codes}/{len(codes)} 只、{len(fields)} 列 → {path.name}")
+        print(f"  {kind}: {len(all_rows):,} 行、{got_codes} 只（名单 {len(codes)}）、{len(fields)} 列 → {path.name}")
 
         # §13 第 3 条：新增数据源须核对非空行数与关键列覆盖
         print(f"    关键列非空覆盖：", end="")

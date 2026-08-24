@@ -62,7 +62,7 @@ def load_panel(fin_dir: Path, codes: set[str] | None) -> dict[str, dict[str, dic
 
 
 def load_share_factors(path: Path) -> dict[str, list[tuple[str, float, float]]]:
-    """{代码: [(除权日, 送转比例 k/10, 每股现金分红)]}"""
+    """{代码: [(除权日, 每股送转比例（分数，10 送 8 转 12 记 2.0）, 每股现金分红)]}"""
     out: dict[str, list[tuple[str, float, float]]] = defaultdict(list)
     if not path.exists():
         return out
@@ -109,7 +109,7 @@ def main() -> int:
         keys = sorted(periods)[-args.periods:]
         if len(keys) < MIN_PERIODS:
             continue
-        prev_key = prev_bps = prev_shares = None
+        prev_key = prev_bps = prev_shares = prev_shares_raw = None
         for key in keys:
             row = periods[key]
             profit, eps = num(row.get("parent_netprofit")), num(row.get("basic_eps"))
@@ -126,12 +126,18 @@ def main() -> int:
             future_split = 1.0
             for ex, ratio_k, _cash in actions.get(code, []):
                 if ex > key and ratio_k:
-                    future_split *= (1 + ratio_k / 10.0)
+                    future_split *= (1 + ratio_k)
             shares_at_period = shares / future_split if shares else None
 
-            # ① ROE 自洽
+            # ① ROE 自洽。**EPS 是否已被追溯重述到最新股本，逐票甚至逐期不一**（比亚迪重述、
+            # 新易盛未重述），故两个口径都算，取更自洽的那个；两个口径都超阈值才报。
             if None not in (profit, bps, roe) and shares_at_period and bps > 0 and abs(roe) > 1.0:
-                implied = profit / (bps * shares_at_period) * 100
+                candidates = {"重述口径（÷后续送转）": shares_at_period}
+                if future_split != 1.0:
+                    candidates["原口径（未重述）"] = shares
+                basis, sh = min(candidates.items(),
+                                key=lambda kv: abs(profit / (bps * kv[1]) / roe - 1) if roe else 0)
+                implied = profit / (bps * sh) * 100
                 if implied != 0 and roe != 0 and implied * roe > 0:  # 同号才可比
                     ratio = implied / roe
                     if ratio > ROE_RATIO_WARN or ratio < 1 / ROE_RATIO_WARN:
@@ -139,18 +145,21 @@ def main() -> int:
                         findings.append({
                             "security_code": code, "security_name": name, "period": key,
                             "check": "ROE自洽", "severity": sev,
-                            "detail": (f"隐含ROE {implied:.2f}% vs 自报 {roe:.2f}%（比值 {ratio:.2f}×）；"
+                            "detail": (f"隐含ROE {implied:.2f}% vs 自报 {roe:.2f}%（比值 {ratio:.2f}×，取自洽侧 {basis}）；"
                                        f"bps={bps:.4f} 归母={profit/1e8:.2f}亿 EPS={eps} "
-                                       f"当期股本={shares_at_period/1e8:.2f}亿"
-                                       + (f"（重述股本 {shares/1e8:.2f}亿 ÷ 后续送转 {future_split:.2f}）"
+                                       f"当期股本={sh/1e8:.2f}亿"
+                                       + (f"（另一口径亦超阈；后续送转 {future_split:.2f}）"
                                           if future_split != 1.0 else "")),
-                            "suggest_bps": f"{profit / (roe / 100) / shares_at_period:.4f}" if roe else "",
+                            "suggest_bps": f"{profit / (roe / 100) / sh:.4f}" if roe else "",
                         })
 
-            # ② 股本跳变（扣送转）
+            # ② 股本跳变（扣送转）。同一重述不确定性：折回口径与原口径各比各的，
+            # 取更接近 1 的那个——真实增发/注销在两个口径下都会显示为跳变。
             if prev_shares and shares_at_period:
-                # 两期都已折回各自的「当期股本」口径，故真实增发才会显示为跳变
-                adj = shares_at_period / prev_shares
+                pairs = [shares_at_period / prev_shares]
+                if prev_shares_raw and shares:
+                    pairs.append(shares / prev_shares_raw)
+                adj = min(pairs, key=lambda x: abs(x - 1) if x > 0 else 9e9)
                 if adj > SHARE_JUMP_WARN or adj < 1 / SHARE_JUMP_WARN:
                     findings.append({
                         "security_code": code, "security_name": name, "period": key,
@@ -165,7 +174,7 @@ def main() -> int:
                 factor, cash = 1.0, 0.0
                 for ex, ratio_k, per_share in actions.get(code, []):
                     if prev_key < ex <= key:
-                        factor *= (1 + ratio_k / 10.0)
+                        factor *= (1 + ratio_k)
                         cash += per_share
                 expect = (prev_bps - cash) / factor
                 if expect > 0:
@@ -181,7 +190,7 @@ def main() -> int:
             if bps:
                 prev_bps, prev_key = bps, key
             if shares_at_period:
-                prev_shares = shares_at_period
+                prev_shares, prev_shares_raw = shares_at_period, shares
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     fields = ["security_code", "security_name", "period", "check", "severity", "detail", "suggest_bps"]

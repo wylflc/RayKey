@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成**时点判定输入表**（`docs/Ashare_pit_judgment_protocol.md` 的执行工具）。
+"""生成**时点判定输入表**（`docs/archive/Ashare_pit_judgment_protocol.md` 的执行工具）。
 
 三条前视隔离全部落在本脚本里
 ----------------------------
@@ -41,10 +41,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FIN = ROOT / "data/raw/financials"
 ORIG = ROOT / "data/raw/financials_original"
-QUEUE = ROOT / "data/processed/pit_attention/judgment_queue.csv"
-CONTAM = ROOT / "data/processed/pit_attention/restatement_contamination.csv"
+QUEUE = ROOT / "data/archive/pit-judgment-2026-08/judgment_queue.csv"
+CONTAM = ROOT / "data/archive/pit-judgment-2026-08/restatement_contamination.csv"
 SEC = ROOT / "data/raw/a_share_securities.csv"
-PROFILE_CACHE = ROOT / "data/interim/f10_org_profile.json"
+PROFILE_CACHE = ROOT / "data/archive/pit-judgment-2026-08/f10_org_profile.json"
 API = "https://datacenter.eastmoney.com/securities/api/data/v1/get"
 
 

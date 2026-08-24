@@ -31,18 +31,9 @@ python3 -m venv /tmp/nnvenv && /tmp/nnvenv/bin/pip install numpy torch
 `nn_apply.py` 与 `nn_roe.py` 还需要同目录下的 `pit116_codes.txt`（时点面板的代码清单）。
 中间产物与产出的逐日估值文件**都不入库**。
 
-## 银行估值口径重算（2026-08-13，结论：合格面确实被摊平但年化不动，见回测日志 §12.30.4）
+## 银行估值口径重算（2026-08-13，见回测日志 §12.30.4）
 
-| 文件 | 作用 |
-| --- | --- |
-| `rebuild_bank_bands.py` | 按 §6.5.7.1 的 J-金融资本型口径只重算银行的估值带，非银行行逐位不动。三种模式：`fixed:COE`（给定折现率）／`peer`（滚动三年同业隐含 COE 中位）／`pbhist`（滚动三年自身 PB 中位） |
-
-```bash
-python3 scripts/rebuild_bank_bands.py（v4.00 已提升为生产脚本） fixed:0.17 data/processed/vd_pit116_bkcoe17.csv
-python3 scripts/rebuild_bank_bands.py（v4.00 已提升为生产脚本） peer      data/processed/vd_pit116_bkpeer.csv
-```
-
-不需要 `torch`/`numpy`，只用标准库。产出的逐日估值文件**不入库**。
+`rebuild_bank_bands.py` 自 v4.00 起是生产脚本（§6.7 第 3 步，模式 `divspread:0.02`）；`fixed:COE`／`peer`／`pbhist`／`ri:`／`ddm:` 各模式保留为研究口径（§12.104~§12.105 不采纳）。
 
 ## 成长/PEG 并联通道（2026-08-13，结论：不采纳，见回测日志 §12.31.4）
 
@@ -88,23 +79,13 @@ python3 scripts/experimental/deviation_gate_diagnostics.py <逐日估值状态.c
 **顺带记一条通用标尺**：同批回测里，只挡掉合格集的 **0.2%** 就能让 Δ年化中位动 −0.91pp，
 而空跑对照逐位等于基准。**故 |Δ| ≲ 1pp 且符号数在 8/23~15/23 之间者一律读作无效应。**
 
-## `daily_scan_adopted.py` —— 已退役（2026-08-14，结 OI-051）
-
-**其全部功能已并入生产入口 `scripts/screen_daily_volume_price_signals.py`**，本目录不再保留副本。
-
-并入的是 §9.7 机械执行层：模型带 `P/V`、银行股利折现、`收>MA20>MA60` 闸门、
-按 `P/V` 升序 + 252 日相关性 ≤0.85 去相关（下扫至多 40 名）、一档 = 净资产 × 1%、
-整手向下取整与 §9.7.3 比例冷却。生产入口新增 `--model-bands / --nav / --rf / --plan-out` 四个参数。
-
-**等价性已验证**：同一交易日、同一模型带下，两套实现给出的 17 只买入清单在
-**代码、名称、现价、`P/V`、股数上逐只逐字段一致**——且这是跨数据源的一致
-（生产走东财 `fqt=1`，退役版走腾讯 `qfq`）。详见 `docs/Ashare_backtest_log.md` §12.42。
-
-## 中轴按什么定：`decompose_pv_bias.py` / `calibrate_band_by_group.py` / `align_buy_line.py`（§12.45）
+## 中轴按什么定：`decompose_pv_bias.py` / `calibrate_band_by_group.py` / `calibrate_band_ma60.py` / `calibrate_band_zscore_partial.py` / `align_buy_line.py`（§12.45~§12.49）
 
 ```bash
 python3 scripts/experimental/decompose_pv_bias.py            # 偏置能被什么解释（R² 分解）
 python3 scripts/experimental/calibrate_band_by_group.py <输入逐日> <输出逐日> <ind1|ind2|tier|ind1xtier>
+python3 scripts/experimental/calibrate_band_ma60.py ...          # 居中判据改 MA60（§12.49，全负）
+python3 scripts/experimental/calibrate_band_zscore_partial.py ... # 方差归一 / 部分校准 α（§12.48，全负）
 python3 scripts/experimental/align_buy_line.py <基准逐日> <基准线> <待对齐逐日>...
 ```
 
@@ -150,6 +131,7 @@ python3 scripts/experimental/panel_tier_forward.py --states data/processed/a_sha
 
 | 文件 | 作用 |
 | --- | --- |
+| `reconstruct_holding_weights.py` | 从逐笔流水重建逐日持仓的时间加权平均权重（「重仓股是哪些」，§12.43.6／§12.76 集中度核对的输入） |
 | `drawdown_path.py` | 读一次**带产物**的回测（`*_equity.csv`、`*_trades.csv`、`--trade-log` 流水），列出全部回撤段，并对最深的几段给出峰/谷日账户结构、沪深300 与上证对照、峰→谷成交流水，以及用流水重建逐日股数（含送转）后的**老仓层／新钱层两层盈亏归因**与峰值日老仓明细（距生效止损线、离场日与原因） |
 
 ```bash

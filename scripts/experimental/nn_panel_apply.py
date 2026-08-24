@@ -42,7 +42,7 @@ X = np.asarray([r[2] for r in rows], dtype=np.float32)
 Y = np.array([np.nan if r[3] is None else r[3] for r in rows], dtype=np.float32)
 
 spans = collections.defaultdict(list)
-for r in csv.DictReader(open(f"{ROOT}/data/processed/pit_attention/universe_panel_pit_v2.csv", encoding="utf-8")):
+for r in csv.DictReader(open(f"{ROOT}/data/archive/pit-judgment-2026-08/universe_panel_pit_v2.csv", encoding="utf-8")):
     spans[r["security_code"]].append((r["effective_from"], r["effective_to"] or "2099-12-31"))
 INP = np.array([any(a <= t <= b for a, b in spans.get(c, ())) for c, t in zip(CODES, DATES)])
 lab = np.isfinite(Y)

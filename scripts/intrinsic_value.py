@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""内在价值主模型：ROE—再投资—增长—可分配现金—折现（§6.5.2.1 第一层/第二层）。
+"""内在价值主模型：ROE—再投资—增长—可分配现金—折现（工作流 §6.5.1 的权益口径折现引擎）。
 
 来历
 ----
@@ -74,8 +74,7 @@
 **边界（照原式，写明不做什么）**
 原式第 11 节末尾指出：非金融企业更严谨应换 ROIC/NOPAT/FCFF/WACC，金融股才用 ROE+CoE。
 **本模块只实现 ROE+CoE 这一支**——批量估值拿不到逐季的 NOPAT、投入资本与债务口径，
-硬套 FCFF 只会把假精度堆在缺失的输入上。故本模块定位为 §6.5.2.1 的**第二层（快速估值）**
-与第一层的 RI 近似；真要走 FCFF 的公司须逐票建档（§6.5.2）。
+硬套 FCFF 只会把假精度堆在缺失的输入上。故本模块承担 §6.5.1 的 equity_fallback 路径与快速校验；FCFF 主路径在 `build_historical_valuation_bands.py` 的 ROIC 引擎。
 
 用法::
 
@@ -170,7 +169,7 @@ def intrinsic_value(
     15.75
     """
     if eps0 <= 0:
-        raise ValuationError(f"EPS0={eps0:g} ≤ 0：本模型按盈利折现，亏损公司须走 §6.5.5.2 逐票建档")
+        raise ValuationError(f"EPS0={eps0:g} ≤ 0：本模型按盈利折现，亏损公司按 §6.5.2.4 判无法估值")
     if roe0 <= 0:
         raise ValuationError(f"ROE0={roe0:.2%} ≤ 0：负 ROE 下再投资关系无意义")
     if g_terminal >= r:

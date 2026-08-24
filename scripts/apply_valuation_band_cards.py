@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge the 建带卡 draft + tag remap into the valuation table (工作流 v1.30 重建).
+"""Merge the 建带卡 draft + tag remap into the valuation table（工作流 §6.7 第 5 步）.
 
 What this writes:
 
@@ -9,7 +9,7 @@ What this writes:
 * `fair_price_low/high` ← 按 §6.5.1 复算的模型带
 * `valuation_tier` ← §6.2 现价对带的位置（审定档 = 建带当日按同一规则算出的档）
 
-锚定量取不到（外部取证缺失或研报覆盖 <3 家）的行按 §6.5.2.1 判**无法估值**并清空带
+锚定量取不到（外部取证缺失或研报覆盖 <3 家）的行按 §6.5.2.4 判**无法估值**并清空带
 ——不得用近似值凑数，更不得退回通用系数带。
 
 Usage::
@@ -64,7 +64,7 @@ CARD_FIELDS = [
     "anchor_quality", "upgrade_path", "band_is_floor", "anchor_vintage", "method_divergence", "runrate_check", "cycle_assumption", "scenario_band_low", "scenario_band_high", "cycle_note", "implied_excess_years", "multiple_regime_flag", "implied_return", "implied_return_tier", "manual_verdict",
 ]
 
-# §6.5.6 的成长期权是 §7 复核逐票填的人工判断，建带卡不产出这几列（v1.46，OI-017）。
+# 成长期权是人工复核（§6.6）逐票填的判断，建带卡不产出这几列（v1.46，OI-017）。
 # 它们必须排除在「整列覆盖」之外，否则每轮 apply 都会把人工填的期权清空。
 HUMAN_CURATED_FIELDS = [
     "growth_option_value", "growth_option_share", "growth_option_evidence_level",
@@ -228,8 +228,8 @@ def main() -> int:
             # 带每轮全量重算，卡即这些列的唯一真值来源。
             for field in CARD_OWNED_FIELDS:
                 row[field] = card.get(field, "")
-            # 人工策展列（§6.5.6 成长期权）不由建带卡产出，只在卡确有值时覆盖——
-            # 否则每轮 apply 都会把 §7 复核逐票填进去的期权抹掉。
+            # 人工策展列（成长期权，§6.6 人工复核）不由建带卡产出，只在卡确有值时覆盖——
+            # 否则每轮 apply 都会把人工复核逐票填进去的期权抹掉。
             for field in HUMAN_CURATED_FIELDS:
                 if card.get(field):
                     row[field] = card[field]
@@ -276,7 +276,7 @@ def main() -> int:
             row["valuation_reviewed_at"] = cutoff_date
         else:
             row["valuation_reviewed_at"] = args.as_of
-        row["valuation_method"] = f"工作流 v1.30 全量重建（{TAG_NAMES.get(letter, letter)}）"
+        row["valuation_method"] = f"建带卡回写（{TAG_NAMES.get(letter, letter)}，{WORKFLOW_VERSION}）"
 
     if args.dry_run:
         print("dry-run，未写文件")
@@ -294,7 +294,7 @@ def main() -> int:
                 "decision_type": "valuation_rebuild",
                 "decision_result": "rebuilt",
                 "summary_reason": (
-                    f"v1.30 全量重建：{len(rows)} 家中 {stats['band']} 家算出模型带、"
+                    f"建带卡回写（{WORKFLOW_VERSION}）：{len(rows)} 家中 {stats['band']} 家算出模型带、"
                     f"{stats['unvaluable']} 家判无法估值（锚定量不可得）；"
                     f"标签重贴 {stats['tag_changed']} 家、分层同步 {stats['tier_synced']} 家；"
                     f"审定档变化 {len(tier_moves)} 家"

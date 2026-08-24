@@ -17,7 +17,7 @@
    矛盾即打标 `roe_conflict` 交由判定环节处理，**不静默丢弃**。
 
 本脚本**只决定「何时值得判」**（召回网），不做任何 worth_attention 判定——
-判定口径见 `docs/Ashare_pit_judgment_protocol.md`。
+判定口径见 `docs/archive/Ashare_pit_judgment_protocol.md`。
 
 用法::
 
@@ -38,8 +38,8 @@ ROOT = Path(__file__).resolve().parents[1]
 FIN = ROOT / "data/raw/financials"
 OHLCV = ROOT / "data/raw/ohlcv"
 ROSTER = ROOT / "data/raw/a_share_delisted_roster.csv"
-CONTAM = ROOT / "data/processed/pit_attention/restatement_contamination.csv"
-OUT = ROOT / "data/processed/pit_attention/judgment_queue.csv"
+CONTAM = ROOT / "data/archive/pit-judgment-2026-08/restatement_contamination.csv"
+OUT = ROOT / "data/archive/pit-judgment-2026-08/judgment_queue.csv"
 
 A_SHARE = re.compile(r"^(000|001|002|003|300|301|600|601|603|605|688|689)\d{3}$")
 

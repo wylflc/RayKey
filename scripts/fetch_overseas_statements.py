@@ -7,7 +7,7 @@
   同一期末取**最新申报**（含重述）。US-GAAP 与 IFRS（20-F，如台积电）两套标签都映射。
 * 港股：东财 HK F10 三张表（`RPT_HKF10_FN_{BALANCE,INCOME,CASHFLOW}_PC`），`DATE_TYPE_CODE=001` 为财年。
   报表货币按公司（清单 6 家均为人民币）。股数取 `hong_kong_financial_indicators.csv` 最新已发行股数。
-* 韩股：无免密钥三表源——不出行，清单上保持「无法估值」并写明缺口（§6.5.5.2）。
+* 韩股：无免密钥三表源——不出行，清单上保持「无法估值」并写明缺口（§6.5.2.4）。
 原始 JSON 落 `data/raw/overseas_statements/`（不入库，≈4 MB/家）；提取结果落 `data/interim/overseas_roic_years.csv`（入库）。
 
 字段口径与 `roic_inputs.load_statements` 逐项对齐：

@@ -1,19 +1,10 @@
 #!/usr/bin/env python3
-"""OI-034 第 2/3 步：估值组与走势组回测，含逐周期与组合层指标。
+"""估值 × 走势规则的回测引擎（工作流 §12），含逐周期与组合层指标。
 
-规格来自用户 2026-08-07 与 2026-08-08 两次指令，逐条照录并标明本脚本对含糊处的取值
-（**凡本脚本自行定义的规则都在下面列出，须用户确认**）：
-
-| 用户原述 | 本脚本实现 |
-| --- | --- |
-| 「每天对所有股票按空间排序，买入空间最大的前十个」 | 每个交易日重排；**先筛后排**——合格集 `P/V ≤ 0.9`，只在合格集内排序 |
-| 「合格集为空时持币」（2026-08-08 裁定） | 当日不买，现金留存；**不硬凑前十** |
-| 「每次买入总仓位的 x%」 | 每次买入金额 = **当日总资产 × x%**，逐票独立 |
-| 「卖出…每次卖出总资金的 x%」 | 触发 `P/V ≥ 1.1` 时卖出 **当日总资产 × x%** 的市值，不足则清空该票 |
-| 「趋势满足条件时一笔买入」 | **本脚本定义**：`收盘 > MA20` 且 `MA20 > MA60`，同时 `P/V ≤ 0.9` |
-| 「买入日的 20 日均线为止损价」 | 记录建仓日 MA20，收盘跌破即**全部清仓** |
-| 「成交按当日收盘价」 | 是；不计手续费与冲击成本（**故结果是上界**） |
-| 「初始 300 万」 | 是；**不允许融资**，现金不足则少买或不买 |
+**现行基准参数只在 `scripts/sweep_backtest_configs.py` 的 `BASE`（工作流 §9.3.1.2）**——本文件的
+argparse 缺省值多为研究口径或历史口径，单独运行本脚本时必须显式给全参数，不得把缺省值当作现行规则。
+回测宇宙固定读 `data/processed/pit_attention/panel_moat_bank_v6b.csv`，逐日估值状态固定读
+`data/processed/a_share_daily_states_adopted.csv`（§6.7 第 3 步产物）。
 
 **分红送转必须落到账上，否则回测直接是错的**：持仓穿越 10 转 10 而不调股数，会凭空亏
 一半；现金分红不入账则系统性低估收益。本脚本在除权日按
@@ -22,10 +13,9 @@
 **三处结构性偏误，读数前必须知道**（v2.88 起把原「幸存者偏差 + 选样前视」拆开——
 两者是不同的偏误，一个可测可修、一个在本仓库根本测不到）：
 
-1. **选样前视（可测，给 `--universe-file` 即可压掉）**。回测标的是**今日的 261 只池内
-   股票**，而池由 2026 年的分层与建档选出。实测 2000-01-01 时这 261 只中**仅 34 只在市**
+1. **选样前视（可测，给 `--universe-file` 即可压掉）**。回测标的是**今日的核心池成员**，而池由 2026 年的分层与建档选出。实测 2000-01-01 时这 261 只中**仅 34 只在市**
    （13%）、2005 年也只有 67 只（26%）。**代价已量化**：2010-05~2026-08 同区间，改用
-   `data/processed/pit_attention/universe_panel_yearly.csv` 逐年时点名单后年化
+   `data/archive/pit-judgment-2026-08/universe_panel_yearly.csv` 逐年时点名单后年化
    **23.68% → 13.41%（−10.27pp）**，其中「换池子」−4.99pp、「加时点」−5.28pp
    （回测日志 §12.25.3）。**不给 `--universe-file` 的读数一律含此前视。**
 2. **幸存者偏差（数据侧已补，判定侧见协议）**。2026-08-11 起行情库含 344 只退市股（`data/raw/a_share_delisted_roster.csv`，
@@ -61,7 +51,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-DAILY_STATES = ROOT / "data/processed/a_share_historical_valuation_daily.csv"
+DAILY_STATES = ROOT / "data/processed/a_share_daily_states_adopted.csv"
 OHLCV_DIR = ROOT / "data/raw/ohlcv"
 RESEARCH_DIR = ROOT / "data/raw/research_reports"
 ACTIONS = ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv"
@@ -81,8 +71,6 @@ BENCHMARK = ROOT / "data/raw/ohlcv/INDEX_000300.csv"
 OUT_DIR = ROOT / "data/processed/backtest"
 
 INITIAL_CAPITAL = 3_000_000.0
-BUY_RATIO_MAX = 0.90      # 合格：P/V ≤ 0.9
-SELL_RATIO_MIN = 1.10     # 触发减持：P/V ≥ 1.1
 MAX_POSITIONS = 10
 TRADING_DAYS = 244
 
@@ -126,7 +114,7 @@ def trade_fee(amount: float, day: str, side: str) -> float:
     FEES["paid"] += fee
     return fee
 
-# 安全边际按档位（§6.7：风险惩罚归决策层，不塞进 r）。**只作用于买入线。**
+# 安全边际按档位（风险惩罚归决策层，不塞进 r；研究开关）。**只作用于买入线。**
 MOS_BY_TIER = {"L1": 0.10, "L2": 0.20, "L3": 0.30}
 DEFAULT_TIER = "L2"
 
@@ -1021,8 +1009,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
     **MOS 只管买、不管卖**——安全边际是「便宜到什么程度才敢下手」，卖出仍按带上沿。
-    这是 §6.7「估值层给 r、决策层给 MOS」那条分工的落地；此前 MOS 只算进带文件的
-    `max_buy_price` 列，回测一行都没引用（§13 第 2 条「成文未落地」，本轮补上）。
+    估值层给 r、决策层给 MOS 的分工在此落地（研究开关，BASE 不用）。
 
     `price_stop`：给估值组也装上走势组那套「跌破建仓日 MA20 即清仓」。
     `value_stop`：**基本面退出**——内在价值自持有期峰值回落超过该比例即清仓。
@@ -1049,7 +1036,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     rich_tag = f"分位≥{sell_pct:.0%}" if gate == "self-pct" else f"P/V≥{sell_line:.2f}"
     # `self-pct-buy` = **非对称闸门**：买入用自身分位（把绝对口径永远够不着的白马放进来——
     # 迈瑞 17 年没有一天 `P/V≤1.00`，却有 43% 的日子在自身 3 年 10 分位以下），
-    # 卖出/止损/换仓一律退回原始比值口径（现行减持线 2.50 十八年只响 9 次，等于让赢家跑）。
+    # 卖出/止损/换仓一律退回原始比值口径（现行减持线（§9.3.1）多年只触发个位数次，等于让赢家跑）。
     # 动机见 §12.61：分位是一把均值回归的尺子，擅长「找到谁便宜」，不擅长「决定何时离场」。
     pct_buy_gate = gate in ("self-pct", "self-pct-buy")
     # 时点股票库：`members` 随日期切换。第一档生效前**一只都不可买**——那段时间还没有
@@ -1390,7 +1377,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             stop_enabled = ((strategy == "trend" and trend_stop) or price_stop) and bool(lot.entry_stop)
             # `stop_line`（用户 2026-08-19 实验）：`min_entry_current` 把生效止损线改为
             # **min(建仓日冻结线, 当日同周期均线)**——均线跌到冻结线之下时止损跟随下移（放宽），
-            # 均线上移不抬线（缺省 `entry` 即现行冻结口径，逐位不变）。周期取该仓实际采用的
+            # 均线上移不抬线（`entry` 为旧冻结口径；现行为 `min_entry_current`（BASE））。周期取该仓实际采用的
             # `entry_stop_ma`（买在 MA60 下方退 MA20 的仓，比较的也是当日 MA20，不混周期）。
             stop_level = lot.entry_stop
             if stop_line == "min_entry_current" and lot.entry_stop and lot.entry_stop_ma:
@@ -1509,9 +1496,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 stats[f"贵+破MA{liquidate_ma}·一键清仓"] += 1
                 continue
             # `no_value_sell`（用户 2026-08-15：「删除超过 P/V 之后的减仓规则」）：
-            # **整条估值减持路径关闭**（§9.3.2 第 4 步第①条）。此后卖出只剩三条：
+            # **整条估值减持路径关闭**（§9.3.2 第 4 步第②条）。此后卖出只剩三条：
             # ⓪建仓日均线止损、②出 §5 名单逐步清仓、③换仓。
-            # **注意现行减持线 2.50 十八年只触发 9 次**，故这条的直接影响本就很小；
+            # **注意现行减持线（§9.3.1）多年只触发个位数次**，故这条的直接影响本就很小；
             # 真正的意义是把「贵了要不要减」这个判断从机械规则里彻底移除。
             # `gain_sell`（用户 2026-08-22 实验）：**信号日收盘 ≥ 持仓均价 × (1 + G) 也算「该减」**——
             # 与 `P/V ≥ 减持线` 走同一条减一档路径。`gated`＝同样过走势闸门（`sell_trend_ma`）；
@@ -1765,7 +1752,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 缺了兜底，资金打满后组合就冻住——实测换手由 200.9% 塌到 17.6%、买入 2145→474 笔。
         # 超额授信期间（常规卖出款还过仍超额）：剩余授信为 0、现金为 0 → 不可能新增买入；换仓照常触发，
         # 但换仓卖出款**同样先还超额负债**（用户 2026-08-22 裁定：「这是融资的代价——净资产下跌、想换仓，
-        # 就会出现卖出后因授信降低而无法买入；必须先保证负债不超过净资产×60%，才可以进行任何其他买入」）。
+        # 就会出现卖出后因授信降低而无法买入；必须先保证负债不超过净资产×授信比例，才可以进行任何其他买入」）。
         # 实际效果：超额期间每日卖出一档弱势持仓去还款、买不进新票，直到负债回到额度内——这是杠杆账户
         # 在回撤里的真实去杠杆过程（2019-05 起点实测期末 2,762 → 763 万）。曾试过的「换仓款留给置换买入」
         # 口径已按用户裁定撤回。
@@ -1971,7 +1958,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         #
         # 实现上**不另写一套下单逻辑**——只把够格的成员插到 `eligible` 最前面，整手取整、
         # 比例冷却、单票上限、建仓日止损、流水记账全部沿用下面那个循环。多写一套的风险
-        # 远大于收益（§13 第 3 条：同一件事写两遍，迟早两边不一样）。
+        # 远大于收益（§13 第 5 条：同一阈值写两遍，迟早两边不一样）。
         quota_room = 0.0
         if quota_today and not fence_on:
             held = sum(lot.shares * marks[c] for c, lot in portfolio.lots.items()
@@ -2042,7 +2029,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 amount = min(amount, room)
             # A 股买入必须是 100 股整数倍。`lot_size` 打开后按手向下取整，**买不足一手就跳过**
             # ——这才是真实可执行的口径。一档金额买不起一手的高价股（茅台一手 13 万）会被自然排除，
-            # 这不是缺陷而是事实：0.5%% 的定投额度本来就装不下这类标的。
+            # 这不是缺陷而是事实：一档金额本来就装不下这类标的。
             if lot_size:
                 lots_n = int(amount // (fill * lot_size))
                 if lots_n <= 0:
@@ -2068,7 +2055,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             else:
                 shares = amount / fill
             # 割肉买回：**只在该股重新合格的那一天触发一次**，买回被割掉的全部股数（现金不足则买满为止）。
-            # 与常规定投的区别是它不受 0.5%% 一档限制——割肉时卖掉的是整仓，补回也应是整仓。
+            # 与常规定投的区别是它不受一档限制——割肉时卖掉的是整仓，补回也应是整仓。
             if rebuy == "lump" and cut_shares.get(code) and code not in portfolio.lots:
                 want = cut_shares.pop(code)
                 if lot_size:
@@ -2133,7 +2120,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     marks[code] = last_price[code]
         # `--margin-ratchet`（纯研究开关，§12.70）：日终剩余现金先还融资，不留到下一笔买入。
         repay_debt(portfolio, margin_ratchet)
-        # **无单票上限的实际后果必须可量**（§9.3.1 明文不设单票上限）：逐日记下最大单股权重
+        # **无单票上限的实际后果必须可量**（§9.3.1 单票机械上限由 `--position-cap` 给出，不给即无上限）：逐日记下最大单股权重
         # 与前三大合计，写进净值曲线。不记的话「集中度」只能靠事后从流水重建，而流水按构造
         # 缺部分减持（本次一并补上），重建值会系统性偏高。
         eq_now = portfolio.equity(marks)
@@ -2290,7 +2277,7 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
     # 一次崩盘落在窗口内外就能翻转结论（§12.1 多起点纪律的动机就是它）。
     # 主读数 = 滚 5 年 CAGR 中位；坏情形 = 滚 5 年 CAGR P25（140 个月末窗里 P10 只有 14 个观测，
     # P25 更稳）；最差值只有描述意义（它就是历史上最差那一段 5 年，各臂几乎同一事件）；
-    # 滚 5 回撤中位作闸门、负窗口占比作否决项（60% 授信下几乎恒为 0，没有排序区分力）。
+    # 滚 5 回撤中位作闸门、负窗口占比作否决项（现行授信下几乎恒为 0，没有排序区分力）。
     def _stats(windows):
         g = sorted(w["cagr"] for w in windows)
         d = sorted(w["mdd"] for w in windows)
@@ -2464,7 +2451,7 @@ def main() -> int:
                         help="研究开关（§12.95）：减持线按档位乘倍数，未列档位为 1.0；缺省空＝原行为")
     parser.add_argument("--price-stop", action="store_true", help="估值组也用建仓日均线止损")
     parser.add_argument("--stop-ma", type=int, choices=(20, 60), default=20,
-                        help="止损均线周期；取 60 时，若建仓价已在 MA60 下方则自动退回 MA20")
+                        help="止损均线周期（现行 60）；建仓价已在该均线下方时的处理由 --entry-below-ma60 决定")
     parser.add_argument("--value-stop", type=float, default=0.0,
                         help="基本面退出：内在价值自峰值回落超该比例即清仓，如 0.25")
     parser.add_argument("--no-trend-stop", dest="trend_stop", action="store_false",
@@ -2498,9 +2485,9 @@ def main() -> int:
     parser.add_argument("--position-cap", type=float, default=0.0,
                         help="单票买入上限占总资产比例，如 0.10；只挡加仓不强制减持")
     parser.add_argument("--only-tiers", default="", help="只买这些档位，逗号分隔，如 L1")
-    parser.add_argument("--daily-states", type=Path, help="逐日估值状态文件，缺省用 261 池版本")
+    parser.add_argument("--daily-states", type=Path, help="逐日估值状态文件，缺省 a_share_daily_states_adopted.csv（§6.7 第 3 步产物）")
     parser.add_argument("--universe-file", type=Path,
-                        help="时点股票库（build_point_in_time_universe.py 的产出）。"
+                        help="时点股票库（现行 panel_moat_bank_v6b.csv，由 build_moat_panel.py 装配）。"
                              "给了它就只在当期成员里选股，移出的持仓逐步清仓")
     parser.add_argument("--quota-file", type=Path,
                         help="配置通道的成员区间（与 --universe-file 同格式）。"
@@ -2533,7 +2520,7 @@ def main() -> int:
                         help="full=加仓与新建仓同条件（缺省）；"
                              "ma-only=**已有持仓**只要 MA20>MA60 就继续定投，不再要求 收盘>MA20")
     parser.add_argument("--no-value-sell", action="store_true",
-                        help="删掉「`P/V` 过减持线就减一档」整条路径（§9.3.2 第 4 步第①条）。"
+                        help="删掉「`P/V` 过减持线就减一档」整条路径（§9.3.2 第 4 步第②条）。"
                              "此后卖出只剩：建仓日均线止损、出名单清仓、换仓")
     # 三个「反向开关」：BASE 串里已含 --no-value-sell / --swap-require-weak / --swap 这类
     # store_true，扫描器只能**追加**参数、无法删除，故各配一个同 dest 的反向旗（后出现者胜）。
@@ -2595,7 +2582,7 @@ def main() -> int:
                         help="减持的前置走势闸门：给 `5 20` 表示还须 收盘<MA5<MA20 才按一档减。"
                              "空=原行为（纯估值触发）。只闸 P/V 减持，不闸出名单清仓与换仓")
     parser.add_argument("--exec-delay", type=int, choices=(0, 1), default=0,
-                        help="0=T 日收盘算信号当日成交（现行）；1=T 日收盘算信号、T+1 日成交")
+                        help="0=T 日收盘算信号当日成交；1=T 日收盘算信号、T+1 日成交（现行）")
     parser.add_argument("--exec-price", choices=("close", "open"), default="close",
                         help="--exec-delay 1 时的成交价取 T+1 的开盘还是收盘")
     parser.add_argument("--trend-tol", type=float, nargs="+", default=[0.0],
@@ -2657,7 +2644,7 @@ def main() -> int:
                         help="负债超过当日授信额度的处理（OI-081）：repay=卖出款先偿还超额、不可新增买入（§10.2，缺省）；"
                              "keep=额度取 max(已用负债, 额度)、不强制还款（v4.39 前旧口径，复现旧读数用）")
     parser.add_argument("--stop-line", choices=("entry", "min_entry_current"), default="entry",
-                        help="止损线口径：entry=建仓日冻结线（现行）；min_entry_current=min(建仓日线, "
+                        help="止损线口径：entry=建仓日冻结线（旧）；min_entry_current=min(建仓日线, "
                              "当日同周期均线)——均线下移时止损跟随下移、上移不抬线（用户 2026-08-19 实验）")
     parser.add_argument("--entry-below-ma60", choices=("ma20_stop", "skip"), default="ma20_stop",
                         help="新建仓成交日收盘 < 当日 MA60（信号日过闸后跳空所致）的处理："
@@ -2819,7 +2806,7 @@ def main() -> int:
               f"每档 {min(sizes)}~{max(sizes)} 只｜并集 {len({c for _d, m in universe for c in m}):,} 只")
     if args.since < covered[0]:
         print(f"  ⚠ 请求起点 {args.since} 早于估值状态起点 **{covered[0]}**，"
-              f"实际从后者起跑（历史带需先有逐季财务与五年年报 ROE，见 §12.4.3）")
+              f"实际从后者起跑（历史带需先有逐季财务与五年年报 ROE，见工作流 §12.1）")
 
     tiers = load_tiers()
     strategies = ["valuation", "trend"] if args.strategy == "both" else [args.strategy]
@@ -3021,7 +3008,7 @@ def main() -> int:
                                      if args.artifacts else
                                      "汇总 summary.csv（--no-artifacts，未落逐条产物）"))
     if not args.universe_file:
-        print("\n⚠ **选样前视**：标的是今日 261 只池内股，池由 2026 年的分层选出。"
+        print("\n⚠ **选样前视**：标的是今日核心池成员，池由 2026 年的分层选出。"
               "已实测其代价——2010-05~2026-08 同区间，改用逐年时点股票库后年化 "
               "**23.68% → 13.41%（−10.27pp）**（回测日志 §12.25.3）。"
               "本次未给 `--universe-file`，故本轮读数含该前视。")

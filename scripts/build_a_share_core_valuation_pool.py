@@ -153,7 +153,7 @@ def build_pool(
         # band_status=rebuild_required：校验失败行冻结新增买入（§6.7 末段），修复后再物化。
         # backfill（模型带、仅建带卡未回填）→ 限期登记义务，买入资格不变。
         band_problems, band_severity = check_band_card(row)
-        # §6.5.5.1 第 3 条（v1.47 重写，用户决定）：**「不发卖出」这种状态不再允许存在**。
+        # §6.5.2.4（原 §6.5.5.1 第 3 条）：**「不发卖出」这种状态不再允许存在**。
         # 一条只能回答「便宜」不能回答「贵」的带，不是一条偏保守的带，是一条**没算完的带**；
         # 把它当估值挂在池里、再在卖出侧打补丁，等于用标注掩盖模型缺口。凡带按定义不能
         # 双向使用（下限带／周期假设未决）且**无逐票档案**的，一律判「无法估值」——
@@ -200,7 +200,7 @@ def build_pool(
                 "valuation_unvaluable_reason": row.get("valuation_unvaluable_reason", ""),
                 "anchor_vintage": row.get("anchor_vintage", ""),
                 "method_divergence": row.get("method_divergence", ""),
-                "runrate_check": row.get("runrate_check", ""),   # §6.5.4 不变量结论须可见（§13 第 3 条）
+                "runrate_check": row.get("runrate_check", ""),   # 运行率核对结论须可见（§13 第 3 条）
                 "cycle_assumption": row.get("cycle_assumption", ""),
                 "scenario_band_low": row.get("scenario_band_low", ""),
                 "scenario_band_high": row.get("scenario_band_high", ""),
@@ -209,7 +209,7 @@ def build_pool(
                 "valuation_tier": valuation_tier or "（空）",
                 "valuation_batch_id": row.get("valuation_batch_id", ""),
                 "valuation_price": row.get("current_price", ""),
-                # §8.5.6 巨盘温和放量输入：估值时点总市值（十亿），扫描按现价比例折算。
+                # 估值时点总市值（十亿）；扫描按现价比例折算。
                 "total_market_cap_bn": row.get("total_market_cap_bn", ""),
                 "fair_price_low": row.get("fair_price_low", ""),
                 "fair_price_high": row.get("fair_price_high", ""),
@@ -481,7 +481,7 @@ def build_overseas_section(
         "- **市场与代码两列已按用户指令删除（2026-08-06）**：两者仍在 `overseas_watchlist_valuation.csv` 的 `market_type`/`security_code` 里，只是不进阅读版。**代价须知**：现价与合理估值均为各自**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较（`P/V` 可以），而本表已不再逐行标出是哪个市场——数量级明显不同的行（如韩股六位数报价）靠公司名识别。行情同源腾讯快照（`scripts/overseas_quotes.py`）。",
         "- 列与 A 股主表同构（2026-08-23 用户指令）：**合理估值 = 模型内在价值 V、`P/V` = 现价 ÷ V**；策略标签、合理价区间、空间、PE、PB 移出阅读版，仍在 CSV（`strategy_tag`／`fair_price_low/high`／`valuation_pe_ttm`／`valuation_pb`）。现价与合理估值为各自交易货币，`P/V` 无量纲、可跨市场比较。",
         "- **参考分（§5.7.4）仅供同档内排序**（Q1×0.25+Q2×0.40+Q3×0.20+Q4×0.15−可信度扣分，不改变资格、不构成买卖指令）。**合理估值自 2026-08-23 起按 A 股 §6.5.2.3 ROIC 口径由三大报表重算**（`scripts/fetch_overseas_statements.py` 取 SEC XBRL／东财 HK F10 三表 → `scripts/build_overseas_roic_bands.py`：与 A 股生产参数同式，r = 美债 10Y + β×经营地 Damodaran ERP，报表币按 `data/reference/overseas_valuation_inputs.csv` 汇率折到交易币、ADR 按普通股数折算；每股 NOPAT 锚按 OI-082 海外先行口径＝各年 NOPAT ÷ 最新稀释股数、周期守卫用回购回加后的权益比率，v4.47）。金融企业（伯克希尔）ROIC 不适用沿用档案带；ROIC 路径被拒或无三表源（韩股、SpaceX）一律无法估值，旧档案带只作参考文本。逐票推导在 `data/companies/<代码>_<名称>/README.md`「ROIC 口径估值」节与 CSV `band_derivation_text`。**改带只能改输入**。",
-        "- 估值列为**无法估值**的行是 §6.5.5.2 的**建档未完成**（流程状态，不是估值结论）：其锚或兜底口径按定义不可算，档案已写明缺哪一个输入、以及什么条件下解锁建带。这类行不自动定档，合理估值／`P/V` 显示 —。",
+        "- 估值列为**无法估值**的行是 §6.5.2.4 判定的**无法估值**（流程状态，不是估值结论）：其锚或兜底口径按定义不可算，档案已写明缺哪一个输入、以及什么条件下解锁建带。这类行不自动定档，合理估值／`P/V` 显示 —。",
         "",
         "| 名称 | 质量 | 参考分 | 估值 | 估值路径 | 现价 | 合理估值 | P/V | 估值时间 | 估值事件 |",
         "| --- | --- | ---: | --- | --- | ---: | ---: | ---: | --- | --- |",
