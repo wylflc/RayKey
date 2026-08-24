@@ -1,0 +1,2 @@
+trade_date,security_code,security_name,rule,condition,close,ma20,ma60,model_pv,cost_basis,gain_pct,entry_stop_price,stop_line,current_shares,sell_shares,amount,swap_for,cooldown_skips,note
+2026-08-24,002714,牧原股份,换仓,P/V 0.9192 − 候选 爱玛科技 0.6802 ≥ 0.1437 且弱势,38.83,39.2505,37.4578,0.9192,39.225,-0.0101,37.32,,11900.0,3500,135905.0,603529,0,

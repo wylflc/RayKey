@@ -2,7 +2,9 @@
 """每日行情取数（工作流 §8）＋ §9.3 机械执行层。
 
 v4.18 起本脚本只做判定所需的事：取收盘/MA20/MA60/成交额、算 `P/V`、
-§7.5 冻结排除、§9.3.2 排序-去相关-出买入计划、§8.4 缺口回溯（只报区间涨跌与放量峰值）。
+§7.5 冻结排除、§9.3.2 先卖后买（卖出清单 `daily_sell_plan.csv`：止损复核／减持／涨幅减持／出名单／换仓／
+余仓清空；买入计划 `daily_entry_plan.csv`）、§9.3.3 比例冷却计数器（`daily_cooldown_state.csv`，买卖共用）、
+§8.4 缺口回溯（只报区间涨跌与放量峰值）。持仓不在核心池内的票另取行情、只进卖出侧。
 已退役的信号分级/入场阶段/形态识别/市场状态/深度低估关注等展示机制于 v4.18 整体删除
 （OI-063，用户 2026-08-19 裁定）——那批代码不进任何买卖判定，历史结论沉淀在回测日志 §12.8。
 """
@@ -37,6 +39,8 @@ DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
 DEFAULT_MODEL_BANDS = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
 DEFAULT_PLAN_OUT = ROOT / "data/processed/daily_entry_plan.csv"
+DEFAULT_SELL_PLAN_OUT = ROOT / "data/processed/daily_sell_plan.csv"
+SECURITIES_MASTER = ROOT / "data/raw/a_share_securities.csv"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
 # 后备行情源：东财历史行情不可用/空响应时切换（同为前复权日线；成交额以收盘×量近似，仅影响流动性门槛估计）。
 # 统一走腾讯 newfqkline：同构覆盖 sh/sz/bj，且为北交所唯一可用历史K线源；旧 web.ifzq 端点在批量扫描下易限流（2026-07-17 实测 501）。
@@ -417,6 +421,13 @@ def parse_args() -> argparse.Namespace:
                         help="十年国债收益率，银行股利折现用（§6.5.1 第 4 条）；"
                              "缺省取 data/reference/cost_of_equity_inputs.csv 最新一行，与 rebuild_bank_bands 同源")
     parser.add_argument("--plan-out", type=Path, default=DEFAULT_PLAN_OUT)
+    parser.add_argument("--sell-out", type=Path, default=DEFAULT_SELL_PLAN_OUT,
+                        help="§9.3.2 第 4 步卖出清单落点（止损复核／减持／涨幅减持／出名单／换仓）")
+    parser.add_argument("--cooldown-state", type=Path, default=DEFAULT_COOLDOWN_STATE,
+                        help="§9.3.3 比例冷却计数器（买入、减持、换仓共用）；扫描器每日读写")
+    parser.add_argument("--holdings", type=Path, default=SEC93_HOLDINGS)
+    parser.add_argument("--triage", type=Path, default=SEC93_TRIAGE,
+                        help="三类表：持仓不在 worth_attention 者按 §9.3.2 第 4 步每日减一档")
     return parser.parse_args()
 
 
@@ -473,8 +484,7 @@ SEC93_TACTICAL_NONE = re.compile(r"^\W*(无|暂无|不可买)")   # 判「无战
 SEC93_GAIN_SELL = 1.25         # §9.3.1「涨幅减持」（v4.44 用户采纳，回测日志 §12.110/§12.113）：收盘较持仓均价涨幅 ≥ 125%（收盘 ≥ 均价×2.25）
                                # 且收盘 < MA20 → 减一档；资金不足时该类持仓优先作换仓卖出源（涨幅最大者先）。持仓均价 = 买入按股数加权、
                                # 减持不变、除权按 §11.4 折算（持仓表 cost_basis）。回测落点 `--gain-sell 1.25`（gated）。
-# ↑ 本脚本只做买入侧（§9.3.2 第 4 步卖出是人工），该常量是减持线数值的**脚本侧唯一落点**，
-#   供卖出侧人工核对引用——不是静默失效，是成文的分工（见工作流 §9.3.2 末段）。
+SEC93_SWAP_MARGIN = 0.1437     # §9.3.1「换仓」：候选 P/V 须比被换出持仓低至少此差值（与回测 `--swap-margin` 同值）
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
@@ -611,52 +621,250 @@ def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
 def load_holdings() -> dict[str, float]:
     """{代码: 持股数}。读不到就返回空——**空 dict 会让本函数退回 v3.00 口径**，
     故调用方必须把「有没有读到持仓」显示出来，不能静默。"""
-    out: dict[str, float] = {}
-    if not SEC93_HOLDINGS.exists():
+    return {code: float(h["shares"]) for code, h in load_holdings_detail().items()}
+
+
+def load_holdings_detail(path: Path | None = None) -> dict[str, dict[str, object]]:
+    """§11.2 五列持仓表 → {代码: {name, shares, cost, stop}}；`cost`／`stop` 缺失为 None。"""
+    path = path or SEC93_HOLDINGS
+    out: dict[str, dict[str, object]] = {}
+    if not path.exists():
         return out
-    with SEC93_HOLDINGS.open(newline="", encoding="utf-8-sig") as fh:
+    with path.open(newline="", encoding="utf-8-sig") as fh:
         for r in csv.DictReader(fh):
             shares = to_float(r.get("current_shares"))
             if shares and shares > 0:
-                out[str(r["security_code"]).zfill(6)] = shares
+                out[str(r["security_code"]).zfill(6)] = {
+                    "name": r.get("security_name", ""), "shares": shares,
+                    "cost": to_float(r.get("cost_basis")), "stop": to_float(r.get("entry_stop_price")),
+                }
     return out
 
 
-def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float | None = None,
-                         holdings: dict[str, float] | None = None,
-                         blocked: set[str] | None = None,
-                         tactical_gated: set[str] | None = None) -> dict[str, object]:
-    """§9.3.2 第 3、5 步：按 `P/V` 升序、去相关、逐个买一档。
+SEC93_TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"
 
-    §9.3.3 比例冷却：一手金额 > 一档时买一手，其后跳过 `round(x)−1` 次合格机会
-    （本函数是单日快照，故只记 `cooldown_skips` 供次日跑批读，不在此处消费）。
 
-    **两条与持仓有关的规则（v3.01/v3.02，OI-058／OI-059）**：
-    - **走势条件分新旧**：新建仓须 `收盘 > MA20 > MA60`；**已有持仓的加仓只须 `MA20 > MA60`**。
-    - **单票上限**（v4.64 = 60%）：现持仓市值 ÷ N ≥ 上限即跳过、顺位补下一名；不足时本档只补到上限；
-      **只挡加仓，不触发卖出，已有持仓因上涨越限不回削**。
-    `holdings` 为空时两条都退化为原口径，故调用方须把「读到几只持仓」打出来。
+def load_worth_attention_codes(path: Path | None = None) -> set[str] | None:
+    """§9.3.2 第 4 步「已移出 worth_attention」的判据来源：三类表。文件缺失返回 None（不判出名单）。"""
+    path = path or SEC93_TRIAGE
+    if not path.exists():
+        return None
+    with path.open(newline="", encoding="utf-8-sig") as fh:
+        return {str(r["security_code"]).zfill(6) for r in csv.DictReader(fh)
+                if (r.get("attention_class") or "").strip() == "worth_attention"}
+
+
+def load_exchange_map(path: Path | None = None) -> dict[str, str]:
+    """证券名单 {代码: 交易所}，供池外持仓取行情时定 secid。"""
+    path = path or SECURITIES_MASTER
+    if not path.exists():
+        return {}
+    with path.open(newline="", encoding="utf-8-sig") as fh:
+        return {str(r["security_code"]).zfill(6): r.get("exchange", "") for r in csv.DictReader(fh)}
+
+
+# ---- §9.3.3 比例冷却计数器（买入、减持、换仓共用；按合格次数计，不按自然日）
+DEFAULT_COOLDOWN_STATE = ROOT / "data/processed/daily_cooldown_state.csv"
+COOLDOWN_FIELDS = ["security_code", "security_name", "remaining_skips", "remaining_before", "applied_trade_date"]
+
+
+def load_cooldown_state(path: Path, as_of: str) -> tuple[dict[str, int], dict[str, str], bool]:
+    """返回 (计数器, 名称, 可写)。同一信号日重跑从 `remaining_before` 重算（幂等）；
+    状态文件的 `applied_trade_date` 晚于 `as_of`（历史重放）时不应用也不回写。"""
+    counters: dict[str, int] = {}
+    names: dict[str, str] = {}
+    if not path.exists():
+        return counters, names, True
+    with path.open(newline="", encoding="utf-8-sig") as fh:
+        rows = list(csv.DictReader(fh))
+    if any((r.get("applied_trade_date") or "") > as_of for r in rows):
+        return {}, {}, False
+    for r in rows:
+        code = str(r.get("security_code") or "").zfill(6)
+        applied = r.get("applied_trade_date") or ""
+        value = to_float(r.get("remaining_before") if applied == as_of else r.get("remaining_skips")) or 0
+        if code and value > 0:
+            counters[code] = int(value)
+            names[code] = r.get("security_name", "")
+    return counters, names, True
+
+
+def save_cooldown_state(path: Path, before: dict[str, int], after: dict[str, int],
+                        names: dict[str, str], as_of: str) -> None:
+    rows = []
+    for code in sorted(set(before) | set(after)):
+        if (after.get(code, 0) or 0) <= 0 and (before.get(code, 0) or 0) <= 0:
+            continue
+        rows.append({"security_code": code, "security_name": names.get(code, ""),
+                     "remaining_skips": after.get(code, 0), "remaining_before": before.get(code, 0),
+                     "applied_trade_date": as_of})
+    write_csv(path, rows, COOLDOWN_FIELDS)
+
+
+def lot_ratio_ready(counters: dict[str, int], code: str, lot_value: float, tranche: float) -> bool:
+    """§9.3.3：一手金额是一档的 x 倍时，成交一手后跳过随后 `round(x) − 1` 次合格机会
+    （与回测 `lot_ratio_ready` 同式）。计数器 > 0 即本次跳过并减一。"""
+    if tranche <= 0 or lot_value <= 0:
+        return False
+    if counters.get(code, 0) > 0:
+        counters[code] -= 1
+        return False
+    counters[code] = max(1, round(lot_value / tranche)) - 1
+    return True
+
+
+def tranche_sell_shares(tranche: float, price: float, held: float) -> float:
+    """减一档的股数：按手向下取整；余仓不足一手时整笔卖出（§9.3.2 第 4 步）。0 = 本档不足一手。"""
+    lots = int((tranche / price) // SEC93_LOT)
+    if lots <= 0:
+        return 0.0
+    shares = lots * SEC93_LOT
+    return held if held - shares < SEC93_LOT else shares
+
+
+def holding_trim_signal(close: float | None, ma20: float | None, pv: float | None,
+                        cost: float | None) -> tuple[str, str]:
+    """§9.3.1 减持行与涨幅减持行的唯一判定（扫描器与跟踪器同用）。
+    返回 (命中规则, 说明)：规则为 `减持`／`涨幅减持`／空；说明写明被走势闸门挡下或均线缺失。"""
+    if close is None:
+        return "", ""
+    value_rich = pv is not None and pv >= SEC93_SELL_LINE
+    gain = (close / cost - 1.0) if (cost is not None and cost > 0) else None
+    gain_hit = gain is not None and gain >= SEC93_GAIN_SELL
+    if not value_rich and not gain_hit:
+        return "", ""
+    tag = "减持" if value_rich else "涨幅减持"
+    if ma20 is None:
+        return "", f"{tag}条件成立但 MA20 缺失，不减、等数据齐"
+    if close >= ma20:
+        return "", f"{tag}条件成立但收盘 {close:g} ≥ MA20 {ma20:g}，走势闸门挡下不减"
+    return tag, ""
+
+
+SELL_FIELDS = ["trade_date", "security_code", "security_name", "rule", "condition", "close", "ma20", "ma60",
+               "model_pv", "cost_basis", "gain_pct", "entry_stop_price", "stop_line",
+               "current_shares", "sell_shares", "amount", "swap_for", "cooldown_skips", "note"]
+
+
+def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: float | None = None,
+                             holdings: dict[str, dict[str, object]] | None = None,
+                             blocked: set[str] | None = None,
+                             tactical_gated: set[str] | None = None,
+                             members: set[str] | None = None,
+                             counters: dict[str, int] | None = None,
+                             holding_rows: list[dict[str, object]] | None = None) -> dict[str, object]:
+    """§9.3.2 全部六步：先卖后买。
+
+    卖出侧（第 4 步）逐持仓判：⓪止损复核（T+1 尾盘现价对当日生效线，本表只列候选、不计其卖出款）、
+    ②出 `worth_attention` 每日减一档（不加走势条件）、①`P/V ≥ 减持线` 或 ①′涨幅 ≥ 125% 且 `收盘 < MA20` 减一档
+    （二者同日只减一档）、③换仓（资金不足一档时：先换涨幅达标的弱势持仓，否则换最贵的弱势持仓且 P/V 差 ≥ 换仓差）、
+    ④任何减档后余仓不足一手清空。减持与换仓卖出款当日计入可用资金。
+    买入侧（第 3、5 步）：`P/V` 升序、去相关、逐个买一档；高价股一档买不起一手时按 §9.3.3 计数器买一手或跳过。
+    `holding_rows`：不在输入池内的持仓行情（出名单／无法估值者），只进卖出侧。
     """
     holdings = holdings or {}
+    counters = counters if counters is not None else {}
+    blocked = blocked or set()
+    tactical_gated = tactical_gated or set()
     tranche = nav * SEC93_TRANCHE_PCT
+    held_codes = set(holdings)
+    by_code: dict[str, dict[str, object]] = {str(r["security_code"]).zfill(6): r for r in rows}
+    for r in holding_rows or []:
+        by_code.setdefault(str(r["security_code"]).zfill(6), r)
 
     def trend_ok(r) -> bool:
         c, m20, m60 = to_float(r.get("close")), to_float(r.get("ma20")), to_float(r.get("ma60"))
         if not (c and m20 and m60) or not m20 > m60:
             return False
-        if str(r["security_code"]).zfill(6) in holdings:
+        if str(r["security_code"]).zfill(6) in held_codes:
             return True                      # 已持仓：只看均线排列
         return c > m20                       # 新建仓：还要站上 MA20
 
     def liquid_ok(r) -> bool:
-        # §10.1 第 3 条：20 日均成交额低于 5,000 万元不列买入候选（v4.18 起在合格集硬执行；
-        # 此前该门槛只存在于展示层，买入计划从未真正检查过它）。
         return (to_float(r.get("amount_ma20")) or 0.0) >= MIN_AMOUNT_MA20
 
-    # §9.3.2 第 1 步：排除 review_pending（§7.5 冻结）。此前冻结只改展示字段、
-    # 本函数不读它——冻结股照样进下扫序列（判例 2026-08-19：天山铝业冻结中仍参与排序，
-    # 仅因相关性 0.72 被碰巧剔除）。「读起来在保护你、实际不保护任何东西」型，故在合格集处硬排除。
-    blocked = blocked or set()
+    # ---------------- 卖出侧
+    cash = nav if funds is None else max(funds, 0.0)
+    funds0 = cash
+    sells: list[dict[str, object]] = []
+    sell_notes: list[tuple[str, str]] = []     # (名称, 说明)：条件成立但未卖的解释行
+    missing_holdings: list[str] = []
+
+    def sell_row(code: str, r: dict[str, object] | None, rule: str, condition: str, shares: float,
+                 price: float | None, cooldown: int = 0, swap_for: str = "", note: str = "") -> dict[str, object]:
+        h = holdings[code]
+        cost = h.get("cost")
+        close = price
+        gain = (close / cost - 1.0) if (close and cost and cost > 0) else None
+        return {
+            "trade_date": "", "security_code": code, "security_name": h.get("name", ""),
+            "rule": rule, "condition": condition,
+            "close": close if close is not None else "",
+            "ma20": to_float((r or {}).get("ma20")) or "", "ma60": to_float((r or {}).get("ma60")) or "",
+            "model_pv": (r or {}).get("model_pv", "") if isinstance((r or {}).get("model_pv"), float) else "",
+            "cost_basis": cost if cost is not None else "", "gain_pct": round(gain, 4) if gain is not None else "",
+            "entry_stop_price": h.get("stop") if h.get("stop") is not None else "",
+            "stop_line": "", "current_shares": h["shares"], "sell_shares": shares,
+            "amount": round(shares * close, 2) if (close and shares) else "",
+            "swap_for": swap_for, "cooldown_skips": cooldown, "note": note,
+        }
+
+    def reduce_one(code: str, r: dict[str, object], rule: str, condition: str, price: float,
+                   swap_for: str = "") -> float:
+        """减一档（含 §9.3.3 高价股按手）。返回卖出股数并记入清单；0 = 冷却中跳过或不足一手。"""
+        held = float(holdings[code]["shares"])
+        shares = tranche_sell_shares(tranche, price, held)
+        cooldown = 0
+        if not shares and held >= SEC93_LOT:
+            if lot_ratio_ready(counters, code, price * SEC93_LOT, tranche):
+                shares = SEC93_LOT if held - SEC93_LOT >= SEC93_LOT else held
+                cooldown = counters.get(code, 0)
+            else:
+                sell_notes.append((holdings[code].get("name", code),
+                                   f"{rule}命中但一手金额 > 一档，§9.3.3 冷却中跳过（余 {counters.get(code, 0)} 次）"))
+                return 0.0
+        if not shares:
+            return 0.0
+        note = "余仓不足一手，整笔清空" if shares >= held else ""
+        sells.append(sell_row(code, r, rule, condition, shares, price, cooldown, swap_for, note))
+        holdings[code]["shares"] = held - shares
+        return shares
+
+    for code, h in holdings.items():
+        r = by_code.get(code)
+        price = to_float((r or {}).get("close"))
+        if r is None or price is None or price <= 0:
+            missing_holdings.append(h.get("name", code))
+            sells.append(sell_row(code, r, "数据缺失", "无当日行情，未进任何判定", 0, None,
+                                  note="停牌或取数失败：按 §9.1 执行日停牌跳过并复核"))
+            continue
+        ma20, ma60 = to_float(r.get("ma20")), to_float(r.get("ma60"))
+        pv = r.get("model_pv") if isinstance(r.get("model_pv"), float) else None
+        # ⓪ 止损复核：生效线 = min(锚, 当日 MA60)；T+1 尾盘现价跌破 T+1 当日线即整仓清空
+        stop = h.get("stop")
+        if stop:
+            line = min(stop, ma60) if ma60 else stop
+            if price < line:
+                row = sell_row(code, r, "止损复核", f"T+1 尾盘现价 < min(锚 {stop:g}, T+1 当日 MA60)", h["shares"], price,
+                               note="T 日收盘已低于生效线；T+1 复核仍跌破即整仓清空、不走当日其他路径，卖出款不计入本表买入预算")
+                row["stop_line"] = round(line, 4)
+                sells.append(row)
+        # ② 出名单：每日减一档，不加走势条件
+        if members is not None and code not in members:
+            sold = reduce_one(code, r, "出名单", "已移出 worth_attention，每日减一档直至清空", price)
+            cash += sold * price
+            continue
+        # ①／①′ 减持：P/V ≥ 线 或 涨幅 ≥ 125%，且收盘 < MA20
+        rule, why = holding_trim_signal(price, ma20, pv, h.get("cost"))
+        if rule:
+            cond = (f"P/V {pv:.4f} ≥ {SEC93_SELL_LINE:.4f} 且收盘 {price:g} < MA20 {ma20:g}" if rule == "减持"
+                    else f"收盘 {price:g} ≥ 均价 {h.get('cost'):g}×{1 + SEC93_GAIN_SELL:.2f} 且收盘 < MA20 {ma20:g}")
+            sold = reduce_one(code, r, rule, cond, price)
+            cash += sold * price
+        elif why:
+            sell_notes.append((h.get("name", code), why))
+
+    # ---------------- 合格集
     frozen_out = [r for r in rows
                   if str(r["security_code"]).zfill(6) in blocked
                   and isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
@@ -665,8 +873,6 @@ def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
                     if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
                     and trend_ok(r) and not liquid_ok(r)
                     and str(r["security_code"]).zfill(6) not in blocked]
-    # §9.3.1 L3 战术闸门（v4.53）：L3 无战术理由不进合格集（新建仓与加仓同），与冻结同为硬排除。
-    tactical_gated = tactical_gated or set()
     tactical_out = [r for r in rows
                     if str(r["security_code"]).zfill(6) in tactical_gated
                     and isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
@@ -683,12 +889,59 @@ def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
     n_cheap = sum(1 for r in rows
                   if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE)
 
-    # **相关性基准必须含在手持仓**：§9.3.1 写的是「与**在手**/已选标的 ≤ 上限」，
-    # 判例：2026-08-17 持有山西汾酒时，与之相关 0.79 的古井贡酒曾被排在买入计划第 1 位。
-    held_rows = [r for r in rows if str(r["security_code"]).zfill(6) in holdings]
+    # ---------------- ③ 换仓：想买未持仓候选而可用资金不足一档时，先卖一档弱势持仓（相关性过滤之前，与回测同序）
+    swap_targets: set[str] = set()
+    reduced_today: set[str] = set()
+    swap_stop_reason = ""
+    if funds is not None:
+        for cand in eligible:
+            ccode = str(cand["security_code"]).zfill(6)
+            if ccode in held_codes:
+                continue
+            if cash >= tranche:
+                break
+            gain_src = []
+            weak_src = []
+            for hcode, h in holdings.items():
+                if hcode in reduced_today or float(h["shares"]) <= 0:
+                    continue
+                hr = by_code.get(hcode)
+                hp, hm20 = to_float((hr or {}).get("close")), to_float((hr or {}).get("ma20"))
+                if hp is None or hm20 is None or not hp < hm20:
+                    continue                                   # 只换走势已走坏（收盘 < MA20）的持仓
+                cost = h.get("cost")
+                if cost and cost > 0 and hp >= cost * (1.0 + SEC93_GAIN_SELL):
+                    gain_src.append((hp / cost - 1.0, hcode))
+                hpv = (hr or {}).get("model_pv")
+                if isinstance(hpv, float):
+                    weak_src.append((hpv, hcode))
+            if gain_src:
+                gain, worst = max(gain_src)
+                cond = f"涨幅 {gain:.0%} ≥ {SEC93_GAIN_SELL:.0%} 且弱势，让位给 {cand.get('security_name', ccode)}"
+            else:
+                if not weak_src:
+                    swap_stop_reason = "无弱势持仓可换"
+                    break
+                worst_pv, worst = max(weak_src)
+                if worst_pv - cand["model_pv"] < SEC93_SWAP_MARGIN:
+                    swap_stop_reason = (f"最贵弱势持仓 P/V {worst_pv:.4f} 与候选 {cand.get('security_name', ccode)} "
+                                        f"P/V {cand['model_pv']:.4f} 差 {worst_pv - cand['model_pv']:.4f} < {SEC93_SWAP_MARGIN}")
+                    break
+                cond = (f"P/V {worst_pv:.4f} − 候选 {cand.get('security_name', ccode)} {cand['model_pv']:.4f} "
+                        f"≥ {SEC93_SWAP_MARGIN} 且弱势")
+            hr = by_code[worst]
+            hp = to_float(hr.get("close")) or 0.0
+            sold = reduce_one(worst, hr, "换仓", cond, hp, swap_for=ccode)
+            reduced_today.add(worst)
+            if sold:
+                cash += sold * hp
+                swap_targets.add(ccode)
+
+    # ---------------- 相关性过滤
+    held_rows = [by_code[c] for c in holdings if c in by_code and float(holdings[c]["shares"]) > 0]
     picked: list[dict] = []
     dropped: list[tuple[dict, float, str]] = []
-    corr_unknown: list[tuple[dict, str]] = []    # OI-093：算不出相关性的候选与对手名单，放行但显式列出
+    corr_unknown: list[tuple[dict, str]] = []
     for cand in eligible[:SEC93_SCAN_DEPTH]:
         code = str(cand["security_code"]).zfill(6)
         worst, worst_name = 0.0, ""
@@ -696,9 +949,9 @@ def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
         for held in held_rows + picked:
             other = str(held["security_code"]).zfill(6)
             if other == code:
-                continue                     # 加仓自身不与自己比
+                continue
             value = corr_252(code, other)
-            if value is None:                # 未知 ≠ 不相关：与回测同语义放行，但必须报出来
+            if value is None:
                 unknown.append(str(held.get("security_name", "")) or other)
                 continue
             if value > worst:
@@ -707,30 +960,19 @@ def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             dropped.append((cand, worst, worst_name))
             continue
         if unknown:
-            # 同一持仓可能既在 held_rows 又已入 picked（加仓行），名单去重
             corr_unknown.append((cand, "、".join(dict.fromkeys(unknown))))
         picked.append(cand)
 
-    # **可用资金 ≠ 净资产**（OI-062，2026-08-17 修）：满仓或带融资的账户里，净资产早已变成持仓市值，
-    # 而买入只能用**现金＋未用授信**。
-    cash, plan, capped = (nav if funds is None else max(funds, 0.0)), [], []
+    # ---------------- 买入
+    plan, capped, cooled = [], [], []
     for cand in picked:
         price = to_float(cand.get("close")) or 0.0
         if price <= 0:
             continue
         code = str(cand["security_code"]).zfill(6)
         lot_amount = price * SEC93_LOT
-        if lot_amount <= tranche:
-            budget, cooldown = tranche, 0
-        else:                                   # 高价股：一档买不起一手 → 买一手、比例冷却（§9.3.3）
-            budget, cooldown = lot_amount, round(lot_amount / tranche) - 1
-        # **可用资金不足一档 → 买到用尽**（v4.64 对齐回测 `amount = min(一档, 可用资金)`；此前扫描器
-        # 遇「一档 > 可用」整笔跳过，与回测不同步——按 §9.3.1「资金用尽即停」与 §9.3.1.2 同步原则改正）。
-        budget = min(budget, cash)
-        # 单票上限（v4.64）：与回测 `--position-cap` 同语义——`room = N × 上限 − 现持仓市值`，
-        # room ≤ 0 跳过；room 不足一档时本档只补到上限。**只挡加仓**：已有持仓因上涨越限不回削；
-        # 新建仓 held_value = 0、一档 5% 远低于上限，不受影响。
-        held_value = holdings.get(code, 0.0) * price
+        budget = min(tranche, cash)
+        held_value = float(holdings.get(code, {}).get("shares", 0.0) or 0.0) * price
         room = None
         if SEC93_POSITION_CAP and nav > 0:
             room = nav * SEC93_POSITION_CAP - held_value
@@ -738,16 +980,23 @@ def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
                 capped.append((cand, held_value / nav))
                 continue
             budget = min(budget, room)
-        lots = int(budget // lot_amount)          # 按一手向下取整，不为迁就整手提高档位（§9.3.1.1）
+        lots = int(budget // lot_amount)
+        cooldown = 0
         if lots <= 0:
-            if room is not None and room < lot_amount:
+            if room is not None and room < lot_amount and cash >= lot_amount:
                 capped.append((cand, held_value / nav))
-            continue
+                continue
+            # 高价股／可用资金不足一手：§9.3.3 计数器决定本次买一手还是跳过
+            if lot_ratio_ready(counters, code, lot_amount, tranche) and cash >= lot_amount:
+                lots, cooldown = 1, counters.get(code, 0)
+            else:
+                cooled.append((cand, counters.get(code, 0), cash < lot_amount))
+                continue
         amount = lots * lot_amount
         cash -= amount
         plan.append({
-            "trade_date": "",   # 由 report_section93 统一填信号日（OI-065：无日期列则文件无法自证时点）
-            "security_code": str(cand["security_code"]).zfill(6),
+            "trade_date": "",
+            "security_code": code,
             "security_name": cand.get("security_name", ""),
             "quality_tier": cand.get("quality_tier", ""),
             "close": price,
@@ -759,15 +1008,27 @@ def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             "amount": round(amount, 2),
             "cooldown_skips": cooldown,
         })
-    return {"plan": plan, "dropped": dropped, "corr_unknown": corr_unknown,
-            "eligible": eligible, "capped": capped,
+    return {"plan": plan, "sells": sells, "sell_notes": sell_notes, "missing_holdings": missing_holdings,
+            "swap_targets": swap_targets, "swap_stop_reason": swap_stop_reason,
+            "dropped": dropped, "corr_unknown": corr_unknown,
+            "eligible": eligible, "capped": capped, "cooled": cooled,
             "frozen_out": frozen_out, "illiquid_out": illiquid_out, "tactical_out": tactical_out,
             "n_cheap": n_cheap, "cash": cash, "tranche": tranche,
-            "funds0": (nav if funds is None else max(funds, 0.0)), "funds_given": funds is not None,
+            "funds0": funds0, "funds_given": funds is not None,
             "n_held": len(holdings),
             "n_addon": sum(1 for r in eligible
-                           if str(r["security_code"]).zfill(6) in holdings
+                           if str(r["security_code"]).zfill(6) in held_codes
                            and not (to_float(r.get("close")) or 0) > (to_float(r.get("ma20")) or 0))}
+
+
+def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float | None = None,
+                         holdings: dict[str, float] | None = None,
+                         blocked: set[str] | None = None,
+                         tactical_gated: set[str] | None = None) -> dict[str, object]:
+    """买入侧兼容入口：只给股数的持仓字典（无成本／止损）→ 走完整执行层，卖出侧只可能出「出名单」以外的
+    P/V 减持（无成本即无涨幅减持、无止损）。生产入口是 `section93_execution_plan`。"""
+    detail = {c: {"name": "", "shares": s, "cost": None, "stop": None} for c, s in (holdings or {}).items()}
+    return section93_execution_plan(rows, nav, funds, detail, blocked, tactical_gated, members=None, counters={})
 
 
 # `daily_entry_plan.csv` 的固定列。空计划也要写出带表头的空文件——OI-065：买入 0 只时
@@ -778,65 +1039,100 @@ PLAN_FIELDS = ["trade_date", "security_code", "security_name", "quality_tier", "
 
 
 def report_section93(result: dict[str, object], nav: float, out_path: Path,
-                     as_of: str = "") -> None:
+                     as_of: str = "", sell_out: Path | None = None) -> None:
     plan, dropped = result["plan"], result["dropped"]
+    sells = result.get("sells") or []
     for p in plan:
         p["trade_date"] = as_of
-    invested = float(result["funds0"]) - result["cash"]
-    print(f"\n§9.3 机械执行：`P/V ≤ {SEC93_BUY_LINE}` 的 {result['n_cheap']} 只；"
+    for s in sells:
+        s["trade_date"] = as_of
+    sold_cash = sum(float(s["amount"] or 0) for s in sells if s["rule"] not in ("止损复核", "数据缺失"))
+    invested = float(result["funds0"]) + sold_cash - result["cash"]
+    print(f"\n§9.3 机械执行（§9.2 四张表）")
+    print(f"  1. 一档 {result['tranche'] / 1e4:,.2f} 万（净资产 {nav / 1e4:,.2f} 万 × {SEC93_TRANCHE_PCT:.1%}）")
+    print(f"  2. 合格集：`P/V ≤ {SEC93_BUY_LINE}` 的 {result['n_cheap']} 只；"
           f"再过走势条件的 **{len(result['eligible'])} 只**"
           f"（新建仓 `收>MA20>MA60`；**已持仓只须 `MA20>MA60`**，其中 {result['n_addon']} 只"
           f"是靠这条放宽进来的回踩加仓）；"
           f"流动性门槛（20日均额<{MIN_AMOUNT_MA20 / 1e8:.1f}亿）排除 {len(result.get('illiquid_out') or [])} 只；"
           f"§7.5 冻结硬排除 {len(result.get('frozen_out') or [])} 只；"
           f"L3 战术闸门排除 {len(result.get('tactical_out') or [])} 只；"
-          f"相关性 >{SEC93_MAX_CORR} 剔除 {len(dropped)} 只 → 买入 {len(plan)} 只")
+          f"相关性 >{SEC93_MAX_CORR} 剔除 {len(dropped)} 只")
+    for r in result["eligible"]:
+        print(f"     {r['security_code']} {str(r.get('security_name', '')):<9}｜P/V {r['model_pv']:.4f}"
+              + ("｜换仓目标" if str(r['security_code']).zfill(6) in (result.get('swap_targets') or set()) else ""))
     for il in result.get("illiquid_out") or []:
-        print(f"  [流动性排除·§10.1] {il.get('security_name','')} P/V {il['model_pv']:.2f}"
+        print(f"     [流动性排除·§10.1] {il.get('security_name','')} P/V {il['model_pv']:.2f}"
               f"｜20日均额 {(to_float(il.get('amount_ma20')) or 0.0) / 1e4:,.0f} 万")
     for tg in result.get("tactical_out") or []:
-        print(f"  [L3 战术闸门排除·§9.3.1] {tg.get('security_name','')} P/V {tg['model_pv']:.2f}"
+        print(f"     [L3 战术闸门排除·§9.3.1] {tg.get('security_name','')} P/V {tg['model_pv']:.2f}"
               f"（分层表 tactical_thesis 为空或判「无」；补判为条件式战术理由后按当日名次重入）")
     for fz in result.get("frozen_out") or []:
-        print(f"  [冻结排除·review_pending] {fz.get('security_name','')} P/V {fz['model_pv']:.2f}"
+        print(f"     [冻结排除·review_pending] {fz.get('security_name','')} P/V {fz['model_pv']:.2f}"
               f"（两闸已开，待 §6.7 重建解冻后按当日名次重入）")
+    for cand, value, who in dropped:
+        print(f"     [相关性剔除] {cand.get('security_name','')} P/V {cand['model_pv']:.2f}｜与已选 {who} 相关 {value:.2f}")
+    for cand, who in result.get("corr_unknown") or []:
+        print(f"     [相关性缺数据·OI-093] {cand.get('security_name','')} P/V {cand['model_pv']:.2f}"
+              f"｜与 {who} 的重叠K线不足 {CORR_MIN_OVERLAP} 根，按未知放行（与回测同语义），如需人工核对相关性再执行")
     if result["n_held"] == 0:
         print("  ⚠ **没读到任何持仓**（data/processed/a_share_holdings.csv 缺失或为空）"
-              "——加仓放宽会退回旧口径，买入计划不可直接照做")
+              "——卖出清单为空、加仓放宽退回旧口径，买入计划不可直接照做")
     else:
-        cap_txt = f"单票上限 {SEC93_POSITION_CAP:.0%}（只挡加仓、不触发卖出；v4.64）" if SEC93_POSITION_CAP else "单票无上限"
-        print(f"  持仓 {result['n_held']} 只已载入｜{cap_txt}")
-    for cand, w in result["capped"]:
-        print(f"  [单票上限挡下] {cand.get('security_name','')} "
-              f"P/V {cand['model_pv']:.2f}｜现持仓已占净资产 {w:.1%}，已达/不足一手可补至 "
-              f"{SEC93_POSITION_CAP:.0%} 上限，不加仓")
+        cap_txt = f"单票上限 {SEC93_POSITION_CAP:.0%}（只挡加仓、不触发卖出）" if SEC93_POSITION_CAP else "单票无上限"
+        print(f"     持仓 {result['n_held']} 只已载入｜{cap_txt}")
+    # 3. 卖出清单
+    print(f"  3. 卖出清单：{len([s for s in sells if s['rule'] not in ('数据缺失',)])} 条"
+          + ("（**今日无卖出**）" if not sells else ""))
+    for s in sells:
+        amt = f"{float(s['amount']) / 1e4:.2f} 万" if s["amount"] != "" else "—"
+        print(f"     [{s['rule']}] {s['security_code']} {str(s['security_name']):<9}"
+              f"｜{s['condition']}｜卖 {s['sell_shares']:g} 股 {amt}"
+              + (f"｜换入 {s['swap_for']}" if s["swap_for"] else "")
+              + (f"｜其后跳过 {s['cooldown_skips']} 次" if s["cooldown_skips"] else "")
+              + (f"｜{s['note']}" if s["note"] else ""))
+    for name, why in result.get("sell_notes") or []:
+        print(f"     [未卖·说明] {name}：{why}")
+    if result.get("swap_stop_reason"):
+        print(f"     [换仓停止] {result['swap_stop_reason']}")
+    # 4. 买入清单
     if result["funds_given"]:
-        print(f"  一档 {result['tranche'] / 1e4:,.2f} 万｜**可用资金 {float(result['funds0']) / 1e4:,.2f} 万**"
-              f"（现金＋未用授信）→ 投入 {invested / 1e4:,.2f} 万（占净资产 {invested / nav * 100:.1f}%）"
-              f"｜余 {result['cash'] / 1e4:,.2f} 万")
+        print(f"  4. 买入清单：可用资金 {float(result['funds0']) / 1e4:,.2f} 万（现金＋未用授信）"
+              f"＋ 当日减持/换仓卖出款 {sold_cash / 1e4:,.2f} 万 → 投入 {invested / 1e4:,.2f} 万"
+              f"（占净资产 {invested / nav * 100:.1f}%）｜余 {result['cash'] / 1e4:,.2f} 万")
     else:
-        print(f"  一档 {result['tranche'] / 1e4:,.2f} 万｜⚠ **未给 `--funds`，按「可用资金＝净资产」估算**"
-              f"（OI-062：满仓/带融资账户上此计划资金上不可执行，买入须走 §9.3.2 换仓）"
+        print(f"  4. 买入清单：⚠ **未给 `--funds`，按「可用资金＝净资产」估算、不做换仓**"
+              f"（OI-062：满仓/带融资账户上此计划资金上不可执行）"
               f"｜投入 {invested / 1e4:,.1f} 万（仓位 {invested / nav * 100:.1f}%）｜余 {result['cash'] / 1e4:,.1f} 万")
+    for cand, w in result["capped"]:
+        print(f"     [单票上限挡下] {cand.get('security_name','')} P/V {cand['model_pv']:.2f}"
+              f"｜现持仓已占净资产 {w:.1%}，已达/不足一手可补至 {SEC93_POSITION_CAP:.0%} 上限，不加仓")
+    no_cash_skips = [cand for cand, _r, no_cash in (result.get("cooled") or []) if no_cash]
+    for cand, remaining, no_cash in result.get("cooled") or []:
+        if not no_cash:
+            print(f"     [冷却跳过·§9.3.3] {cand.get('security_name','')} P/V {cand['model_pv']:.2f}"
+                  f"｜一手 {to_float(cand.get('close')) * SEC93_LOT / 1e4:.2f} 万 > 一档｜余 {remaining} 次")
+    if no_cash_skips:
+        print(f"     资金用尽即停：{len(no_cash_skips)} 只合格候选不足一手未买（"
+              + "、".join(str(c.get('security_name', '')) for c in no_cash_skips[:6])
+              + ("…" if len(no_cash_skips) > 6 else "") + "）")
     for i, p in enumerate(plan, 1):
         band = f"{p['model_intrinsic_value'] * 0.9:.2f}-{p['model_intrinsic_value'] * 1.1:.2f}" \
             if isinstance(p["model_intrinsic_value"], float) else "—"
-        print(f"  {i:>3} {p['security_code']} {p['security_name']:<9}"
+        print(f"     {i:>3} {p['security_code']} {p['security_name']:<9}"
               f"｜现价 {p['close']:>8.2f}｜带 {band:>17}｜P/V {p['model_pv']:.2f}"
               f"｜{p['shares']:>5} 股 {p['amount'] / 1e4:>5.2f} 万"
               + (f"｜其后跳过 {p['cooldown_skips']} 次" if p["cooldown_skips"] else ""))
-    for cand, value, who in dropped:
-        print(f"  [相关性剔除] {cand.get('security_name','')} "
-              f"P/V {cand['model_pv']:.2f}｜与已选 {who} 相关 {value:.2f}")
-    for cand, who in result.get("corr_unknown") or []:
-        print(f"  [相关性缺数据·OI-093] {cand.get('security_name','')} "
-              f"P/V {cand['model_pv']:.2f}｜与 {who} 的重叠K线不足 {CORR_MIN_OVERLAP} 根，"
-              f"按未知放行（与回测同语义），如需人工核对相关性再执行")
-    # OI-065：**空计划也必须落盘**（只含表头），否则前一日的旧计划会原样留在盘上冒充今日结论；
-    # `trade_date` 列让读取方能自证文件时点，不再依赖 mtime。
+    if not plan:
+        print("     今日无合格标的，持币")
+    # OI-065：**空计划也必须落盘**（只含表头），否则前一日的旧计划会原样留在盘上冒充今日结论。
     write_csv(out_path, plan, PLAN_FIELDS)
     print(f"  买入计划已写 {out_path}（trade_date={as_of or '—'}，{len(plan)} 条"
           + ("；**今日买入为空，已写空文件覆盖旧计划**）" if not plan else "）"))
+    if sell_out is not None:
+        write_csv(sell_out, sells, SELL_FIELDS)
+        print(f"  卖出清单已写 {sell_out}（{len(sells)} 条"
+              + ("；**今日卖出为空，已写空文件覆盖旧清单**）" if not sells else "）"))
 
 
 FIELDNAMES = [
@@ -927,14 +1223,41 @@ def main() -> int:
     if rows and not scored:
         print("**告警：quality_score 整列为空** —— 池 CSV 未透传参考分，报告不得手填，先修池物化")
 
-    # §9.3 的买入计划（`attach_model_pv` 已在落盘前跑过，见上文）。
+    # §9.3 执行清单（`attach_model_pv` 已在落盘前跑过，见上文）：先卖后买，四张表。
     if section93_ready:
         if args.nav > 0:
-            report_section93(section93_entry_plan(rows, args.nav, args.funds, load_holdings(),
-                                                  blocked or set(), load_tactical_gate_codes()),
-                             args.nav, args.plan_out, args.as_of)
+            holdings = load_holdings_detail(args.holdings)
+            pool_codes = {str(r.get("security_code", "")).zfill(6) for r in rows}
+            holding_rows: list[dict[str, object]] = []
+            outside = [c for c in holdings if c not in pool_codes]
+            if outside:
+                exchanges = load_exchange_map()
+                pseudo = [{"security_code": c, "security_name": holdings[c].get("name", ""),
+                           "exchange": exchanges.get(c, "")} for c in outside]
+                holding_rows = scan(pseudo, args.as_of, None, args.timeout, args.workers)
+                attach_model_pv(holding_rows, bands, args.as_of, args.rf)
+                print(f"  持仓不在输入池 {len(outside)} 只已另取行情（只进卖出侧）："
+                      + "、".join(holdings[c].get("name", c) for c in outside))
+            members = load_worth_attention_codes(args.triage)
+            if members is None:
+                print(f"  ⚠ 三类表缺失（{args.triage}）：本次不判「出名单」")
+            counters, cd_names, cd_writable = load_cooldown_state(args.cooldown_state, args.as_of)
+            before = dict(counters)
+            if not cd_writable:
+                print(f"  ⚠ 冷却计数器 {args.cooldown_state} 的应用日晚于 {args.as_of}（历史重放）：本次不应用、不回写")
+            result = section93_execution_plan(rows, args.nav, args.funds, holdings, blocked or set(),
+                                              load_tactical_gate_codes(), members, counters, holding_rows)
+            report_section93(result, args.nav, args.plan_out, args.as_of, args.sell_out)
+            if cd_writable:
+                for c in set(before) | set(counters):
+                    cd_names.setdefault(c, holdings.get(c, {}).get("name", "") or next(
+                        (str(r.get("security_name", "")) for r in rows if str(r.get("security_code", "")).zfill(6) == c), ""))
+                save_cooldown_state(args.cooldown_state, before, counters, cd_names, args.as_of)
+                active = {c: n for c, n in counters.items() if n > 0}
+                print(f"  §9.3.3 冷却计数器已写 {args.cooldown_state}（冷却中 {len(active)} 只"
+                      + ("：" + "、".join(f"{cd_names.get(c, c)} 余 {n}" for c, n in active.items()) if active else "") + "）")
         else:
-            print("§9.3 未给 --nav，只算 P/V 不出买入计划（一档以净资产为基数）")
+            print("§9.3 未给 --nav，只算 P/V 不出执行清单（一档以净资产为基数）")
     else:
         print(f"§9.3 机械执行层未运行：模型带文件不存在（{args.model_bands}）。"
               f"重建见 §6.7；不跑它则本次只产出 §8 的取数，**买入判定缺席**")

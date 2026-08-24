@@ -31,6 +31,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         # 三条线（v4.20 起入测——track_holdings 的减持线曾漂移三个月无人发现）；v4.34 起生产值 = 对齐解四位小数、不取整（§12.1）
         self.assertAlmostEqual(1 - float(option_value(args, "--width")), daily_scan.SEC93_BUY_LINE, places=4)
         self.assertEqual(float(option_value(args, "--sell-line")), daily_scan.SEC93_SELL_LINE)
+        self.assertEqual(float(option_value(args, "--swap-margin")), daily_scan.SEC93_SWAP_MARGIN)
         import track_holdings_daily
         self.assertEqual(track_holdings_daily.SELL_LINE, daily_scan.SEC93_SELL_LINE)
         # v4.44：涨幅减持 125%（gated）与融资口径（66.6%、不设金额上限）

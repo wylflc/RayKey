@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.78
+# A股选股-估值-量价操作流程 v4.79
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -53,6 +53,8 @@
 | 持仓 | `data/processed/a_share_holdings.csv` |
 | 账户快照 | `data/processed/portfolio_account_snapshot.csv`；授信额度按 §10.2 比例口径计算（`credit_line_cny` 列已退役，仅存历史数据） |
 | 每日买入计划 | `data/processed/daily_entry_plan.csv` |
+| 每日卖出清单 | `data/processed/daily_sell_plan.csv`（止损复核、减持、涨幅减持、出名单、换仓、余仓清空） |
+| 比例冷却计数器 | `data/processed/daily_cooldown_state.csv`（§9.3.3，扫描器每日读写） |
 | 每日持仓跟踪 | `data/processed/daily_holdings_tracking.csv` |
 | 每日阅读日志 | `data/processed/000_daily_scan_log.md` |
 | 审计日志 | `data/processed/a_share_workflow_decision_log.csv`，只追加不覆盖 |
@@ -499,7 +501,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
   --funds <现金加可用授信>
 ```
 
-`--nav` 决定一档；`--funds` 决定当天实际可执行预算。不给 `--nav` 时只生成行情和 `P/V`，不生成买入计划。`--as-of` 是信号日（最近收盘日），`--evidence-date` 是证据日（运行时的北京当日历日）；不给证据日则带可用性截止回退信号日，只用于历史重放。
+`--nav` 决定一档；`--funds` 决定当天实际可执行预算。不给 `--nav` 时只生成行情和 `P/V`，不生成执行清单；不给 `--funds` 时不做换仓。产物：`daily_buy_candidates.csv`（行情与 `P/V`）、`daily_sell_plan.csv`（§9.3.2 第 4 步卖出清单）、`daily_entry_plan.csv`（第 5 步买入清单）、`daily_cooldown_state.csv`（§9.3.3 计数器）。持仓不在核心池内的票由扫描器另取行情（交易所按证券名单），只进卖出侧。`--as-of` 是信号日（最近收盘日），`--evidence-date` 是证据日（运行时的北京当日历日）；不给证据日则带可用性截止回退信号日，只用于历史重放。
 
 ### 8.3 必需量
 
@@ -529,7 +531,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 2. **更新估值与档位**：队列出现 `valuation_review_needed` 时**当晚执行 §6.7**（**含其第 1 步的逐季财务刷新**；`--as-of` 取**证据日**＝运行时的北京当日历日，不是信号日）；随后以同一证据日重建队列，再刷新核心池阅读版和当日档位。
 3. **取行情与生成买入计划**：运行 §8.2，确认净资产、可用资金、持仓和模型带均已加载。
 4. **跟踪持仓与公司行动**：运行 `track_holdings_daily.py --as-of`；先处理除权除息，再检查止损、公告与估值。
-5. **形成执行清单**：按 §9.3.2 先卖后买，四张表即使为空也必须显示。
+5. **形成执行清单**：由第 3 步的扫描器按 §9.3.2 先卖后买生成 `daily_sell_plan.csv` 与 `daily_entry_plan.csv`，四张表即使为空也必须显示；止损行只列候选，T+1 尾盘按现价对当日生效线复核后执行，其卖出款不计入当日买入预算。
 6. **输出与留痕**：回复用户，并将同一内容置顶写入 `data/processed/000_daily_scan_log.md`；成交后按 §11.5 回写。
 
 当日无估值更新时可以省略 §6.7 重建，但必须明确写“当日无估值更新”。
@@ -620,7 +622,7 @@ python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 
 #### 9.3.3 高价股比例冷却
 
-一手金额大于一档时仍成交一手。令 `x = 一手金额 ÷ 一档`，随后跳过 `round(x) − 1` 次该票的合格机会；买入、减持和换仓共用同一计数器。冷却按合格次数，不按自然日。
+一手金额大于一档时仍成交一手。令 `x = 一手金额 ÷ 一档`，随后跳过 `round(x) − 1` 次该票的合格机会；买入、减持和换仓共用同一计数器。冷却按合格次数，不按自然日。计数器持久化在 `data/processed/daily_cooldown_state.csv`，扫描器每次生成执行清单时读入、消费、回写；同一信号日重跑从 `remaining_before` 重算，`--as-of` 早于文件 `applied_trade_date` 的历史重放不应用也不回写。
 
 #### 9.3.4 现有持仓衔接
 
@@ -677,7 +679,7 @@ security_code, security_name, current_shares, cost_basis, entry_stop_price
 python3 scripts/track_holdings_daily.py --as-of YYYY-MM-DD
 ```
 
-逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示现档、合理价、空间、`P/V`、止损价与是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘与生效止损线的 MA60 走 §8.3 的同一份取数实现；补跑历史日期时生产带只用 `available_at ≤ as-of` 的行。
+逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示现档、合理价、空间、`P/V`、MA20、MA60、生效止损线与是否命中、减持／涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，减持命中判定与扫描器同一实现（`holding_trim_signal`）；补跑历史日期时生产带只用 `available_at ≤ as-of` 的行。
 
 ### 11.4 除权除息
 

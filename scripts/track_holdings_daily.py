@@ -47,7 +47,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from a_share_quotes import fetch_spot_quotes
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
 from build_a_share_core_valuation_pool import DEEP_UNDERVALUED_UPSIDE, OVERVALUED_BAND_MULT
-from screen_daily_volume_price_signals import SEC93_GAIN_SELL, SEC93_SELL_LINE, fetch_daily_rows
+from screen_daily_volume_price_signals import SEC93_GAIN_SELL, SEC93_SELL_LINE, fetch_daily_rows, holding_trim_signal
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
 
@@ -59,14 +59,15 @@ DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 
 # **减持线的唯一落点在 §9.3.1**；此处直接引用扫描器常量、不再抄数——v2.98 抄下的 2.50 在
 # v4.04 参数表改 2.5548 时没跟上（本文件漂移到 2026-08-19 才被发现，v4.20 修）。
-# 注意：§9.3.1 的减持是 `P/V ≥ 线 **且收盘 < MA20**`，本脚本不算均线，只报前半个条件。
+# §9.3.1 的减持是 `P/V ≥ 线 **且收盘 < MA20**`：MA20 与 MA60 同经 `fetch_daily_rows` 取（前复权，§8.3），
+# 减持／涨幅减持的命中判定用扫描器 `holding_trim_signal`（唯一实现）；执行清单由扫描器 `daily_sell_plan.csv` 给出。
 SELL_LINE = SEC93_SELL_LINE
 # v4.62 OI-091：P/V 的净负债/企业价值来自生产带行。OI-095 起不在 import 时读带，
 # 由 track() 按 `--as-of` 载入（available_at ≤ as-of）——历史日期补跑不得用当日之后才可得的带。
 # 测试可预置桩（非 None 即不再载入）。
 MODEL_BANDS: dict[str, dict] | None = None
 # §9.3.1 涨幅减持（v4.44）：收盘较持仓均价（`cost_basis`，按 §11.4 折算）涨幅 ≥ 125% 且收盘 < MA20 → 减一档；
-# 资金不足时优先作换仓卖出源。与 P/V 减持同型：本脚本只报前半个条件（涨幅），MA20 见扫描器输出。
+# 资金不足时优先作换仓卖出源。
 GAIN_SELL = SEC93_GAIN_SELL
 
 FIELDNAMES = [
@@ -82,7 +83,10 @@ FIELDNAMES = [
     # 用三取值而不是布尔——布尔的 False 会把"没设"和"没跌破"混成同一个格子。
     "entry_stop_price",
     "stop_hit",
+    "stop_line",       # 当日生效止损线 = min(锚, 当日 MA60)；锚未设或均线缺失时留空/退锚
     "close",
+    "ma20",            # §8.3 前复权 MA20：减持／涨幅减持的走势闸门
+    "ma60",            # §8.3 前复权 MA60：生效止损线的当日均线
     "quality_tier",
     # 参考分（工作流 §5.7）：只透传分层表经池 CSV 带过来的 quality_score，供报告显示同档内排序；
     # 不参与任何判定，也不在此重算。
@@ -143,8 +147,8 @@ def beijing_now() -> datetime:
 MA60_BASIS: dict[str, str] = {}     # 代码 → "qfq"（前复权，§8.3 口径）/ "raw"（前复权源不可用时的不复权兜底）
 
 
-def fetch_raw_close(code: str, as_of: date, timeout: float) -> tuple[float | None, float | None]:
-    """`as_of` 当日**不复权**收盘与当日 MA60，返回 `(收盘, MA60)`。
+def fetch_raw_close(code: str, as_of: date, timeout: float) -> tuple[float | None, float | None, float | None]:
+    """`as_of` 当日**不复权**收盘与当日 MA20／MA60，返回 `(收盘, MA20, MA60)`。
 
     取数走扫描器 `fetch_daily_rows` **同一实现**（OI-095：东财主源、腾讯备源、北交所自动改道腾讯，
     与 §9.3.1 入场闸门的 MA60 同源同基；两侧各自取数时两家前复权序列有差，同日入场闸门与
@@ -163,25 +167,25 @@ def fetch_raw_close(code: str, as_of: date, timeout: float) -> tuple[float | Non
             return []
         return [(str(r["date"]), float(r["close"])) for r in rows if str(r["date"]) <= as_of_text]
 
-    def ma60_of(closes: list[tuple[str, float]]) -> float | None:
-        return (sum(v for _d, v in closes[-60:]) / 60) if len(closes) >= 60 else None
+    def ma_of(closes: list[tuple[str, float]], window: int) -> float | None:
+        return (sum(v for _d, v in closes[-window:]) / window) if len(closes) >= window else None
 
     raw_closes = series("")
     close = next((v for d, v in raw_closes if d == as_of_text), None)
     adj_closes = series("qfq")
     if adj_closes:
-        ma60 = ma60_of(adj_closes)
+        ma20, ma60 = ma_of(adj_closes, 20), ma_of(adj_closes, 60)
         MA60_BASIS[code] = "qfq"
     elif raw_closes:
-        ma60 = ma60_of(raw_closes)
+        ma20, ma60 = ma_of(raw_closes, 20), ma_of(raw_closes, 60)
         MA60_BASIS[code] = "raw"
     else:
-        ma60 = None
-    return close, ma60
+        ma20 = ma60 = None
+    return close, ma20, ma60
 
 
 def resolve_prices(codes: list[str], as_of: date,
-                   timeout: float) -> tuple[dict[str, float], dict[str, float], str]:
+                   timeout: float) -> tuple[dict[str, float], dict[str, float], dict[str, float], str]:
     """OI-067（v4.20 修，用户裁定）：价格按 `--as-of` 取**当日不复权收盘**，不再取运行瞬间现价。
 
     三种情形：①盘后/补跑历史日期——日线有 `as_of` 那根K线，取真实收盘（补跑从此可信）；
@@ -194,10 +198,13 @@ def resolve_prices(codes: list[str], as_of: date,
     is_today = as_of == bj.date()
     intraday = is_today and (bj.hour, bj.minute) < (15, 5)
     out: dict[str, float] = {}
+    ma20s: dict[str, float] = {}          # §9.3.1 减持／涨幅减持的走势闸门均线
     ma60s: dict[str, float] = {}          # §9.3.1 v4.25 生效止损线的当日均线；取不到即缺席
     missing: list[str] = []
     for code in codes:
-        close, ma60 = (None, None) if intraday else fetch_raw_close(code, as_of, timeout)
+        close, ma20, ma60 = (None, None, None) if intraday else fetch_raw_close(code, as_of, timeout)
+        if ma20 is not None:
+            ma20s[code] = ma20
         if ma60 is not None:
             ma60s[code] = ma60
         if close is not None:
@@ -214,7 +221,7 @@ def resolve_prices(codes: list[str], as_of: date,
         label = "盘中价（北京 15:05 前运行，盘后重跑即覆盖为收盘）" if intraday else "现价兜底（当日K线未入库）"
     elif missing:
         label = "收盘（历史日期，无K线的按数据缺失处理）"
-    return out, ma60s, label
+    return out, ma20s, ma60s, label
 
 
 def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeout: float) -> list[dict[str, object]]:
@@ -228,7 +235,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         holdings = [h for h in holdings if h["security_code"].zfill(6) in wanted]
 
     pool = load_pool(pool_file)
-    prices, ma60s, price_label = resolve_prices([h["security_code"].zfill(6) for h in holdings], as_of, timeout)
+    prices, ma20s, ma60s, price_label = resolve_prices([h["security_code"].zfill(6) for h in holdings], as_of, timeout)
     if price_label != "收盘":
         print(f"  ⚠ 价格口径：{price_label}")
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -263,17 +270,20 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
             notes.append("不在核心估值合格池内，无带——按 §9.3.2 第四步逐日清仓")
         elif low is None or high is None:
             notes.append("池内无合理价区间（无法估值）：无 `P/V`，当日不进机械判定")
-        elif pv is not None and pv >= SELL_LINE:
-            notes.append(f"**`P/V` {pv:.2f} ≥ {SELL_LINE:.4f}**：减持另须 `收盘 < MA20`"
-                         f"（§9.3.1 完整条件，均线见扫描器输出），两者同时成立才减一档")
-        # §9.3.1 涨幅减持（v4.44）：与 P/V 行并列的第二条减持触发，判据是持仓均价而非估值带，
-        # 故无带／无 P/V 的票也要判（只要有收盘价与成本）。
+        # §9.3.1 减持行与涨幅减持行：唯一判定在扫描器 `holding_trim_signal`（P/V 或涨幅 且 收盘 < MA20）。
+        # 无带／无 P/V 的票涨幅行照判（只要有收盘价与成本）。
         cost = to_float(h.get("cost_basis"))
+        ma20 = ma20s.get(code)
+        trim_rule, trim_why = holding_trim_signal(close, ma20, pv, cost)
         gain = (close / cost - 1.0) if (close is not None and cost is not None and cost > 0) else None
-        if gain is not None and gain >= GAIN_SELL:
-            notes.append(f"**较持仓均价 {cost:g} 涨幅 {gain:.0%} ≥ {GAIN_SELL:.0%}**：减持另须 `收盘 < MA20`"
+        if trim_rule == "减持":
+            notes.append(f"**减持一档**：`P/V` {pv:.2f} ≥ {SELL_LINE:.4f} 且收盘 {close:g} < MA20 {ma20:g}（§9.3.1）")
+        elif trim_rule == "涨幅减持":
+            notes.append(f"**涨幅减持一档**：较持仓均价 {cost:g} 涨幅 {gain:.0%} ≥ {GAIN_SELL:.0%} 且收盘 {close:g} < MA20 {ma20:g}"
                          f"（§9.3.1 涨幅行）；资金不足时优先作换仓卖出源（涨幅最大者先）")
-        elif cost is None or cost <= 0:
+        elif trim_why:
+            notes.append(trim_why)
+        if close is not None and (cost is None or cost <= 0):
             # §13 第 3 条：判据缺失必须显式落字，不能静默等同「未触发」。
             notes.append("**持仓均价未填**（`cost_basis` 空）：§9.3.1 涨幅减持行无法判定，请按 §11.2 补填（买入加权、除权按 §11.4 折算）")
 
@@ -287,6 +297,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         # （盘中价/新上市不足 60 根）时退回按锚判读并注明。
         entry_stop = to_float(h.get("entry_stop_price"))
         ma60 = ma60s.get(code)
+        stop_line = None
         if entry_stop is None:
             stop_hit = "未设"
         elif close is None:
@@ -326,7 +337,10 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
                 "cost_basis": h.get("cost_basis", ""),
                 "entry_stop_price": "" if entry_stop is None else f"{entry_stop:g}",
                 "stop_hit": stop_hit,
+                "stop_line": "" if stop_line is None else f"{stop_line:.4g}",
                 "close": "" if close is None else f"{close:g}",
+                "ma20": "" if ma20 is None else f"{ma20:.4f}",
+                "ma60": "" if ma60 is None else f"{ma60:.4f}",
                 "quality_tier": (pool_row or {}).get("quality_tier", ""),
                 "quality_score": (pool_row or {}).get("quality_score", ""),
                 "effective_valuation_tier": tier,
@@ -457,12 +471,16 @@ def main() -> None:
         writer.writerows(rows)
     log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv, args.valuation_pool)
 
-    trim = [r for r in rows if r["pv"] and float(r["pv"]) >= SELL_LINE]
-    gain_trim = []
+    trim, gain_trim, gated = [], [], []
     for r in rows:
         c, k = to_float(r.get("close")), to_float(r.get("cost_basis"))
-        if c is not None and k is not None and k > 0 and c / k - 1.0 >= GAIN_SELL:
+        rule, why = holding_trim_signal(c, to_float(r.get("ma20")), to_float(r.get("pv")), k)
+        if rule == "减持":
+            trim.append(r)
+        elif rule == "涨幅减持":
             gain_trim.append((c / k - 1.0, r))
+        elif why:
+            gated.append((r, why))
     gain_trim.sort(key=lambda t: -t[0])
     no_pv = [r for r in rows if not str(r["pv"]).strip()]
     no_band = [r for r in rows if not r["fair_price_low"]]
@@ -487,19 +505,21 @@ def main() -> None:
         print(f"  未设止损锚 {len(unset)} 只：{'、'.join(str(r['security_name']) for r in unset)}"
               f"——§9.3.5 对其不生效，须待清空后重新建仓时按新规则设定")
     if trim:
-        names = "、".join(f"{r['security_name']}({r['pv']})" for r in trim)
-        print(f"  **P/V ≥ {SELL_LINE:.4f} 共 {len(trim)} 只**：{names}——另须 `收盘 < MA20`（§9.3.1）才减一档")
+        names = "、".join(f"{r['security_name']}(P/V {r['pv']}，收 {r['close']} < MA20 {r['ma20']})" for r in trim)
+        print(f"  **减持一档（P/V ≥ {SELL_LINE:.4f} 且收盘 < MA20）共 {len(trim)} 只**：{names}——股数见扫描器 `daily_sell_plan.csv`")
     else:
-        print(f"  P/V ≥ {SELL_LINE:.4f}：无")
+        print(f"  减持（P/V ≥ {SELL_LINE:.4f} 且收盘 < MA20）：无")
     no_cost = [r for r in rows if not (to_float(r.get("cost_basis")) or 0) > 0]
     if no_cost:
         print(f"  **持仓均价未填 {len(no_cost)} 只**：{'、'.join(str(r['security_name']) for r in no_cost)}——§9.3.1 涨幅减持行对其无法判定，请补 `cost_basis`（§11.2）")
     if gain_trim:
-        names = "、".join(f"{r['security_name']}(+{g:.0%})" for g, r in gain_trim)
-        print(f"  **较持仓均价涨幅 ≥ {GAIN_SELL:.0%} 共 {len(gain_trim)} 只**：{names}——另须 `收盘 < MA20`（§9.3.1 涨幅行）才减一档；"
-              f"资金不足时按此顺序优先作换仓卖出源")
+        names = "、".join(f"{r['security_name']}(+{g:.0%}，收 {r['close']} < MA20 {r['ma20']})" for g, r in gain_trim)
+        print(f"  **涨幅减持一档（涨幅 ≥ {GAIN_SELL:.0%} 且收盘 < MA20）共 {len(gain_trim)} 只**：{names}——"
+              f"资金不足时按此顺序优先作换仓卖出源；股数见 `daily_sell_plan.csv`")
     else:
-        print(f"  较持仓均价涨幅 ≥ {GAIN_SELL:.0%}：无")
+        print(f"  涨幅减持（涨幅 ≥ {GAIN_SELL:.0%} 且收盘 < MA20）：无")
+    for r, why in gated:
+        print(f"  [条件成立未减] {r['security_name']}：{why}")
     if no_pv:
         print(f"  **P/V 未算出 {len(no_pv)} 只**：{'、'.join(str(r['security_name']) for r in no_pv)}（无行情或无带，当日不进 §9.3 判定）")
     if no_band:
