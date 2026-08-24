@@ -30,10 +30,11 @@ data/raw/corporate_actions/*_full*.csv
 # `scripts/backtest_valuation_strategy.py` 完全重建，**清理入口是
 # `scripts/clean_derived_artifacts.py`**（缺省只报告，--apply 才删）。
 #
-# 逐日估值状态：生产口径两份（缺省版 + 采纳版），单份 90~100MB，太大不入库但要留在盘上。
-data/processed/a_share_historical_valuation_daily.csv
+# 逐日估值状态与 ROIC 带（§6.7 第 2/3 步产物；单份 0.14~2 GB，留在盘上不入库）
+data/processed/roic_bands.csv
+data/processed/roic_daily_raw.csv
 data/processed/a_share_daily_states_adopted.csv
-# 估值带模型变体（§12.9~§12.40 的实验臂）：单份 50~140MB，跑完即可删。
+# 建带引擎的实验臂与一次性变体（跑完即删）
 data/processed/vd_*.csv
 data/processed/vb_*.csv
 data/processed/hd_*.csv
@@ -41,49 +42,24 @@ data/processed/hb_*.csv
 data/processed/hist_daily_*.csv
 data/processed/hist_bands_*.csv
 data/processed/a_share_daily_g*.csv
-data/processed/a_share_historical_valuation_daily_*.csv
-data/processed/a_share_historical_valuation_bands_*.csv
-# ROIC 口径带与中间产物（v4.00 生产口径；重建见工作流 §6.7 估值重建链）
-data/processed/roic_bands.csv
-data/processed/roic_daily_raw.csv
+data/processed/a_share_historical_valuation_*.csv
+data/processed/dcf_*.csv
+data/processed/ame_*.csv
+data/processed/roiccond*_*.csv
+data/processed/roicmed_*.csv
+# 诊断集（notebooks/valuation_band_vs_price.ipynb 第二格一条命令重建）
+data/processed/diag_daily_states.csv
+data/processed/diag_bands.csv
+data/processed/metric_states/
 
-# 回测产物：一轮参数扫描落成百上千份，2026-08-14 清理前有 5.7 万个文件 / 5.8 GB。
-# **历次扫描的读数已归并进入库的 `backtest/scan_summaries.csv`，此处只挡原件。**
+# 回测产物：历次扫描的读数已归并进入库的 `backtest/scan_summaries.csv`，此处只挡原件。
 data/processed/backtest/*_equity.csv
 data/processed/backtest/*_trades.csv
 data/processed/backtest/*_periods.csv
 data/processed/backtest/summary_*.csv
 data/processed/backtest/summary.csv
-# `--label-suffix` 命名的单跑汇总（如 summaryV304ROIC.csv），同属原件不入库
 data/processed/backtest/summary[A-Z]*.csv
-# 逐笔成交流水（`--trade-log`）：notebooks/price_pv_channels.ipynb 的输入，
-# 由该 notebook 第二格的命令一条重建，不入库。
 data/processed/backtest/*trade_log.csv
-
-# 纠偏原则检验（notebooks/valuation_band_vs_price.ipynb）的诊断用逐日状态，
-# 重建命令写在该 notebook 的第二个 cell 里。
-data/processed/diag_daily_states.csv
-data/processed/diag_bands.csv
-data/processed/metric_states/
-data/raw/financials_statements_v6new/
-data/processed/dcf_bands.csv
-data/processed/dcf_daily_raw.csv
-data/processed/dcf_states.csv
-data/processed/roiccond_bands.csv
-data/processed/roiccond_daily_raw.csv
-data/processed/roiccond_states.csv
-data/processed/roiccond3_bands.csv
-data/processed/roiccond3_daily_raw.csv
-data/processed/roiccond3_states.csv
-data/processed/roiccond3s_bands.csv
-data/processed/roiccond3s_daily_raw.csv
-data/processed/roiccond3s_states.csv
-data/processed/roiccond3h_bands.csv
-data/processed/roiccond3h_daily_raw.csv
-data/processed/roiccond3h_states.csv
-data/processed/roicmed_bands.csv
-data/processed/roicmed_daily_raw.csv
-data/processed/roicmed_states.csv
 
 # ---------------------------------------------------------------- 实验 A/B（docs/Ashare_quant_exp1_*.md / exp2_*.md）
 # 逐日状态按实验股票库切出的子集（每份 0.3~0.6 GB，由 scripts/experimental/subset_daily_states.py 一条命令重建）

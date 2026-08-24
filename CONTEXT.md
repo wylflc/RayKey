@@ -18,7 +18,7 @@ AShareQuant models listed-company research for mainland China, Hong Kong, and U.
 
 - **Worth-Attention Company** — kept for ongoing attention. This set *is* the **Watchlist**, and only these receive a **Quality Tier**.
 - **Boundary-Pending Company** — reviewable but off the watchlist, for one of two reasons: reliable evidence is insufficient to judge it (including a new listing without an annual report), or it is judgeable but currently lacks a durable advantage while its industry is not structurally hopeless. Carries no quality tier; re-enters review when reliable evidence appears or a hard trigger occurs (new product, customer validation, major order, restructuring, industry-structure change) — never on price action alone.
-- **Garbage Company** — permanently excluded, and only for a governance/fraud disaster or an industry structurally low-barrier enough that no company can build a durable advantage. Company-level weakness in a non-hopeless industry is boundary-pending, not garbage. Never re-screened on price, theme, or low PE; only security master data is maintained. One narrow correction path exists (`garbage_review`, back to boundary-pending) — see workflow §5.4.7.
+- **Garbage Company** — permanently excluded, and only for a governance/fraud disaster or an industry structurally low-barrier enough that no company can build a durable advantage. Company-level weakness in a non-hopeless industry is boundary-pending, not garbage. Never re-screened on price, theme, or low PE; only security master data is maintained. One narrow correction path exists (`garbage_review`, back to boundary-pending) — see workflow §5.5.
 
 **Watchlist** — the set of listed companies retained for ongoing attention after business-quality screening. Not a buy list: watchlist membership says the business deserves attention, not that the security is worth owning.
 
@@ -66,7 +66,7 @@ AShareQuant models listed-company research for mainland China, Hong Kong, and U.
 
 **Buy Candidate** — the pipeline's terminal buy-side output: a pool name whose right-side volume/price signal fired on a given trading day, carrying the facts behind it (signal grade, entry stage vs. stage required, effective valuation tier, band position, over-extension). Governed by workflow §8–§11. It is **not** an instruction to buy; the pipeline emits no buy or sell recommendation, and position sizing is outside it.
 
-**Pretrade Decision** *(retired v2.05)* — the former structured buy gate between a buy candidate and an actual position. The 15-item gate and its `approved`/`compliant`/`off_system`/`hold_off` verdicts were retired on 2026-08-03; `data/processed/pretrade_decisions.csv` is a closed historical record. Retained here only so the term is recognizable in old decision-log rows and archived docs — **do not apply it.**
+**Pretrade Decision** *(retired v2.05)* — the former structured buy gate between a buy candidate and an actual position. The 15-item gate and its `approved`/`compliant`/`off_system`/`hold_off` verdicts were retired on 2026-08-03; `data/archive/pretrade_decisions_2026-08-03.csv` is a closed historical record. Retained here only so the term is recognizable in old decision-log rows and archived docs — **do not apply it.**
 
 **Position Plan** — non-binding portfolio guidance downstream of both moat screening and valuation assessment. It belongs to a security, and is never evidence that the underlying company has a stronger moat.
 

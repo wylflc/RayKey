@@ -719,4 +719,4 @@ thesis 破坏时立即触发名单复核，退出按工作流 §9.3 执行。
 | --- | --- | --- |
 | **v1.28** | 2026-08-24 | **通篇删减解释说明与历史内容，正文只留现行规则（用户指令，与工作流 v4.65 同一规则）。**§3.2 失效仓位列删除；§4 融资口径改为引用工作流；§5 版本标注与动机段删除，B/G 遗留仓位表与时间止损删除（买卖只认工作流 §9.3）；§8.1 叙事删除；§9.2/§13/§15 墓碑清除；§16 压缩为两条现行决议，病历/依据/防护层变更表/旧修订记录移至 `docs/archive/personal-investment-system-history.md`；§2.1 单票上限表述对齐工作流单票机械上限。 |
 
-v1.21~v1.27 逐版记录见 `docs/archive/personal-investment-system-history.md`；v1.20 及以前见 `docs/archive/personal-investment-system_v1.20_full.md`。
+v1.21~v1.27 逐版记录见 `docs/archive/personal-investment-system-history.md`；v1.20 及以前的全文见 git 历史（`git show 5fa8ad69:docs/archive/personal-investment-system_v1.20_full.md`）。

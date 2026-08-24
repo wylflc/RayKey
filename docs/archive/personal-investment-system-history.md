@@ -1,6 +1,6 @@
 # 个人投资体系：历史记录归档（自 v1.28 起从正文移出）
 
-> 本文件承接 `docs/000_personal-investment-system-v1.zh.md` v1.27 正文中的历史与叙事内容：既往病历、策略路线决议全文（含依据）、防护层变更记录、v1.21~v1.27 修订记录。现行规则只看正文；v1.20 及以前全文见 `personal-investment-system_v1.20_full.md`。移出时内容原样保留。
+> 本文件承接 `docs/000_personal-investment-system-v1.zh.md` v1.27 正文中的历史与叙事内容：既往病历、策略路线决议全文（含依据）、防护层变更记录、v1.21~v1.27 修订记录。现行规则只看正文；v1.20 及以前全文见 git 历史（`git show 5fa8ad69:docs/archive/personal-investment-system_v1.20_full.md`）。移出时内容原样保留。
 
 ### 16.1 既往病历
 
