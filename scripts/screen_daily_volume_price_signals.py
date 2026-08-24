@@ -255,6 +255,9 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = 
         if not price_rows:
             raise RuntimeError("empty kline response")
         add_indicators(price_rows)
+        # §9.3.1 相关性的同源K线（OI-093）：多留一根算首日收益率。线程间各写各的代码键，无竞态。
+        CLOSE_SERIES[code] = [(str(r["date"]), float(r["close"]))
+                              for r in price_rows[-(CORR_WINDOW + 2):] if to_float(r.get("close"))]
         snapshot = quote_snapshot(price_rows)
         if since:
             snapshot.update(gap_review(price_rows, as_of, since))
@@ -526,27 +529,29 @@ def bank_dividend_intrinsic(code: str, as_of: str, rf: float) -> float | None:
     return total / (rf + BANK_RISK_PREMIUM) if total > 0 else None
 
 
-def daily_returns_window(codes: Iterable[str], window: int = 253) -> dict[str, list[float]]:
-    """逐票近 `window` 根的日收益率，取自本地行情库。重叠不足 120 根的不参与相关性。"""
-    out: dict[str, list[float]] = {}
-    for code in codes:
-        path = ROOT / "data/raw/ohlcv" / f"{code}.csv"
-        if not path.exists():
-            continue
-        with path.open(newline="", encoding="utf-8") as handle:
-            closes = [float(r["close"]) for r in csv.DictReader(handle) if r.get("close")][-window:]
-        if len(closes) >= 120:
-            out[code] = [closes[i] / closes[i - 1] - 1 for i in range(1, len(closes))]
-    return out
+# §9.3.1 相关性的数据源（OI-093）：扫描当日逐票已取的前复权K线（`scan_one` 落入本表），
+# 两侧同源、窗口末端即信号日。此前读 `data/raw/ohlcv/` 行情库——该库按需增量、不随 §8 刷新，
+# 窗口末端可落后信号日数周，且缺文件时 pearson 按 0 相关静默放行。
+CLOSE_SERIES: dict[str, list[tuple[str, float]]] = {}
+CORR_WINDOW = 252          # §9.3.1：近 252 日日收益率
+CORR_MIN_OVERLAP = 120     # 与回测 Correlations 同阈：重叠收益率不足此数 → 无值（不当作 0）
 
 
-def pearson(returns: dict[str, list[float]], a: str, b: str) -> float:
-    """两票日收益率的皮尔逊相关。任一缺数据返回 0——**当作不相关会放行**，故缺数据要单独报。"""
-    xs, ys = returns.get(a), returns.get(b)
-    if not xs or not ys:
-        return 0.0
-    n = min(len(xs), len(ys))
-    xs, ys = xs[-n:], ys[-n:]
+def corr_252(a: str, b: str) -> float | None:
+    """两票近 252 日日收益率的皮尔逊相关，按交易日对齐（停牌日不同则取交集）。
+
+    数据缺失或重叠不足 `CORR_MIN_OVERLAP` 返回 **None＝未知**，交调用方显式列名单——
+    与回测 `Correlations.get` 同语义，不再把缺数据当 0 相关放行。"""
+    sa, sb = CLOSE_SERIES.get(a), CLOSE_SERIES.get(b)
+    if not sa or not sb:
+        return None
+    ra = {d: c / p - 1 for (_, p), (d, c) in zip(sa, sa[1:]) if p > 0}
+    rb = {d: c / p - 1 for (_, p), (d, c) in zip(sb, sb[1:]) if p > 0}
+    common = sorted(ra.keys() & rb.keys())[-CORR_WINDOW:]
+    if len(common) < CORR_MIN_OVERLAP:
+        return None
+    xs = [ra[d] for d in common]
+    ys = [rb[d] for d in common]
     mx, my = mean(xs), mean(ys)
     sx = math.sqrt(sum((v - mx) ** 2 for v in xs))
     sy = math.sqrt(sum((v - my) ** 2 for v in ys))
@@ -665,23 +670,29 @@ def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
     # **相关性基准必须含在手持仓**：§9.3.1 写的是「与**在手**/已选标的 ≤ 上限」，
     # 判例：2026-08-17 持有山西汾酒时，与之相关 0.79 的古井贡酒曾被排在买入计划第 1 位。
     held_rows = [r for r in rows if str(r["security_code"]).zfill(6) in holdings]
-    returns = daily_returns_window(
-        [str(r["security_code"]).zfill(6) for r in eligible]
-        + [str(r["security_code"]).zfill(6) for r in held_rows])
     picked: list[dict] = []
     dropped: list[tuple[dict, float, str]] = []
+    corr_unknown: list[tuple[dict, str]] = []    # OI-093：算不出相关性的候选与对手名单，放行但显式列出
     for cand in eligible[:SEC93_SCAN_DEPTH]:
         code = str(cand["security_code"]).zfill(6)
         worst, worst_name = 0.0, ""
+        unknown: list[str] = []
         for held in held_rows + picked:
-            if str(held["security_code"]).zfill(6) == code:
+            other = str(held["security_code"]).zfill(6)
+            if other == code:
                 continue                     # 加仓自身不与自己比
-            value = pearson(returns, code, str(held["security_code"]).zfill(6))
+            value = corr_252(code, other)
+            if value is None:                # 未知 ≠ 不相关：与回测同语义放行，但必须报出来
+                unknown.append(str(held.get("security_name", "")) or other)
+                continue
             if value > worst:
                 worst, worst_name = value, str(held.get("security_name", ""))
         if worst > SEC93_MAX_CORR:
             dropped.append((cand, worst, worst_name))
             continue
+        if unknown:
+            # 同一持仓可能既在 held_rows 又已入 picked（加仓行），名单去重
+            corr_unknown.append((cand, "、".join(dict.fromkeys(unknown))))
         picked.append(cand)
 
     # **可用资金 ≠ 净资产**（OI-062，2026-08-17 修）：满仓或带融资的账户里，净资产早已变成持仓市值，
@@ -732,7 +743,8 @@ def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
             "amount": round(amount, 2),
             "cooldown_skips": cooldown,
         })
-    return {"plan": plan, "dropped": dropped, "eligible": eligible, "capped": capped,
+    return {"plan": plan, "dropped": dropped, "corr_unknown": corr_unknown,
+            "eligible": eligible, "capped": capped,
             "frozen_out": frozen_out, "illiquid_out": illiquid_out, "tactical_out": tactical_out,
             "n_cheap": n_cheap, "cash": cash, "tranche": tranche,
             "funds0": (nav if funds is None else max(funds, 0.0)), "funds_given": funds is not None,
@@ -800,6 +812,10 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
     for cand, value, who in dropped:
         print(f"  [相关性剔除] {cand.get('security_name','')} "
               f"P/V {cand['model_pv']:.2f}｜与已选 {who} 相关 {value:.2f}")
+    for cand, who in result.get("corr_unknown") or []:
+        print(f"  [相关性缺数据·OI-093] {cand.get('security_name','')} "
+              f"P/V {cand['model_pv']:.2f}｜与 {who} 的重叠K线不足 {CORR_MIN_OVERLAP} 根，"
+              f"按未知放行（与回测同语义），如需人工核对相关性再执行")
     # OI-065：**空计划也必须落盘**（只含表头），否则前一日的旧计划会原样留在盘上冒充今日结论；
     # `trade_date` 列让读取方能自证文件时点，不再依赖 mtime。
     write_csv(out_path, plan, PLAN_FIELDS)
