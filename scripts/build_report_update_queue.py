@@ -23,7 +23,9 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ATTENTION_TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"
 DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
-DEFAULT_FINANCIALS = ROOT / "data/interim/a_share_financial_indicators.csv"
+# OI-094：兜底用的 latest_report_date 缺省读逐季面板目录（随披露增量刷新），
+# 不再读已无生产者的 2026-05 指标快照；传文件路径仍按旧快照 CSV 读（复现用）。
+DEFAULT_FINANCIALS = ROOT / "data/raw/financials"
 DEFAULT_FORECASTS = ROOT / "data/interim/a_share_earnings_forecasts.csv"
 DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_OUTPUT = ROOT / "data/interim/a_share_report_update_queue.csv"
@@ -321,11 +323,16 @@ def main() -> None:
     args = parse_args()
     if args.market != "A_SHARE":
         raise SystemExit("Only --market A_SHARE is supported.")
+    if args.financials.is_dir():
+        from quarterly_panel_indicators import load_latest_indicators
+        financial_rows = list(load_latest_indicators(args.financials, args.as_of).values())
+    else:
+        financial_rows = load_csv(args.financials)
     rows = build_queue(
         load_csv(args.attention_triage),
         load_csv(args.tiers),
         load_csv(args.valuation_pool),
-        load_csv(args.financials),
+        financial_rows,
         load_csv(args.forecasts),
         load_csv(args.report_disclosures),
         args.as_of,

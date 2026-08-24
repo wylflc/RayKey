@@ -18,7 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_UNIVERSE = ROOT / "data/raw/a_share_securities.csv"
 DEFAULT_ATTENTION_TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"
 DEFAULT_PREVIOUS_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
-DEFAULT_FINANCIALS = ROOT / "data/interim/a_share_financial_indicators.csv"
+# OI-094：财务判据缺省读逐季面板目录（每期一个 YYYY-MM-DD.csv，随披露增量刷新），
+# 不再读已无生产者的 2026-05 指标快照；传文件路径仍按旧快照 CSV 读（复现用）。
+DEFAULT_FINANCIALS = ROOT / "data/raw/financials"
 DEFAULT_OUTPUT = ROOT / "data/interim/a_share_quarterly_quality_review_queue.csv"
 
 
@@ -112,8 +114,6 @@ def material_financial_change(financial: dict[str, str] | None) -> list[str]:
     gross_margin = as_float(financial.get("gross_margin_pct"))
     net_margin = as_float(financial.get("net_margin_pct"))
     cashflow_to_revenue = as_float(financial.get("cashflow_to_revenue_pct"))
-    debt_asset = as_float(financial.get("debt_asset_ratio_pct"))
-    research_ratio = as_float(financial.get("research_expense_to_revenue_pct"))
 
     if revenue_yoy is not None and abs(revenue_yoy) >= 30:
         reasons.append("revenue_yoy_abs_ge_30pct")
@@ -125,10 +125,6 @@ def material_financial_change(financial: dict[str, str] | None) -> list[str]:
         reasons.append("high_net_margin")
     if cashflow_to_revenue is not None and cashflow_to_revenue < -0.05:
         reasons.append("negative_cashflow_to_revenue")
-    if debt_asset is not None and debt_asset >= 70:
-        reasons.append("high_debt_asset_ratio")
-    if research_ratio is not None and research_ratio >= 8:
-        reasons.append("high_research_intensity")
     return reasons
 
 
@@ -260,11 +256,16 @@ def main() -> None:
     args = parse_args()
     if args.market != "A_SHARE":
         raise SystemExit("Only --market A_SHARE is supported.")
+    if args.financials.is_dir():
+        from quarterly_panel_indicators import load_latest_indicators
+        financial_rows = list(load_latest_indicators(args.financials, args.as_of).values())
+    else:
+        financial_rows = load_csv(args.financials)
     rows = build_queue(
         load_csv(args.universe),
         load_csv(args.attention_triage),
         load_csv(args.previous_tiers),
-        load_csv(args.financials),
+        financial_rows,
         args.as_of,
     )
     fieldnames = [

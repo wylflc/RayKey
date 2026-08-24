@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.71
+# A股选股-估值-量价操作流程 v4.72
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -114,6 +114,9 @@ A股证券名单 ∪ 财报中出现的A股证券
 python3 scripts/fetch_a_share_universe.py \
   --output data/raw/a_share_securities.csv
 
+# 队列的财务判据读 data/raw/financials/ 逐季面板，建队列前先增量刷新到当日
+python3 scripts/fetch_a_share_quarterly_financials.py --as-of YYYY-MM-DD --since <当前报告期末> --refresh
+
 python3 scripts/build_quarterly_quality_review_queue.py \
   --market A_SHARE \
   --as-of YYYY-MM-DD \
@@ -175,7 +178,7 @@ python3 scripts/build_quarterly_quality_review_queue.py \
 
 ### 5.6 复核队列条件
 
-满足任一条件进入队列：新上市；新报告晚于上次复核；原 L1/L2；L3 出现经营或技术改善；`boundary_pending` 出现硬触发；关键利润率、现金流、负债、研发或增长发生重大变化；发生诉讼、处罚、审计或控股股东风险。
+满足任一条件进入队列：新上市；新报告晚于上次复核；原 L1/L2；L3 出现经营或技术改善；`boundary_pending` 出现硬触发；关键利润率、现金流或增长发生重大变化；发生诉讼、处罚、审计或控股股东风险。
 
 `garbage`、无硬触发的 `boundary_pending`、以及只有价格或传闻变化的公司不进入队列。
 
