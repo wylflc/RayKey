@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.73
+# A股选股-估值-量价操作流程 v4.74
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -335,10 +335,11 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 **`--as-of` 一律取证据日（运行时的北京当日历日），不是扫描信号日**：晚间披露的报告公告日官方戳次日，证据日取戳日方可入带。
 
 ```bash
-# 1. 刷新财务输入与除权事件（逐季财务、三大报表、除权事件三份缺一不可）
+# 1. 刷新财务输入与除权事件（逐季财务、三大报表、除权事件、rf/ERP 序列四份缺一不可）
 python3 scripts/fetch_a_share_quarterly_financials.py --as-of YYYY-MM-DD --since <当前报告期末>
 python3 scripts/fetch_a_share_financial_statements.py
 python3 scripts/fetch_ohlcv_history.py --as-of YYYY-MM-DD --actions-only   # 缺省范围＝核心池∪持仓；档案层全员或全市场加 --codes-file
+python3 scripts/fetch_cost_of_equity_inputs.py   # rf/ERP 序列：银行/保险股利折现（第 3 步、扫描器 --rf 缺省、档案层）与 §6.8 的 r 读它的最新行
 
 # 2. 构建 ROIC 带与逐日状态
 python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
@@ -516,7 +517,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 
 ### 8.4 故障与缺口
 
-`--since auto` 自动检出上次扫描日，报告缺口区间的交易日数、区间涨跌与最大放量倍数。扫描为零行或行情失败达到一半时非零退出，当日结果不可用；低于一半按停牌或个别数据缺失逐行标注。
+`--since auto` 自动检出上次扫描日（读上一份 `daily_buy_candidates.csv` 的 `trade_date`），报告缺口区间的交易日数、区间涨跌与最大放量倍数。扫描为零行或行情失败达到一半时非零退出，当日结果不可用；低于一半按停牌或个别数据缺失逐行标注。扫描写入决策日志的只有结论行：取数异常（`data_error`／`insufficient_price_history`）与 §7.5 复核冻结（`review_frozen`）；正常行情行不写。
 
 ## 9. 每日执行与交易规则
 

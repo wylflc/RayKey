@@ -303,15 +303,20 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = 
     return {key: rounded(value) for key, value in snapshot.items()}
 
 
-def detect_last_scan(log_path: Path, as_of: str) -> str:
-    """§8.4：自动检出上一次扫描日——缺口回溯不能依赖人记得传 --since。"""
-    if not log_path.exists():
+def detect_last_scan(prior_csv: Path, as_of: str) -> str:
+    """§8.4：自动检出上一次扫描日——缺口回溯不能依赖人记得传 --since。
+
+    读上一份扫描产物（`daily_buy_candidates.csv`）的 `trade_date`（OI-096：决策日志不再逐股写
+    `decision_result=ok` 行，不能再从日志检出）。产物在本次扫描落盘前读取，存的是上一次的日期；
+    同日重跑或补跑更早日期时取不到 `< as_of` 的日期，按单日快照执行。"""
+    if not prior_csv.exists():
         return ""
     dates = set()
-    with log_path.open(encoding="utf-8-sig") as handle:
+    with prior_csv.open(encoding="utf-8-sig") as handle:
         for row in csv.DictReader(handle):
-            if row.get("decision_type") == "daily_signal_state" and row.get("as_of"):
-                dates.add(row["as_of"])
+            day = str(row.get("trade_date") or "").strip()
+            if len(day) == 10:
+                dates.add(day)
     prior = sorted(d for d in dates if d < as_of)
     return prior[-1] if prior else ""
 
@@ -345,9 +350,17 @@ def log_scan_decisions(
     logged_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     entries: list[dict[str, object]] = []
     for row in rows:
+        # §2 审计口径（OI-096）：只记结论行——取数异常（data_error/insufficient_price_history）
+        # 与 §7.5 复核冻结；正常行情行不再逐股写 `decision_result=ok`（上次扫描日由
+        # detect_last_scan 读扫描产物的 trade_date，买入结论的唯一真值是 daily_entry_plan.csv，
+        # 持仓动作由 track_holdings_daily 记）。
+        state = str(row.get("signal_state") or "")
+        frozen = bool(row.get("review_frozen"))
+        if state == "ok" and not frozen:
+            continue
         reason = str(row.get("note") or "")
-        if not reason and row.get("model_pv") != "":
-            reason = f"P/V {row.get('model_pv')}"
+        if frozen:
+            reason = (reason + "；" if reason else "") + "§7.5 复核期买入冻结"
         entries.append(
             {
                 "logged_at_utc": logged_at,
@@ -356,10 +369,8 @@ def log_scan_decisions(
                 "as_of": as_of,
                 "security_code": row.get("security_code", ""),
                 "security_name": row.get("security_name", ""),
-                # decision_type 名称保持 daily_signal_state：detect_last_scan（§8.4 缺口回溯）
-                # 以它识别历史扫描日，改名会让回溯断链。
                 "decision_type": "daily_signal_state",
-                "decision_result": row.get("signal_state", ""),
+                "decision_result": "review_frozen" if state == "ok" else state,
                 "summary_reason": reason,
                 "input_files": str(input_file),
                 "source_urls": row.get("data_source", ""),
@@ -876,7 +887,7 @@ def main() -> int:
     input_rows = load_csv(args.input)
     since = args.since
     if since == "auto":
-        since = detect_last_scan(args.log_file, args.as_of)
+        since = detect_last_scan(args.output_csv, args.as_of)
         if since:
             print(f"§8.4 缺口回溯：检出上次扫描日 {since}，将回溯 {since}→{args.as_of} 区间")
         else:
