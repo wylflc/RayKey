@@ -86,6 +86,10 @@ BASE = (
     # §9.3 成文改从实现（v4.68）；三开关缺省即现行，显式写出以防缺省漂移。
     "--stop-basis exec --residual-clear lot "
     "--position-cap 0.6 "
+    # 审计批 C（2026-08-24，用户裁定）：T+1 成交日无价该笔跳过（§9.1）、差别化股息税按 FIFO 结算、
+    # 配股按交易所除权参考价折算并全额认购（事件库配股行）。`--fill-missing signal_close`／`--no-rights-events`／
+    # 不给 `--dividend-tax` 为研究／复现口径。
+    "--fill-missing skip --dividend-tax --swap-repeat skip "
     "--addon-trend ma-only --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv"

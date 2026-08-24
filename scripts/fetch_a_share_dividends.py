@@ -113,12 +113,13 @@ def fetch_ex_dividend_events(as_of: str, timeout: float = 15.0) -> dict[str, dic
     return events
 
 
-def adjust_for_ex_dividend(price: float, cash_per_share: float, share_ratio: float) -> float:
-    """除权除息价格换算：`(原价 − 每股现金红利) ÷ (1 + 每股送转比例)`。
+def adjust_for_ex_dividend(price: float, cash_per_share: float, share_ratio: float,
+                           rights_ratio: float = 0.0, rights_price: float = 0.0) -> float:
+    """除权除息价格换算：`(原价 − 每股现金红利 + 每股配股数 × 配股价) ÷ (1 + 每股送转比例 + 每股配股数)`。
 
-    该换算是**价格口径换算**（§11.4 的交易所除权参考价公式），不属于任何规则变更。
+    该换算是**价格口径换算**（§11.4 的交易所除权参考价公式，配股同式），不属于任何规则变更。
     """
-    return (price - cash_per_share) / (1 + share_ratio)
+    return (price - cash_per_share + rights_ratio * rights_price) / (1 + share_ratio + rights_ratio)
 
 
 def summarise(code: str, rows: list[dict]) -> list[dict]:

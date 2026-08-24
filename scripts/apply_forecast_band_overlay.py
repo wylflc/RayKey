@@ -115,13 +115,16 @@ def exright_normalize(band: dict, code_actions: list[dict], as_of: str) -> tuple
             continue
         cash = (num(act.get("cash_per_share")) or 0.0) if ex > cash_since else 0.0
         ratio = (num(act.get("share_ratio")) or 0.0) if ex > split_since else 0.0
-        if cash == 0.0 and ratio == 0.0:
+        # 配股（§11.4）：与送转同窗，按交易所配股除权参考价 (原值 + 每股配股数×配股价) ÷ (1 + 每股配股数)
+        rr = (num(act.get("rights_ratio")) or 0.0) if ex > split_since else 0.0
+        rp = num(act.get("rights_price")) or 0.0
+        if cash == 0.0 and ratio == 0.0 and rr == 0.0:
             continue
-        iv, lo, hi = ((iv - cash) / (1 + ratio), (lo - cash) / (1 + ratio),
-                      (hi - cash) / (1 + ratio))
-        factor *= 1 + ratio
-        cash_cum = (cash_cum + cash) / (1 + ratio)
-        hits.append(f"{ex} 现金{cash:g}/送转{ratio:g}")
+        denom, shift = 1 + ratio + rr, rr * rp - cash
+        iv, lo, hi = ((iv + shift) / denom, (lo + shift) / denom, (hi + shift) / denom)
+        factor *= denom
+        cash_cum = (cash_cum + cash) / denom
+        hits.append(f"{ex} 现金{cash:g}/送转{ratio:g}" + (f"/配股{rr:g}@{rp:g}" if rr else ""))
     if not hits:
         return None
     if iv <= 0:

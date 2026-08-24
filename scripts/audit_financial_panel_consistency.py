@@ -72,7 +72,8 @@ def load_share_factors(path: Path) -> dict[str, list[tuple[str, float, float]]]:
             if not ex:
                 continue
             out[(row.get("security_code") or "").strip()].append(
-                (ex, num(row.get("share_ratio")) or 0.0, num(row.get("cash_per_share")) or 0.0))
+                (ex, (num(row.get("share_ratio")) or 0.0) + (num(row.get("rights_ratio")) or 0.0),
+                 num(row.get("cash_per_share")) or 0.0))
     return out
 
 

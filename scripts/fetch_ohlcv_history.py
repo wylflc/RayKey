@@ -26,8 +26,9 @@
   末位留空即**不复权**。**单次最多返回 640 根**（实测：请求 1000 返回 640，请求 3000 返回空），
   故按日期窗分页回溯，直到某窗返回空即认为到达上市日。
 * 除权除息取东财 `RPT_SHAREBONUS_DET` 的 `EX_DIVIDEND_DATE`／`PRETAX_BONUS_RMB`（每 10 股税前派息）
-  ／`BONUS_RATIO`（每 10 股送股）／`IT_RATIO`（每 10 股转增）。**配股不在该表**——这是已知缺口，
-  受影响的票须人工补，不得当作"没有配股"。
+  ／`BONUS_RATIO`（每 10 股送股）／`IT_RATIO`（每 10 股转增）。**配股不在该表**，改取新浪
+  「分红配股」页的配股表（`sharebonus_2`：每 10 股配股数／配股价／除权日／公告日），只落已有除权日的
+  已实施配股，写入同一事件库的 `rights_ratio`（每股配股数）／`rights_price` 两列；两源按 (代码, 除权日, 类别) 去重。
 * **幸存者偏差未解决**：universe 取自当前的池与持仓，退市与更名股票不在其中（§12.4 已登记）。
   本模块不假装解决它，只把它写在这里。
 
@@ -68,7 +69,8 @@ MAX_BARS_PER_CALL = 640          # 实测上限，见模块 docstring
 OHLCV_FIELDS = ["date", "open", "close", "high", "low", "volume"]
 ACTION_FIELDS = ["security_code", "security_name", "ex_dividend_date",
                  "cash_per_share", "share_ratio", "plan", "report_date",
-                 "plan_notice_date", "progress"]
+                 "plan_notice_date", "progress", "rights_ratio", "rights_price"]
+SINA_RIGHTS_URL = "https://vip.stock.finance.sina.com.cn/corp/go.php/vISSUE_ShareBonus/stockid/{code}.phtml"
 # `plan_notice_date` = 董事会预案公告日（东财 `PLAN_NOTICE_DATE`）——股利折现的分红可得日（`divspread_dividend`）。
 # **预案已公告、尚未除权的分红也落盘**（`ex_dividend_date` 为空、`progress` 记东财进度）：除权侧的
 # 读者一律按「除权日为空即跳过」处理，股利折现侧则从预案公告日起计入。同一代码重取时旧的预案行整体清掉，
@@ -188,10 +190,50 @@ def fetch_actions(code: str, timeout: float) -> list[dict[str, str]]:
     return out
 
 
+def fetch_rights(code: str, timeout: float) -> list[dict[str, str]]:
+    """新浪配股表 → 事件行（只取已有除权日的已实施配股）。每股配股数 = 每 10 股配股数 ÷ 10。"""
+    import html as _html
+    import re as _re
+    request = urllib.request.Request(SINA_RIGHTS_URL.format(code=code.zfill(6)),
+                                     headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        text = response.read().decode("gbk", errors="ignore")
+    marker = 'id="sharebonus_2"'
+    if marker not in text:
+        return []
+    table = text[text.index(marker):]
+    table = table[:table.find("</table>")] if "</table>" in table else table
+    out = []
+    for tr in _re.findall(r"<tr[^>]*>(.*?)</tr>", table, _re.S):
+        cells = [_html.unescape(_re.sub("<[^>]+>", "", c)).strip()
+                 for c in _re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", tr, _re.S)]
+        if len(cells) < 5 or not _re.match(r"\d{4}-\d{2}-\d{2}$", cells[0]):
+            continue
+        notice, per_ten, price, ex = cells[0], cells[1], cells[2], cells[4][:10]
+        try:
+            ratio = float(per_ten) / 10.0
+            rights_price = float(price)
+        except ValueError:
+            continue
+        if ratio <= 0 or not _re.match(r"\d{4}-\d{2}-\d{2}$", ex):
+            continue                              # 未实施／无除权日的配股不是事件
+        out.append({
+            "security_code": code.zfill(6), "security_name": "",
+            "ex_dividend_date": ex, "cash_per_share": "0.000000", "share_ratio": "0.000000",
+            "plan": f"10配{per_ten}股@{price}元（新浪）", "report_date": "",
+            "plan_notice_date": notice, "progress": "配股实施",
+            "rights_ratio": f"{ratio:.6f}", "rights_price": f"{rights_price:.4f}",
+        })
+    return out
+
+
 def action_key(action: dict[str, str]) -> tuple[str, str]:
-    """除权事件按 (代码, 除权日) 去重；预案行无除权日，按 (代码, plan:报告期:预案日) 去重。"""
+    """除权事件按 (代码, 除权日[, rights]) 去重；预案行无除权日，按 (代码, plan:报告期:预案日) 去重。
+    同日既分红又配股时两行并存（读者按列相加）。"""
     ex = action.get("ex_dividend_date") or ""
     if ex:
+        if float(action.get("rights_ratio") or 0) > 0:
+            return (action["security_code"], f"{ex}:rights")
         return (action["security_code"], ex)
     return (action["security_code"], f"plan:{action.get('report_date', '')}:{action.get('plan_notice_date', '')}")
 
@@ -212,6 +254,9 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=20.0)
     parser.add_argument("--pause", type=float, default=0.12)
     parser.add_argument("--actions-only", action="store_true", help="只刷除权事件，不动日线")
+    parser.add_argument("--rights-only", action="store_true",
+                        help="只刷新浪配股事件（不动东财分红、不动日线）；全市场首次补取用")
+    parser.add_argument("--no-rights", action="store_true", help="跳过新浪配股表（只刷东财分红送转）")
     parser.add_argument("--full", action="store_true", help="忽略已有文件，重下全历史")
     parser.add_argument("--since", help="只取该日之后的日线（缺省全历史）。回测只需 2006 起时可大幅提速")
     parser.add_argument("--out-suffix", default="", help="并行分片时避免除权事件文件互相覆盖")
@@ -259,10 +304,10 @@ def main() -> int:
         写盘所以一根没丢。同一次运行里两种写法、两种结局，正是 §13 第 3 条那类「丢了数据
         不报警」的成因——故这里改为每批落盘。
         """
-        refetched = {a["security_code"] for a in actions}
+        refetched = {a["security_code"] for a in actions if float(a.get("rights_ratio") or 0) <= 0}
         merged = {action_key(a): a for a in load_csv(actions_path)
                   if a.get("security_code")
-                  # 本批重取到的代码：旧预案行整体清掉，由本次取到的行接替（已实施→带除权日；作废→消失）
+                  # 本批重取到分红的代码：旧预案行整体清掉，由本次取到的行接替（已实施→带除权日；作废→消失）
                   and not (a["security_code"] in refetched and not (a.get("ex_dividend_date") or ""))}
         merged.update({action_key(a): a for a in actions})
         with actions_path.open("w", newline="", encoding="utf-8") as handle:
@@ -283,18 +328,30 @@ def main() -> int:
                 skipped += 1
             since = date.fromisoformat(last) + timedelta(days=1)
 
-        try:
-            actions = fetch_actions(code, args.timeout)
-            all_actions.extend(actions)
-            time.sleep(args.pause)
-        except Exception as exc:                               # noqa: BLE001
-            failed.append(f"{code} 除权({type(exc).__name__})")
+        if not args.rights_only:
+            try:
+                actions = fetch_actions(code, args.timeout)
+                all_actions.extend(actions)
+                time.sleep(args.pause)
+            except Exception as exc:                           # noqa: BLE001
+                failed.append(f"{code} 除权({type(exc).__name__})")
+        if not args.no_rights:
+            try:
+                rights = fetch_rights(code, args.timeout)
+                for r in rights:
+                    r["security_name"] = name
+                all_actions.extend(rights)
+                time.sleep(args.pause)
+            except Exception as exc:                           # noqa: BLE001
+                failed.append(f"{code} 配股({type(exc).__name__})")
+        if args.rights_only and index % 200 == 0:
+            print(f"  [{index}/{len(targets)}] 配股已取至 {name}({code})，累计事件 {len(all_actions)}", flush=True)
 
         if len(all_actions) >= 200:                            # 每约 10-20 只落一次盘
             flush_actions(all_actions)
             all_actions = []
 
-        if args.actions_only:
+        if args.actions_only or args.rights_only:
             continue
         if existing and since and since > until:
             bar_counts.append(len(existing))
@@ -317,8 +374,10 @@ def main() -> int:
             print(f"  [{index}/{len(targets)}] {name}({code}) 累计 {len(rows)} 根")
 
     total_actions = flush_actions(all_actions)
-    covered = len({a["security_code"] for a in load_csv(ACTIONS_CSV) if a.get("security_code")})
-    print(f"除权除息事件 {total_actions} 行、覆盖 {covered}/{len(targets)} 只 → {ACTIONS_CSV.relative_to(ROOT)}")
+    final_rows = load_csv(ACTIONS_CSV)
+    covered = len({a["security_code"] for a in final_rows if a.get("security_code")})
+    n_rights = sum(1 for a in final_rows if float(a.get("rights_ratio") or 0) > 0)
+    print(f"除权除息事件 {total_actions} 行（含配股 {n_rights} 行）、覆盖 {covered}/{len(targets)} 只 → {ACTIONS_CSV.relative_to(ROOT)}")
 
     # §13 第 3 条硬自检：新增数据源必须核对非空行数与覆盖面。
     if bar_counts:

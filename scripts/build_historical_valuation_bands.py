@@ -684,11 +684,14 @@ def exright_adjust(actions: list[dict], since: str, until: str,
         if floor_since < ex_date <= until:
             cash = (_num(action.get("cash_per_share")) or 0.0) if ex_date > since else 0.0
             ratio = (_num(action.get("share_ratio")) or 0.0) if ex_date > split_since else 0.0
-            if cash == 0.0 and ratio == 0.0:
+            rr = (_num(action.get("rights_ratio")) or 0.0) if ex_date > split_since else 0.0   # 配股：与送转同窗
+            rp = _num(action.get("rights_price")) or 0.0
+            if cash == 0.0 and ratio == 0.0 and rr == 0.0:
                 continue
-            vals = [(v - cash) / (1.0 + ratio) for v in vals]
-            factor *= 1.0 + ratio
-            cash_cum = (cash_cum + cash) / (1.0 + ratio)
+            denom = 1.0 + ratio + rr
+            vals = [(v - cash + rr * rp) / denom for v in vals]
+            factor *= denom
+            cash_cum = (cash_cum + cash) / denom
     return vals, factor, cash_cum
 
 
@@ -704,7 +707,7 @@ def split_factor(actions: list[dict], since: str, until: str) -> float:
     for action in actions:
         ex_date = action.get("ex_dividend_date") or ""
         if since < ex_date <= until:
-            factor *= 1.0 + (_num(action.get("share_ratio")) or 0.0)
+            factor *= 1.0 + (_num(action.get("share_ratio")) or 0.0) + (_num(action.get("rights_ratio")) or 0.0)
     return factor
 
 
@@ -824,7 +827,7 @@ def dividends_total(actions: list[dict], since: str, until: str, shares_end: flo
         if ex > until:
             break
         cash = _num(action.get("cash_per_share")) or 0.0
-        ratio = _num(action.get("share_ratio")) or 0.0
+        ratio = (_num(action.get("share_ratio")) or 0.0) + (_num(action.get("rights_ratio")) or 0.0)
         if since < ex:
             total += cash * shares_end * f
         f *= 1.0 + ratio
@@ -921,7 +924,7 @@ def external_equity_intra(series: dict[str, dict], actions: list[dict], period: 
         cum = 1.0
         for action in actions:
             ex = (action.get("ex_dividend_date") or "")[:10]
-            ratio = _num(action.get("share_ratio")) or 0.0
+            ratio = (_num(action.get("share_ratio")) or 0.0) + (_num(action.get("rights_ratio")) or 0.0)
             if ex > ref_notice and ratio > 0:
                 cum *= 1.0 + ratio
                 candidates.extend((cum, 1.0 / cum))

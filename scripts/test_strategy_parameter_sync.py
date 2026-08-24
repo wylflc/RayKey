@@ -50,6 +50,11 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(option_value(args, "--entry-below-ma60"), "ma60_stop")
         self.assertEqual(option_value(args, "--stop-basis"), "exec")
         self.assertEqual(option_value(args, "--residual-clear"), "lot")
+        # 审计批 C：T+1 无价跳过、股息税、配股事件（不给 --no-rights-events）
+        self.assertEqual(option_value(args, "--fill-missing"), "skip")
+        self.assertIn("--dividend-tax", args)
+        self.assertNotIn("--no-rights-events", args)
+        self.assertEqual(option_value(args, "--swap-repeat"), "skip")
 
     def test_workflow_current_table_matches_production(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")

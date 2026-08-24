@@ -402,13 +402,17 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
     固定输出而非只在命中时打印，是本条的要点：不出声时，「今天查过了、没有」与「今天忘了查」
     在报告上长得一模一样——而 OI-030 登记的正是后者（规则预见了失效形态，却没有人负责触发它）。
 
-    只提示、不写回：§11.4 明文「调整由维护者完成」。**v2.56 后本检出的要害变了**——
+    只提示、不写回：调整由 `apply_holdings_corporate_action.py` 执行并登记台账
+    `holdings_corporate_actions_applied.csv`；本检出按台账区分「已处理／未处理」，并对近 30 日事件库有除权而无登记的
+    持仓提示疑似漏调。**v2.56 后本检出的要害变了**——
     割肉价已退役，漏调影响的是 `P/V`（分子跳、分母不跳），会凭空造出一个买入信号；
     10 送 10 直接让 `P/V` 腰斩。危害由「多喊一次」升级为「多买一笔」。
     建议值一律标为**须人工核对**——差异化分派（判例即九号公司 2026-08-07）的价格口径与
     公告的每股派息不等，机械换算会算错。
     """
     codes = {str(row["security_code"]) for row in rows}
+    from apply_holdings_corporate_action import DEFAULT_LEDGER, ledger_index, load_ledger
+    applied = ledger_index(load_ledger(DEFAULT_LEDGER))
     try:
         events = fetch_ex_dividend_events(as_of.isoformat(), timeout=timeout)
     except Exception as exc:                                   # noqa: BLE001
@@ -416,8 +420,37 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
         return
 
     hits = {code: event for code, event in events.items() if code in codes}
+    # 配股（§11.4）：东财按日接口不含配股，读事件库（新浪配股表，`fetch_ohlcv_history.py --actions-only` 刷新）当日配股行
+    actions_csv = ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv"
+    if actions_csv.exists():
+        with actions_csv.open(newline="", encoding="utf-8-sig") as fh:
+            for a in csv.DictReader(fh):
+                code = str(a.get("security_code") or "").zfill(6)
+                if code not in codes or (a.get("ex_dividend_date") or "")[:10] != as_of.isoformat():
+                    continue
+                rr, rp = to_float(a.get("rights_ratio")) or 0.0, to_float(a.get("rights_price")) or 0.0
+                if rr <= 0:
+                    continue
+                ev = hits.setdefault(code, {"name": a.get("security_name", ""), "plan": "", "cash_per_share": 0.0,
+                                            "share_ratio": 0.0, "progress": ""})
+                ev["rights_ratio"], ev["rights_price"] = rr, rp
+                ev["plan"] = (str(ev.get("plan") or "") + " " + str(a.get("plan") or "")).strip()
+    # 疑似漏调：事件库里近 30 日有除权而台账无登记的持仓（事件库随 §6.7 第 1 步刷新，只覆盖库内代码）
+    if actions_csv.exists():
+        from datetime import timedelta
+        lo = (as_of - timedelta(days=30)).isoformat()
+        missed = []
+        with actions_csv.open(newline="", encoding="utf-8-sig") as fh:
+            for a in csv.DictReader(fh):
+                code = str(a.get("security_code") or "").zfill(6)
+                ex = (a.get("ex_dividend_date") or "")[:10]
+                if code in codes and lo <= ex < as_of.isoformat() and (code, ex) not in applied:
+                    missed.append(f"{a.get('security_name') or code}（{code}）{ex} {a.get('plan', '')}")
+        if missed:
+            print(f"  ⚠ **疑似漏调 {len(missed)} 项**（近 30 日事件库有除权、台账无登记）：{'；'.join(missed)}"
+                  f"——若已手工调过，补跑 apply_holdings_corporate_action.py 登记（--dry-run 看数）；未调过则立即执行")
     if not hits:
-        print(f"  当日持仓除权除息：无（全市场 {len(events)} 家除权，均不在持仓内）")
+        print(f"  当日持仓除权除息：无（全市场 {len(events)} 家除权，均不在持仓内；事件库当日无持仓配股）")
         return
 
     print(f"  **当日持仓除权除息 {len(hits)} 只**（§11.4：须在当日跟踪前调整**估值带**与 `cost_basis`）：")
@@ -425,7 +458,12 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
     for code, event in hits.items():
         row = by_code[code]
         cash, ratio = float(event["cash_per_share"]), float(event["share_ratio"])  # type: ignore[arg-type]
-        print(f"    - {row['security_name']}（{code}）{event['plan']}")
+        rr, rp = float(event.get("rights_ratio") or 0.0), float(event.get("rights_price") or 0.0)  # type: ignore[arg-type]
+        done = (code, as_of.isoformat()) in applied
+        print(f"    - {row['security_name']}（{code}）{event['plan']}"
+              + ("｜**已处理**（台账已登记，持仓表为除权后口径，勿再调）" if done else "｜**未处理**"))
+        if done:
+            continue
         # `entry_stop_price` 与前三项一起调（§11.4）。**漏调它的后果比漏调带更立即**：
         # 送转后价格按因子下跳而止损价不动，次日必然「跌破」，直接触发一次错误的整仓清仓。
         for label, field in (("成本价", "cost_basis"), ("带下沿", "fair_price_low"),
@@ -434,17 +472,18 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
             if value is None:
                 print(f"        {label}：未设定，无需调整")
                 continue
-            print(f"        {label} {value:g} → **建议 {adjust_for_ex_dividend(value, cash, ratio):.2f}**"
-                  f"（(原价 − {cash:g}) ÷ (1 + {ratio:g})）")
+            print(f"        {label} {value:g} → **建议 {adjust_for_ex_dividend(value, cash, ratio, rr, rp):.2f}**"
+                  f"（(原价 − {cash:g}" + (f" + {rr:g}×{rp:g}" if rr else "") + f") ÷ (1 + {ratio + rr:g})）")
         if ratio:
             print(f"        送转比例 {ratio:g}/股：`current_shares` 同须按 §11.4 调整")
+        if rr:
+            print(f"        配股 {rr:g}/股 @ {rp:g}：认购后 `current_shares` × (1 + {rr:g})、认购款 = 股数 × {rr:g} × {rp:g}；"
+                  f"不认购则股数不变、价格口径量仍按上式折算")
         print("        注：`entry_stop_price` 的调整**须持久化**——它是历史时点价格，"
               "没有任何重建会重新算它（带的除权归一化由建带链机械维护，见 §11.4）")
-        print("        ⚠ 建议值须人工核对后写回，两条都要核："
-              "①**本检出不知道你调过没有**——清单里没有记录调整状态的字段，若本日已按 §11.4 调过，"
-              "忽略本行，再调一次就是重复除权；"
-              "②差异化分派的价格口径与公告每股派息不等（判例：九号公司 2026-08-07 公告 10派12.3852，"
-              "价格口径每份 1.22）")
+        print(f"        → 执行：python3 scripts/apply_holdings_corporate_action.py --as-of {as_of.isoformat()} --code {code}"
+              "（写回持仓表并登记台账；同一事件二次执行会被拒绝）。差异化分派的价格口径与公告每股派息不等"
+              "（判例：九号公司 2026-08-07 公告 10派12.3852，价格口径每份 1.22）时显式给 --cash/--ratio")
 
 
 def parse_args() -> argparse.Namespace:

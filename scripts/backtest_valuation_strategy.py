@@ -360,9 +360,10 @@ def _load_ohlcv_column(column: str, codes: set[str] | None) -> dict[str, dict[st
     return out
 
 
-def load_actions() -> dict[str, dict[str, tuple[float, float]]]:
-    """{代码: {除权日: (每股现金红利, 送转比)}}。同日多条相加/连乘。"""
-    out: dict[str, dict[str, tuple[float, float]]] = defaultdict(dict)
+def load_actions(include_rights: bool = True) -> dict[str, dict[str, tuple[float, float, float, float]]]:
+    """{代码: {除权日: (每股现金红利, 送转比, 每股配股数, 配股价)}}。同日多条：现金相加、送转连乘、配股相加。
+    `include_rights=False` 为研究/复现口径：忽略事件库的配股行（`rights_ratio` 列）。"""
+    out: dict[str, dict[str, tuple[float, float, float, float]]] = defaultdict(dict)
     if not ACTIONS.exists():
         return out
     with ACTIONS.open(newline="", encoding="utf-8") as handle:
@@ -372,8 +373,13 @@ def load_actions() -> dict[str, dict[str, tuple[float, float]]]:
                 continue
             cash = _num(row.get("cash_per_share")) or 0.0
             ratio = _num(row.get("share_ratio")) or 0.0
-            old_cash, old_ratio = out[row["security_code"]].get(day, (0.0, 0.0))
-            out[row["security_code"]][day] = (old_cash + cash, (1 + old_ratio) * (1 + ratio) - 1)
+            rr = (_num(row.get("rights_ratio")) or 0.0) if include_rights else 0.0
+            rp = (_num(row.get("rights_price")) or 0.0) if include_rights else 0.0
+            if cash == 0.0 and ratio == 0.0 and rr == 0.0:
+                continue
+            old_cash, old_ratio, old_rr, old_rp = out[row["security_code"]].get(day, (0.0, 0.0, 0.0, 0.0))
+            out[row["security_code"]][day] = (old_cash + cash, (1 + old_ratio) * (1 + ratio) - 1,
+                                              old_rr + rr, rp if rr > 0 else old_rp)
     return out
 
 
@@ -489,9 +495,10 @@ def daily_returns(prices: dict[str, dict[str, float]],
         ret = {}
         for prev, cur in zip(days, days[1:]):
             base = series[prev]
-            cash, ratio = actions.get(code, {}).get(cur, (0.0, 0.0))
+            cash, ratio, rr, rp = actions.get(code, {}).get(cur, (0.0, 0.0, 0.0, 0.0))
             if base > 0:
-                ret[cur] = (series[cur] * (1 + ratio) + cash) / base - 1
+                # 配股按全额认购：持有 1 股变 (1+k+rr) 股、付 rr×配股价
+                ret[cur] = (series[cur] * (1 + ratio + rr) + cash - rr * rp) / base - 1
         out[code] = ret
     return out
 
@@ -627,7 +634,8 @@ def moving_averages(series: dict[str, float], windows=(5, 10, 20, 60, 120, 240))
 def exright_affine(days: list[str], events: dict[str, tuple[float, float]]) -> tuple[list[float], list[float]]:
     """每个交易日「当日口径 → 末日口径」的仿射映射 `q = A·p + B`（除权折算的累积形式）。
 
-    除权日 `e` 的事件 `(D, r)` 把 `e` 之前任一日的价格折到 `e` 当日口径：`p → (p − D)/(1 + r)`
+    除权日 `e` 的事件 `(D, r, rr, rp)` 把 `e` 之前任一日的价格折到 `e` 当日口径：`p → (p − D + rr·rp)/(1 + r + rr)`
+    （配股按交易所除权参考价：每股配 `rr` 股、配股价 `rp`）
     （§11.4 交易所除权参考价公式，与 `apply_corporate_actions` 对持仓锚的折算同式）。自末日向前
     累乘即可得到每一日到末日的复合映射；同一映射反过来用，就能把末日口径的均值折回任意一日的口径。
     """
@@ -637,9 +645,9 @@ def exright_affine(days: list[str], events: dict[str, tuple[float, float]]) -> t
     for i in range(n - 1, -1, -1):
         scale[i], shift[i] = a, b
         event = events.get(days[i])
-        if event:                               # 第 i 日除权：i 之前的日子多一层 (p − D)/(1 + r)
-            cash, ratio = event
-            a, b = a / (1.0 + ratio), b - a * cash / (1.0 + ratio)
+        if event:                               # 第 i 日除权：i 之前的日子多一层 (p − D + rr·配股价)/(1 + r + rr)
+            cash, ratio, rr, rp = event
+            a, b = a / (1.0 + ratio + rr), b + a * (rr * rp - cash) / (1.0 + ratio + rr)
     return scale, shift
 
 
@@ -706,6 +714,8 @@ class Lot:
     lock_eta: float = 0.0       # 设定当前锁定线的 η（流水标签用）
     avg_cost: float = 0.0       # 持仓均价：买入按股数加权、减持不变、除权日与锚同式折算（`--addon-max-gain`／`--gain-sell` 用）
     peak_intrinsic: float = 0.0 # 持有期内内在价值的峰值——**基本面退出**按它的回撤触发
+    sublots: list = field(default_factory=list)   # 股息税用：[买入日, 股数, 该批已收现金红利] 按买入先后排列（FIFO）
+    tax_paid: float = 0.0       # 本周期已缴差别化股息税
     exit_date: str = ""
     exit_reason: str = ""
 
@@ -717,6 +727,8 @@ class Portfolio:
     closed: list[Lot] = field(default_factory=list)
     debt: float = 0.0                 # 融资余额（含已计提利息）
     interest_paid: float = 0.0        # 累计利息
+    dividend_tax_paid: float = 0.0    # 累计差别化股息税（`--dividend-tax`）
+    rights_paid: float = 0.0          # 累计配股认购款
 
     def gross(self, prices: dict[str, float]) -> float:
         """总资产 = 现金 + 持仓市值。担保比例的分子。"""
@@ -804,44 +816,103 @@ def force_liquidate(portfolio: Portfolio, day: str, marks: dict[str, float],
 
 
 def apply_corporate_actions(portfolio: Portfolio, day: str,
-                            actions: dict[str, dict[str, tuple[float, float]]],
+                            actions: dict[str, dict[str, tuple[float, float, float, float]]],
                             adjust_stops: bool = True) -> float:
-    """除权日调股数、派息入现金。**不做这步整个回测就是错的**（穿越 10 转 10 会凭空亏一半）。
+    """除权日调股数、派息入现金、配股全额认购。**不做这步整个回测就是错的**（穿越 10 转 10 会凭空亏一半）。
 
-    `adjust_stops`（OI-054，缺省开）：建仓日止损锚 `entry_stop` 与持有期峰价 `peak_price` 按 §11.4
-    同式折算 `(原值 − D) ÷ (1 + 送转比)`——§9.3.5 对实盘早已如此规定（「除权除息按 §11.4 同因子
-    调整锚」），回测侧此前漏做：10 送 10 当天原始价腰斩而锚不动，整仓被当成「跌破止损」清空。
-    `frozen`（`--exright-stop frozen`）只用于复现 v4.31 前的读数。
+    事件 `(D, k, rr, rp)`：每股现金 D、每股送转 k、每股配股 rr、配股价 rp。价格口径量（锚、均价、峰价、锁定线）
+    按交易所除权参考价同式折算 `(原值 − D + rr·rp) ÷ (1 + k + rr)`；股数 `× (1 + k + rr)`（配股全额认购），
+    认购款 `股数 × rr × rp` 先用现金、不足部分计入融资负债。
+    `adjust_stops`（OI-054，缺省开）：建仓日止损锚 `entry_stop` 与持有期峰价 `peak_price` 同式折算——§9.3.5 对实盘早已如此规定
+    （「除权除息按 §11.4 同因子调整锚」）。`frozen`（`--exright-stop frozen`）只用于复现 v4.31 前的读数。
+    股息税（`--dividend-tax`）：现金红利按批记入 `sublots`，卖出时按持有期结算（`sell_dividend_tax`）。
     """
     credited = 0.0
     for code, lot in portfolio.lots.items():
         event = actions.get(code, {}).get(day)
         if not event:
             continue
-        cash_per_share, ratio = event
+        cash_per_share, ratio, rr, rp = event
         cash = lot.shares * cash_per_share
         portfolio.cash += cash
         lot.dividends += cash
         lot.proceeds += cash
         credited += cash
-        lot.shares *= (1 + ratio)
-        if lot.trail_peak > 0:          # 上移锚峰值按 §11.4 同式折算：(原值 − D) ÷ (1 + 送转比)
-            lot.trail_peak = max(0.0, (lot.trail_peak - cash_per_share) / (1 + ratio))
+        denom = 1.0 + ratio + rr
+        shift = rr * rp - cash_per_share          # 价格口径的分子平移：−D + rr·rp
+        for sub in lot.sublots:                   # 每批先记红利、再按送转放大股数
+            sub[2] += sub[1] * cash_per_share
+            sub[1] *= (1 + ratio)
+        if rr > 0:
+            new_shares = lot.shares * rr
+            cost = new_shares * rp
+            pay = min(portfolio.cash, cost)
+            portfolio.cash -= pay
+            portfolio.debt += cost - pay          # 认购款不足部分按融资计（§10.2 超额部分由卖出款先还）
+            portfolio.rights_paid += cost
+            lot.invested += cost
+            lot.sublots.append([day, new_shares, 0.0])
+        lot.shares *= denom
+        if lot.trail_peak > 0:          # 上移锚峰值按 §11.4 同式折算
+            lot.trail_peak = max(0.0, (lot.trail_peak + shift) / denom)
         if lot.lock_level > 0:          # 盈利锁定线与锚同式折算；现金红利高于线价的极端情形只折送转
-            adjusted_lock = (lot.lock_level - cash_per_share) / (1 + ratio)
-            lot.lock_level = adjusted_lock if adjusted_lock > 0 else lot.lock_level / (1 + ratio)
+            adjusted_lock = (lot.lock_level + shift) / denom
+            lot.lock_level = adjusted_lock if adjusted_lock > 0 else lot.lock_level / denom
         if lot.avg_cost > 0:           # 持仓均价与锚同式折算；现金红利高于均价的极端情形只折送转
-            adjusted_cost = (lot.avg_cost - cash_per_share) / (1 + ratio)
-            lot.avg_cost = adjusted_cost if adjusted_cost > 0 else lot.avg_cost / (1 + ratio)
+            adjusted_cost = (lot.avg_cost + shift) / denom
+            lot.avg_cost = adjusted_cost if adjusted_cost > 0 else lot.avg_cost / denom
         if adjust_stops:
             if lot.entry_stop > 0:
-                adjusted = (lot.entry_stop - cash_per_share) / (1 + ratio)
+                adjusted = (lot.entry_stop + shift) / denom
                 # 锚为 0 表示「无止损」（falsy 短路），折算不得把一条活着的止损线静默折没——
                 # 现金红利高于锚价本身的极端情形只折送转、不扣现金
-                lot.entry_stop = adjusted if adjusted > 0 else lot.entry_stop / (1 + ratio)
+                lot.entry_stop = adjusted if adjusted > 0 else lot.entry_stop / denom
             if lot.peak_price > 0:
-                lot.peak_price = max(0.0, (lot.peak_price - cash_per_share) / (1 + ratio))
+                lot.peak_price = max(0.0, (lot.peak_price + shift) / denom)
     return credited
+
+
+DIVIDEND_TAX_ON = False           # 由 run(dividend_tax=...) 设定；模块级以便 close_lot 等无参数通道读取
+
+
+def _add_months(day: date, months: int) -> date:
+    year, month = day.year + (day.month - 1 + months) // 12, (day.month - 1 + months) % 12 + 1
+    last = calendar.monthrange(year, month)[1]
+    return date(year, month, min(day.day, last))
+
+
+def dividend_tax_rate(buy_day: str, sell_day: str) -> float:
+    """差别化股息税率（财税〔2015〕101 号）：持股 ≤1 个月 20%、1 个月～1 年 10%、>1 年免。"""
+    b, sday = date.fromisoformat(buy_day), date.fromisoformat(sell_day)
+    if sday <= _add_months(b, 1):
+        return 0.20
+    if sday <= _add_months(b, 12):
+        return 0.10
+    return 0.0
+
+
+def sell_dividend_tax(portfolio: Portfolio, lot: Lot, shares: float, day: str) -> float:
+    """卖出 `shares` 股时按 FIFO 结算这些股份持有期内已收现金红利的股息税，返回税额（已计入 `portfolio.dividend_tax_paid`）。
+    只对现金红利计税；送股面值部分不计（事件库不分送股与转增）。开关关时恒 0。"""
+    if not DIVIDEND_TAX_ON or not lot.sublots or shares <= 0:
+        return 0.0
+    remaining, tax = shares, 0.0
+    while remaining > 1e-9 and lot.sublots:
+        buy_day, sub_shares, div_cash = lot.sublots[0]
+        if sub_shares <= 0:
+            lot.sublots.pop(0)
+            continue
+        take = min(sub_shares, remaining)
+        frac = take / sub_shares
+        tax += dividend_tax_rate(buy_day, day) * div_cash * frac
+        if take >= sub_shares - 1e-9:
+            lot.sublots.pop(0)
+        else:
+            lot.sublots[0] = [buy_day, sub_shares - take, div_cash * (1.0 - frac)]
+        remaining -= take
+    lot.tax_paid += tax
+    portfolio.dividend_tax_paid += tax
+    return tax
 
 
 def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int,
@@ -947,6 +1018,7 @@ def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: s
                        "amount": f"{lot.shares * price:.0f}", "pv_ratio": "",
                        "intrinsic_value": "", "reason": reason})
     portfolio.cash += lot.shares * price - trade_fee(lot.shares * price, day, "sell")
+    portfolio.cash -= sell_dividend_tax(portfolio, lot, lot.shares, day)
     lot.proceeds += lot.shares * price
     lot.shares = 0.0
     lot.exit_date, lot.exit_reason = day, reason
@@ -1005,6 +1077,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         tier_buy_scale: dict[str, float] | None = None,
         tier_sell_scale: dict[str, float] | None = None,
         exright_stop: str = "adjust", addon_max_gain: float = 0.0,
+        fill_missing: str = "skip", dividend_tax: bool = False, swap_repeat: str = "skip",
         gain_sell: float = 0.0, gain_sell_mode: str = "gated",
         swap_trigger: str = "power", credit_over_limit: str = "repay",
         candidate_log=None) -> dict:
@@ -1024,6 +1097,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     实测现行规则下这条链路虽然存在（64 次减持里 10 次由 V 下修触发），但**太慢**
     ——徐工机械那一笔从建仓到被判贵走了 9 年半。
     """
+    global DIVIDEND_TAX_ON
+    DIVIDEND_TAX_ON = dividend_tax
     portfolio = Portfolio(cash=capital)
     fees0 = FEES["paid"]        # 本次 run 的费用 = 结束时累计 − 起始累计
     stats = stats if stats is not None else collections.Counter()
@@ -1229,14 +1304,18 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # T 日收盘上；止损判据按 `--stop-basis`（现行 exec：成交日收盘对成交日均线）、建仓跳过
         # 按 `--entry-below-ma60`（现行 skip：T 日收盘对成交日 MA60）各有自己的时点口径
         # （OI-092 A/B，§12.126）；盯市净值用当日收盘（停牌沿用末价）。
-        # T+1 无价（停牌/最后一日）时回落到 T 日收盘并计数，不静默丢弃该笔。
+        # T+1 无价（停牌/最后一日）：`fill_missing=skip`（现行，§9.1「执行日停牌则跳过」）该笔不成交、计数；
+        # `signal_close`（研究/复现口径）回落 T 日收盘成交。
         def fill_price(code: str, fallback: float | None) -> float | None:
             if exec_delay == 0:
-                return fallback                      # 现行口径：成交价即 T 日收盘
+                return fallback                      # 成交价即 T 日收盘
             src = (opens or {}) if exec_price == "open" else prices
             got = src.get(code, {}).get(day)
             if got and got > 0:
                 return got
+            if fill_missing == "skip":
+                stats["成交日无价·跳过"] += 1
+                return None
             stats["成交日无价·回落信号日收盘"] += 1
             return fallback
 
@@ -1351,6 +1430,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     else:
                         log_partial_sell(ledger, day, code, shares, price, "移出股票库·减一档")
                         lot.shares -= shares
+                        portfolio.cash -= sell_dividend_tax(portfolio, lot, shares, day)
                         portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                         lot.proceeds += shares * price
                         lot.sells += 1
@@ -1470,6 +1550,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                             log_partial_sell(ledger, day, code, shares, price,
                                              f"{trigger_reason}{stop_tag}·减一档")
                             lot.shares -= shares
+                            portfolio.cash -= sell_dividend_tax(portfolio, lot, shares, day)
                             portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                             lot.proceeds += shares * price
                             lot.sells += 1
@@ -1562,6 +1643,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 else:
                     log_partial_sell(ledger, day, code, shares, price, f"{sell_tag}·减一档")
                     lot.shares -= shares
+                    portfolio.cash -= sell_dividend_tax(portfolio, lot, shares, day)
                     portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                     lot.proceeds += shares * price
                     lot.sells += 1
@@ -1739,6 +1821,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     if shares < lot_w.shares * 0.999:
                         stats["簇内升级·减一档"] += 1
                         lot_w.shares -= shares
+                        portfolio.cash -= sell_dividend_tax(portfolio, lot_w, shares, day)
                         portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                         lot_w.proceeds += shares * price
                         lot_w.sells += 1
@@ -1797,9 +1880,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # 换仓是终结长期赢家的唯一路径，而「更便宜的候选出现」与「这只该卖」是两件事。
                 # 加上这个条件后，涨势中的持仓不会仅仅因为排名靠后就被换掉。
                 # **判据用信号日的收盘与均线**，与买入端、减持闸门同源。
+                # `swap_repeat`：`skip`（现行，§9.3.1「卖一档、买一档」）＝当日已被换仓减过一档的持仓不再作卖出源；
+                # `whole`（研究／复现口径）＝旧行为——同日再次被选中时 `partial` 判 False、整仓卖出（v4.80 前 2015-05 起点 84 次）。
                 held = [((pcts[c] if gate == "self-pct" else
                           (scores.get(c, today[c][2]) if rank_mode != "pv" else today[c][2])), c)
                         for c in portfolio.lots if c in today
+                        and (swap_repeat == "whole" or c not in reduced_today)
                         and (gate != "self-pct" or c in pcts)
                         and (not swap_require_weak
                              or ((_m := mas.get(c, {}).get(sig_day, {})).get(swap_weak_ma) is not None
@@ -1858,6 +1944,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if partial and shares < lot_worst.shares * 0.999:
                     stats["换仓·减一档"] += 1
                     lot_worst.shares -= shares
+                    portfolio.cash -= sell_dividend_tax(portfolio, lot_worst, shares, day)
                     portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                     lot_worst.proceeds += shares * price
                     lot_worst.sells += 1
@@ -1954,6 +2041,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if shares < lot_h.shares * 0.999:
                     stats[f"相关性冲突·{corr_conflict}·减一档"] += 1
                     lot_h.shares -= shares
+                    portfolio.cash -= sell_dividend_tax(portfolio, lot_h, shares, day)
                     portfolio.cash += shares * price_h - trade_fee(shares * price_h, day, "sell")
                     lot_h.proceeds += shares * price_h
                     lot_h.sells += 1
@@ -2008,7 +2096,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 走势组默认一笔建仓（总资产 ÷ 持仓上限）且不加仓；`trend_tranche` 打开后改为
             # **与估值组同一套定投**——只要当日仍满足「P/V 合格 且 收盘>MA20>MA60」就继续买入
             # 总资产 × x%。用户 2026-08-09：「走势满足要求的情况下分批进行建仓」。
-            fill = fill_price(code, close) or close
+            fill = fill_price(code, close)
+            if not fill:
+                continue                      # 成交日无价（停牌／末日）：该笔跳过，资金顺位下一名
             tranche = trend_tranche and strategy == "trend"
             if ((strategy == "trend" and not tranche) or lump_sum) and code in portfolio.lots:
                 continue                      # 一笔建仓：不加仓
@@ -2106,6 +2196,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             lot.avg_cost = ((lot.avg_cost * lot.shares + amount) / (lot.shares + shares)
                             if lot.shares + shares > 0 else 0.0)   # 持仓均价：买入加权、减持不变
             lot.shares += shares
+            lot.sublots.append([day, shares, 0.0])
             lot.invested += amount
             lot.buys += 1
             if code in quota_today:
@@ -2163,6 +2254,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             "buys": buy_count, "sells": sell_count, "turnover": turnover,
             "margin_events": margin_events, "min_margin_ratio": min_ratio,
             "min_margin_day": min_ratio_day, "interest_paid": portfolio.interest_paid,
+            "dividend_tax_paid": portfolio.dividend_tax_paid, "rights_paid": portfolio.rights_paid,
             "final_debt": portfolio.debt}
 
 
@@ -2685,6 +2777,17 @@ def main() -> int:
     parser.add_argument("--ma-basis", choices=("adjusted", "raw"), default="adjusted",
                         help="均线与创新低判据的价格口径（OI-054）：adjusted=前复权、折回当日口径（缺省，与实盘"
                              "扫描器同基）；raw=不复权直接平均（v4.31 前旧口径，除权后 20/60 个交易日内均线错位）")
+    parser.add_argument("--fill-missing", choices=("skip", "signal_close"), default="skip",
+                        help="T+1 成交日无价（停牌／末日）：skip＝该笔跳过（§9.1 执行日停牌跳过，缺省）；"
+                             "signal_close＝回落 T 日收盘成交（研究／复现口径）")
+    parser.add_argument("--dividend-tax", action="store_true",
+                        help="差别化股息税：卖出时按 FIFO 对所卖股份持有期内已收现金红利计税（≤1 个月 20%%、≤1 年 10%%、>1 年免）")
+    parser.add_argument("--swap-repeat", choices=("skip", "whole"), default="skip",
+                        help="换仓卖出源同日重复选中：skip＝每持仓每日至多换出一档（缺省，§9.3.1）；whole＝旧行为整仓卖出（复现口径）")
+    parser.add_argument("--no-dividend-tax", action="store_false", dest="dividend_tax",
+                        help="研究／复现口径：关闭股息税（与 --dividend-tax 后者为准）")
+    parser.add_argument("--no-rights-events", action="store_true",
+                        help="研究／复现口径：忽略事件库的配股行（现行为按交易所配股除权参考价折算并全额认购）")
     parser.add_argument("--exright-stop", choices=("adjust", "frozen"), default="adjust",
                         help="除权日对建仓止损锚与持有期峰价的处理（OI-054）：adjust=按 §11.4 同式折算（缺省，"
                              "§9.3.5 实盘规则）；frozen=不动（v4.31 前旧口径，送转日会把整仓当跌破清空）")
@@ -2779,7 +2882,7 @@ def main() -> int:
     prices = load_prices({r[0] for rows in states.values() for r in rows})
     opens = (load_opens({r[0] for rows in states.values() for r in rows})
              if args.exec_delay and args.exec_price == "open" else None)
-    actions = load_actions()
+    actions = load_actions(include_rights=not args.no_rights_events)
     DELISTED_LAST.update(load_delisted())
     names, benchmark, risk_free = load_names(), load_benchmark(), load_risk_free()
     mkt_series = None
@@ -2850,6 +2953,10 @@ def main() -> int:
             label = (f"{strategy}_x{x:g}_w{width:g}"
                      + (f"_tol{trend_tol:g}" if trend_tol else "")
                      + (f"_x{args.exec_delay}{args.exec_price[0]}" if args.exec_delay else "")
+                     + ("_fmsc" if args.fill_missing == "signal_close" else "")
+                     + ("_dtax" if args.dividend_tax else "")
+                     + ("_norights" if args.no_rights_events else "")
+                     + ("_swpw" if args.swap_repeat == "whole" else "")
                      + (f"_sma{'-'.join(map(str, args.sell_trend_ma))}" if args.sell_trend_ma else "")
                      + (f"_liq{args.liquidate_ma}d{args.liquidate_days}" if args.liquidate_ma else "")
                      + ("_mos" if args.use_mos else "")
@@ -2958,6 +3065,7 @@ def main() -> int:
                          stop_confirm_days=args.stop_confirm_days,
                          stop_deep_pct=args.stop_deep_pct, stop_line=args.stop_line,
                          entry_below_ma60=args.entry_below_ma60, exright_stop=args.exright_stop,
+                         fill_missing=args.fill_missing, dividend_tax=args.dividend_tax, swap_repeat=args.swap_repeat,
                          stop_basis=args.stop_basis, residual_clear=args.residual_clear,
                          stop_partial=args.stop_partial, stop_tranche=args.stop_tranche,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
