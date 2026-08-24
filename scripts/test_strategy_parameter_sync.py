@@ -46,7 +46,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(daily_scan.SEC93_POSITION_CAP, 0.60)
         self.assertEqual(float(option_value(args, "--position-cap")), daily_scan.SEC93_POSITION_CAP)
         # v4.68（OI-092，§12.126）：三处时点/阈值口径显式入 BASE，防缺省漂移
-        self.assertEqual(option_value(args, "--entry-below-ma60"), "ma20_stop")
+        self.assertEqual(option_value(args, "--entry-below-ma60"), "ma60_stop")
         self.assertEqual(option_value(args, "--stop-basis"), "exec")
         self.assertEqual(option_value(args, "--residual-clear"), "lot")
 

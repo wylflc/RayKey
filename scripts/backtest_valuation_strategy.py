@@ -844,20 +844,25 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
     return credited
 
 
-def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int) -> tuple[float, int]:
+def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int,
+                     force_ma60: bool = False) -> tuple[float, int]:
     """建仓日的止损价，返回 (价格, 实际采用的均线周期)。
 
     用户 2026-08-08 规则：**优先用 MA60；但若建仓时股价已在 MA60 下方，则退回 MA20。**
     理由是买在 MA60 之下时，拿 MA60 当止损等于**建仓即触发**——止损价高于成本价，
     这条止损不是保护而是立刻把仓位打掉。退回 MA20 才可能落在成本价下方。
 
-    v4.69 起生产口径即本分支（`--entry-below-ma60 ma20_stop`，照买、退档 MA20）；
-    放弃式 `skip`/`skip_fill` 为研究口径（§12.126：`skip` 与本分支噪声级、`skip_fill` 主读数 −0.76）。
+    v4.70 起生产口径为 `--entry-below-ma60 ma60_stop`：锚恒取成交日 MA60、不比较建仓时价格位置，
+    MA60 缺失才退 MA20；`ma20_stop`（按 T 日收盘位置退档）与放弃式 `skip`/`skip_fill` 为研究口径
+    （§12.126：前三者两两噪声级、`skip_fill` 主读数 −0.76）。
     """
     if stop_ma == 20:
         return ma.get(20, 0.0), 20
     ma60 = ma.get(60, 0.0)
-    if ma60 and close >= ma60:
+    # `force_ma60`（`--entry-below-ma60 ma60_stop`）：可得 MA60 即锚定 MA60，不比较建仓时
+    # 价格位置——锚高于成本的仓位次日未站回线上即清。MA60 缺失（停牌回落/不足 60 根）仍退
+    # MA20：锚为 0 会被止损分支 falsy 短路成「无止损」，不能拿数据缺角造出永不止损的仓。
+    if ma60 and (force_ma60 or close >= ma60):
         return ma60, 60
     return ma.get(20, 0.0), 20
 
@@ -2095,7 +2100,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                           entry_band_low=(1 - width) * value, entry_band_high=(1 + width) * value,
                           entry_upside=value / fill - 1, peak_intrinsic=value)
                 lot.entry_stop, lot.entry_stop_ma = entry_stop_price(
-                    ma, fill if entry_below_ma60 == "skip_fill" else close, stop_ma)
+                    ma, fill if entry_below_ma60 == "skip_fill" else close, stop_ma,
+                    force_ma60=(entry_below_ma60 == "ma60_stop"))
                 portfolio.lots[code] = lot
             lot.avg_cost = ((lot.avg_cost * lot.shares + amount) / (lot.shares + shares)
                             if lot.shares + shares > 0 else 0.0)   # 持仓均价：买入加权、减持不变
@@ -2662,10 +2668,12 @@ def main() -> int:
     parser.add_argument("--stop-line", choices=("entry", "min_entry_current"), default="entry",
                         help="止损线口径：entry=建仓日冻结线（旧）；min_entry_current=min(建仓日线, "
                              "当日同周期均线)——均线下移时止损跟随下移、上移不抬线（用户 2026-08-19 实验）")
-    parser.add_argument("--entry-below-ma60", choices=("ma20_stop", "skip", "skip_fill"),
+    parser.add_argument("--entry-below-ma60", choices=("ma20_stop", "ma60_stop", "skip", "skip_fill"),
                         default="ma20_stop",
-                        help="新建仓信号日过闸后跳空破 MA60 的处理：ma20_stop=照买、锚退 MA20"
-                             "（现行，v4.69）；skip=T 日收盘对成交日 MA60 放弃（研究口径，与现行噪声级）；"
+                        help="新建仓信号日过闸后跳空破 MA60 的处理：ma60_stop=照买、锚恒取成交日 MA60"
+                             "（现行，v4.70；MA60 缺失仍退 MA20 兜底）；ma20_stop=照买、T 日收盘低于成交日"
+                             " MA60 时锚退 MA20（研究口径，与现行噪声级）；"
+                             "skip=T 日收盘对成交日 MA60 放弃（研究口径，与现行噪声级）；"
                              "skip_fill=成交日收盘对成交日 MA60 放弃（OI-092① 研究口径，§12.126 不采纳）")
     parser.add_argument("--stop-basis", choices=("exec", "signal"), default="exec",
                         help="止损判据时点（OI-092②）：exec=成交日收盘对成交日均线、同日判同日卖"
@@ -2872,6 +2880,7 @@ def main() -> int:
                      + ("_colk" if args.credit_over_limit == "keep" else "")
                      + ("_skipma60" if args.entry_below_ma60 == "skip" else "")
                      + ("_skipfill" if args.entry_below_ma60 == "skip_fill" else "")
+                     + ("_ma60stop" if args.entry_below_ma60 == "ma60_stop" else "")
                      + ("_stopsig" if args.stop_basis == "signal" else "")
                      + ("_rct" if args.residual_clear == "tranche" else "")
                      + ("_rawma" if args.ma_basis == "raw" else "")
