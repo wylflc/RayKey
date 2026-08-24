@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.72
+# A股选股-估值-量价操作流程 v4.73
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -512,6 +512,8 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 
 除上表判定所需量外不再计算或展示其他量价指标。
 
+日线取数只有一份实现（`screen_daily_volume_price_signals.fetch_daily_rows`：东财主源、腾讯备源、北交所走腾讯）；§11.3 持仓跟踪的收盘与 MA60 同用它取数。
+
 ### 8.4 故障与缺口
 
 `--since auto` 自动检出上次扫描日，报告缺口区间的交易日数、区间涨跌与最大放量倍数。扫描为零行或行情失败达到一半时非零退出，当日结果不可用；低于一半按停牌或个别数据缺失逐行标注。
@@ -674,7 +676,7 @@ security_code, security_name, current_shares, cost_basis, entry_stop_price
 python3 scripts/track_holdings_daily.py --as-of YYYY-MM-DD
 ```
 
-逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示现档、合理价、空间、`P/V`、止损价与是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。
+逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示现档、合理价、空间、`P/V`、止损价与是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘与生效止损线的 MA60 走 §8.3 的同一份取数实现；补跑历史日期时生产带只用 `available_at ≤ as-of` 的行。
 
 ### 11.4 除权除息
 

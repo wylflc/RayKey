@@ -47,7 +47,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from a_share_quotes import fetch_spot_quotes
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
 from build_a_share_core_valuation_pool import DEEP_UNDERVALUED_UPSIDE, OVERVALUED_BAND_MULT
-from screen_daily_volume_price_signals import SEC93_GAIN_SELL, SEC93_SELL_LINE, get_json, infer_secid
+from screen_daily_volume_price_signals import SEC93_GAIN_SELL, SEC93_SELL_LINE, fetch_daily_rows
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
 
@@ -61,7 +61,10 @@ DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 # v4.04 参数表改 2.5548 时没跟上（本文件漂移到 2026-08-19 才被发现，v4.20 修）。
 # 注意：§9.3.1 的减持是 `P/V ≥ 线 **且收盘 < MA20**`，本脚本不算均线，只报前半个条件。
 SELL_LINE = SEC93_SELL_LINE
-MODEL_BANDS = load_model_bands()   # v4.62 OI-091：P/V 的净负债/企业价值来自生产带行
+# v4.62 OI-091：P/V 的净负债/企业价值来自生产带行。OI-095 起不在 import 时读带，
+# 由 track() 按 `--as-of` 载入（available_at ≤ as-of）——历史日期补跑不得用当日之后才可得的带。
+# 测试可预置桩（非 None 即不再载入）。
+MODEL_BANDS: dict[str, dict] | None = None
 # §9.3.1 涨幅减持（v4.44）：收盘较持仓均价（`cost_basis`，按 §11.4 折算）涨幅 ≥ 125% 且收盘 < MA20 → 减一档；
 # 资金不足时优先作换仓卖出源。与 P/V 减持同型：本脚本只报前半个条件（涨幅），MA20 见扫描器输出。
 GAIN_SELL = SEC93_GAIN_SELL
@@ -143,90 +146,38 @@ MA60_BASIS: dict[str, str] = {}     # 代码 → "qfq"（前复权，§8.3 口�
 def fetch_raw_close(code: str, as_of: date, timeout: float) -> tuple[float | None, float | None]:
     """`as_of` 当日**不复权**收盘与当日 MA60，返回 `(收盘, MA60)`。
 
-    收盘：当日无K线（未收盘/停牌/接口失败）为 None。MA60（§9.3.1 v4.25 生效止损线
-    要用的当日均线）：截至 `as_of` 的最近 60 根**前复权**收盘均值（§8.3 口径，v4.32，OI-080）
-    ——前复权序列锚在最新一根，末根即当日不复权收盘，故均值与当日价、与已按 §11.4 折算过的锚
-    同尺度；此前按不复权收盘平均，除息后 60 个交易日内均线项偏高约一个股息率。不足 60 根
-    （新上市）为 None；前复权序列取不到时退回不复权均值并记 `MA60_BASIS[code] = "raw"`（报告注明）。
-    主源腾讯 newfqkline（`day` 不复权给收盘、`qfqday` 前复权给均线）——东财 kline 端点对本机
-    批量访问会整段断连（2026-08-19 实测连扫描器同参查询也 RemoteDisconnected），故腾讯为主；
-    腾讯前复权序列可能滞后一个交易日，按扫描器同法用不复权末根补齐。
+    取数走扫描器 `fetch_daily_rows` **同一实现**（OI-095：东财主源、腾讯备源、北交所自动改道腾讯，
+    与 §9.3.1 入场闸门的 MA60 同源同基；两侧各自取数时两家前复权序列有差，同日入场闸门与
+    止损生效线会不同基）。收盘：不复权序列 `as_of` 当根，当日无K线（未收盘/停牌/接口失败）为 None。
+    MA60（§9.3.1 生效止损线要用的当日均线）：截至 `as_of` 的最近 60 根**前复权**收盘均值
+    （§8.3 口径）——前复权序列锚在最新一根，末根即当日不复权收盘，故均值与当日价、与已按 §11.4
+    折算过的锚同尺度。不足 60 根（新上市）为 None；前复权序列取不到时退回不复权均值并记
+    `MA60_BASIS[code] = "raw"`（报告注明）。
     """
-    import urllib.parse
-    from datetime import timedelta
-    from a_share_quotes import quote_symbol
-    symbol = quote_symbol(code, "")
-    # 60 个交易日 ≈ 90 个自然日，节假日富余取 130 天窗口
-    start = (as_of - timedelta(days=130)).isoformat()
     as_of_text = as_of.isoformat()
 
-    def closes_of(rows: list[list[str]]) -> list[tuple[str, float]]:
-        return [(str(p[0]), float(p[2])) for p in rows if str(p[0]) <= as_of_text]
+    def series(fq: str) -> list[tuple[str, float]]:
+        try:
+            _, rows = fetch_daily_rows(code, "", as_of_text, timeout, fq=fq)
+        except (OSError, ValueError, KeyError, IndexError):
+            return []
+        return [(str(r["date"]), float(r["close"])) for r in rows if str(r["date"]) <= as_of_text]
 
     def ma60_of(closes: list[tuple[str, float]]) -> float | None:
         return (sum(v for _d, v in closes[-60:]) / 60) if len(closes) >= 60 else None
 
-    def tencent(fq: str) -> list[list[str]]:
-        import json as _json
-        import urllib.request
-        url = (f"https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
-               f"?param={symbol},day,{start},{as_of_text},90,{fq}")
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0",
-                                                   "Referer": "https://gu.qq.com/"})
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            payload = _json.loads(resp.read().decode("utf-8", "ignore"))
-        data = (payload.get("data") or {}).get(symbol) or {}
-        return data.get("qfqday" if fq else "day") or []
-
-    def finish(raw_closes: list[tuple[str, float]], adj_closes: list[tuple[str, float]] | None):
-        close = next((v for d, v in raw_closes if d == as_of_text), None)
-        if adj_closes:
-            # 前复权末根滞后时，用不复权后续各根补齐（前复权锚在最新一根，补上的末根与其同尺度）
-            last_adj = adj_closes[-1][0]
-            adj_closes = adj_closes + [(d, v) for d, v in raw_closes if d > last_adj]
-            ma60 = ma60_of(adj_closes)
-            MA60_BASIS[code] = "qfq"
-        else:
-            ma60 = ma60_of(raw_closes)
-            MA60_BASIS[code] = "raw"
-        return close, ma60
-
-    try:
-        raw_rows = tencent("")
-        if raw_rows:
-            try:
-                adj_rows = tencent("qfq")
-            except OSError:
-                adj_rows = []
-            close, ma60 = finish(closes_of(raw_rows), closes_of(adj_rows) or None)
-            if close is not None:
-                return close, ma60
-    except OSError:
-        pass
-    # 备源：东财日线（fqt=0 不复权给收盘，fqt=1 前复权给均线）
-    def eastmoney(fqt: str) -> list[list[str]]:
-        query = urllib.parse.urlencode({
-            "secid": infer_secid(code, ""),
-            "fields1": "f1,f2,f3,f4,f5,f6",
-            "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
-            "klt": "101", "fqt": fqt,
-            "beg": start.replace("-", ""),
-            "end": as_of_text.replace("-", ""), "lmt": "90",
-        })
-        payload = get_json(f"https://push2his.eastmoney.com/api/qt/stock/kline/get?{query}", timeout)
-        return [line.split(",") for line in (payload.get("data") or {}).get("klines") or []]
-
-    try:
-        raw_rows = eastmoney("0")
-    except OSError:
-        return None, None
-    if not raw_rows:
-        return None, None
-    try:
-        adj_rows = eastmoney("1")
-    except OSError:
-        adj_rows = []
-    return finish(closes_of(raw_rows), closes_of(adj_rows) or None)
+    raw_closes = series("")
+    close = next((v for d, v in raw_closes if d == as_of_text), None)
+    adj_closes = series("qfq")
+    if adj_closes:
+        ma60 = ma60_of(adj_closes)
+        MA60_BASIS[code] = "qfq"
+    elif raw_closes:
+        ma60 = ma60_of(raw_closes)
+        MA60_BASIS[code] = "raw"
+    else:
+        ma60 = None
+    return close, ma60
 
 
 def resolve_prices(codes: list[str], as_of: date,
@@ -267,6 +218,9 @@ def resolve_prices(codes: list[str], as_of: date,
 
 
 def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeout: float) -> list[dict[str, object]]:
+    global MODEL_BANDS
+    if MODEL_BANDS is None:
+        MODEL_BANDS = load_model_bands(as_of=as_of.isoformat())
     with holdings_file.open(newline="", encoding="utf-8") as handle:
         holdings = list(csv.DictReader(handle))
     wanted = {s.strip().zfill(6) for s in symbols.split(",") if s.strip()}

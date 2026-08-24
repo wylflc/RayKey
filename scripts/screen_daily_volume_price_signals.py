@@ -59,6 +59,9 @@ def write_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str]) 
 
 
 def infer_secid(code: str, exchange: str) -> str:
+    """东财 push2 secid：沪市 `1.`，深市与北交所 `0.`（与 `fetch_a_share_valuation_evidence.secid` 同口径）。
+    东财历史K线端点不服务北交所——日线一律经 `fetch_daily_rows` 取，北交所在那里改道腾讯，
+    不得拿本函数的返回值直连东财K线端点查北交所代码。"""
     code = code.zfill(6)
     exchange = (exchange or "").upper()
     if exchange == "SSE" or code.startswith(("60", "68", "69")):
@@ -72,14 +75,17 @@ def get_json(url: str, timeout: float) -> dict:
         return json.loads(response.read().decode("utf-8", "ignore"))
 
 
-def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float) -> tuple[str, list[dict[str, float | str]]]:
+def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float, fq: str = "qfq") -> tuple[str, list[dict[str, float | str]]]:
+    """A 股日线**唯一取数实现**（OI-095：扫描器与 `track_holdings_daily` 同用本函数，两侧 MA60 同源同基）。
+    东财主源、腾讯备源，北交所直接走腾讯。`fq="qfq"`（缺省）前复权（§8.3 均线/走势口径）；
+    `fq=""` 不复权（跟踪器取当日收盘用）。"""
     query = urllib.parse.urlencode(
         {
             "secid": infer_secid(code, exchange),
             "fields1": "f1,f2,f3,f4,f5,f6",
             "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
             "klt": "101",
-            "fqt": "1",
+            "fqt": "1" if fq else "0",
             "beg": "20200101",
             "end": as_of.replace("-", ""),
             "lmt": "1000",
@@ -87,15 +93,15 @@ def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float) -> tu
     )
     # 北交所（92/43/83/87 前缀）：东财K线无数据，直接走腾讯 newfqkline。
     if quote_symbol(code, exchange).startswith("bj"):
-        return fetch_daily_rows_tencent(code, exchange, as_of, timeout)
+        return fetch_daily_rows_tencent(code, exchange, as_of, timeout, fq)
     url = f"{EASTMONEY_KLINE}?{query}"
     try:
         payload = get_json(url, timeout)
     except OSError:
-        return fetch_daily_rows_tencent(code, exchange, as_of, timeout)
+        return fetch_daily_rows_tencent(code, exchange, as_of, timeout, fq)
     klines = (payload.get("data") or {}).get("klines") or []
     if not klines:
-        return fetch_daily_rows_tencent(code, exchange, as_of, timeout)
+        return fetch_daily_rows_tencent(code, exchange, as_of, timeout, fq)
     rows: list[dict[str, float | str]] = []
     for line in klines:
         parts = line.split(",")
@@ -114,12 +120,12 @@ def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float) -> tu
     return url, rows
 
 
-def fetch_daily_rows_tencent(code: str, exchange: str, as_of: str, timeout: float) -> tuple[str, list[dict[str, float | str]]]:
-    """后备源：腾讯前复权日线（北交所主源，走 newfqkline）。成交量单位为手（口径内部一致）；
-    成交额接口未提供，以收盘价×成交量×100近似，只影响流动性门槛的估计。"""
+def fetch_daily_rows_tencent(code: str, exchange: str, as_of: str, timeout: float, fq: str = "qfq") -> tuple[str, list[dict[str, float | str]]]:
+    """后备源：腾讯日线（北交所主源，走 newfqkline）。`fq` 语义同 `fetch_daily_rows`（"" = 不复权）。
+    成交量单位为手（口径内部一致）；成交额接口未提供，以收盘价×成交量×100近似，只影响流动性门槛的估计。"""
     symbol = quote_symbol(code, exchange)
     base = TENCENT_KLINE
-    param = f"{symbol},day,2020-01-01,{as_of},1000,qfq"
+    param = f"{symbol},day,2020-01-01,{as_of},1000,{fq}"
     url = f"{base}?param={param}"
     request = urllib.request.Request(
         url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"}
@@ -127,10 +133,10 @@ def fetch_daily_rows_tencent(code: str, exchange: str, as_of: str, timeout: floa
     with urllib.request.urlopen(request, timeout=timeout) as response:
         payload = json.loads(response.read().decode("utf-8", "ignore"))
     data = (payload.get("data") or {}).get(symbol) or {}
-    klines = [list(parts) for parts in (data.get("qfqday") or data.get("day") or [])]
-    # 腾讯前复权序列可能滞后一个交易日：用不复权序列补齐最新K线。
+    klines = [list(parts) for parts in ((data.get("qfqday") or data.get("day")) if fq else data.get("day")) or []]
+    # 腾讯前复权序列可能滞后一个交易日：用不复权序列补齐最新K线（不复权序列自身无此滞后）。
     # 成交量单位沪深口径不一（股/手），按重叠日成交量比例归一后再拼接。
-    if klines and str(klines[-1][0]) < as_of:
+    if fq and klines and str(klines[-1][0]) < as_of:
         raw_url = f"{base}?param={symbol},day,{klines[-1][0]},{as_of},10,"
         raw_req = urllib.request.Request(
             raw_url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"}

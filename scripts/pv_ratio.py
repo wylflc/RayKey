@@ -33,18 +33,28 @@ def trading_pv(price: float | None, band: dict, basis: str = "equity") -> float 
     return price / iv
 
 
-def load_model_bands(path=None) -> dict[str, dict]:
-    """{代码: 生产带行}（`data/processed/a_share_pool_model_bands_adopted.csv`）；读不到返回空 dict。"""
+def load_model_bands(path=None, as_of: str = "") -> dict[str, dict]:
+    """{代码: 生产带行}（`data/processed/a_share_pool_model_bands_adopted.csv`）；读不到返回空 dict。
+
+    `as_of`（YYYY-MM-DD）非空时只取 `available_at ≤ as_of` 的行、逐票留最新一条（OI-095）：
+    历史日期重放不得用当日之后才可得的带。"""
     import csv
     from pathlib import Path as _P
     target = _P(path) if path else _P(__file__).resolve().parents[1] / "data/processed/a_share_pool_model_bands_adopted.csv"
     out: dict[str, dict] = {}
+    best_avail: dict[str, str] = {}
     try:
         with target.open(encoding="utf-8-sig", newline="") as handle:
             for row in csv.DictReader(handle):
                 code = (row.get("security_code") or "").strip().zfill(6)
-                if code and (row.get("status") or "ok") in ("", "ok"):
+                if not code or (row.get("status") or "ok") not in ("", "ok"):
+                    continue
+                avail = (row.get("band_available_at") or row.get("available_at") or "").strip()
+                if as_of and not (len(avail) == 10 and avail <= as_of):
+                    continue
+                if code not in out or avail >= best_avail[code]:
                     out[code] = row
+                    best_avail[code] = avail
     except OSError:
         return {}
     return out

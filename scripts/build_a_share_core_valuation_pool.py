@@ -35,7 +35,9 @@ from overseas_quotes import fetch_overseas_quotes
 from validate_valuation_bands import check_row as check_band_card
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
 from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
-MODEL_BANDS = load_model_bands()
+# OI-095：不在 import 时读生产带；main() 按 `--as-of` 载入（available_at ≤ as-of），
+# 历史日期补跑不得用当日之后才可得的带。
+MODEL_BANDS: dict[str, dict] = {}
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -844,7 +846,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    global MODEL_BANDS
     args = parse_args()
+    MODEL_BANDS = load_model_bands(as_of=args.as_of)
     rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of, args.valuation)
     overseas_rows = load_overseas(args.overseas)
     # §6.8 复核触发① 的落地校验（OI-039）：财报已披露而带还建在披露前的证据上，当天就喊出来。
