@@ -707,7 +707,7 @@ def split_factor(actions: list[dict], since: str, until: str) -> float:
     for action in actions:
         ex_date = action.get("ex_dividend_date") or ""
         if since < ex_date <= until:
-            factor *= 1.0 + (_num(action.get("share_ratio")) or 0.0) + (_num(action.get("rights_ratio")) or 0.0)
+            factor *= 1.0 + (_num(action.get("share_ratio")) or 0.0)      # 只计送转；配股属外生权益（§6.5.1 每股锚），不入送转因子
     return factor
 
 
@@ -924,7 +924,7 @@ def external_equity_intra(series: dict[str, dict], actions: list[dict], period: 
         cum = 1.0
         for action in actions:
             ex = (action.get("ex_dividend_date") or "")[:10]
-            ratio = (_num(action.get("share_ratio")) or 0.0) + (_num(action.get("rights_ratio")) or 0.0)
+            ratio = _num(action.get("share_ratio")) or 0.0            # EPS 重述只按送转；配股不重述 EPS
             if ex > ref_notice and ratio > 0:
                 cum *= 1.0 + ratio
                 candidates.extend((cum, 1.0 / cum))
