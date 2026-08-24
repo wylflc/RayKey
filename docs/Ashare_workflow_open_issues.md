@@ -53,7 +53,7 @@
 | 编号 | 主题 | 处置 | 结案 | 详见 |
 | --- | --- | --- | --- | --- |
 | OI-097 | 银行/保险股利折现的 rf 序列无刷新入口 | `fetch_cost_of_equity_inputs.py` 并入 §6.7 第 1 步；序列刷新至 08-24（rf 1.6794%），§6.7 第 3-6 步重跑传导银行/保险 V | v4.74（08-24） | — |
-| OI-096 | 决策日志 `daily_signal_state` 噪声行 | 扫描日志只记结论行（`data_error`/`insufficient_price_history`/§7.5 冻结），正常行不再逐股写 ok；`--since auto` 改读 `daily_buy_candidates.csv` 的 `trade_date`；历史行按 §2 只追加原则保留 | v4.74（08-24） | — |
+| OI-096 | 决策日志 `daily_signal_state` 噪声行 | 扫描日志只记结论行（`data_error`/`insufficient_price_history`/§7.5 冻结），正常行不再逐股写 ok；`--since auto` 改读 `daily_buy_candidates.csv` 的 `trade_date`；历史 `daily_signal_state` 行已按用户指令整类清除（19,146 行，全文见 `git show d8e2ffdc:`） | v4.74（08-24） | — |
 | OI-095 | 扫描器与跟踪器各自实现前复权K线与 MA60，同日可能不同基 | 跟踪器收盘/MA60 改经扫描器 `fetch_daily_rows` 同一实现（新增 `fq` 不复权参数；北交所自动走腾讯，BJ 发东财备源的路径消失）；`infer_secid` 成文北交所口径；跟踪器/池物化生产带改运行时按 as-of 载入（`available_at ≤ as-of`） | v4.73（08-24） | — |
 | OI-094 | §5/§7 队列读 2026-05 财务指标快照 | 两队列改读 `data/raw/financials/` 逐季面板（`quarterly_panel_indicators.py` 现算指标、含 as-of 时点过滤）；负债/研发两判据随 §5.6 改写移除；名单与面板刷新至 08-24、两队列重建；快照删除 | v4.72（08-24） | — |
 | OI-093 | 扫描器相关性用陈旧行情库、缺数据按 0 放行 | 改用扫描当日已取前复权K线（两侧同源、按交易日对齐、窗口末端即信号日）；重叠不足 120 根返回未知、放行并列名单（与回测 `Correlations` 同语义） | v4.71（08-24） | — |
