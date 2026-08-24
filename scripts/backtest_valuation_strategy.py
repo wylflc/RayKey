@@ -1080,6 +1080,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         fill_missing: str = "skip", dividend_tax: bool = False, swap_repeat: str = "skip",
         gain_sell: float = 0.0, gain_sell_mode: str = "gated",
         swap_trigger: str = "power", credit_over_limit: str = "repay",
+        swap_held_trigger: bool = False,
         candidate_log=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
@@ -1861,7 +1862,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             stats["超额授信·当日无新增买入"] += 1
         if swap and eligible:
             for code, close, value, ratio in eligible[:max_positions]:
-                if code in portfolio.lots:
+                # `swap_held_trigger`（OI-101 研究开关）：已持仓候选想加仓而资金不足时同样触发换仓，
+                # 边际对实际接收资金的候选比；缺省沿用「只由未持仓候选触发」。
+                if code in portfolio.lots and not swap_held_trigger:
                     continue
                 # `swap_trigger`（OI-081，用户 2026-08-22 裁定）：`power`（缺省）＝按 §10.2 可用资金
                 # （现金＋剩余授信）不足一档才换仓——授信还有余量时先融资买；`cash`＝v4.39 前旧口径，
@@ -1884,7 +1887,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # `whole`（研究／复现口径）＝旧行为——同日再次被选中时 `partial` 判 False、整仓卖出（v4.80 前 2015-05 起点 84 次）。
                 held = [((pcts[c] if gate == "self-pct" else
                           (scores.get(c, today[c][2]) if rank_mode != "pv" else today[c][2])), c)
-                        for c in portfolio.lots if c in today
+                        for c in portfolio.lots if c in today and c != code
                         and (swap_repeat == "whole" or c not in reduced_today)
                         and (gate != "self-pct" or c in pcts)
                         and (not swap_require_weak
@@ -1903,7 +1906,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 gain_src = []
                 if gain_sell:
                     for c, l in portfolio.lots.items():
-                        if (c not in today or l.avg_cost <= 0 or c in quota_hold_today
+                        if (c not in today or c == code or l.avg_cost <= 0 or c in quota_hold_today
                                 or c in reduced_today or today[c][0] < l.avg_cost * (1.0 + gain_sell)):
                             continue
                         if gain_sell_mode == "gated" and swap_require_weak:
@@ -2751,6 +2754,8 @@ def main() -> int:
                         help="研究开关（用户 2026-08-22）：信号日收盘 ≥ 持仓均价×(1+G) 即触发减一档并可作换仓卖出源；0=关。例 1.0")
     parser.add_argument("--gain-sell-mode", choices=("gated", "ungated"), default="gated",
                         help="gated=涨幅减持／换仓同样过走势闸门（收<MA20 / 弱势）；ungated=不过闸门")
+    parser.add_argument("--swap-held-trigger", action="store_true",
+                        help="OI-101 研究开关：已持仓候选想加仓而资金不足时也触发换仓（缺省只由未持仓候选触发）")
     parser.add_argument("--swap-trigger", choices=("cash", "power"), default="power",
                         help="换仓触发口径（OI-081）：power=现金＋剩余授信不足一档才换（§10.2 可用资金，缺省）；"
                              "cash=只看现金（v4.39 前旧口径，复现旧读数用）")
@@ -3014,6 +3019,7 @@ def main() -> int:
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
                      + (f"_only{args.only_tiers}" if args.only_tiers else "")
                      + ("_sp" if args.swap_partial else "")
+                     + ("_sht" if args.swap_held_trigger else "")
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
                      + (f"_ml{args.min_lot_cooldown}" if args.min_lot_cooldown else "")
                      + ("_lrc" if args.lot_ratio_cooldown else "")
@@ -3105,7 +3111,7 @@ def main() -> int:
                          tier_sell_scale=parse_tier_scale(args.tier_sell_scale),
                          addon_max_gain=args.addon_max_gain, gain_sell=args.gain_sell,
                          gain_sell_mode=args.gain_sell_mode, swap_trigger=args.swap_trigger,
-                         credit_over_limit=args.credit_over_limit,
+                         credit_over_limit=args.credit_over_limit, swap_held_trigger=args.swap_held_trigger,
                          candidate_log=cand_writer)
             if cand_handle is not None:
                 cand_handle.close()
