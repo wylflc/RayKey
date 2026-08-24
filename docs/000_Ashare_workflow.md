@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.75
+# A股选股-估值-量价操作流程 v4.76
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -337,7 +337,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 ```bash
 # 1. 刷新财务输入与除权事件（逐季财务、三大报表、除权事件、rf/ERP 序列四份缺一不可）
 python3 scripts/fetch_a_share_quarterly_financials.py --as-of YYYY-MM-DD --since <当前报告期末>
-python3 scripts/fetch_a_share_financial_statements.py
+python3 scripts/fetch_a_share_financial_statements.py --as-of YYYY-MM-DD   # 最新年报期早于 as-of 上一年 12-31 的代码整只重取
 python3 scripts/fetch_ohlcv_history.py --as-of YYYY-MM-DD --actions-only   # 缺省范围＝核心池∪持仓；档案层全员或全市场加 --codes-file
 python3 scripts/fetch_cost_of_equity_inputs.py   # rf/ERP 序列：银行/保险股利折现（第 3 步、扫描器 --rf 缺省、档案层）与 §6.8 的 r 读它的最新行
 

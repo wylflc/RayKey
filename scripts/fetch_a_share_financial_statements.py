@@ -33,9 +33,19 @@
 **静默漏掉银行的关键列**；而本表只覆盖回测宇宙与分层表数百只、年报数千行，落全列也只有个位数 MB。
 `_YOY` 列是纯派生（同比率），一律丢弃。
 
+增量规则（OI-098）
+------------------
+`--as-of` 是证据日（北京历日，缺省取北京当日）。**应到年报期** = `as-of` 上一年的 12-31。
+名单里的代码分三类处理：①文件里没有的→取；②文件里有、但最新 `REPORT_DATE` 早于应到年报期
+→ **整只重取并替换**（东财一次返回全部年报期，替换即超集）；③已到应到期→跳过。
+2026-08-24 前只有 ①，「代码已在文件里」就整只跳过——年报披露后按 §6.7 命令跑，已有的
+333 只永远停在首次抓取时的最新年报，三表估值输入静默过期（与逐季脚本的披露窗强制重取同一缺陷类）。
+重取失败（网络或四套表全空）时保留该代码原有行，不丢数据；重取后仍未到应到期的（尚未披露）
+逐次运行都会再试，直到披露。`--refresh` 仍是全量重取（追溯重述等场景）。
+
 用法::
 
-    python3 scripts/fetch_a_share_financial_statements.py            # 缺省：回测宇宙 v6b ∪ 分层表全体
+    python3 scripts/fetch_a_share_financial_statements.py --as-of 2026-08-24   # 缺省名单：回测宇宙 v6b ∪ 分层表全体
     python3 scripts/fetch_a_share_financial_statements.py --panel data/processed/pit_attention/panel_moat_bank_v6b.csv
     python3 scripts/fetch_a_share_financial_statements.py --codes 600519 601166 --refresh
 """
@@ -48,8 +58,9 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "data/raw/financials_statements"
@@ -78,8 +89,10 @@ REQUIRED = {
 
 
 def secucode(code: str) -> str:
-    """六位代码 → 东财 `SECUCODE`。面板实测只有沪深两市。"""
+    """六位代码 → 东财 `SECUCODE`。北交所 `920xxx`（及 43/83/87/88 段）用 `.BJ`，`9` 开头的沪市只有 B 股 `900xxx`。"""
     code = code.zfill(6)
+    if code.startswith("92"):
+        return f"{code}.BJ"
     if code[0] in "69":
         return f"{code}.SH"
     if code[0] in "03":
@@ -106,6 +119,36 @@ def fetch(report_name: str, code: str, timeout: float) -> tuple[list[dict], str 
     return (result.get("data") or []), None
 
 
+def beijing_today() -> date:
+    """证据日缺省：北京历日（本机时区不是北京，不能用 `date.today()`）。"""
+    return datetime.now(ZoneInfo("Asia/Shanghai")).date()
+
+
+def expected_annual_period(as_of: date) -> str:
+    """`as-of` 时点应到的最新年报期末 = 上一年 12-31（年报披露窗自次年 1-1 起开）。"""
+    return f"{as_of.year - 1:04d}-12-31"
+
+
+def plan_codes(existing_rows: list[dict], codes: list[str],
+               expected_period: str) -> tuple[list[str], list[str]]:
+    """把名单分成「文件里没有的」与「有但最新年报期早于应到期的」两组，各按名单顺序。"""
+    latest = latest_period_by_code(existing_rows)
+    missing = [c for c in codes if c not in latest]
+    stale = [c for c in codes if c in latest and latest[c] < expected_period]
+    return missing, stale
+
+
+def latest_period_by_code(rows: list[dict]) -> dict[str, str]:
+    """代码 → 该代码在行集里的最新 `REPORT_DATE`（无日期的行记空串，代码仍计入）。"""
+    out: dict[str, str] = {}
+    for row in rows:
+        code = (row.get("security_code") or "").zfill(6)
+        period = (row.get("REPORT_DATE") or "")[:10]
+        if period >= out.get(code, ""):
+            out[code] = period
+    return out
+
+
 def normalise(rows: list[dict], code: str, table: str) -> list[dict]:
     """丢 `_YOY` 派生列、统一日期到 10 位、补审计与来源字段。"""
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -130,10 +173,14 @@ def main() -> int:
                         help="取这些名单文件里 security_code 的并集，缺省＝回测宇宙 ∪ 分层表")
     parser.add_argument("--codes", nargs="*", help="只取这些代码，缺省取面板全体")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
-    parser.add_argument("--refresh", action="store_true", help="重取已有文件")
+    parser.add_argument("--as-of", type=date.fromisoformat, default=None,
+                        help="证据日 YYYY-MM-DD（北京历日，缺省取北京当日）；应到年报期 = 上一年 12-31")
+    parser.add_argument("--refresh", action="store_true", help="全量重取（含已到应到年报期的代码）")
     parser.add_argument("--timeout", type=float, default=45.0)
     parser.add_argument("--pause", type=float, default=0.25)
     args = parser.parse_args()
+    as_of = args.as_of or beijing_today()
+    expected = expected_annual_period(as_of)
 
     if args.codes:
         codes = sorted({c.zfill(6) for c in args.codes})
@@ -144,7 +191,7 @@ def main() -> int:
                 codes |= {r["security_code"].zfill(6) for r in csv.DictReader(handle)}
         codes = sorted(codes)
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    print(f"三大报表取数：{len(codes)} 只 × {len(STATEMENTS)} 张表｜"
+    print(f"三大报表取数：{len(codes)} 只 × {len(STATEMENTS)} 张表｜as-of {as_of}（应到年报期 {expected}）｜"
           f"落点 {args.out_dir if args.out_dir.is_absolute() and ROOT not in args.out_dir.parents else args.out_dir.relative_to(ROOT)}/")
 
     failures: list[str] = []
@@ -152,17 +199,19 @@ def main() -> int:
     for kind, candidates in STATEMENTS.items():
         path = args.out_dir / f"{kind}.csv"
         existing_rows: list[dict] = []
-        todo = codes
+        todo = list(codes)
+        stale: list[str] = []
         if path.exists() and not args.refresh:
             with path.open(encoding="utf-8-sig", newline="") as handle:
                 existing_rows = list(csv.DictReader(handle))
-            have = {r.get("security_code", "") for r in existing_rows}
-            todo = [c for c in codes if c not in have]
+            missing, stale = plan_codes(existing_rows, codes, expected)
+            todo = missing + stale
             if not todo:
-                print(f"  {kind}: 名单 {len(codes)} 只已全部在库，跳过（--refresh 全量重取）")
+                print(f"  {kind}: 名单 {len(codes)} 只已全部在库且年报期到 {expected}，跳过（--refresh 全量重取）")
                 continue
-            print(f"  {kind}: 已有 {len(have)} 只，增量补取 {len(todo)} 只")
-        all_rows: list[dict] = list(existing_rows)
+            have = len(latest_period_by_code(existing_rows))
+            print(f"  {kind}: 已有 {have} 只，新增补取 {len(missing)} 只、年报期落后 {expected} 重取 {len(stale)} 只")
+        fetched: dict[str, list[dict]] = {}          # 取到行的代码 → 全部年报期（替换其旧行）
         for index, code in enumerate(todo, start=1):
             rows: list[dict] = []
             for table in candidates:
@@ -175,12 +224,25 @@ def main() -> int:
                     tables_used[f"{kind}:{table}"] = tables_used.get(f"{kind}:{table}", 0) + 1
                     break
                 time.sleep(args.pause)
-            if not rows:
-                failures.append(f"{code}/{kind}：**四套表全空**")
-            all_rows.extend(rows)
+            if rows:
+                fetched[code] = rows
+            else:
+                failures.append(f"{code}/{kind}：**四套表全空**" + ("，保留原有行" if code in stale else ""))
             if index % 25 == 0:
-                print(f"    {kind} {index}/{len(todo)}｜累计 {len(all_rows):,} 行")
+                print(f"    {kind} {index}/{len(todo)}｜取到 {sum(len(v) for v in fetched.values()):,} 行")
             time.sleep(args.pause)
+
+        # 合并：重取成功的代码整只替换（超集），失败的保留原有行；新代码追加。
+        all_rows: list[dict] = [r for r in existing_rows
+                                if (r.get("security_code") or "").zfill(6) not in fetched]
+        for code in todo:
+            all_rows.extend(fetched.get(code, []))
+        if stale:
+            after = latest_period_by_code(all_rows)
+            behind = [c for c in stale if after.get(c, "") < expected]
+            print(f"    年报期落后重取 {len(stale)} 只：补到 {expected} 的 {len(stale) - len(behind)} 只"
+                  + (f"，仍未到（尚未披露或取数失败）{len(behind)} 只：{' '.join(behind[:12])}"
+                     + ("…" if len(behind) > 12 else "") if behind else ""))
 
         if not all_rows:
             failures.append(f"{kind}：**0 行**，不落盘")

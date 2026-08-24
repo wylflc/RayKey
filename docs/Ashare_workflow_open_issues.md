@@ -48,6 +48,7 @@
 
 | 编号 | 主题 | 处置 | 结案 | 详见 |
 | --- | --- | --- | --- | --- |
+| OI-098 | 三大报表增量取数不认新增年报期（§6.7 第 1 步命令不带 `--refresh`，代码已在文件即整只跳过，年报披露后已在库代码永不更新） | `fetch_a_share_financial_statements.py` 加 `--as-of`，应到年报期 = 上一年 12-31，最新年报期落后的代码整只重取替换、失败保留原行、仍未披露者逐次再试；`secucode` 北交所 `920xxx` 改 `.BJ`（此前发 `.SH` 四套表全空，民士达/锦波生物无三表）；§6.7 第 1 步命令加 `--as-of`；`test_statement_refresh.py` 无网络锁定替换/跳过/保留三路径 | v4.76（08-24） | — |
 | OI-024 | §5.7 六列中 q1/q3/q4_reason 待回填 | 全池初稿回填（q1_reason 与 q2_moat_type 208/208 补齐，q3_reason 100/208、q4_reason 42/208——行内字段无对应内容者留空）；全部由该行已在库字段归纳、不引入新证据、不改档位与分数；余格与逐票确认随 §5.1 季度复核；填充率自检在 `build_quality_tiers_md.py` 每轮打印 | v4.75（08-24） | — |
 | OI-097 | 银行/保险股利折现的 rf 序列无刷新入口 | `fetch_cost_of_equity_inputs.py` 并入 §6.7 第 1 步；序列刷新至 08-24（rf 1.6794%），§6.7 第 3-6 步重跑传导银行/保险 V | v4.74（08-24） | — |
 | OI-096 | 决策日志 `daily_signal_state` 噪声行 | 扫描日志只记结论行（`data_error`/`insufficient_price_history`/§7.5 冻结），正常行不再逐股写 ok；`--since auto` 改读 `daily_buy_candidates.csv` 的 `trade_date`；历史 `daily_signal_state` 行已按用户指令整类清除（19,146 行，全文见 `git show d8e2ffdc:`） | v4.74（08-24） | — |
