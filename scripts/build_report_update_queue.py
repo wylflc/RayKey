@@ -69,12 +69,19 @@ def is_valuation_scope_tier(tier: str) -> bool:
     return tier.startswith(("L1", "L2", "L3"))
 
 
-def load_latest_forecasts(rows: list[dict[str, str]]) -> dict[str, dict[str, str]]:
-    """§7.3（v1.16）：每代码取最新公告日的预告行（仅 is_latest=T）。
+def _visible(row: dict[str, str], as_of: str) -> bool:
+    """公告日晚于 `as_of` 的行在该时点不可见——晚间披露官方戳次日，须以戳日为 `--as-of` 重建才可入队。
+    公告日缺失的行按不可见处理（无法证明其在时点前已披露）。"""
+    notice = (row.get("notice_date") or "").strip()[:10]
+    return bool(notice) and notice <= as_of
+
+
+def load_latest_forecasts(rows: list[dict[str, str]], as_of: str) -> dict[str, dict[str, str]]:
+    """§7.3（v1.16）：每代码取 `as_of` 时点前公告日最新的预告行（仅 is_latest=T）。
     指标口径（归母/扣非/营收）在此无关——入队只看公告日是否晚于估值时间。"""
     best: dict[str, dict[str, str]] = {}
     for row in rows:
-        if row.get("is_latest") != "T":
+        if row.get("is_latest") != "T" or not _visible(row, as_of):
             continue
         code = row.get("security_code", "").zfill(6)
         current = best.get(code)
@@ -83,14 +90,14 @@ def load_latest_forecasts(rows: list[dict[str, str]]) -> dict[str, dict[str, str
     return best
 
 
-def load_latest_disclosures(rows: list[dict[str, str]]) -> dict[str, dict[str, dict[str, str]]]:
-    """§7.3（v1.18）：每代码分别取 正式定期报告 与 业绩快报 的最新公告行。
-    正式报告优先 is_new=1；同类型多行取公告日最大者。"""
+def load_latest_disclosures(rows: list[dict[str, str]], as_of: str) -> dict[str, dict[str, dict[str, str]]]:
+    """§7.3（v1.18）：每代码分别取 正式定期报告 与 业绩快报 在 `as_of` 时点前的最新公告行。
+    同类型多行取公告日最大者。"""
     best: dict[str, dict[str, dict[str, str]]] = {}
     for row in rows:
         code = row.get("security_code", "").zfill(6)
         dtype = row.get("disclosure_type", "")
-        if dtype not in ("periodic_report", "express_report"):
+        if dtype not in ("periodic_report", "express_report") or not _visible(row, as_of):
             continue
         slot = best.setdefault(code, {})
         current = slot.get(dtype)
@@ -136,9 +143,9 @@ def build_queue(
     attention_by_code = {row["security_code"].zfill(6): row for row in attention_rows if row.get("security_code")}
     financials_by_code = {row["security_code"].zfill(6): row for row in financial_rows if row.get("security_code")}
     valuation_by_code = {row["security_code"].zfill(6): row for row in valuation_rows if row.get("security_code")}
-    forecasts_by_code = load_latest_forecasts(forecast_rows)
-    disclosures_by_code = load_latest_disclosures(disclosure_rows)
     as_of_date = parse_date(as_of) or datetime.now(timezone.utc).date()
+    forecasts_by_code = load_latest_forecasts(forecast_rows, as_of_date.isoformat())
+    disclosures_by_code = load_latest_disclosures(disclosure_rows, as_of_date.isoformat())
     output: list[dict[str, object]] = []
 
     for tier in tier_rows:

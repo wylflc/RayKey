@@ -199,6 +199,9 @@ def main() -> int:
             csv.DictWriter(handle, fieldnames=[
                 "security_code", "security_name", "reference_score", "attention_class",
                 "never_admit", "never_admit_reason", "moat_note", "rule", "basis", "reviewed_at",
+                "pending_h1",
+                # 复现性三列：判定所用模型 ID、工作流版本、`docs/Ashare_quality_rubric.md` 的 sha256 前 12 位
+                "judged_by_model", "workflow_version", "rubric_sha256",
             ]).writeheader()
         print(f"已建空判定档 {VERDICTS.relative_to(ROOT)}")
 
