@@ -3,10 +3,14 @@
 
 来源（2026-08-23 起，用户指令「海外公司同样应用当前估值方法」）：
 * 美股／美元 ADR：SEC XBRL companyfacts（`data.sec.gov/api/xbrl/companyfacts/CIK##########.json`），按 CIK
-  取全部已申报事实，只留 `fp=FY` 且表单为 10-K/20-F/40-F 的年度值；持续期科目要求 300~380 天，
-  同一期末取**最新申报**（含重述）。US-GAAP 与 IFRS（20-F，如台积电）两套标签都映射。
-* 港股：东财 HK F10 三张表（`RPT_HKF10_FN_{BALANCE,INCOME,CASHFLOW}_PC`），`DATE_TYPE_CODE=001` 为财年。
+  取年度值及最新 10-Q；季报按「最近完整财年 + 本期累计 − 上年同期累计」合成 TTM。
+  同一期末取**最新申报**（含重述）。US-GAAP 与 IFRS（20-F）两套标签都映射。
+* 港股：东财 HK F10 三张表（`RPT_HKF10_FN_{BALANCE,INCOME,CASHFLOW}_PC`），年度值加最新季报／中报，
+  同样合成 TTM。
   报表货币按公司（清单 6 家均为人民币）。股数取 `hong_kong_financial_indicators.csv` 最新已发行股数。
+* 6-K／境外发行人季报不进入 SEC companyfacts 的公司，由官方财报逐项维护
+  `data/reference/overseas_statement_overrides.csv`；披露事件与公开可得日只认
+  `data/reference/overseas_report_evidence.csv`，不拿程序运行日或预期财报日代替证据日。
 * 韩股：无免密钥三表源——不出行，清单上保持「无法估值」并写明缺口（§6.5.2.4）。
 原始 JSON 落 `data/raw/overseas_statements/`（不入库，≈4 MB/家）；提取结果落 `data/interim/overseas_roic_years.csv`（入库）。
 
@@ -23,7 +27,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,6 +39,8 @@ US_INDICATORS = ROOT / "data/interim/us_financial_indicators.csv"
 HK_INDICATORS = ROOT / "data/interim/hong_kong_financial_indicators.csv"
 RAW_DIR = ROOT / "data/raw/overseas_statements"
 OUT = ROOT / "data/interim/overseas_roic_years.csv"
+REPORT_EVIDENCE = ROOT / "data/reference/overseas_report_evidence.csv"
+STATEMENT_OVERRIDES = ROOT / "data/reference/overseas_statement_overrides.csv"
 UA = "RayKey-AShareQuant research bot (personal research use)"
 HK_API = "https://datacenter.eastmoney.com/securities/api/data/v1/get"
 # 港股清单的报表货币（东财 HK F10 不带币种列；6 家均以人民币列报）
@@ -45,6 +51,9 @@ FIELDS = ["market", "security_code", "security_name", "period", "fiscal_year", "
           "revenue", "operating_income", "pretax", "income_tax", "interest_expense", "ebit", "tax_rate", "tax_rate_observed",
           "nopat", "total_equity", "parent_equity", "minority_equity", "interest_debt", "cash_like", "excess_cash",
           "invested_capital", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid", "tags_used", "source"]
+
+PERIOD_META_FIELDS = ["period_type", "report_label", "evidence_url"]
+FIELDS += PERIOD_META_FIELDS
 
 GAAP = {
     "revenue": ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "SalesRevenueNet",
@@ -128,6 +137,54 @@ def _num(v):
         return None
 
 
+def _load_csv_by(path: Path, keys: tuple[str, ...]) -> dict[tuple[str, ...], dict[str, str]]:
+    if not path.exists():
+        return {}
+    return {tuple(row.get(key, "") for key in keys): row
+            for row in csv.DictReader(path.open(encoding="utf-8-sig"))}
+
+
+def load_report_evidence(as_of: str) -> dict[str, dict[str, str]]:
+    rows = _load_csv_by(REPORT_EVIDENCE, ("security_code",))
+    return {key[0]: row for key, row in rows.items() if row.get("evidence_date", "") <= as_of}
+
+
+def load_statement_overrides(as_of: str) -> list[dict]:
+    if not STATEMENT_OVERRIDES.exists():
+        return []
+    rows = []
+    for raw in csv.DictReader(STATEMENT_OVERRIDES.open(encoding="utf-8-sig")):
+        if raw.get("notice_date", "") > as_of:
+            continue
+        rows.append(_build_row(
+            raw["market"], raw["security_code"], raw["security_name"], raw["period"], raw["notice_date"],
+            raw["report_currency"], *[_num(raw.get(key)) for key in
+                                      ("revenue", "operating_income", "pretax", "income_tax", "interest_expense",
+                                       "total_equity", "parent_equity", "minority_equity", "interest_debt", "cash_like",
+                                       "capex", "dep_amort", "cfo", "shares")],
+            {}, raw.get("source") or "official statement override",
+            TAX_DEFAULT.get(raw["market"], 0.25),
+            buybacks=_num(raw.get("buybacks")) or 0.0,
+            dividends=_num(raw.get("dividends_paid")) or 0.0,
+            period_type=raw.get("period_type") or "ttm",
+            report_label=raw.get("report_label") or "",
+            evidence_url=raw.get("evidence_url") or "",
+        ))
+    return rows
+
+
+def apply_evidence(rows: list[dict], evidence: dict[str, dict[str, str]]) -> list[dict]:
+    """Attach only a matching, already-public report event to a statement row."""
+    for row in rows:
+        item = evidence.get(row["security_code"])
+        if not item or item.get("report_period") != row.get("period"):
+            continue
+        row["notice_date"] = item["evidence_date"]
+        row["report_label"] = item["report_event"]
+        row["evidence_url"] = item.get("evidence_url", "")
+    return rows
+
+
 def _get(url: str, headers: dict, timeout: int = 40) -> bytes:
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -148,7 +205,8 @@ def sec_download(symbol: str, cik: str, refresh: bool) -> dict | None:
                     {"User-Agent": UA, "Accept-Encoding": "gzip, deflate"})
     except Exception as exc:  # noqa: BLE001
         print(f"  SEC {symbol}: 下载失败 {exc}")
-        return None
+        # 刷新失败不得把一只原本可估值的公司变成空；保留最近一次成功快照。
+        return json.loads(out.read_text(encoding="utf-8")) if out.exists() and out.stat().st_size > 1000 else None
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(data)
     time.sleep(0.4)
@@ -192,6 +250,133 @@ def _sec_series(tax: dict, concepts: list[str], duration: bool) -> tuple[dict[st
     return {k: v[1] for k, v in merged.items()}, "+".join(used), unit_used
 
 
+def _sec_entries(tax: dict, concepts: list[str]) -> tuple[list[dict], str]:
+    """Return the freshest usable concept; concept order breaks equal-date ties."""
+    found = []
+    for rank, concept in enumerate(concepts):
+        node = tax.get(concept) or {}
+        candidates = [(len(entries), entries) for unit, entries in node.get("units", {}).items()
+                      if unit != "pure" and entries]
+        if candidates:
+            entries = max(candidates, key=lambda item: item[0])[1]
+            freshest = max((str(e.get("filed") or "") for e in entries), default="")
+            found.append((freshest, -rank, entries, concept))
+    if not found:
+        return [], ""
+    _, _, entries, concept = max(found, key=lambda item: (item[0], item[1]))
+    return entries, concept
+
+
+def _days(entry: dict) -> int | None:
+    try:
+        return (date.fromisoformat(entry["end"]) - date.fromisoformat(entry["start"])).days
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def _annual_notice(tax: dict, end: str) -> str:
+    filings = []
+    for node in tax.values():
+        for entries in node.get("units", {}).values():
+            filings += [str(e.get("filed") or "") for e in entries
+                        if e.get("end") == end and e.get("fp") == "FY"
+                        and str(e.get("form", "")).startswith(("10-K", "20-F", "40-F"))
+                        and e.get("filed")]
+    return min(filings) if filings else end
+
+
+def _latest_10q_identity(tax: dict, concepts: list[str]) -> tuple[str, str, str] | None:
+    entries, _ = _sec_entries(tax, concepts)
+    valid = [e for e in entries if e.get("form") == "10-Q" and e.get("fp") in {"Q1", "Q2", "Q3"}
+             and e.get("filed") and e.get("end") and (_days(e) or 0) >= 60]
+    if not valid:
+        return None
+    filed = max(str(e["filed"]) for e in valid)
+    current = max((e for e in valid if e.get("filed") == filed), key=lambda e: str(e["end"]))
+    return str(current["end"]), str(current["fp"]), filed
+
+
+def _duration_pair(tax: dict, concepts: list[str], end: str, filed: str) -> tuple[float | None, float | None, str]:
+    entries, concept = _sec_entries(tax, concepts)
+    current = [e for e in entries if e.get("form") == "10-Q" and e.get("end") == end
+               and e.get("filed") == filed and 60 <= (_days(e) or 0) <= 300]
+    if not current:
+        return None, None, concept
+    cur = max(current, key=lambda e: _days(e) or 0)
+    duration = _days(cur) or 0
+    prior = [e for e in entries if e.get("form") == "10-Q" and e.get("filed") == filed
+             and e.get("end") < end and abs((_days(e) or -999) - duration) <= 7]
+    if not prior:
+        prior = [e for e in entries if e.get("form") == "10-Q" and e.get("end") < end
+                 and abs((_days(e) or -999) - duration) <= 7]
+    old = max(prior, key=lambda e: (str(e.get("end") or ""), str(e.get("filed") or "")), default=None)
+    return float(cur["val"]), (float(old["val"]) if old else None), concept
+
+
+def _instant_value(tax: dict, concepts: list[str], end: str, filed: str) -> tuple[float | None, str]:
+    entries, concept = _sec_entries(tax, concepts)
+    exact = [e for e in entries if e.get("end") == end and not e.get("start")
+             and str(e.get("filed") or "") <= filed]
+    if not exact:
+        exact = [e for e in entries if e.get("end") == end and str(e.get("filed") or "") <= filed]
+    hit = max(exact, key=lambda e: str(e.get("filed") or ""), default=None)
+    return (float(hit["val"]) if hit else None), concept
+
+
+def _shares_value(tax: dict, concepts: list[str], end: str, filed: str) -> tuple[float | None, str]:
+    entries, concept = _sec_entries(tax, concepts)
+    exact = [e for e in entries if e.get("form") == "10-Q" and e.get("end") == end
+             and e.get("filed") == filed and 60 <= (_days(e) or 0) <= 300]
+    hit = min(exact, key=lambda e: _days(e) or 9999, default=None)
+    return (float(hit["val"]) if hit else None), concept
+
+
+def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: list[dict],
+                        evidence_date: str = "") -> dict | None:
+    """Build a latest TTM snapshot from a domestic issuer's latest 10-Q."""
+    identity = _latest_10q_identity(tax, maps["revenue"])
+    if not identity or not annuals:
+        return None
+    end, fp, filed = identity
+    annual = annuals[-1]
+    if end <= annual["period"]:
+        return None
+    tags: dict[str, str] = {}
+
+    def ttm(key: str) -> float | None:
+        cur, old, concept = _duration_pair(tax, maps[key], end, filed)
+        tags[key] = concept
+        base = _num(annual.get(key))
+        return base + cur - old if base is not None and cur is not None and old is not None else None
+
+    def inst(key: str) -> float | None:
+        value, concept = _instant_value(tax, maps[key], end, filed)
+        tags[key] = concept
+        return value
+
+    revenue, opinc, pretax, taxv = ttm("revenue"), ttm("operating_income"), ttm("pretax"), ttm("income_tax")
+    interest = ttm("interest_expense") or 0.0
+    total_eq, parent_eq, minority = inst("total_equity"), inst("parent_equity"), inst("minority_equity") or 0.0
+    if total_eq is not None and parent_eq is not None and abs(total_eq - parent_eq) < 1e-6 and minority:
+        total_eq = parent_eq + minority
+    lt_nc, lt_cur, lt_total = inst("lt_debt_noncurrent"), inst("lt_debt_current"), inst("lt_debt_total")
+    debt = ((lt_nc or 0.0) + (lt_cur or 0.0)) if lt_nc is not None else (lt_total or 0.0)
+    debt += inst("st_debt") or 0.0
+    cash = (inst("cash") or 0.0) + (inst("cash_invest") or 0.0)
+    shares, share_tag = _shares_value(tax, maps["shares"], end, filed)
+    tags["shares"] = share_tag
+    if revenue is None or (pretax is None and opinc is None) or parent_eq is None or shares is None:
+        return None
+    fy = int(annual["period"][:4]) + 1
+    label = {"Q1": "一季报", "Q2": "二季报", "Q3": "三季报"}[fp]
+    return _build_row("US", symbol, name, end, evidence_date or filed, annual["report_currency"], revenue,
+                      opinc, pretax, taxv, interest, total_eq, parent_eq, minority, debt, cash,
+                      abs(ttm("capex") or 0.0), ttm("dep_amort") or 0.0, ttm("cfo"), shares, tags,
+                      "SEC companyfacts 10-Q TTM", TAX_DEFAULT["US"],
+                      buybacks=abs(ttm("buybacks") or 0.0), dividends=abs(ttm("dividends_paid") or 0.0),
+                      period_type="ttm", report_label=f"{label}（FY{fy} {fp}，截至 {end}）")
+
+
 def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
     facts = data.get("facts", {})
     if "ifrs-full" in facts and "ProfitLossBeforeTax" in facts["ifrs-full"]:
@@ -212,7 +397,7 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
             ccy = unit
     ends = sorted(set(series["revenue"]) | set(series["pretax"]) | set(series["operating_income"]))
     rows = []
-    # 期末→财年申报日（取该期末任一持续期科目的最早 filed 不可得，统一用期末+90 天近似；只用于排序/可得日）
+    # 财年公开可得日取该期 10-K／20-F／40-F 的实际 filed 日。
     for end in ends:
         def v(key):
             return series.get(key, {}).get(end)
@@ -232,10 +417,11 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
         if total_eq is not None and parent_eq is not None and abs(total_eq - parent_eq) < 1e-6 and minority:
             total_eq = parent_eq + minority
         shares = v("shares") or v("shares_instant")
-        rows.append(_build_row("US", symbol, name, end, end, ccy or "USD", rev, opinc, pretax, taxv, intexp,
+        rows.append(_build_row("US", symbol, name, end, _annual_notice(tax, end), ccy or "USD", rev, opinc, pretax, taxv, intexp,
                                total_eq, parent_eq, minority, debt, cash, v("capex") or 0.0, v("dep_amort") or 0.0,
                                v("cfo"), shares, tags, src, TAX_DEFAULT["US"],
-                               buybacks=abs(v("buybacks") or 0.0), dividends=abs(v("dividends_paid") or 0.0)))
+                               buybacks=abs(v("buybacks") or 0.0), dividends=abs(v("dividends_paid") or 0.0),
+                               period_type="annual", report_label=f"年报（FY{end[:4]}，截至 {end}）"))
     return rows
 
 
@@ -247,7 +433,8 @@ def hk_download(code: str, refresh: bool) -> dict[str, list[dict]]:
         if out.exists() and not refresh:
             out_all[kind] = json.loads(out.read_text(encoding="utf-8"))
             continue
-        allrows, page = [], 1
+        cached = json.loads(out.read_text(encoding="utf-8")) if out.exists() and out.stat().st_size > 1000 else []
+        allrows, page, complete = [], 1, True
         while True:
             url = (f"{HK_API}?reportName={rn}&columns=ALL&pageSize=500&pageNumber={page}&sortColumns=REPORT_DATE&sortTypes=-1&filter="
                    + urllib.parse.quote(f'(SECUCODE="{code}.HK")'))
@@ -255,6 +442,7 @@ def hk_download(code: str, refresh: bool) -> dict[str, list[dict]]:
                 d = json.loads(_get(url, {"User-Agent": "Mozilla/5.0", "Referer": "https://emweb.securities.eastmoney.com/"}, 30).decode("utf-8"))
             except Exception as exc:  # noqa: BLE001
                 print(f"  HK {code} {kind} p{page}: 下载失败 {exc}")
+                complete = False
                 break
             res = d.get("result") or {}
             data = res.get("data") or []
@@ -263,9 +451,12 @@ def hk_download(code: str, refresh: bool) -> dict[str, list[dict]]:
                 break
             page += 1
             time.sleep(0.3)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps(allrows, ensure_ascii=False), encoding="utf-8")
-        out_all[kind] = allrows
+        if complete and allrows:
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(json.dumps(allrows, ensure_ascii=False), encoding="utf-8")
+            out_all[kind] = allrows
+        else:
+            out_all[kind] = cached
         time.sleep(0.3)
     return out_all
 
@@ -304,12 +495,81 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
                                pick(period, "minority_equity") or 0.0, debt, cash, abs(pick(period, "capex") or 0.0),
                                pick(period, "dep_amort") or 0.0, pick(period, "cfo"), shares, tags,
                                "eastmoney HK F10 (RPT_HKF10_FN_*_PC, DATE_TYPE_CODE=001)", TAX_DEFAULT["HK"],
-                               buybacks=abs(pick(period, "buybacks") or 0.0), dividends=abs(pick(period, "dividends_paid") or 0.0)))
+                               buybacks=abs(pick(period, "buybacks") or 0.0), dividends=abs(pick(period, "dividends_paid") or 0.0),
+                               period_type="annual", report_label=f"年报（FY{period[:4]}，截至 {period}）"))
     return rows
 
 
+def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shares: float | None,
+                       annuals: list[dict], evidence_date: str = "") -> dict | None:
+    """Build the latest verified HK quarterly/interim TTM snapshot from F10 cumulative statements."""
+    if not annuals or not evidence_date:
+        return None
+
+    maps: dict[str, dict[str, dict[str, float]]] = {}
+    for kind in ("balance", "income", "cashflow"):
+        by_period: dict[str, dict[str, float]] = {}
+        for row in tables.get(kind, []):
+            period = str(row.get("REPORT_DATE", ""))[:10]
+            amount = _num(row.get("AMOUNT"))
+            if period and amount is not None:
+                by_period.setdefault(period, {})[str(row.get("STD_ITEM_NAME", ""))] = amount
+        maps[kind] = by_period
+
+    annual = annuals[-1]
+    candidates = sorted(p for p in (set(maps["income"]) | set(maps["balance"])) if p > annual["period"])
+    if not candidates:
+        annual["notice_date"] = evidence_date
+        return None
+    period = candidates[-1]
+    previous = f"{int(period[:4]) - 1:04d}{period[4:]}"
+    tags: dict[str, str] = {}
+
+    def pick(which: str, key: str) -> float | None:
+        kind, names = HK_ITEMS[key]
+        selected = {"current": period, "previous": previous, "annual": annual["period"]}[which]
+        for item in names:
+            if item in maps[kind].get(selected, {}):
+                tags[key] = f"{kind}:{item}"
+                return maps[kind][selected][item]
+        return None
+
+    annual_values = {key: _num(annual.get(key)) for key in
+                     ("revenue", "operating_income", "pretax", "income_tax", "interest_expense",
+                      "capex", "dep_amort", "cfo", "buybacks", "dividends_paid")}
+
+    def ttm(key: str) -> float | None:
+        cur, old, base = pick("current", key), pick("previous", key), annual_values[key]
+        if key in {"income_tax", "interest_expense", "capex", "buybacks", "dividends_paid"}:
+            cur = abs(cur) if cur is not None else None
+            old = abs(old) if old is not None else None
+            base = abs(base) if base is not None else None
+        return base + cur - old if base is not None and cur is not None and old is not None else None
+
+    revenue, opinc, pretax = ttm("revenue"), ttm("operating_income"), ttm("pretax")
+    taxv = ttm("income_tax")
+    interest = ttm("interest_expense") or 0.0
+    total_eq, parent_eq = pick("current", "total_equity"), pick("current", "parent_equity")
+    minority = pick("current", "minority_equity") or 0.0
+    debt = sum(pick("current", key) or 0.0 for key in ("lt_loan", "st_loan", "notes_nc", "notes_c"))
+    cash = (pick("current", "cash") or 0.0) + (pick("current", "deposits") or 0.0)
+    if revenue is None or (pretax is None and opinc is None) or parent_eq is None or not shares:
+        return None
+    annual_date, current_date = date.fromisoformat(annual["period"]), date.fromisoformat(period)
+    quarter = ((current_date.year - annual_date.year) * 12 + current_date.month - annual_date.month) // 3
+    label = {1: "一季报", 2: "中报", 3: "三季报"}.get(quarter, "定期报告")
+    fiscal_year = int(annual["period"][:4]) + (1 if period > annual["period"] else 0)
+    return _build_row("HK", code, name, period, evidence_date, HK_REPORT_CCY.get(code, "CNY"), revenue,
+                      opinc, pretax, abs(taxv) if taxv is not None else None, abs(interest), total_eq, parent_eq,
+                      minority, debt, cash, abs(ttm("capex") or 0.0), ttm("dep_amort") or 0.0, ttm("cfo"), shares,
+                      tags, "eastmoney HK F10 TTM", TAX_DEFAULT["HK"],
+                      buybacks=abs(ttm("buybacks") or 0.0), dividends=abs(ttm("dividends_paid") or 0.0),
+                      period_type="ttm", report_label=f"{label}（FY{fiscal_year}，截至 {period}）")
+
+
 def _build_row(market, code, name, period, notice, ccy, rev, opinc, pretax, taxv, intexp, total_eq, parent_eq, minority,
-               debt, cash, capex, dep, cfo, shares, tags, src, tax_default, buybacks=0.0, dividends=0.0) -> dict:
+               debt, cash, capex, dep, cfo, shares, tags, src, tax_default, buybacks=0.0, dividends=0.0,
+               period_type="annual", report_label="", evidence_url="") -> dict:
     # 与 roic_inputs.load_statements 同式
     ebit = (pretax + intexp) if pretax is not None else opinc
     if pretax is not None and pretax > 0 and taxv is not None:
@@ -331,6 +591,7 @@ def _build_row(market, code, name, period, notice, ccy, rev, opinc, pretax, taxv
         "capex": capex, "dep_amort": dep, "cfo": cfo, "shares": shares,
         "buybacks": buybacks, "dividends_paid": dividends,
         "tags_used": ";".join(f"{k}={v}" for k, v in sorted(tags.items())), "source": src,
+        "period_type": period_type, "report_label": report_label, "evidence_url": evidence_url,
     }
 
 
@@ -343,10 +604,14 @@ def main() -> int:
     watch = list(csv.DictReader(WATCHLIST.open(encoding="utf-8-sig")))
     cik = {r["symbol"]: r["sec_cik"].zfill(10) for r in csv.DictReader(US_INDICATORS.open(encoding="utf-8-sig")) if r.get("sec_cik")}
     hk_shares = {r["security_code"]: _num(r.get("issued_shares")) for r in csv.DictReader(HK_INDICATORS.open(encoding="utf-8-sig"))}
+    evidence = load_report_evidence(args.as_of)
+    overrides = load_statement_overrides(args.as_of)
+    override_keys = {(r["security_code"], r["period"], r["period_type"]) for r in overrides}
     rows: list[dict] = []
     summary = []
     for r in watch:
         market, code, name = r["market_type"].upper(), r["security_code"], r["security_name"]
+        item = evidence.get(code) or {}
         if market == "US":
             c = cik.get(code)
             if not c:
@@ -355,16 +620,38 @@ def main() -> int:
             if not data:
                 summary.append(f"{market} {code} {name}: SEC 无数据"); continue
             got = sec_extract(code, name, data)
+            facts = data.get("facts", {})
+            if "ifrs-full" in facts and "ProfitLossBeforeTax" in facts["ifrs-full"]:
+                tax, maps = facts["ifrs-full"], IFRS
+            else:
+                tax, maps = facts.get("us-gaap", {}), GAAP
+            current = sec_current_extract(code, name, tax, maps, got, item.get("evidence_date", ""))
+            if current and current["period"] == item.get("report_period"):
+                got.append(current)
         elif market == "HK":
-            got = hk_extract(code, name, hk_download(code, args.refresh), hk_shares.get(code))
+            tables = hk_download(code, args.refresh)
+            got = hk_extract(code, name, tables, hk_shares.get(code))
+            current = hk_current_extract(code, name, tables, hk_shares.get(code), got, item.get("evidence_date", ""))
+            if current and current["period"] == item.get("report_period"):
+                got.append(current)
         else:
             summary.append(f"{market} {code} {name}: 该市场无三表取数源，不出行（清单保持无法估值）"); continue
+        # 官方报表维护行优先于自动提取；SEC companyfacts 对 6-K 境外发行人季报通常没有结构化事实。
+        got = [g for g in got if (code, g["period"], g["period_type"]) not in override_keys]
+        got += [g for g in overrides if g["security_code"] == code]
+        got = apply_evidence(got, evidence)
+        got.sort(key=lambda g: (g["period"], 0 if g["period_type"] == "annual" else 1))
         rows += got
-        yrs = [g["period"] for g in got if g.get("nopat") is not None]
-        summary.append(f"{market} {code} {name}: {len(got)} 个财年（有 NOPAT {len(yrs)}），{got[-1]['period'] if got else '—'}，币种 {got[-1]['report_currency'] if got else '—'}")
+        annuals = [g for g in got if g.get("period_type") == "annual"]
+        current = [g for g in got if g.get("period_type") == "ttm"]
+        latest = current[-1] if current else (annuals[-1] if annuals else None)
+        summary.append(f"{market} {code} {name}: {len(annuals)} 个财年"
+                       f"{'＋TTM ' + current[-1]['period'] if current else ''}，"
+                       f"证据 {latest['notice_date'] if latest else '—'} {latest['report_label'] if latest else '—'}，"
+                       f"币种 {latest['report_currency'] if latest else '—'}")
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=FIELDS)
+        w = csv.DictWriter(fh, fieldnames=FIELDS, lineterminator="\n")
         w.writeheader()
         for row in rows:
             w.writerow({k: ("" if row.get(k) is None else row.get(k)) for k in FIELDS})

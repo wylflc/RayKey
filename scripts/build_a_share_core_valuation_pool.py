@@ -611,7 +611,7 @@ def write_markdown(
         "- **每一条带都出自逐票估值档案（§6.5.2）**：带由该公司单独设计的方法给出，并约定了跟踪指标与复核触发条件（见 `data/processed/a_share_valuation_dossiers.csv`，人读正文在 `data/companies/<代码>_<名称>/README.md`）。v2.00 起全池全部建档，通用十一类（A/C/D/E/F/H/J/K/M/N/P）已退居分类标签，只用于分类、排序与同族比较，**不再参与任何一条带的计算**；新入池公司在建档之前一律判「无法估值」（带显示 —），不以通用公式顶一条带上去。**因此「带非空」即「档案带」**，v2.03 起不再逐行标「（档）」——一个出现在 100% 行上的标记不区分任何东西。",
         "- 业绩预告不在本表展示（v1.09）：预告物化文件（§7.1）只作 §7.5.1 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
         "- 合理价区间 = 模型内在价值 × [0.90, 1.10]，是估值的唯一输出锚（模型认可的公允中枢＝区间中值＝本表合理估值）。「估值路径」列：ROIC·增长／ROIC·零增长＝§6.5.2.3 真口径；权益退路＝无三大报表时的权益 DCF；银行/保险·股利折现＝§6.5.2.3 银行式（保险自 v4.56 照搬）；手工带＝§6.5.2.4 例外。",
-        "- 估值时间 = 最近一次估值复核日（合理价区间的推导日）；估值事件 = 该次复核所依据的最新披露（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件）。档位每日按现价自动重算，带只在 §7 复核时更新——「价格改档、证据改带」。审定档、核心理由与复核时点价（`valuation_price`）见池 CSV。",
+        "- 估值时间 = 最近一次估值复核日（合理价区间的推导日）；估值事件 = 该次复核所依据的最新披露（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件）。海外附表按 §6.8 特例写最新定期报告的公开可得日，不写脚本运行日。档位每日按现价自动重算，带只在 §7 复核时更新——「价格改档、证据改带」。审定档、核心理由与复核时点价（`valuation_price`）见池 CSV。",
         *(
             ["- 文末附**海外关注清单**（非A股，§6.8）：只作质量与估值观察，不入本池 CSV、不进每日量价扫描、无买入资格。"]
             if extra_sections
@@ -682,9 +682,15 @@ def log_overseas_decisions(
 ) -> None:
     """§6.8 海外关注清单逐票结论日志：decision_type 固定 overseas_watch（不可买，仅观察）。
 
-    只记**当日复核**的行（`valuation_reviewed_at == as_of`），因此每日现价刷新不重复写结论，
-    新增或改带的标的在复核当日各留一行。"""
-    rows = [row for row in rows if row.get("valuation_reviewed_at") == as_of]
+    OI-102 起海外 `valuation_reviewed_at` 存**财报证据日**，不能再拿它判断脚本在哪天完成复核。
+    只记录估值脚本写下的本批 `valuation_batch_id`，因此每日现价刷新不会重复写结论。"""
+    batch_id = f"overseas_review_{as_of.replace('-', '')}"
+    rows = [row for row in rows if row.get("valuation_batch_id") == batch_id]
+    if log_file.exists():
+        with log_file.open(encoding="utf-8-sig", newline="") as handle:
+            logged = {row.get("security_code", "") for row in csv.DictReader(handle)
+                      if row.get("run_id") == f"overseas_watchlist:{as_of}"}
+        rows = [row for row in rows if f"{row.get('market_type', '')}:{row['security_code']}" not in logged]
     if not rows:
         return
     logged_at = datetime.now(timezone.utc).isoformat(timespec="seconds")

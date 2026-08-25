@@ -21,13 +21,9 @@
 ------------------------------------------
 * **美股：Nasdaq 财报日历** `api.nasdaq.com/api/calendar/earnings?date=YYYY-MM-DD`，
   无密钥、按日查询，返回当日全部披露公司。实测 2026-08-07 连续 10 日全部 200。
-* **向后扫描才是本缺陷的解药，向前只是附赠**。实测：向前 150 天只命中 5/18 家美股——
-  大市值公司的下期财报日要临近才进该日历（接口自己回「Zacks 尚未提供」）；而**向后**
-  120 天可逐一还原已发生的披露日，实测 AAPL 2026-07-30、DIS/UBER 2026-08-05、
-  MSFT/META 2026-07-29、AMD 2026-08-04，与登记 OI-039 时人工核出的日期完全一致。
-  OI-039 的失效形态是「**报告已经出来了而没人复核**」，判定它需要的是**已披露日**，
-  不是预告日。故 `last_report_date` 是主判据，`next_report_date` 只作提前量提示。
-  这与 A 股侧 §7.3「公告日 > 复核日即入队」是同一个机制，本脚本是它的海外对应物。
+* Nasdaq 日历只维护 `next_report_date` 提前量。历史扫描结果可留在日历快照辅助核对，
+  但可能含预期日期，不能写入 `last_report_date` 或作为披露证据；最近报告只认
+  `data/reference/overseas_report_evidence.csv` 的公司 IR／交易所／监管申报证据。
 * **同一公司的另一上市线可作代理**：清单按 §6.8 边界第 5 条以「实际定价用的那条线」
   建行（阿里/京东取港股线），但**财报是公司层面的事件、两条线同日**，故其美股 ADR
   代码可直接作财报日代理（09988→BABA、09618→JD）。这不改变定价线，只借日期。
@@ -42,9 +38,9 @@
 ----------
 1. `data/interim/overseas_earnings_calendar.csv`——扫描窗口内查到的逐票财报日快照。
 2. `--apply` 把美股行的 `next_report_date` / `next_report_source` 写回 §6.8 清单。
-3. `overdue_reviews()`——**每日跑批时执行的那个检查**：`next_report_date` 已过、而该行
-   的复核证据日早于它，即为逾期。由 `build_a_share_core_valuation_pool.py` 在渲染海外
-   附表时调用（§9.1 第二步每日必跑），使漏做当天就被喊出来。
+3. `overdue_reviews()`——**每日跑批时执行的那个检查**：官方 `last_report_date` 晚于
+   复核证据日即为逾期；过期的 `next_report_date` 不自动升级为披露。由
+   `build_a_share_core_valuation_pool.py` 在渲染海外附表时调用。
 
 用法::
 
@@ -94,8 +90,8 @@ def scan_nasdaq_calendar(as_of: date, back_days: int, fwd_days: int,
                          timeout: float, pause: float) -> dict[str, dict[str, str]]:
     """逐日扫描 [as_of−back_days, as_of+fwd_days]，按标的归并出上一次与下一次财报日。
 
-    逐日查询是该接口唯一的形态（无区间参数）。向后取**最晚的一个 ≤ as_of** 作
-    `last_report_date`（主判据），向前取**最早的一个 > as_of** 作 `next_report_date`。
+    逐日查询是该接口唯一的形态（无区间参数）。向后取**最晚的一个 ≤ as_of** 留作日历
+    快照核对，向前取**最早的一个 > as_of** 作 `next_report_date`；前者不是披露证据。
     """
     found: dict[str, dict[str, str]] = {}
     failed: list[str] = []
@@ -142,7 +138,7 @@ def match_symbol(code: str, found: dict[str, dict[str, str]]) -> dict[str, str] 
 
 # --------------------------------------------------------------- 逾期自检（每日跑批调用）
 def _as_deadline(value: str) -> date | None:
-    """把 `next_report_date` 解析成「该日之后即应已披露」的判定日。
+    """把日／月精度日期解析为可比较的判定日。
 
     允许两种精度：`YYYY-MM-DD` 用当日；`YYYY-MM` 用**该月最后一天**——月精度的写法（人工
     维护的港韩行常见「约 2026-11」）只在整月过完后才算逾期，宁可晚报不可误报。
@@ -162,22 +158,8 @@ def _as_deadline(value: str) -> date | None:
 def _review_evidence_date(row: dict[str, str]) -> date | None:
     """该行的**带所依据的证据日**（`evidence_available_at`）。
 
-    这里刻意**不读** `valuation_reviewed_at`，两个字段回答的是不同的问题：
-
-    * `valuation_reviewed_at` = 我们最后一次**动过这一行**。判例即 OI-039 本身——苹果
-      在 2026-08-03 被建档批动过（`valuation_reviewed_at` = 08-03，晚于 07-30 的财报日），
-      但那一批**用的是财报前的输入**。拿它作判据会把这次漏做判成「已复核」，正好放过
-      本缺陷要抓的那一类。
-    * `evidence_available_at` = 带**依据的**最新证据的公开可得日（§7.2 口径）。财报没被
-      吸收进带，这个日期就还停在财报之前——它才是与披露日可比的那一端，也正是登记
-      OI-039 时点名的「本就构成可比对的两端」。
-
-    附带解掉 v2.15「重跑不等于复核」的残留风险：该规则只在**结论真的变了**时才写
-    `valuation_reviewed_at`，故一次真做了、但带与档恰好不变的复核留不下复核日；而
-    `evidence_available_at` 由取证动作本身更新，与结论变没变无关，不受该规则影响。
-
-    实测交叉验证（2026-08-07）：Nasdaq 日历还原的披露日与本清单人工维护的
-    `evidence_available_at` 在 20 家可覆盖标的上**逐行相等**。
+    `valuation_reviewed_at` 与该字段均由官方报告证据表写公开可得日；这里固定读取
+    `evidence_available_at`，与 `last_report_date` 作同口径比较。
     """
     return _as_deadline(row.get("evidence_available_at", ""))
 
@@ -185,8 +167,10 @@ def _review_evidence_date(row: dict[str, str]) -> date | None:
 def overdue_reviews(rows: list[dict[str, str]], as_of: date) -> tuple[list[dict[str, object]], list[dict[str, str]], list[dict[str, str]]]:
     """返回 (逾期未复核清单, 无财报日的行, 今明两日有财报的行)。
 
-    逾期定义：**已披露日**（`last_report_date`，缺失时退回已过期的 `next_report_date`）
+    逾期定义：**已披露日**（只认官方证据写入的 `last_report_date`）
     晚于该行最后一次看证据的日期 —— 即报告已经出来了，而我们的带还建在它之前的证据上。
+
+    `next_report_date` 是日历预期，不是披露证据；即使日期已过也不得自动升级为已披露。
     """
     overdue: list[dict[str, object]] = []
     missing: list[dict[str, str]] = []
@@ -198,8 +182,6 @@ def overdue_reviews(rows: list[dict[str, str]], as_of: date) -> tuple[list[dict[
             upcoming.append(row)
 
         disclosed = _as_deadline(row.get("last_report_date", ""))
-        if disclosed is None and nxt is not None and nxt <= as_of:
-            disclosed = nxt          # 只有预告日、且已过期：按已披露处理
         if disclosed is None:
             missing.append(row)
             continue
@@ -249,11 +231,11 @@ def apply_to_watchlist(path: Path, found: dict[str, dict[str, str]], as_of: str)
         for column in ("last_report_date", "next_report_date", "next_report_source"):
             row.setdefault(column, "")
         hit = match_symbol(row.get("security_code", ""), found)
-        if not hit or not (hit["last"] or hit["next"]):
+        if not hit or not hit["next"]:
             skipped += 1
             continue
-        if hit["last"]:
-            row["last_report_date"] = hit["last"]
+        # Nasdaq calendar 同时含历史日期和预期日期，但不能证明财报真的发布；OI-102 起
+        # `last_report_date` 只由官方披露证据表写入，这里只维护下一次预期日。
         if hit["next"]:
             row["next_report_date"] = hit["next"]
         row["next_report_source"] = f"nasdaq_calendar@{as_of}"

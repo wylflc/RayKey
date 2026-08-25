@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.84
+# A股选股-估值-量价操作流程 v4.85
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -397,12 +397,12 @@ python3 scripts/build_a_share_core_valuation_pool.py \
 
 港股、美股和韩股只作为观察附表，不写入 A 股核心池，也不进入 §9.3。质量判断沿用 §5，估值遵守价格独立、证据改带和可证伪原则；交易货币不得跨市场直接比较（`P/V` 可以）。
 
-**估值口径与 A 股相同**：合理估值按 §6.5.2.3 的 ROIC 口径由三大报表重算（`build_historical_valuation_bands.py --value-model roic` 的生产参数逐项同式），r = 美债 10Y ＋ β×经营地 Damodaran ERP（β 按档与 A 股同表），报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（伯克希尔）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」，旧档案带只作参考文本。三表来源：美股 SEC XBRL companyfacts、港股东财 HK F10（`data/raw/overseas_statements/` 不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。
+**估值口径与 A 股相同**：合理估值按 §6.5.2.3 的 ROIC 口径由三大报表重算（`build_historical_valuation_bands.py --value-model roic` 的生产参数逐项同式），最新季报／中报按「最近完整财年＋本期累计−上年同期累计」合成 TTM 作为当前观察点，年度历史仍用于 ROIC0、增量 ROIC 与再投资率。r = 美债 10Y ＋ β×经营地 Damodaran ERP（β 按档与 A 股同表），报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（伯克希尔）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」，旧档案带只作参考文本。三表来源：美股 SEC XBRL companyfacts、港股东财 HK F10；6-K／境外发行人未进入 companyfacts 的季报按官方财报维护 `data/reference/overseas_statement_overrides.csv`（原始文件不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。
 
 ```bash
 python3 scripts/fetch_overseas_earnings_calendar.py --as-of YYYY-MM-DD --apply
 python3 scripts/fetch_overseas_earnings_calendar.py --as-of YYYY-MM-DD --check-only
-python3 scripts/fetch_overseas_statements.py [--refresh]                  # 三表 → overseas_roic_years.csv（年报后重取）
+python3 scripts/fetch_overseas_statements.py --as-of YYYY-MM-DD [--refresh] # 年报＋最新季报 TTM → overseas_roic_years.csv
 python3 scripts/build_overseas_roic_bands.py --as-of YYYY-MM-DD            # ROIC 口径合理估值 → overseas_watchlist_valuation.csv ＋ README「ROIC 口径估值」节
 python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --as-of YYYY-MM-DD
 ```
@@ -411,7 +411,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 
 **回购与分红的处理**：估值只看「可分配现金 = NOPAT × (1 − 维持增长所需留存)」，分红与回购同属可分配现金、不区分、不另按股数缩减重复计量，未来回购计划不进模型。海外引擎每股 NOPAT 锚 = 各年 NOPAT ÷ 最新稀释股数（增长态取最新、否则近 3 年中位），周期守卫比较 NOPAT/(母公司权益＋累计回购)；A 股引擎按 §6.5.1 的每股锚口径，两侧差异成文（OI-082）。A 股分红按 §11.4 除权归一化处理，银行股利折现只计现金股利。
 
-海外标的的报告日、证据日、带、档位和不可买状态维护在 `data/processed/overseas_watchlist_valuation.csv`。无日历源的市场必须人工维护日期并显式显示缺口。
+海外最新定期报告只认 `data/reference/overseas_report_evidence.csv` 的公司 IR／交易所／监管申报证据。附表 `估值时间`、清单 `valuation_reviewed_at`／`evidence_available_at`／`last_report_date` 均写该报告的公开可得日，`估值事件` 写报告类型；不得写脚本运行日。`next_report_date` 只作预期提醒，过期日历日期未获官方证据确认时不得当作已披露。报告日、证据日、带、档位和不可买状态维护在 `data/processed/overseas_watchlist_valuation.csv`。
 
 ## 7. 阶段三：披露与事件滚动更新
 

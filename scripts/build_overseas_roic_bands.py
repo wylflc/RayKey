@@ -3,7 +3,7 @@
 
 与 `build_historical_valuation_bands.py --value-model roic`（生产参数：conditional3／hybrid／peak 守卫）逐项同式：
   history = 最近 5 个财年（至少 3 年）；ROIC0 = 归一化 ROIC；增量 ROIC（端点）；再投资率；
-  rd = 历史利息/有息负债（夹 2%~12%，缺省 4.5%）；税率 = 最新财年观测；WACC 账面权重；
+  rd = 历史利息/有息负债（夹 2%~12%，缺省 4.5%）；税率 = 最新报告口径观测；WACC 账面权重；
   **每股 NOPAT 锚（v4.47，OI-082 海外先行）**：各年 NOPAT ÷ **最新稀释股数**（送转/拆股自动消除、回购缩股不进历史），
   增长态（近 3 年严格上升）取最新、否则取近 3 年中位；周期守卫比较 **NOPAT/(母公司权益＋累计回购)** 的最新值 vs 10 年中位
   （> 1.6× → 周期峰 → 取 5 年中位每股 NOPAT）——回购造成的权益缩水不再被读成周期峰（A 股引擎仍用 NOPAT/权益×BPS，待 §12.1 A/B）；
@@ -39,6 +39,7 @@ from build_a_share_core_valuation_pool import effective_valuation_tier  # noqa: 
 WATCHLIST = ROOT / "data/processed/overseas_watchlist_valuation.csv"
 YEARS_CSV = ROOT / "data/interim/overseas_roic_years.csv"
 INPUTS_CSV = ROOT / "data/reference/overseas_valuation_inputs.csv"
+REPORT_EVIDENCE = ROOT / "data/reference/overseas_report_evidence.csv"
 BAND_LOW_COEF, BAND_HIGH_COEF = 0.90, 1.10
 BETA_BY_TIER = {"L1": 0.9, "L2": 1.0, "L3": 1.3, "L4": 1.3}
 TERMINAL_EXCESS_BY_TIER = {"L1": 0.06, "L2": 0.03, "L3": 0.0, "L4": 0.0}
@@ -78,6 +79,8 @@ def load_inputs() -> dict[str, float]:
 def load_years() -> dict[str, list[roic_inputs.RoicYear]]:
     out: dict[str, list[roic_inputs.RoicYear]] = {}
     meta: dict[str, dict] = {}
+    current: dict[str, roic_inputs.RoicYear] = {}
+    current_meta: dict[str, dict] = {}
     for r in csv.DictReader(YEARS_CSV.open(encoding="utf-8")):
         y = roic_inputs.RoicYear(period=r["period"], notice_date=r["notice_date"])
         y.revenue, y.ebit, y.nopat = _f(r["revenue"]), _f(r["ebit"]), _f(r["nopat"])
@@ -91,22 +94,39 @@ def load_years() -> dict[str, list[roic_inputs.RoicYear]]:
         y.shares = _f(r["shares"])  # type: ignore[attr-defined]
         y.buybacks = _f(r.get("buybacks")) or 0.0  # type: ignore[attr-defined]
         y.dividends_paid = _f(r.get("dividends_paid")) or 0.0  # type: ignore[attr-defined]
-        out.setdefault(r["security_code"], []).append(y)
-        meta[r["security_code"]] = {"ccy": r["report_currency"], "source": r["source"], "tags": r["tags_used"]}
+        row_meta = {"ccy": r["report_currency"], "source": r["source"], "tags": r["tags_used"],
+                    "report_label": r.get("report_label", ""), "evidence_url": r.get("evidence_url", "")}
+        if r.get("period_type") == "ttm":
+            current[r["security_code"]] = y
+            current_meta[r["security_code"]] = row_meta
+        else:
+            out.setdefault(r["security_code"], []).append(y)
+            meta[r["security_code"]] = row_meta
     for code in out:
         out[code].sort(key=lambda y: y.period)
     load_years.meta = meta  # type: ignore[attr-defined]
+    load_years.current = current  # type: ignore[attr-defined]
+    load_years.current_meta = current_meta  # type: ignore[attr-defined]
     return out
 
 
-def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: dict[str, float]) -> dict:
+def load_report_evidence(as_of: str) -> dict[str, dict[str, str]]:
+    if not REPORT_EVIDENCE.exists():
+        return {}
+    return {r["security_code"]: r for r in csv.DictReader(REPORT_EVIDENCE.open(encoding="utf-8-sig"))
+            if r.get("evidence_date", "") <= as_of}
+
+
+def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: dict[str, float],
+                  current: roic_inputs.RoicYear | None = None) -> dict:
     """复刻 ROIC 路径，返回 {status, value_report_ccy, path, text, ...}。"""
     res: dict = {"status": "rejected", "reason": "", "path": "", "text": ""}
     cfg = COMPANY_CFG.get(code, dict(erp="erp_us", ccy="USD", adr=1, fx=None, fx_inv=False))
     history = years[-ROE_YEARS:]
     if len(history) < MIN_YEARS:
         res["reason"] = f"三大报表年份仅 {len(history)} < 要求 {MIN_YEARS} 年"; return res
-    latest = history[-1]
+    annual_latest = history[-1]
+    latest = current if current and current.period > annual_latest.period else annual_latest
     rf, erp = inp["rf_usd"], inp[cfg["erp"]]
     beta = BETA_BY_TIER.get(tier, 1.0)
     r = cost_of_equity(rf, erp, beta)
@@ -124,8 +144,9 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     if latest.parent_equity is None or latest.parent_equity <= 0:
         res["reason"] = "母公司权益非正，股数法无法折每股"; return res
     if latest.nopat is None or latest.nopat <= 0:
-        res["reason"] = f"最新财年 NOPAT={latest.nopat/1e9:.2f}b ≤ 0：息税前利润非正，按现金折现无意义（A 股同规，按 §6.5.2.4 判无法估值）"; return res
+        res["reason"] = f"最新报告口径 NOPAT={latest.nopat/1e9:.2f}b ≤ 0：息税前利润非正，按现金折现无意义（A 股同规，按 §6.5.2.4 判无法估值）"; return res
     # ---- OI-082（v4.47，海外先行）：每股 NOPAT 锚 = 各年 NOPAT ÷ 最新稀释股数；周期守卫用回购回加后的权益比率
+    # 最新正式季报另以 TTM 作为最末观察点；年度历史仍只用于 ROIC0/增量 ROIC/再投资率，避免把重叠 TTM 当第六个财年。
     long_hist = years[-10:]
     cum = 0.0
     adj_ratio_by_period: dict[str, float] = {}
@@ -134,19 +155,22 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
         if y.nopat is not None and y.parent_equity is not None and (y.parent_equity + cum) > 0:
             adj_ratio_by_period[y.period] = y.nopat / (y.parent_equity + cum)
     long_ratios = [adj_ratio_by_period[y.period] for y in long_hist if y.period in adj_ratio_by_period]
+    if latest is not annual_latest and latest.nopat is not None and latest.parent_equity is not None and latest.parent_equity + cum > 0:
+        long_ratios.append(latest.nopat / (latest.parent_equity + cum))
     nopat_cyclical = (len(long_ratios) >= 4 and long_ratios[-1] > 0 and long_ratios[-1] > PEAK_K * statistics.median(long_ratios))
     nps = [y.nopat / shares for y in history if y.nopat is not None]
+    if latest is not annual_latest and latest.nopat is not None:
+        nps.append(latest.nopat / shares)
     if not nps:
         res["reason"] = "无可用的每股 NOPAT"; return res
     if nopat_cyclical:
-        nopat_ps, mode = statistics.median(nps), "cyclical_median"
+        nopat_ps, mode = statistics.median(nps[-5:]), "cyclical_median"
     elif len(nps) >= 3 and nps[-1] > nps[-2] > nps[-3]:
         nopat_ps, mode = nps[-1], "ttm_growth"
     elif len(nps) >= 3:
         nopat_ps, mode = statistics.median(nps[-3:]), "median3"
     else:
         nopat_ps, mode = statistics.median(nps), "median"
-    ratios = long_ratios[-len(history):]
     ratio0 = nopat_ps / (latest.parent_equity / shares) if latest.parent_equity else float("nan")
     bps = latest.parent_equity / shares
     cum_buyback_latest = cum
@@ -160,7 +184,8 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
                   g_terminal=g_terminal, cyclical=nopat_cyclical, years=[y.period[:4] for y in history], v_zero=v_zero,
                   nps=nps, adj_ratio_latest=(long_ratios[-1] if long_ratios else None),
                   adj_ratio_median=(statistics.median(long_ratios) if long_ratios else None),
-                  cum_buybacks=cum_buyback_latest, buyback_latest=getattr(latest, "buybacks", 0.0) or 0.0)
+                  cum_buybacks=cum_buyback_latest, buyback_latest=getattr(latest, "buybacks", 0.0) or 0.0,
+                  current_period=(latest.period if latest is not annual_latest else ""))
     if not roic_ok:
         if v_zero <= 0:
             res["reason"] = f"零增长股权价值 {v_zero:.2f} ≤ 0：净负债超过零增长企业价值"; res.update(common); return res
@@ -202,9 +227,11 @@ def derivation_text(code: str, r: dict, meta: dict, cfg: dict, fx: float, value_
     nps_txt = "／".join(f"{v:.2f}" for v in r["nps"])
     guard_txt = (f"周期守卫 NOPAT/(权益＋累计回购 {r['cum_buybacks']/1e9:.1f}b)：最新 {r['adj_ratio_latest']:.3f} vs 10 年中位 {r['adj_ratio_median']:.3f}"
                  f"（{'命中→取 5 年中位' if r['cyclical'] else '未命中'}）" if r.get("adj_ratio_latest") is not None else "周期守卫：无可比比率")
-    return (f"ROIC·{'增长' if r['path']=='growth' else '零增长'}（§6.5.2.3 同口径，财年 {r['years'][0]}~{r['years'][-1]}，{meta.get('source','')}）："
+    period_text = (f"财年 {r['years'][0]}~{r['years'][-1]}＋截至 {r['current_period']} TTM"
+                   if r.get("current_period") else f"财年 {r['years'][0]}~{r['years'][-1]}")
+    return (f"ROIC·{'增长' if r['path']=='growth' else '零增长'}（§6.5.2.3 同口径，{period_text}，{meta.get('source','')}）："
             f"每股 NOPAT 锚（v4.47 OI-082：各年 NOPAT ÷ 最新稀释股数 {r['shares']/1e6:,.0f}m）序列 {nps_txt} → 取 **{r['nopat_ps']:.3f}**（{r['mode']}）；{guard_txt}；"
-            f"最新年回购 {r['buyback_latest']/1e9:.1f}b；BPS {r['bps']:.2f}；"
+            f"最新观察点回购 {r['buyback_latest']/1e9:.1f}b；BPS {r['bps']:.2f}；"
             f"ROIC0 {r['roic0']:.1%}；WACC {r['wacc']:.2%}（r {r['r']:.2%} = rf {r['rf']:.2%} + β{r['beta']}×ERP {r['erp']:.2%}；rd {r['rd']:.2%}；t {r['tax']:.0%}；账面权重）；{g_line}；"
             f"净负债/股 {r['net_debt_ps']:.3f}（有息负债−超额现金＋少数股东权益）；**V = {r['value']:.3f} {ccy_report}/普通股**{fx_line}"
             + (f" → **{value_trade:,.2f} {cfg['ccy']}**" if value_trade else "") + f"；带 = V×[0.90,1.10]。标签：{meta.get('tags','')[:400]}")
@@ -218,6 +245,9 @@ def main() -> int:
     args = ap.parse_args()
     inp = load_inputs()
     years = load_years(); meta = load_years.meta  # type: ignore[attr-defined]
+    current = load_years.current  # type: ignore[attr-defined]
+    current_meta = load_years.current_meta  # type: ignore[attr-defined]
+    evidence = load_report_evidence(args.as_of)
     rows = list(csv.DictReader(WATCHLIST.open(encoding="utf-8-sig")))
     quotes = {}
     if args.quotes == "fetch" and not args.check:
@@ -228,8 +258,12 @@ def main() -> int:
             print(f"⚠ 行情取数失败，沿用复核时点价：{exc}")
     print(f"{'代码':<8}{'名称':<14}{'档':<4}{'状态':<12}{'V(报表币)':>12}{'V(交易币)':>12}{'现价':>10}{'P/V':>7}  说明")
     changed = 0
+    evidence_changed = 0
     for row in rows:
         code, name, tier = row["security_code"], row["security_name"], str(row.get("quality_tier", "L2"))
+        report = evidence.get(code) or {}
+        evidence_date = report.get("evidence_date") or row.get("evidence_available_at") or ""
+        evidence_event = report.get("report_event") or row.get("valuation_evidence_event") or ""
         cfg = COMPANY_CFG.get(code, dict(erp="erp_us", ccy=row.get("currency") or "USD", adr=1, fx=None, fx_inv=False))
         q = quotes.get(f"{row['market_type'].upper()}:{code}") or {}
         price = _f(q.get("price")) or _f(row.get("valuation_price"))
@@ -242,8 +276,10 @@ def main() -> int:
         elif code in NO_SOURCE or code not in years:
             method, text, lo, hi, v_trade, status = "无法估值", f"{NO_SOURCE.get(code, '无三表数据')}；旧档案带 {old_band} 仅供参考，不再作为合理估值。", None, None, None, "unavailable"
         else:
-            r = value_company(code, tier, years[code], inp)
-            ccy_report = meta[code]["ccy"]
+            model_current = current.get(code)
+            r = value_company(code, tier, years[code], inp, model_current)
+            model_meta = current_meta.get(code, meta[code]) if model_current else meta[code]
+            ccy_report = model_meta["ccy"]
             fx = 1.0
             if cfg.get("fx"):
                 fx = inp[cfg["fx"]]
@@ -255,7 +291,7 @@ def main() -> int:
                 status = "ok"
             else:
                 v_trade, lo, hi, method, status = None, None, None, "无法估值", "rejected"
-            text = derivation_text(code, r, meta[code], cfg, fx, v_trade, ccy_report)
+            text = derivation_text(code, r, model_meta, cfg, fx, v_trade, ccy_report)
             if status == "rejected":
                 text += f"；旧档案带 {old_band} 仅供参考，不再作为合理估值。"
         pv = (price / v_trade) if (price and v_trade) else None
@@ -276,21 +312,39 @@ def main() -> int:
             row["valuation_price"] = f"{price:.2f}" if cfg["ccy"] != "KRW" else f"{price:.0f}"
             row["valuation_price_as_of"] = price_as_of or args.as_of
         row["valuation_reason"] = (str(row.get("valuation_reason", "")).split("｜**本次定档")[0]
-                                   + f"｜**本次定档（{args.as_of}，ROIC 口径）**：{method}；带 "
+                                   + f"｜**本次定档（{evidence_date or '证据日缺失'}，{evidence_event or '定期报告'}，ROIC 口径）**：{method}；带 "
                                    + ("—" if lo is None else f"{lo:,.2f}~{hi:,.2f}") + f"；复核时点价 {row.get('valuation_price') or 'NA'}（{row.get('valuation_price_as_of') or 'NA'}）→ **{tier_new}**。")
-        if status in ("ok", "rejected"):
-            latest = years[code][-1]
-            row["valuation_evidence_event"] = f"年报（FY{latest.period[:4]}，截至 {latest.period}，{meta[code]['source'].split(' ')[0]} 三表）"
-            row["evidence_available_at"] = latest.notice_date
+        before_evidence = (row.get("valuation_reviewed_at", ""), row.get("valuation_evidence_event", ""),
+                           row.get("evidence_available_at", ""), row.get("last_report_date", ""))
+        if evidence_date:
+            # OI-102：展示日期回答“本次估值依据何时公开”，不得写脚本运行日。
+            row["valuation_reviewed_at"] = evidence_date
+            row["evidence_available_at"] = evidence_date
+            row["last_report_date"] = evidence_date
+        if evidence_event:
+            row["valuation_evidence_event"] = evidence_event
+        # 日历未来日期只是预期；已过期却没有官方披露证据时，不得反向伪装成最新报告。
+        next_report = row.get("next_report_date", "")
+        next_deadline = next_report + "-31" if len(next_report) == 7 else next_report
+        if (next_report and (next_deadline <= args.as_of
+                            or (len(next_report) == 7 and evidence_date.startswith(next_report)))):
+            row["next_report_date"] = ""
+            row["next_report_source"] = ""
+        evidence_updated = ((row.get("valuation_reviewed_at", ""), row.get("valuation_evidence_event", ""),
+                             row.get("evidence_available_at", ""), row.get("last_report_date", "")) != before_evidence)
+        if evidence_updated:
+            evidence_changed += 1
         row["dossier_status"] = "active" if status in ("ok", "keep") else "unvaluable_pending_input"
-        if (row["fair_price_low"], row["fair_price_high"], row["band_method"]) != before:
-            row["valuation_reviewed_at"] = args.as_of
+        band_changed = (row["fair_price_low"], row["fair_price_high"], row["band_method"]) != before
+        if band_changed:
             changed += 1
+        if evidence_updated or band_changed:
+            row["valuation_batch_id"] = f"overseas_review_{args.as_of.replace('-', '')}"
     if args.check:
         return 0
     fields = list(rows[0].keys())
     with WATCHLIST.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=fields)
+        w = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
         w.writeheader(); w.writerows(rows)
     # 逐票 README 追加/替换「ROIC 口径估值」节
     for row in rows:
@@ -300,7 +354,7 @@ def main() -> int:
         readme = d / "README.md"
         body = readme.read_text(encoding="utf-8") if readme.exists() else f"# {row['security_name']}\n"
         marker = "## ROIC 口径估值（§6.5.2.3 同口径）"
-        section = (f"{marker}\n\n更新 {args.as_of}（`scripts/build_overseas_roic_bands.py`）。方法：{row['band_method']}；"
+        section = (f"{marker}\n\n证据 {row.get('valuation_reviewed_at') or '—'}（{row.get('valuation_evidence_event') or '—'}）。方法：{row['band_method']}；"
                    f"带 {row.get('fair_price_low') or '—'}~{row.get('fair_price_high') or '—'} {row.get('currency','')}；审定档 {row['valuation_tier']}。\n\n{row['band_derivation_text']}\n")
         if marker in body:
             head = body.split(marker)[0]
@@ -308,7 +362,7 @@ def main() -> int:
         else:
             body = body.rstrip("\n") + "\n\n" + section
         readme.write_text(body, encoding="utf-8")
-    print(f"\n写回 {WATCHLIST.name}：{changed} 行带/方法变化；README 已追加 ROIC 节")
+    print(f"\n写回 {WATCHLIST.name}：{changed} 行带/方法变化，{evidence_changed} 行证据日期/事件变化；README 已刷新 ROIC 节")
     return 0
 
 
