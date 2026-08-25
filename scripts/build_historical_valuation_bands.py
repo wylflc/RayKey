@@ -1659,6 +1659,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 band.ttm_factor = f_ttm
                 if len(ratios) >= 3 and f_ttm != 1.0:
                     r_cur = ratios[-1] * f_ttm
+                    trough_annual = trough_w
                     if peak_s is not None and statistics.median(long_ratios) > 0:
                         s_cur = r_cur / statistics.median(long_ratios)
                         if ramp <= 0:
@@ -1668,10 +1669,39 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                             peak_w = min(1.0, max(0.0, (s_cur - (args.roic_peak_k - ramp)) / (2 * ramp)))
                             trough_w = (min(1.0, max(0.0, (1.0 / s_cur - (args.roic_peak_k - ramp)) / (2 * ramp)))
                                         if s_cur > 0 else 1.0)
+                        # 研究开关 --trough-ratchet（OI-104 替代 A）：报告年内谷梯只加不撤——TTM 复苏使 v 回落时保留年报行的 v，
+                        # 否则谷梯撤走、锚从 (1−v)·base3 + v·五年中位 掉回 base3，利润越涨 V 越低（万华 2026H1、乐鑫 2024Q3）。
+                        if getattr(args, "trough_ratchet", "off") == "on" and trough_w < trough_annual:
+                            trough_w = trough_annual
+                            ROIC_STATS["季报谷梯棘轮·保留年报谷梯"] += 1
                         band.peak_weight, band.trough_weight = peak_w, trough_w
                         nopat_cyclical = peak_w >= 0.5
+                    # 研究开关 --ttm-trust（OI-104 替代 B）：季报行信任度按 {年报₋₁→年报₀, 年报₀→TTM} 两次变动前滚，
+                    # TTM 一步 f ≥ 1+δ 记上行、f ≤ 1−δ 记下行、其间视为无新证据沿用年度 λ；只在 graded 判别下生效。
+                    ttm_trust_mode = getattr(args, "ttm_trust", "off")
+                    if ttm_trust_mode in ("on", "up") and detect == "graded":
+                        delta = getattr(args, "ttm_trust_delta", 0.02)
+                        if f_ttm >= 1.0 + delta or f_ttm <= 1.0 - delta:
+                            rising_q = (1 if ratios[-1] > ratios[-2] else 0) + (1 if f_ttm >= 1.0 + delta else 0)
+                            trust_q = rising_q / 2.0
+                            if trust_q > 0 and min_ratio and r_cur <= min_ratio * statistics.median(ratios):
+                                trust_q = 0.0
+                            # up：单边前滚——只在 λ 上调且 TTM 当期高于中位基（锚因此上抬）时采用，其余沿用年度 λ
+                            base_q = statistics.median(ratios[-3:]) if nopat_src == "conditional3" else statistics.median(ratios)
+                            if ttm_trust_mode == "up" and not (trust_q > trust and r_cur > base_q):
+                                trust_q = trust
+                            if trust_q != trust:
+                                ROIC_STATS["季报 λ 前滚·信任度改变"] += 1
+                            trust = trust_q
+                            band.growth_trust = trust
                     base3 = statistics.median(ratios[-3:]) if nopat_src == "conditional3" else statistics.median(ratios)
                     ratio_noncyc = base3 + trust * (r_cur - base3)
+                # 研究开关 --trough-lift trend_only（OI-104 诊断臂）：λ=0 行的谷守卫只降不抬——五年中位高于非周期锚时不混合
+                if (getattr(args, "trough_lift", "all") == "trend_only" and trust <= 0.0 and trough_w > 0.0
+                        and ratio_cyc > ratio_noncyc):
+                    trough_w = 0.0
+                    band.trough_weight = 0.0
+                    ROIC_STATS["λ=0 谷守卫不抬锚（trend_only）"] += 1
                 # 峰／谷坡道：在非周期锚与窗口中位之间按 w = max(峰权重, 谷权重) 线性混合（w=0／1 即旧的两个分支）
                 w_any = max(peak_w, trough_w)
                 ratio0 = (1.0 - w_any) * ratio_noncyc + w_any * ratio_cyc
@@ -2548,6 +2578,17 @@ def main() -> int:
                              "peak=当前比率>K×十年中位（防的是把高位利润外推，锚点实测更准）")
     parser.add_argument("--ttm-current", choices=("on", "off"), default="on",
                         help="OI-090（v4.62）：季报期间当期比率 = 年报最新比率 × 归母净利TTM/年报净利、守卫按其重算；off=旧式只动 BPS（缺省 on＝生产）")
+    parser.add_argument("--trough-ratchet", choices=("off", "on"), default="off",
+                        help="研究开关（OI-104 替代 A）：季报行谷梯 v = max(按 TTM 当期重算的 v, 年报行的 v)，报告年内谷梯只加不撤；"
+                             "off=缺省＝生产")
+    parser.add_argument("--ttm-trust", choices=("off", "on", "up"), default="off",
+                        help="研究开关（OI-104 替代 B）：季报行信任度 λ 按 {年报₋₁→年报₀, 年报₀→TTM} 两次变动计，TTM 一步以 "
+                             "f ≥ 1+δ 记上行、f ≤ 1−δ 记下行、其间沿用年度 λ；up=只在 λ 上调且 TTM 当期高于中位基时采用（单边）；"
+                             "仅 --roic-cond-detect graded 生效；off=缺省＝生产")
+    parser.add_argument("--trough-lift", choices=("all", "trend_only"), default="all",
+                        help="研究开关（OI-104 诊断臂）：trend_only=λ=0 行的谷守卫只在五年中位低于非周期锚时混合（只降不抬）；all=缺省＝生产")
+    parser.add_argument("--ttm-trust-delta", type=float, default=0.02, metavar="D",
+                        help="--ttm-trust 的最小幅度 δ（缺省 0.02）")
     parser.add_argument("--growth-damp", choices=("on", "off"), default="on",
                         help="OI-089（v4.62）：增速腿 × min(1, NOPAT_最新/上年) × min(1, TTM 因子)；off=旧式（缺省 on＝生产）")
     parser.add_argument("--pv-basis", choices=("ev", "equity"), default="equity",
