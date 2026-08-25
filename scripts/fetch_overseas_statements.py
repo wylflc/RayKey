@@ -7,7 +7,7 @@
   同一期末取**最新申报**（含重述）。US-GAAP 与 IFRS（20-F）两套标签都映射。
 * 港股：东财 HK F10 三张表（`RPT_HKF10_FN_{BALANCE,INCOME,CASHFLOW}_PC`），年度值加最新季报／中报，
   同样合成 TTM。
-  报表货币按公司（清单 6 家均为人民币）。股数取 `hong_kong_financial_indicators.csv` 最新已发行股数。
+  报表货币按公司（清单内人民币列报公司显式登记）。股数取 `hong_kong_financial_indicators.csv` 最新已发行股数。
 * 6-K／境外发行人季报不进入 SEC companyfacts 的公司，由官方财报逐项维护
   `data/reference/overseas_statement_overrides.csv`；披露事件与公开可得日只认
   `data/reference/overseas_report_evidence.csv`，不拿程序运行日或预期财报日代替证据日。
@@ -43,8 +43,9 @@ REPORT_EVIDENCE = ROOT / "data/reference/overseas_report_evidence.csv"
 STATEMENT_OVERRIDES = ROOT / "data/reference/overseas_statement_overrides.csv"
 UA = "RayKey-AShareQuant research bot (personal research use)"
 HK_API = "https://datacenter.eastmoney.com/securities/api/data/v1/get"
-# 港股清单的报表货币（东财 HK F10 不带币种列；6 家均以人民币列报）
-HK_REPORT_CCY = {"00700": "CNY", "09992": "CNY", "09618": "CNY", "09988": "CNY", "03690": "CNY", "06862": "CNY"}
+# 港股清单的报表货币（东财 HK F10 不带币种列；人民币列报公司显式登记）
+HK_REPORT_CCY = {"00700": "CNY", "09992": "CNY", "09618": "CNY", "09988": "CNY", "03690": "CNY", "06862": "CNY",
+                 "03888": "CNY"}
 TAX_DEFAULT = {"US": 0.21, "HK": 0.165}
 
 FIELDS = ["market", "security_code", "security_name", "period", "fiscal_year", "notice_date", "report_currency",
