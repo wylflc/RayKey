@@ -80,6 +80,8 @@ class CalendarEvidenceTest(unittest.TestCase):
         overdue, missing, _ = calendar.overdue_reviews([row], date(2026, 8, 25))
         self.assertEqual(overdue, [])
         self.assertEqual(missing, [])
+        due = calendar.verification_due([row], date(2026, 8, 25))
+        self.assertEqual([item["security_code"] for item in due], ["PDD"])
 
     def test_calendar_apply_does_not_overwrite_official_last_report(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -125,14 +127,18 @@ class MaterializedEvidenceTest(unittest.TestCase):
             self.assertEqual(watch[code]["last_report_date"], item["evidence_date"], code)
             self.assertEqual(watch[code]["valuation_evidence_event"], item["report_event"], code)
 
-    def test_pdd_q1_is_in_ttm_inputs(self):
+    def test_pdd_q2_is_in_ttm_inputs(self):
         with (ROOT / "data/interim/overseas_roic_years.csv").open(encoding="utf-8-sig") as handle:
             rows = [r for r in csv.DictReader(handle)
                     if r["security_code"] == "PDD" and r["period_type"] == "ttm"]
         self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0]["period"], "2026-03-31")
-        self.assertEqual(rows[0]["notice_date"], "2026-05-27")
-        self.assertEqual(rows[0]["report_label"], "一季报（2026Q1）")
+        self.assertEqual(rows[0]["period"], "2026-06-30")
+        self.assertEqual(rows[0]["notice_date"], "2026-08-24")
+        self.assertEqual(rows[0]["report_label"], "二季报（2026Q2）")
+
+    def test_valuation_path_hides_implementation_notes(self):
+        self.assertEqual(core_pool._display_valuation_path("ROIC·增长（§6.5.2.3 同口径）"), "ROIC·增长")
+        self.assertEqual(core_pool._display_valuation_path("隐含PB：档案带"), "隐含PB")
 
     def test_every_supported_latest_interim_report_has_matching_ttm_row(self):
         with (ROOT / "data/reference/overseas_report_evidence.csv").open(encoding="utf-8-sig") as handle:

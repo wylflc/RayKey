@@ -7,7 +7,7 @@ security_code,report_period,evidence_date,report_event,evidence_source,evidence_
 06862,2025-12-31,2026-03-24,年报（FY2025）,hkex_results,https://www1.hkexnews.hk/search/titlesearch.xhtml?category=0&market=SEHK&stockId=199151
 TSM,2026-06-30,2026-07-16,二季报（2026Q2）,issuer_ir,https://investor.tsmc.com/english/quarterly-results/2026/q2
 ADBE,2026-05-29,2026-06-11,二季报（FY2026Q2）,issuer_ir,https://news.adobe.com/news/2026/06/adobe-q2fy26-financial-results
-PDD,2026-03-31,2026-05-27,一季报（2026Q1）,issuer_ir,https://investor.pddholdings.com/news-releases/news-release-details/pdd-holdings-announces-first-quarter-2026-unaudited-financial/
+PDD,2026-06-30,2026-08-24,二季报（2026Q2）,issuer_ir,https://pinduoduo.gcs-web.com/news-releases/news-release-details/pdd-holdings-announces-second-quarter-2026-unaudited-financial
 MU,2026-05-28,2026-06-24,三季报（FY2026Q3）,issuer_ir,https://investors.micron.com/news/press-release/2026/Micron-Technology-Inc--Reports-Record-Results-for-the-Third-Quarter-of-Fiscal-2026/default.aspx
 NVDA,2026-04-26,2026-05-20,一季报（FY2027Q1）,issuer_ir,https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-First-Quarter-Fiscal-2027/default.aspx
 ASML,2026-06-28,2026-07-15,二季报（2026Q2）,issuer_ir,https://www.asml.com/en/news/press-releases/2026/q2-2026-financial-results

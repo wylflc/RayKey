@@ -409,6 +409,13 @@ def _fmt_number(value: float | None, currency: str) -> str:
     return f"{value:.2f}"
 
 
+def _display_valuation_path(method: str) -> str:
+    """阅读版只显示方法名，不展示实现章节或口径注记。"""
+    if not method:
+        return "—"
+    return method.split("（", 1)[0].split("：", 1)[0]
+
+
 def build_overseas_section(
     rows: list[dict[str, str]],
     quotes: dict[str, dict] | None = None,
@@ -453,9 +460,8 @@ def build_overseas_section(
         mid = (low + high) / 2 if (low is not None and high is not None and not unvaluable) else None
         fair_cell = _fmt_number(mid, currency) if mid else "—"
         pv_cell = f"{ref_price / mid:.3f}" if (mid and ref_price) else "—"
-        # 估值路径：ROIC 口径原样；旧通用路径取「：」前的方法名；无带即无法估值。
         method = str(row.get("band_method") or row.get("valuation_method") or "")
-        path_cell = method if method.startswith("ROIC") else (method.split("：")[0] if method else "—")
+        path_cell = _display_valuation_path(method)
         body.append(
             # 参考分（§5.7.4）与 A 股主表同列位：质量档之后、估值档之前。海外清单
             # 2026-08-03 起逐票打分，此前该列不存在（附表只有质量档、无档内序位）。
@@ -474,16 +480,10 @@ def build_overseas_section(
         "",
         "## 附：海外关注清单（非A股，观察口径）",
         "",
-        f"用户长期关注但不在 A 股上市的公司，共 {len(rows)} 家，由 `data/processed/overseas_watchlist_valuation.csv` 渲染（§6.8）。",
+        f"共 {len(rows)} 家，仅供观察，不进入 A 股候选池，也不具备买入资格。",
         "",
-        "- **一律不进 §9.3 的候选池**：本清单不入 `a_share_core_valuation_pool.csv`、不进每日取数。它只回答「质量几档、该用什么模型、现价贵不贵」。",
-        "- 质量分层（§5.7）与策略标签（§6.5）口径与 A 股完全一致，不降低门槛；本清单是用户点名的自选名单而非全市场筛选结果，故层级分布天然偏上，不适用 §5.7.1 的金字塔校准。",
-        "- 行序与 A 股主表一致按**质量档 L1→L4**排列，同档内按**参考分降序**。",
-        "- 档位同样按 §6.2 现价自动定档（>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估），与审定档不同的行显示 `审定档→现档`。带只由证据复核修改。",
-        "- **市场与代码两列已按用户指令删除（2026-08-06）**：两者仍在 `overseas_watchlist_valuation.csv` 的 `market_type`/`security_code` 里，只是不进阅读版。**代价须知**：现价与合理估值均为各自**交易货币**（港股 HKD、美股 USD、韩股 KRW），跨市场不可直接比较（`P/V` 可以），而本表已不再逐行标出是哪个市场——数量级明显不同的行（如韩股六位数报价）靠公司名识别。行情同源腾讯快照（`scripts/overseas_quotes.py`）。",
-        "- 列与 A 股主表同构（2026-08-23 用户指令）：**合理估值 = 模型内在价值 V、`P/V` = 现价 ÷ V**；策略标签、合理价区间、空间、PE、PB 移出阅读版，仍在 CSV（`strategy_tag`／`fair_price_low/high`／`valuation_pe_ttm`／`valuation_pb`）。现价与合理估值为各自交易货币，`P/V` 无量纲、可跨市场比较。",
-        "- **参考分（§5.7.4）仅供同档内排序**（Q1×0.25+Q2×0.40+Q3×0.20+Q4×0.15−可信度扣分，不改变资格、不构成买卖指令）。**合理估值自 2026-08-23 起按 A 股 §6.5.2.3 ROIC 口径由三大报表重算**（`scripts/fetch_overseas_statements.py` 取 SEC XBRL／东财 HK F10 三表 → `scripts/build_overseas_roic_bands.py`：与 A 股生产参数同式，r = 美债 10Y + β×经营地 Damodaran ERP，报表币按 `data/reference/overseas_valuation_inputs.csv` 汇率折到交易币、ADR 按普通股数折算；每股 NOPAT 锚按 OI-082 海外先行口径＝各年 NOPAT ÷ 最新稀释股数、周期守卫用回购回加后的权益比率，v4.47）。金融企业（伯克希尔）ROIC 不适用沿用档案带；ROIC 路径被拒或无三表源（韩股、SpaceX）一律无法估值，旧档案带只作参考文本。逐票推导在 `data/companies/<代码>_<名称>/README.md`「ROIC 口径估值」节与 CSV `band_derivation_text`。**改带只能改输入**。",
-        "- 估值列为**无法估值**的行是 §6.5.2.4 判定的**无法估值**（流程状态，不是估值结论）：其锚或兜底口径按定义不可算，档案已写明缺哪一个输入、以及什么条件下解锁建带。这类行不自动定档，合理估值／`P/V` 显示 —。",
+        "- 现价与合理估值按各自交易货币显示；`P/V` 无量纲。参考分只用于同档排序。",
+        "- 合理估值取当前估值档案；无法估值行显示 —。估值时间与事件取最新正式报告的公开可得日和报告类型。",
         "",
         "| 名称 | 质量 | 参考分 | 估值 | 估值路径 | 现价 | 合理估值 | P/V | 估值时间 | 估值事件 |",
         "| --- | --- | ---: | --- | --- | ---: | ---: | ---: | --- | --- |",
@@ -588,7 +588,7 @@ def write_markdown(
         body.append(
             "| {security_code} | {security_name} | {quality_tier_label} | {quality_score} | ".format(**row)
             + str(cells["valuation_cell"])
-            + f" | {valuation_paths.get(str(row.get('security_code', '')).zfill(6), '手工带（§6.5.2.4）')} | "
+            + f" | {valuation_paths.get(str(row.get('security_code', '')).zfill(6), '手工带')} | "
             + f"{cells['price']} | "
             + f"{cells['fair_value']} | {cells['pv']} | "
             + "{valuation_reviewed_at} | {valuation_evidence_event} |".format(
@@ -602,18 +602,13 @@ def write_markdown(
         "",
         f"生成日期：{as_of}｜{quote_line}",
         "",
-        "本文件由 `scripts/build_a_share_core_valuation_pool.py` 生成，是全量 worth_attention 单一列表阅读版。**买卖由 §9.3 唯一决定**：买入线/减持线的取值只在工作流 §9.3.1 一处定，本表不复写数字；`P/V` = 现价 ÷ 合理估值（V，模型内在价值），与 §9.3 同一口径。**档位（低估/中性/高估等）只是展示标签，不决定能否买**。带为 **ROIC 口径**（§6.5.2.3，v4.00）：非金融按 NOPAT/投入资本/WACC 折现，银行与保险按股利折现，「估值路径」列标明每条带怎么来的。",
+        "本表为全量 `worth_attention` 阅读版；估值档仅作展示，买卖以工作流 §9.3 为准。",
         "",
-        "- **档位按现价自动定档（§6.2，无人工复核，双向不限幅）**：>1.2×带顶=高估；带顶~1.2×带顶=较高估；带内=中性；带底以下按空间≥40% 分低估/较低估；无法估值不自动定档。与审定档不同的行显示 `审定档→现档`——**箭头左端是审定档（最近一次证据复核的结论），不是昨日档**，可能是多日累计漂移；当日发生的变化另见扫描报告与刷新日志。带本身仍只能由 §7 复核修改（财报/预告/事件）——价格改档、证据改带。",
-        "- 现价为每日扫描时的行情快照；现价缺失（停牌/请求失败）的行沿用估值时点值。**PE/PB 两列已按用户指令删除（2026-08-17）**——表观倍数不参与定档也不参与买卖，定档只看现价对带（§6.2），带的来源见「估值路径」列；两列仍在 CSV 中。",
-        "- **合理估值 = 模型内在价值 V**（= 合理价区间中值）；**`P/V` = 现价 ÷ V**（三位小数）。合理价区间／空间两列于 2026-08-23 按用户指令移出阅读版（参考价值不大），仍在池 CSV（`fair_price_low/high`）；定档仍按带与空间（§6.2，空间 = V/现价 − 1）。",
-        "- **本表每一条带都可双向使用（v1.47）**：只能回答「便宜」不能回答「贵」的带（下限带、周期假设未决）不是偏保守的带，是**没算完的带**——一律判「无法估值」并进入 §6.5.2 建档队列；无带即无 `P/V`，该票当日不进 §9.3 的任何买卖判定。",
-        "- **每一条带都出自逐票估值档案（§6.5.2）**：带由该公司单独设计的方法给出，并约定了跟踪指标与复核触发条件（见 `data/processed/a_share_valuation_dossiers.csv`，人读正文在 `data/companies/<代码>_<名称>/README.md`）。v2.00 起全池全部建档，通用十一类（A/C/D/E/F/H/J/K/M/N/P）已退居分类标签，只用于分类、排序与同族比较，**不再参与任何一条带的计算**；新入池公司在建档之前一律判「无法估值」（带显示 —），不以通用公式顶一条带上去。**因此「带非空」即「档案带」**，v2.03 起不再逐行标「（档）」——一个出现在 100% 行上的标记不区分任何东西。",
-        "- 业绩预告不在本表展示（v1.09）：预告物化文件（§7.1）只作 §7.5.1 express 复核队列输入，复核完成后其影响体现为 估值时间/估值事件 两列的更新。",
-        "- 合理价区间 = 模型内在价值 × [0.90, 1.10]，是估值的唯一输出锚（模型认可的公允中枢＝区间中值＝本表合理估值）。「估值路径」列：ROIC·增长／ROIC·零增长＝§6.5.2.3 真口径；权益退路＝无三大报表时的权益 DCF；银行/保险·股利折现＝§6.5.2.3 银行式（保险自 v4.56 照搬）；手工带＝§6.5.2.4 例外。",
-        "- 估值时间 = 最近一次估值复核日（合理价区间的推导日）；估值事件 = 该次复核所依据的最新披露（一季报/中报预告/中报/三季报/年报/业绩快报/重大事件）。海外附表按 §6.8 特例写最新定期报告的公开可得日，不写脚本运行日。档位每日按现价自动重算，带只在 §7 复核时更新——「价格改档、证据改带」。审定档、核心理由与复核时点价（`valuation_price`）见池 CSV。",
+        "- 合理估值为合理价区间中值；`P/V` = 现价 ÷ 合理估值。估值路径只显示当前方法名。",
+        "- 现价取每日行情快照，缺失时沿用估值时点值；档位随现价更新，合理价带随证据复核更新。",
+        "- 估值时间为本次估值所依据证据的公开可得日；估值事件为对应报告或重大事件。",
         *(
-            ["- 文末附**海外关注清单**（非A股，§6.8）：只作质量与估值观察，不入本池 CSV、不进每日量价扫描、无买入资格。"]
+            ["- 文末海外关注清单仅供观察，不进入 A 股候选池，也不具备买入资格。"]
             if extra_sections
             else []
         ),

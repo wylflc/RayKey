@@ -323,11 +323,10 @@ def main() -> int:
             row["last_report_date"] = evidence_date
         if evidence_event:
             row["valuation_evidence_event"] = evidence_event
-        # 日历未来日期只是预期；已过期却没有官方披露证据时，不得反向伪装成最新报告。
+        # 仅在正式证据已推进到预期窗口时清理预期日；单纯过期须留给待核验告警。
         next_report = row.get("next_report_date", "")
-        next_deadline = next_report + "-31" if len(next_report) == 7 else next_report
-        if (next_report and (next_deadline <= args.as_of
-                            or (len(next_report) == 7 and evidence_date.startswith(next_report)))):
+        if (next_report and evidence_date
+                and (evidence_date[:7] == next_report[:7] or evidence_date >= next_report)):
             row["next_report_date"] = ""
             row["next_report_source"] = ""
         evidence_updated = ((row.get("valuation_reviewed_at", ""), row.get("valuation_evidence_event", ""),

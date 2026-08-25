@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.85
+# A股选股-估值-量价操作流程 v4.86
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -407,11 +407,11 @@ python3 scripts/build_overseas_roic_bands.py --as-of YYYY-MM-DD            # ROI
 python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --as-of YYYY-MM-DD
 ```
 
-阅读版 `000_a_share_core_valuation_pool.md` 两表列：代码／名称／质量／参考分／估值／估值路径／现价／**合理估值 V**／**`P/V`**／估值时间／估值事件（合理价区间、空间、策略标签、PE、PB 只在 CSV）。
+阅读版 `000_a_share_core_valuation_pool.md` 两表列：代码／名称／质量／参考分／估值／估值路径／现价／**合理估值 V**／**`P/V`**／估值时间／估值事件（合理价区间、空间、策略标签、PE、PB 只在 CSV）。表前只保留字段含义与交易边界；估值路径只显示方法名，不带章节号或口径注记。
 
 **回购与分红的处理**：估值只看「可分配现金 = NOPAT × (1 − 维持增长所需留存)」，分红与回购同属可分配现金、不区分、不另按股数缩减重复计量，未来回购计划不进模型。海外引擎每股 NOPAT 锚 = 各年 NOPAT ÷ 最新稀释股数（增长态取最新、否则近 3 年中位），周期守卫比较 NOPAT/(母公司权益＋累计回购)；A 股引擎按 §6.5.1 的每股锚口径，两侧差异成文（OI-082）。A 股分红按 §11.4 除权归一化处理，银行股利折现只计现金股利。
 
-海外最新定期报告只认 `data/reference/overseas_report_evidence.csv` 的公司 IR／交易所／监管申报证据。附表 `估值时间`、清单 `valuation_reviewed_at`／`evidence_available_at`／`last_report_date` 均写该报告的公开可得日，`估值事件` 写报告类型；不得写脚本运行日。`next_report_date` 只作预期提醒，过期日历日期未获官方证据确认时不得当作已披露。报告日、证据日、带、档位和不可买状态维护在 `data/processed/overseas_watchlist_valuation.csv`。
+海外最新定期报告只认 `data/reference/overseas_report_evidence.csv` 的公司 IR／交易所／监管申报证据。附表 `估值时间`、清单 `valuation_reviewed_at`／`evidence_available_at`／`last_report_date` 均写该报告的公开可得日，`估值事件` 写报告类型；不得写脚本运行日。`next_report_date` 只作预期提醒，过期日历日期未获官方证据确认时不得当作已披露，且必须报“待核验”并核对公司官方业绩页。报告日、证据日、带、档位和不可买状态维护在 `data/processed/overseas_watchlist_valuation.csv`。
 
 ## 7. 阶段三：披露与事件滚动更新
 

@@ -38,9 +38,9 @@
 ----------
 1. `data/interim/overseas_earnings_calendar.csv`——扫描窗口内查到的逐票财报日快照。
 2. `--apply` 把美股行的 `next_report_date` / `next_report_source` 写回 §6.8 清单。
-3. `overdue_reviews()`——**每日跑批时执行的那个检查**：官方 `last_report_date` 晚于
-   复核证据日即为逾期；过期的 `next_report_date` 不自动升级为披露。由
-   `build_a_share_core_valuation_pool.py` 在渲染海外附表时调用。
+3. `overdue_reviews()` 检查正式证据已推进但估值未复核；`verification_due()` 检查
+   `next_report_date` 已过但正式证据尚未推进。预期日只触发官网核验，不自动升级为披露。
+   两项均由 `build_a_share_core_valuation_pool.py` 在渲染海外附表时调用。
 
 用法::
 
@@ -199,9 +199,35 @@ def overdue_reviews(rows: list[dict[str, str]], as_of: date) -> tuple[list[dict[
     return overdue, missing, upcoming
 
 
+def verification_due(rows: list[dict[str, str]], as_of: date) -> list[dict[str, object]]:
+    """返回预期日已过、但官方证据尚未推进到该报告窗口的行。"""
+    due: list[dict[str, object]] = []
+    for row in rows:
+        expected_raw = (row.get("next_report_date") or "").strip()
+        expected = _as_deadline(expected_raw)
+        if expected is None or expected >= as_of:
+            continue
+        disclosed = _as_deadline(row.get("last_report_date", ""))
+        confirmed = bool(disclosed and (
+            disclosed >= expected or disclosed.strftime("%Y-%m") == expected_raw[:7]
+        ))
+        if confirmed:
+            continue
+        due.append({
+            "security_code": row.get("security_code", ""),
+            "security_name": row.get("security_name", ""),
+            "market_type": row.get("market_type", ""),
+            "expected_date": expected_raw,
+            "last_evidence_date": disclosed.isoformat() if disclosed else "无",
+            "days_past": (as_of - expected).days,
+        })
+    return due
+
+
 def print_overdue_report(rows: list[dict[str, str]], as_of: date) -> int:
-    """打印逾期、缺日与临期清单，返回逾期只数。供每日跑批与本脚本共用。"""
+    """打印逾期、待核验、缺日与临期清单，返回需处理只数。"""
     overdue, missing, upcoming = overdue_reviews(rows, as_of)
+    due = verification_due(rows, as_of)
     if overdue:
         print(f"  **§6.8 复核触发① 逾期 {len(overdue)} 只**（财报已披露而带与档未按 §7.3/§7.5.1 复核）：")
         for item in sorted(overdue, key=lambda x: -int(x["days_overdue"])):
@@ -209,13 +235,19 @@ def print_overdue_report(rows: list[dict[str, str]], as_of: date) -> int:
                   f"披露 {item['report_date']}，最后复核 {item['reviewed_at']}，**逾期 {item['days_overdue']} 天**")
     else:
         print("  §6.8 复核触发①：无逾期")
+    if due:
+        print(f"  **过期预期日待核验 {len(due)} 只**（仅提示核对官网，不视为已披露证据）：")
+        for item in sorted(due, key=lambda x: -int(x["days_past"])):
+            print(f"    - {item['security_name']}（{item['market_type']}:{item['security_code']}）"
+                  f"预期 {item['expected_date']}，最新证据 {item['last_evidence_date']}，"
+                  f"已过 {item['days_past']} 天")
     if upcoming:
         names = "、".join(f"{r.get('security_name','')}（{r.get('next_report_date','')}）" for r in upcoming)
         print(f"  **今明两日财报 {len(upcoming)} 只**（披露次日须按 §7.5.1 express 复核）：{names}")
     if missing:
         names = "、".join(f"{r.get('security_name','')}" for r in missing)
         print(f"  无财报日 {len(missing)} 只（该市无免密钥日历源，须人工维护 `last_report_date`）：{names}")
-    return len(overdue)
+    return len(overdue) + len(due)
 
 
 # --------------------------------------------------------------- 写回
