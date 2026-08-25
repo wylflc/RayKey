@@ -853,6 +853,57 @@ def ttm_profit_factor(series: dict[str, dict], period: str, latest) -> float:
     return (annual + ytd - ytd_prev) / annual
 
 
+def _fold_cash_to_basis(actions: list[dict], cash: float, ex: str, basis_now: str) -> float:
+    """每股现金（除权日前股本口径）折到 `basis_now` 的股本基准：除权日 ≤ 基准日的按 [除权日, 基准日] 内送转（含同日派转）摊薄，
+    晚于基准日的按 (基准日, 除权日) 内送转放大（同日送转不放大）。配股不入送转因子（§6.5.1）。"""
+    factor = 1.0
+    for action in actions:
+        aex = (action.get("ex_dividend_date") or "")[:10]
+        ratio = _num(action.get("share_ratio")) or 0.0
+        if ratio <= 0 or not aex:
+            continue
+        if ex <= basis_now and ex <= aex <= basis_now:
+            factor *= 1.0 + ratio
+        elif ex > basis_now and basis_now < aex < ex:
+            factor /= 1.0 + ratio
+    return cash / factor
+
+
+def dividends_booked_since(actions: list[dict], ref_period: str, period: str, basis_now: str) -> tuple[float, list[float]]:
+    """§6.5.1 第 1 条「其后现金分红」/股（折到本行 BPS 股本基准 `basis_now`）：年报期末 `ref_period` 之后、本期期末 `period`
+    的权益里已扣的现金分红。返回 `(确定计入的合计, 确认日不可知的逐笔金额)`，后者由调用方按 |x| 更小的解释取舍。
+      ①除权日在 (年报期末, 本期期末]：预案公告日晚于年报期末的确定计入（年报权益未扣）；预案日 ≤ 年报期末的不可知（预案日缺失时年度分配视为确定、中期分配视为不可知）
+        （股东大会／董事会确认可能落在年报期末前后任一侧：格力 2025Q3 派息 10-31 预案、年末已计应付；泸州老窖 2024Q3 12-25 预案、次年 1 月才确认）。
+      ②已结束财年的年度分配、除权日晚于本期期末且本期为 06-30/09-30 行：确定计入（股东大会须于 06-30 前召开，期末已计应付股利）；
+        本期为 03-31 行时不计（尚未审议，紫金矿业 2026Q1：预案 03-21、除权 06-26）。
+      ③中期分配预案公告日在 (年报期末, 本期期末]、除权日晚于期末：不可知（确认是否早于期末因公司而异，样本两向）。
+    此前按 (年报公告日, 本期公告日] 的除权日取窗：②（除权晚于本期公告日）与①中年报公告日之前除权的中期分红被漏计并读成回购注销，
+    预案晚于期末、除权早于公告日的分红又被多计成增发。"""
+    sure, ambiguous = 0.0, []
+    for action in actions:
+        cash = _num(action.get("cash_per_share")) or 0.0
+        ex = (action.get("ex_dividend_date") or "")[:10]
+        if cash <= 0 or not ex:
+            continue
+        plan = (action.get("plan_notice_date") or "")[:10]
+        report = (action.get("report_date") or "")[:10]
+        annual = report.endswith("12-31")
+        if ref_period < ex <= period:
+            certain = plan > ref_period if plan else (not report or annual)
+        elif ex > period and annual and period[5:7] >= "06" and report < period and (not plan or plan <= period):
+            certain = True
+        elif ex > period and not annual and plan and ref_period < plan <= period:
+            certain = False
+        else:
+            continue
+        amount = _fold_cash_to_basis(actions, cash, ex, basis_now)
+        if certain:
+            sure += amount
+        else:
+            ambiguous.append(amount)
+    return sure, ambiguous
+
+
 EXT_EQUITY_STATS: dict[str, int] = defaultdict(int)     # §13 第 3 条：各退化模式计数，建带结尾打印
 EXT_EQUITY_TOP: list[tuple[float, str, str, str]] = []   # (|x|/BPS, 代码, 名称, 报告期) 最新带中超阈值者
 
@@ -863,6 +914,7 @@ def external_equity_intra(series: dict[str, dict], actions: list[dict], period: 
     """§6.5.1 第 1 条：最新年报之后的**外生权益/股** `x` 与当期股数估计。
 
     `x = BPS_当期 − (年报母公司权益 + 其后归母净利 − 其后现金分红) ÷ 当期股数`；年报行 `x = 0`。
+    「其后现金分红」按本期期末权益是否已扣判定（`dividends_booked_since`），不按公告日窗口。
     股数 = 年报期末股数 × 基准日间送转因子；「归母净利 ÷ EPS」隐含股数仅在与之明显不符（>3%）且不能用
     本行之后的送转重述解释时采用（东财会按后来的送转重述历史 EPS 而不重述 BPS，比亚迪 2024 年报 EPS 4.61
     = 13.84 ÷ 3）。返回 `(x_ps, shares_now, bps_basis_now, mode)`；不可算时 `x = 0` 并由 mode 说明。"""
@@ -900,9 +952,8 @@ def external_equity_intra(series: dict[str, dict], actions: list[dict], period: 
     if np_ytd is None:
         return 0.0, shares_assumed, basis_now, "np_gap"
     np_since += np_ytd
-    # 其后现金分红（每股，折到本行 BPS 基准）：窗口 (年报公告日, 本期公告日]——已宣告分红在期末多已计入应付股利
-    _vals, _f, cash_cum = exright_adjust(actions, ref_notice, notice_now, ())
-    div_ps = cash_cum * split_factor(actions, basis_now, notice_now)
+    # 其后现金分红（每股，折到本行 BPS 基准）：按「期末权益是否已扣」判，见 dividends_booked_since
+    div_ps, div_ambiguous = dividends_booked_since(actions, ref_period, period, basis_now)
     # 股数：年报期末 × 送转 为缺省（`shares_ref`）；用「归母净利 ÷ EPS」的隐含股数**相对年报行的变化倍数**
     # 承接稀释／注销（`shares_eps`）——只比倍数、不比水平：E/BPS 与 净利/EPS 的水平可差 5~10%（其他权益
     # 工具、加权平均），但两者都按同一倍数动；且东财会按后来的送转重述历史 EPS（比亚迪 2024 年报 4.61 =
@@ -910,6 +961,10 @@ def external_equity_intra(series: dict[str, dict], actions: list[dict], period: 
     # 余下的倍数超过 3% 才算真实的股数变化。
     shares_now, mode = shares_assumed, "shares_ref"
     x_assumed = bps_now - (ref_equity + np_since) / shares_assumed + div_ps
+    for amount in div_ambiguous:                 # 确认日不可知的分红：取使 |x| 更小的解释（计入即 x 增大 amount）
+        if abs(x_assumed + amount) < abs(x_assumed):
+            x_assumed += amount
+            div_ps += amount
     np_row, eps_row = np_ytd, _num(row.get("basic_eps"))
     np_ref, eps_ref = _num(ref_row.get("parent_netprofit")), _num(ref_row.get("basic_eps"))
     # 三道守卫（全市场实测后加）：①EPS 精度——按该行 EPS 的小数位数估舍入误差，相对误差 >2% 的行不用

@@ -7,7 +7,10 @@ Run: ``python3 scripts/test_equity_anchor.py``
 1. 增发是「股权换现金」：每股 NOPAT 锚不得被募资抬高，募资按面值进每股净现金（东鹏 2026Q1 判例的抽象）；
 2. 回购注销同式、符号相反；
 3. 东财按后来的送转重述历史 EPS 而不重述 BPS 时，不得把重述误判成股数变化；
-4. 送转落在报告期末与公告日之间时，BPS 是否已按除权后股本列示要按数据判、不按公告日假定（比亚迪 2025 中报判例）。
+4. 送转落在报告期末与公告日之间时，BPS 是否已按除权后股本列示要按数据判、不按公告日假定（比亚迪 2025 中报判例）；
+5. 「其后现金分红」按期末权益是否已扣判（v4.87）：年度分配预案 ≤ 中报期末即计入（除权可晚于公告日，泸州老窖 2026 中报判例）、
+   一季报期末不计；确认日不可知的中期分红（预案 ≤ 年报期末而除权在其后、预案后未除权）按 |x| 更小的解释取舍；
+   同日派转的每股现金按除权后股本折算。
 """
 from __future__ import annotations
 
@@ -92,6 +95,55 @@ class ExternalEquityIntraTest(unittest.TestCase):
         self.assertEqual(mode, "shares_ref")
         self.assertAlmostEqual(x, 0.0, places=6)
         self.assertAlmostEqual(shares, 10e8)
+
+    def test_declared_annual_dividend_booked_at_h1_not_q1(self):
+        # 年度分配预案 04-25、除权 08-28（晚于中报公告 08-25）：中报期末权益已计应付股利 → 计入；一季报期末尚未审议 → 不计
+        actions = [{"ex_dividend_date": "2025-08-28", "cash_per_share": "0.5", "share_ratio": "0",
+                    "plan_notice_date": "2025-04-25", "report_date": "2024-12-31"}]
+        self.assertEqual(B.dividends_booked_since(actions, "2024-12-31", "2025-06-30", "2025-08-25"), (0.5, []))
+        self.assertEqual(B.dividends_booked_since(actions, "2024-12-31", "2025-03-31", "2025-04-28"), (0.0, []))
+        # H1：权益 100 + 8 − 5（应付股利）= 103 亿 / 10 亿股 → BPS 10.3；x 必须 ≈ 0，不得读成注销
+        series = {"2024-12-31": self.ref, "2025-06-30": row("2025-06-30", "2025-08-25", 10.3, 8e8, 0.8)}
+        x, _s, _b, mode = B.external_equity_intra(series, actions, "2025-06-30", "2024-12-31", 100e8)
+        self.assertAlmostEqual(x, 0.0, places=6)
+        self.assertEqual(mode, "shares_ref")
+
+    def test_interim_paid_before_annual_notice_is_counted(self):
+        # 三季度分红预案 12-25、除权 01-24（早于年报公告 03-30）：年末是否已计应付不可知 → 按 |x| 更小的解释
+        actions = [{"ex_dividend_date": "2025-01-24", "cash_per_share": "0.3", "share_ratio": "0",
+                    "plan_notice_date": "2024-12-25", "report_date": "2024-09-30"}]
+        self.assertEqual(B.dividends_booked_since(actions, "2024-12-31", "2025-03-31", "2025-04-28"), (0.0, [0.3]))
+        # 泸州老窖型：年末未扣、1 月才付 → 一季报 BPS = (100+4−3)/10 = 10.1，计入后 x≈0
+        series = {"2024-12-31": self.ref, "2025-03-31": row("2025-03-31", "2025-04-28", 10.1, 4e8, 0.4)}
+        x, _s, _b, _m = B.external_equity_intra(series, actions, "2025-03-31", "2024-12-31", 100e8)
+        self.assertAlmostEqual(x, 0.0, places=6)
+        # 格力型：年报权益已计应付股利（ref_equity 已是扣后的 100 亿）、1 月付款不再动权益 → BPS = (100+4)/10 = 10.4，不计入 x≈0
+        series = {"2024-12-31": self.ref, "2025-03-31": row("2025-03-31", "2025-04-28", 10.4, 4e8, 0.4)}
+        x, _s, _b, _m = B.external_equity_intra(series, actions, "2025-03-31", "2024-12-31", 100e8)
+        self.assertAlmostEqual(x, 0.0, places=6)
+        # 预案晚于年报期末（01-05）→ 确定计入
+        actions2 = [dict(actions[0], plan_notice_date="2025-01-05")]
+        self.assertEqual(B.dividends_booked_since(actions2, "2024-12-31", "2025-03-31", "2025-04-28"), (0.3, []))
+
+    def test_interim_declared_not_yet_ex_is_not_booked(self):
+        # 中期分配预案 08-28、除权 10-20：三季报期末权益多未扣 → 不计；到三季报之后的年报行 x 恒为 0，下一期由①接住
+        actions = [{"ex_dividend_date": "2025-10-20", "cash_per_share": "0.2", "share_ratio": "0",
+                    "plan_notice_date": "2025-08-28", "report_date": "2025-06-30"}]
+        self.assertEqual(B.dividends_booked_since(actions, "2024-12-31", "2025-09-30", "2025-10-28"), (0.0, [0.2]))
+
+    def test_dividend_cash_folded_to_bps_basis(self):
+        # 06-20 派 0.2 后 07-10 十转十、中报 BPS 按除权后股本（基准 = 公告日）：每股现金折半；晚于基准日的同日派转不放大现金
+        actions = [{"ex_dividend_date": "2025-06-20", "cash_per_share": "0.2", "share_ratio": "0"},
+                   {"ex_dividend_date": "2025-07-10", "cash_per_share": "0", "share_ratio": "1.0"}]
+        self.assertAlmostEqual(B.dividends_booked_since(actions, "2024-12-31", "2025-06-30", "2025-08-25")[0], 0.1)
+        self.assertAlmostEqual(B.dividends_booked_since(actions, "2024-12-31", "2025-06-30", "2025-06-30")[0], 0.2)
+        # 同日派 0.5 转 10 转 10、基准日在其后：每股现金按除权后股本折半（同花顺 2026-04-10 判例）
+        actions3 = [{"ex_dividend_date": "2025-04-10", "cash_per_share": "0.5", "share_ratio": "1.0",
+                     "plan_notice_date": "2025-03-10", "report_date": "2024-12-31"}]
+        self.assertAlmostEqual(B.dividends_booked_since(actions3, "2024-12-31", "2025-06-30", "2025-08-25")[0], 0.25)
+        actions2 = [{"ex_dividend_date": "2025-08-28", "cash_per_share": "0.5", "share_ratio": "1.0",
+                     "plan_notice_date": "2025-04-25", "report_date": "2024-12-31"}]
+        self.assertAlmostEqual(B.dividends_booked_since(actions2, "2024-12-31", "2025-06-30", "2025-06-30")[0], 0.5)
 
     def test_annual_row_is_zero_by_construction(self):
         series = {"2024-12-31": self.ref}
