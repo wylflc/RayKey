@@ -585,6 +585,36 @@ class Correlations:
         return value
 
 
+def correlation_skip_buyable_codes(rows, held_codes, corr: Correlations, day: str,
+                                   max_corr: float, scan_depth: int,
+                                   max_positions: int) -> set[str]:
+    """预演生产 `corr_conflict=skip`：返回当前持仓下能通过相关性过滤的候选代码。
+
+    供 OI-101 的「只有实际可买的未持仓候选才能触发换仓」研究臂使用。这里不能把
+    换仓卖出预先算进去：候选若在卖出前不可买，就不能先靠自己触发卖出、再反过来
+    证明自己可买。未知相关性沿用生产语义放行。
+    """
+    held = set(held_codes)
+    anchors = list(held)
+    chosen = []
+    for row in rows[:scan_depth]:
+        if len(chosen) >= max_positions:
+            break
+        code = row[0]
+        if code in held:
+            chosen.append(row)               # 已持仓加仓不受相关性约束
+            continue
+        held_conflict = any(
+            (value := corr.get(code, other, day)) is not None and value > max_corr
+            for other in anchors if other != code)
+        candidate_conflict = any(
+            (value := corr.get(code, other[0], day)) is not None and value > max_corr
+            for other in chosen if other[0] not in held)
+        if not held_conflict and not candidate_conflict:
+            chosen.append(row)
+    return {row[0] for row in chosen}
+
+
 # 档位排序偏置。用户 2026-08-08 提出「L1 空间 +20/+10 再跟 L2 排序」。
 TIER_BONUS = {"L1": 0.20, "L2": 0.10, "L3": 0.0}
 TIER_QUOTA = {"L1": 4, "L2": 5, "L3": 1}
@@ -1081,6 +1111,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         gain_sell: float = 0.0, gain_sell_mode: str = "gated",
         swap_trigger: str = "power", credit_over_limit: str = "repay",
         swap_held_trigger: bool = False, swap_proceeds: str = "pv",
+        swap_post_corr_trigger: bool = False,
         candidate_log=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
@@ -1861,6 +1892,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 口径已按用户裁定撤回。
         if credit_over_limit == "repay" and credit_ratio > 0 and portfolio.debt > credit_limit + 1e-6:
             stats["超额授信·当日无新增买入"] += 1
+        # OI-101 第四臂：先按生产 `corr_conflict=skip` 预演一次相关性过滤。只有在**当前持仓不变**
+        # 的前提下确实能进入买入段的未持仓候选，才有资格触发释放资金；卖出款去向仍由后面的
+        # 正式相关性过滤＋全局 P/V 排序决定。BASE 缺省关闭，逐位保持「先触发、后过滤」。
+        post_corr_buyable = None
+        if swap_post_corr_trigger and max_corr and corr is not None and not cluster_swap:
+            if corr_conflict != "skip":
+                raise ValueError("--swap-post-corr-trigger 目前只定义于 --corr-conflict skip")
+            post_corr_buyable = correlation_skip_buyable_codes(
+                eligible, portfolio.lots, corr, day, max_corr, scan_depth, max_positions)
         if swap and eligible:
             for code, close, value, ratio in eligible[:max_positions]:
                 # `swap_held_trigger`（OI-101 研究开关）：已持仓候选想加仓而资金不足时同样触发换仓，
@@ -1874,6 +1914,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 blocked = funds < (lump_sum or budget) or len(portfolio.lots) >= max_positions
                 if not blocked:
                     break
+                if post_corr_buyable is not None and code not in post_corr_buyable:
+                    stats["换仓触发·相关性挡下"] += 1
+                    continue
                 # 配置通道的持仓**不作为换仓的卖出源**——否则通道刚买进来就会被主排序换掉，
                 # 额度形同虚设（§12.56.2 实测：换仓正是终结长期赢家的那条路径）。
                 # 分位口径下换仓比的是**分位**，`swap_margin` 的单位随之变成分位点
@@ -2767,6 +2810,9 @@ def main() -> int:
                         help="OI-101 研究开关：换仓卖出款去向——pv=按 P/V 升序买（缺省）；target=谁触发换仓先买谁，余款再按 P/V")
     parser.add_argument("--swap-held-trigger", action="store_true",
                         help="OI-101 研究开关：已持仓候选想加仓而资金不足时也触发换仓（缺省只由未持仓候选触发）")
+    parser.add_argument("--swap-post-corr-trigger", action="store_true",
+                        help="OI-101 第四臂：只有先通过生产相关性过滤、实际可买的未持仓候选才能触发换仓；"
+                             "卖出款仍按全局 P/V 排序（目前只定义于 corr-conflict=skip）")
     parser.add_argument("--swap-trigger", choices=("cash", "power"), default="power",
                         help="换仓触发口径（OI-081）：power=现金＋剩余授信不足一档才换（§10.2 可用资金，缺省）；"
                              "cash=只看现金（v4.39 前旧口径，复现旧读数用）")
@@ -3032,6 +3078,7 @@ def main() -> int:
                      + ("_sp" if args.swap_partial else "")
                      + ("_sht" if args.swap_held_trigger else "")
                      + ("_spt" if args.swap_proceeds == "target" else "")
+                     + ("_spct" if args.swap_post_corr_trigger else "")
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
                      + (f"_ml{args.min_lot_cooldown}" if args.min_lot_cooldown else "")
                      + ("_lrc" if args.lot_ratio_cooldown else "")
@@ -3125,6 +3172,7 @@ def main() -> int:
                          gain_sell_mode=args.gain_sell_mode, swap_trigger=args.swap_trigger,
                          credit_over_limit=args.credit_over_limit, swap_held_trigger=args.swap_held_trigger,
                          swap_proceeds=args.swap_proceeds,
+                         swap_post_corr_trigger=args.swap_post_corr_trigger,
                          candidate_log=cand_writer)
             if cand_handle is not None:
                 cand_handle.close()
