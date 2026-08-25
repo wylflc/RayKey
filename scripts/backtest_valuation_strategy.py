@@ -444,6 +444,15 @@ def load_universe(path: Path) -> list[tuple[str, set[str]]]:
     return snapshots
 
 
+def parse_excluded_codes(text: str) -> set[str]:
+    """Parse the research-only comma-separated security-code exclusion list."""
+    codes = {part.strip() for part in (text or "").split(",") if part.strip()}
+    invalid = sorted(code for code in codes if len(code) != 6 or not code.isdigit())
+    if invalid:
+        raise ValueError(f"股票代码须为 6 位数字：{','.join(invalid)}")
+    return codes
+
+
 def load_quota(path: Path) -> dict[str, list[tuple[str, str]]]:
     """配置通道的成员区间：{代码: [(起, 止)]}。与 `--universe-file` 同格式，`effective_to` 可空。
 
@@ -2425,6 +2434,23 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
     sharpe = (cagr - rf) / vol if vol and not math.isnan(vol) and vol > 0 else float("nan")
     exposure = statistics.fmean([1 - c / e for _d, e, c, *_r in curve if e > 0])
 
+    # 只在实际持仓日统计集中度，避免把空仓日的 0 当作「充分分散」。top1/top3 是股票市值
+    # 除以净资产，故融资时允许超过 100%；这与 --position-cap 的分母一致，也最贴近实盘上限口径。
+    holding_days = [row for row in curve if row[3] > 0]
+    position_counts = [row[3] for row in holding_days]
+    top1_weights = [row[6] for row in holding_days]
+    top3_weights = [row[7] for row in holding_days]
+
+    def _quantile(values, q: float) -> float:
+        if not values:
+            return float("nan")
+        ordered = sorted(values)
+        pos = (len(ordered) - 1) * q
+        lo, hi = math.floor(pos), math.ceil(pos)
+        if lo == hi:
+            return ordered[lo]
+        return ordered[lo] + (ordered[hi] - ordered[lo]) * (pos - lo)
+
     closed = result["closed"]
     wins = [l for l in closed if l.proceeds > l.invested]
     profits = [l.proceeds - l.invested for l in closed]
@@ -2513,6 +2539,18 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "强平次数": len(result.get("margin_events") or []),
             "最低担保比例": result.get("min_margin_ratio", float("inf")),
             "平均仓位": exposure, "周期数": len(closed),
+            "持仓数中位": statistics.median(position_counts) if position_counts else float("nan"),
+            "持仓数P25": _quantile(position_counts, 0.25),
+            "单票权重中位": statistics.median(top1_weights) if top1_weights else float("nan"),
+            "单票权重P90": _quantile(top1_weights, 0.90),
+            "单票权重最大": max(top1_weights) if top1_weights else float("nan"),
+            "前三权重中位": statistics.median(top3_weights) if top3_weights else float("nan"),
+            "前三权重P90": _quantile(top3_weights, 0.90),
+            "前三权重最大": max(top3_weights) if top3_weights else float("nan"),
+            "单票超60%天数占比": (sum(v > 0.60 for v in top1_weights) / len(top1_weights)
+                                  if top1_weights else float("nan")),
+            "单票超100%天数占比": (sum(v > 1.00 for v in top1_weights) / len(top1_weights)
+                                   if top1_weights else float("nan")),
             "胜率": len(wins) / len(closed) if closed else float("nan"),
             "盈亏比": (statistics.fmean([p for p in profits if p > 0]) /
                     abs(statistics.fmean([p for p in profits if p <= 0]))
@@ -2658,6 +2696,9 @@ def main() -> int:
     parser.add_argument("--universe-file", type=Path,
                         help="时点股票库（现行 panel_moat_bank_v6b.csv，由 build_moat_panel.py 装配）。"
                              "给了它就只在当期成员里选股，移出的持仓逐步清仓")
+    parser.add_argument("--exclude-codes", default="", metavar="CODE[,CODE...]",
+                        help="研究开关：从本次股票池统一剔除指定 6 位代码；逗号分隔。"
+                             "用于赢家依赖/留一法检验，不改变源面板")
     parser.add_argument("--quota-file", type=Path,
                         help="配置通道的成员区间（与 --universe-file 同格式）。"
                              "配 --quota-pct 使用；OI-046 末段那条「不经由 P/V 排序的独立配置通道」")
@@ -2910,7 +2951,13 @@ def main() -> int:
                 transfer=args.transfer, stamp_mode=args.fee_stamp_mode)
 
     print(f"载入…（逐日估值状态、行情、除权除息、均线）")
+    try:
+        excluded_codes = parse_excluded_codes(args.exclude_codes)
+    except ValueError as exc:
+        sys.exit(f"--exclude-codes 无效：{exc}")
     universe = load_universe(args.universe_file) if args.universe_file else None
+    if universe and excluded_codes:
+        universe = [(day, members - excluded_codes) for day, members in universe]
     quota = load_quota(args.quota_file) if args.quota_file else None
     if args.quota_pct > 0 and not quota:
         sys.exit("给了 --quota-pct 却没给 --quota-file：配置通道无成员，等于没开——拒绝静默跑空")
@@ -2941,6 +2988,9 @@ def main() -> int:
                   f"「只在 P/V ≥ {args.sell_line} 时才止损」。", file=sys.stderr)
     states = load_states(args.daily_states,
                          {c for _d, m in universe for c in m} if universe else None)
+    if excluded_codes and not universe:
+        states = {day: [row for row in rows if row[0] not in excluded_codes]
+                  for day, rows in states.items()}
     prices = load_prices({r[0] for rows in states.values() for r in rows})
     opens = (load_opens({r[0] for rows in states.values() for r in rows})
              if args.exec_delay and args.exec_price == "open" else None)
@@ -3001,6 +3051,8 @@ def main() -> int:
         sizes = [len(m) for _d, m in universe]
         print(f"  **时点股票库**：{len(universe)} 档｜{universe[0][0]} 起生效｜"
               f"每档 {min(sizes)}~{max(sizes)} 只｜并集 {len({c for _d, m in universe for c in m}):,} 只")
+    if excluded_codes:
+        print(f"  **研究剔除**：{len(excluded_codes)} 只｜{','.join(sorted(excluded_codes))}")
     if args.since < covered[0]:
         print(f"  ⚠ 请求起点 {args.since} 早于估值状态起点 **{covered[0]}**，"
               f"实际从后者起跑（历史带需先有逐季财务与五年年报 ROE，见工作流 §12.1）")
@@ -3079,6 +3131,7 @@ def main() -> int:
                      + ("_sht" if args.swap_held_trigger else "")
                      + ("_spt" if args.swap_proceeds == "target" else "")
                      + ("_spct" if args.swap_post_corr_trigger else "")
+                     + (f"_ex{len(excluded_codes)}" if excluded_codes else "")
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
                      + (f"_ml{args.min_lot_cooldown}" if args.min_lot_cooldown else "")
                      + ("_lrc" if args.lot_ratio_cooldown else "")
