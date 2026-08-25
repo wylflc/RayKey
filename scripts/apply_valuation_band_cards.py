@@ -121,6 +121,14 @@ def exchange_of(code: str) -> str:
     return "SH" if code[0] == "6" else "SZ"
 
 
+def quote_date(quote_time: object, fallback: str) -> str:
+    """Return the provider's actual trading date, not the evidence cutoff date."""
+    raw = str(quote_time or "").strip()
+    if len(raw) >= 8 and raw[:8].isdigit():
+        return f"{raw[:4]}-{raw[4:6]}-{raw[6:8]}"
+    return fallback
+
+
 REPORT_EVENT = {"03-31": "一季报", "06-30": "中报", "09-30": "三季报", "12-31": "年报"}
 
 
@@ -205,7 +213,10 @@ def main() -> int:
         price = quote.get("price")
         if price:
             row["current_price"] = f"{price}"
-            row["valuation_price_as_of"] = args.as_of
+            # `--as-of` is the evidence cutoff (§6.7), which can be the next
+            # calendar day for an evening filing.  The quote may still be the
+            # previous trading day's close, so stamp it from Tencent field 30.
+            row["valuation_price_as_of"] = quote_date(quote.get("quote_time"), args.as_of)
             if quote.get("pe_ttm") is not None:
                 row["pe_ttm"] = f"{quote['pe_ttm']}"
             if quote.get("pb") is not None:
