@@ -35,7 +35,7 @@
 
 增量规则（OI-098）
 ------------------
-`--as-of` 是证据日（北京历日，缺省取北京当日）。**应到年报期** = `as-of` 上一年的 12-31。
+`--signal-date` 是信号日，证据日统一取下一工作日。**应到年报期** = 证据日上一年的 12-31。
 名单里的代码分三类处理：①文件里没有的→取；②文件里有、但最新 `REPORT_DATE` 早于应到年报期
 → **整只重取并替换**（东财一次返回全部年报期，替换即超集）；③已到应到期→跳过。
 2026-08-24 前只有 ①，「代码已在文件里」就整只跳过——年报披露后按 §6.7 命令跑，已有的
@@ -45,7 +45,7 @@
 
 用法::
 
-    python3 scripts/fetch_a_share_financial_statements.py --as-of 2026-08-24   # 缺省名单：回测宇宙 v6b ∪ 分层表全体
+    python3 scripts/fetch_a_share_financial_statements.py --signal-date 2026-08-24
     python3 scripts/fetch_a_share_financial_statements.py --panel data/processed/pit_attention/panel_moat_bank_v6b.csv
     python3 scripts/fetch_a_share_financial_statements.py --codes 600519 601166 --refresh
 """
@@ -63,6 +63,8 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
+from a_share_signal_dates import evidence_date_for_signal
+
 OUT_DIR = ROOT / "data/raw/financials_statements"
 PANELS = (ROOT / "data/processed/pit_attention/panel_moat_bank_v6b.csv",
           ROOT / "data/processed/a_share_watchlist_quality_tiers.csv")
@@ -173,13 +175,13 @@ def main() -> int:
                         help="取这些名单文件里 security_code 的并集，缺省＝回测宇宙 ∪ 分层表")
     parser.add_argument("--codes", nargs="*", help="只取这些代码，缺省取面板全体")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
-    parser.add_argument("--as-of", type=date.fromisoformat, default=None,
-                        help="证据日 YYYY-MM-DD（北京历日，缺省取北京当日）；应到年报期 = 上一年 12-31")
+    parser.add_argument("--signal-date", type=date.fromisoformat, required=True,
+                        help="信号日 YYYY-MM-DD；证据日自动取下一工作日")
     parser.add_argument("--refresh", action="store_true", help="全量重取（含已到应到年报期的代码）")
     parser.add_argument("--timeout", type=float, default=45.0)
     parser.add_argument("--pause", type=float, default=0.25)
     args = parser.parse_args()
-    as_of = args.as_of or beijing_today()
+    as_of = evidence_date_for_signal(args.signal_date)
     expected = expected_annual_period(as_of)
 
     if args.codes:

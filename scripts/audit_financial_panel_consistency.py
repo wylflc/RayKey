@@ -23,8 +23,8 @@
 
 用法
 ----
-    python3 scripts/audit_financial_panel_consistency.py --as-of YYYY-MM-DD
-    python3 scripts/audit_financial_panel_consistency.py --as-of YYYY-MM-DD --all-market
+    python3 scripts/audit_financial_panel_consistency.py --signal-date YYYY-MM-DD
+    python3 scripts/audit_financial_panel_consistency.py --signal-date YYYY-MM-DD --all-market
 缺省只扫核心估值池（201 只）；`--all-market` 扫面板全部公司，慢很多。
 """
 from __future__ import annotations
@@ -33,6 +33,8 @@ import argparse
 import csv
 from collections import defaultdict
 from pathlib import Path
+
+from a_share_signal_dates import evidence_iso_for_signal
 
 ROOT = Path(__file__).resolve().parent.parent
 ROE_RATIO_WARN = 2.0     # 隐含 ROE / 自报 ROE 超出 [1/2, 2] 报警
@@ -79,7 +81,7 @@ def load_share_factors(path: Path) -> dict[str, list[tuple[str, float, float]]]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="季度财务面板逐行自洽核对")
-    ap.add_argument("--as-of", required=True)
+    ap.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
     ap.add_argument("--financials-dir", type=Path, default=ROOT / "data/raw/financials")
     ap.add_argument("--pool", type=Path, default=ROOT / "data/processed/a_share_core_valuation_pool.csv")
     ap.add_argument("--corporate-actions", type=Path,
@@ -88,6 +90,7 @@ def main() -> int:
     ap.add_argument("--periods", type=int, default=8, help="每只回看多少期")
     ap.add_argument("--out", type=Path, default=ROOT / "data/interim/financial_panel_anomalies.csv")
     args = ap.parse_args()
+    args.as_of = evidence_iso_for_signal(args.signal_date)
 
     codes = None
     names: dict[str, str] = {}

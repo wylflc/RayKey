@@ -34,9 +34,9 @@
 
 用法::
 
-    python3 scripts/fetch_ohlcv_history.py --as-of 2026-08-07                 # 池+持仓，全历史，增量
-    python3 scripts/fetch_ohlcv_history.py --as-of 2026-08-07 --limit 5       # 冒烟
-    python3 scripts/fetch_ohlcv_history.py --as-of 2026-08-07 --actions-only  # 只刷除权事件
+    python3 scripts/fetch_ohlcv_history.py --signal-date 2026-08-07                 # 池+持仓，全历史，增量
+    python3 scripts/fetch_ohlcv_history.py --signal-date 2026-08-07 --limit 5       # 冒烟
+    python3 scripts/fetch_ohlcv_history.py --signal-date 2026-08-07 --actions-only  # 只刷除权事件
 """
 from __future__ import annotations
 
@@ -50,6 +50,8 @@ from datetime import date, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+from a_share_signal_dates import evidence_iso_for_signal
+
 POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
 OHLCV_DIR = ROOT / "data/raw/ohlcv"
@@ -249,7 +251,7 @@ def universe() -> list[tuple[str, str, str]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="逐票不复权日线 + 除权除息事件（OI-035）")
-    parser.add_argument("--as-of", required=True, help="截止交易日 YYYY-MM-DD")
+    parser.add_argument("--signal-date", required=True, help="信号日 YYYY-MM-DD；证据日自动取下一工作日")
     parser.add_argument("--limit", type=int, default=0, help="只跑前 N 只（冒烟用）")
     parser.add_argument("--timeout", type=float, default=20.0)
     parser.add_argument("--pause", type=float, default=0.12)
@@ -264,6 +266,7 @@ def main() -> int:
                         help="改用文件里的代码清单（每行一个），用于补取**当前池外**的历史标的"
                              "——这正是解幸存者偏差所需（§12.4 登记的那一半）")
     args = parser.parse_args()
+    args.as_of = evidence_iso_for_signal(args.signal_date)
 
     until = date.fromisoformat(args.as_of)
     targets = universe()

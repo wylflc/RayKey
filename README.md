@@ -35,7 +35,7 @@ A 股上市公司研究与数据分析仓库（附带港/美/韩观察清单）�
 ```bash
 python3 scripts/fetch_a_share_universe.py --output data/raw/a_share_securities.csv   # 名单刷新（§5.3）
 python3 scripts/build_quarterly_quality_review_queue.py --as-of YYYY-MM-DD           # 季度审查队列
-python3 scripts/build_report_update_queue.py --market A_SHARE --as-of YYYY-MM-DD     # 披露更新队列
+python3 scripts/build_report_update_queue.py --market A_SHARE --signal-date YYYY-MM-DD     # 披露更新队列
 python3 scripts/build_a_share_company_analysis_index.py                              # 跨轮次公司结论索引
 ```
 

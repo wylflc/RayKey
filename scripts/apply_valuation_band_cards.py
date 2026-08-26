@@ -14,7 +14,7 @@ What this writes:
 
 Usage::
 
-    python3 scripts/apply_valuation_band_cards.py --as-of 2026-08-01 --quotes fetch
+    python3 scripts/apply_valuation_band_cards.py --signal-date 2026-08-01 --quotes fetch
 """
 
 from __future__ import annotations
@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import json  # noqa: E402
 
 from a_share_quotes import fetch_spot_quotes  # noqa: E402
+from a_share_signal_dates import evidence_iso_for_signal  # noqa: E402
 from build_a_share_core_valuation_pool import effective_valuation_tier  # noqa: E402
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log  # noqa: E402
 
@@ -171,11 +172,12 @@ MODEL_BANDS = _load_model_bands()
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="把建带卡与标签重映射合并回估值表")
-    parser.add_argument("--as-of", required=True)
+    parser.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
     parser.add_argument("--quotes", choices=["fetch", "skip"], default="fetch")
     parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+    args.as_of = evidence_iso_for_signal(args.signal_date)
 
     rows = read(VALUATION)
     tiers = {r["security_code"].zfill(6): r.get("quality_tier", "") for r in read(TIERS)}
@@ -186,7 +188,7 @@ def main() -> int:
     if args.quotes == "fetch":
         items = [(r["security_code"].zfill(6), exchange_of(r["security_code"].zfill(6))) for r in rows]
         quotes = fetch_spot_quotes(items)
-        print(f"行情：取到 {len(quotes)}/{len(items)} 只（{args.as_of}）")
+        print(f"行情：取到 {len(quotes)}/{len(items)} 只（信号日 {args.signal_date}，证据日 {args.as_of}）")
 
     fieldnames = list(rows[0].keys())
     for field in CARD_FIELDS:
@@ -213,10 +215,10 @@ def main() -> int:
         price = quote.get("price")
         if price:
             row["current_price"] = f"{price}"
-            # `--as-of` is the evidence cutoff (§6.7), which can be the next
+            # The derived evidence date is the cutoff (§6.7), which can be the next
             # calendar day for an evening filing.  The quote may still be the
             # previous trading day's close, so stamp it from Tencent field 30.
-            row["valuation_price_as_of"] = quote_date(quote.get("quote_time"), args.as_of)
+            row["valuation_price_as_of"] = quote_date(quote.get("quote_time"), args.signal_date)
             if quote.get("pe_ttm") is not None:
                 row["pe_ttm"] = f"{quote['pe_ttm']}"
             if quote.get("pb") is not None:

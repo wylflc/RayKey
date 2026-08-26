@@ -18,6 +18,8 @@ import csv
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+from a_share_signal_dates import evidence_iso_for_signal
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ATTENTION_TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"
@@ -70,7 +72,7 @@ def is_valuation_scope_tier(tier: str) -> bool:
 
 
 def _visible(row: dict[str, str], as_of: str) -> bool:
-    """公告日晚于 `as_of` 的行在该时点不可见——晚间披露官方戳次日，须以戳日为 `--as-of` 重建才可入队。
+    """公告日晚于证据截止日的行在该时点不可见。
     公告日缺失的行按不可见处理（无法证明其在时点前已披露）。"""
     notice = (row.get("notice_date") or "").strip()[:10]
     return bool(notice) and notice <= as_of
@@ -302,10 +304,31 @@ def build_queue(
     return output
 
 
+def build_queue_for_signal(
+    attention_rows: list[dict[str, str]],
+    tier_rows: list[dict[str, str]],
+    valuation_rows: list[dict[str, str]],
+    financial_rows: list[dict[str, str]],
+    forecast_rows: list[dict[str, str]],
+    disclosure_rows: list[dict[str, str]],
+    signal_date: str,
+) -> list[dict[str, object]]:
+    """Production entry: derive the evidence cutoff from one signal date."""
+    return build_queue(
+        attention_rows,
+        tier_rows,
+        valuation_rows,
+        financial_rows,
+        forecast_rows,
+        disclosure_rows,
+        evidence_iso_for_signal(signal_date),
+    )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--market", default="A_SHARE")
-    parser.add_argument("--as-of", required=True)
+    parser.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
     parser.add_argument("--attention-triage", type=Path, default=DEFAULT_ATTENTION_TRIAGE)
     parser.add_argument("--tiers", type=Path, default=DEFAULT_TIERS)
     parser.add_argument("--valuation-pool", type=Path, default=DEFAULT_VALUATION_POOL)
@@ -328,6 +351,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    args.as_of = evidence_iso_for_signal(args.signal_date)
     if args.market != "A_SHARE":
         raise SystemExit("Only --market A_SHARE is supported.")
     if args.financials.is_dir():
@@ -335,14 +359,14 @@ def main() -> None:
         financial_rows = list(load_latest_indicators(args.financials, args.as_of).values())
     else:
         financial_rows = load_csv(args.financials)
-    rows = build_queue(
+    rows = build_queue_for_signal(
         load_csv(args.attention_triage),
         load_csv(args.tiers),
         load_csv(args.valuation_pool),
         financial_rows,
         load_csv(args.forecasts),
         load_csv(args.report_disclosures),
-        args.as_of,
+        args.signal_date,
     )
     fieldnames = [
         "market_type",

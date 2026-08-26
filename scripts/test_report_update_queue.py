@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""§7.1 更新队列的时点隔离：公告日晚于 `--as-of` 的披露/预告/快报不得进入队列。"""
+"""§7.1 更新队列的时点隔离与信号日→证据日映射。"""
 
 from __future__ import annotations
 
 import unittest
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import build_report_update_queue as q
 
@@ -18,6 +22,18 @@ def _pool(code: str, reviewed: str) -> dict[str, str]:
 
 
 class ReportUpdateQueueAsOfTest(unittest.TestCase):
+    def test_signal_date_automatically_exposes_next_workday_notice(self) -> None:
+        disclosures = [
+            {"security_code": "000651", "disclosure_type": "periodic_report",
+             "notice_date": "2026-08-27", "report_date": "2026-06-30", "report_label": "2026 中报"},
+        ]
+        rows = q.build_queue_for_signal(
+            [], [_tier("000651")], [_pool("000651", "2026-04-29")], [], [], disclosures, "2026-08-26"
+        )
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["as_of"], "2026-08-27")
+        self.assertEqual(rows[0]["latest_periodic_notice_date"], "2026-08-27")
+
     def test_future_dated_notice_is_invisible(self) -> None:
         disclosures = [
             {"security_code": "000001", "disclosure_type": "periodic_report",

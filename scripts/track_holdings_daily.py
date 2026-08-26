@@ -45,6 +45,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from a_share_quotes import fetch_spot_quotes
+from a_share_signal_dates import evidence_iso_for_signal
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
 from build_a_share_core_valuation_pool import DEEP_UNDERVALUED_UPSIDE, OVERVALUED_BAND_MULT
 from screen_daily_volume_price_signals import SEC93_GAIN_SELL, SEC93_SELL_LINE, fetch_daily_rows, holding_trim_signal
@@ -63,7 +64,7 @@ DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 # 减持／涨幅减持的命中判定用扫描器 `holding_trim_signal`（唯一实现）；执行清单由扫描器 `daily_sell_plan.csv` 给出。
 SELL_LINE = SEC93_SELL_LINE
 # v4.62 OI-091：P/V 的净负债/企业价值来自生产带行。OI-095 起不在 import 时读带，
-# 由 track() 按 `--as-of` 载入（available_at ≤ as-of）——历史日期补跑不得用当日之后才可得的带。
+# 由 track() 按信号日自动推导的证据日载入；与扫描器使用同一时点。
 # 测试可预置桩（非 None 即不再载入）。
 MODEL_BANDS: dict[str, dict] | None = None
 # §9.3.1 涨幅减持（v4.44）：收盘较持仓均价（`cost_basis`，按 §11.4 折算）涨幅 ≥ 125% 且收盘 < MA20 → 减一档；
@@ -227,7 +228,7 @@ def resolve_prices(codes: list[str], as_of: date,
 def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeout: float) -> list[dict[str, object]]:
     global MODEL_BANDS
     if MODEL_BANDS is None:
-        MODEL_BANDS = load_model_bands(as_of=as_of.isoformat())
+        MODEL_BANDS = load_model_bands(as_of=evidence_iso_for_signal(as_of))
     with holdings_file.open(newline="", encoding="utf-8") as handle:
         holdings = list(csv.DictReader(handle))
     wanted = {s.strip().zfill(6) for s in symbols.split(",") if s.strip()}

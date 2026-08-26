@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.89
+# A股选股-估值-量价操作流程 v4.90
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -118,7 +118,7 @@ python3 scripts/fetch_a_share_universe.py \
   --output data/raw/a_share_securities.csv
 
 # 队列的财务判据读 data/raw/financials/ 逐季面板，建队列前先增量刷新到当日
-python3 scripts/fetch_a_share_quarterly_financials.py --as-of YYYY-MM-DD --since <当前报告期末> --refresh
+python3 scripts/fetch_a_share_quarterly_financials.py --signal-date YYYY-MM-DD --since <当前报告期末> --refresh
 
 python3 scripts/build_quarterly_quality_review_queue.py \
   --market A_SHARE \
@@ -335,13 +335,13 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 以下顺序是当前唯一生产路径。重建全历史模型带属于重作业，必须独占运行。
 
-**`--as-of` 一律取证据日（运行时的北京当日历日），不是扫描信号日**：晚间披露的报告公告日官方戳次日，证据日取戳日方可入带。
+所有生产命令只接收 `--signal-date`。证据日由 `scripts/a_share_signal_dates.py` 唯一推导为信号日之后的首个工作日（周一至周五）；调用方不得另行指定证据日。
 
 ```bash
 # 1. 刷新财务输入与除权事件（逐季财务、三大报表、除权事件、rf/ERP 序列四份缺一不可）
-python3 scripts/fetch_a_share_quarterly_financials.py --as-of YYYY-MM-DD --since <当前报告期末>
-python3 scripts/fetch_a_share_financial_statements.py --as-of YYYY-MM-DD   # 最新年报期早于 as-of 上一年 12-31 的代码整只重取
-python3 scripts/fetch_ohlcv_history.py --as-of YYYY-MM-DD --actions-only   # 分红送转（东财）＋配股（新浪）；缺省范围＝核心池∪持仓；档案层全员或全市场加 --codes-file
+python3 scripts/fetch_a_share_quarterly_financials.py --signal-date YYYY-MM-DD --since <当前报告期末>
+python3 scripts/fetch_a_share_financial_statements.py --signal-date YYYY-MM-DD
+python3 scripts/fetch_ohlcv_history.py --signal-date YYYY-MM-DD --actions-only
 python3 scripts/fetch_cost_of_equity_inputs.py   # rf/ERP 序列：银行/保险股利折现（第 3 步、扫描器 --rf 缺省、档案层）与 §6.8 的 r 读它的最新行
 
 # 2. 构建 ROIC 带与逐日状态
@@ -359,27 +359,27 @@ python3 scripts/rebuild_bank_bands.py divspread:0.02 \
   data/processed/roic_bands.csv
 
 # 4. 生成池模型带 → 叠加预告/快报 → 写入逐票档案 → 重渲染 README
-python3 scripts/build_pool_model_bands.py --as-of YYYY-MM-DD
-python3 scripts/apply_forecast_band_overlay.py --as-of YYYY-MM-DD
-python3 scripts/apply_model_bands_to_dossiers.py --as-of YYYY-MM-DD
+python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD
+python3 scripts/apply_forecast_band_overlay.py --signal-date YYYY-MM-DD
+python3 scripts/apply_model_bands_to_dossiers.py --signal-date YYYY-MM-DD
 python3 scripts/build_company_dossier_readmes.py   # 档案 CSV → README（§6.6 带变动后重渲染；--check 只验漂移）
 
 # 5. 档案 → 建带卡 → 估值表
 python3 scripts/build_valuation_band_cards.py \
   --tags data/interim/strategy_tag_map.csv \
   --out data/interim/valuation_band_cards.csv \
-  --as-of YYYY-MM-DD
-python3 scripts/apply_valuation_band_cards.py --as-of YYYY-MM-DD --quotes fetch
+  --signal-date YYYY-MM-DD
+python3 scripts/apply_valuation_band_cards.py --signal-date YYYY-MM-DD --quotes fetch
 
 # 5.5 逐行自洽核对财务面板（检出会静默改变带的数据错误）
-python3 scripts/audit_financial_panel_consistency.py --as-of YYYY-MM-DD
+python3 scripts/audit_financial_panel_consistency.py --signal-date YYYY-MM-DD
 
 # 6. 校验并物化核心池
 python3 scripts/validate_valuation_bands.py \
   --valuation data/processed/a_share_focus_watchlist_l1_l2_valuation.csv \
   --queue-out data/interim/valuation_rebuild_queue.csv \
-  --as-of YYYY-MM-DD
-python3 scripts/build_a_share_core_valuation_pool.py --as-of YYYY-MM-DD
+  --signal-date YYYY-MM-DD
+python3 scripts/build_a_share_core_valuation_pool.py --signal-date YYYY-MM-DD
 ```
 
 第 1 步不得跳过；披露窗未关的报告期由脚本强制重取并在结尾告警，除权事件库随第 1 步同批刷新。
@@ -390,7 +390,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --as-of YYYY-MM-DD
 
 ```bash
 python3 scripts/build_a_share_core_valuation_pool.py \
-  --md-only --quotes fetch --as-of YYYY-MM-DD
+  --md-only --quotes fetch --signal-date YYYY-MM-DD
 ```
 
 ### 6.8 海外关注清单
@@ -404,7 +404,7 @@ python3 scripts/fetch_overseas_earnings_calendar.py --as-of YYYY-MM-DD --apply
 python3 scripts/fetch_overseas_earnings_calendar.py --as-of YYYY-MM-DD --check-only
 python3 scripts/fetch_overseas_statements.py --as-of YYYY-MM-DD [--refresh] # 年报＋最新季报 TTM → overseas_roic_years.csv
 python3 scripts/build_overseas_roic_bands.py --as-of YYYY-MM-DD            # ROIC 口径合理估值 → overseas_watchlist_valuation.csv ＋ README「ROIC 口径估值」节
-python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --as-of YYYY-MM-DD
+python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --signal-date YYYY-MM-DD
 ```
 
 阅读版 `000_a_share_core_valuation_pool.md` 两表列：代码／名称／质量／参考分／估值／估值路径／现价／**合理估值 V**／**`P/V`**／估值时间／估值事件（合理价区间、空间、策略标签、PE、PB 只在 CSV）。表前只保留字段含义与交易边界；估值路径只显示方法名，不带章节号或口径注记。
@@ -431,7 +431,7 @@ python3 scripts/fetch_a_share_earnings_forecasts.py --report-date <当前报告�
 ```bash
 python3 scripts/build_report_update_queue.py \
   --market A_SHARE \
-  --as-of YYYY-MM-DD \
+  --signal-date YYYY-MM-DD \
   --attention-triage data/processed/a_share_attention_triage.csv \
   --tiers data/processed/a_share_watchlist_quality_tiers.csv \
   --valuation-pool data/processed/a_share_core_valuation_pool.csv \
@@ -440,7 +440,7 @@ python3 scripts/build_report_update_queue.py \
   --output data/interim/a_share_report_update_queue.csv
 ```
 
-**三个文件都必须当日重建**；任一文件日期早于扫描日即不可用。`garbage` 不进入队列。队列只纳入公告日 ≤ `--as-of` 的预告、快报与定期报告；晚间披露官方戳次日的，以戳日为 `--as-of` 重建方可入队。
+**三个文件都必须当日重建**；任一文件日期早于扫描日即不可用。`garbage` 不进入队列。队列只纳入公告日不晚于信号日自动推导的证据日的预告、快报与定期报告。
 
 `<当前报告期末>` 取最近一个已开始披露的报告期末（`2026-06-30` 一类）；披露窗未关时（法定截止日：一季报 4-30、半年报 8-31、三季报 10-31、年报次年 4-30）每日重取。
 
@@ -473,7 +473,7 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 
 **预告与快报触发的估值复核由 §6.4 的叠加机械完成**：叠加把带与 `valuation_reviewed_at` 一并推进到公告日，队列重建后冻结自动解除。叠加覆盖不到的行（银行与保险、`zero_growth` 路径输入不全、股本多期倒推不一致、手工带；脚本逐行打印跳过原因）走人工复核。
 
-**正式定期报告不过夜**：扫描当晚发现新披露即当晚跑完 §6.7 全链（`--as-of` 取证据日）并以同一证据日重建队列，当日信号直接使用新带；链跑完仍吸收不了的行按上段走人工复核。
+**正式定期报告不过夜**：扫描当晚发现新披露即当晚以信号日跑完 §6.7 全链并重建队列，当日信号直接使用新带；链跑完仍吸收不了的行按上段走人工复核。
 
 #### 7.5.1 Express 复核
 
@@ -497,14 +497,13 @@ python3 scripts/check_report_day_price_divergence.py --as-of YYYY-MM-DD
 
 ```bash
 python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
-  --evidence-date <证据日：运行时的北京当日历日> \
   --review-queue data/interim/a_share_report_update_queue.csv \
   --model-bands data/processed/a_share_pool_model_bands_adopted.csv \
   --nav <当日净资产> \
   --funds <现金加可用授信>
 ```
 
-`--nav` 决定一档；`--funds` 决定当天实际可执行预算。不给 `--nav` 时只生成行情和 `P/V`，不生成执行清单；不给 `--funds` 时不做换仓。产物：`daily_buy_candidates.csv`（行情与 `P/V`）、`daily_sell_plan.csv`（§9.3.2 第 4 步卖出清单）、`daily_entry_plan.csv`（第 5 步买入清单）、`daily_cooldown_state.csv`（§9.3.3 计数器）。持仓不在核心池内的票由扫描器另取行情（交易所按证券名单），只进卖出侧。`--as-of` 是信号日（最近收盘日），`--evidence-date` 是证据日（运行时的北京当日历日）；不给证据日则带可用性截止回退信号日，只用于历史重放。
+`--nav` 决定一档；`--funds` 决定当天实际可执行预算。不给 `--nav` 时只生成行情和 `P/V`，不生成执行清单；不给 `--funds` 时不做换仓。产物：`daily_buy_candidates.csv`（行情与 `P/V`）、`daily_sell_plan.csv`（§9.3.2 第 4 步卖出清单）、`daily_entry_plan.csv`（第 5 步买入清单）、`daily_cooldown_state.csv`（§9.3.3 计数器）。持仓不在核心池内的票由扫描器另取行情（交易所按证券名单），只进卖出侧。`--as-of` 是信号日（最近收盘日）；模型带的证据截止由同一信号日自动推导。
 
 ### 8.3 必需量
 
@@ -531,7 +530,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 信号口径与执行时点只认 §9.3.1。执行日价格变化不重算信号日合格集；停牌或执行日新增 §7 事件时跳过该票并重新复核。
 
 1. **同步证据**：按 **§7.1** 跑完「两个取数脚本 ＋ 队列重建」三条命令（**只重建队列不算同步证据**）；运行 §7.5.2 财报日价格背离检查；核查 §7.4 的每日范围。
-2. **更新估值与档位**：队列出现 `valuation_review_needed` 时**当晚执行 §6.7**（**含其第 1 步的逐季财务刷新**；`--as-of` 取**证据日**＝运行时的北京当日历日，不是信号日）；随后以同一证据日重建队列，再刷新核心池阅读版和当日档位。
+2. **更新估值与档位**：队列出现 `valuation_review_needed` 时**当晚以同一信号日执行 §6.7**（含其第 1 步的逐季财务刷新）；随后重建队列，再刷新核心池阅读版和当日档位。
 3. **取行情与生成买入计划**：运行 §8.2，确认净资产、可用资金、持仓和模型带均已加载。
 4. **跟踪持仓与公司行动**：运行 `track_holdings_daily.py --as-of`；先按 §11.4 用 `apply_holdings_corporate_action.py` 处理除权除息并登记台账，再检查止损、公告与估值。
 5. **形成执行清单**：由第 3 步的扫描器按 §9.3.2 先卖后买生成 `daily_sell_plan.csv` 与 `daily_entry_plan.csv`，四张表即使为空也必须显示；止损行只列候选，T+1 尾盘按现价对当日生效线复核后执行，其卖出款不计入当日买入预算。
@@ -684,7 +683,7 @@ security_code, security_name, current_shares, cost_basis, entry_stop_price
 python3 scripts/track_holdings_daily.py --as-of YYYY-MM-DD
 ```
 
-逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示现档、合理价、空间、`P/V`、MA20、MA60、生效止损线与是否命中、减持／涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，减持命中判定与扫描器同一实现（`holding_trim_signal`）；补跑历史日期时生产带只用 `available_at ≤ as-of` 的行。
+逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示现档、合理价、空间、`P/V`、MA20、MA60、生效止损线与是否命中、减持／涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，减持命中判定与扫描器同一实现（`holding_trim_signal`）；生产带的证据截止与扫描器同由信号日自动推导。
 
 ### 11.4 除权除息
 

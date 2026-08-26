@@ -59,6 +59,8 @@ import csv
 import sys
 from pathlib import Path
 
+from a_share_signal_dates import evidence_iso_for_signal
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from financials_corrections import apply_corrections as _apply_corr, report as _corr_report  # noqa: E402
 
@@ -301,7 +303,7 @@ def recompute(band: dict, scale: float) -> tuple[float | None, float, str] | Non
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="把业绩预告／快报叠加到生产模型带（§6.3 第 5 条）")
-    ap.add_argument("--as-of", required=True, help="信号日（北京时间），只采用公告日不晚于它的证据")
+    ap.add_argument("--signal-date", required=True, help="信号日；证据截止自动取下一工作日")
     ap.add_argument("--bands", type=Path, default=ROOT / "data/processed/a_share_pool_model_bands_adopted.csv")
     ap.add_argument("--forecasts", type=Path, default=ROOT / "data/interim/a_share_earnings_forecasts.csv")
     ap.add_argument("--disclosures", type=Path, default=ROOT / "data/interim/a_share_report_disclosures.csv")
@@ -315,6 +317,7 @@ def main() -> int:
                     help="只用于按 总市值÷现价 交叉校验股本；缺失则跳过校验")
     ap.add_argument("--out", type=Path, default=None, help="缺省原地覆盖 --bands")
     args = ap.parse_args()
+    args.as_of = evidence_iso_for_signal(args.signal_date)
 
     with args.bands.open(encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)

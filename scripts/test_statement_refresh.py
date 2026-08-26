@@ -3,7 +3,7 @@
 
 Run: ``python3 scripts/test_statement_refresh.py``
 
-锁定的行为：`fetch_a_share_financial_statements.py` 按 `--as-of` 判应到年报期（上一年 12-31），
+锁定的行为：`fetch_a_share_financial_statements.py` 按信号日推导证据日，并据此判应到年报期，
 最新年报期落后的代码**整只重取并替换**、已到期的跳过、重取失败保留原有行。
 2026-08-24 前的实现只看「代码是否已在文件里」，年报披露后按 §6.7 命令跑永远不更新已有代码。
 
@@ -91,7 +91,7 @@ class MainMergeTest(unittest.TestCase):
 
     def _run(self, as_of: str, fetch_stub) -> int:
         argv = ["prog", "--codes", "000001", "600519", "--out-dir", str(self.out),
-                "--as-of", as_of, "--pause", "0"]
+                "--signal-date", as_of, "--pause", "0"]
         with mock.patch.object(fs, "fetch", side_effect=fetch_stub), \
                 mock.patch.object(fs.time, "sleep"), \
                 mock.patch.object(sys, "argv", argv):

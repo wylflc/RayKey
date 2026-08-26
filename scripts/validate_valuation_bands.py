@@ -33,8 +33,8 @@ Rows failing any check go to ``valuation_rebuild_queue.csv``, ordered
 
 Usage::
 
-    python3 scripts/validate_valuation_bands.py --as-of 2026-08-01
-    python3 scripts/validate_valuation_bands.py --as-of 2026-08-01 --strict
+    python3 scripts/validate_valuation_bands.py --signal-date 2026-08-01
+    python3 scripts/validate_valuation_bands.py --signal-date 2026-08-01 --strict
 """
 
 from __future__ import annotations
@@ -47,6 +47,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
+from a_share_signal_dates import evidence_iso_for_signal
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -391,10 +392,11 @@ def main() -> int:
     parser.add_argument("--holdings", type=Path, default=DEFAULT_HOLDINGS)
     parser.add_argument("--queue-out", type=Path, default=DEFAULT_QUEUE)
     parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
-    parser.add_argument("--as-of", required=True)
+    parser.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
     parser.add_argument("--strict", action="store_true", help="有违规行时以非零码退出（供池物化前置门禁使用）")
     parser.add_argument("--no-log", action="store_true")
     args = parser.parse_args()
+    args.as_of = evidence_iso_for_signal(args.signal_date)
 
     with args.valuation.open(encoding="utf-8-sig") as handle:
         rows = list(csv.DictReader(handle))

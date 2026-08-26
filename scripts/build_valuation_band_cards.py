@@ -16,7 +16,7 @@ Usage::
     python3 scripts/build_valuation_band_cards.py \
       --tags data/interim/strategy_tag_map.csv \
       --out data/interim/valuation_band_cards.csv \
-      --as-of 2026-08-01
+      --signal-date 2026-08-01
 """
 
 from __future__ import annotations
@@ -27,12 +27,14 @@ import datetime
 import json
 from pathlib import Path
 
+from a_share_signal_dates import evidence_iso_for_signal
+
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR = ROOT / "data/interim/valuation_evidence"
 
 AS_OF_YEAR = 2026                # `AS_OF_DATE` 缺省的年份
-AS_OF_DATE = f"{AS_OF_YEAR}-12-31"   # 由 main() 按 --as-of 覆盖；决定哪些报告期算「已结束」
+AS_OF_DATE = f"{AS_OF_YEAR}-12-31"   # 由 main() 按信号日推导证据日后覆盖
 
 # §6.5.2 逐票估值档案（v1.47，用户决定）：带只由档案给出（`bespoke = true`）。
 # 全池建档后通用十类模型成为不可达路径、已整体删除；非 bespoke 行在 `_build_card` 硬失败。
@@ -361,11 +363,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="从逐票档案转抄建带卡草稿（§6.7 第 5 步）")
     parser.add_argument("--tags", type=Path, required=True, help="CSV: security_code,strategy_tag_letter")
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--as-of", required=True)
+    parser.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
     args = parser.parse_args()
 
     global AS_OF_DATE
-    AS_OF_DATE = args.as_of          # §6.4：只有 REPORT_DATE ≤ as_of 的预告/快报才合成
+    AS_OF_DATE = evidence_iso_for_signal(args.signal_date)
+    args.as_of = AS_OF_DATE
 
     with args.tags.open(encoding="utf-8-sig") as handle:
         tags = list(csv.DictReader(handle))

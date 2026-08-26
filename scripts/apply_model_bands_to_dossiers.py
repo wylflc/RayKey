@@ -37,8 +37,8 @@
 ----
 照 §6.7 建带链跑即可，**两个参数都用缺省**：
 
-    python3 scripts/build_pool_model_bands.py --as-of YYYY-MM-DD
-    python3 scripts/apply_model_bands_to_dossiers.py --as-of YYYY-MM-DD
+    python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD
+    python3 scripts/apply_model_bands_to_dossiers.py --signal-date YYYY-MM-DD
 
 随后跑 §6.7 后半段（建带卡 → apply → 校验 → 池物化）。
 
@@ -56,6 +56,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from build_historical_valuation_bands import load_actions, split_factor  # noqa: E402
+from a_share_signal_dates import evidence_iso_for_signal  # noqa: E402
 from divspread_names import is_divspread_financial  # noqa: E402  v4.56 银行＋保险股利折现
 from screen_daily_volume_price_signals import bank_dividend_intrinsic  # noqa: E402
 
@@ -130,11 +131,12 @@ def main() -> int:
                     help="池外档案（L4／boundary 点名档案，§6.1 只落档案）的带来源：生产带文件只含池成员（v4.54，OI-083），"
                          "不在其中的档案行直接从全市场模型带取最新 ok 带；给空串关闭")
     ap.add_argument("--dossiers", type=Path, default=DOSSIERS)
-    ap.add_argument("--as-of", required=True)
+    ap.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
     ap.add_argument("--min-available", default="2025-01-01",
                     help="模型带的 available_at 早于此即视为时点过旧，判无法估值（v4.22 统一口径）")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
+    args.as_of = evidence_iso_for_signal(args.signal_date)
 
     usable, stale = latest_model_bands(args.bands, args.min_available)
     rows = list(csv.DictReader(args.dossiers.open(newline="", encoding="utf-8-sig")))

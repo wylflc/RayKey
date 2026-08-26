@@ -35,9 +35,9 @@ OI-034 的回测方案（用户 2026-08-07 给定）第 1 步是：**对每个�
 
 用法::
 
-    python3 scripts/fetch_a_share_quarterly_financials.py --as-of 2026-08-07
-    python3 scripts/fetch_a_share_quarterly_financials.py --as-of 2026-08-07 --since 2020-03-31
-    python3 scripts/fetch_a_share_quarterly_financials.py --as-of 2026-08-07 --refresh   # 重取已有期
+    python3 scripts/fetch_a_share_quarterly_financials.py --signal-date 2026-08-07
+    python3 scripts/fetch_a_share_quarterly_financials.py --signal-date 2026-08-07 --since 2020-03-31
+    python3 scripts/fetch_a_share_quarterly_financials.py --signal-date 2026-08-07 --refresh
 """
 from __future__ import annotations
 
@@ -52,6 +52,8 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+from a_share_signal_dates import evidence_iso_for_signal
+
 OUT_DIR = ROOT / "data/raw/financials"
 API = "https://datacenter-web.eastmoney.com/api/data/v1/get"
 HEADERS = {"User-Agent": "Mozilla/5.0", "Referer": "https://data.eastmoney.com/"}
@@ -156,13 +158,14 @@ def disclosure_window_open(report_date: str, as_of: date) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="逐季度历史财务数据全市场取数（OI-034 前置）")
-    parser.add_argument("--as-of", required=True, help="截止日 YYYY-MM-DD")
+    parser.add_argument("--signal-date", required=True, help="信号日 YYYY-MM-DD；证据日自动取下一工作日")
     parser.add_argument("--since", default="2016-03-31", help="起始报告期末，缺省 2016-03-31（约十年）")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
     parser.add_argument("--refresh", action="store_true", help="重取已存在的报告期")
     parser.add_argument("--timeout", type=float, default=25.0)
     parser.add_argument("--pause", type=float, default=0.25)
     args = parser.parse_args()
+    args.as_of = evidence_iso_for_signal(args.signal_date)
 
     until = date.fromisoformat(args.as_of)
     periods = quarter_ends_between(date.fromisoformat(args.since), until)

@@ -12,7 +12,7 @@
 
 用法：
     python3 scripts/build_pool_model_bands.py            # 缺省路径
-    python3 scripts/build_pool_model_bands.py --as-of 2026-08-16
+    python3 scripts/build_pool_model_bands.py --signal-date 2026-08-16
 """
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ OUT = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
 
 
 from divspread_names import is_divspread_financial   # v4.56：银行＋保险同一判定（OI-085）
+from a_share_signal_dates import evidence_iso_for_signal
 
 
 def is_bank(name: str, code: str = "") -> bool:
@@ -39,12 +40,13 @@ def is_bank(name: str, code: str = "") -> bool:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="池模型带文件（ROIC 口径 + 银行股利折现）")
-    ap.add_argument("--as-of", default="9999-12-31", help="只取 available_at ≤ 此日的带")
+    ap.add_argument("--signal-date", required=True, help="信号日；available_at 截止自动取下一工作日")
     ap.add_argument("--pool", type=Path, default=POOL)
     ap.add_argument("--bands", type=Path, default=BANDS)
     ap.add_argument("--states", type=Path, default=STATES)
     ap.add_argument("--out", type=Path, default=OUT)
     a = ap.parse_args()
+    a.as_of = evidence_iso_for_signal(a.signal_date)
 
     with a.pool.open(encoding="utf-8-sig") as fh:
         pool = {r["security_code"].zfill(6): r.get("security_name", "")

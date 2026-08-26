@@ -35,12 +35,13 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from a_share_quotes import fetch_spot_quotes
+from a_share_signal_dates import evidence_iso_for_signal
 from fetch_overseas_earnings_calendar import print_overdue_report
 from overseas_quotes import fetch_overseas_quotes
 from validate_valuation_bands import check_row as check_band_card
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
 from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
-# OI-095：不在 import 时读生产带；main() 按 `--as-of` 载入（available_at ≤ as-of），
+# OI-095：不在 import 时读生产带；main() 按信号日推导的证据日载入（available_at ≤ 证据日），
 # 历史日期补跑不得用当日之后才可得的带。
 MODEL_BANDS: dict[str, dict] = {}
 
@@ -874,7 +875,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-csv", type=Path, default=DEFAULT_OUTPUT_CSV)
     parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
     parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
-    parser.add_argument("--as-of", default=datetime.now(timezone.utc).date().isoformat())
+    parser.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
     parser.add_argument(
         "--quotes",
         choices=["skip", "fetch"],
@@ -926,7 +927,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     global MODEL_BANDS
     args = parse_args()
-    MODEL_BANDS = load_model_bands(as_of=args.as_of)
+    args.as_of = args.signal_date
+    args.evidence_date = evidence_iso_for_signal(args.signal_date)
+    MODEL_BANDS = load_model_bands(as_of=args.evidence_date)
     rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of, args.valuation)
     dossier_rows = load_csv(args.dossiers) if args.dossiers.exists() else []
     triage_rows = load_csv(args.attention_triage) if args.attention_triage.exists() else []
@@ -940,7 +943,7 @@ def main() -> None:
         try:
             print_overdue_report(overseas_rows, date.fromisoformat(args.as_of))
         except ValueError:
-            print("  §6.8 复核触发① 自检跳过：--as-of 非合法日期")
+            print("  §6.8 复核触发① 自检跳过：信号日非合法日期")
     quotes: dict[str, dict] = {}
     overseas_quotes: dict[str, dict] = {}
     if args.quotes == "fetch":
