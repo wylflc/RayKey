@@ -20,6 +20,11 @@ The same MD carries the 海外关注清单 appendix (§6.8): non-A-share names t
 tracks, rendered from `overseas_watchlist_valuation.csv` with the identical
 §6.2 price-auto-tier logic but kept out of the pool CSV, out of the daily
 volume/price scan and out of buy eligibility.
+
+It also carries an L4 dossier archive for user-named A-share companies that
+were profiled but did not enter ``worth_attention``. This is a reading-only
+lookup section: it preserves the structured attention class and never enters
+the pool CSV, production bands, quote refresh, P/V calculation or daily scan.
 """
 
 from __future__ import annotations
@@ -43,6 +48,8 @@ MODEL_BANDS: dict[str, dict] = {}
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_VALUATION = ROOT / "data/processed/a_share_focus_watchlist_l1_l2_valuation.csv"
 DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
+DEFAULT_DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
+DEFAULT_TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_MD = ROOT / "data/processed/000_a_share_core_valuation_pool.md"
 DEFAULT_FORECASTS = ROOT / "data/interim/a_share_earnings_forecasts.csv"
@@ -51,8 +58,8 @@ DEFAULT_TIER_SNAPSHOT = ROOT / "data/interim/pool_effective_tiers.csv"
 DEFAULT_OVERSEAS = ROOT / "data/processed/overseas_watchlist_valuation.csv"
 DEFAULT_OVERSEAS_TIER_SNAPSHOT = ROOT / "data/interim/overseas_effective_tiers.csv"
 
-# 分层档位集合：池只物化 L1-L3（worth_attention 的分层全集；L4 属 documented_not_attention，
-# 不在 worth_attention 名单，不进池）。§6.2 三态矩阵已退役，矩阵机制随 v4.18 删除（OI-063）。
+# 分层档位集合：池只物化 L1-L3（worth_attention 的分层全集）；阅读版另有 L4 档案归档区，
+# 但不进入池。§6.2 三态矩阵已退役，矩阵机制随 v4.18 删除（OI-063）。
 POOL_TIERS = {"L1", "L2", "L3"}
 CORE_LAYER_TIERS = {"L1", "L2"}
 VALUATION_ORDER = ["低估", "较低估", "中性", "较高估", "高估"]
@@ -416,6 +423,67 @@ def _display_valuation_path(method: str) -> str:
     return method.split("（", 1)[0].split("：", 1)[0]
 
 
+def build_l4_dossier_section(
+    dossier_rows: list[dict[str, str]],
+    triage_rows: list[dict[str, str]],
+) -> tuple[list[str], int]:
+    """渲染用户点名建档但未入关注池的 L4 阅读归档区。
+
+    筛选依据只认逐票档案 ``notes`` 中的「用户点名建档」来源和三类表当前状态；
+    不从目录存在性猜测，避免把全市场批量建档误列为用户点名。L4 是本文档归档层级，
+    ``attention_class`` 原样展示，不触碰质量真值或买入资格。
+    """
+    triage_by_code = {
+        str(row.get("security_code", "")).zfill(6): row for row in triage_rows
+    }
+    selected: list[tuple[dict[str, str], str]] = []
+    for row in dossier_rows:
+        code = str(row.get("security_code", "")).zfill(6)
+        triage = triage_by_code.get(code)
+        if not triage or triage.get("attention_class") == "worth_attention":
+            continue
+        if "用户点名建档" not in str(row.get("notes", "")):
+            continue
+        selected.append((row, str(triage.get("attention_class") or "—")))
+
+    if not selected:
+        return [], 0
+    selected.sort(key=lambda item: str(item[0].get("security_code", "")).zfill(6))
+
+    body: list[str] = []
+    for row, attention_class in selected:
+        code = str(row.get("security_code", "")).zfill(6)
+        name = str(row.get("security_name") or code)
+        low, high = _to_float(row.get("band_low")), _to_float(row.get("band_high"))
+        if low is None or high is None or low <= 0 or high <= 0:
+            band, fair_value, method = "—", "—", "无法估值"
+        else:
+            band = f"{low:.2f}" if low == high else f"{low:.2f}-{high:.2f}"
+            fair_value = f"{(low + high) / 2:.2f}"
+            method = _display_valuation_path(str(row.get("band_method") or "")) or "—"
+        dossier_dir = Path(str(row.get("dossier_dir") or f"data/companies/{code}_{name}"))
+        dossier_link = f"../companies/{dossier_dir.name}/README.md"
+        body.append(
+            f"| {code} | [{name}]({dossier_link}) | L4 | {attention_class} | "
+            f"{band} | {fair_value} | {method} | {row.get('reviewed_at') or '—'} |"
+        )
+
+    lines = [
+        "",
+        "## L4｜已建档但未进入关注池",
+        "",
+        f"共 {len(selected)} 家。L4 为本阅读版的档案归档层级；`名单状态` 保留结构化 `attention_class`。",
+        "",
+        "- 仅维护逐票档案与合理价；不进入核心池 CSV、生产带、每日行情、`P/V`、每日扫描或 §9.3。",
+        "- 合理价区间与中值 `V` 取逐票估值档案；无法估值显示 —。公司名称可直接打开档案。",
+        "",
+        "| 代码 | 名称/档案 | 归档层级 | 名单状态 | 合理价区间 | 合理估值 V | 估值方法 | 档案更新 |",
+        "| --- | --- | --- | --- | ---: | ---: | --- | --- |",
+        *body,
+    ]
+    return lines, len(selected)
+
+
 def build_overseas_section(
     rows: list[dict[str, str]],
     quotes: dict[str, dict] | None = None,
@@ -519,6 +587,8 @@ def write_markdown(
     prev_tiers: dict[str, str] | None = None,
     disclosures: dict[str, dict[str, str]] | None = None,
     extra_sections: list[str] | None = None,
+    l4_count: int = 0,
+    overseas_count: int = 0,
 ) -> dict[str, object]:
     """渲染单一列表阅读版 MD（v1.05）；返回 {'changes': 当日档位变化, 'drift': 现档≠审定档,
     'forecast': 有预告代码, 'forecast_pending': §7.5.1 待复核名单（预告+快报+正式报告，v1.18）,
@@ -608,8 +678,13 @@ def write_markdown(
         "- 现价取每日行情快照，缺失时沿用估值时点值；档位随现价更新，合理价带随证据复核更新。",
         "- 估值时间为本次估值所依据证据的公开可得日；估值事件为对应报告或重大事件。",
         *(
+            ["- L4 归档区仅供查找已建档但未入关注池的公司，不取每日行情、不进入扫描。"]
+            if l4_count
+            else []
+        ),
+        *(
             ["- 文末海外关注清单仅供观察，不进入 A 股候选池，也不具备买入资格。"]
-            if extra_sections
+            if overseas_count
             else []
         ),
         "",
@@ -794,6 +869,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--valuation", type=Path, default=DEFAULT_VALUATION)
     parser.add_argument("--tiers", type=Path, default=DEFAULT_TIERS)
+    parser.add_argument("--dossiers", type=Path, default=DEFAULT_DOSSIERS)
+    parser.add_argument("--attention-triage", type=Path, default=DEFAULT_TRIAGE)
     parser.add_argument("--output-csv", type=Path, default=DEFAULT_OUTPUT_CSV)
     parser.add_argument("--output-md", type=Path, default=DEFAULT_OUTPUT_MD)
     parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
@@ -851,6 +928,9 @@ def main() -> None:
     args = parse_args()
     MODEL_BANDS = load_model_bands(as_of=args.as_of)
     rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of, args.valuation)
+    dossier_rows = load_csv(args.dossiers) if args.dossiers.exists() else []
+    triage_rows = load_csv(args.attention_triage) if args.attention_triage.exists() else []
+    l4_section, l4_count = build_l4_dossier_section(dossier_rows, triage_rows)
     overseas_rows = load_overseas(args.overseas)
     # §6.8 复核触发① 的落地校验（OI-039）：财报已披露而带还建在披露前的证据上，当天就喊出来。
     # 放在这里是因为本脚本是 §9.1 第二步**每日必跑**的那一个，而海外行不进 §9.1 1a 的机械覆盖；
@@ -917,7 +997,8 @@ def main() -> None:
         write_csv(args.output_csv, rows, fieldnames)
     overseas_section, overseas_flags = build_overseas_section(overseas_rows, overseas_quotes, prev_overseas_tiers)
     flags = write_markdown(
-        args.output_md, rows, args.as_of, quotes, forecasts, prev_tiers, disclosures, overseas_section
+        args.output_md, rows, args.as_of, quotes, forecasts, prev_tiers, disclosures,
+        [*l4_section, *overseas_section], l4_count, len(overseas_rows),
     )
     write_tier_snapshot(args.tier_snapshot, flags["current_tiers"], args.as_of)  # type: ignore[arg-type]
     if overseas_rows:
@@ -927,7 +1008,8 @@ def main() -> None:
     summary = (
         f"tier changes today: {'、'.join(changes) if changes else '无'}; "
         f"drift vs 审定档: {len(list(flags.get('drift') or []))}; "
-        f"{forecast_summary(flags, forecast_retrieved, args.as_of, disclosure_retrieved)}"
+        f"{forecast_summary(flags, forecast_retrieved, args.as_of, disclosure_retrieved)}; "
+        f"L4 档案区 {l4_count} 家"
         + (
             f"; 海外附表 {len(overseas_rows)} 家（{len(overseas_quotes)} 只取到行情），"
             f"档位变化：{'、'.join(overseas_changes) if overseas_changes else '无'}"
@@ -943,7 +1025,8 @@ def main() -> None:
             args.output_md, disclosure_retrieved, overseas_flags,
             # 溯源：旧版此处写空串，刷新行看不出读了哪些文件（§13 第 3 条同型）。
             input_files=";".join(_rel(p) for p in (
-                args.valuation, args.tiers, args.tier_snapshot, args.forecasts, args.disclosures
+                args.valuation, args.tiers, args.dossiers, args.attention_triage,
+                args.tier_snapshot, args.forecasts, args.disclosures
             )),
         )
         print(f"refreshed {args.output_md} with {len(quotes)}/{len(rows)} quotes; {summary}")
