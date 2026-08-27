@@ -91,6 +91,15 @@ def latest_model_bands(path: Path, min_available: str, codes: set[str] | None = 
     与回测面板逐票对不上。回测面板本身取值正确，故这**只是生产侧的选择错**，不是口径分歧。
     """
     best: dict[str, dict] = {}
+    import roic_inputs
+    reset = roic_inputs.load_entity_reset()
+    post_seen: set[str] = set()
+    if reset:
+        for row in csv.DictReader(path.open(newline="", encoding="utf-8-sig")):
+            c = row.get("security_code") or ""
+            if c in reset and (row.get("report_date") or "") >= reset[c]["reset"] \
+                    and (not as_of or (row.get("available_at") or "")[:10] <= as_of):
+                post_seen.add(c)
     for row in csv.DictReader(path.open(newline="", encoding="utf-8-sig")):
         if codes is not None and row.get("security_code") not in codes:
             continue                                  # v4.54：全市场带文件只看池外档案代码
@@ -98,6 +107,9 @@ def latest_model_bands(path: Path, min_available: str, codes: set[str] | None = 
             continue
         if row.get("status") != "ok":
             continue
+        if roic_inputs.reset_supersedes(reset, row.get("security_code") or "", row.get("report_date") or "",
+                                        (row.get("security_code") or "") in post_seen):
+            continue                                  # §6.5.2.4 主体重置：重置前的带不再沿用
         try:
             if float(row["intrinsic_value"]) <= 0:
                 continue

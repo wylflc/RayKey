@@ -68,6 +68,12 @@ def main() -> int:
 
     best: dict[str, dict] = {}
     evaluated: dict[str, str] = {}
+    # §6.5.2.4 主体重置：重置后报告期已评估（含拒绝行）时，不再采纳早于重置日的 ok 行；
+    # 重置后无 ok 行时写入最新评估行（status 非 ok、无 V），让 model_evaluated_at 与「无法估值」同时传下去
+    import roic_inputs
+    reset = {c: r["reset"] for c, r in roic_inputs.load_entity_reset().items()}
+    post_seen: set[str] = set()
+    post_latest: dict[str, dict] = {}
     fields: list[str] = []
     with a.bands.open(encoding="utf-8-sig") as fh:
         reader = csv.DictReader(fh)
@@ -81,6 +87,11 @@ def main() -> int:
             # 采纳带停在更早 ok 行时不再把已评估的新报告期重复入队。
             if avail > evaluated.get(code, ""):
                 evaluated[code] = avail
+            if code in reset and (row.get("report_date") or "") >= reset[code]:
+                post_seen.add(code)
+                pk = (avail, row.get("report_date") or "")
+                if code not in post_latest or pk > (post_latest[code].get("available_at", ""), post_latest[code].get("report_date", "")):
+                    post_latest[code] = row
             if row.get("status") != "ok":
                 continue
             key = (avail, row.get("report_date") or "")
@@ -88,6 +99,9 @@ def main() -> int:
                                           best[code].get("report_date", "")):
                 best[code] = row
 
+    for c in [c for c in best if c in reset and c in post_seen and (best[c].get("report_date") or "") < reset[c]]:
+        best[c] = dict(post_latest[c])
+        print(f"  · 主体重置：{pool.get(c, c)} 重置后无 ok 带，不沿用重置前的带（写入最新评估行 {best[c].get('report_date')}，status={best[c].get('status')}）")
     # 银行：V 换成采纳逐日状态最后一行的股利折现值
     bank_codes = {c for c, n in pool.items() if is_bank(n, c)}
     bank_last: dict[str, dict] = {}
@@ -120,9 +134,9 @@ def main() -> int:
             w.writerow(best[c])
     print(f"带 {len(best)}/{len(pool)} 只（银行改写 {replaced}）→ {a.out.name}")
     if missing:
-        # 无 ok 带 = 模型判不可估或数据不全 → 走 §6.5.2.4 手工带，不静默
+        # 无 ok 带 = 模型判不可估或数据不全 → §6.5.2.4 无法估值，不静默
         names = "、".join(pool[c] for c in missing)
-        print(f"⚠ 无模型带 {len(missing)} 只（走 §6.5.2.4 手工带或建档队列）：{names}")
+        print(f"⚠ 无模型带 {len(missing)} 只（§6.5.2.4 无法估值或建档队列）：{names}")
     return 0
 
 

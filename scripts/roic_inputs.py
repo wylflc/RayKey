@@ -453,3 +453,30 @@ def wacc(cost_equity: float, cost_debt: float, tax_rate: float,
     if total <= 0 or equity <= 0:
         return cost_equity
     return (equity * cost_equity + debt * cost_debt * (1 - tax_rate)) / total
+
+
+# §6.5.2.4 主体重置表：{代码: {"reset": 重置报告期, "growth_mode": none|trend}}；文件不存在即空。
+ENTITY_RESET_FILE = Path(__file__).resolve().parents[1] / "data/processed/entity_reset_dates.csv"
+
+
+def load_entity_reset(path: Path | None = None) -> dict[str, dict[str, str]]:
+    path = path or ENTITY_RESET_FILE
+    out: dict[str, dict[str, str]] = {}
+    if not path or not Path(path).exists():
+        return out
+    with Path(path).open(encoding="utf-8-sig", newline="") as fh:
+        for row in csv.DictReader(fh):
+            code = (row.get("security_code") or "").strip().zfill(6)
+            when = (row.get("reset_report_date") or "").strip()
+            if code and code != "000000" and when:
+                out[code] = {"reset": when,
+                             "growth_mode": ((row.get("growth_mode") or "none").strip().lower() or "none")}
+    return out
+
+
+def reset_supersedes(reset: dict[str, dict[str, str]], code: str, report_date: str,
+                     post_seen: bool) -> bool:
+    """重置后报告期已评估（`post_seen`）时，早于重置日的带不可再用。"""
+    r = reset.get(code)
+    return bool(r) and post_seen and (report_date or "") < r["reset"]
+

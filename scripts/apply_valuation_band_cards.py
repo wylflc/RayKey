@@ -170,6 +170,22 @@ def _load_model_bands() -> dict:
 MODEL_BANDS = _load_model_bands()
 
 
+def _load_model_evaluated(path: Path = MODEL_BANDS_PATH) -> dict[str, str]:
+    """各代码的 `model_evaluated_at`（含 status 非 ok 的行，§6.5.2.4 主体重置后无 ok 带时仍要推进复核日）。"""
+    out: dict[str, str] = {}
+    if path is None or not Path(path).exists():
+        return out
+    with Path(path).open(newline="", encoding="utf-8-sig") as fh:
+        for r in csv.DictReader(fh):
+            ev = max((r.get("model_evaluated_at") or "")[:10], (r.get("available_at") or "")[:10])
+            if ev and ev > out.get(r["security_code"], ""):
+                out[r["security_code"]] = ev
+    return out
+
+
+MODEL_EVALUATED = _load_model_evaluated()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="把建带卡与标签重映射合并回估值表")
     parser.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
@@ -292,6 +308,9 @@ def main() -> int:
             row["valuation_reviewed_at"] = cutoff_date
         else:
             row["valuation_reviewed_at"] = args.as_of
+        ev = MODEL_EVALUATED.get(code)
+        if ev and ev > (row.get("valuation_reviewed_at") or ""):
+            row["valuation_reviewed_at"] = ev              # 模型已评估（含拒绝行）的报告期不再重复入队
         row["valuation_method"] = f"建带卡回写（{TAG_NAMES.get(letter, letter)}，{WORKFLOW_VERSION}）"
 
     if args.dry_run:

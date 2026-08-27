@@ -145,6 +145,13 @@ ROIC_STATS: defaultdict[str, int] = defaultdict(int)
 MOAT_PARAMS: dict[str, dict[str, float | int | None]] = {}
 MOAT_STATS: defaultdict[str, int] = defaultdict(int)
 
+# §6.5.2.4 主体重置：{代码: 重置报告期}。报告期 ≥ 重置日的行把比率窗口、十年守卫窗与经营账面基年截到重置日起
+# （复用结构断点 `book_break`），不足三年时锚 = 最新年报比率 × TTM 因子，g0 只由季报趋势给出。早于重置日的行不受影响。
+ENTITY_RESET: dict[str, str] = {}
+ENTITY_RESET_GROWTH: dict[str, str] = {}     # {代码: none|trend}，缺省 none（重置后不足三年判不增长）
+ENTITY_RESET_FILE = ROOT / "data/processed/entity_reset_dates.csv"
+
+
 RATES_FILE = ROOT / "data/reference/cost_of_equity_inputs.csv"
 
 # β 初版按类型简化（评审给的量级）。**不用行情 raw beta**：小盘噪声、停牌、A 股风格切换
@@ -834,7 +841,7 @@ def dividends_total(actions: list[dict], since: str, until: str, shares_end: flo
     return total
 
 
-def ttm_profit_factor(series: dict[str, dict], period: str, latest) -> float:
+def ttm_profit_factor(series: dict[str, dict], period: str, latest, reset_date: str | None = None) -> float:
     """OI-090：`归母净利 TTM ÷ 最新年报归母净利`。TTM = 年报 + 本期 YTD − 上年同期 YTD（季报行）；年报行恒为 1。
     只在本期报告年 = 最新年报年 + 1 时计算（年报滞后一年以上不外推）；任一项缺失或年报净利 ≤ 0 返回 1。"""
     if period.endswith("-12-31") or latest is None:
@@ -845,9 +852,16 @@ def ttm_profit_factor(series: dict[str, dict], period: str, latest) -> float:
     if int(period[:4]) != int(latest.period[:4]) + 1:
         return 1.0
     row = series.get(period)
-    prev = series.get(f"{int(period[:4]) - 1}{period[4:]}")
+    prev_period = f"{int(period[:4]) - 1}{period[4:]}"
+    prev = series.get(prev_period)
     ytd = _num(row.get("parent_netprofit")) if row else None
     ytd_prev = _num(prev.get("parent_netprofit")) if prev else None
+    if reset_date and prev_period < reset_date:
+        # 主体重置：上年同期行属旧主体，改用本行 netprofit_yoy 反推重述后的同期数；反推不出则 f=1（判不增长）
+        yoy = _num(row.get("netprofit_yoy")) if row else None
+        if ytd is None or yoy is None or yoy <= -100.0:
+            return 1.0
+        ytd_prev = ytd / (1.0 + yoy / 100.0)
     if ytd is None or ytd_prev is None:
         return 1.0
     return (annual + ytd - ytd_prev) / annual
@@ -1428,6 +1442,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     # **引擎仍不用改**：把 `eps0→每股NOPAT`、`roe0→ROIC`、`r→WACC`、`roe_terminal→ROIC_T`
     # 喂进 `intrinsic_value`，它算出的 `payout×NOPAT` 恰是 `NOPAT×(1−再投资率)` ＝ FCFF，
     # 终值式恰是框架的 EV/NOPAT——**得到的是每股企业价值**，再减净负债即得每股股权价值。
+    reset_active = False
     if getattr(args, "value_model", "dcf") == "roic":
         history = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at, args.roe_years)
         latest = max(history, key=lambda y: y.period) if history else None
@@ -1475,6 +1490,11 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             x_cum, x_note, book_break = annual_external_equity(
                 long_hist_all, series, actions,
                 getattr(args, "ext_equity_min_frac", EXTERNAL_EQUITY_MIN_FRACTION))
+            reset_date = ENTITY_RESET.get(code)
+            reset_active = bool(reset_date) and period >= reset_date
+            if reset_active and (book_break is None or book_break < reset_date):
+                book_break = reset_date
+                EXT_EQUITY_STATS["主体重置·重切窗口"] += 1
             if book_break is not None:
                 # 结构断点（破产重整/债转股/极端募资）：比率窗口与十年守卫窗口都截到断点年起（业务变更年重切窗口）
                 history = [y for y in history if y.period >= book_break]
@@ -1483,6 +1503,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     band.reason = f"结构断点 {book_break} 之后无可用财年"
                     return band
                 latest = max(history, key=lambda y: y.period)
+                if reset_active:
+                    roic0 = roic_inputs.normalized_roic(history)   # 主体重置：ROIC0 也只看重置后的财年
             base_year = min((y for y in long_hist_all if book_break is None or y.period >= book_break),
                             key=lambda y: y.period, default=None)
             def e_op(year) -> float | None:
@@ -1655,8 +1677,20 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 # OI-090（v4.62）：季报期间「当期」= 年报最新比率 × (归母净利 TTM ÷ 年报归母净利)，信任度 λ 与三年/五年中位
                 # 仍取年报；峰值坡道 w 按 TTM 当期重算（利润冲顶当季即被守卫看到，牧原 2020 型；崩塌当季即进锚，天齐 2024 型）。
                 # 年报行 f=1 与旧式逐位相同；f 不可算（年报净利 ≤0、季报缺行、年报滞后一年以上）则 f=1。
-                f_ttm = ttm_profit_factor(series, period, latest) if getattr(args, "ttm_current", "on") == "on" else 1.0
+                f_ttm = (ttm_profit_factor(series, period, latest, reset_date if reset_active else None)
+                         if getattr(args, "ttm_current", "on") == "on" else 1.0)
                 band.ttm_factor = f_ttm
+                if reset_active and len(ratios) < 3:
+                    # 主体重置且重置后不足三个年报：锚 = 最新年报比率 × TTM 因子（当期化），无中位、无峰谷守卫；
+                    # 增长信任只看季报趋势：TTM 因子 ≥ 1+δ 记增长，否则判不增长。
+                    ratio_noncyc = ratios[-1] * f_ttm
+                    ratio_cyc = ratio_noncyc
+                    peak_w = trough_w = 0.0
+                    band.peak_weight, band.trough_weight = 0.0, 0.0
+                    nopat_cyclical = False
+                    trust = 1.0 if f_ttm >= 1.0 + getattr(args, "ttm_trust_delta", 0.02) else 0.0
+                    band.growth_trust = trust
+                    ROIC_STATS["主体重置·最新年报×TTM 锚"] += 1
                 if len(ratios) >= 3 and f_ttm != 1.0:
                     r_cur = ratios[-1] * f_ttm
                     trough_annual = trough_w
@@ -1714,6 +1748,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 else:
                     band.roic_nopat_mode = f"blend(λ={trust:.1f},w={peak_w:.2f},v={trough_w:.2f})"
                     ROIC_STATS["OI-088 坡道/分级混合锚"] += 1
+                if reset_active and len(ratios) < 3:
+                    band.roic_nopat_mode = "entity_reset"
             if nopat_cyclical:
                 ROIC_STATS["NOPAT 周期守卫·按中位（w≥0.5）"] += 1
             # §6.5.1 第 1/3 条（v4.59，OI-086）：分子锚乘**经营账面** `BPS_op = BPS − x − X_cum/股数`，
@@ -1830,6 +1866,12 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 g0_raw = g_capital if g_capital is not None else 0.0
                 band.roic_g_source = "capital"
             g0 = max(min(g0_raw, args.g0_cap), args.g0_floor)
+            if reset_active and len(ratios) < 3:
+                f_reset = band.ttm_factor if band.ttm_factor is not None else 1.0
+                # 增速腿同源：TTM 增速 × 模型的增速腿权重（--roic-trail-weight）再封顶，不直接外推原始 TTM 增速
+                g0 = (max(min((f_reset - 1.0) * args.roic_trail_weight, args.g0_cap), 0.0)
+                      if band.growth_trust >= 1.0 and ENTITY_RESET_GROWTH.get(code, "none") == "trend" else 0.0)
+                band.roic_g_source = "entity_reset_ttm" if g0 > 0 else "entity_reset_none"
             band.g0 = g0
             # 终值 ROIC：与基准同规——基准 L2 是 `ROE_T = r + 2pp` 且 ≤ ROE0，
             # 这里平移成 `ROIC_T = WACC + 2pp` 且 ≤ ROIC0（竞争均衡下超额回报收敛）。
@@ -2144,6 +2186,10 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
     usable = applicable_bands(bands)
     if not usable or not prices:
         return []
+    # 主体重置：首个重置后报告期可得之日起，早于重置日的带不再沿用（重置后无 ok 带即无状态行）
+    reset_date = ENTITY_RESET.get(code)
+    reset_cut = (min((b.available_at for b in bands if b.report_date >= reset_date and b.available_at), default=None)
+                 if reset_date else None)
     # 坑 5：**报告期早于首个交易日的带，其每股口径是上市前的**（IPO 发行使净资产与股本
     # 同时跳升，而这笔发行不在除权除息表里，故 `split_factor` 抓不到）。实测柏楚电子
     # 上市首段用 `2019-06-30` 报告（发行前 BPS 5.45）对上市后价格，P/V 报 3.49；
@@ -2161,6 +2207,8 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
         if index < 0:
             continue
         band = usable[index]
+        if reset_cut and date >= reset_cut and band.report_date < reset_date:
+            continue
         # 坑 4：带按**公告时**的股本口径，价格是不复权的 → 按公告后的除权事件折算带。
         # v4.20 起现金分红与送转同折（OI-052/OI-039），公式与交易所除权参考价一致。
         (low, value, high), factor, cash_cum = exright_adjust(
@@ -2530,6 +2578,8 @@ def main() -> int:
     parser.add_argument("--terminal-excess", type=float, metavar="X",
                         help="终值超额回报显式给定：ROE_T = r + X（roic 口径为 ROIC_T = WACC + X，仍 ≤ ROIC0）。"
                              "缺省不启用＝按分档表（uniform L2 隐含 2pp）。研究开关（OI-070 ②）")
+    parser.add_argument("--entity-reset-file", type=Path, default=ENTITY_RESET_FILE, metavar="CSV",
+                        help="§6.5.2.4 主体重置表（列：security_code,reset_report_date）；文件不存在即不启用")
     parser.add_argument("--moat-params", type=Path, metavar="CSV",
                         help="逐票/分档终值参数覆盖（列：security_code,fade_years,terminal_excess,n1，"
                              "空格即沿用全局）。只改「超额回报持续多久、终值超额多大」，不改 r/增长/分子。"
@@ -2683,6 +2733,11 @@ def main() -> int:
             seq.sort()
         print(f"外部 ROE 预测：{len(EXTERNAL_ROE)} 只、"
               f"{sum(len(v) for v in EXTERNAL_ROE.values()):,} 条 ← {args.roe_external}")
+    for _c, _r in roic_inputs.load_entity_reset(args.entity_reset_file).items():
+        ENTITY_RESET[_c] = _r["reset"]
+        ENTITY_RESET_GROWTH[_c] = _r["growth_mode"]
+    if ENTITY_RESET:
+        print(f"主体重置：{len(ENTITY_RESET)} 只 ← {args.entity_reset_file}")
     if args.moat_params:
         with args.moat_params.open(encoding="utf-8-sig") as fh:
             for r in csv.DictReader(fh):
