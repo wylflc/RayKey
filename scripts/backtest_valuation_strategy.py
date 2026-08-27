@@ -1121,6 +1121,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_trigger: str = "power", credit_over_limit: str = "repay",
         swap_held_trigger: bool = False, swap_proceeds: str = "pv",
         swap_post_corr_trigger: bool = False,
+        exec_confirm_close: bool = False,
         candidate_log=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
@@ -1285,6 +1286,24 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                                  portfolio.margin_ratio({})))
             continue
         today = {code: (close, value, ratio) for code, close, value, ratio in states[sig_day]}
+        # 研究开关 `exec_confirm_close`：T 日仍负责产生信号、排序与相关性顺序；T+1 收盘只负责
+        # 复核这笔价格触发操作是否仍满足同一组直接条件。V 冻结在 T 日，仅用 T+1 收盘重算 P/V，
+        # 避免把隔夜新财报导致的带变化混进“价格确认”；除权日例外读取 T+1 已归一化状态，避免把
+        # 分红送转造成的机械跳价误判为价格变化。买入/加仓复核 P/V 与各自走势条件；估值/涨幅减持复核对应价格线与
+        # 卖侧均线；换仓复核目标仍可买、原卖出源仍弱且 P/V 边际仍成立。止损本来就按成交日
+        # 收盘与成交日均线判，无需再套第二层；出名单、强平与退市不是价格触发，也不参与。
+        exec_today = {}
+        if exec_confirm_close:
+            state_on_exec = {code: (close, value, ratio)
+                             for code, close, value, ratio in states.get(day, [])}
+            for code, (_signal_close, signal_value, _signal_ratio) in today.items():
+                exec_close = prices.get(code, {}).get(day)
+                if not exec_close:
+                    continue
+                if actions.get(code, {}).get(day) and code in state_on_exec:
+                    exec_today[code] = state_on_exec[code]
+                elif signal_value and signal_value > 0:
+                    exec_today[code] = (exec_close, signal_value, exec_close / signal_value)
         # `liquidate_ma` 的连续天数计数（用户 2026-08-10）：**对全池逐日累计**，不能只对持仓算
         # ——一只票可能在计数中途被卖光又买回，只对持仓算会把计数错误地清零。
         if liquidate_ma:
@@ -1648,15 +1667,36 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 (today.get(code, (None,))[0] or price) >= lot.avg_cost * (1.0 + gain_sell)
             if not value_rich and not gain_hit:
                 continue
+            # 先保留 T 日逐路径信号，再要求**同一路径**在 T+1 收盘仍成立。不能用 T+1 新出现的
+            # 涨幅条件替代 T 日的估值减持，反之亦然；那会变成重新发信号而不是确认旧操作。
+            if exec_confirm_close:
+                exec_row = exec_today.get(code)
+                if exec_row is None:
+                    stats["T+1确认·减持取消·状态缺失"] += 1
+                    continue
+                exec_close, _exec_value, exec_ratio = exec_row
+                value_rich = value_rich and (not no_value_sell) and is_rich(code, exec_ratio)
+                gain_hit = gain_hit and bool(gain_sell) and lot.avg_cost > 0 and \
+                    exec_close >= lot.avg_cost * (1.0 + gain_sell)
+                if not value_rich and not gain_hit:
+                    stats["T+1确认·减持取消·价格线恢复"] += 1
+                    continue
             sell_tag = rich_tag if value_rich else f"涨幅≥{gain_sell:.0%}"
             if sell_trend_ma and not (gain_hit and gain_sell_mode == "ungated"):
-                sig_close = today.get(code, (None,))[0]
-                ma_s = mas.get(code, {}).get(sig_day, {})
-                if not sig_close or not all(w in ma_s for w in sell_trend_ma):
+                judge_close = (exec_today[code][0] if exec_confirm_close else
+                               today.get(code, (None,))[0])
+                judge_ma_day = day if exec_confirm_close else sig_day
+                ma_s = mas.get(code, {}).get(judge_ma_day, {})
+                if not judge_close or not all(w in ma_s for w in sell_trend_ma):
+                    if exec_confirm_close:
+                        stats["T+1确认·减持取消·均线缺失"] += 1
                     continue                       # 均线不全 → 不减，等数据齐
-                seq = [sig_close] + [ma_s[w] for w in sell_trend_ma]
+                seq = [judge_close] + [ma_s[w] for w in sell_trend_ma]
                 if not all(a < b for a, b in zip(seq, seq[1:])):
-                    stats["减持被走势闸门挡下" if value_rich else "涨幅减持被走势闸门挡下"] += 1
+                    if exec_confirm_close:
+                        stats["T+1确认·减持取消·收盘站回均线"] += 1
+                    else:
+                        stats["减持被走势闸门挡下" if value_rich else "涨幅减持被走势闸门挡下"] += 1
                     continue
             if value_rich or gain_hit:
                 # `sell_full`（用户 2026-08-12）：触发即整仓卖出，不按一档减。
@@ -1782,6 +1822,45 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     return True                      # 已持仓：只看均线排列，不看价格位置
                 return r[1] > ma[trend_ma[0]] * k
             eligible = [r for r in eligible if _trend_ok(r)]
+        held_for_confirmation = set(portfolio.lots)
+        buy_confirmation_cache: dict[str, bool] = {}
+
+        def buy_confirmed(r) -> bool:
+            """只确认 T 日已经选中的买入，不让失败候选在相关性过滤前释放顺位。"""
+            code = r[0]
+            if not exec_confirm_close:
+                return True
+            if code in buy_confirmation_cache:
+                return buy_confirmation_cache[code]
+            k = 1.0 - trend_tol
+            exec_row = exec_today.get(code)
+            if exec_row is None:
+                stats["T+1确认·买入取消·状态缺失"] += 1
+                buy_confirmation_cache[code] = False
+                return False
+            exec_close, _exec_value, exec_ratio = exec_row
+            if exec_ratio > buy_line(code) or (buy_floor > 0 and exec_ratio < buy_floor):
+                stats["T+1确认·买入取消·P/V"] += 1
+                buy_confirmation_cache[code] = False
+                return False
+            if strategy == "trend" and entry_mode in ("trend", "both"):
+                ma_exec = mas.get(code, {}).get(day) or {}
+                if not all(w in ma_exec for w in trend_ma):
+                    stats["T+1确认·买入取消·均线缺失"] += 1
+                    buy_confirmation_cache[code] = False
+                    return False
+                if (len(trend_ma) >= 2
+                        and not ma_exec[trend_ma[0]] > ma_exec[trend_ma[1]] * k):
+                    stats["T+1确认·买入取消·均线排列"] += 1
+                    buy_confirmation_cache[code] = False
+                    return False
+                if not (addon_trend == "ma-only" and code in held_for_confirmation) \
+                        and not exec_close > ma_exec[trend_ma[0]] * k:
+                    stats["T+1确认·建仓取消·收盘未站上均线"] += 1
+                    buy_confirmation_cache[code] = False
+                    return False
+            buy_confirmation_cache[code] = True
+            return True
         if candidate_log is not None:
             # 研究开关（`--candidate-log`，2026-08-23 集中度核对）：记下当日合格集前十的排序，供
             # 「rank 1 vs rank 2~5 前向收益」事件研究。**按严格判据**（收盘>MA20>MA60）记，
@@ -1923,6 +2002,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 blocked = funds < (lump_sum or budget) or len(portfolio.lots) >= max_positions
                 if not blocked:
                     break
+                if not buy_confirmed((code, close, value, ratio)):
+                    continue
                 if post_corr_buyable is not None and code not in post_corr_buyable:
                     stats["换仓触发·相关性挡下"] += 1
                     continue
@@ -1980,6 +2061,31 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                                   (scores.get(code, ratio) if rank_mode != "pv" else ratio))
                     if worst_ratio - cand_score < swap_margin:
                         break
+                if exec_confirm_close:
+                    # 确认 T 日选出的**同一对**目标/来源；来源恢复后取消本次换仓，不改选另一只。
+                    # 这样才是订单确认，而不是用 T+1 数据重新运行一遍换仓策略。
+                    exec_cand = exec_today.get(code)
+                    exec_source = exec_today.get(worst)
+                    ma_source = mas.get(worst, {}).get(day) or {}
+                    if exec_cand is None or exec_source is None:
+                        stats["T+1确认·换仓取消·状态缺失"] += 1
+                        continue
+                    source_close, _source_value, source_ratio = exec_source
+                    _cand_close, _cand_value, cand_ratio = exec_cand
+                    weak_confirmation = swap_require_weak and (
+                        not swap_tag or gain_sell_mode == "gated")
+                    if weak_confirmation and (ma_source.get(swap_weak_ma) is None
+                                              or source_close >= ma_source[swap_weak_ma]):
+                        stats["T+1确认·换仓取消·来源站回均线"] += 1
+                        continue
+                    if swap_tag:
+                        if not (lot_worst := portfolio.lots.get(worst)) or lot_worst.avg_cost <= 0 \
+                                or source_close < lot_worst.avg_cost * (1.0 + gain_sell):
+                            stats["T+1确认·换仓取消·涨幅回落"] += 1
+                            continue
+                    elif source_ratio - cand_ratio < swap_margin:
+                        stats["T+1确认·换仓取消·P/V边际不足"] += 1
+                        continue
                 price = fill_price(worst, marks.get(worst))
                 if not price:
                     break
@@ -2149,6 +2255,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         for code, close, value, ratio in eligible[:max_positions]:
             if buying_power(portfolio, credit_limit) <= 0:
                 break
+            # T 日候选排序与相关性过滤已经结束后才确认；失败只取消这笔，不会让被它挡住的
+            # 相关候选在 T+1 顺位补入。换仓目标在卖出来源前也调用同一缓存，因此一对操作同进同退。
+            if not buy_confirmed((code, close, value, ratio)):
+                continue
             # 配置通道的额度用完就不再按通道买；该成员此后只能走普通路径（即需过买入线）。
             over_line = ((pcts.get(code) is None or pcts[code] > buy_pct) if pct_buy_gate
                          else ratio > buy_line(code))
@@ -2195,7 +2305,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 单票上限：**只挡加仓、不强制减持**——已有仓位因上涨超限是「买入上限」管不着的，
             # 强行削回去等于给策略偷加了一条止盈规则。
             if position_cap:
-                held_value = portfolio.lots[code].shares * close if code in portfolio.lots else 0.0
+                held_value = (portfolio.lots[code].shares * (fill if exec_confirm_close else close)
+                              if code in portfolio.lots else 0.0)
                 room = equity * position_cap - held_value
                 if room <= 0:
                     continue
@@ -2319,7 +2430,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             "margin_events": margin_events, "min_margin_ratio": min_ratio,
             "min_margin_day": min_ratio_day, "interest_paid": portfolio.interest_paid,
             "dividend_tax_paid": portfolio.dividend_tax_paid, "rights_paid": portfolio.rights_paid,
-            "final_debt": portfolio.debt}
+            "final_debt": portfolio.debt, "stats": dict(stats)}
 
 
 # ------------------------------------------------------------------ 指标
@@ -2795,6 +2906,9 @@ def main() -> int:
                         help="0=T 日收盘算信号当日成交；1=T 日收盘算信号、T+1 日成交（现行）")
     parser.add_argument("--exec-price", choices=("close", "open"), default="close",
                         help="--exec-delay 1 时的成交价取 T+1 的开盘还是收盘")
+    parser.add_argument("--exec-confirm-close", action="store_true",
+                        help="研究开关：T 日生成操作后，T+1 收盘按当天 P/V 与均线复核同一价格触发条件；"
+                             "不重排 T 日候选，出名单/强平/退市不参与，止损沿用本来就有的成交日确认")
     parser.add_argument("--trend-tol", type=float, nargs="+", default=[0.0],
                         help="走势条件容差 t：判据放宽为 收盘 > MA20×(1−t) 且 MA20 > MA60×(1−t)。"
                              "0.005 即 0.5%%。可给多个做敏感度")
@@ -2928,6 +3042,10 @@ def main() -> int:
         sys.exit("--stop-confirm-days 须为 ≥1 的交易日数")
     if not 0 <= args.stop_deep_pct < 1:
         sys.exit("--stop-deep-pct 是比例，须落在 [0,1)，例如 3% 填 0.03")
+    if args.exec_confirm_close and (args.exec_delay != 1 or args.exec_price != "close"):
+        sys.exit("--exec-confirm-close 只定义于 --exec-delay 1 --exec-price close")
+    if args.exec_confirm_close and args.gate != "pv":
+        sys.exit("--exec-confirm-close 当前只实现生产 P/V 口径；自身分位的 T+1 历史窗语义未定义")
     profit_lock: tuple[tuple[float, float], ...] = ()
     if args.profit_lock:
         steps = []
@@ -3067,6 +3185,7 @@ def main() -> int:
             label = (f"{strategy}_x{x:g}_w{width:g}"
                      + (f"_tol{trend_tol:g}" if trend_tol else "")
                      + (f"_x{args.exec_delay}{args.exec_price[0]}" if args.exec_delay else "")
+                     + ("_c1" if args.exec_confirm_close else "")
                      + ("_fmsc" if args.fill_missing == "signal_close" else "")
                      + ("_dtax" if args.dividend_tax else "")
                      + ("_norights" if args.no_rights_events else "")
@@ -3226,6 +3345,7 @@ def main() -> int:
                          credit_over_limit=args.credit_over_limit, swap_held_trigger=args.swap_held_trigger,
                          swap_proceeds=args.swap_proceeds,
                          swap_post_corr_trigger=args.swap_post_corr_trigger,
+                         exec_confirm_close=args.exec_confirm_close,
                          candidate_log=cand_writer)
             if cand_handle is not None:
                 cand_handle.close()
