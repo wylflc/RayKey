@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.92
+# A股选股-估值-量价操作流程 v4.93
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -53,7 +53,7 @@
 | 核心池阅读版 | `data/processed/000_a_share_core_valuation_pool.md` |
 | 持仓 | `data/processed/a_share_holdings.csv` |
 | 持仓除权处理台账 | `data/processed/holdings_corporate_actions_applied.csv`（§11.4，只追加） |
-| 账户快照 | `data/processed/portfolio_account_snapshot.csv`；授信额度按 §10.2 比例口径计算（`credit_line_cny` 列已退役，仅存历史数据） |
+| 账户快照 | `data/processed/portfolio_account_snapshot.csv`；可用资金按 §10.2（券商可用保证金优先）；`credit_line_cny` 列已退役，仅存历史数据 |
 | 每日买入计划 | `data/processed/daily_entry_plan.csv` |
 | 每日卖出清单 | `data/processed/daily_sell_plan.csv`（止损复核、减持、涨幅减持、出名单、换仓、余仓清空） |
 | 比例冷却计数器 | `data/processed/daily_cooldown_state.csv`（§9.3.3，扫描器每日读写） |
@@ -675,7 +675,7 @@ python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 现金 + max(0, N × 66.6% − 当前融资负债)
 ```
 
-该值作为 §8.2 的 `--funds`。负债超过授信额度时不可新增买入，卖出款先偿还超额负债。触及账户级阈值时在当日报告显式提示；未触及时不重复展开。
+该值作为 §8.2 的 `--funds`。用户回报券商可用保证金时，`--funds` 直接取券商数（已含现金，不再叠加），不按上式估算；上式只在未回报时使用。负债超过授信额度（券商可用保证金为 0 或上式为负）时不可新增买入，卖出款先偿还超额负债。触及账户级阈值时在当日报告显式提示；未触及时不重复展开。
 
 ## 11. 持仓记录与跟踪
 
