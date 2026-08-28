@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.93
+# A股选股-估值-量价操作流程 v4.94
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -53,7 +53,7 @@
 | 核心池阅读版 | `data/processed/000_a_share_core_valuation_pool.md` |
 | 持仓 | `data/processed/a_share_holdings.csv` |
 | 持仓除权处理台账 | `data/processed/holdings_corporate_actions_applied.csv`（§11.4，只追加） |
-| 账户快照 | `data/processed/portfolio_account_snapshot.csv`；可用资金按 §10.2（券商可用保证金优先）；`credit_line_cny` 列已退役，仅存历史数据 |
+| 账户快照 | `data/processed/portfolio_account_snapshot.csv`；可用资金按 §10.2（券商可用保证金优先），策略收益率、峰值与回撤按 §10.3；`credit_line_cny` 列已退役，仅存历史数据 |
 | 每日买入计划 | `data/processed/daily_entry_plan.csv` |
 | 每日卖出清单 | `data/processed/daily_sell_plan.csv`（止损复核、减持、涨幅减持、出名单、换仓、余仓清空） |
 | 比例冷却计数器 | `data/processed/daily_cooldown_state.csv`（§9.3.3，扫描器每日读写） |
@@ -675,7 +675,20 @@ python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 现金 + max(0, N × 66.6% − 当前融资负债)
 ```
 
-该值作为 §8.2 的 `--funds`。用户回报券商可用保证金时，`--funds` 直接取券商数（已含现金，不再叠加），不按上式估算；上式只在未回报时使用。负债超过授信额度（券商可用保证金为 0 或上式为负）时不可新增买入，卖出款先偿还超额负债。触及账户级阈值时在当日报告显式提示；未触及时不重复展开。
+该值作为 §8.2 的 `--funds`。用户回报券商可用保证金时，`--funds` = 券商可用保证金 + 现金（现金另计，用户未报现金即记 0），不按上式估算；上式只在未回报时使用。负债超过授信额度（券商可用保证金为 0 或上式为负）时不可新增买入，卖出款先偿还超额负债。触及账户级阈值时在当日报告显式提示；未触及时不重复展开。
+
+### 10.3 策略收益跟踪
+
+策略基准日 2026-08-28，基准净资产 = 该日账户快照 `net_assets_cny`（`strategy_base_net_assets_cny` 列）。账户快照每日登记：
+
+| 列 | 取值 |
+| --- | --- |
+| `external_cash_flow_cny` | 当日外部现金流：入金为正、出金为负，无则 0 |
+| `strategy_return_pct` | `(N − 基准日后累计外部现金流) ÷ 基准净资产 − 1`，百分比保留两位 |
+| `account_peak_net_assets_cny` | 基准日起 `N − 累计外部现金流` 的最高值，基准日取基准净资产 |
+| `drawdown_from_peak_pct` | `(N − 累计外部现金流) ÷ account_peak_net_assets_cny − 1` |
+
+基准日前各行的峰值与回撤列只存历史数据，不参与计算。当日报告账户段列出策略收益率与策略期回撤。
 
 ## 11. 持仓记录与跟踪
 
