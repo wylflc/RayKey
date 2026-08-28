@@ -1,0 +1,14 @@
+# 卖侧缓冲豁免（2026-08-28）：G = 涨幅路径豁免，P = 持仓侧 P/V ≥ 2.4257 豁免，GP3 = 涨幅豁免 + P/V ≥ 3.0 豁免；面板子集状态文件
+BASE|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv
+AC-G|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-confirm --stop-confirm-days 2 --sell-buffer-exempt-gain
+AC-P|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-confirm --stop-confirm-days 2 --sell-buffer-exempt-pv 2.4257
+AC-GP|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-confirm --stop-confirm-days 2 --sell-buffer-exempt-gain --sell-buffer-exempt-pv 2.4257
+AC-GP3|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-confirm --stop-confirm-days 2 --sell-buffer-exempt-gain --sell-buffer-exempt-pv 3.0
+AT1-G|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-tol 0.01 --stop-tol 0.01 --sell-buffer-exempt-gain
+AT1-P|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-tol 0.01 --stop-tol 0.01 --sell-buffer-exempt-pv 2.4257
+AT1-GP|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-tol 0.01 --stop-tol 0.01 --sell-buffer-exempt-gain --sell-buffer-exempt-pv 2.4257
+AT1-GP3|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-tol 0.01 --stop-tol 0.01 --sell-buffer-exempt-gain --sell-buffer-exempt-pv 3.0
+AT2-G|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-tol 0.02 --stop-tol 0.02 --sell-buffer-exempt-gain
+AT2-P|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-tol 0.02 --stop-tol 0.02 --sell-buffer-exempt-pv 2.4257
+AT2-GP|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-tol 0.02 --stop-tol 0.02 --sell-buffer-exempt-gain --sell-buffer-exempt-pv 2.4257
+AT2-GP3|--daily-states data/processed/a_share_daily_states_adopted_panel.csv --hold-states data/processed/a_share_daily_states_hold_panel.csv --sell-tol 0.02 --stop-tol 0.02 --sell-buffer-exempt-gain --sell-buffer-exempt-pv 3.0

@@ -1124,6 +1124,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_post_corr_trigger: bool = False,
         exec_confirm_close: bool = False,
         sell_confirm: bool = False, sell_tol: float = 0.0, stop_tol: float = 0.0,
+        sell_buffer_exempt_gain: bool = False, sell_buffer_exempt_pv: float = 0.0,
         candidate_log=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
@@ -1579,13 +1580,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     stop_level, stop_tag = lot.lock_level, f"盈利锁定{lot.lock_eta:g}×成本"
             # `stop_tol`（研究开关）：生效止损线整体下移 T 比例，现价须低于 线×(1−T) 才计一次跌破；
             # 与 `stop_confirm_days` 正交（前者是价格容差，后者是时间确认）。0 = 逐位不变。
-            if stop_tol and stop_level:
+            # `sell_buffer_exempt_pv`（研究开关）：持仓侧 P/V ≥ X 的仓位不吃止损容差与多日确认，按原口径当日判。
+            stop_exempt = bool(sell_buffer_exempt_pv) and ratio is not None and ratio >= sell_buffer_exempt_pv
+            if stop_tol and stop_level and not stop_exempt:
                 stop_level *= 1.0 - stop_tol
             stop_trigger = ""
             if stop_enabled and judge_price:
                 lot.stop_breach_streak, stop_trigger = update_stop_breach(
                     judge_price, stop_level, lot.stop_breach_streak,
-                    stop_confirm_days, stop_deep_pct,
+                    1 if stop_exempt else stop_confirm_days, stop_deep_pct,
                 )
             elif not stop_enabled:
                 lot.stop_breach_streak = 0
@@ -1711,7 +1714,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         stats["T+1确认·减持取消·均线缺失"] += 1
                     continue                       # 均线不全 → 不减，等数据齐
                 # `sell_tol`（研究开关）：弱势判据放宽为 `收盘 < MA×(1−T)`（链式排列各级同式）；0 = 逐位不变。
-                k_sell = 1.0 - sell_tol
+                # 缓冲豁免（研究开关）：涨幅路径触发（`sell_buffer_exempt_gain`）或持仓侧 P/V ≥ X
+                # （`sell_buffer_exempt_pv`）的减持不吃容差、不做 T+1 复核，按原口径当日判。
+                buffer_exempt = ((sell_buffer_exempt_gain and gain_hit)
+                                 or (bool(sell_buffer_exempt_pv) and ratio is not None
+                                     and ratio >= sell_buffer_exempt_pv))
+                k_sell = 1.0 if buffer_exempt else 1.0 - sell_tol
                 seq = [judge_close] + [ma_s[w] for w in sell_trend_ma]
                 if not all(a < b * k_sell for a, b in zip(seq, seq[1:])):
                     if exec_confirm_close:
@@ -1721,7 +1729,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 # `sell_confirm`（研究开关）：T 日弱势成立后，T+1 收盘（成交价）对 T+1 均线再判一次同一弱势
                 # 判据，站回均线即取消本笔减持；P/V／涨幅触发沿用 T 日，不重发信号。
-                if sell_confirm:
+                if sell_confirm and not buffer_exempt:
                     ma_x = mas.get(code, {}).get(day, {})
                     if not all(w in ma_x for w in sell_trend_ma):
                         stats["卖出T+1确认·减持取消·均线缺失"] += 1
@@ -2051,6 +2059,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # **判据用信号日的收盘与均线**，与买入端、减持闸门同源。
                 # `swap_repeat`：`skip`（现行，§9.3.1「卖一档、买一档」）＝当日已被换仓减过一档的持仓不再作卖出源；
                 # `whole`（研究／复现口径）＝旧行为——同日再次被选中时 `partial` 判 False、整仓卖出（v4.80 前 2015-05 起点 84 次）。
+                # 缓冲豁免（研究开关）：持仓侧 P/V ≥ X 的来源不加容差、不做 T+1 复核；涨幅让位来源在
+                # `sell_buffer_exempt_gain` 下同样豁免。
+                def _pv_exempt(c: str) -> bool:
+                    return bool(sell_buffer_exempt_pv) and hold_today[c][2] >= sell_buffer_exempt_pv
                 held = [((pcts[c] if gate == "self-pct" else
                           (scores.get(c, hold_today[c][2]) if rank_mode != "pv" else hold_today[c][2])), c)
                         for c in portfolio.lots if c in today and c != code
@@ -2058,7 +2070,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         and (gate != "self-pct" or c in pcts)
                         and (not swap_require_weak
                              or ((_m := mas.get(c, {}).get(sig_day, {})).get(swap_weak_ma) is not None
-                                 and today[c][0] < _m[swap_weak_ma] * (1.0 - sell_tol)))
+                                 and today[c][0] < _m[swap_weak_ma] * (1.0 - (0.0 if _pv_exempt(c) else sell_tol))))
                         # `swap_out_min_pv`（用户 2026-08-15：「只有高估严重了才允许换仓，
                         # 而不是仅仅排序变了就轻易地换」）：卖出源还须自身 `P/V ≥ 阈值`。
                         # 与 `swap_margin`（候选须比持仓便宜出边际）正交——那是**相对**条件，
@@ -2077,7 +2089,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                             continue
                         if gain_sell_mode == "gated" and swap_require_weak:
                             _m = mas.get(c, {}).get(sig_day, {})
-                            if _m.get(swap_weak_ma) is None or today[c][0] >= _m[swap_weak_ma] * (1.0 - sell_tol):
+                            _tol_c = 0.0 if (sell_buffer_exempt_gain or _pv_exempt(c)) else sell_tol
+                            if _m.get(swap_weak_ma) is None or today[c][0] >= _m[swap_weak_ma] * (1.0 - _tol_c):
                                 continue
                         gain_src.append((today[c][0] / l.avg_cost, c))
                 swap_tag = ""
@@ -2123,7 +2136,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     break
                 # `sell_confirm`（研究开关）：T 日选定的来源在 T+1 收盘（成交价）对 T+1 均线仍须弱势，
                 # 否则取消本次换仓、不改选另一只；目标与 P/V 边际不复核。
-                if sell_confirm and swap_require_weak and (not swap_tag or gain_sell_mode == "gated"):
+                if (sell_confirm and swap_require_weak and (not swap_tag or gain_sell_mode == "gated")
+                        and not ((sell_buffer_exempt_gain and swap_tag) or _pv_exempt(worst))):
                     ma_x = mas.get(worst, {}).get(day, {})
                     if ma_x.get(swap_weak_ma) is None or price >= ma_x[swap_weak_ma] * (1.0 - sell_tol):
                         stats["卖出T+1确认·换仓取消·来源站回均线"] += 1
@@ -2968,6 +2982,12 @@ def main() -> int:
                              "开 --sell-confirm 时 T+1 复核同式）。0=关，1%% 填 0.01")
     parser.add_argument("--stop-tol", type=float, default=0.0, metavar="T",
                         help="研究开关：止损容差，现价 < 生效止损线×(1−T) 才计跌破（连续跌破计数同式）。0=关，1%% 填 0.01")
+    parser.add_argument("--sell-buffer-exempt-gain", action="store_true",
+                        help="研究开关：涨幅路径触发的卖出（涨幅减持、涨幅让位换仓来源）不吃卖侧缓冲——"
+                             "不做 --sell-confirm 复核、不加 --sell-tol 容差，按原口径当日判；止损不属涨幅路径，不受影响")
+    parser.add_argument("--sell-buffer-exempt-pv", type=float, default=0.0, metavar="X",
+                        help="研究开关：信号日持仓侧 P/V ≥ X 的仓位不吃卖侧缓冲（减持／换仓来源的复核与容差、"
+                             "止损的 --stop-tol 与 --stop-confirm-days 多日确认都按原口径当日判）。0=关")
     parser.add_argument("--trend-tol", type=float, nargs="+", default=[0.0],
                         help="走势条件容差 t：判据放宽为 收盘 > MA20×(1−t) 且 MA20 > MA60×(1−t)。"
                              "0.005 即 0.5%%。可给多个做敏感度")
@@ -3258,6 +3278,8 @@ def main() -> int:
                      + ("_sc" if args.sell_confirm else "")
                      + (f"_stl{args.sell_tol * 100:g}" if args.sell_tol else "")
                      + (f"_stt{args.stop_tol * 100:g}" if args.stop_tol else "")
+                     + ("_sbxg" if args.sell_buffer_exempt_gain else "")
+                     + (f"_sbxpv{args.sell_buffer_exempt_pv:g}" if args.sell_buffer_exempt_pv else "")
                      + ("_fmsc" if args.fill_missing == "signal_close" else "")
                      + ("_dtax" if args.dividend_tax else "")
                      + ("_norights" if args.no_rights_events else "")
@@ -3420,6 +3442,8 @@ def main() -> int:
                          swap_post_corr_trigger=args.swap_post_corr_trigger,
                          exec_confirm_close=args.exec_confirm_close,
                          sell_confirm=args.sell_confirm, sell_tol=args.sell_tol, stop_tol=args.stop_tol,
+                         sell_buffer_exempt_gain=args.sell_buffer_exempt_gain,
+                         sell_buffer_exempt_pv=args.sell_buffer_exempt_pv,
                          candidate_log=cand_writer)
             if cand_handle is not None:
                 cand_handle.close()

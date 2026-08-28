@@ -23,7 +23,8 @@ def market(days):
 class SellConfirmationTest(unittest.TestCase):
     def run_case(self, states, mas, *, x: float = 0.05, swap: bool = False,
                  sell_confirm: bool = False, sell_tol: float = 0.0,
-                 stop_tol: float = 0.0, stop_confirm_days: int = 1):
+                 stop_tol: float = 0.0, stop_confirm_days: int = 1,
+                 exempt_gain: bool = False, exempt_pv: float = 0.0):
         bt.DELISTED_LAST.clear()
         return bt.run(
             "trend", x, states, market(states), {}, mas,
@@ -37,6 +38,7 @@ class SellConfirmationTest(unittest.TestCase):
             swap_require_weak=True, swap_weak_ma=20,
             sell_confirm=sell_confirm, sell_tol=sell_tol, stop_tol=stop_tol,
             stop_confirm_days=stop_confirm_days,
+            sell_buffer_exempt_gain=exempt_gain, sell_buffer_exempt_pv=exempt_pv,
         )
 
     # D0 信号 D1 建仓；D2 收盘「贵且弱」发减持信号；D3 为成交日。
@@ -170,6 +172,43 @@ class SellConfirmationTest(unittest.TestCase):
         self.assertEqual(self.run_case(breach_twice, mas, stop_confirm_days=2)["sells"], 1)
         self.assertEqual(self.run_case(recover, mas, stop_confirm_days=2)["sells"], 0)
         self.assertEqual(self.run_case(self.STOP_STATES, {"A": self.STOP_MAS}, stop_confirm_days=2)["sells"], 0)
+
+    def test_pv_exemption_skips_confirmation_for_expensive_trim(self) -> None:
+        # 信号日持仓侧 P/V = 10/4 = 2.5：X=2.45 豁免（T+1 站回也照减），X=3.0 不豁免（取消）。
+        states = {**self.TRIM_STATES, "2024-01-05": [row("A", 12.0, 100.0)]}
+        mas = {"A": {**self.TRIM_MAS, "2024-01-05": {20: 11.5, 60: 8.0}}}
+        self.assertEqual(self.run_case(states, mas, sell_confirm=True, exempt_pv=2.45)["sells"], 1)
+        self.assertEqual(self.run_case(states, mas, sell_confirm=True, exempt_pv=3.0)["sells"], 0)
+        self.assertEqual(self.run_case(states, mas, sell_tol=0.02, exempt_pv=2.45)["sells"], 1)
+
+    def test_gain_exemption_only_covers_gain_path(self) -> None:
+        # D2 收盘 23 ≥ 10×2.25 且 < MA20 24 → 涨幅减持；D3 收盘 22 站回 MA20 21：
+        # 复核取消，涨幅豁免后照减；估值路径（TRIM 夹具）不受涨幅豁免影响。
+        states = {
+            "2024-01-02": [row("A", 10.0, 20.0)],
+            "2024-01-03": [row("A", 10.0, 5.0)],
+            "2024-01-04": [row("A", 23.0, 100.0)],
+            "2024-01-05": [row("A", 22.0, 100.0)],
+        }
+        mas = {"A": {
+            "2024-01-02": {20: 9.0, 60: 8.0},
+            "2024-01-03": {20: 9.0, 60: 8.0},
+            "2024-01-04": {20: 24.0, 60: 8.0},
+            "2024-01-05": {20: 21.0, 60: 8.0},
+        }}
+        self.assertEqual(self.run_case(states, mas, sell_confirm=True)["sells"], 0)
+        self.assertEqual(self.run_case(states, mas, sell_confirm=True, exempt_gain=True)["sells"], 1)
+        trim = {**self.TRIM_STATES, "2024-01-05": [row("A", 12.0, 100.0)]}
+        trim_mas = {"A": {**self.TRIM_MAS, "2024-01-05": {20: 11.5, 60: 8.0}}}
+        self.assertEqual(self.run_case(trim, trim_mas, sell_confirm=True, exempt_gain=True)["sells"], 0)
+
+    def test_pv_exemption_applies_to_stop_buffer_but_gain_exemption_does_not(self) -> None:
+        states = {**self.STOP_STATES, "2024-01-05": [row("A", 7.9, 20.0)]}
+        mas = {"A": self.STOP_MAS}
+        self.assertEqual(self.run_case(states, mas, stop_tol=0.02)["sells"], 0)
+        self.assertEqual(self.run_case(states, mas, stop_tol=0.02, exempt_pv=0.3)["sells"], 1)   # P/V 0.395 ≥ 0.3
+        self.assertEqual(self.run_case(states, mas, stop_tol=0.02, exempt_gain=True)["sells"], 0)
+        self.assertEqual(self.run_case(self.STOP_STATES, mas, stop_confirm_days=2, exempt_pv=0.3)["sells"], 1)
 
     def test_summary_reports_top5_winners_by_code(self) -> None:
         states = {
