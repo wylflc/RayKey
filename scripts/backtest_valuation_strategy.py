@@ -1123,6 +1123,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_held_trigger: bool = False, swap_proceeds: str = "pv",
         swap_post_corr_trigger: bool = False,
         exec_confirm_close: bool = False,
+        sell_confirm: bool = False, sell_tol: float = 0.0, stop_tol: float = 0.0,
         candidate_log=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
 
@@ -1576,6 +1577,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         lot.lock_level, lot.lock_eta = lot.avg_cost * eta, eta
                 if lot.lock_level > stop_level:
                     stop_level, stop_tag = lot.lock_level, f"盈利锁定{lot.lock_eta:g}×成本"
+            # `stop_tol`（研究开关）：生效止损线整体下移 T 比例，现价须低于 线×(1−T) 才计一次跌破；
+            # 与 `stop_confirm_days` 正交（前者是价格容差，后者是时间确认）。0 = 逐位不变。
+            if stop_tol and stop_level:
+                stop_level *= 1.0 - stop_tol
             stop_trigger = ""
             if stop_enabled and judge_price:
                 lot.stop_breach_streak, stop_trigger = update_stop_breach(
@@ -1705,13 +1710,26 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     if exec_confirm_close:
                         stats["T+1确认·减持取消·均线缺失"] += 1
                     continue                       # 均线不全 → 不减，等数据齐
+                # `sell_tol`（研究开关）：弱势判据放宽为 `收盘 < MA×(1−T)`（链式排列各级同式）；0 = 逐位不变。
+                k_sell = 1.0 - sell_tol
                 seq = [judge_close] + [ma_s[w] for w in sell_trend_ma]
-                if not all(a < b for a, b in zip(seq, seq[1:])):
+                if not all(a < b * k_sell for a, b in zip(seq, seq[1:])):
                     if exec_confirm_close:
                         stats["T+1确认·减持取消·收盘站回均线"] += 1
                     else:
                         stats["减持被走势闸门挡下" if value_rich else "涨幅减持被走势闸门挡下"] += 1
                     continue
+                # `sell_confirm`（研究开关）：T 日弱势成立后，T+1 收盘（成交价）对 T+1 均线再判一次同一弱势
+                # 判据，站回均线即取消本笔减持；P/V／涨幅触发沿用 T 日，不重发信号。
+                if sell_confirm:
+                    ma_x = mas.get(code, {}).get(day, {})
+                    if not all(w in ma_x for w in sell_trend_ma):
+                        stats["卖出T+1确认·减持取消·均线缺失"] += 1
+                        continue
+                    seq_x = [price] + [ma_x[w] for w in sell_trend_ma]
+                    if not all(a < b * k_sell for a, b in zip(seq_x, seq_x[1:])):
+                        stats["卖出T+1确认·减持取消·收盘站回均线"] += 1
+                        continue
             if value_rich or gain_hit:
                 # `sell_full`（用户 2026-08-12）：触发即整仓卖出，不按一档减。
                 # 与 `--dev-sell-min` / `--liquidate-ma` 的区别是它仍只看 P/V 与走势闸门，
@@ -2040,7 +2058,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         and (gate != "self-pct" or c in pcts)
                         and (not swap_require_weak
                              or ((_m := mas.get(c, {}).get(sig_day, {})).get(swap_weak_ma) is not None
-                                 and today[c][0] < _m[swap_weak_ma]))
+                                 and today[c][0] < _m[swap_weak_ma] * (1.0 - sell_tol)))
                         # `swap_out_min_pv`（用户 2026-08-15：「只有高估严重了才允许换仓，
                         # 而不是仅仅排序变了就轻易地换」）：卖出源还须自身 `P/V ≥ 阈值`。
                         # 与 `swap_margin`（候选须比持仓便宜出边际）正交——那是**相对**条件，
@@ -2059,7 +2077,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                             continue
                         if gain_sell_mode == "gated" and swap_require_weak:
                             _m = mas.get(c, {}).get(sig_day, {})
-                            if _m.get(swap_weak_ma) is None or today[c][0] >= _m[swap_weak_ma]:
+                            if _m.get(swap_weak_ma) is None or today[c][0] >= _m[swap_weak_ma] * (1.0 - sell_tol):
                                 continue
                         gain_src.append((today[c][0] / l.avg_cost, c))
                 swap_tag = ""
@@ -2103,6 +2121,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 price = fill_price(worst, marks.get(worst))
                 if not price:
                     break
+                # `sell_confirm`（研究开关）：T 日选定的来源在 T+1 收盘（成交价）对 T+1 均线仍须弱势，
+                # 否则取消本次换仓、不改选另一只；目标与 P/V 边际不复核。
+                if sell_confirm and swap_require_weak and (not swap_tag or gain_sell_mode == "gated"):
+                    ma_x = mas.get(worst, {}).get(day, {})
+                    if ma_x.get(swap_weak_ma) is None or price >= ma_x[swap_weak_ma] * (1.0 - sell_tol):
+                        stats["卖出T+1确认·换仓取消·来源站回均线"] += 1
+                        continue
                 # `swap_partial`（用户 2026-08-09）：换仓由**整仓卖出**改为**按定投同速减一档**。
                 # **仅在「只差钱、槽位没满」时适用**——槽位满时减仓不腾出槽位，新标的照样买不进
                 # （买入循环里 `code not in lots and len(lots) >= max_positions` 会挡下），
@@ -2577,6 +2602,13 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
         return ordered[lo] + (ordered[hi] - ordered[lo]) * (pos - lo)
 
     closed = result["closed"]
+    # 前五大赢家（§12.1 去赢家压力测试的赢家定义）：全部闭合周期按代码汇总 `proceeds − invested`
+    # （卖出款＋现金分红−买入金额；不摊融资利息与费用），取前五；期末未平仓已按截止清算并入 closed。
+    pnl_by_code: dict[str, float] = collections.defaultdict(float)
+    for l in closed:
+        pnl_by_code[l.code] += l.proceeds - l.invested
+    top5 = [kv for kv in sorted(pnl_by_code.items(), key=lambda kv: (-kv[1], kv[0]))[:5] if kv[1] > 0]
+    pos_total = sum(v for v in pnl_by_code.values() if v > 0)
     wins = [l for l in closed if l.proceeds > l.invested]
     profits = [l.proceeds - l.invested for l in closed]
     holding = [_days_between(l.entry_date, l.exit_date) for l in closed if l.exit_date]
@@ -2684,6 +2716,9 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "买入笔数": result["buys"], "卖出笔数": result["sells"],
             "年均换手": (result["turnover"] / years / statistics.fmean([e for _d, e, *_r in curve])
                      if years else float("nan")),
+            "前五赢家": "/".join(c for c, _v in top5),
+            "前五赢家盈亏": sum(v for _c, v in top5),
+            "前五赢家占正贡献": (sum(v for _c, v in top5) / pos_total) if pos_total > 0 else float("nan"),
             "累计手续费": result.get("fees", 0.0),
             "手续费占初始本金": result.get("fees", 0.0) / capital if capital else float("nan"),
             "基准年化": bench}
@@ -2924,6 +2959,15 @@ def main() -> int:
     parser.add_argument("--exec-confirm-close", action="store_true",
                         help="研究开关：T 日生成操作后，T+1 收盘按当天 P/V 与均线复核同一价格触发条件；"
                              "不重排 T 日候选，出名单/强平/退市不参与，止损沿用本来就有的成交日确认")
+    parser.add_argument("--sell-confirm", action="store_true",
+                        help="研究开关：只复核卖侧走势——减持／涨幅减持／换仓来源的 `收盘 < MA` 弱势判据在 T+1 收盘"
+                             "再判一次（T+1 收盘对 T+1 均线），不成立则该笔跳过；P/V 与涨幅条件不复核，买入不复核。"
+                             "止损的 T+1 确认用 --stop-confirm-days 2。须 --exec-delay 1 --exec-price close")
+    parser.add_argument("--sell-tol", type=float, default=0.0, metavar="T",
+                        help="研究开关：卖侧弱势判据容差，`收盘 < MA×(1−T)` 才算弱势（减持／涨幅减持／换仓来源；"
+                             "开 --sell-confirm 时 T+1 复核同式）。0=关，1%% 填 0.01")
+    parser.add_argument("--stop-tol", type=float, default=0.0, metavar="T",
+                        help="研究开关：止损容差，现价 < 生效止损线×(1−T) 才计跌破（连续跌破计数同式）。0=关，1%% 填 0.01")
     parser.add_argument("--trend-tol", type=float, nargs="+", default=[0.0],
                         help="走势条件容差 t：判据放宽为 收盘 > MA20×(1−t) 且 MA20 > MA60×(1−t)。"
                              "0.005 即 0.5%%。可给多个做敏感度")
@@ -3061,6 +3105,12 @@ def main() -> int:
         sys.exit("--exec-confirm-close 只定义于 --exec-delay 1 --exec-price close")
     if args.exec_confirm_close and args.gate != "pv":
         sys.exit("--exec-confirm-close 当前只实现生产 P/V 口径；自身分位的 T+1 历史窗语义未定义")
+    if args.sell_confirm and (args.exec_delay != 1 or args.exec_price != "close"):
+        sys.exit("--sell-confirm 只定义于 --exec-delay 1 --exec-price close")
+    if args.sell_confirm and args.exec_confirm_close:
+        sys.exit("--sell-confirm 与 --exec-confirm-close 二选一：后者已含卖侧复核")
+    if not 0 <= args.sell_tol < 1 or not 0 <= args.stop_tol < 1:
+        sys.exit("--sell-tol / --stop-tol 是比例，须落在 [0,1)，例如 1% 填 0.01")
     profit_lock: tuple[tuple[float, float], ...] = ()
     if args.profit_lock:
         steps = []
@@ -3205,6 +3255,9 @@ def main() -> int:
                      + (f"_tol{trend_tol:g}" if trend_tol else "")
                      + (f"_x{args.exec_delay}{args.exec_price[0]}" if args.exec_delay else "")
                      + ("_c1" if args.exec_confirm_close else "")
+                     + ("_sc" if args.sell_confirm else "")
+                     + (f"_stl{args.sell_tol * 100:g}" if args.sell_tol else "")
+                     + (f"_stt{args.stop_tol * 100:g}" if args.stop_tol else "")
                      + ("_fmsc" if args.fill_missing == "signal_close" else "")
                      + ("_dtax" if args.dividend_tax else "")
                      + ("_norights" if args.no_rights_events else "")
@@ -3366,6 +3419,7 @@ def main() -> int:
                          swap_proceeds=args.swap_proceeds,
                          swap_post_corr_trigger=args.swap_post_corr_trigger,
                          exec_confirm_close=args.exec_confirm_close,
+                         sell_confirm=args.sell_confirm, sell_tol=args.sell_tol, stop_tol=args.stop_tol,
                          candidate_log=cand_writer)
             if cand_handle is not None:
                 cand_handle.close()

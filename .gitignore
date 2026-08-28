@@ -75,3 +75,4 @@ data/processed/experiments/universes/cap_all.csv
 
 # 海外三表原始 JSON（SEC companyfacts ≈4 MB/家、东财 HK F10 长表）：按需重取，不入库；提取后的 data/interim/overseas_roic_years.csv 入库
 data/raw/overseas_statements/
+data/processed/a_share_daily_states_*_panel.csv

@@ -22,6 +22,12 @@
 
 **一律带 `--no-artifacts`**：扫描只看 summary，逐笔/逐日/逐期三份产物是纯浪费——
 一轮 253 次运行会落 759 个文件约 5 GB，且目录堆大后回测本身会变慢（§12.41）。
+
+**去赢家第二遍（§12.1 第 3 款，缺省自动跑）**：第一遍跑完后，从 `BASE` 臂 2011-11-01 起点
+（不在起点集时取最早起点）的 summary 读 `前五赢家`（全部闭合周期按代码汇总 `proceeds − invested`
+的前五名），把同一组代码用 `--exclude-codes` 从**全部臂**统一剔除再跑一遍，结果行以 `EX5:` 前缀
+落在同一个 --out 文件（另有一行 `#EX5|起点|代码` 记录赢家），`--report` 出两张表、第二张 Δ 对去赢家
+`BASE` 配对。运行次数因此翻倍；`--no-ex-top5` 只用于复现旧读数或纯补跑。
 """
 import argparse
 import collections
@@ -118,51 +124,91 @@ FIELDS = ("年化", "最大回撤", "Sharpe", "Calmar", "平均仓位", "年均�
 # 其余（滚 3、滚 10、逐年、全期）一律只描述。两层分位不要混：表里的「符号」是 23 个起点的配对差，
 # P25／最差是**每个起点内** ~140 个月末窗口的分位。
 DELTA_KEYS = ("滚动5年年化中位", "滚动5年年化P25", "滚动5年回撤中位")
+EX5_PREFIX = "EX5:"              # 去赢家第二遍的结果行标签前缀
+EX5_ANCHOR_START = "2011-11-01"  # 赢家取自 BASE 臂该起点（§12.132 起的定义）
+EX5_FIELD = "前五赢家"           # 引擎 summary 里的赢家列（代码以 / 连接）
 AUX_DELTA_KEYS = ("滚动3年年化中位", "逐年收益中位", "年化")
 PRIMARY_KEY = "滚动5年年化中位"
 DRAWDOWN_GATE = 0.03      # 滚 5 年回撤中位配对 Δ 超过 +3pp（更深）即触发闸门标记
 
 
+def summary_tag(label: str, since: str, exclude: str = "") -> str:
+    return re.sub(r"[^A-Za-z0-9]", "", label + since + ("ex5" if exclude else ""))
+
+
 def run_one(job):
-    label, extra, since = job
-    tag = re.sub(r"[^A-Za-z0-9]", "", label + since)
+    label, extra, since, exclude = job
+    tag = summary_tag(label, since, exclude)
+    out_label = (EX5_PREFIX + label) if exclude else label
     summary = OUT_DIR / f"summary_{tag}.csv"
     summary.unlink(missing_ok=True)
     cmd = ([sys.executable, str(ROOT / "scripts/backtest_valuation_strategy.py")]
            + shlex.split(BASE) + ["--since", since, "--label-suffix", "_" + tag]
-           + shlex.split(extra))
+           + shlex.split(extra) + (["--exclude-codes", exclude] if exclude else []))
     subprocess.run(cmd, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         rows = [r for r in csv.DictReader(summary.open(encoding="utf-8"))
                 if r["策略"].startswith("trend_")]
     except (OSError, csv.Error, KeyError):
-        return f"{label}|{since}|ERR"
+        return f"{out_label}|{since}|ERR"
     if not rows:
-        return f"{label}|{since}|EMPTY"
+        return f"{out_label}|{since}|EMPTY"
     row = rows[-1]
     get = lambda k: float(row.get(k) or 0)
-    return "|".join([label, since] + [f"{get(k):.6f}" for k in FIELDS])
+    return "|".join([out_label, since] + [f"{get(k):.6f}" for k in FIELDS])
+
+
+def read_top5_winners(starts: list[str]) -> tuple[str, str]:
+    """从第一遍 `BASE` 臂锚定起点的 summary 读前五赢家，返回 (起点, 逗号分隔代码)；读不到返回空代码。"""
+    anchor = EX5_ANCHOR_START if EX5_ANCHOR_START in starts else starts[0]
+    summary = OUT_DIR / f"summary_{summary_tag('BASE', anchor)}.csv"
+    try:
+        rows = [r for r in csv.DictReader(summary.open(encoding="utf-8"))
+                if r["策略"].startswith("trend_")]
+    except (OSError, csv.Error, KeyError):
+        return anchor, ""
+    if not rows or not rows[-1].get(EX5_FIELD):
+        return anchor, ""
+    return anchor, ",".join(c for c in rows[-1][EX5_FIELD].split("/") if c)
 
 
 def report(path: Path, title: str) -> None:
-    """对照表。Δ 相对 `BASE` 臂，按 §12.1 同时给中位与符号数——单看中位会把掷硬币读成效应。"""
-    arms: dict[str, dict[str, dict]] = collections.defaultdict(dict)
-    order: list[str] = []
-    # 跑挂的运行以 `标签|起点|ERR`（或 `EMPTY`）落盘。**必须在这里数出来**——
-    # 下面按字段数过滤会把它们丢掉，于是**整条臂全挂时它连一行都没有，表里完全不出现**，
-    # 短臂告警（比较起点数）也发现不了。2026-08-15 实测撞到一次：`--stop-ma 120` 不在
-    # argparse 的 choices 里，23 次运行全部退出，而对照表看上去一切正常。
-    failed: dict[str, int] = collections.Counter()
+    """对照表。Δ 相对 `BASE` 臂，按 §12.1 同时给中位与符号数——单看中位会把掷硬币读成效应。
+
+    结果文件里 `EX5:` 前缀的行是去赢家第二遍，单独成表、Δ 对 `EX5:BASE` 配对。"""
+    groups: dict[str, dict[str, dict[str, dict]]] = {"": collections.defaultdict(dict),
+                                                       EX5_PREFIX: collections.defaultdict(dict)}
+    orders: dict[str, list[str]] = {"": [], EX5_PREFIX: []}
+    failed: dict[str, collections.Counter] = {"": collections.Counter(), EX5_PREFIX: collections.Counter()}
+    ex5_note = ""
     for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("#EX5|"):
+            _tag, anchor, codes = line.split("|", 2)
+            ex5_note = f"剔除 BASE {anchor} 起点前五赢家 {codes.replace(',', '/')}"
+            continue
         parts = line.split("|")
+        grp = EX5_PREFIX if parts[0].startswith(EX5_PREFIX) else ""
+        parts[0] = parts[0][len(grp):]
         if len(parts) == 3 and parts[2] in ("ERR", "EMPTY"):
-            failed[parts[0]] += 1
+            failed[grp][parts[0]] += 1
         if len(parts) != 2 + len(FIELDS):
             continue
         label, since = parts[0], parts[1]
-        if label not in order:
-            order.append(label)
-        arms[label][since] = dict(zip(FIELDS, map(float, parts[2:])))
+        if label not in orders[grp]:
+            orders[grp].append(label)
+        groups[grp][label][since] = dict(zip(FIELDS, map(float, parts[2:])))
+    _print_group(groups[""], orders[""], failed[""], title)
+    if groups[EX5_PREFIX] or failed[EX5_PREFIX]:
+        print()
+        _print_group(groups[EX5_PREFIX], orders[EX5_PREFIX], failed[EX5_PREFIX],
+                     f"{title}｜去赢家压力测试（{ex5_note or '剔除 BASE 前五赢家'}；Δ 对去赢家 BASE 配对，只作稳健性描述）")
+
+
+def _print_group(arms, order: list[str], failed, title: str) -> None:
+    # 跑挂的运行以 `标签|起点|ERR`（或 `EMPTY`）落盘。**必须在这里数出来**——
+    # 上面按字段数过滤会把它们丢掉，于是**整条臂全挂时它连一行都没有，表里完全不出现**，
+    # 短臂告警（比较起点数）也发现不了。2026-08-15 实测撞到一次：`--stop-ma 120` 不在
+    # argparse 的 choices 里，23 次运行全部退出，而对照表看上去一切正常。
     if failed:
         dead = [k for k in failed if k not in arms]
         print("⚠ 有运行跑挂了：" + "、".join(f"{k} {v} 次" for k, v in failed.items())
@@ -170,7 +216,7 @@ def report(path: Path, title: str) -> None:
                  "——先单跑一次看报错（多半是参数拼错或不在 choices 里），不要以为这些臂没测。"
                  if dead else ""), file=sys.stderr)
     if "BASE" not in arms:
-        print("配置文件里没有 BASE 臂，无法算 Δ", file=sys.stderr)
+        print(f"{title}：没有 BASE 臂，无法算 Δ", file=sys.stderr)
         return
     base = arms["BASE"]
     starts = sorted({s for a in arms.values() for s in a})
@@ -255,6 +301,8 @@ def main():
     # 调高前先算：并发数 × 1.3 GB + 其它后台作业 必须 < 5 GB。见 CLAUDE.md「机器资源约束」。
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--report", action="store_true", help="不重跑，只对 --out 现有内容出表")
+    ap.add_argument("--no-ex-top5", action="store_true",
+                    help="不跑去赢家第二遍（§12.1 第 3 款要求每轮都跑；只在复现旧读数或纯补跑时给）")
     ap.add_argument("--title", default="扫描结果")
     args = ap.parse_args()
 
@@ -262,21 +310,37 @@ def main():
         if not args.config:
             ap.error("要跑扫描就得给配置文件（只出表请加 --report）")
         starts = [s.strip() for s in args.starts.split(",") if s.strip()] or DEFAULT_STARTS
-        jobs = []
+        arms = []
         for line in args.config.read_text(encoding="utf-8").splitlines():
             if not line.strip() or line.lstrip().startswith("#"):
                 continue
             label, extra = line.split("|", 1)
-            jobs += [(label.strip(), extra, s) for s in starts]
-        print(f"{len(jobs)} 次运行（{len(jobs) // len(starts)} 配置 × {len(starts)} 起点）"
-              f"，{args.workers} 并发", file=sys.stderr)
-        with ThreadPoolExecutor(max_workers=args.workers) as pool, \
-                args.out.open("w", encoding="utf-8") as fh:
-            for done, result in enumerate(pool.map(run_one, jobs), 1):
-                fh.write(result + "\n")
-                fh.flush()
-                if done % 25 == 0:
-                    print(f"  {done}/{len(jobs)}", file=sys.stderr)
+            arms.append((label.strip(), extra))
+        if "BASE" not in {label for label, _e in arms}:
+            ap.error("配置文件里没有 BASE 臂：Δ 与去赢家第二遍都以它为对照")
+
+        def run_pass(jobs, fh, note: str) -> None:
+            print(f"{note}：{len(jobs)} 次运行（{len(jobs) // len(starts)} 配置 × {len(starts)} 起点）"
+                  f"，{args.workers} 并发", file=sys.stderr)
+            with ThreadPoolExecutor(max_workers=args.workers) as pool:
+                for done, result in enumerate(pool.map(run_one, jobs), 1):
+                    fh.write(result + "\n")
+                    fh.flush()
+                    if done % 25 == 0:
+                        print(f"  {done}/{len(jobs)}", file=sys.stderr)
+
+        with args.out.open("w", encoding="utf-8") as fh:
+            run_pass([(label, extra, s, "") for label, extra in arms for s in starts], fh, "第一遍（全样本）")
+            if not args.no_ex_top5:
+                anchor, winners = read_top5_winners(starts)
+                if not winners:
+                    print(f"⚠ 读不到 BASE {anchor} 起点的 `{EX5_FIELD}`（该次运行跑挂或引擎过旧），"
+                          "去赢家第二遍跳过——补跑后用 --report 出表仍只有第一张", file=sys.stderr)
+                else:
+                    fh.write(f"#EX5|{anchor}|{winners}\n")
+                    fh.flush()
+                    run_pass([(label, extra, s, winners) for label, extra in arms for s in starts], fh,
+                             f"第二遍（统一剔除 BASE {anchor} 起点前五赢家 {winners}）")
     report(args.out, args.title)
 
 
