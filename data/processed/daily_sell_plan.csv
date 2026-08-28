@@ -1,1 +1,1 @@
-trade_date,security_code,security_name,rule,condition,close,ma20,ma60,model_pv,cost_basis,gain_pct,entry_stop_price,stop_line,current_shares,sell_shares,amount,swap_for,cooldown_skips,note
+trade_date,security_code,security_name,rule,condition,close,ma20,ma60,model_pv,hold_pv,cost_basis,gain_pct,entry_stop_price,stop_line,current_shares,sell_shares,amount,swap_for,cooldown_skips,note

@@ -1073,6 +1073,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         use_mos: bool = False, price_stop: bool = False, value_stop: float = 0.0,
         stop_ma: int = 20, trend_stop: bool = True, entry_filter: str = "none",
         lump_sum: float = 0.0, swap: bool = False, swap_margin: float = 0.10,
+        hold_states=None,
         max_positions: int = MAX_POSITIONS, lows=None, day_index=None,
         max_corr: float = 0.0, corr=None, corr_conflict: str = "skip",
         corr_strength_days: int = 126, tier_mode: str = "none",
@@ -1286,6 +1287,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                                  portfolio.margin_ratio({})))
             continue
         today = {code: (close, value, ratio) for code, close, value, ratio in states[sig_day]}
+        hold_today = ({**today, **{code: (close, value, ratio) for code, close, value, ratio in hold_states.get(sig_day, [])}}
+                      if hold_states is not None else today)
         # 研究开关 `exec_confirm_close`：T 日仍负责产生信号、排序与相关性顺序；T+1 收盘只负责
         # 复核这笔价格触发操作是否仍满足同一组直接条件。V 冻结在 T 日，仅用 T+1 收盘重算 P/V，
         # 避免把隔夜新财报导致的带变化混进“价格确认”；除权日例外读取 T+1 已归一化状态，避免把
@@ -1293,9 +1296,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 卖侧均线；换仓复核目标仍可买、原卖出源仍弱且 P/V 边际仍成立。止损本来就按成交日
         # 收盘与成交日均线判，无需再套第二层；出名单、强平与退市不是价格触发，也不参与。
         exec_today = {}
+        hold_exec_today = {}
         if exec_confirm_close:
             state_on_exec = {code: (close, value, ratio)
                              for code, close, value, ratio in states.get(day, [])}
+            hold_state_on_exec = ({code: (close, value, ratio) for code, close, value, ratio in hold_states.get(day, [])}
+                                  if hold_states is not None else state_on_exec)
+            for code, (_sc, signal_value, _sr) in hold_today.items():
+                exec_close = prices.get(code, {}).get(day)
+                if not exec_close:
+                    continue
+                if actions.get(code, {}).get(day) and code in hold_state_on_exec:
+                    hold_exec_today[code] = hold_state_on_exec[code]
+                elif signal_value and signal_value > 0:
+                    hold_exec_today[code] = (exec_close, signal_value, exec_close / signal_value)
             for code, (_signal_close, signal_value, _signal_ratio) in today.items():
                 exec_close = prices.get(code, {}).get(day)
                 if not exec_close:
@@ -1459,7 +1473,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 lot.trail_peak = max(lot.trail_peak, price)   # 上移锚的峰值：只在开关开时维护
             if lot.peak_price > 0:
                 lot.max_drawdown = max(lot.max_drawdown, 1 - price / lot.peak_price)
-            current_value = today.get(code, (None, None, None))[1]
+            current_value = hold_today.get(code, (None, None, None))[1]
             if current_value:
                 lot.peak_intrinsic = max(lot.peak_intrinsic, current_value)
             if lot.invested > 0:
@@ -1472,7 +1486,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             lot, price = portfolio.lots[code], fill_price(code, marks.get(code))
             if not price:
                 continue
-            ratio = today.get(code, (None, None, None))[2]
+            ratio = hold_today.get(code, (None, None, None))[2]
             # 移出股票库 → **逐步清仓**（用户 2026-08-08：「对于被移除股票库的公司，逐步清仓」）。
             # 按与减持同一速度卖，不一次性砸出——一年一次的换库若全额出清，会在每年 5 月
             # 制造一次集中抛售，测出来的是流动性冲击而不是规则优劣。
@@ -1626,7 +1640,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 基本面退出：内在价值自峰值回落超阈值即清仓。**盯 V 不盯价**，故一只票可以
             # 在股价没怎么跌的时候就被卖掉——那正是「业绩塌了但市场还没反应」的情形。
             if value_stop and lot.peak_intrinsic > 0:
-                current_value = today.get(code, (None, None, None))[1]
+                current_value = hold_today.get(code, (None, None, None))[1]
                 if current_value and current_value <= lot.peak_intrinsic * (1 - value_stop):
                     turnover += lot.shares * price
                     close_lot(portfolio, code, day, price, ledger=ledger, reason=f"内在价值自峰值回落≥{value_stop:.0%}")
@@ -1914,8 +1928,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                             continue
                         v = corr.get(code, held, day)
                         if v is not None and v > cluster_delta:
-                            kin.append((scores.get(held, today[held][2])
-                                        if rank_mode != "pv" else today[held][2], held))
+                            kin.append((scores.get(held, hold_today[held][2])
+                                        if rank_mode != "pv" else hold_today[held][2], held))
                 if not kin:
                     final.append(r)                      # 无同簇持仓：直接建仓
                     continue
@@ -2020,7 +2034,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # `swap_repeat`：`skip`（现行，§9.3.1「卖一档、买一档」）＝当日已被换仓减过一档的持仓不再作卖出源；
                 # `whole`（研究／复现口径）＝旧行为——同日再次被选中时 `partial` 判 False、整仓卖出（v4.80 前 2015-05 起点 84 次）。
                 held = [((pcts[c] if gate == "self-pct" else
-                          (scores.get(c, today[c][2]) if rank_mode != "pv" else today[c][2])), c)
+                          (scores.get(c, hold_today[c][2]) if rank_mode != "pv" else hold_today[c][2])), c)
                         for c in portfolio.lots if c in today and c != code
                         and (swap_repeat == "whole" or c not in reduced_today)
                         and (gate != "self-pct" or c in pcts)
@@ -2031,7 +2045,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         # 而不是仅仅排序变了就轻易地换」）：卖出源还须自身 `P/V ≥ 阈值`。
                         # 与 `swap_margin`（候选须比持仓便宜出边际）正交——那是**相对**条件，
                         # 这是**绝对**条件：持仓本身不算贵时，谁更便宜都不换。缺省 0 = 关。
-                        and (not swap_out_min_pv or today[c][2] >= swap_out_min_pv)
+                        and (not swap_out_min_pv or hold_today[c][2] >= swap_out_min_pv)
                         and c not in quota_hold_today
                         and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
                 # `gain_sell`（用户 2026-08-22 实验）：**涨幅 ≥ G 的持仓也是换仓卖出源**——不比 P/V 边际，
@@ -2065,7 +2079,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     # 确认 T 日选出的**同一对**目标/来源；来源恢复后取消本次换仓，不改选另一只。
                     # 这样才是订单确认，而不是用 T+1 数据重新运行一遍换仓策略。
                     exec_cand = exec_today.get(code)
-                    exec_source = exec_today.get(worst)
+                    exec_source = hold_exec_today.get(worst)
                     ma_source = mas.get(worst, {}).get(day) or {}
                     if exec_cand is None or exec_source is None:
                         stats["T+1确认·换仓取消·状态缺失"] += 1
@@ -2196,7 +2210,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if not price_h:
                     continue
                 if corr_conflict == "swap_space":
-                    ratio_h = today[h][2] if h in today else None
+                    ratio_h = hold_today[h][2] if h in hold_today else None
                     decided = ratio_h is not None and (ratio_h - r[3]) >= swap_margin
                 else:                                     # swap_strength
                     rc = trailing_return(r[0], day, corr_strength_days)
@@ -2803,6 +2817,7 @@ def main() -> int:
     parser.add_argument("--position-cap", type=float, default=0.0,
                         help="单票买入上限占总资产比例，如 0.10；只挡加仓不强制减持")
     parser.add_argument("--only-tiers", default="", help="只买这些档位，逗号分隔，如 L1")
+    parser.add_argument("--hold-states", type=Path, default=None, help="持仓侧逐日状态（v4.92 SPA，§9.3.1：减持线／换仓来源／簇内升级／T+1 换仓确认读它）；候选侧仍读 --daily-states；不给则持仓侧＝候选侧（v4.92 前口径）")
     parser.add_argument("--daily-states", type=Path, help="逐日估值状态文件，缺省 a_share_daily_states_adopted.csv（§6.7 第 3 步产物）")
     parser.add_argument("--universe-file", type=Path,
                         help="时点股票库（现行 panel_moat_bank_v6b.csv，由 build_moat_panel.py 装配）。"
@@ -3106,6 +3121,10 @@ def main() -> int:
                   f"「只在 P/V ≥ {args.sell_line} 时才止损」。", file=sys.stderr)
     states = load_states(args.daily_states,
                          {c for _d, m in universe for c in m} if universe else None)
+    hold_states = (load_states(args.hold_states, {c for _d, m in universe for c in m} if universe else None)
+                   if args.hold_states else None)
+    if hold_states is not None and excluded_codes and not universe:
+        hold_states = {day: [row for row in rows if row[0] not in excluded_codes] for day, rows in hold_states.items()}
     if excluded_codes and not universe:
         states = {day: [row for row in rows if row[0] not in excluded_codes]
                   for day, rows in states.items()}
@@ -3289,6 +3308,7 @@ def main() -> int:
                          trend_stop=args.trend_stop, entry_filter=args.entry_filter,
                          lump_sum=args.lump_sum / 100.0, swap=args.swap,
                          swap_margin=args.swap_margin, max_positions=args.max_positions,
+                         hold_states=hold_states,
                          lows=lows, day_index=(day_lists, day_pos),
                          max_corr=args.max_corr, corr=corr, corr_conflict=args.corr_conflict,
                          corr_strength_days=args.corr_strength_days, tier_mode=args.tier_mode,

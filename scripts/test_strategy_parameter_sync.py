@@ -23,6 +23,11 @@ class StrategyParameterSyncTest(unittest.TestCase):
     def test_adopted_production_values(self) -> None:
         self.assertEqual(daily_scan.SEC93_MAX_CORR, 0.70)
         self.assertEqual(daily_scan.SEC93_TRANCHE_PCT, 0.05)
+        # v4.92 SPA：候选侧买入线 0.9343、持仓侧减持线 2.4257（max(BASE,B2) 状态同上侧面对齐解）、换仓边际 0.1437
+        self.assertEqual(daily_scan.SEC93_BUY_LINE, 0.9343)
+        self.assertEqual(daily_scan.SEC93_SELL_LINE, 2.4257)
+        self.assertEqual(daily_scan.SEC93_SWAP_MARGIN, 0.1437)
+        self.assertEqual(daily_scan.DEFAULT_HOLD_BANDS, ROOT / "data/processed/a_share_pool_model_bands_hold.csv")
 
     def test_backtest_baseline_matches_production(self) -> None:
         args = shlex.split(sweep.BASE)
@@ -32,6 +37,9 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertAlmostEqual(1 - float(option_value(args, "--width")), daily_scan.SEC93_BUY_LINE, places=4)
         self.assertEqual(float(option_value(args, "--sell-line")), daily_scan.SEC93_SELL_LINE)
         self.assertEqual(float(option_value(args, "--swap-margin")), daily_scan.SEC93_SWAP_MARGIN)
+        # v4.92 SPA：候选侧与持仓侧逐日状态都显式入 BASE（`--hold-states` 缺省 None = 持仓侧同候选侧，会静默退回旧口径）
+        self.assertEqual(option_value(args, "--daily-states"), "data/processed/a_share_daily_states_adopted.csv")
+        self.assertEqual(option_value(args, "--hold-states"), "data/processed/a_share_daily_states_hold.csv")
         import track_holdings_daily
         self.assertEqual(track_holdings_daily.SELL_LINE, daily_scan.SEC93_SELL_LINE)
         # v4.44：涨幅减持 125%（gated）与融资口径（66.6%、不设金额上限）
@@ -61,7 +69,9 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn("| 相关性 | 与在手及已选标的近 252 日相关性 `≤ 0.70`", workflow)
         self.assertIn("| 单次买入 | 当日净资产 `N × 5.0%` |", workflow)
         self.assertIn(f"| 买入线 | `P/V ≤ {daily_scan.SEC93_BUY_LINE:.4f}` |", workflow)
-        self.assertIn(f"| 减持 | `P/V ≥ {daily_scan.SEC93_SELL_LINE:.4f}` 且", workflow)
+        self.assertIn(f"| 减持 | 持仓侧 `P/V ≥ {daily_scan.SEC93_SELL_LINE:.4f}` 且", workflow)
+        self.assertIn("`data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`", workflow)
+        self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)
         self.assertIn("授信 = 净资产 × 66.6%，不设金额上限", workflow)
         self.assertIn(f"| 单票机械上限 | 单票市值 ÷ 当日净资产 `N` ≥ {daily_scan.SEC93_POSITION_CAP:.0%} 时不再加仓", workflow)

@@ -114,6 +114,29 @@ class ExecutionPlanTest(unittest.TestCase):
         res = self.run_plan([cand, strong], holdings, funds=1000.0, members={"000010", "000013"})
         self.assertEqual(res["plan"][0]["shares"], 100)                      # §9.3.1.1 可用资金不足一档时买到用尽
 
+    def test_holding_side_pv_governs_trim_and_swap(self) -> None:
+        # v4.92 SPA：减持线与换仓来源按持仓侧 `hold_pv` 判；候选侧 `model_pv` 只管买入线与候选排序
+        rich_cand = row("000021", "RC", close=100.0, ma20=110.0, ma60=90.0, pv=2.60)   # 候选侧 ≥ 减持线
+        rich_cand["hold_pv"] = 2.00                                                     # 持仓侧未越线 → 不减
+        rich_hold = row("000022", "RH", close=100.0, ma20=110.0, ma60=90.0, pv=2.00)
+        rich_hold["hold_pv"] = 2.60                                                     # 持仓侧越线且弱势 → 减一档
+        holdings = {"000021": hold("RC", 5000, 90.0, None), "000022": hold("RH", 5000, 90.0, None)}
+        res = self.run_plan([rich_cand, rich_hold], holdings, funds=1e6, members={"000021", "000022"})
+        self.assertEqual([(s["security_code"], s["rule"], s["hold_pv"], s["model_pv"]) for s in res["sells"]],
+                         [("000022", "减持", 2.60, 2.00)])
+        self.assertEqual(sorted(n for n, _h, _c in res["hold_pv_diff"]), ["RC", "RH"])
+        # 换仓来源：候选 0.60 对持仓侧 0.70 差 0.10 < 0.1437 不换（按候选侧 1.50 会误换）
+        cand = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)
+        weak = row("000023", "W", close=100.0, ma20=110.0, ma60=90.0, pv=1.50)
+        weak["hold_pv"] = 0.70
+        res = self.run_plan([cand, weak], {"000023": hold("W", 5000, 90.0, None)}, funds=1000.0, members={"000010", "000023"})
+        self.assertEqual([s for s in res["sells"] if s["rule"] == "换仓"], [])
+        self.assertIn("持仓侧 P/V 0.7000", res["swap_stop_reason"])
+        weak["hold_pv"] = 1.50
+        res = self.run_plan([cand, weak], {"000023": hold("W", 5000, 90.0, None)}, funds=1000.0, members={"000010", "000023"})
+        self.assertEqual([(s["security_code"], s["hold_pv"]) for s in res["sells"] if s["rule"] == "换仓"], [("000023", 1.50)])
+        self.assertEqual(res["hold_pv_diff"], [])                                       # 两侧相同时不列差异
+
     def test_cooldown_counter_consumed_and_set(self) -> None:
         pricey = row("000020", "P", close=2000.0, ma20=1900.0, ma60=1800.0, pv=0.5)   # 一手 20 万 > 一档 15 万
         counters: dict[str, int] = {}

@@ -63,6 +63,8 @@ AShareQuant models listed-company research for mainland China, Hong Kong, and U.
 
 **Valuation Assessment** — whether a security's current price is attractive relative to fundamentals or intrinsic value.
 
+**Candidate-Side Band / Holding-Side Band** — the two production band files the daily execution layer reads (workflow §6.5.2.3, §9.3.1). The candidate-side band (`a_share_pool_model_bands_adopted.csv`) governs the buy line, candidate ranking, tiers, dossiers and the pool reading version; the holding-side band (`a_share_pool_model_bands_hold.csv`, per name the higher of the candidate-side V and the B2 quarterly-λ-front-roll V) governs only the trim line and the swap source. Backtests mirror the split with `--daily-states` (candidate side) and `--hold-states` (holding side).
+
 **Scenario Valuation** — a valuation assessment expressed as bear, base, and bull cases with explicit assumptions about demand, margins, capital intensity, multiple, asset value, or cycle position. A target price without stated assumptions is not one.
 
 **Buy Candidate** — the pipeline's terminal buy-side output: a pool name whose right-side volume/price signal fired on a given trading day, carrying the facts behind it (signal grade, entry stage vs. stage required, effective valuation tier, band position, over-extension). Governed by workflow §8–§11. It is **not** an instruction to buy; the pipeline emits no buy or sell recommendation, and position sizing is outside it.

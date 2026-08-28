@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.91
+# A股选股-估值-量价操作流程 v4.92
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -47,7 +47,8 @@
 | 三类初筛 | `data/processed/a_share_attention_triage.csv` |
 | L1-L3 分层与参考分 | `data/processed/a_share_watchlist_quality_tiers.csv` |
 | 逐票研究档案 | `data/processed/a_share_valuation_dossiers.csv` 与 `data/companies/<代码>_<名称>/` |
-| 当前生产模型带 | `data/processed/a_share_pool_model_bands_adopted.csv` |
+| 当前生产模型带 | `data/processed/a_share_pool_model_bands_adopted.csv`（候选侧） |
+| 持仓侧模型带 | `data/processed/a_share_pool_model_bands_hold.csv`（逐票取候选侧与 B2 较高 V；§9.3.1 减持线与换仓来源读它） |
 | 核心估值池 | `data/processed/a_share_core_valuation_pool.csv` |
 | 核心池阅读版 | `data/processed/000_a_share_core_valuation_pool.md` |
 | 持仓 | `data/processed/a_share_holdings.csv` |
@@ -267,7 +268,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 生产估值只有一个入口（§6.7 建带命令），按输入可得性与企业性质分四条路径，带文件 `roic_path` 列逐行标明；读跨票比较结论时先看该列：
 
-1. **growth（主路径：非金融且三大报表 ≥3 个财年）**——ROIC/FCFF 内在价值：NOPAT、投入资本、增量 ROIC（五年窗首尾 `ΔNOPAT/ΔIC`）、再投资率、WACC、增长衰减和净负债共同生成每股价值；`g0` 取资本腿 `min(增量 ROIC, 40%) × 再投资率` 与利润增速腿（NOPAT 五年 CAGR）之**大者**、夹 `[0, 25%]`，带文件 `roic_g_source` 列标明实际来源；终值 `ROIC_T = min(WACC + 2pp, ROIC0)`。**每股 NOPAT 的归一化比率 `ratio0`**：①**增长态信任度** `λ = 近两次年度变动中上行的次数 ÷ 2 ∈ {0, ½, 1}`，非周期锚 `= 三年比率中位 + λ × (当期比率 − 三年中位)`；②**周期守卫坡道** `w = clip((当期比率 ÷ 十年中位 − 1.3) ÷ 0.6, 0, 1)`（十年中位 ≤ 0 时 `w = 0`），`ratio0 = (1−w) × 非周期锚 + w × 五年比率中位`，利润增速腿 `× (1−w)`；**谷底对称守卫** `v = clip((十年中位 ÷ 当期比率 − 1.3) ÷ 0.6, 0, 1)`，取 `max(w, v)` 作混合权重；带文件 `peak_weight`／`growth_trust`／`trough_weight` 三列留痕，`roic_nopat_mode` 在两端记 `ttm_growth`／`median3`／`cyclical_median`、中间记 `blend(λ,w)`。**季报期间的当期化与增速腿折减**：季报行的当期比率 = 年报最新比率 × `归母净利 TTM ÷ 年报归母净利`（TTM = 年报 + 本期 YTD − 上年同期 YTD；年报行恒为 1；年报净利 ≤ 0、季报缺行或年报滞后一年以上时不算），信任度 λ 与三年/五年中位仍取年报、守卫坡道 `w` 按 TTM 当期重算；增速腿另乘 `d = min(1, NOPAT_最新/NOPAT_上年) × min(1, TTM 因子)`；带文件 `ttm_factor`／`growth_damp` 两列留痕。
+1. **growth（主路径：非金融且三大报表 ≥3 个财年）**——ROIC/FCFF 内在价值：NOPAT、投入资本、增量 ROIC（五年窗首尾 `ΔNOPAT/ΔIC`）、再投资率、WACC、增长衰减和净负债共同生成每股价值；`g0` 取资本腿 `min(增量 ROIC, 40%) × 再投资率` 与利润增速腿（NOPAT 五年 CAGR）之**大者**、夹 `[0, 25%]`，带文件 `roic_g_source` 列标明实际来源；终值 `ROIC_T = min(WACC + 2pp, ROIC0)`。**每股 NOPAT 的归一化比率 `ratio0`**：①**增长态信任度** `λ = 近两次年度变动中上行的次数 ÷ 2 ∈ {0, ½, 1}`，非周期锚 `= 三年比率中位 + λ × (当期比率 − 三年中位)`；②**周期守卫坡道** `w = clip((当期比率 ÷ 十年中位 − 1.3) ÷ 0.6, 0, 1)`（十年中位 ≤ 0 时 `w = 0`），`ratio0 = (1−w) × 非周期锚 + w × 五年比率中位`，利润增速腿 `× (1−w)`；**谷底对称守卫** `v = clip((十年中位 ÷ 当期比率 − 1.3) ÷ 0.6, 0, 1)`，取 `max(w, v)` 作混合权重；带文件 `peak_weight`／`growth_trust`／`trough_weight` 三列留痕，`roic_nopat_mode` 在两端记 `ttm_growth`／`median3`／`cyclical_median`、中间记 `blend(λ,w)`。**季报期间的当期化与增速腿折减**：季报行的当期比率 = 年报最新比率 × `归母净利 TTM ÷ 年报归母净利`（TTM = 年报 + 本期 YTD − 上年同期 YTD；年报行恒为 1；年报净利 ≤ 0、季报缺行或年报滞后一年以上时不算），信任度 λ 与三年/五年中位仍取年报、守卫坡道 `w` 按 TTM 当期重算；增速腿另乘 `d = min(1, NOPAT_最新/NOPAT_上年) × min(1, TTM 因子)`；带文件 `ttm_factor`／`growth_damp` 两列留痕。**B2 口径（持仓侧带的第二输入，建带命令另加 `--ttm-trust on --ttm-trust-delta 0.02`）**：季报行的 λ 改按 {年报₋₁→年报₀, 年报₀→TTM} 两次变动计（TTM 一步 `TTM 因子 ≥ 1.02` 记上行、`≤ 0.98` 记下行、其间沿用年度 λ；极低比率保护不变），其余与候选侧同式。
 2. **zero_growth**——`ROIC0` 距 `g_T` 不足利差护栏时退零增长锚：`V = 每股NOPAT ÷ WACC − 每股净负债`。
 3. **equity_fallback（非银行金融企业；无三大报表者）**——同一折现引擎喂权益口径：`roe0 = 归一化ROE + 2×(TTM − 归一化ROE)`（仅当期高于归一化时上抬，onesided_max λ=2）、`eps0 = roe0 × BPS_op`（清洁盈余；`BPS_op` 与外生权益见下文股本口径段）、`g0 = roe0 × (1 − 近三年派息率)` 夹 `[0, 25%]`、`ROE_T = min(12%, roe0)`。
 4. **bank_divspread（银行与保险）**——`V = 最近已知完整财年每股现金分红合计 ÷（十年期国债收益率 + 2%）`。每笔现金分红按东财 `report_date`（分红所属报告期）归入财年，自董事会预案公告日（`plan_notice_date`，缺失时退除权日）起计入；财年在「已知该年 12-31 期分配」或「已过次年 4-30」之一成立时算完整，取最新完整财年，合计 ≤ 0 判无法估值。分子实现唯一落点 `scripts/divspread_dividend.py`，历史逐日与实盘扫描同读。天然现价口径，除权归一化对银行/保险行跳过（§6.5.2.3）。保险与银行同口径；名单与名称判定统一在 `scripts/divspread_names.py`。
@@ -299,6 +300,8 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 ##### 6.5.2.3 生产带落地
 
 `data/processed/a_share_pool_model_bands_adopted.csv` 是生产模型带唯一来源，**只含池成员**（分层表 worth_attention L1-L3；池外档案的带由 `apply_model_bands_to_dossiers.py` 直接取自全市场模型带、只落档案），**其带值恒为现价口径**：§6.7 第 4 步的叠加脚本末段按除权事件（现金自带公告日起、送转自 `bps_basis_date` 起，§6.5.1 第 5 条）归一化，`exright_note` 列非空即已折算。逐票档案只承载研究结论和当前带；`apply_model_bands_to_dossiers.py` 只覆盖带相关字段，保留 `key_metrics`、`review_triggers`、高频指标和研究备注。README 第八节「现价隐含了什么」的首段由 `build_company_dossier_readmes.py` 按生产带与池内现价机械生成（`现价 ÷ 中值 = P/V`、路径与增长/折现假设、归一化盈利倍数），`implied_growth_years` 只承载手写的可证伪命题与方法分歧，不得再写带中枢、隐含年数反解或任何带值。
+
+**持仓侧带** `data/processed/a_share_pool_model_bands_hold.csv`：§6.7 第 4 步由候选侧生产带与 B2 池带（§6.5.1 B2 口径）逐票取 `intrinsic_value` 较高的一行，两侧各自完成预告叠加与除权归一化后再取，`hold_source` 列标明来源；成员与候选侧生产带相同。§9.3.1 减持线与换仓来源读持仓侧带；买入线、候选排序、档位、档案、阅读版与 §6 其余判定只读候选侧生产带。回测同构：候选侧读 `a_share_daily_states_adopted.csv`，持仓侧读 `a_share_daily_states_hold.csv`（§6.7 第 3 步逐 (代码, 日期) 取较高 V，`--hold-states`）。
 
 生产 `P/V` 与回测 `valuation_ratio` 必须逐位一致（成文例外只剩 §6.4 叠加行）。**晚间披露报告的当晚吸收两侧同构**：生产在公告日戳的前一晚即用新带出信号；回测逐日状态里每条带自**可得日之前的最后一个市场交易日**起生效（`build_historical_valuation_bands.py --state-effective prev_trading_day`，缺省；前一交易日按上证指数日历取，行情库在该公告前已断的陈旧序列退回可得日生效）。带的可得日按 §6.3 第 2 条封顶（`--notice-cap statutory`，缺省）。回测的均线与建仓止损锚同样与实盘同构：均线按前复权口径折回当日股本／分红基准（§8.3），除权日止损锚与持有期峰价按 §11.4 同式折算（§9.3.5）。早于 `2025-01-01` 的陈旧模型带不进任何一层：扫描器无 `P/V`、档案层判「无法估值」（§6.5.2.4），两层同一结论。
 
@@ -345,16 +348,34 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
   --out-bands data/processed/roic_bands.csv \
   --out-daily data/processed/roic_daily_raw.csv
+# 2b. B2 带与逐日状态（持仓侧第二输入；与第 2 步串行、不得并发）
+python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
+  --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 --since 2002-01-01 \
+  --roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak \
+  --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
+  --ttm-trust on --ttm-trust-delta 0.02 \
+  --out-bands data/processed/roic_bands_b2.csv \
+  --out-daily data/processed/roic_daily_raw_b2.csv
 
-# 3. 银行与保险改用股利折现并生成采纳逐日状态（保险名单在 scripts/divspread_names.py）
+# 3. 银行与保险改用股利折现并生成采纳逐日状态（保险名单在 scripts/divspread_names.py），两侧各一份，再合成持仓侧逐日状态
 python3 scripts/rebuild_bank_bands.py divspread:0.02 \
   data/processed/a_share_daily_states_adopted.csv \
   data/processed/roic_daily_raw.csv \
   data/processed/roic_bands.csv
+python3 scripts/rebuild_bank_bands.py divspread:0.02 \
+  data/processed/a_share_daily_states_b2.csv \
+  data/processed/roic_daily_raw_b2.csv \
+  data/processed/roic_bands_b2.csv
+python3 scripts/build_hold_daily_states.py   # 持仓侧逐日状态 = 逐 (代码, 日期) 取两侧较高 V → a_share_daily_states_hold.csv
 
-# 4. 生成池模型带 → 叠加预告/快报 → 写入逐票档案 → 重渲染 README
+# 4. 生成池模型带 → 叠加预告/快报 →（B2 池带同两步 → 持仓侧池带）→ 写入逐票档案 → 重渲染 README
 python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD
 python3 scripts/apply_forecast_band_overlay.py --signal-date YYYY-MM-DD
+python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD \
+  --bands data/processed/roic_bands_b2.csv --states data/processed/a_share_daily_states_b2.csv \
+  --out data/processed/a_share_pool_model_bands_b2.csv
+python3 scripts/apply_forecast_band_overlay.py --signal-date YYYY-MM-DD --bands data/processed/a_share_pool_model_bands_b2.csv
+python3 scripts/build_hold_model_bands.py   # 持仓侧池带 = 逐票取候选侧与 B2 较高 V → a_share_pool_model_bands_hold.csv
 python3 scripts/apply_model_bands_to_dossiers.py --signal-date YYYY-MM-DD
 python3 scripts/build_company_dossier_readmes.py   # 档案 CSV → README（§6.6 带变动后重渲染；--check 只验漂移）
 
@@ -378,7 +399,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --signal-date YYYY-MM-DD
 
 第 1 步不得跳过；披露窗未关的报告期由脚本强制重取并在结尾告警，除权事件库随第 1 步同批刷新。
 
-第 5.5 步只报异常不改数，**「严重」级须逐条处置后才继续**。任一步失败即停止；不得把旧估值表上的校验通过当成新带已生效。完成后核对模型带、档案、估值表和核心池的带值与日期一致。校验失败行冻结新增买入，修复后再物化。
+第 5.5 步只报异常不改数，**「严重」级须逐条处置后才继续**。任一步失败即停止；不得把旧估值表上的校验通过当成新带已生效。完成后核对模型带、档案、估值表和核心池的带值与日期一致，持仓侧带的成员与候选侧生产带一致。校验失败行冻结新增买入，修复后再物化。
 
 仅刷新每日现价和展示档位时运行：
 
@@ -493,11 +514,12 @@ python3 scripts/check_report_day_price_divergence.py --as-of YYYY-MM-DD
 python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
   --review-queue data/interim/a_share_report_update_queue.csv \
   --model-bands data/processed/a_share_pool_model_bands_adopted.csv \
+  --hold-bands data/processed/a_share_pool_model_bands_hold.csv \
   --nav <当日净资产> \
   --funds <现金加可用授信>
 ```
 
-`--nav` 决定一档；`--funds` 决定当天实际可执行预算。不给 `--nav` 时只生成行情和 `P/V`，不生成执行清单；不给 `--funds` 时不做换仓。产物：`daily_buy_candidates.csv`（行情与 `P/V`）、`daily_sell_plan.csv`（§9.3.2 第 4 步卖出清单）、`daily_entry_plan.csv`（第 5 步买入清单）、`daily_cooldown_state.csv`（§9.3.3 计数器）。持仓不在核心池内的票由扫描器另取行情（交易所按证券名单），只进卖出侧。`--as-of` 是信号日（最近收盘日）；模型带的证据截止由同一信号日自动推导。
+`--nav` 决定一档；`--funds` 决定当天实际可执行预算。不给 `--nav` 时只生成行情和 `P/V`，不生成执行清单；不给 `--funds` 时不做换仓。产物：`daily_buy_candidates.csv`（行情、候选侧 `model_pv` 与持仓侧 `hold_pv`）、`daily_sell_plan.csv`（§9.3.2 第 4 步卖出清单）、`daily_entry_plan.csv`（第 5 步买入清单）、`daily_cooldown_state.csv`（§9.3.3 计数器）。持仓不在核心池内的票由扫描器另取行情（交易所按证券名单），只进卖出侧。`--as-of` 是信号日（最近收盘日）；模型带的证据截止由同一信号日自动推导。
 
 ### 8.3 必需量
 
@@ -505,7 +527,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 | --- | --- |
 | 收盘 | T 日收盘，不存在盘中版本 |
 | MA20、MA60 | 前复权收盘简单移动平均（回测 `adjusted_moving_averages` 同基：按除权事件折回当日口径） |
-| `P/V` | 未复权现价 ÷ §6.5 当前生产带中值 |
+| `P/V` | 未复权现价 ÷ §6.5 当前生产带中值；候选侧读生产带、持仓侧读持仓侧带（§6.5.2.3），两侧各列 |
 | 20 日均成交额 | §10.1 流动性过滤的输入 |
 | 相关性 | 近 252 个交易日日收益率皮尔逊相关；只对合格候选、在手持仓和已选候选按需计算 |
 
@@ -561,7 +583,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 | 项 | 当前唯一取值 |
 | --- | --- |
 | 候选池 | 当日 `worth_attention` |
-| 估值 | §6.5 当前生产模型带；`P/V = 收盘 ÷ V` |
+| 估值 | 候选侧（买入线、排序、换仓触发候选）读 §6.5 当前生产模型带；持仓侧（减持、换仓来源）读 §6.5.2.3 持仓侧带；`P/V = 收盘 ÷ V` |
 | 买入线 | `P/V ≤ 0.9343` |
 | 新建仓走势 | T 日 `收盘 > MA20 > MA60` |
 | 已有持仓加仓走势 | `MA20 > MA60`，不要求收盘高于 MA20 |
@@ -572,9 +594,9 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 | 单次买入 | 当日净资产 `N × 5.0%` |
 | 持仓只数上限 | 无 |
 | 单票机械上限 | 单票市值 ÷ 当日净资产 `N` ≥ 60% 时不再加仓；不足 60% 时本档只补到 60%（可小于一档，按一手向下取整，不足一手跳过）。**只挡加仓，不触发任何卖出**：已有持仓因上涨越限不回削，减持／涨幅减持／换仓／止损各按本表规则；新建仓（一档 5%）与换仓目标（必为未持仓票）不受影响。按信号日收盘市值与当日 `N` 判 |
-| 减持 | `P/V ≥ 2.4671` 且 `收盘 < MA20`，减一档 |
+| 减持 | 持仓侧 `P/V ≥ 2.4257` 且 `收盘 < MA20`，减一档 |
 | 涨幅减持 | 收盘较持仓均价涨幅 `≥ 125%`（收盘 ≥ 均价 × 2.25）且 `收盘 < MA20`，减一档；持仓均价 = 买入按股数加权、减持不变、除权按 §11.4 折算（持仓表 `cost_basis`） |
-| 换仓 | 只由**未持仓**的合格候选触发（已持仓候选加仓不触发），按 `P/V` 升序逐个判：可用资金不足一档时先换出**满足涨幅减持条件**的持仓一档（涨幅最大者，不比 `P/V` 边际）；否则该候选 `P/V` 须比最贵的弱势持仓至少低 `0.1437`，且被换出持仓 `收盘 < MA20`；卖一档、买一档。卖出款不定向给触发候选，与其它可用资金一并按 §9.3.2 第 5 步 `P/V` 升序买入 |
+| 换仓 | 只由**未持仓**的合格候选触发（已持仓候选加仓不触发），按 `P/V` 升序逐个判：可用资金不足一档时先换出**满足涨幅减持条件**的持仓一档（涨幅最大者，不比 `P/V` 边际）；否则该候选（候选侧 `P/V`）须比最贵的弱势持仓（持仓侧 `P/V`）至少低 `0.1437`，且被换出持仓 `收盘 < MA20`；卖一档、买一档。卖出款不定向给触发候选，与其它可用资金一并按 §9.3.2 第 5 步 `P/V` 升序买入 |
 | 止损 | 锚 = 零股建仓时的成交日 MA60；**生效止损线 = min(锚, 当日 MA60)**——均线下移时跟随下移、上移不抬线；执行时点（尾盘 14:45-14:55）现价跌破当日生效线即**当日**整仓清空 |
 | 止盈 | 无 |
 | 交易单位 | A 股 100 股一手；高价股按 §9.3.3 比例冷却 |
@@ -597,7 +619,7 @@ python3 scripts/sweep_backtest_configs.py <配置文件> --out <结果文件>
 python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 ```
 
-配置文件只写相对 `BASE` 的变化，不手抄完整基准命令。回测宇宙固定读取 `data/processed/pit_attention/panel_moat_bank_v6b.csv`，估值状态固定读取 `data/processed/a_share_daily_states_adopted.csv`。
+配置文件只写相对 `BASE` 的变化，不手抄完整基准命令。回测宇宙固定读取 `data/processed/pit_attention/panel_moat_bank_v6b.csv`，估值状态固定读取 `data/processed/a_share_daily_states_adopted.csv`（候选侧）与 `data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`：减持线、换仓来源、簇内升级与 T+1 换仓确认读它）。
 
 回测基准的融资口径：本金 300 万；授信 = 净资产 × 66.6%，不设金额上限；强平线 130%；融资年利率 3.5%；资金顺序按 §10.2（授信每日按净资产重定，所有卖出款先偿还超出额度的负债，负债回到额度内才可买入，换仓与买入按现金＋剩余授信判）。实盘与回测同口径。
 
@@ -677,7 +699,7 @@ security_code, security_name, current_shares, cost_basis, entry_stop_price
 python3 scripts/track_holdings_daily.py --as-of YYYY-MM-DD
 ```
 
-逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示现档、合理价、空间、`P/V`、MA20、MA60、生效止损线与是否命中、减持／涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，减持命中判定与扫描器同一实现（`holding_trim_signal`）；生产带的证据截止与扫描器同由信号日自动推导。
+逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示现档、合理价、空间、`P/V`、MA20、MA60、生效止损线与是否命中、减持／涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，减持命中判定与扫描器同一实现（`holding_trim_signal`）；`P/V` 读持仓侧带，与候选侧不同时并列显示；生产带的证据截止与扫描器同由信号日自动推导。
 
 ### 11.4 除权除息
 
@@ -727,7 +749,7 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 
 历史面板 `effective_from` 与 `effective_to` 均为有效期边界，结束日包含在内。禁止把区间起点当成完整快照，也禁止手工修改面板 CSV；名单变化先改判定源，再运行装配脚本。
 
-换估值口径或换宇宙做 A/B 时，**三条线必须一起重解到同一在册合格面**（`scripts/experimental/align_buy_line.py`），否则比的是两条不同宽度的闸门。现行三线 **0.9343／2.4671／0.1437** 为 v4.62 纪元对齐解（下侧 17.617%／上侧 30.856%，511,416 个在册观测），保留四位小数、不取整。现行基准（`BASE`：授信 66.6%、单票上限 60%、T+1 无价跳过、股息税、换仓源同日不重复、配股事件，月末锚定口径）在册读数：**滚5 中位／P25／最差 60.22／49.05／26.58、滚5 回撤中位 47.8、滚5 Calmar 1.27、滚5 Sharpe 1.12、负窗口占比 0；滚3 中位 53.12；年化中位 45.74、最大回撤中位 59.4、Calmar 0.74、Sharpe 0.85、换手 4.32、逐年中位 46.42、逐年最差 −24.4**。配对差一律相对现行基准读数，读数不跨纪元迁移；各纪元的三线解与在册读数只查 `docs/Ashare_backtest_log.md`。
+换估值口径或换宇宙做 A/B 时，**三条线必须一起重解到同一在册合格面**（`scripts/experimental/align_buy_line.py`），否则比的是两条不同宽度的闸门。现行三线 **候选侧买入线 0.9343／持仓侧减持线 2.4257／换仓边际 0.1437**：买入线对候选侧状态下侧合格面 17.775%、减持线对持仓侧状态上侧面 30.025%（候选侧同面解 2.4671），506,118 个在册观测，保留四位小数、不取整。现行基准（`BASE`：候选侧 `a_share_daily_states_adopted.csv`＋持仓侧 `a_share_daily_states_hold.csv`、授信 66.6%、单票上限 60%、T+1 无价跳过、股息税、换仓源同日不重复、配股事件，月末锚定口径）在册读数：**滚5 中位／P25／最差 64.40／54.07／26.19、滚5 回撤中位 47.6、滚5 Calmar 1.36、滚5 Sharpe 1.17、负窗口占比 0；滚3 中位 55.58；年化中位 46.98、最大回撤中位 59.4、Calmar 0.80、Sharpe 0.90、换手 5.28、逐年中位 46.28、逐年最差 −24.1**。配对差一律相对现行基准读数，读数不跨纪元迁移；各纪元的三线解与在册读数只查 `docs/Ashare_backtest_log.md`。
 
 当前参数是取舍前沿上的一点，不是三条标准同时占优的峰；援引本基准时说清按哪条标准选的，不称「最优」。
 

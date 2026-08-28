@@ -48,7 +48,8 @@ from a_share_quotes import fetch_spot_quotes
 from a_share_signal_dates import evidence_iso_for_signal
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
 from build_a_share_core_valuation_pool import DEEP_UNDERVALUED_UPSIDE, OVERVALUED_BAND_MULT
-from screen_daily_volume_price_signals import SEC93_GAIN_SELL, SEC93_SELL_LINE, fetch_daily_rows, holding_trim_signal
+from screen_daily_volume_price_signals import (DEFAULT_HOLD_BANDS, DEFAULT_MODEL_BANDS, SEC93_GAIN_SELL, SEC93_SELL_LINE,
+                                               fetch_daily_rows, holding_trim_signal)
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
 
@@ -66,7 +67,8 @@ SELL_LINE = SEC93_SELL_LINE
 # v4.62 OI-091：P/V 的净负债/企业价值来自生产带行。OI-095 起不在 import 时读带，
 # 由 track() 按信号日自动推导的证据日载入；与扫描器使用同一时点。
 # 测试可预置桩（非 None 即不再载入）。
-MODEL_BANDS: dict[str, dict] | None = None
+MODEL_BANDS: dict[str, dict] | None = None      # 持仓侧带（v4.92 SPA：§9.3.1 减持线读它）
+CAND_BANDS: dict[str, dict] | None = None       # 候选侧带（只用于并列显示两侧 P/V）
 # §9.3.1 涨幅减持（v4.44）：收盘较持仓均价（`cost_basis`，按 §11.4 折算）涨幅 ≥ 125% 且收盘 < MA20 → 减一档；
 # 资金不足时优先作换仓卖出源。
 GAIN_SELL = SEC93_GAIN_SELL
@@ -226,9 +228,15 @@ def resolve_prices(codes: list[str], as_of: date,
 
 
 def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeout: float) -> list[dict[str, object]]:
-    global MODEL_BANDS
+    global MODEL_BANDS, CAND_BANDS
     if MODEL_BANDS is None:
-        MODEL_BANDS = load_model_bands(as_of=evidence_iso_for_signal(as_of))
+        evidence = evidence_iso_for_signal(as_of)
+        CAND_BANDS = load_model_bands(DEFAULT_MODEL_BANDS, as_of=evidence)
+        if DEFAULT_HOLD_BANDS.exists():
+            MODEL_BANDS = load_model_bands(DEFAULT_HOLD_BANDS, as_of=evidence)
+        else:
+            MODEL_BANDS = CAND_BANDS
+            print(f"  ⚠ **持仓侧带文件不存在（{DEFAULT_HOLD_BANDS}）**：P/V 退回候选侧带；重建见 §6.7 第 4 步")
     with holdings_file.open(newline="", encoding="utf-8") as handle:
         holdings = list(csv.DictReader(handle))
     wanted = {s.strip().zfill(6) for s in symbols.split(",") if s.strip()}
@@ -256,15 +264,21 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         # §9.3 唯一判据（v2.56）：V 取带中值；带缺失则 pv 留空，该票当日不进任何机械判定。
         # v4.62（OI-091）：有生产带行时按 `pv_ratio.trading_pv`（ROIC 路径为 (现价+净负债)÷EV），否则退回 现价÷中值。
         pv = None
+        cand_pv = None
         if close is not None and low is not None and high is not None:
             mid = (low + high) / 2
             band_row = MODEL_BANDS.get(str(code).zfill(6)) if MODEL_BANDS else None
             if band_row is not None:
                 pv = trading_pv(close, band_row)
+            cand_row = CAND_BANDS.get(str(code).zfill(6)) if CAND_BANDS else None
+            if cand_row is not None:
+                cand_pv = trading_pv(close, cand_row)
             if pv is None and mid > 0:
                 pv = close / mid
 
         notes: list[str] = []
+        if pv is not None and cand_pv is not None and abs(pv - cand_pv) > 5e-5:
+            notes.append(f"持仓侧 `P/V` {pv:.2f}（候选侧 {cand_pv:.2f}；减持线与换仓来源按持仓侧判）")
         if close is None:
             notes.append("**未取到当日行情**（停牌或接口失败）：`P/V` 未算出，该票当日不进 §9.3 判定")
         if pool_row is None:
@@ -546,9 +560,9 @@ def main() -> None:
               f"——§9.3.5 对其不生效，须待清空后重新建仓时按新规则设定")
     if trim:
         names = "、".join(f"{r['security_name']}(P/V {r['pv']}，收 {r['close']} < MA20 {r['ma20']})" for r in trim)
-        print(f"  **减持一档（P/V ≥ {SELL_LINE:.4f} 且收盘 < MA20）共 {len(trim)} 只**：{names}——股数见扫描器 `daily_sell_plan.csv`")
+        print(f"  **减持一档（持仓侧 P/V ≥ {SELL_LINE:.4f} 且收盘 < MA20）共 {len(trim)} 只**：{names}——股数见扫描器 `daily_sell_plan.csv`")
     else:
-        print(f"  减持（P/V ≥ {SELL_LINE:.4f} 且收盘 < MA20）：无")
+        print(f"  减持（持仓侧 P/V ≥ {SELL_LINE:.4f} 且收盘 < MA20）：无")
     no_cost = [r for r in rows if not (to_float(r.get("cost_basis")) or 0) > 0]
     if no_cost:
         print(f"  **持仓均价未填 {len(no_cost)} 只**：{'、'.join(str(r['security_name']) for r in no_cost)}——§9.3.1 涨幅减持行对其无法判定，请补 `cost_basis`（§11.2）")

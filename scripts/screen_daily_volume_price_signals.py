@@ -39,6 +39,8 @@ DEFAULT_INPUT = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
 DEFAULT_MODEL_BANDS = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
+# v4.92 SPA：持仓侧带（逐票取候选侧与 B2 较高 V，`build_hold_model_bands.py`）——§9.3.1 减持线与换仓来源读它
+DEFAULT_HOLD_BANDS = ROOT / "data/processed/a_share_pool_model_bands_hold.csv"
 DEFAULT_PLAN_OUT = ROOT / "data/processed/daily_entry_plan.csv"
 DEFAULT_SELL_PLAN_OUT = ROOT / "data/processed/daily_sell_plan.csv"
 SECURITIES_MASTER = ROOT / "data/raw/a_share_securities.csv"
@@ -408,6 +410,9 @@ def parse_args() -> argparse.Namespace:
     # ---- §9.3 机械执行层。三个都给才出买入计划。
     parser.add_argument("--model-bands", type=Path, default=DEFAULT_MODEL_BANDS,
                         help="批量模型带表；§9.3 的 P/V 用它，不用池里的逐票档案带")
+    parser.add_argument("--hold-bands", type=Path, default=DEFAULT_HOLD_BANDS,
+                        help="持仓侧模型带表（§6.7 第 4 步逐票取候选侧与 B2 较高 V）；§9.3.1 减持线与换仓来源的 P/V 读它，"
+                             "买入线与候选排序仍读 --model-bands；文件缺失时持仓侧退回候选侧并显著告警")
     parser.add_argument("--nav", type=float, default=0.0,
                         help="当日净资产，用于定一档 = NAV × §9.3.1 的比例。不给则只算 P/V、不出买入计划")
     parser.add_argument("--funds", type=float, default=None,
@@ -473,7 +478,8 @@ SEC93_POSITION_CAP = 0.60      # §9.3.1「单票机械上限」（v4.64，用�
                                # 持仓市值 ÷ 当日净资产 N ≥ 60% 不再加仓，不足时本档只补到 60%（可小于一档、按手向下取整）；
                                # **只挡加仓、不触发任何卖出**，上涨越限不回削；新建仓与换仓目标（必为未持仓票）不受影响。
                                # None = 不设限（v4.04~v4.63 旧口径，§12.75）。与回测 `--position-cap` 同语义。
-SEC93_SELL_LINE = 2.4671       # §9.3.1「减持线」，v4.62 季度当期化纪元对齐解（上侧面 30.858%；v4.61 为 2.5263、v4.34 为 2.5008）：P/V ≥ 线且收盘 < MA20 → 减一档。
+SEC93_SELL_LINE = 2.4257       # §9.3.1「减持线」，按**持仓侧** P/V 判（v4.92 SPA：持仓侧 max(BASE,B2) 状态对同一上侧面的对齐解，回测日志 §12.136/§12.137；
+                               # v4.62 候选侧解为 2.4671、v4.61 为 2.5263、v4.34 为 2.5008）：持仓侧 P/V ≥ 线且收盘 < MA20 → 减一档。
 SEC93_L3_TACTICAL_GATE = True   # §9.3.1「L3 战术闸门」（v4.53，OI-084 用户裁定①）：L3 且分层表 tactical_thesis 为空或判「无」者不进合格集（新建仓与加仓同）
 SEC93_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 SEC93_TACTICAL_NONE = re.compile(r"^\W*(无|暂无|不可买)")   # 判「无战术理由」的写法
@@ -583,9 +589,10 @@ def corr_252(a: str, b: str) -> float | None:
 
 
 def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
-                    as_of: str, rf: float) -> None:
-    """给每行挂上 §9.3 用的 `model_intrinsic_value` / `model_pv` / `model_band_source`。
+                    as_of: str, rf: float, prefix: str = "model") -> None:
+    """给每行挂上 §9.3 用的 `{prefix}_intrinsic_value` / `{prefix}_pv` / `{prefix}_band_source`。
 
+    `prefix="model"` 为候选侧（买入线、候选排序），`prefix="hold"` 为持仓侧（v4.92 SPA：减持线、换仓来源）。
     **与 §8 的 `fair_price_low/high`（逐票档案带）并存、互不覆盖**：档案带继续供
     §6.2 自动定档用，模型带只供 §9.3 用。"""
     for row in rows:
@@ -601,17 +608,17 @@ def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
             if intrinsic:
                 source = f"模型带·{bands[code].get('report_date', '')}"
         close = to_float(row.get("close"))
-        row["model_intrinsic_value"] = round(intrinsic, 4) if intrinsic else ""
-        row["model_band_source"] = source
+        row[f"{prefix}_intrinsic_value"] = round(intrinsic, 4) if intrinsic else ""
+        row[f"{prefix}_band_source"] = source
         # v4.62（OI-091）：P/V 走 `pv_ratio.trading_pv`——ROIC 路径为 (现价+每股净负债)÷每股企业价值，其余 现价÷V
         if close and intrinsic and intrinsic > 0:
             if source.startswith("模型带") and code in bands:
                 pv_value = trading_pv(close, bands[code])
             else:
                 pv_value = close / intrinsic
-            row["model_pv"] = round(pv_value, 4) if pv_value is not None else ""
+            row[f"{prefix}_pv"] = round(pv_value, 4) if pv_value is not None else ""
         else:
-            row["model_pv"] = ""
+            row[f"{prefix}_pv"] = ""
 
 
 def load_holdings() -> dict[str, float]:
@@ -718,6 +725,15 @@ def tranche_sell_shares(tranche: float, price: float, held: float) -> float:
     return held if held - shares < SEC93_LOT else shares
 
 
+def hold_pv_of(r: dict[str, object] | None) -> float | None:
+    """持仓侧 P/V（v4.92 SPA：§9.3.1 减持线与换仓来源读它）；行上无 `hold_pv` 时退回候选侧 `model_pv`。"""
+    r = r or {}
+    for key in ("hold_pv", "model_pv"):
+        if isinstance(r.get(key), float):
+            return r[key]
+    return None
+
+
 def holding_trim_signal(close: float | None, ma20: float | None, pv: float | None,
                         cost: float | None) -> tuple[str, str]:
     """§9.3.1 减持行与涨幅减持行的唯一判定（扫描器与跟踪器同用）。
@@ -738,7 +754,7 @@ def holding_trim_signal(close: float | None, ma20: float | None, pv: float | Non
 
 
 SELL_FIELDS = ["trade_date", "security_code", "security_name", "rule", "condition", "close", "ma20", "ma60",
-               "model_pv", "cost_basis", "gain_pct", "entry_stop_price", "stop_line",
+               "model_pv", "hold_pv", "cost_basis", "gain_pct", "entry_stop_price", "stop_line",
                "current_shares", "sell_shares", "amount", "swap_for", "cooldown_skips", "note"]
 
 
@@ -798,6 +814,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             "close": close if close is not None else "",
             "ma20": to_float((r or {}).get("ma20")) or "", "ma60": to_float((r or {}).get("ma60")) or "",
             "model_pv": (r or {}).get("model_pv", "") if isinstance((r or {}).get("model_pv"), float) else "",
+            "hold_pv": hold_pv_of(r) if hold_pv_of(r) is not None else "",
             "cost_basis": cost if cost is not None else "", "gain_pct": round(gain, 4) if gain is not None else "",
             "entry_stop_price": h.get("stop") if h.get("stop") is not None else "",
             "stop_line": "", "current_shares": h["shares"], "sell_shares": shares,
@@ -835,7 +852,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                                   note="停牌或取数失败：按 §9.1 执行日停牌跳过并复核"))
             continue
         ma20, ma60 = to_float(r.get("ma20")), to_float(r.get("ma60"))
-        pv = r.get("model_pv") if isinstance(r.get("model_pv"), float) else None
+        pv = hold_pv_of(r)                                   # 持仓侧 P/V（v4.92 SPA：减持线按它判）
         # ⓪ 止损复核：生效线 = min(锚, 当日 MA60)；T+1 尾盘现价跌破 T+1 当日线即整仓清空
         stop = h.get("stop")
         if stop:
@@ -853,7 +870,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         # ①／①′ 减持：P/V ≥ 线 或 涨幅 ≥ 125%，且收盘 < MA20
         rule, why = holding_trim_signal(price, ma20, pv, h.get("cost"))
         if rule:
-            cond = (f"P/V {pv:.4f} ≥ {SEC93_SELL_LINE:.4f} 且收盘 {price:g} < MA20 {ma20:g}" if rule == "减持"
+            cond = (f"持仓侧 P/V {pv:.4f} ≥ {SEC93_SELL_LINE:.4f} 且收盘 {price:g} < MA20 {ma20:g}" if rule == "减持"
                     else f"收盘 {price:g} ≥ 均价 {h.get('cost'):g}×{1 + SEC93_GAIN_SELL:.2f} 且收盘 < MA20 {ma20:g}")
             sold = reduce_one(code, r, rule, cond, price)
             cash += sold * price
@@ -908,8 +925,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 cost = h.get("cost")
                 if cost and cost > 0 and hp >= cost * (1.0 + SEC93_GAIN_SELL):
                     gain_src.append((hp / cost - 1.0, hcode))
-                hpv = (hr or {}).get("model_pv")
-                if isinstance(hpv, float):
+                hpv = hold_pv_of(hr)                          # 换仓来源按持仓侧 P/V（v4.92 SPA）
+                if hpv is not None:
                     weak_src.append((hpv, hcode))
             if gain_src:
                 gain, worst = max(gain_src)
@@ -920,10 +937,10 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                     break
                 worst_pv, worst = max(weak_src)
                 if worst_pv - cand["model_pv"] < SEC93_SWAP_MARGIN:
-                    swap_stop_reason = (f"最贵弱势持仓 P/V {worst_pv:.4f} 与候选 {cand.get('security_name', ccode)} "
+                    swap_stop_reason = (f"最贵弱势持仓 持仓侧 P/V {worst_pv:.4f} 与候选 {cand.get('security_name', ccode)} "
                                         f"P/V {cand['model_pv']:.4f} 差 {worst_pv - cand['model_pv']:.4f} < {SEC93_SWAP_MARGIN}")
                     break
-                cond = (f"P/V {worst_pv:.4f} − 候选 {cand.get('security_name', ccode)} {cand['model_pv']:.4f} "
+                cond = (f"持仓侧 P/V {worst_pv:.4f} − 候选 {cand.get('security_name', ccode)} {cand['model_pv']:.4f} "
                         f"≥ {SEC93_SWAP_MARGIN} 且弱势")
             hr = by_code[worst]
             hp = to_float(hr.get("close")) or 0.0
@@ -1004,7 +1021,14 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             "amount": round(amount, 2),
             "cooldown_skips": cooldown,
         })
+    # 持仓侧与候选侧 P/V 不同的持仓（报告用：减持线与换仓来源按持仓侧判，读者要能看到两侧数）
+    hold_pv_diff = [(h.get("name", code), by_code[code]["hold_pv"], by_code[code]["model_pv"])
+                    for code, h in holdings.items()
+                    if code in by_code and isinstance(by_code[code].get("hold_pv"), float)
+                    and isinstance(by_code[code].get("model_pv"), float)
+                    and abs(by_code[code]["hold_pv"] - by_code[code]["model_pv"]) > 5e-5]
     return {"plan": plan, "sells": sells, "sell_notes": sell_notes, "missing_holdings": missing_holdings,
+            "hold_pv_diff": hold_pv_diff,
             "swap_targets": swap_targets, "swap_stop_reason": swap_stop_reason,
             "dropped": dropped, "corr_unknown": corr_unknown,
             "eligible": eligible, "capped": capped, "cooled": cooled,
@@ -1077,6 +1101,8 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
     else:
         cap_txt = f"单票上限 {SEC93_POSITION_CAP:.0%}（只挡加仓、不触发卖出）" if SEC93_POSITION_CAP else "单票无上限"
         print(f"     持仓 {result['n_held']} 只已载入｜{cap_txt}")
+        for name, hpv, cpv in result.get("hold_pv_diff") or []:
+            print(f"     [持仓侧带] {name}：持仓侧 P/V {hpv:.4f}（候选侧 {cpv:.4f}）——减持线与换仓来源按持仓侧判")
     # 3. 卖出清单
     print(f"  3. 卖出清单：{len([s for s in sells if s['rule'] not in ('数据缺失',)])} 条"
           + ("（**今日无卖出**）" if not sells else ""))
@@ -1153,6 +1179,10 @@ FIELDNAMES = [
     "model_intrinsic_value",
     "model_band_source",
     "model_pv",
+    # v4.92 SPA 持仓侧带三列：减持线与换仓来源读 `hold_pv`；持仓侧带缺失时等于候选侧三列。
+    "hold_intrinsic_value",
+    "hold_band_source",
+    "hold_pv",
     "strategy_tag",
     "total_market_cap_bn",
     "signal_state",
@@ -1206,6 +1236,21 @@ def main() -> int:
             print(f"  **无带 {len(rows) - priced} 只**（§9.3 判定不到它们）：{'、'.join(missing)}")
         if rows and not priced:
             print("  **告警：model_pv 整列为空** —— 模型带与池对不上号，§9.3 本次等于没跑")
+        # v4.92 SPA：持仓侧带（减持线／换仓来源）。缺文件不静默——退回候选侧并显著告警（§13 第 3 条）。
+        if args.hold_bands and args.hold_bands.exists():
+            hold_bands = load_model_bands(args.hold_bands, evidence_date)
+            attach_model_pv(rows, hold_bands, args.as_of, args.rf, prefix="hold")
+            n_hold = sum(1 for r in rows if isinstance(r.get("hold_pv"), float))
+            n_diff = sum(1 for r in rows if isinstance(r.get("hold_pv"), float) and isinstance(r.get("model_pv"), float)
+                         and abs(r["hold_pv"] - r["model_pv"]) > 5e-5)
+            print(f"§9.3 持仓侧带：{len(hold_bands)} 只有带，{n_hold}/{len(rows)} 只算出持仓侧 P/V，其中 {n_diff} 只与候选侧不同"
+                  f"（减持线 {SEC93_SELL_LINE} 与换仓来源按持仓侧判）")
+            if rows and priced and not n_hold:
+                print("  **告警：hold_pv 整列为空** —— 持仓侧带与池对不上号，减持／换仓来源本次等于按候选侧判")
+        else:
+            hold_bands = bands
+            attach_model_pv(rows, hold_bands, args.as_of, args.rf, prefix="hold")
+            print(f"  ⚠ **持仓侧带文件不存在（{args.hold_bands}）**：减持线与换仓来源退回候选侧 P/V；重建见 §6.7 第 4 步")
     write_csv(args.output_csv, rows, FIELDNAMES)
     review_note = (
         "复核冻结：已启用（读取更新队列）。" if blocked is not None else
@@ -1234,6 +1279,7 @@ def main() -> int:
                            "exchange": exchanges.get(c, "")} for c in outside]
                 holding_rows = scan(pseudo, args.as_of, None, args.timeout, args.workers)
                 attach_model_pv(holding_rows, bands, args.as_of, args.rf)
+                attach_model_pv(holding_rows, hold_bands, args.as_of, args.rf, prefix="hold")
                 print(f"  持仓不在输入池 {len(outside)} 只已另取行情（只进卖出侧）："
                       + "、".join(holdings[c].get("name", c) for c in outside))
             members = load_worth_attention_codes(args.triage)
