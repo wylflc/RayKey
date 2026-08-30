@@ -1122,6 +1122,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_trigger: str = "power", credit_over_limit: str = "repay",
         swap_held_trigger: bool = False, swap_proceeds: str = "pv",
         swap_post_corr_trigger: bool = False,
+        swap_recipient_margin: bool = False, swap_recipient_scale: float = 1.0,
         exec_confirm_close: bool = False,
         sell_confirm: bool = False, sell_tol: float = 0.0, stop_tol: float = 0.0,
         sell_buffer_exempt_gain: bool = False, sell_buffer_exempt_pv: float = 0.0,
@@ -2029,6 +2030,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 raise ValueError("--swap-post-corr-trigger 目前只定义于 --corr-conflict skip")
             post_corr_buyable = correlation_skip_buyable_codes(
                 eligible, portfolio.lots, corr, day, max_corr, scan_depth, max_positions)
+        # `swap_recipient_margin`（研究开关）：授权卖出的那把尺（源持仓侧 `P/V` − 接收方
+        # 候选侧 `P/V` ≥ `swap_margin`）同样量**钱的实际去向**——换仓释放出来的资金只能投给
+        # 自身也过这道边际的标的，不过线者只能动用换仓前本就可用的现金＋剩余授信。
+        # 涨幅让位的卖出不由 `P/V` 边际授权，其卖出款不受本闸门约束。
+        if swap_recipient_margin and (gate != "pv" or rank_mode != "pv"):
+            raise ValueError("--swap-recipient-margin 目前只定义于 --gate pv 且 --rank-mode pv")
+        swap_funds_before = buying_power(portfolio, credit_limit) if swap_recipient_margin else 0.0
+        swap_gain_proceeds = 0.0             # 涨幅让位卖出款：不受闸门约束
+        swap_floor_pv = float("inf")         # min(源持仓侧 P/V) − swap_margin
         if swap and eligible:
             for code, close, value, ratio in eligible[:max_positions]:
                 # `swap_held_trigger`（OI-101 研究开关）：已持仓候选想加仓而资金不足时同样触发换仓，
@@ -2156,6 +2166,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     shares = (lot_size if lot_worst.shares - lot_size >= lot_size
                               else lot_worst.shares)
                     stats["高价股·按手换仓"] += 1
+                sold_qty = shares if (partial and shares < lot_worst.shares * 0.999) else lot_worst.shares
                 if partial and shares < lot_worst.shares * 0.999:
                     stats["换仓·减一档"] += 1
                     lot_worst.shares -= shares
@@ -2171,6 +2182,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     turnover += lot_worst.shares * price
                     close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓{swap_tag}：让位给空间更大的{code}")
                 sell_count += 1
+                if swap_recipient_margin:
+                    if swap_tag:
+                        swap_gain_proceeds += sold_qty * price
+                    else:
+                        swap_floor_pv = min(swap_floor_pv,
+                                            worst_ratio - swap_margin * swap_recipient_scale)
                 if code not in swap_targets:
                     swap_target_order.append(code)
                 swap_targets.add(code)
@@ -2178,6 +2195,14 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         if credit_over_limit == "repay" and credit_ratio > 0:
             if repay_over_limit(portfolio, credit_limit) > 0:
                 stats["超额授信·换仓款先还"] += 1
+        # 受闸门约束的额度 = 换仓真正多出来的可用资金（已扣掉超额授信还款与涨幅让位款）；
+        # 其余为不受约束额度，`spent_unguarded` 累计不过线标的已占用的部分。
+        spent_unguarded = 0.0
+        swap_unguarded = float("inf")
+        if swap_recipient_margin:
+            funds_now = buying_power(portfolio, credit_limit)
+            swap_unguarded = funds_now - max(
+                0.0, funds_now - swap_funds_before - swap_gain_proceeds)
         # ---- 档位排序偏置（用户 2026-08-08）
         if tier_mode == "bonus":
             eligible.sort(key=lambda r: -(1.0 / r[3] + TIER_BONUS.get(tiers.get(r[0], DEFAULT_TIER), 0.0)))
@@ -2364,6 +2389,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if room <= 0:
                     continue
                 amount = min(amount, room)
+            # 换仓款的接收方须过同一条边际；不过线者只能动用不受约束的那部分额度。
+            if swap_recipient_margin and ratio > swap_floor_pv:
+                amount = min(amount, max(0.0, swap_unguarded - spent_unguarded))
+                if amount <= 0:
+                    stats["换仓款·接收方边际不足·跳过"] += 1
+                    continue
             # A 股买入必须是 100 股整数倍。`lot_size` 打开后按手向下取整，**买不足一手就跳过**
             # ——这才是真实可执行的口径。一档金额买不起一手的高价股（茅台一手 13 万）会被自然排除，
             # 这不是缺陷而是事实：一档金额本来就装不下这类标的。
@@ -2404,6 +2435,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if afford > 0:
                     shares, amount = afford, afford * fill
                     stats["割肉买回"] += 1
+            # 整手取整、按手建仓与割肉买回都可能绕过上面的截断，这里按最终金额兜底。
+            if swap_recipient_margin and ratio > swap_floor_pv:
+                if amount > swap_unguarded - spent_unguarded + 1e-6:
+                    stats["换仓款·接收方边际不足·跳过"] += 1
+                    continue
+                spent_unguarded += amount
             lot = portfolio.lots.get(code)
             if lot is None:
                 # 止损价取**成交日**均线。成交日停牌时 `mas[code][day]` 整条缺失，
@@ -3044,6 +3081,12 @@ def main() -> int:
                         help="OI-101 研究开关：换仓卖出款去向——pv=按 P/V 升序买（缺省）；target=谁触发换仓先买谁，余款再按 P/V")
     parser.add_argument("--swap-held-trigger", action="store_true",
                         help="OI-101 研究开关：已持仓候选想加仓而资金不足时也触发换仓（缺省只由未持仓候选触发）")
+    parser.add_argument("--swap-recipient-margin", action="store_true",
+                        help="接收方边际守卫：换仓卖出款只能投给同样满足「源持仓侧 P/V − 接收方候选侧 P/V ≥ swap-margin」"
+                             "的标的，不过线者只能动用换仓前本就可用的资金；涨幅让位款不受约束")
+    parser.add_argument("--swap-recipient-scale", type=float, default=1.0, metavar="K",
+                        help="接收方边际守卫的相邻区间扫描：要求的边际 = swap-margin × K；"
+                             "K=1 为与换仓触发同一条线，K=0 为「接收方不得比卖出源更贵」")
     parser.add_argument("--swap-post-corr-trigger", action="store_true",
                         help="OI-101 第四臂：只有先通过生产相关性过滤、实际可买的未持仓候选才能触发换仓；"
                              "卖出款仍按全局 P/V 排序（目前只定义于 corr-conflict=skip）")
@@ -3440,6 +3483,8 @@ def main() -> int:
                          credit_over_limit=args.credit_over_limit, swap_held_trigger=args.swap_held_trigger,
                          swap_proceeds=args.swap_proceeds,
                          swap_post_corr_trigger=args.swap_post_corr_trigger,
+                         swap_recipient_margin=args.swap_recipient_margin,
+                         swap_recipient_scale=args.swap_recipient_scale,
                          exec_confirm_close=args.exec_confirm_close,
                          sell_confirm=args.sell_confirm, sell_tol=args.sell_tol, stop_tol=args.stop_tol,
                          sell_buffer_exempt_gain=args.sell_buffer_exempt_gain,

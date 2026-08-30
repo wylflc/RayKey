@@ -1,0 +1,6 @@
+# 接收方边际守卫（2026-08-31）：换仓卖出款只能投给同样满足「源持仓侧 P/V − 接收方候选侧 P/V ≥ swap-margin × K」的标的。
+# K 为相邻区间扫描：1.0 与换仓触发同线、0.5 半线、0.0 仅要求接收方不比卖出源更贵。全市场状态文件（BASE 缺省）。
+BASE|
+RECIP10|--swap-recipient-margin
+RECIP05|--swap-recipient-margin --swap-recipient-scale 0.5
+RECIP00|--swap-recipient-margin --swap-recipient-scale 0.0
