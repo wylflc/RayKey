@@ -10,7 +10,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from build_full_market_screen_queue import (
+    needs_scope_check,
     tier_inputs,
+    tier_move,
     classify,
     deduct_ratio,
     in_ipo_roe_window,
@@ -173,6 +175,54 @@ class TierInputsTest(unittest.TestCase):
 
     def test_no_usable_period_returns_empty_basis(self) -> None:
         self.assertEqual(tier_inputs({}, "000001", "2026-06-30"), (None, None, None, ""))
+
+
+class TierMoveTest(unittest.TestCase):
+    """越线检测：直接比两次分层结果，不重述 classify 的前置条件。"""
+
+    def test_upward_and_downward_moves(self) -> None:
+        self.assertEqual(tier_move("C_排除", "B_观察"), "up")
+        self.assertEqual(tier_move("C_排除", "A_核心"), "up")
+        self.assertEqual(tier_move("B_观察", "A_核心"), "up")
+        self.assertEqual(tier_move("A_核心", "B_观察"), "down")
+        self.assertEqual(tier_move("B_观察", "C_排除"), "down")
+
+    def test_unchanged_or_unknown_tier_yields_no_move(self) -> None:
+        self.assertEqual(tier_move("B_观察", "B_观察"), "")
+        self.assertEqual(tier_move("", "A_核心"), "")          # 首次建队列，无基准
+        self.assertEqual(tier_move("A_核心", "无数据"), "")
+
+
+class ScopeCheckTest(unittest.TestCase):
+    """毛利跳变 + 营收翻倍 → 强制核合并范围。两条是合取，缺一不报。"""
+
+    @staticmethod
+    def _rows(gm_now, gm_before, yoy):
+        return ({"gross_margin": gm_now, "revenue_yoy": yoy}, {"gross_margin": gm_before})
+
+    def test_both_conditions_met(self) -> None:
+        self.assertTrue(needs_scope_check(*self._rows("39.64", "13.6", "155.0")))
+        self.assertTrue(needs_scope_check(*self._rows("54.92", "38.85", "100.0")))   # 恰在两条线上
+
+    def test_margin_jump_alone_is_not_enough(self) -> None:
+        self.assertFalse(needs_scope_check(*self._rows("39.64", "13.6", "14.3")))
+
+    def test_revenue_doubling_alone_is_not_enough(self) -> None:
+        self.assertFalse(needs_scope_check(*self._rows("34.90", "33.0", "531.2")))   # 毛利只动 1.9pp
+
+    def test_margin_collapse_also_triggers(self) -> None:
+        """并入低毛利贸易：营收暴涨而毛利率塌陷，与并入高毛利业务同样要核合并范围。"""
+        self.assertTrue(needs_scope_check(*self._rows("10.01", "63.95", "473.6")))
+        self.assertTrue(needs_scope_check(*self._rows("46.05", "56.85", "155.2")))
+
+    def test_margin_move_below_ten_points_does_not_trigger(self) -> None:
+        self.assertFalse(needs_scope_check(*self._rows("40.0", "31.0", "300.0")))
+        self.assertFalse(needs_scope_check(*self._rows("31.0", "40.0", "300.0")))
+
+    def test_missing_inputs_do_not_trigger(self) -> None:
+        self.assertFalse(needs_scope_check(None, {"gross_margin": "13.6"}))
+        self.assertFalse(needs_scope_check({"gross_margin": "39.64", "revenue_yoy": "155"}, None))
+        self.assertFalse(needs_scope_check(*self._rows("39.64", "", "155.0")))
 
 
 if __name__ == "__main__":

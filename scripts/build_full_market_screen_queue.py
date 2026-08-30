@@ -64,6 +64,12 @@ FIELDS = ["security_code", "security_name", "board", "listing_date", "queue_tier
           "deduct_ratio_pct", "ocf_to_eps", "ipo_roe_window",
           # 分层入参（`queue_tier` 只由这三列＋名称算出，`revenue_yi` 等是当期披露值，口径不同）：
           "tier_basis", "revenue_ttm_yi", "netprofit_ttm_yi", "roe_ttm_pct",
+          # 上一次建队列的层与本次移动方向：`tier_move=up` 就是「越线」，取代此前按当期折年
+          # 现算的旗标——那种算法要自己重述 `classify` 的前置条件，漏一条就误报（漏「营收 ≥5 亿」
+          # 时把折年营收 2.36 亿的公司也标成越过 A 线）。这里直接比两次 `classify` 的结果。
+          "prior_queue_tier", "tier_move",
+          # 单期毛利跳变 + 营收翻倍：几乎都是并表口径变化而非经营兑现，判定前必须核合并范围。
+          "scope_check",
           "prior_class", "prior_quality_tier"]
 
 
@@ -146,6 +152,46 @@ def ocf_to_eps(row: dict | None) -> float | None:
     return ocf / eps
 
 
+TIER_RANK = {"A_核心": 0, "B_观察": 1, "C_排除": 2}
+
+
+def load_prior_tiers(path: Path | None = None) -> dict[str, str]:
+    """上一次建队列时每只的层。文件不在（首次建）时返回空表，`tier_move` 全部留空。
+
+    缺省读将被本次覆写的 `screen_queue.csv` 自身，故必须在写盘前调用。判据换代那一次要
+    显式传上一代的队列文件（`--prior-queue`），否则基准已被新口径覆盖，移动方向会全空。
+    """
+    path = path or OUT
+    if not path.exists():
+        return {}
+    with path.open(newline="", encoding="utf-8") as handle:
+        return {r["security_code"]: r.get("queue_tier", "") for r in csv.DictReader(handle)}
+
+
+def tier_move(prior: str, current: str) -> str:
+    """层的移动方向。升层（`up`）是本轮要送去逐家判的越线事件。"""
+    if prior not in TIER_RANK or current not in TIER_RANK or prior == current:
+        return ""
+    return "up" if TIER_RANK[current] < TIER_RANK[prior] else "down"
+
+
+def needs_scope_check(current: dict | None, prior_same: dict | None) -> bool:
+    """毛利率较上年同期跳变 ≥10pp（**两个方向都算**）**且** 营收同比 ≥ +100%——先核合并范围。
+
+    营收翻倍的同时毛利率结构位移 10 个点，同口径经营几乎给不出这种组合，两个方向都指向并表：
+    并入高毛利业务两者同升，并入低毛利贸易则营收暴涨而毛利率塌陷。只比上年同期，不比上年
+    全年——半年对全年是两个窗口，季节性会自造假信号。命中只要求核对合并范围，不改分层，
+    也不改结论。
+    """
+    if not current or not prior_same:
+        return False
+    now, before = _num(current.get("gross_margin")), _num(prior_same.get("gross_margin"))
+    yoy = _num(current.get("revenue_yoy"))
+    if now is None or before is None or yoy is None:
+        return False
+    return abs(now - before) >= 10 and yoy >= 100
+
+
 def ytd_consistent(series: dict[str, dict], period: str, field: str) -> bool:
     """上年同期与上年年报是否同口径。
 
@@ -223,6 +269,8 @@ def main() -> int:
     ap.add_argument("--tier", default="A_核心", help="打印哪一层")
     ap.add_argument("--preview", action="store_true",
                     help="预审模式：以 2025 年报打底、叠加 2026Q1 与中报预告方向（用户 2026-08-09）")
+    ap.add_argument("--prior-queue", default="",
+                    help="拿哪个队列文件作 tier_move 的基准（缺省为待覆写的 screen_queue.csv 自身）")
     ap.add_argument("--h1-only", action="store_true",
                     help="只列已出 2026 中报的公司（用户 2026-08-09：先判这批，其余等中报）")
     args = ap.parse_args()
@@ -232,6 +280,7 @@ def main() -> int:
     # 分层入参走 TTM，故另载上年同期两期作滚动减项（见 classify 文档串与 tier_inputs）。
     panels = {"2026-06-30": h1, "2026-03-31": q1, "2025-12-31": ann25,
               "2025-06-30": load_period("2025-06-30"), "2025-03-31": load_period("2025-03-31")}
+    prior_tiers = load_prior_tiers(Path(args.prior_queue) if args.prior_queue else None)
     securities = {r["security_code"]: r for r in csv.DictReader(SEC.open(encoding="utf-8-sig"))}
     # 财报面板里有、名录里没有的沪深代码只打印不入队：§5.3 要求开批前先刷新名录，刷新后仍缺的
     # 只剩两类——已发行未上市（待上市）与已终止上市后仍在老三板披露的旧代码（退市长油、乐视退
@@ -290,6 +339,10 @@ def main() -> int:
             "ocf_to_eps": (f"{oe:.2f}" if (oe := ocf_to_eps(row)) is not None else ""),
             "ipo_roe_window": "1" if ipo_window else "",
             "tier_basis": tier_basis,
+            "prior_queue_tier": prior_tiers.get(code, ""),
+            "tier_move": tier_move(prior_tiers.get(code, ""), tier),
+            "scope_check": ("1" if needs_scope_check(
+                row, panels.get("2025-06-30" if basis == "2026H1" else "2025-03-31", {}).get(code)) else ""),
             "revenue_ttm_yi": f"{rev_year:.2f}" if rev_year is not None else "",
             "netprofit_ttm_yi": f"{prof_year:.2f}" if prof_year is not None else "",
             "roe_ttm_pct": f"{roe_year:.2f}" if roe_year is not None else "",
