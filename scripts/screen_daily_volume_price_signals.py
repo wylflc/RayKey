@@ -45,11 +45,10 @@ DEFAULT_PLAN_OUT = ROOT / "data/processed/daily_entry_plan.csv"
 DEFAULT_SELL_PLAN_OUT = ROOT / "data/processed/daily_sell_plan.csv"
 SECURITIES_MASTER = ROOT / "data/raw/a_share_securities.csv"
 EASTMONEY_KLINE = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
-# 后备行情源：东财历史行情不可用/空响应时切换（同为前复权日线；成交额以收盘×量近似，仅影响流动性门槛估计）。
+# 后备行情源：东财历史行情不可用/空响应时切换（同为前复权日线；成交额以收盘×量近似，只进展示列 `amount`／`amount_ma20`，不进判定）。
 # 统一走腾讯 newfqkline：同构覆盖 sh/sz/bj，且为北交所唯一可用历史K线源；旧 web.ifzq 端点在批量扫描下易限流（2026-07-17 实测 501）。
 TENCENT_KLINE = "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get"
 
-MIN_AMOUNT_MA20 = 50_000_000  # §10.1 第 3 条：20日均成交额低于 5,000 万元不列买入候选。
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -130,7 +129,7 @@ def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float, fq: s
 
 def fetch_daily_rows_tencent(code: str, exchange: str, as_of: str, timeout: float, fq: str = "qfq") -> tuple[str, list[dict[str, float | str]]]:
     """后备源：腾讯日线（北交所主源，走 newfqkline）。`fq` 语义同 `fetch_daily_rows`（"" = 不复权）。
-    成交量单位为手（口径内部一致）；成交额接口未提供，以收盘价×成交量×100近似，只影响流动性门槛的估计。"""
+    成交量单位为手（口径内部一致）；成交额接口未提供，以收盘价×成交量×100近似，只进展示列、不进判定。"""
     symbol = quote_symbol(code, exchange)
     base = TENCENT_KLINE
     param = f"{symbol},day,2020-01-01,{as_of},1000,{fq}"
@@ -792,9 +791,6 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             return True                      # 已持仓：只看均线排列
         return c > m20                       # 新建仓：还要站上 MA20
 
-    def liquid_ok(r) -> bool:
-        return (to_float(r.get("amount_ma20")) or 0.0) >= MIN_AMOUNT_MA20
-
     # ---------------- 卖出侧
     cash = nav if funds is None else max(funds, 0.0)
     funds0 = cash
@@ -882,19 +878,15 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                   if str(r["security_code"]).zfill(6) in blocked
                   and isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
                   and trend_ok(r)]
-    illiquid_out = [r for r in rows
-                    if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
-                    and trend_ok(r) and not liquid_ok(r)
-                    and str(r["security_code"]).zfill(6) not in blocked]
     tactical_out = [r for r in rows
                     if str(r["security_code"]).zfill(6) in tactical_gated
                     and isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
-                    and trend_ok(r) and liquid_ok(r)
+                    and trend_ok(r)
                     and str(r["security_code"]).zfill(6) not in blocked]
     eligible = [
         r for r in rows
         if isinstance(r.get("model_pv"), float) and r["model_pv"] <= SEC93_BUY_LINE
-        and trend_ok(r) and liquid_ok(r)
+        and trend_ok(r)
         and str(r["security_code"]).zfill(6) not in blocked
         and str(r["security_code"]).zfill(6) not in tactical_gated
     ]
@@ -1032,7 +1024,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             "swap_targets": swap_targets, "swap_stop_reason": swap_stop_reason,
             "dropped": dropped, "corr_unknown": corr_unknown,
             "eligible": eligible, "capped": capped, "cooled": cooled,
-            "frozen_out": frozen_out, "illiquid_out": illiquid_out, "tactical_out": tactical_out,
+            "frozen_out": frozen_out, "tactical_out": tactical_out,
             "n_cheap": n_cheap, "cash": cash, "tranche": tranche,
             "funds0": funds0, "funds_given": funds is not None,
             "n_held": len(holdings),
@@ -1074,16 +1066,12 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
           f"再过走势条件的 **{len(result['eligible'])} 只**"
           f"（新建仓 `收>MA20>MA60`；**已持仓只须 `MA20>MA60`**，其中 {result['n_addon']} 只"
           f"是靠这条放宽进来的回踩加仓）；"
-          f"流动性门槛（20日均额<{MIN_AMOUNT_MA20 / 1e8:.1f}亿）排除 {len(result.get('illiquid_out') or [])} 只；"
           f"§7.5 冻结硬排除 {len(result.get('frozen_out') or [])} 只；"
           f"L3 战术闸门排除 {len(result.get('tactical_out') or [])} 只；"
           f"相关性 >{SEC93_MAX_CORR} 剔除 {len(dropped)} 只")
     for r in result["eligible"]:
         print(f"     {r['security_code']} {str(r.get('security_name', '')):<9}｜P/V {r['model_pv']:.4f}"
               + ("｜换仓目标" if str(r['security_code']).zfill(6) in (result.get('swap_targets') or set()) else ""))
-    for il in result.get("illiquid_out") or []:
-        print(f"     [流动性排除·§10.1] {il.get('security_name','')} P/V {il['model_pv']:.2f}"
-              f"｜20日均额 {(to_float(il.get('amount_ma20')) or 0.0) / 1e4:,.0f} 万")
     for tg in result.get("tactical_out") or []:
         print(f"     [L3 战术闸门排除·§9.3.1] {tg.get('security_name','')} P/V {tg['model_pv']:.2f}"
               f"（分层表 tactical_thesis 为空或判「无」；补判为条件式战术理由后按当日名次重入）")

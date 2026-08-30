@@ -1,1 +1,2 @@
 trade_date,security_code,security_name,rule,condition,close,ma20,ma60,model_pv,hold_pv,cost_basis,gain_pct,entry_stop_price,stop_line,current_shares,sell_shares,amount,swap_for,cooldown_skips,note
+2026-08-28,600809,山西汾酒,换仓,持仓侧 P/V 0.8754 − 候选 同力股份 0.7002 ≥ 0.1437 且弱势,119.03,120.136,113.2032,1.0357,0.8754,123.321,-0.0348,113.54,,13400.0,1100,130933.0,920599,0,
