@@ -54,6 +54,10 @@ VERDICTS = ROOT / "data/processed/full_market_screen/verdicts.csv"
 FIELDS = ["security_code", "security_name", "board", "listing_date", "queue_tier", "tier_reason",
           "basis", "pending_h1", "revenue_yi", "netprofit_yi", "roe_pct", "gross_pct",
           "net_margin_pct", "revenue_yoy", "netprofit_yoy", "ocf_ps", "bps",
+          # 升级预筛的三列质量守卫（OI-036 2026-08-30 登记的预筛缺陷）：
+          # 只看 `netprofit_yoy` 与 `weightavg_roe` 会把非经常损益驱动的单期高增长认成回报兑现，
+          # 也会把 IPO 当年及次年的净资产跳升认成「回报腰斩」。
+          "deduct_ratio_pct", "ocf_to_eps", "ipo_roe_window",
           "prior_class", "prior_quality_tier"]
 
 
@@ -89,11 +93,14 @@ def board_of(code: str) -> str:
     return {"68": "star_market", "30": "chinext"}.get(code[:2], "main_board")
 
 
-def classify(revenue, netprofit, roe, name: str) -> tuple[str, str]:
+def classify(revenue, netprofit, roe, name: str, ipo_roe_window: bool = False) -> tuple[str, str]:
     """排队分层。**只决定判断粒度，不决定结论**——见文件头。
 
     **入参必须是年度口径**（2025 年报）。首版误传当期营收（一季报为单季）导致大量中型公司
     被错分到 C_排除——判据是年度阈值（5 亿/30 亿），拿单季数去比等于把门槛抬高了四倍。
+
+    `ipo_roe_window=True`（年报期落在上市当年及次年）时**不走 ROE 单独进 A 的通道**：
+    上市前净资产小，ROE 天然虚高，摊薄后普遍跌破 12% 线。营收够 30 亿的照常进 A。
     """
     if name.startswith(("*ST", "ST")):
         return "C_排除", "ST/退市风险警示"
@@ -103,9 +110,40 @@ def classify(revenue, netprofit, roe, name: str) -> tuple[str, str]:
         return "C_排除", "亏损且营收<30亿"
     if revenue < 5:
         return "C_排除", "营收<5亿，规模不足以支撑可验证的护城河"
-    if revenue >= 30 or (roe is not None and roe >= 12):
+    if revenue >= 30:
         return "A_核心", f"营收{revenue:.0f}亿" + (f"／ROE{roe:.1f}%" if roe is not None else "")
+    if roe is not None and roe >= 12:
+        if ipo_roe_window:
+            return "B_观察", f"营收{revenue:.0f}亿，ROE{roe:.1f}%为上市前小净资产口径，摊薄后待复核"
+        return "A_核心", f"营收{revenue:.0f}亿／ROE{roe:.1f}%"
     return "B_观察", f"营收{revenue:.0f}亿，盈利"
+
+
+def deduct_ratio(row: dict | None) -> float | None:
+    """扣非归母 ÷ 归母（按每股口径），单位 %。低于 ~80% 表示当期利润里有相当比例非经常损益。"""
+    if not row:
+        return None
+    basic, deduct = _num(row.get("basic_eps")), _num(row.get("deduct_basic_eps"))
+    if basic in (None, 0) or deduct is None:
+        return None
+    return deduct / basic * 100
+
+
+def ocf_to_eps(row: dict | None) -> float | None:
+    """每股经营现金流 ÷ 每股收益。持续低于 1（尤其为负）说明利润没有变成现金。"""
+    if not row:
+        return None
+    eps, ocf = _num(row.get("basic_eps")), _num(row.get("op_cashflow_ps"))
+    if eps in (None, 0) or ocf is None:
+        return None
+    return ocf / eps
+
+
+def in_ipo_roe_window(listing_date: str, annual_period: str = "2025-12-31") -> bool:
+    """年报期是否落在上市当年或次年——此时 ROE 分母含上市前的小净资产。"""
+    if not listing_date or len(listing_date) < 4 or not listing_date[:4].isdigit():
+        return False
+    return int(annual_period[:4]) - int(listing_date[:4]) <= 1
 
 
 def main() -> int:
@@ -161,7 +199,8 @@ def main() -> int:
         if rev_year is None and revenue is not None:
             rev_year, prof_year, roe_year = revenue * (2 if basis == "2026H1" else 4), profit, roe
             annualized = True
-        tier, reason = classify(rev_year, prof_year, roe_year, name)
+        ipo_window = in_ipo_roe_window(sec.get("listing_date", "") or "")
+        tier, reason = classify(rev_year, prof_year, roe_year, name, ipo_roe_window=ipo_window)
         if annualized:
             reason += "（按当期折年，年报缺失）"
         rows.append({
@@ -178,6 +217,9 @@ def main() -> int:
             "netprofit_yoy": row.get("netprofit_yoy", "") if row else "",
             "ocf_ps": row.get("op_cashflow_ps", "") if row else "",
             "bps": row.get("bps", "") if row else "",
+            "deduct_ratio_pct": (f"{dr:.0f}" if (dr := deduct_ratio(row)) is not None else ""),
+            "ocf_to_eps": (f"{oe:.2f}" if (oe := ocf_to_eps(row)) is not None else ""),
+            "ipo_roe_window": "1" if ipo_window else "",
             "prior_class": triage.get(code, {}).get("attention_class", ""),
             "prior_quality_tier": tiers.get(code, {}).get("quality_tier", ""),
         })
