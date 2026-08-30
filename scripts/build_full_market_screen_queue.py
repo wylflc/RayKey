@@ -175,14 +175,14 @@ def tier_move(prior: str, current: str) -> str:
     return "up" if TIER_RANK[current] < TIER_RANK[prior] else "down"
 
 
-SCOPE_MARGIN_PP = 10      # 毛利率较上年同期的位移，两个方向都算
+SCOPE_MARGIN_PP = 8       # 毛利率较上年同期的位移，两个方向都算
 SCOPE_REVENUE_YOY = 50    # 营收同比下限，%
 
 
 def needs_scope_check(current: dict | None, prior_same: dict | None) -> bool:
-    """毛利率较上年同期跳变 ≥10pp（**两个方向都算**）**且** 营收同比 ≥ +50%——先核合并范围。
+    """毛利率较上年同期跳变 ≥8pp（**两个方向都算**）**且** 营收同比 ≥ +50%——先核合并范围。
 
-    营收半年增五成的同时毛利率结构位移 10 个点，同口径经营几乎给不出这种组合，两个方向都
+    营收半年增五成的同时毛利率结构位移 8 个点，同口径经营几乎给不出这种组合，两个方向都
     指向并表：并入高毛利业务两者同升，并入低毛利贸易则营收暴涨而毛利率塌陷。只比上年同期，
     不比上年全年——半年对全年是两个窗口，季节性会自造假信号。命中只要求核对合并范围，不改
     分层，也不改结论。

@@ -194,7 +194,7 @@ class TierMoveTest(unittest.TestCase):
 
 
 class ScopeCheckTest(unittest.TestCase):
-    """毛利跳变 ≥10pp + 营收同比 ≥+50% → 强制核合并范围。两条是合取，缺一不报。"""
+    """毛利跳变 ≥8pp + 营收同比 ≥+50% → 强制核合并范围。两条是合取，缺一不报。"""
 
     @staticmethod
     def _rows(gm_now, gm_before, yoy):
@@ -219,9 +219,12 @@ class ScopeCheckTest(unittest.TestCase):
         self.assertTrue(needs_scope_check(*self._rows("10.01", "63.95", "473.6")))
         self.assertTrue(needs_scope_check(*self._rows("46.05", "56.85", "155.2")))
 
-    def test_margin_move_below_ten_points_does_not_trigger(self) -> None:
-        self.assertFalse(needs_scope_check(*self._rows("40.0", "31.0", "300.0")))
-        self.assertFalse(needs_scope_check(*self._rows("31.0", "40.0", "300.0")))
+    def test_margin_move_below_the_line_does_not_trigger(self) -> None:
+        self.assertFalse(needs_scope_check(*self._rows("38.9", "31.0", "300.0")))   # 7.9pp，差 0.1
+        self.assertFalse(needs_scope_check(*self._rows("31.0", "38.9", "300.0")))
+
+    def test_margin_move_on_the_line_triggers(self) -> None:
+        self.assertTrue(needs_scope_check(*self._rows("39.0", "31.0", "50.0")))     # 恰 8pp
 
     def test_missing_inputs_do_not_trigger(self) -> None:
         self.assertFalse(needs_scope_check(None, {"gross_margin": "13.6"}))
