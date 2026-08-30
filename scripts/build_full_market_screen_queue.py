@@ -36,8 +36,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 from collections import defaultdict
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fetch_a_share_universe import has_status_prefix
 
 ROOT = Path(__file__).resolve().parents[1]
 FIN = ROOT / "data/raw/financials"
@@ -118,13 +122,14 @@ def main() -> int:
     h1, q1 = load_period("2026-06-30"), load_period("2026-03-31")
     ann25 = load_period("2025-12-31")   # 分层专用：**必须用年度口径**，见 classify 文档串
     securities = {r["security_code"]: r for r in csv.DictReader(SEC.open(encoding="utf-8-sig"))}
-    # A 股名录会滞后于财报（2026-08-09 实测漏了 4 只 8 月上市新股）。**以并集为准**，
-    # 名录缺的从财报补出名称，板块按代码段推断，并在 `board` 里标 `*新增` 以便复核。
-    for code, row in {**q1, **h1}.items():
-        if code in securities or not is_a_share(code):
-            continue
-        securities[code] = {"security_code": code, "security_name": row.get("security_name", ""),
-                            "board": board_of(code) + "*新增", "listing_date": ""}
+    # 财报面板里有、名录里没有的沪深代码只打印不入队：§5.3 要求开批前先刷新名录，刷新后仍缺的
+    # 只剩两类——已发行未上市（待上市）与已终止上市后仍在老三板披露的旧代码（退市长油、乐视退
+    # 一类）。二者都不是可判的在市 A 股；待上市者上市后随名录刷新自动进队。
+    missing = sorted((code, row.get("security_name", "")) for code, row in {**q1, **h1}.items()
+                     if code not in securities and is_a_share(code))
+    if missing:
+        print(f"名录外的沪深财报代码 {len(missing)} 只（待上市或已退市，不入队）："
+              + "、".join(f"{c} {n}" for c, n in missing[:12]) + ("…" if len(missing) > 12 else ""))
     triage = {r["security_code"]: r for r in csv.DictReader(TRIAGE.open(encoding="utf-8"))}
     tiers = {r["security_code"]: r for r in csv.DictReader(TIERS.open(encoding="utf-8"))}
 
@@ -140,7 +145,11 @@ def main() -> int:
         profit = (_num(row.get("parent_netprofit")) or 0) / 1e8 if row else None
         roe = _num(row.get("weightavg_roe"))
         gross = _num(row.get("gross_margin"))
+        # 名单简称带交易状态前缀（N 上市首日、C 上市 5 日内、XD/XR/DR 除权除息）时改用财报里的简称：
+        # 前缀会把真名挤出简称字段的长度上限（`华大海天` → `N华大`），交易所又没有干净的备选字段。
         name = sec["security_name"]
+        if has_status_prefix(name) and (row or {}).get("security_name"):
+            name = row["security_name"]
         # **分层只能用 2025 年报的年度营收**。首版误用当期（一季报为单季）营收去比年度门槛，
         # 使年营收 20~33 亿的公司（泛微网络 22.9 亿、黔源电力 32.9 亿）被打进 C_排除，
         # 2026-08-09 扫描 C 层异常个案时发现。年报缺失时用当期值×4 折年，并在理由里标注。

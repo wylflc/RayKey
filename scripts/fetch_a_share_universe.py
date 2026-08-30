@@ -142,7 +142,7 @@ def fetch_sse_rows(page_size: int, timeout: int) -> list[dict[str, str]]:
         terminated = 0
         for raw in rows:
             code = clean_text(raw.get("A_STOCK_CODE"))
-            security_name = clean_text(raw.get("SEC_NAME_CN") or raw.get("COMPANY_ABBR"))
+            security_name = pick_clean_name(clean_text(raw.get("SEC_NAME_CN")), clean_text(raw.get("COMPANY_ABBR")))
             listed_company_name = clean_text(raw.get("FULL_NAME") or raw.get("COMPANY_ABBR"))
             if not code or not security_name:
                 continue
@@ -335,6 +335,31 @@ def fetch_bse_rows(timeout: int, pause_seconds: float) -> list[dict[str, str]]:
 
 def clean_text(value: Any) -> str:
     return "" if value is None else str(value).strip()
+
+
+# 交易所名单把当日交易状态贴在证券简称前：XD 除息、XR 除权、DR 两者、N 上市首日、C 上市 5 日内。
+# 它们随日期变化，不是公司名，会让同一家公司在不同刷新日得到不同 `security_name`。
+# **`ST` 与 `*ST` 不在此列**——那是风险警示状态，§5.4 与排队分层都按它判定，必须保留。
+STATUS_PREFIXES = ("XD", "XR", "DR", "N", "C")
+
+
+def has_status_prefix(name: str) -> bool:
+    return any(name.startswith(p) and name[len(p):] and not name[len(p)][0].isascii()
+               for p in STATUS_PREFIXES)
+
+
+def pick_clean_name(*candidates: str) -> str:
+    """挑没有交易状态前缀的那个候选名。
+
+    简称字段有长度上限，前缀会把真名挤掉（`宇通重工` → `XD宇通重`），所以**不能靠截断前缀还原**。
+    上交所同时给 `SEC_NAME_CN` 与 `COMPANY_ABBR`，前缀只贴在其中一个（哪一个不固定），取干净的那个即可。
+    深交所与北交所只有一个简称字段，没有干净候选时原样保留——前缀是当日状态，下次刷新自然消失。
+    """
+    names = [n for n in candidates if n]
+    for name in names:
+        if not has_status_prefix(name):
+            return name
+    return names[0] if names else ""
 
 
 def strip_html(value: Any) -> str:
