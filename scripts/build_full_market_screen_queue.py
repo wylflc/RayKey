@@ -68,7 +68,7 @@ FIELDS = ["security_code", "security_name", "board", "listing_date", "queue_tier
           # 现算的旗标——那种算法要自己重述 `classify` 的前置条件，漏一条就误报（漏「营收 ≥5 亿」
           # 时把折年营收 2.36 亿的公司也标成越过 A 线）。这里直接比两次 `classify` 的结果。
           "prior_queue_tier", "tier_move",
-          # 单期毛利跳变 + 营收翻倍：几乎都是并表口径变化而非经营兑现，判定前必须核合并范围。
+          # 单期毛利跳变 + 营收高增：几乎都是并表口径变化而非经营兑现，判定前必须核合并范围。
           "scope_check",
           "prior_class", "prior_quality_tier"]
 
@@ -175,13 +175,17 @@ def tier_move(prior: str, current: str) -> str:
     return "up" if TIER_RANK[current] < TIER_RANK[prior] else "down"
 
 
-def needs_scope_check(current: dict | None, prior_same: dict | None) -> bool:
-    """毛利率较上年同期跳变 ≥10pp（**两个方向都算**）**且** 营收同比 ≥ +100%——先核合并范围。
+SCOPE_MARGIN_PP = 10      # 毛利率较上年同期的位移，两个方向都算
+SCOPE_REVENUE_YOY = 50    # 营收同比下限，%
 
-    营收翻倍的同时毛利率结构位移 10 个点，同口径经营几乎给不出这种组合，两个方向都指向并表：
-    并入高毛利业务两者同升，并入低毛利贸易则营收暴涨而毛利率塌陷。只比上年同期，不比上年
-    全年——半年对全年是两个窗口，季节性会自造假信号。命中只要求核对合并范围，不改分层，
-    也不改结论。
+
+def needs_scope_check(current: dict | None, prior_same: dict | None) -> bool:
+    """毛利率较上年同期跳变 ≥10pp（**两个方向都算**）**且** 营收同比 ≥ +50%——先核合并范围。
+
+    营收半年增五成的同时毛利率结构位移 10 个点，同口径经营几乎给不出这种组合，两个方向都
+    指向并表：并入高毛利业务两者同升，并入低毛利贸易则营收暴涨而毛利率塌陷。只比上年同期，
+    不比上年全年——半年对全年是两个窗口，季节性会自造假信号。命中只要求核对合并范围，不改
+    分层，也不改结论。
     """
     if not current or not prior_same:
         return False
@@ -189,7 +193,7 @@ def needs_scope_check(current: dict | None, prior_same: dict | None) -> bool:
     yoy = _num(current.get("revenue_yoy"))
     if now is None or before is None or yoy is None:
         return False
-    return abs(now - before) >= 10 and yoy >= 100
+    return abs(now - before) >= SCOPE_MARGIN_PP and yoy >= SCOPE_REVENUE_YOY
 
 
 def ytd_consistent(series: dict[str, dict], period: str, field: str) -> bool:

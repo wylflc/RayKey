@@ -194,7 +194,7 @@ class TierMoveTest(unittest.TestCase):
 
 
 class ScopeCheckTest(unittest.TestCase):
-    """毛利跳变 + 营收翻倍 → 强制核合并范围。两条是合取，缺一不报。"""
+    """毛利跳变 ≥10pp + 营收同比 ≥+50% → 强制核合并范围。两条是合取，缺一不报。"""
 
     @staticmethod
     def _rows(gm_now, gm_before, yoy):
@@ -202,10 +202,14 @@ class ScopeCheckTest(unittest.TestCase):
 
     def test_both_conditions_met(self) -> None:
         self.assertTrue(needs_scope_check(*self._rows("39.64", "13.6", "155.0")))
-        self.assertTrue(needs_scope_check(*self._rows("54.92", "38.85", "100.0")))   # 恰在两条线上
+        self.assertTrue(needs_scope_check(*self._rows("54.92", "38.85", "50.0")))    # 恰在两条线上
+        self.assertTrue(needs_scope_check(*self._rows("39.64", "13.6", "85.99")))    # 安凯微：+100% 时漏掉
 
     def test_margin_jump_alone_is_not_enough(self) -> None:
         self.assertFalse(needs_scope_check(*self._rows("39.64", "13.6", "14.3")))
+
+    def test_revenue_below_the_line_does_not_trigger(self) -> None:
+        self.assertFalse(needs_scope_check(*self._rows("39.64", "13.6", "49.9")))
 
     def test_revenue_doubling_alone_is_not_enough(self) -> None:
         self.assertFalse(needs_scope_check(*self._rows("34.90", "33.0", "531.2")))   # 毛利只动 1.9pp
