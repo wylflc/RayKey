@@ -17,7 +17,10 @@
 
 分层排队（不是分层判断）
 ------------------------
-5,392 只逐一深判不现实，也不必要。本脚本按**可判性**排队，把判断力用在有可能进池的公司上：
+5,392 只逐一深判不现实，也不必要。本脚本按**可判性**排队，把判断力用在有可能进池的公司上。
+三条判据一律读 **TTM（本期 + 上年年报 − 上年同期）**，与 §6.5.2 估值带同源；兜底链见
+`tier_inputs`，所用口径逐行写 `tier_basis`，入参写 `revenue_ttm_yi`／`netprofit_ttm_yi`／
+`roe_ttm_pct` 三列：
 
 * `A_核心`：营收 ≥ 30 亿 或 ROE ≥ 12%——**必须逐家判**，进池候选都在这里
 * `B_观察`：营收 5~30 亿 且 盈利——按行业成批判，个别有护城河签名的单拎
@@ -42,6 +45,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fetch_a_share_universe import has_status_prefix
+from build_historical_valuation_bands import derive_roe, prior_periods, ttm
 
 ROOT = Path(__file__).resolve().parents[1]
 FIN = ROOT / "data/raw/financials"
@@ -58,6 +62,8 @@ FIELDS = ["security_code", "security_name", "board", "listing_date", "queue_tier
           # 只看 `netprofit_yoy` 与 `weightavg_roe` 会把非经常损益驱动的单期高增长认成回报兑现，
           # 也会把 IPO 当年及次年的净资产跳升认成「回报腰斩」。
           "deduct_ratio_pct", "ocf_to_eps", "ipo_roe_window",
+          # 分层入参（`queue_tier` 只由这三列＋名称算出，`revenue_yi` 等是当期披露值，口径不同）：
+          "tier_basis", "revenue_ttm_yi", "netprofit_ttm_yi", "roe_ttm_pct",
           "prior_class", "prior_quality_tier"]
 
 
@@ -96,8 +102,9 @@ def board_of(code: str) -> str:
 def classify(revenue, netprofit, roe, name: str, ipo_roe_window: bool = False) -> tuple[str, str]:
     """排队分层。**只决定判断粒度，不决定结论**——见文件头。
 
-    **入参必须是年度口径**（2025 年报）。首版误传当期营收（一季报为单季）导致大量中型公司
-    被错分到 C_排除——判据是年度阈值（5 亿/30 亿），拿单季数去比等于把门槛抬高了四倍。
+    **入参必须是滚动十二个月口径**（TTM = 本期 + 上年年报 − 上年同期，与 §6.5.2 估值带同源）。
+    判据是年度阈值（5 亿/30 亿），传当期累计值等于按报告期长短浮动门槛：传一季报把门槛抬高
+    四倍，传中报抬高两倍。TTM 不可得时按下文兜底链退到年报，仍不可得才折年。
 
     `ipo_roe_window=True`（年报期落在上市当年及次年）时**不走 ROE 单独进 A 的通道**：
     上市前净资产小，ROE 天然虚高，摊薄后普遍跌破 12% 线。营收够 30 亿的照常进 A。
@@ -139,6 +146,69 @@ def ocf_to_eps(row: dict | None) -> float | None:
     return ocf / eps
 
 
+def ytd_consistent(series: dict[str, dict], period: str, field: str) -> bool:
+    """上年同期与上年年报是否同口径。
+
+    报告期是**年初至今累计**，故同一年内 06-30／03-31 的累计值不可能超过该年 12-31。
+    超过就说明两期之间改过口径（永安期货、浙江东方 2025 年把大宗商品销售移出营业总收入，
+    25H1 55.6 亿 / 38.7 亿 大于 25 年报 18.5 亿 / 16.3 亿），此时 TTM 的减项与加项不是
+    同一个量，滚出来的营收会为负。判不同口径就放弃 TTM，退到年报。
+
+    年报本身为负（冲回）时这条判不出来，故调用侧另按「滚出的营收为负」兜一道。
+    """
+    prior = prior_periods(period)
+    if prior is None:
+        return True
+    annual, same = (series.get(key) for key in prior)
+    if annual is None or same is None:
+        return True
+    a, b = _num(annual.get(field)), _num(same.get(field))
+    if a is None or b is None or a <= 0:
+        return True
+    return b <= a
+
+
+def tier_inputs(panels: dict[str, dict[str, dict]], code: str, period: str
+                ) -> tuple[float | None, float | None, float | None, str]:
+    """分层用的年度口径三元组（营收亿、归母亿、ROE%）与所用口径名。
+
+    兜底链 `ttm` → `annual` → `annualized`：TTM 需要本期、上年年报、上年同期三期齐全，
+    上市不足一年的新股取不到减项；再退到上年年报；连年报都没有（当年上市）才折年。
+    折年只在报告期长度上换算，季节性不做处理，故排在最后。ROE 走 `derive_roe`，它在
+    `weightavg_roe` 出现伪 0 时退到 `EPS_TTM / BPS`，返回小数，这里换回百分数。
+    """
+    series = {name: table[code] for name, table in panels.items() if code in table}
+    revenue = ttm(series, period, "total_operate_income") if period in series else None
+    if revenue is not None and (revenue.value < 0
+                                or not ytd_consistent(series, period, "total_operate_income")):
+        revenue = None   # 减项与年报不同口径，滚出来的是差额不是营收
+    if revenue is not None:
+        profit = ttm(series, period, "parent_netprofit")
+        roe, _ = derive_roe(series, period, ttm(series, period, "basic_eps"))
+        return (revenue.value / 1e8,
+                profit.value / 1e8 if profit else None,
+                roe.value * 100 if roe else None,
+                "ttm")
+    annual = series.get("2025-12-31")
+    if annual is not None:
+        rev = _num(annual.get("total_operate_income"))
+        if rev is not None:
+            prof = _num(annual.get("parent_netprofit"))
+            return (rev / 1e8, prof / 1e8 if prof is not None else None,
+                    _num(annual.get("weightavg_roe")), "annual")
+    current = series.get(period)
+    if current is None:
+        return None, None, None, ""
+    rev = _num(current.get("total_operate_income"))
+    if rev is None:
+        return None, None, None, ""
+    factor = 2 if period.endswith("06-30") else (1 if period.endswith("12-31") else 4)
+    prof = _num(current.get("parent_netprofit"))
+    roe = _num(current.get("weightavg_roe"))
+    return (rev * factor / 1e8, prof * factor / 1e8 if prof is not None else None,
+            roe * factor if roe is not None else None, "annualized")
+
+
 def in_ipo_roe_window(listing_date: str, annual_period: str = "2025-12-31") -> bool:
     """年报期是否落在上市当年或次年——此时 ROE 分母含上市前的小净资产。"""
     if not listing_date or len(listing_date) < 4 or not listing_date[:4].isdigit():
@@ -158,7 +228,10 @@ def main() -> int:
     args = ap.parse_args()
 
     h1, q1 = load_period("2026-06-30"), load_period("2026-03-31")
-    ann25 = load_period("2025-12-31")   # 分层专用：**必须用年度口径**，见 classify 文档串
+    ann25 = load_period("2025-12-31")
+    # 分层入参走 TTM，故另载上年同期两期作滚动减项（见 classify 文档串与 tier_inputs）。
+    panels = {"2026-06-30": h1, "2026-03-31": q1, "2025-12-31": ann25,
+              "2025-06-30": load_period("2025-06-30"), "2025-03-31": load_period("2025-03-31")}
     securities = {r["security_code"]: r for r in csv.DictReader(SEC.open(encoding="utf-8-sig"))}
     # 财报面板里有、名录里没有的沪深代码只打印不入队：§5.3 要求开批前先刷新名录，刷新后仍缺的
     # 只剩两类——已发行未上市（待上市）与已终止上市后仍在老三板披露的旧代码（退市长油、乐视退
@@ -191,18 +264,14 @@ def main() -> int:
         # **分层只能用 2025 年报的年度营收**。首版误用当期（一季报为单季）营收去比年度门槛，
         # 使年营收 20~33 亿的公司（泛微网络 22.9 亿、黔源电力 32.9 亿）被打进 C_排除，
         # 2026-08-09 扫描 C 层异常个案时发现。年报缺失时用当期值×4 折年，并在理由里标注。
-        a25 = ann25.get(code, {})
-        rev_year = (_num(a25.get("total_operate_income")) or 0) / 1e8 if a25 else None
-        prof_year = (_num(a25.get("parent_netprofit")) or 0) / 1e8 if a25 else None
-        roe_year = _num(a25.get("weightavg_roe")) if a25 else None
-        annualized = False
-        if rev_year is None and revenue is not None:
-            rev_year, prof_year, roe_year = revenue * (2 if basis == "2026H1" else 4), profit, roe
-            annualized = True
+        period = {"2026H1": "2026-06-30", "2026Q1": "2026-03-31"}.get(basis, "")
+        rev_year, prof_year, roe_year, tier_basis = tier_inputs(panels, code, period)
         ipo_window = in_ipo_roe_window(sec.get("listing_date", "") or "")
         tier, reason = classify(rev_year, prof_year, roe_year, name, ipo_roe_window=ipo_window)
-        if annualized:
-            reason += "（按当期折年，年报缺失）"
+        if tier_basis == "annual":
+            reason += "（按上年年报，TTM 不可用）"
+        elif tier_basis == "annualized":
+            reason += "（按当期折年，TTM 与年报均不可用）"
         rows.append({
             "security_code": code, "security_name": name, "board": sec["board"],
             "listing_date": sec.get("listing_date", "")[:10],
@@ -220,6 +289,10 @@ def main() -> int:
             "deduct_ratio_pct": (f"{dr:.0f}" if (dr := deduct_ratio(row)) is not None else ""),
             "ocf_to_eps": (f"{oe:.2f}" if (oe := ocf_to_eps(row)) is not None else ""),
             "ipo_roe_window": "1" if ipo_window else "",
+            "tier_basis": tier_basis,
+            "revenue_ttm_yi": f"{rev_year:.2f}" if rev_year is not None else "",
+            "netprofit_ttm_yi": f"{prof_year:.2f}" if prof_year is not None else "",
+            "roe_ttm_pct": f"{roe_year:.2f}" if roe_year is not None else "",
             "prior_class": triage.get(code, {}).get("attention_class", ""),
             "prior_quality_tier": tiers.get(code, {}).get("quality_tier", ""),
         })
