@@ -139,11 +139,15 @@ def fetch_sse_rows(page_size: int, timeout: int) -> list[dict[str, str]]:
         if len(rows) != total:
             raise FetchError(f"SSE stockType={stock_type} fetched {len(rows)} rows, expected {total}")
 
+        terminated = 0
         for raw in rows:
             code = clean_text(raw.get("A_STOCK_CODE"))
             security_name = clean_text(raw.get("SEC_NAME_CN") or raw.get("COMPANY_ABBR"))
             listed_company_name = clean_text(raw.get("FULL_NAME") or raw.get("COMPANY_ABBR"))
             if not code or not security_name:
+                continue
+            if is_terminated_sse_row(raw):
+                terminated += 1
                 continue
             normalized.append(
                 {
@@ -164,7 +168,19 @@ def fetch_sse_rows(page_size: int, timeout: int) -> list[dict[str, str]]:
                     "source_url": url,
                 }
             )
+        if terminated:
+            print(f"SSE stockType={stock_type}: skipped {terminated} terminated listings (DELIST_DATE set)")
     return normalized
+
+
+def is_terminated_sse_row(raw: dict[str, Any]) -> bool:
+    """SSE 名单把已终止上市的代码一并返回：DELIST_DATE 有值、STATE_CODE=3、证券简称为 "-"。"""
+    delist_date = clean_text(raw.get("DELIST_DATE"))
+    if delist_date and delist_date != "-":
+        return True
+    if clean_text(raw.get("STATE_CODE")) == "3":
+        return True
+    return clean_text(raw.get("SEC_NAME_CN")) == "-"
 
 
 def build_szse_url(page_no: int) -> str:
