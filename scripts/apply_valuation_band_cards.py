@@ -37,6 +37,7 @@ from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append
 
 ROOT = Path(__file__).resolve().parents[1]
 VALUATION = ROOT / "data/processed/a_share_focus_watchlist_l1_l2_valuation.csv"
+DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 TAGS = ROOT / "data/interim/strategy_tag_map.csv"
 CARDS = ROOT / "data/interim/valuation_band_cards.csv"
@@ -186,6 +187,41 @@ def _load_model_evaluated(path: Path = MODEL_BANDS_PATH) -> dict[str, str]:
 MODEL_EVALUATED = _load_model_evaluated()
 
 
+def seed_new_pool_rows(rows: list[dict], tiers: dict[str, str], cards: dict[str, dict]) -> list[tuple[str, str]]:
+    """给分层表里已定档、但估值表还没有行的 `worth_attention` 成员补一行占位。
+
+    只填身份与带；价格、档位、PE/PB 等由本脚本随后的主循环统一写入，与既有行同一口径。
+    """
+    known = {r["security_code"].zfill(6) for r in rows}
+    template = list(rows[0].keys()) if rows else []
+    dossiers = {r["security_code"].zfill(6): r
+                for r in read(DOSSIERS)
+                if (r.get("dossier_status") or "").strip() == "active"}
+    seeded: list[tuple[str, str]] = []
+    for code, tier in sorted(tiers.items()):
+        if code in known or tier not in ("L1", "L2", "L3"):
+            continue
+        card, doc = cards.get(code), dossiers.get(code)
+        if not card or not doc:
+            continue
+        low, high = card.get("band_low") or doc.get("band_low"), card.get("band_high") or doc.get("band_high")
+        if not low or not high:
+            continue
+        row = {field: "" for field in template}
+        row.update({
+            "security_code": code,
+            "security_name": doc.get("security_name", ""),
+            "quality_tier": tier,
+            "valuation_method": "内在价值模型（§6.5.2.3，v2.72 起唯一带来源）",
+            "fair_price_low": low,
+            "fair_price_high": high,
+            "valuation_reason": "新入 worth_attention（§5.5 迁移），带由 §6.7 链机械生成",
+        })
+        rows.append(row)
+        seeded.append((code, row["security_name"]))
+    return seeded
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="把建带卡与标签重映射合并回估值表")
     parser.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
@@ -199,6 +235,14 @@ def main() -> int:
     tiers = {r["security_code"].zfill(6): r.get("quality_tier", "") for r in read(TIERS)}
     tags = {r["security_code"].zfill(6): r for r in read(TAGS)}
     cards = {r["security_code"].zfill(6): r for r in read(CARDS)}
+
+    # 新入池公司补行：本表此前只更新已有行、从不新增，`worth_attention` 新成员因而
+    # 拿不到估值行，核心池与每日扫描都看不见它（2026-08-30 OI-036 升池时暴露）。
+    # 补行条件是三者齐备——分层表已定 L1-L3、已有 active 逐票档案（§6.5.2）、建带卡已算出带；
+    # 缺任一项不补，由 §6.7 的既有告警暴露。
+    seeded = seed_new_pool_rows(rows, tiers, cards)
+    if seeded:
+        print(f"  新入池补行 {len(seeded)} 只：" + "、".join(f"{c} {n}" for c, n in seeded))
 
     quotes: dict[str, dict] = {}
     if args.quotes == "fetch":
