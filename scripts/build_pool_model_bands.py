@@ -67,7 +67,7 @@ def main() -> int:
     print(f"成员 {len(pool)} 只 ← 池（分层表 L1-L3 ∪ 池 CSV；池外档案不进生产带文件）")
 
     best: dict[str, dict] = {}
-    evaluated: dict[str, str] = {}
+    evaluated: dict[str, tuple[str, str]] = {}   # code → (可得日, 报告期)
     # §6.5.2.4 主体重置：重置后报告期已评估（含拒绝行）时，不再采纳早于重置日的 ok 行；
     # 重置后无 ok 行时写入最新评估行（status 非 ok、无 V），让 model_evaluated_at 与「无法估值」同时传下去
     import roic_inputs
@@ -83,10 +83,13 @@ def main() -> int:
             avail = row.get("available_at") or ""
             if code not in pool or not avail or avail > a.as_of:
                 continue
-            # 模型最近评估过的报告期可得日（含护栏拒绝行）：§7.3 估值复核日读它，
+            # 模型最近评估过的报告期（含护栏拒绝行）：§7.3 估值复核日读可得日，
             # 采纳带停在更早 ok 行时不再把已评估的新报告期重复入队。
-            if avail > evaluated.get(code, ""):
-                evaluated[code] = avail
+            # **报告期一并记下**：无法估值的行没有可用带，阅读版的「估值事件」只能取这里，
+            # 取采纳带自身的报告期会与「估值时间」差出几年（中芯国际采纳带停在 2023-09-30，
+            # 而模型已评估到 2026-06-30）。
+            if avail > evaluated.get(code, ("", ""))[0]:
+                evaluated[code] = (avail, row.get("report_date") or "")
             if code in reset and (row.get("report_date") or "") >= reset[code]:
                 post_seen.add(code)
                 pk = (avail, row.get("report_date") or "")
@@ -121,10 +124,14 @@ def main() -> int:
             row["roic_path"] = "bank_divspread"
             replaced += 1
 
-    if "model_evaluated_at" not in fields:
-        fields.append("model_evaluated_at")
+    for col in ("model_evaluated_at", "model_evaluated_report_date"):
+        if col not in fields:
+            fields.append(col)
     for c, row in best.items():
-        row["model_evaluated_at"] = max(evaluated.get(c, ""), row.get("available_at") or "")
+        ev_at, ev_rd = evaluated.get(c, ("", ""))
+        own_at = row.get("available_at") or ""
+        row["model_evaluated_at"] = max(ev_at, own_at)
+        row["model_evaluated_report_date"] = ev_rd if ev_at >= own_at else (row.get("report_date") or "")
 
     missing = sorted(set(pool) - set(best))
     with a.out.open("w", newline="", encoding="utf-8") as fh:

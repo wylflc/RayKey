@@ -156,6 +156,46 @@ def disclosure_window_open(report_date: str, as_of: date) -> bool:
     return as_of <= date(year + year_offset, month, day)
 
 
+# 源端同一个数的**小数位会变**：2026-08-30 全历史重取时，北交所与新三板 6,008 只里 5,644 只的
+# `bps` 由 12 位小数变成 2 位（智诺科技 0.836756 → 0.84、裕荣光电 0.956470 → 0.96），
+# 沪深主板只有 83 只变且全是真重述。重取把高精度值覆盖成低精度值是**数据变差**，
+# 而两者在磁盘上无法区分。故写盘前逐格比对：新值若只是旧值的四舍五入，保留旧值。
+PRECISION_GUARDED = ("basic_eps", "deduct_basic_eps", "bps", "op_cashflow_ps",
+                     "weightavg_roe", "gross_margin")
+
+
+def is_rounding_of(new_text: str, old_text: str) -> bool:
+    """`new` 是否只是 `old` 舍入到更少小数位的结果（数值相同、精度更低）。"""
+    try:
+        new_value, old_value = float(new_text), float(old_text)
+    except (TypeError, ValueError):
+        return False
+    if new_value == old_value:
+        return False
+    for digits in range(0, 7):
+        if abs(round(old_value, digits) - new_value) < 1e-12:
+            return True
+    return False
+
+
+def keep_precision(rows: list[dict[str, str]], path: Path) -> int:
+    """把 `rows` 里被舍入掉精度的格换回磁盘上的旧值，返回换回的格数。"""
+    if not path.exists():
+        return 0
+    with path.open(newline="", encoding="utf-8") as handle:
+        old = {r["security_code"]: r for r in csv.DictReader(handle)}
+    restored = 0
+    for row in rows:
+        prev = old.get(row["security_code"])
+        if not prev:
+            continue
+        for field in PRECISION_GUARDED:
+            if is_rounding_of(row.get(field, ""), prev.get(field, "")):
+                row[field] = prev[field]
+                restored += 1
+    return restored
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="逐季度历史财务数据全市场取数（OI-034 前置）")
     parser.add_argument("--signal-date", required=True, help="信号日 YYYY-MM-DD；证据日自动取下一工作日")
@@ -194,13 +234,15 @@ def main() -> int:
         if not rows:
             failures.append(f"{report_date}：**0 行**")
             continue
+        restored = keep_precision(rows, path)
         with path.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=FIELDNAMES)
             writer.writeheader()
             writer.writerows(rows)
         counts[report_date] = len(rows)
         delta = f"  (+{len(rows) - before} 家)" if before else ""
-        print(f"  {report_date}: {len(rows):>5} 行{delta}")
+        kept = f"  ｜保留旧精度 {restored} 格" if restored else ""
+        print(f"  {report_date}: {len(rows):>5} 行{delta}{kept}")
         if window_open:
             open_note.append(f"{report_date}（{len(rows)} 家，截止日前仍会增加）")
         time.sleep(args.pause)

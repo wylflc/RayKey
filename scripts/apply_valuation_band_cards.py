@@ -171,16 +171,28 @@ def _load_model_bands() -> dict:
 MODEL_BANDS = _load_model_bands()
 
 
-def _load_model_evaluated(path: Path = MODEL_BANDS_PATH) -> dict[str, str]:
-    """各代码的 `model_evaluated_at`（含 status 非 ok 的行，§6.5.2.4 主体重置后无 ok 带时仍要推进复核日）。"""
-    out: dict[str, str] = {}
+def _load_model_evaluated(path: Path = MODEL_BANDS_PATH) -> dict[str, dict[str, str]]:
+    """各代码模型最近评估到的那一期（含 status 非 ok 的行，§6.5.2.4 主体重置后无 ok 带时仍要推进复核日）。
+
+    返回 `{code: {"at": 可得日, "report_date": 报告期}}`。**报告期必须一并返回**：无法估值的行
+    没有可用带，若只拿到日期，「估值时间」会走最近评估日而「估值事件」退回旧带的报告期或
+    `valuation_evidence/` 陈旧快照，同一行两列指向不同年份——中芯国际显示「2026-08-28 三季报」
+    （日期来自 2026 中报的评估、事件来自 2023-09-30 那条采纳带），广东宏大显示「一季报」
+    （实为 2026-06-30 中报被薄权益判拒，读的是 2026-04-24 的证据快照）。
+    """
+    out: dict[str, dict[str, str]] = {}
     if path is None or not Path(path).exists():
         return out
     with Path(path).open(newline="", encoding="utf-8-sig") as fh:
         for r in csv.DictReader(fh):
             ev = max((r.get("model_evaluated_at") or "")[:10], (r.get("available_at") or "")[:10])
-            if ev and ev > out.get(r["security_code"], ""):
-                out[r["security_code"]] = ev
+            # 评估期优先读产出方写的 `model_evaluated_report_date`；缺列（旧文件）才退回本行报告期。
+            rd = ((r.get("model_evaluated_report_date") or "").strip()
+                  or (r.get("report_date") or ""))[:10]
+            key = (ev, rd)
+            prev = out.get(r["security_code"])
+            if ev and (prev is None or key > (prev["at"], prev["report_date"])):
+                out[r["security_code"]] = {"at": ev, "report_date": rd}
     return out
 
 
@@ -335,7 +347,12 @@ def main() -> int:
         # 里上一次证据抓取的截止期——两者已经不是同一件事。判例：宇通客车 2026-08-10 的带来自
         # 2026-06-30 中报，池 MD 却显示「2026-04-28 一季报」，读者据此会以为带没跟上中报。
         mb = MODEL_BANDS.get(code)
-        if mb:
+        ev = MODEL_EVALUATED.get(code)
+        # 无法估值行（带被护栏判拒，或采纳带早于 §6.5.2.4 的 2025-01-01 已过期）没有可用带，
+        # 两列一律取**模型最近评估的那一期**：取带自身的报告期会让「估值时间」与「估值事件」
+        # 差出几年，读者据此以为证据停在那一期。见 `_load_model_evaluated` 文档串的两个判例。
+        stale = ev if (row.get("fair_price_basis") or "").startswith("无法估值") and ev else None
+        if mb and not stale:
             row["evidence_available_at"] = mb["available_at"][:10]
             row["valuation_evidence_event"] = REPORT_EVENT.get(mb["report_date"][5:10], "定期报告")
             # 复核日 = 模型最近评估过的报告期可得日（含护栏拒绝行，`model_evaluated_at`）：
@@ -343,6 +360,13 @@ def main() -> int:
             row["valuation_reviewed_at"] = max(mb["available_at"][:10],
                                                (mb.get("model_evaluated_at") or "")[:10])
             row["valuation_method"] = "内在价值模型（§6.5.2.3，v2.72 起唯一带来源）"
+            continue
+        if stale:
+            row["evidence_available_at"] = stale["at"]
+            row["valuation_evidence_event"] = REPORT_EVENT.get(stale["report_date"][5:10], "定期报告")
+            row["valuation_reviewed_at"] = stale["at"]
+            row["valuation_method"] = ("内在价值模型（§6.5.2.3，v2.72 起唯一带来源）" if mb
+                                       else f"建带卡回写（{TAG_NAMES.get(letter, letter)}，{WORKFLOW_VERSION}）")
             continue
         cutoff_date, cutoff_event = evidence_cutoff(code)
         if cutoff_date:
@@ -352,9 +376,8 @@ def main() -> int:
             row["valuation_reviewed_at"] = cutoff_date
         else:
             row["valuation_reviewed_at"] = args.as_of
-        ev = MODEL_EVALUATED.get(code)
-        if ev and ev > (row.get("valuation_reviewed_at") or ""):
-            row["valuation_reviewed_at"] = ev              # 模型已评估（含拒绝行）的报告期不再重复入队
+        if ev and ev["at"] > (row.get("valuation_reviewed_at") or ""):
+            row["valuation_reviewed_at"] = ev["at"]        # 模型已评估（含拒绝行）的报告期不再重复入队
         row["valuation_method"] = f"建带卡回写（{TAG_NAMES.get(letter, letter)}，{WORKFLOW_VERSION}）"
 
     if args.dry_run:
