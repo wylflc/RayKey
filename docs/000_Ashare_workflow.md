@@ -765,7 +765,6 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 9. 信号层三表：`scripts/experimental/selection_edge_audit.py`（边际选择检验、排序信息量、换仓方向性；回测须带 `--candidate-log` 与 `--trade-log`）与 `scripts/experimental/panel_tier_forward.py`（`P/V` 分档前向回报）。采纳候选在候选臂与 `BASE` 上各跑一遍并报差；另每季在 `BASE` 上重算一遍作不变量检验。各表报逐日配对差中位、为正日数与逐年同号年数。三表不进第 2 款的决策读数，读数写入回测 log。
 10. 采纳候选报 `scripts/experimental/delta_attribution.py` 的前三只净额占比；超过 100% 者不作采纳依据。
 11. 引用正读数时同报本族已试臂数，按 `data/processed/backtest/scan_summaries.csv` 的扫描标签计。
-12. 轨道 B 的采纳按季度批处理，季度之间只走轨道 A。
 
 历史面板 `effective_from` 与 `effective_to` 均为有效期边界，结束日包含在内。禁止把区间起点当成完整快照，也禁止手工修改面板 CSV；名单变化先改判定源，再运行装配脚本。
 
