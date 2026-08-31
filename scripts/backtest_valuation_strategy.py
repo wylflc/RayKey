@@ -1037,6 +1037,24 @@ def sell_shares(target: float, held: float, price: float, lot_size: int,
     return held if held - shares < max(lot_size, clear_floor) else shares
 
 
+def swap_margin_gap_ok(ref: float, cand: float, margin: float,
+                       mode: str = "abs", scale: float = 1.0) -> bool:
+    """候选 `cand` 是否比被换出的 `ref` 便宜够了（`ref`／`cand` 均为 `P/V`）。
+
+    `abs`（现行）：`ref − cand ≥ margin`。两个被减项分别取自持仓侧与候选侧两套逐日状态，
+    v4.92 起两侧的 `V` 不同标度，故这条判据的单位不是任一侧的 `P/V`（OI-114）。
+    `ratio`：`ref − cand ≥ ref × margin`，即 `cand/ref ≤ 1 − margin`、`ref/cand ≥ 1/(1 − margin)`——
+    边际按被换出持仓自身的 `P/V` 定标，两侧同倍缩放时判据不变。
+    """
+    return ref - cand >= (margin * scale if mode == "abs" else ref * margin * scale)
+
+
+def swap_margin_gap_floor(ref: float, margin: float,
+                          mode: str = "abs", scale: float = 1.0) -> float:
+    """`swap_margin_gap_ok` 的下限形式：候选 `P/V` ≤ 本值即算便宜够了。"""
+    return ref - margin * scale if mode == "abs" else ref * (1.0 - margin * scale)
+
+
 def log_partial_sell(ledger: list | None, day: str, code: str, shares: float,
                      price: float, reason: str) -> None:
     """部分减持也要进流水。**此前只有 `close_lot` 记账**，故流水缺掉全部「减一档」，
@@ -1163,6 +1181,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         use_mos: bool = False, price_stop: bool = False, value_stop: float = 0.0,
         stop_ma: int = 20, trend_stop: bool = True, entry_filter: str = "none",
         lump_sum: float = 0.0, swap: bool = False, swap_margin: float = 0.10,
+        swap_margin_mode: str = "abs",
         hold_states=None,
         max_positions: int = MAX_POSITIONS, lows=None, day_index=None,
         max_corr: float = 0.0, corr=None, corr_conflict: str = "skip",
@@ -1319,6 +1338,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         if tier_buy_scale:
             line *= tier_buy_scale.get(tiers.get(code, DEFAULT_TIER), 1.0)
         return line
+
+    def swap_gap_ok(ref: float, cand: float, scale: float = 1.0) -> bool:
+        return swap_margin_gap_ok(ref, cand, swap_margin, swap_margin_mode, scale)
+
+    def swap_gap_floor(ref: float, scale: float) -> float:
+        return swap_margin_gap_floor(ref, swap_margin, swap_margin_mode, scale)
 
     # ---- 分位表预热：把 `since` 之前**已经发生过**的观测先灌进去。
     # 不预热的话每个起点都要空等 `quantile_min_obs` 天才有第一只可买票，而这段空窗
@@ -2059,7 +2084,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     final.append(r)                      # 无同簇持仓：直接建仓
                     continue
                 worst_ratio, worst = max(kin)            # 同簇里最贵的那只
-                if worst_ratio - cand_score < swap_margin:
+                if not swap_gap_ok(worst_ratio, cand_score):
                     continue                             # 簇内已有更便宜的，本日不买
                 price = fill_price(worst, marks.get(worst))
                 if not price:
@@ -2213,7 +2238,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     worst_ratio, worst = max(held)
                     cand_score = (pcts[code] if gate == "self-pct" else
                                   (scores.get(code, ratio) if rank_mode != "pv" else ratio))
-                    if worst_ratio - cand_score < swap_margin:
+                    if not swap_gap_ok(worst_ratio, cand_score):
                         break
                 if exec_confirm_close:
                     # 确认 T 日选出的**同一对**目标/来源；来源恢复后取消本次换仓，不改选另一只。
@@ -2237,7 +2262,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                                 or source_close < lot_worst.avg_cost * (1.0 + gain_sell):
                             stats["T+1确认·换仓取消·涨幅回落"] += 1
                             continue
-                    elif source_ratio - cand_ratio < swap_margin:
+                    elif not swap_gap_ok(source_ratio, cand_ratio):
                         stats["T+1确认·换仓取消·P/V边际不足"] += 1
                         continue
                 price = fill_price(worst, marks.get(worst))
@@ -2297,13 +2322,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if repay_over_limit(portfolio, credit_limit) > 0:
                 stats["超额授信·换仓款先还"] += 1
         # 两个闸门共用「当日换仓卖出源」这一事实，各自派生自己的下限。
-        swap_floor_pv = swap_src_min_pv - swap_margin * swap_recipient_scale
+        swap_floor_pv = swap_gap_floor(swap_src_min_pv, swap_recipient_scale)
         # `swap_source_block`（OI-107，用户 2026-08-31）：当日换仓卖出源**不进买入队列**，
         # 且所有「不比卖出源便宜 swap_margin × K」的候选一并剔除——授权卖出的那把尺同样
         # 决定谁有资格接盘。与 `swap_recipient_margin` 的差别：后者只挡换仓释放出的那部分
         # 资金，本闸门连账上原有现金也不许买，故也堵住同日「卖 X 又买 X」的对敲。
         if swap_source_block >= 0.0 and swap_sources_today:
-            block_floor = swap_src_min_pv - swap_margin * swap_source_block
+            block_floor = swap_gap_floor(swap_src_min_pv, swap_source_block)
             kept = [r for r in eligible
                     if r[0] not in swap_sources_today and r[3] <= block_floor]
             stats["换仓源闸门·剔出买入队列"] += len(eligible) - len(kept)
@@ -2388,7 +2413,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 if corr_conflict == "swap_space":
                     ratio_h = hold_today[h][2] if h in hold_today else None
-                    decided = ratio_h is not None and (ratio_h - r[3]) >= swap_margin
+                    decided = ratio_h is not None and swap_gap_ok(ratio_h, r[3])
                 else:                                     # swap_strength
                     rc = trailing_return(r[0], day, corr_strength_days)
                     rh = trailing_return(h, day, corr_strength_days)
@@ -3016,6 +3041,10 @@ def main() -> int:
                         help="关掉换仓。`scripts/sweep_backtest_configs.py` 的 BASE 里带着 --swap，"
                              "而 store_true 无法在配置行里撤销，故需要这条显式的关")
     parser.add_argument("--swap-margin", type=float, default=0.10, help="换仓的 P/V 最小改善，防抖")
+    parser.add_argument("--swap-margin-mode", choices=("abs", "ratio"), default="abs",
+                        help="换仓边际的标度：abs=现行绝对差 `持仓P/V − 候选P/V ≥ 边际`；"
+                             "ratio=相对差 `持仓P/V − 候选P/V ≥ 持仓P/V × 边际`，"
+                             "即 `候选/持仓 ≤ 1 − 边际`、`持仓/候选 ≥ 1/(1 − 边际)`")
     parser.add_argument("--max-positions", type=int, default=MAX_POSITIONS)
     parser.add_argument("--max-corr", type=float, default=0.0,
                         help="相关性上限，如 0.7；与已选/已持仓相关性超过它的候选跳过、顺位补下一名")
@@ -3518,6 +3547,7 @@ def main() -> int:
                      + (f"_cap{args.position_cap:g}" if args.position_cap else "")
                      + (f"_only{args.only_tiers}" if args.only_tiers else "")
                      + ("_sp" if args.swap_partial else "")
+                     + ("_relm" if args.swap_margin_mode == "ratio" else "")
                      + ("_sht" if args.swap_held_trigger else "")
                      + ("_spt" if args.swap_proceeds == "target" else "")
                      + ("_spct" if args.swap_post_corr_trigger else "")
@@ -3559,7 +3589,8 @@ def main() -> int:
                          value_stop=args.value_stop, stop_ma=args.stop_ma,
                          trend_stop=args.trend_stop, entry_filter=args.entry_filter,
                          lump_sum=args.lump_sum / 100.0, swap=args.swap,
-                         swap_margin=args.swap_margin, max_positions=args.max_positions,
+                         swap_margin=args.swap_margin, swap_margin_mode=args.swap_margin_mode,
+                         max_positions=args.max_positions,
                          hold_states=hold_states,
                          lows=lows, day_index=(day_lists, day_pos),
                          max_corr=args.max_corr, corr=corr, corr_conflict=args.corr_conflict,
