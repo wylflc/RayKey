@@ -137,6 +137,24 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertEqual([(s["security_code"], s["hold_pv"]) for s in res["sells"] if s["rule"] == "换仓"], [("000023", 1.50)])
         self.assertEqual(res["hold_pv_diff"], [])                                       # 两侧相同时不列差异
 
+    def test_same_day_buy_sell_netted(self) -> None:
+        # §9.3.2 第 6 步：同日买卖按较小者抵消，只执行净额
+        trig = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.50)       # 未持仓触发者
+        src = row("000012", "H2", close=10.0, ma20=12.0, ma60=9.0, pv=0.80)      # 弱势卖出源，自身也过买入线
+        holdings = {"000012": hold("H2", 50000, 5.0, None)}
+        res = self.run_plan([trig, src], holdings, funds=1000.0, members={"000010", "000012"})
+        swap = [s for s in res["sells"] if s["rule"] == "换仓"][0]
+        self.assertEqual(swap["security_code"], "000012")
+        self.assertEqual(swap["sell_shares"], 14900)                 # 原 15,000 卖出，抵消 100 股
+        self.assertIn("同日对冲 100 股", str(swap["note"]))
+        self.assertEqual([(p["security_code"], p["shares"]) for p in res["plan"]], [("000010", 15000)])
+        self.assertEqual(res["netted"], [("000012", 100.0)])
+        # 出名单是强制退出，不抵消
+        gone = row("000013", "G", close=10.0, ma20=9.0, ma60=8.0, pv=0.50)
+        res = self.run_plan([gone], {"000013": hold("G", 50000, 5.0, None)}, funds=200000.0, members=set())
+        self.assertEqual([s["rule"] for s in res["sells"]], ["出名单"])
+        self.assertEqual(res["netted"], [])
+
     def test_swap_condition_reports_actual_recipients(self) -> None:
         # 报告口径（2026-08-31）：换仓行依据写对**实际接收方**的边际，触发者降为附注
         trig = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)          # 未持仓触发者

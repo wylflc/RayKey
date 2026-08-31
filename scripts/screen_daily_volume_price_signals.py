@@ -1051,6 +1051,33 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 else str(s["condition"]).split("，让位给")[0])
         s["condition"] = f"{head}｜卖出款去向：{dest_txt}{gate}"
 
+    # §9.3.2 第 6 步：同一信号日同一只股票买卖并存时按较小者对冲，只执行净额，双边费税都不付。
+    # 只对减持、涨幅减持、换仓三条生效：「出名单」是强制退出、同日买入本就不该发生（§10.1 第 1 条），
+    # 抵消会把该矛盾盖住；「止损复核」是提示行、并未在本函数里减仓，故只提示不抵消。
+    NETTABLE = ("减持", "涨幅减持", "换仓")
+    by_plan = {str(p["security_code"]).zfill(6): p for p in plan}
+    netted_rows: list[tuple[str, float]] = []
+    for srow in sells:
+        code = str(srow["security_code"]).zfill(6)
+        p_row = by_plan.get(code)
+        if not p_row or srow["rule"] not in NETTABLE:
+            continue
+        n = min(float(srow["sell_shares"]), float(p_row["shares"]))
+        if n <= 0:
+            continue
+        px = to_float(p_row["close"]) or 0.0
+        srow["sell_shares"] = float(srow["sell_shares"]) - n
+        srow["amount"] = round(float(srow["sell_shares"]) * px, 2) if srow["sell_shares"] else ""
+        srow["note"] = (str(srow["note"]) + "；" if srow["note"] else "") + f"同日对冲 {n:.0f} 股"
+        p_row["shares"] = float(p_row["shares"]) - n
+        p_row["lots"] = int(p_row["shares"] // SEC93_LOT)
+        p_row["amount"] = round(float(p_row["shares"]) * px, 2)
+        netted_rows.append((code, n))
+    sells[:] = [r for r in sells if r["rule"] not in NETTABLE or float(r["sell_shares"]) > 0]
+    plan[:] = [r for r in plan if float(r["shares"]) > 0]
+    stop_conflict = [str(r["security_name"]) for r in sells
+                     if r["rule"] == "止损复核" and str(r["security_code"]).zfill(6) in by_plan]
+
     # 持仓侧与候选侧 P/V 不同的持仓（报告用：减持线与换仓来源按持仓侧判，读者要能看到两侧数）
     hold_pv_diff = [(h.get("name", code), by_code[code]["hold_pv"], by_code[code]["model_pv"])
                     for code, h in holdings.items()
@@ -1058,6 +1085,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                     and isinstance(by_code[code].get("model_pv"), float)
                     and abs(by_code[code]["hold_pv"] - by_code[code]["model_pv"]) > 5e-5]
     return {"plan": plan, "sells": sells, "sell_notes": sell_notes, "missing_holdings": missing_holdings,
+            "netted": netted_rows, "stop_conflict": stop_conflict,
             "hold_pv_diff": hold_pv_diff,
             "swap_targets": swap_targets, "swap_stop_reason": swap_stop_reason,
             "dropped": dropped, "corr_unknown": corr_unknown,
@@ -1143,6 +1171,10 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
         print(f"     [未卖·说明] {name}：{why}")
     if result.get("swap_stop_reason"):
         print(f"     [换仓停止] {result['swap_stop_reason']}")
+    for code, n in result.get("netted") or []:
+        print(f"     [同日对冲] {code} 当日买卖并存，按 {n:.0f} 股抵消，只执行净额，双边费税不付")
+    for name in result.get("stop_conflict") or []:
+        print(f"     [⚠ 止损冲突] {name} 当日既在止损复核又在买入清单——止损命中即整仓清空，不得同日买回")
     # 4. 买入清单
     if result["funds_given"]:
         print(f"  4. 买入清单：可用资金 {float(result['funds0']) / 1e4:,.2f} 万（现金＋未用授信）"

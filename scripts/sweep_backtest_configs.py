@@ -98,6 +98,9 @@ BASE = (
     # 审计批 C（2026-08-24，用户裁定）：T+1 成交日无价该笔跳过（§9.1）、差别化股息税按 FIFO 结算、
     # 配股按交易所除权参考价折算并全额认购（事件库配股行）。`--fill-missing signal_close`／`--no-rights-events`／
     # 不给 `--dividend-tax` 为研究／复现口径。
+    # **同日买卖对冲**（v4.104，§9.3.2 第 6 步）：同一信号日同一只股票的买入与卖出按较小者抵消，
+    # 只执行净额、双边费税与股息税都不付；卖出与买入同日同价，故对冲精确。不给该开关即 v4.104 前旧口径。
+    "--net-same-day "
     "--fill-missing skip --dividend-tax --swap-repeat skip "
     "--addon-trend ma-only --swap-require-weak "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "

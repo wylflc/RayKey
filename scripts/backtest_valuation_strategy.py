@@ -930,7 +930,8 @@ def dividend_tax_rate(buy_day: str, sell_day: str) -> float:
     return 0.0
 
 
-def sell_dividend_tax(portfolio: Portfolio, lot: Lot, shares: float, day: str) -> float:
+def sell_dividend_tax(portfolio: Portfolio, lot: Lot, shares: float, day: str,
+                      sink: list | None = None) -> float:
     """卖出 `shares` 股时按 FIFO 结算这些股份持有期内已收现金红利的股息税，返回税额（已计入 `portfolio.dividend_tax_paid`）。
     只对现金红利计税；送股面值部分不计（事件库不分送股与转增）。开关关时恒 0。"""
     if not DIVIDEND_TAX_ON or not lot.sublots or shares <= 0:
@@ -944,6 +945,8 @@ def sell_dividend_tax(portfolio: Portfolio, lot: Lot, shares: float, day: str) -
         take = min(sub_shares, remaining)
         frac = take / sub_shares
         tax += dividend_tax_rate(buy_day, day) * div_cash * frac
+        if sink is not None:
+            sink.append([buy_day, take, div_cash * frac])   # 对冲还原用：按 FIFO 顺序记消耗批次
         if take >= sub_shares - 1e-9:
             lot.sublots.pop(0)
         else:
@@ -1049,20 +1052,107 @@ def log_partial_sell(ledger: list | None, day: str, code: str, shares: float,
 
 
 def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: str,
-              ledger: list | None = None) -> None:
+              ledger: list | None = None, net_reg: dict | None = None) -> None:
     lot = portfolio.lots.pop(code)
+    ledger_idx = None
     if ledger is not None:
+        ledger_idx = len(ledger)
         ledger.append({"date": day, "security_code": code, "action": "卖出",
                        "shares": f"{lot.shares:.0f}", "price": f"{price:.3f}",
                        "amount": f"{lot.shares * price:.0f}", "pv_ratio": "",
                        "intrinsic_value": "", "reason": reason})
+    sold = lot.shares
     portfolio.cash += lot.shares * price - trade_fee(lot.shares * price, day, "sell")
-    portfolio.cash -= sell_dividend_tax(portfolio, lot, lot.shares, day)
+    consumed: list = []
+    portfolio.cash -= sell_dividend_tax(portfolio, lot, lot.shares, day, consumed)
     lot.proceeds += lot.shares * price
     lot.shares = 0.0
     lot.exit_date, lot.exit_reason = day, reason
     lot.sells += 1
     portfolio.closed.append(lot)
+    register_sale(net_reg, code, lot, sold, price, consumed, True,
+                  len(portfolio.closed) - 1, ledger_idx)
+
+
+def _fee_quiet(amount: float, day: str, side: str) -> float:
+    """算费但不计入 `FEES["paid"]`（对冲时用来求「少付了多少」）。"""
+    fee = trade_fee(amount, day, side)
+    FEES["paid"] -= fee
+    return fee
+
+
+def register_sale(reg: dict | None, code: str, lot: Lot, shares: float, price: float,
+                  consumed: list, whole: bool, closed_idx: int | None,
+                  ledger_idx: int | None) -> None:
+    """登记当日一笔卖出，供 §9.3.2 同日买卖对冲使用（`--net-same-day`；不开时 reg 为 None）。"""
+    if reg is None or shares <= 0:
+        return
+    reg.setdefault(code, []).append(
+        {"lot": lot, "shares": shares, "left": shares, "price": price,
+         "consumed": consumed, "whole": whole, "closed_idx": closed_idx, "ledger_idx": ledger_idx})
+
+
+def _restore_dividends(portfolio: Portfolio, lot: Lot, consumed: list, shares: float, day: str) -> float:
+    """把最后 `shares` 股对应的红利批次按 FIFO 逆序还回 `lot.sublots`，返回应退的股息税。"""
+    refund, remaining = 0.0, shares
+    while remaining > 1e-9 and consumed:
+        buy_day, sub_shares, div_cash = consumed[-1]
+        take = min(sub_shares, remaining)
+        frac = take / sub_shares if sub_shares else 0.0
+        refund += dividend_tax_rate(buy_day, day) * div_cash * frac
+        if take >= sub_shares - 1e-9:
+            consumed.pop()
+        else:
+            consumed[-1] = [buy_day, sub_shares - take, div_cash * (1.0 - frac)]
+        if lot.sublots and lot.sublots[0][0] == buy_day:
+            lot.sublots[0][1] += take
+            lot.sublots[0][2] += div_cash * frac
+        else:
+            lot.sublots.insert(0, [buy_day, take, div_cash * frac])
+        remaining -= take
+    lot.tax_paid -= refund
+    portfolio.dividend_tax_paid -= refund
+    return refund
+
+
+def net_off_sale(reg: dict, portfolio: Portfolio, code: str, buy_shares: float,
+                 day: str, ledger: list | None) -> tuple[float, float]:
+    """§9.3.2：同一信号日同一只股票的买入与卖出直接对冲，只执行净额，双边费税都不付。
+    返回 (被对冲股数, turnover 调整量)。卖出与买入同日同价（`--exec-price close`），故对冲是精确的。"""
+    sales = reg.get(code) or []
+    netted = 0.0
+    turn_adj = 0.0
+    for sale in reversed(sales):                     # 后卖的先对冲
+        if netted >= buy_shares - 1e-9 or sale["left"] <= 0:
+            continue
+        n = min(buy_shares - netted, sale["left"])
+        lot, price = sale["lot"], sale["price"]
+        before, after = sale["left"], sale["left"] - n
+        # 少付的卖出费（佣金/过户/印花按成交额算，最低佣金也一并回退）
+        fee_delta = _fee_quiet(before * price, day, "sell") - _fee_quiet(after * price, day, "sell")
+        portfolio.cash += fee_delta
+        FEES["paid"] -= fee_delta
+        portfolio.cash -= n * price                  # 退回这部分卖出款
+        portfolio.cash += _restore_dividends(portfolio, lot, sale["consumed"], n, day)
+        lot.proceeds -= n * price
+        turn_adj -= n * price
+        if sale["whole"] and code not in portfolio.lots:
+            lot.exit_date, lot.exit_reason = "", ""
+            if sale["closed_idx"] is not None and sale["closed_idx"] < len(portfolio.closed) \
+                    and portfolio.closed[sale["closed_idx"]] is lot:
+                portfolio.closed.pop(sale["closed_idx"])
+            portfolio.lots[code] = lot
+        lot.shares += n
+        sale["left"] = after
+        if after <= 1e-9:                            # 整笔被对冲：卖出记录一并撤销
+            lot.sells -= 1
+        if ledger is not None and sale["ledger_idx"] is not None:
+            row = ledger[sale["ledger_idx"]]
+            row["shares"] = f"{after:.0f}"
+            row["amount"] = f"{after * price:.0f}"
+            row["reason"] = str(row["reason"]) + f"（同日对冲 {n:.0f} 股）"
+        netted += n
+    return netted, turn_adj
 
 
 # ------------------------------------------------------------------ 回测
@@ -1124,6 +1214,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_post_corr_trigger: bool = False,
         swap_recipient_margin: bool = False, swap_recipient_scale: float = 1.0,
         swap_source_block: float = -1.0, min_buy_frac: float = 0.0,
+        net_same_day: bool = False,
         exec_confirm_close: bool = False,
         sell_confirm: bool = False, sell_tol: float = 0.0, stop_tol: float = 0.0,
         sell_buffer_exempt_gain: bool = False, sell_buffer_exempt_pv: float = 0.0,
@@ -1425,6 +1516,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             stats["**穿仓·净资产归零**"] += 1
             break
         budget = equity * x
+        # §9.3.2：同一信号日同一只股票的买卖直接对冲，只执行净额（`--net-same-day`）。
+        net_reg: dict | None = {} if net_same_day else None
 
         # ---- 大盘围栏状态机（用户 2026-08-20）。判据全取**信号日**指数；动作落在成交日，与个股同序。
         fence_on = False
@@ -1634,17 +1727,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                             log_partial_sell(ledger, day, code, shares, price,
                                              f"{trigger_reason}{stop_tag}·减一档")
                             lot.shares -= shares
-                            portfolio.cash -= sell_dividend_tax(portfolio, lot, shares, day)
+                            _consumed = []
+                            portfolio.cash -= sell_dividend_tax(portfolio, lot, shares, day, _consumed)
                             portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                             lot.proceeds += shares * price
                             lot.sells += 1
                             turnover += shares * price
+                            register_sale(net_reg, code, lot, shares, price, _consumed, False, None,
+                                          (len(ledger) - 1) if ledger is not None else None)
                         sell_count += 1
                         stats["止损·减一档"] += 1
                     continue
                 turnover += lot.shares * price     # 必须在 close_lot 之前取——它会把 shares 清零
                 close_lot(portfolio, code, day, price, ledger=ledger,
-                          reason=f"{trigger_reason}{stop_tag}止损")
+                          reason=f"{trigger_reason}{stop_tag}止损", net_reg=net_reg)
                 sell_count += 1
                 continue
             # 基本面退出：内在价值自峰值回落超阈值即清仓。**盯 V 不盯价**，故一只票可以
@@ -1762,12 +1858,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 if shares >= lot.shares * 0.999:
                     turnover += lot.shares * price
-                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"{sell_tag}清空")
+                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"{sell_tag}清空", net_reg=net_reg)
                 else:
                     log_partial_sell(ledger, day, code, shares, price, f"{sell_tag}·减一档")
                     lot.shares -= shares
-                    portfolio.cash -= sell_dividend_tax(portfolio, lot, shares, day)
+                    _consumed = []
+                    portfolio.cash -= sell_dividend_tax(portfolio, lot, shares, day, _consumed)
                     portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
+                    register_sale(net_reg, code, lot, shares, price, _consumed, False, None,
+                                  (len(ledger) - 1) if ledger is not None else None)
                     lot.proceeds += shares * price
                     lot.sells += 1
                     turnover += shares * price
@@ -2172,17 +2271,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if partial and shares < lot_worst.shares * 0.999:
                     stats["换仓·减一档"] += 1
                     lot_worst.shares -= shares
-                    portfolio.cash -= sell_dividend_tax(portfolio, lot_worst, shares, day)
+                    _consumed = []
+                    portfolio.cash -= sell_dividend_tax(portfolio, lot_worst, shares, day, _consumed)
                     portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                     lot_worst.proceeds += shares * price
                     lot_worst.sells += 1
                     turnover += shares * price
                     log_partial_sell(ledger, day, worst, shares, price, f"换仓·减一档{swap_tag}：让位给{code}")
+                    register_sale(net_reg, worst, lot_worst, shares, price, _consumed, False, None,
+                                  (len(ledger) - 1) if ledger is not None else None)
                     reduced_today.add(worst)
                 else:
                     stats["换仓·整仓卖出"] += 1
                     turnover += lot_worst.shares * price
-                    close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓{swap_tag}：让位给空间更大的{code}")
+                    close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓{swap_tag}：让位给空间更大的{code}", net_reg=net_reg)
                 sell_count += 1
                 swap_sources_today.add(worst)
                 if swap_tag:
@@ -2454,6 +2556,16 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if afford > 0:
                     shares, amount = afford, afford * fill
                     stats["割肉买回"] += 1
+            # 同日买卖对冲：本次买入先与当日已卖出的同一只抵消，只对净额下单、双边费税都不付。
+            if net_reg and code in net_reg and shares > 0:
+                netted, turn_adj = net_off_sale(net_reg, portfolio, code, shares, day, ledger)
+                if netted > 0:
+                    stats["同日买卖对冲"] += 1
+                    turnover += turn_adj
+                    shares -= netted
+                    amount = shares * fill
+                    if shares <= 0:
+                        continue
             # 整手取整、按手建仓与割肉买回都可能绕过上面的截断，这里按最终金额兜底。
             if swap_recipient_margin and ratio > swap_floor_pv:
                 if amount > swap_unguarded - spent_unguarded + 1e-6:
@@ -3109,6 +3221,8 @@ def main() -> int:
     parser.add_argument("--swap-source-block", type=float, default=-1.0, metavar="K",
                         help="OI-107：当日换仓卖出源不进买入队列，并一并剔除所有「不比卖出源便宜 swap-margin × K」"
                              "的候选；-1=关。K=1 与换仓触发同线，K=0 只挡卖出源与比它更贵的")
+    parser.add_argument("--net-same-day", action="store_true",
+                        help="同一信号日同一只股票的买入与卖出直接对冲，只执行净额、双边费税都不付（§9.3.2）")
     parser.add_argument("--min-buy-frac", type=float, default=0.0, metavar="F",
                         help="碎仓下限：本笔可投金额不足一档的 F 倍即不执行（建仓与加仓同）；0=关。例 0.10")
     parser.add_argument("--swap-post-corr-trigger", action="store_true",
@@ -3510,7 +3624,7 @@ def main() -> int:
                          swap_recipient_margin=args.swap_recipient_margin,
                          swap_recipient_scale=args.swap_recipient_scale,
                          swap_source_block=args.swap_source_block,
-                         min_buy_frac=args.min_buy_frac,
+                         min_buy_frac=args.min_buy_frac, net_same_day=args.net_same_day,
                          exec_confirm_close=args.exec_confirm_close,
                          sell_confirm=args.sell_confirm, sell_tol=args.sell_tol, stop_tol=args.stop_tol,
                          sell_buffer_exempt_gain=args.sell_buffer_exempt_gain,
@@ -3535,6 +3649,8 @@ def main() -> int:
                     w = csv.DictWriter(handle, fieldnames=list(ledger[0]) + ["security_name"])
                     w.writeheader()
                     for row in ledger:
+                        if not float(row["shares"]):
+                            continue          # 同日买卖对冲后整笔抵消，该成交并未发生
                         w.writerow({**row, "security_name": names.get(row["security_code"], "")})
                 print(f"    成交流水 {len(ledger):,} 笔 → {args.trade_log}")
             summary = summarize(label, result, args.capital, benchmark, risk_free)
