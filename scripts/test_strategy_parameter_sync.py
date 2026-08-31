@@ -71,6 +71,11 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn("| 单次买入 | 当日净资产 `N × 5.0%` |", workflow)
         self.assertIn(f"| 买入线 | `P/V ≤ {daily_scan.SEC93_BUY_LINE:.4f}` |", workflow)
         self.assertNotIn("| 减持 |", workflow)                # v4.109（OI-110）：估值减持行已删
+        # v4.110（OI-116）：止盈行不得退回「无」——涨幅减持即按盈利触发的减仓
+        self.assertIn("| 止盈 | 只有本表「涨幅减持」一条按盈利触发的减仓", workflow)
+        self.assertNotIn("| 止盈 | 无 |", workflow)
+        # v4.110（OI-117）：四项决策读数的取表落点
+        self.assertIn("四项一律取全样本表的读数。", workflow)
         self.assertIn("`data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`", workflow)
         self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)
