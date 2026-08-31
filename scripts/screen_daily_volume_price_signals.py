@@ -946,6 +946,10 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 swap_targets.add(ccode)
                 swap_src_meta[worst] = (src_pv, ccode)
 
+    # §9.3.2 第 5 步：当日被换出的持仓不进入当日买入队列（否则卖出款可原路买回它自己）
+    if swap_src_meta:
+        eligible = [r for r in eligible if str(r["security_code"]).zfill(6) not in swap_src_meta]
+
     # ---------------- 相关性过滤
     held_rows = [by_code[c] for c in holdings if c in by_code and float(holdings[c]["shares"]) > 0]
     picked: list[dict] = []
