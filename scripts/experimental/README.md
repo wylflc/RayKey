@@ -5,7 +5,8 @@
 1. **已做完并已在 `docs/Ashare_backtest_log.md` 记录结论的实验代码**，供后续复现或改进；
 2. **`docs/000_Ashare_workflow.md` §12.1 验证纪律点名要跑的常设核验工具**——
    `align_buy_line.py`（第 12.1 节三线对齐）、`selection_edge_audit.py`（第 9 款）、
-   `panel_tier_forward.py`（第 9 款）、`delta_attribution.py`（第 10 款）。
+   `panel_tier_forward.py`（第 9 款）、`swap_regime_control.py`（第 9 款，换仓方向性的对照）、
+   `delta_attribution.py`（第 10 款）。
    第 2 类改动前先确认 §12.1 的引用是否同步。
 
 ## §12.1 常设核验工具（信号层与归因）

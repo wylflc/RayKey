@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.104
+# A股选股-估值-量价操作流程 v4.106
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -762,7 +762,7 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 6. 检查可执行性、幸存者偏差、未来信息和多重比较；绝对收益不当作未来预期。
 7. 只有第 1~6 款通过、第 9~11 款读数齐备且用户裁定后，才修改 §9.3.1、生产常量和回测 `BASE`。
 8. 实验过程写入回测 log；最终版本变化写入 changelog；当前操作只写回本文件。
-9. 信号层三表：`scripts/experimental/selection_edge_audit.py`（边际选择检验、排序信息量、换仓方向性；回测须带 `--candidate-log` 与 `--trade-log`）与 `scripts/experimental/panel_tier_forward.py`（`P/V` 分档前向回报）。采纳候选在候选臂与 `BASE` 上各跑一遍并报差；另每季在 `BASE` 上重算一遍作不变量检验。各表报逐日配对差中位、为正日数与逐年同号年数。三表不进第 2 款的决策读数，读数写入回测 log。
+9. 信号层三表：`scripts/experimental/selection_edge_audit.py`（边际选择检验、排序信息量、换仓方向性；回测须带 `--candidate-log` 与 `--trade-log`）与 `scripts/experimental/panel_tier_forward.py`（`P/V` 分档前向回报）。采纳候选在候选臂与 `BASE` 上各跑一遍并报差；另每季在 `BASE` 上重算一遍作不变量检验。各表报逐日配对差中位、为正日数与逐年同号年数。换仓方向性一表须同报 `scripts/experimental/swap_regime_control.py` 的四表对照（面板层 `P/V` 信息量、合成换仓、`P/V` 匹配对照、样本独立性），匹配对照的容差至少取 ±0.04／±0.10／±0.15 三档、只报符号稳健的读数；该表的样本量按不同 `(源, 标的)` 配对数计，不按日数；只有与合成换仓反号的年份计入机制层结论。三表不进第 2 款的决策读数，读数写入回测 log。
 10. 采纳候选报 `scripts/experimental/delta_attribution.py` 的前三只净额占比；超过 100% 者不作采纳依据。
 11. 引用正读数时同报本族已试臂数，按 `data/processed/backtest/scan_summaries.csv` 的扫描标签计。
 
