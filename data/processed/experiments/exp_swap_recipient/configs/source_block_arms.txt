@@ -1,0 +1,11 @@
+# OI-107 换仓源闸门 + 碎仓下限（2026-08-31，用户指令）。全市场状态文件（BASE 缺省）。
+# SRCxx：当日换仓卖出源及所有「不比卖出源便宜 0.1437 × K」的候选不进买入队列，K = 0.0/0.5/1.0。
+# MINxx：本笔可投金额不足一档的 F 倍即不执行（建仓与加仓同），F = 5%/10%/20%。
+BASE|
+SRC00|--swap-source-block 0.0
+SRC05|--swap-source-block 0.5
+SRC10|--swap-source-block 1.0
+MIN05|--min-buy-frac 0.05
+MIN10|--min-buy-frac 0.10
+MIN20|--min-buy-frac 0.20
+BOTH|--swap-source-block 1.0 --min-buy-frac 0.10

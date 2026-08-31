@@ -898,6 +898,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     swap_targets: set[str] = set()
     reduced_today: set[str] = set()
     swap_stop_reason = ""
+    swap_src_meta: dict[str, tuple[float | None, str]] = {}   # 卖出源 → (源持仓侧 P/V 或 None, 触发者)
     if funds is not None:
         for cand in eligible:
             ccode = str(cand["security_code"]).zfill(6)
@@ -920,6 +921,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 hpv = hold_pv_of(hr)                          # 换仓来源按持仓侧 P/V（v4.92 SPA）
                 if hpv is not None:
                     weak_src.append((hpv, hcode))
+            src_pv = None
             if gain_src:
                 gain, worst = max(gain_src)
                 cond = f"涨幅 {gain:.0%} ≥ {SEC93_GAIN_SELL:.0%} 且弱势，让位给 {cand.get('security_name', ccode)}"
@@ -932,6 +934,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                     swap_stop_reason = (f"最贵弱势持仓 持仓侧 P/V {worst_pv:.4f} 与候选 {cand.get('security_name', ccode)} "
                                         f"P/V {cand['model_pv']:.4f} 差 {worst_pv - cand['model_pv']:.4f} < {SEC93_SWAP_MARGIN}")
                     break
+                src_pv = worst_pv
                 cond = (f"持仓侧 P/V {worst_pv:.4f} − 候选 {cand.get('security_name', ccode)} {cand['model_pv']:.4f} "
                         f"≥ {SEC93_SWAP_MARGIN} 且弱势")
             hr = by_code[worst]
@@ -941,6 +944,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             if sold:
                 cash += sold * hp
                 swap_targets.add(ccode)
+                swap_src_meta[worst] = (src_pv, ccode)
 
     # ---------------- 相关性过滤
     held_rows = [by_code[c] for c in holdings if c in by_code and float(holdings[c]["shares"]) > 0]
@@ -1013,6 +1017,40 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             "amount": round(amount, 2),
             "cooldown_skips": cooldown,
         })
+    # 换仓行的报告口径（用户 2026-08-31 指令）：依据以**实际接收方**的边际为主、触发者降为附注。
+    # 授权卖出的那把尺是「源持仓侧 P/V − 接收方候选侧 P/V ≥ SEC93_SWAP_MARGIN」，此前只量了
+    # 触发者，而卖出款按 §9.3.2 第 5 步不定向、按 P/V 升序流向全场，两者常常不是同一只。
+    for s in sells:
+        if s["rule"] != "换仓" or str(s["security_code"]).zfill(6) not in swap_src_meta:
+            continue
+        src_pv, tcode = swap_src_meta[str(s["security_code"]).zfill(6)]
+        if plan:
+            parts = []
+            for p in plan:
+                nm = p["security_name"] or p["security_code"]
+                pv = p["model_pv"]
+                if src_pv is None or not isinstance(pv, float):
+                    parts.append(str(nm))
+                    continue
+                m = src_pv - pv
+                parts.append(f"{nm} {pv:.4f}（边际 {m:+.4f}{'⚠不足' if m < SEC93_SWAP_MARGIN else ''}）")
+            dest_txt = "、".join(parts)
+            if sum(1 for x in sells if x["rule"] == "换仓") > 1:
+                dest_txt += "（当日换仓卖出款合并投放）"
+        else:
+            dest_txt = "无——卖出款当日未投出"
+        trow = by_code.get(tcode) or {}
+        tname = str(trow.get("security_name", "")) or tcode
+        tpv = trow.get("model_pv")
+        gate = f"｜触发闸门：{tname}"
+        if isinstance(tpv, float):
+            gate += f" {tpv:.4f}"
+            if src_pv is not None:
+                gate += f"（差 {src_pv - tpv:.4f} ≥ {SEC93_SWAP_MARGIN}）"
+        head = (f"持仓侧 P/V {src_pv:.4f} 且弱势" if src_pv is not None
+                else str(s["condition"]).split("，让位给")[0])
+        s["condition"] = f"{head}｜卖出款去向：{dest_txt}{gate}"
+
     # 持仓侧与候选侧 P/V 不同的持仓（报告用：减持线与换仓来源按持仓侧判，读者要能看到两侧数）
     hold_pv_diff = [(h.get("name", code), by_code[code]["hold_pv"], by_code[code]["model_pv"])
                     for code, h in holdings.items()
@@ -1098,7 +1136,7 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
         amt = f"{float(s['amount']) / 1e4:.2f} 万" if s["amount"] != "" else "—"
         print(f"     [{s['rule']}] {s['security_code']} {str(s['security_name']):<9}"
               f"｜{s['condition']}｜卖 {s['sell_shares']:g} 股 {amt}"
-              + (f"｜换入 {s['swap_for']}" if s["swap_for"] else "")
+              + (f"｜触发者 {s['swap_for']}" if s["swap_for"] else "")
               + (f"｜其后跳过 {s['cooldown_skips']} 次" if s["cooldown_skips"] else "")
               + (f"｜{s['note']}" if s["note"] else ""))
     for name, why in result.get("sell_notes") or []:

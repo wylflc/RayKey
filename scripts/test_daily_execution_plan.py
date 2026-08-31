@@ -137,6 +137,40 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertEqual([(s["security_code"], s["hold_pv"]) for s in res["sells"] if s["rule"] == "换仓"], [("000023", 1.50)])
         self.assertEqual(res["hold_pv_diff"], [])                                       # 两侧相同时不列差异
 
+    def test_swap_condition_reports_actual_recipients(self) -> None:
+        # 报告口径（2026-08-31）：换仓行依据写对**实际接收方**的边际，触发者降为附注
+        trig = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)          # 未持仓触发者
+        src = row("000012", "H2", close=100.0, ma20=110.0, ma60=90.0, pv=1.50)      # 弱势最贵 → 卖出源
+        cheap = row("000014", "A", close=10.0, ma20=9.0, ma60=8.0, pv=0.30)         # 已持仓、更便宜 → 收款
+        holdings = {"000012": hold("H2", 5000, 90.0, None), "000014": hold("A", 100, 9.0, None)}
+        res = self.run_plan([trig, src, cheap], holdings, funds=1000.0,
+                            members={"000010", "000012", "000014"})
+        swap = [s for s in res["sells"] if s["rule"] == "换仓"][0]
+        self.assertEqual(swap["security_code"], "000012")
+        self.assertEqual(swap["swap_for"], "000010")                                 # 机器列仍记触发者
+        self.assertIn("持仓侧 P/V 1.5000 且弱势", swap["condition"])
+        self.assertIn("卖出款去向：", swap["condition"])
+        self.assertIn("A 0.3000（边际 +1.2000）", swap["condition"])                  # 对实际接收方的边际
+        self.assertIn("触发闸门：X 0.6000（差 0.9000 ≥ 0.1437）", swap["condition"])
+        # 接收方边际不足时打标：源持仓侧 0.70，接收方 0.60 → 差 0.10 < 0.1437（触发者 0.50 差 0.20 过线）
+        trig2 = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.50)
+        src2 = row("000012", "H2", close=100.0, ma20=110.0, ma60=90.0, pv=1.50)
+        src2["hold_pv"] = 0.70
+        near = row("000015", "N", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)
+        holdings = {"000012": hold("H2", 5000, 90.0, None), "000015": hold("N", 100, 9.0, None)}
+        res = self.run_plan([trig2, src2, near], holdings, funds=1000.0,
+                            members={"000010", "000012", "000015"})
+        swap = [s for s in res["sells"] if s["rule"] == "换仓"][0]
+        self.assertIn("N 0.6000（边际 +0.1000⚠不足）", swap["condition"])
+        self.assertIn("X 0.5000（边际 +0.2000）", swap["condition"])                  # 触发者本身过线、不打标
+        # 卖出款一分未投出时明写（唯一候选一手 20 万 > 卖出款 15 万）
+        pricey = row("000010", "X", close=2000.0, ma20=1800.0, ma60=1700.0, pv=0.50)
+        holdings = {"000012": hold("H2", 5000, 90.0, None)}
+        res = self.run_plan([pricey, src], holdings, funds=1.0, members={"000010", "000012"})
+        swap = [s for s in res["sells"] if s["rule"] == "换仓"][0]
+        self.assertEqual(res["plan"], [])
+        self.assertIn("卖出款去向：无——卖出款当日未投出", swap["condition"])
+
     def test_cooldown_counter_consumed_and_set(self) -> None:
         pricey = row("000020", "P", close=2000.0, ma20=1900.0, ma60=1800.0, pv=0.5)   # 一手 20 万 > 一档 15 万
         counters: dict[str, int] = {}

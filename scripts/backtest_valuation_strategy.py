@@ -1123,6 +1123,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_held_trigger: bool = False, swap_proceeds: str = "pv",
         swap_post_corr_trigger: bool = False,
         swap_recipient_margin: bool = False, swap_recipient_scale: float = 1.0,
+        swap_source_block: float = -1.0, min_buy_frac: float = 0.0,
         exec_confirm_close: bool = False,
         sell_confirm: bool = False, sell_tol: float = 0.0, stop_tol: float = 0.0,
         sell_buffer_exempt_gain: bool = False, sell_buffer_exempt_pv: float = 0.0,
@@ -2034,11 +2035,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 候选侧 `P/V` ≥ `swap_margin`）同样量**钱的实际去向**——换仓释放出来的资金只能投给
         # 自身也过这道边际的标的，不过线者只能动用换仓前本就可用的现金＋剩余授信。
         # 涨幅让位的卖出不由 `P/V` 边际授权，其卖出款不受本闸门约束。
-        if swap_recipient_margin and (gate != "pv" or rank_mode != "pv"):
-            raise ValueError("--swap-recipient-margin 目前只定义于 --gate pv 且 --rank-mode pv")
+        if (swap_recipient_margin or swap_source_block >= 0.0) and (gate != "pv" or rank_mode != "pv"):
+            raise ValueError("--swap-recipient-margin／--swap-source-block 目前只定义于 --gate pv 且 --rank-mode pv")
         swap_funds_before = buying_power(portfolio, credit_limit) if swap_recipient_margin else 0.0
         swap_gain_proceeds = 0.0             # 涨幅让位卖出款：不受闸门约束
-        swap_floor_pv = float("inf")         # min(源持仓侧 P/V) − swap_margin
+        swap_src_min_pv = float("inf")       # 当日 P/V 授权换仓卖出源的最低持仓侧 P/V
+        swap_sources_today: set[str] = set()  # 当日全部换仓卖出源（含涨幅让位）
         if swap and eligible:
             for code, close, value, ratio in eligible[:max_positions]:
                 # `swap_held_trigger`（OI-101 研究开关）：已持仓候选想加仓而资金不足时同样触发换仓，
@@ -2182,12 +2184,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     turnover += lot_worst.shares * price
                     close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓{swap_tag}：让位给空间更大的{code}")
                 sell_count += 1
-                if swap_recipient_margin:
-                    if swap_tag:
-                        swap_gain_proceeds += sold_qty * price
-                    else:
-                        swap_floor_pv = min(swap_floor_pv,
-                                            worst_ratio - swap_margin * swap_recipient_scale)
+                swap_sources_today.add(worst)
+                if swap_tag:
+                    swap_gain_proceeds += sold_qty * price
+                else:
+                    swap_src_min_pv = min(swap_src_min_pv, worst_ratio)
                 if code not in swap_targets:
                     swap_target_order.append(code)
                 swap_targets.add(code)
@@ -2195,6 +2196,18 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         if credit_over_limit == "repay" and credit_ratio > 0:
             if repay_over_limit(portfolio, credit_limit) > 0:
                 stats["超额授信·换仓款先还"] += 1
+        # 两个闸门共用「当日换仓卖出源」这一事实，各自派生自己的下限。
+        swap_floor_pv = swap_src_min_pv - swap_margin * swap_recipient_scale
+        # `swap_source_block`（OI-107，用户 2026-08-31）：当日换仓卖出源**不进买入队列**，
+        # 且所有「不比卖出源便宜 swap_margin × K」的候选一并剔除——授权卖出的那把尺同样
+        # 决定谁有资格接盘。与 `swap_recipient_margin` 的差别：后者只挡换仓释放出的那部分
+        # 资金，本闸门连账上原有现金也不许买，故也堵住同日「卖 X 又买 X」的对敲。
+        if swap_source_block >= 0.0 and swap_sources_today:
+            block_floor = swap_src_min_pv - swap_margin * swap_source_block
+            kept = [r for r in eligible
+                    if r[0] not in swap_sources_today and r[3] <= block_floor]
+            stats["换仓源闸门·剔出买入队列"] += len(eligible) - len(kept)
+            eligible = kept
         # 受闸门约束的额度 = 换仓真正多出来的可用资金（已扣掉超额授信还款与涨幅让位款）；
         # 其余为不受约束额度，`spent_unguarded` 累计不过线标的已占用的部分。
         spent_unguarded = 0.0
@@ -2389,6 +2402,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if room <= 0:
                     continue
                 amount = min(amount, room)
+            # `min_buy_frac`（用户 2026-08-31）：本笔可投金额不足一档的 F 时不执行——
+            # 碎仓同样会写建仓止损锚、占一个相关性锚位，并使该票此后不再能触发换仓。
+            # 放在整手取整之前判，以免 `lot_ratio_ready` 的比例冷却计数器被白白消耗。
+            if min_buy_frac and amount < budget * min_buy_frac:
+                stats[f"碎仓<{min_buy_frac:.0%}档·跳过"] += 1
+                continue
             # 换仓款的接收方须过同一条边际；不过线者只能动用不受约束的那部分额度。
             if swap_recipient_margin and ratio > swap_floor_pv:
                 amount = min(amount, max(0.0, swap_unguarded - spent_unguarded))
@@ -3087,6 +3106,11 @@ def main() -> int:
     parser.add_argument("--swap-recipient-scale", type=float, default=1.0, metavar="K",
                         help="接收方边际守卫的相邻区间扫描：要求的边际 = swap-margin × K；"
                              "K=1 为与换仓触发同一条线，K=0 为「接收方不得比卖出源更贵」")
+    parser.add_argument("--swap-source-block", type=float, default=-1.0, metavar="K",
+                        help="OI-107：当日换仓卖出源不进买入队列，并一并剔除所有「不比卖出源便宜 swap-margin × K」"
+                             "的候选；-1=关。K=1 与换仓触发同线，K=0 只挡卖出源与比它更贵的")
+    parser.add_argument("--min-buy-frac", type=float, default=0.0, metavar="F",
+                        help="碎仓下限：本笔可投金额不足一档的 F 倍即不执行（建仓与加仓同）；0=关。例 0.10")
     parser.add_argument("--swap-post-corr-trigger", action="store_true",
                         help="OI-101 第四臂：只有先通过生产相关性过滤、实际可买的未持仓候选才能触发换仓；"
                              "卖出款仍按全局 P/V 排序（目前只定义于 corr-conflict=skip）")
@@ -3485,6 +3509,8 @@ def main() -> int:
                          swap_post_corr_trigger=args.swap_post_corr_trigger,
                          swap_recipient_margin=args.swap_recipient_margin,
                          swap_recipient_scale=args.swap_recipient_scale,
+                         swap_source_block=args.swap_source_block,
+                         min_buy_frac=args.min_buy_frac,
                          exec_confirm_close=args.exec_confirm_close,
                          sell_confirm=args.sell_confirm, sell_tol=args.sell_tol, stop_tol=args.stop_tol,
                          sell_buffer_exempt_gain=args.sell_buffer_exempt_gain,
