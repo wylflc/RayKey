@@ -156,7 +156,7 @@ def case_pool_provenance_uses_actual_path():
 
     valuation = [{
         "security_code": "600519", "security_name": "贵州茅台", "quality_tier": "L1",
-        "valuation_tier": "中性", "fair_price_low": "1600", "fair_price_high": "2000",
+        "fair_price_low": "1600", "fair_price_high": "2000",
         "band_derivation": "dossier", "anchor_basis": "x", "band_sensitivity": "y",
     }]
     tiers = [{"security_code": "600519", "quality_tier": "L1", "quality_tier_label": "L1"}]

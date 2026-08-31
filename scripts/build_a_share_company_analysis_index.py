@@ -50,7 +50,6 @@ FIELDNAMES = [
     "prior_quality_tier",
     "prior_strategy_tag",
     "prior_tier_reason",
-    "prior_valuation_tier",
     "prior_valuation_reason",
     "prior_core_pool_eligible",
     "decision_log_entries",
@@ -142,7 +141,6 @@ def build_index(
                 "prior_quality_tier": tier.get("quality_tier", ""),
                 "prior_strategy_tag": tier.get("primary_strategy_tag", ""),
                 "prior_tier_reason": tier.get("tier_qualification_reason", ""),
-                "prior_valuation_tier": val.get("valuation_tier", ""),
                 "prior_valuation_reason": val.get("valuation_reason", ""),
                 "prior_core_pool_eligible": "yes" if code in pool_codes else "",
                 "decision_log_entries": str(log_count.get(code, 0)),
@@ -211,7 +209,6 @@ def write_markdown(path: Path, rows: list[dict[str, str]], generated_at: str) ->
             ("行业", "industry"),
             ("上轮档位", "prior_quality_tier"),
             ("上轮策略", "prior_strategy_tag"),
-            ("上轮估值", "prior_valuation_tier"),
             ("round1 理由", "round1_attention_reason"),
         ],
     )

@@ -75,18 +75,17 @@ def main() -> int:
             continue
         title, desc = TIER_HEADS[tier]
         lines += [f"## {title} — {len(rows)}家", "", desc, "",
-                  "| 代码 | 名称 | 策略标签 | 当日档位 | 定档理由（摘） |",
-                  "| --- | --- | --- | --- | --- |"]
+                  "| 代码 | 名称 | 策略标签 | 定档理由（摘） |",
+                  "| --- | --- | --- | --- |"]
         for row in sorted(rows, key=lambda r: r["security_code"]):
             code = row["security_code"].zfill(6)
             tag = pool.get(code, {}).get("strategy_tag") or tags.get(code, {}).get("strategy_tag_letter", "")
-            tier_now = pool.get(code, {}).get("valuation_tier", "—")
             reason = (row.get("tier_reason") or row.get("moat_summary") or "").replace("\n", " ").replace("|", "／")
             # `tier_reason` 的逐条对照可能超过表格可读宽度。
             # 截断保留，但必须**可见**——静默截断会让 MD 声称汇总了它其实没显示的依据。
             if len(reason) > 150:
                 reason = reason[:150] + "…（全文见 CSV `tier_reason`）"
-            lines.append(f"| {code} | {row.get('security_name','')} | {tag} | {tier_now} | {reason} |")
+            lines.append(f"| {code} | {row.get('security_name','')} | {tag} | {reason} |")
         lines.append("")
 
     args.out.write_text("\n".join(lines), encoding="utf-8")

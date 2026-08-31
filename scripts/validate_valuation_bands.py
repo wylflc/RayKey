@@ -9,14 +9,8 @@ band which cannot be recomputed does not confer buy eligibility（旧 v1.28 §6.
 The check that matters is the direction of causation (§6.6 分工恒等式)::
 
     带 = 模型(锚定量, 倍数)     ← only §7 review changes it
-    档 = 位置(现价, 带)         ← daily, §6.2
-    任何时候不得由档反推带。
-
-A band back-solved from an already-judged tier makes the daily auto-tiering
-circular (``档 = 位置(现价, 反推(档))``) and silently turns the retired trim ladder
-into a cost anchor. Legacy rows of exactly that shape are detected here by
-recomputing them against the undocumented ladder they used, so the migration
-list is produced from evidence rather than from trust.
+    `P/V` = 现价 ÷ 带中值        ← daily
+    任何时候不得由 `P/V` 反推带。
 
 Six checks（旧 v1.28 §6.7 要求 10）:
 
@@ -156,18 +150,6 @@ CARD_SLOTS = [
     "band_sensitivity",
 ]
 
-# 存量档位反推带使用的未成文系数阶梯（v1.28 前）。只用于**识别**历史反推行，
-# 不是任何标准；识别到即判 fallback（§6.7 要求 11）。
-LEGACY_TIER_LADDER = {
-    "低估": (1.30, 1.70),
-    "较低估": (1.12, 1.40),
-    "中性": (0.88, 1.12),
-    "较高估": (0.78, 0.95),
-    "高估": (0.50, 0.78),
-}
-LEGACY_BASIS_RE = re.compile(r"按(低估|较低估|中性|较高估|高估)档标准带")
-
-
 def to_float(value: object) -> float | None:
     try:
         text = str(value).strip()
@@ -194,24 +176,6 @@ def parse_rate_range(text: str) -> tuple[float, float] | None:
 def tag_letter(strategy_tag: str) -> str:
     text = str(strategy_tag).strip()
     return text[0].upper() if text else ""
-
-
-def detect_legacy_fallback(row: dict) -> str | None:
-    """Return the ladder tier if the band is a fixed multiple of 估值当日现价."""
-    basis = str(row.get("fair_price_basis", "") or "")
-    match = LEGACY_BASIS_RE.search(basis)
-    if not match:
-        return None
-    low, high = to_float(row.get("fair_price_low")), to_float(row.get("fair_price_high"))
-    price = to_float(row.get("current_price")) or to_float(row.get("valuation_price"))
-    if None in (low, high, price) or not price:
-        return match.group(1)
-    coef_low, coef_high = LEGACY_TIER_LADDER[match.group(1)]
-    reproduced = (
-        abs(low / price / coef_low - 1) <= BAND_TOLERANCE
-        and abs(high / price / coef_high - 1) <= BAND_TOLERANCE
-    )
-    return f"{match.group(1)}（精确复算为 {coef_low}-{coef_high}×估值当日现价）" if reproduced else match.group(1)
 
 
 def recompute_band(row: dict, shape: int) -> tuple[float, float] | None:
@@ -265,7 +229,7 @@ def check_row(row: dict) -> tuple[list[str], str]:
     # v4.22（OI-068 统一口径）：「无法估值」是模型的诚实失败态——带已清空、无 P/V、
     # 不进 §9.3 判定，**没有带可校验**。拿建带卡的锚白名单去量一条不存在的带，
     # 只会制造恒亮的 blocking 告警（§13 第 3 条反形态）。
-    if str(row.get("valuation_tier", "")).strip() == "无法估值" and not str(row.get("fair_price_low", "")).strip():
+    if not str(row.get("fair_price_low", "")).strip():
         return [], "ok"
 
     # §6.5.2（v1.47）：逐票档案的带**不受通用类型表约束**——它存在的理由正是通用口径
@@ -295,12 +259,11 @@ def check_row(row: dict) -> tuple[list[str], str]:
 
     # 检查 6：band_derivation
     derivation = str(row.get("band_derivation", "") or "").strip()
-    legacy = detect_legacy_fallback(row)
-    if derivation == "fallback" or (not derivation and legacy):
-        problems.append(f"检查6 band_derivation=fallback（档位反推带{'，' + legacy if legacy else ''}）")
+    if derivation == "fallback":
+        problems.append("检查6 band_derivation=fallback（带非模型带）")
     elif derivation and derivation not in ("model", "dossier"):
         # `dossier`（§6.5.2 v1.47）是合法口径：带由逐票档案给出、脱离通用模型。
-        # 它不是「档位反推带」——推导写在档案的 band_derivation 列里，可复算可审计。
+        # 推导写在档案的 band_derivation 列里，可复算可审计。
         problems.append(f"检查6 band_derivation 非法值 '{derivation}'（只允许 model/dossier/fallback）")
 
     anchor_metric = str(row.get("anchor_metric", "") or "").strip()
@@ -370,9 +333,9 @@ def check_row(row: dict) -> tuple[list[str], str]:
     if not problems:
         return problems, "ok"
 
-    # 只缺建带卡字段、且带本身不是档位反推的 → 登记欠账，不阻断买入。
+    # 只缺建带卡字段 → 登记欠账，不阻断买入。
     only_missing_card = all(p.startswith("检查1") for p in problems)
-    severity = "backfill" if (problems and only_missing_card and not legacy) else "blocking"
+    severity = "backfill" if only_missing_card else "blocking"
     # 阻断原因排在前面：缺卡（检查1）几乎所有存量行都有，排在首位会掩盖真正的阻断项。
     problems.sort(key=lambda p: p.startswith("检查1"))
     return problems, severity
@@ -407,14 +370,6 @@ def main() -> int:
         with args.tiers.open(encoding="utf-8-sig") as handle:
             tiers = {r["security_code"]: r.get("quality_tier", "") for r in csv.DictReader(handle)}
 
-    buyable = {"L1": {"低估", "较低估", "中性"}, "L2": {"低估", "较低估"}, "L3": {"低估"}}
-
-    effective = {}
-    snapshot = ROOT / "data/interim/pool_effective_tiers.csv"
-    if snapshot.exists():
-        with snapshot.open(encoding="utf-8-sig") as handle:
-            effective = {r["security_code"]: r.get("effective_tier", "") for r in csv.DictReader(handle)}
-
     failures = []
     for row in rows:
         problems, severity = check_row(row)
@@ -422,13 +377,7 @@ def main() -> int:
             continue
         code = str(row.get("security_code", "")).strip()
         quality = tiers.get(code, row.get("quality_tier", ""))
-        tier_now = effective.get(code) or row.get("valuation_tier", "")
-        if code in held:
-            priority, reason = 1, "持仓"
-        elif tier_now in buyable.get(quality, set()):
-            priority, reason = 2, "当前可买"
-        else:
-            priority, reason = 3, "其余"
+        priority, reason = (1, "持仓") if code in held else (2, "其余")
         failures.append(
             {
                 "priority": priority,
@@ -438,10 +387,9 @@ def main() -> int:
                 "security_name": row.get("security_name", ""),
                 "quality_tier": quality,
                 "strategy_tag": row.get("strategy_tag", ""),
-                "valuation_tier": row.get("valuation_tier", ""),
                 "fair_price_low": row.get("fair_price_low", ""),
                 "fair_price_high": row.get("fair_price_high", ""),
-                "band_derivation": row.get("band_derivation", "") or ("fallback" if detect_legacy_fallback(row) else ""),
+                "band_derivation": row.get("band_derivation", ""),
                 "violations": " | ".join(problems),
                 "fair_price_basis": row.get("fair_price_basis", ""),
                 "queued_at": args.as_of,
@@ -453,7 +401,7 @@ def main() -> int:
     with args.queue_out.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(failures[0].keys()) if failures else
                                 ["priority", "priority_reason", "severity", "security_code", "security_name",
-                                 "quality_tier", "strategy_tag", "valuation_tier", "fair_price_low",
+                                 "quality_tier", "strategy_tag", "fair_price_low",
                                  "fair_price_high", "band_derivation", "violations",
                                  "fair_price_basis", "queued_at"])
         writer.writeheader()
@@ -464,7 +412,7 @@ def main() -> int:
     backfill = [f for f in failures if f["severity"] == "backfill"]
 
     def by_prio(items):
-        counts = {1: 0, 2: 0, 3: 0}
+        counts = {1: 0, 2: 0}
         for item in items:
             counts[item["priority"]] += 1
         return counts
@@ -472,9 +420,9 @@ def main() -> int:
     bcount, fcount = by_prio(blocking), by_prio(backfill)
     print(f"建带校验 {args.as_of}：共 {len(rows)} 行，通过 {passed} 行，未过 {len(failures)} 行")
     print(f"  blocking（带非模型带，降为可持有）{len(blocking)} 行"
-          f" —— 持仓 {bcount[1]} / 当前可买 {bcount[2]} / 其余 {bcount[3]}")
+          f" —— 持仓 {bcount[1]} / 其余 {bcount[2]}")
     print(f"  backfill（模型带待回填建带卡，限期义务、不阻断买入）{len(backfill)} 行"
-          f" —— 持仓 {fcount[1]} / 当前可买 {fcount[2]} / 其余 {fcount[3]}")
+          f" —— 持仓 {fcount[1]} / 其余 {fcount[2]}")
     print(f"  重建队列：{args.queue_out}")
     if blocking:
         print("\n  blocking 样例（前 8 行）：")
@@ -496,9 +444,9 @@ def main() -> int:
                     "decision_result": "pass" if not failures else "violations_found",
                     "summary_reason": (
                         f"建带校验：{len(rows)} 行中 {passed} 行通过；"
-                        f"blocking {len(blocking)} 行（持仓 {bcount[1]}/可买 {bcount[2]}/其余 {bcount[3]}）"
+                        f"blocking {len(blocking)} 行（持仓 {bcount[1]}/其余 {bcount[2]}）"
                         f"按 §6.7 要求 11 降为可持有；"
-                        f"backfill {len(backfill)} 行（持仓 {fcount[1]}/可买 {fcount[2]}/其余 {fcount[3]}）"
+                        f"backfill {len(backfill)} 行（持仓 {fcount[1]}/其余 {fcount[2]}）"
                         f"为建带卡限期回填义务、不阻断买入"
                     ),
                     "input_files": str(args.valuation),

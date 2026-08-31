@@ -4,7 +4,7 @@
 取代 `scan_holdings_sell_signals.py`。该脚本自 v2.56 起只做三件事：
 
 1. 读五列持仓清单（代码/名称/股数/成本价/**建仓日止损锚**）；
-2. 取当日现价，对照核心估值合格池刷新现档（§6.2）与空间；
+2. 取当日现价，对照核心估值合格池刷新空间；
 3. 算出 `P/V`（现价 ÷ 生产带 V，`pv_ratio.trading_pv`；带缺失退回带中值），供 §9.3 的机械买卖判定消费；
 4. 比对收盘价与**生效止损线 = min(锚, 当日MA60)**（§9.3.1 v4.25），命中即出
    §9.3.5 的整仓清空提示。
@@ -47,7 +47,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from a_share_quotes import fetch_spot_quotes
 from a_share_signal_dates import evidence_iso_for_signal
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
-from build_a_share_core_valuation_pool import DEEP_UNDERVALUED_UPSIDE, OVERVALUED_BAND_MULT
 from screen_daily_volume_price_signals import (DEFAULT_HOLD_BANDS, DEFAULT_MODEL_BANDS, SEC93_GAIN_SELL,
                                                fetch_daily_rows, holding_trim_signal)
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
@@ -91,7 +90,6 @@ FIELDNAMES = [
     # 参考分（工作流 §5.7）：只透传分层表经池 CSV 带过来的 quality_score，供报告显示同档内排序；
     # 不参与任何判定，也不在此重算。
     "quality_score",
-    "effective_valuation_tier",
     "fair_price_low",
     "fair_price_high",
     "upside",
@@ -119,24 +117,17 @@ def load_pool(path: Path) -> dict[str, dict[str, str]]:
         return {row["security_code"]: row for row in csv.DictReader(handle)}
 
 
-def effective_tier(close: float, low: float | None, high: float | None) -> tuple[str, str]:
-    """§6.2 价格自动定档 + 空间（区间中值/现价 − 1）。带缺失时返回空档与空空间。
+def band_upside(close: float, low: float | None, high: float | None) -> str:
+    """空间（区间中值/现价 − 1）。带缺失时返回空串。
 
     v2.11（用户指令）：第五列由「带位」改为「空间」。带位（带内X%／低于带底-X%／越带顶+X%）
     与空间是同一件事的两种写法，而空间与池阅读版同口径且可直接比较——池 MD 早在
     v1.10 就以同样理由删掉了带位列，持仓表此前一直没跟上。
     """
     if low is None or high is None or high <= 0 or close <= 0:
-        return "", ""
+        return ""
     pct = round(((low + high) / 2 / close - 1) * 100)
-    upside = "0%" if pct == 0 else f"{pct:+d}%"
-    if close > OVERVALUED_BAND_MULT * high:
-        return "高估", upside
-    if close > high:
-        return "较高估", upside
-    if close >= low:
-        return "中性", upside
-    return ("低估" if (low + high) / 2 / close - 1 >= DEEP_UNDERVALUED_UPSIDE else "较低估"), upside
+    return "0%" if pct == 0 else f"{pct:+d}%"
 
 
 def beijing_now() -> datetime:
@@ -254,9 +245,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         low = to_float(pool_row.get("fair_price_low")) if pool_row else None
         high = to_float(pool_row.get("fair_price_high")) if pool_row else None
 
-        tier, upside = ("", "")
-        if close is not None:
-            tier, upside = effective_tier(close, low, high)
+        upside = band_upside(close, low, high) if close is not None else ""
 
         # §9.3 唯一判据（v2.56）：V 取带中值；带缺失则 pv 留空，该票当日不进任何机械判定。
         # v4.62（OI-091）：有生产带行时按 `pv_ratio.trading_pv`（ROIC 路径为 (现价+净负债)÷EV），否则退回 现价÷中值。
@@ -353,7 +342,6 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
                 "ma60": "" if ma60 is None else f"{ma60:.4f}",
                 "quality_tier": (pool_row or {}).get("quality_tier", ""),
                 "quality_score": (pool_row or {}).get("quality_score", ""),
-                "effective_valuation_tier": tier,
                 "fair_price_low": "" if low is None else f"{low:g}",
                 "fair_price_high": "" if high is None else f"{high:g}",
                 "upside": upside,
@@ -386,7 +374,7 @@ def log_decisions(
             "decision_type": "daily_holdings_tracking",
             "decision_result": row["action"],
             "summary_reason": (
-                f"现价 {row['close'] or 'NA'}｜{row['quality_tier'] or 'NA'}×{row['effective_valuation_tier'] or 'NA'}"
+                f"现价 {row['close'] or 'NA'}｜{row['quality_tier'] or 'NA'}"
                 f"｜带 {row['fair_price_low'] or 'NA'}-{row['fair_price_high'] or 'NA'}｜空间 {row['upside'] or 'NA'}"
                 f"｜P/V {row['pv'] or 'NA'}"
                 + (f"｜{row['note']}" if row["note"] else "")

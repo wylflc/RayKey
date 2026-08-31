@@ -34,7 +34,6 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import roic_inputs  # noqa: E402
 from intrinsic_value import (ValuationError, cost_of_equity, intrinsic_value,  # noqa: E402
                              terminal_growth_ceiling, DEFAULT_G_TERMINAL)
-from build_a_share_core_valuation_pool import effective_valuation_tier  # noqa: E402
 
 WATCHLIST = ROOT / "data/processed/overseas_watchlist_valuation.csv"
 YEARS_CSV = ROOT / "data/interim/overseas_roic_years.csv"
@@ -296,7 +295,6 @@ def main() -> int:
             if status == "rejected":
                 text += f"；旧档案带 {old_band} 仅供参考，不再作为合理估值。"
         pv = (price / v_trade) if (price and v_trade) else None
-        tier_new = "无法估值" if v_trade is None else (effective_valuation_tier(price, lo, hi) or row.get("valuation_tier", ""))
         print(f"{code:<8}{name:<14}{tier:<4}{status:<12}{(f'{r['value']:.2f}' if status in ('ok',) else '—'):>12}{(f'{v_trade:,.2f}' if v_trade else '—'):>12}{(f'{price:,.2f}' if price else '—'):>10}{(f'{pv:.3f}' if pv else '—'):>7}  {method}{'' if status=='ok' else '：' + text[:90]}")
         if args.check:
             continue
@@ -308,13 +306,12 @@ def main() -> int:
         row["band_derivation"] = "roic" if status == "ok" else ("dossier" if status == "keep" else "unvaluable")
         row["band_derivation_text"] = text
         row["fair_price_basis"] = text
-        row["valuation_tier"] = tier_new
         if price:
             row["valuation_price"] = f"{price:.2f}" if cfg["ccy"] != "KRW" else f"{price:.0f}"
             row["valuation_price_as_of"] = price_as_of or args.as_of
         row["valuation_reason"] = (str(row.get("valuation_reason", "")).split("｜**本次定档")[0]
                                    + f"｜**本次定档（{evidence_date or '证据日缺失'}，{evidence_event or '定期报告'}，ROIC 口径）**：{method}；带 "
-                                   + ("—" if lo is None else f"{lo:,.2f}~{hi:,.2f}") + f"；复核时点价 {row.get('valuation_price') or 'NA'}（{row.get('valuation_price_as_of') or 'NA'}）→ **{tier_new}**。")
+                                   + ("—" if lo is None else f"{lo:,.2f}~{hi:,.2f}") + f"；复核时点价 {row.get('valuation_price') or 'NA'}（{row.get('valuation_price_as_of') or 'NA'}）。")
         before_evidence = (row.get("valuation_reviewed_at", ""), row.get("valuation_evidence_event", ""),
                            row.get("evidence_available_at", ""), row.get("last_report_date", ""))
         if evidence_date:
@@ -355,7 +352,7 @@ def main() -> int:
         body = readme.read_text(encoding="utf-8") if readme.exists() else f"# {row['security_name']}\n"
         marker = "## ROIC 口径估值（§6.5.2.3 同口径）"
         section = (f"{marker}\n\n证据 {row.get('valuation_reviewed_at') or '—'}（{row.get('valuation_evidence_event') or '—'}）。方法：{row['band_method']}；"
-                   f"带 {row.get('fair_price_low') or '—'}~{row.get('fair_price_high') or '—'} {row.get('currency','')}；审定档 {row['valuation_tier']}。\n\n{row['band_derivation_text']}\n")
+                   f"带 {row.get('fair_price_low') or '—'}~{row.get('fair_price_high') or '—'} {row.get('currency','')}。\n\n{row['band_derivation_text']}\n")
         if marker in body:
             head = body.split(marker)[0]
             body = head + section

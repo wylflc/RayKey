@@ -6,7 +6,7 @@ CSV 是机器可读的唯一真值来源；README 是人读正文，章节顺序
 
 第八节「现价隐含了什么」（v4.30，OI-078）
 --------------------------------------
-首段由本脚本按**生产带与池内现价**机械生成：`现价 ÷ 生产带中值 = P/V`、带与档位、带所走的
+首段由本脚本按**生产带与池内现价**机械生成：`现价 ÷ 生产带中值 = P/V`、带、带所走的
 §6.5.1 路径及其增长/折现假设、V 与现价各自对应的归一化盈利倍数。数据与带同源（档案带列 +
 `a_share_pool_model_bands_adopted.csv` + 核心池现价），随 §6.7 第 4 步每次重渲染自动更新。
 `implied_growth_years` 列只承载**手写的可证伪命题与方法分歧**，不得再写带中枢、隐含年数反解
@@ -188,10 +188,10 @@ def implied_lead(row: dict, meta: dict, band: dict | None) -> tuple[str, bool]:
             nd = _num(band.get("net_debt_ps")) or 0.0
             ev = _num(band.get("ev_ps")) or (mid + nd)
             text = (f"现价 {price:g}（{as_of}）对 {band_name}中值 V {mid:.2f}：`P/V` = (现价 + 每股净负债 {nd:.2f}) ÷ 每股企业价值 {ev:.2f} = **{pv:.3f}**"
-                    f"（现价÷V = {price / mid:.3f}；带 {low:.2f}~{high:.2f}，档位{meta.get('valuation_tier') or '—'}）。")
+                    f"（现价÷V = {price / mid:.3f}；带 {low:.2f}~{high:.2f}）。")
         else:
             text = (f"现价 {price:g}（{as_of}）÷ {band_name}中值 V {mid:.2f} = **{pv:.3f}**"
-                    f"（带 {low:.2f}~{high:.2f}，档位{meta.get('valuation_tier') or '—'}）。")
+                    f"（带 {low:.2f}~{high:.2f}）。")
     else:
         pv = None
         text = (f"{band_name} {low:.2f}~{high:.2f}（中值 V {mid:.2f}）；本档当前不在核心池估值表内，"

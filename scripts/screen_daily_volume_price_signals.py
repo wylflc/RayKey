@@ -27,7 +27,6 @@ from typing import Iterable
 
 from a_share_quotes import quote_symbol
 from a_share_signal_dates import evidence_iso_for_signal
-from build_a_share_core_valuation_pool import effective_valuation_tier
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
 from pv_ratio import trading_pv  # noqa: E402  v4.62 OI-091：P/V 唯一实现
 
@@ -280,11 +279,10 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = 
     snapshot.update(pool_row)
     snapshot["security_code"] = code
 
-    # §6.2 价格自动定档 + 带内位置：档位由现价 vs 合理价区间每日自动重定；无法估值不自动定档。
+    # 带内位置：现价相对合理价区间的落点（展示列，不进任何判定）。
     close = to_float(snapshot.get("close"))
     fair_low = to_float(pool_row.get("fair_price_low"))
     fair_high = to_float(pool_row.get("fair_price_high"))
-    stored_tier = pool_row.get("valuation_tier", "")
     band_position = ""
     if close and fair_low and fair_high:
         if close > fair_high:
@@ -294,13 +292,8 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = 
         else:
             pos = (close - fair_low) / (fair_high - fair_low) * 100 if fair_high > fair_low else 0.0
             band_position = f"带内{pos:.0f}%"
-    effective_tier = stored_tier if stored_tier == "无法估值" else (
-        effective_valuation_tier(close, fair_low, fair_high) or stored_tier
-    )
     snapshot["band_position"] = band_position
-    snapshot["valuation_tier_effective"] = effective_tier
-    snapshot["valuation_tier_changed"] = effective_tier != stored_tier
-    # 空间（区间中值 ÷ 现价 − 1）：只在现价低于带底时展示（与 §6.2 判「低估」所用同一个量）。
+    # 空间（区间中值 ÷ 现价 − 1）：只在现价低于带底时展示。
     snapshot["margin_of_safety"] = (
         round((fair_low + fair_high) / 2 / close - 1, 4)
         if close and fair_low and fair_high and close < fair_low else ""
@@ -590,8 +583,8 @@ def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
     """给每行挂上 §9.3 用的 `{prefix}_intrinsic_value` / `{prefix}_pv` / `{prefix}_band_source`。
 
     `prefix="model"` 为候选侧（买入线、候选排序），`prefix="hold"` 为持仓侧（v4.92 SPA：换仓来源）。
-    **与 §8 的 `fair_price_low/high`（逐票档案带）并存、互不覆盖**：档案带继续供
-    §6.2 自动定档用，模型带只供 §9.3 用。"""
+    **与 §8 的 `fair_price_low/high`（逐票档案带）并存、互不覆盖**：档案带只作展示，
+    模型带只供 §9.3 用。"""
     for row in rows:
         code = str(row.get("security_code", "")).zfill(6)
         name = str(row.get("security_name", ""))
@@ -1219,15 +1212,12 @@ FIELDNAMES = [
     # 参考分（§5.7）：池 CSV 随行带进来，仅供报告显示同档内排序，不参与任何判定。
     "quality_score",
     "pool_layer",
-    "valuation_tier",
-    "valuation_tier_effective",
-    "valuation_tier_changed",
     "fair_price_low",
     "fair_price_high",
     "band_position",
     "margin_of_safety",
     # §9.3 用的模型带三列。**与 fair_price_low/high 并存不混用**：
-    # 前者是逐票档案带、供 §6.2 自动定档；这三列是批量模型带、供 §9.3 买入判定。
+    # 前者是逐票档案带、只作展示；这三列是批量模型带、供 §9.3 买入判定。
     "model_intrinsic_value",
     "model_band_source",
     "model_pv",

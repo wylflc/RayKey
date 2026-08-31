@@ -7,7 +7,6 @@ What this writes:
 * `strategy_tag`  ← §6.5 判定顺序重贴的十一类标签
 * 建带卡十二字段 ← `valuation_band_cards.csv`
 * `fair_price_low/high` ← 按 §6.5.1 复算的模型带
-* `valuation_tier` ← §6.2 现价对带的位置（审定档 = 建带当日按同一规则算出的档）
 
 锚定量取不到（外部取证缺失或研报覆盖 <3 家）的行按 §6.5.2.4 判**无法估值**并清空带
 ——不得用近似值凑数，更不得退回通用系数带。
@@ -31,7 +30,6 @@ import json  # noqa: E402
 
 from a_share_quotes import fetch_spot_quotes  # noqa: E402
 from a_share_signal_dates import evidence_iso_for_signal  # noqa: E402
-from build_a_share_core_valuation_pool import effective_valuation_tier  # noqa: E402
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log  # noqa: E402
 
 
@@ -202,7 +200,7 @@ MODEL_EVALUATED = _load_model_evaluated()
 def seed_new_pool_rows(rows: list[dict], tiers: dict[str, str], cards: dict[str, dict]) -> list[tuple[str, str]]:
     """给分层表里已定档、但估值表还没有行的 `worth_attention` 成员补一行占位。
 
-    只填身份与带；价格、档位、PE/PB 等由本脚本随后的主循环统一写入，与既有行同一口径。
+    只填身份与带；价格、PE/PB 等由本脚本随后的主循环统一写入，与既有行同一口径。
     """
     known = {r["security_code"].zfill(6) for r in rows}
     template = list(rows[0].keys()) if rows else []
@@ -268,7 +266,6 @@ def main() -> int:
             fieldnames.append(field)
 
     stats = {"band": 0, "unvaluable": 0, "tier_synced": 0, "tag_changed": 0}
-    tier_moves: list[str] = []
     for row in rows:
         code = row["security_code"].zfill(6)
         card, tag = cards.get(code, {}), tags.get(code, {})
@@ -324,15 +321,9 @@ def main() -> int:
             # 「（档）」标记与池的档案识别都拿不到它）；仅在卡未标注时兜底为 model。
             row["band_derivation"] = card.get("band_derivation") or "model"
             row["fair_price_basis"] = (card.get("anchor_basis") or "")[:400]
-            previous = row.get("valuation_tier", "")
-            tier = effective_valuation_tier(price, float(low), float(high)) or previous
-            row["valuation_tier"] = tier
-            if tier != previous:
-                tier_moves.append(f"{code}{row.get('security_name','')} {previous}→{tier}")
             stats["band"] += 1
         else:
             reason = card.get("needs_external") or card.get("note") or "锚定量不可得或模型判不可估"
-            row["valuation_tier"] = "无法估值"
             row["fair_price_low"] = row["fair_price_high"] = ""
             row["base_band_low"] = row["base_band_high"] = ""
             row["band_derivation"] = ""
@@ -398,8 +389,7 @@ def main() -> int:
                 "summary_reason": (
                     f"建带卡回写（{WORKFLOW_VERSION}）：{len(rows)} 家中 {stats['band']} 家算出模型带、"
                     f"{stats['unvaluable']} 家判无法估值（锚定量不可得）；"
-                    f"标签重贴 {stats['tag_changed']} 家、分层同步 {stats['tier_synced']} 家；"
-                    f"审定档变化 {len(tier_moves)} 家"
+                    f"标签重贴 {stats['tag_changed']} 家、分层同步 {stats['tier_synced']} 家"
                 ),
                 "input_files": f"{CARDS};{TAGS};{TIERS}",
                 "output_file": str(VALUATION),
@@ -413,7 +403,6 @@ def main() -> int:
     print(f"  判无法估值   {stats['unvaluable']}")
     print(f"  标签重贴     {stats['tag_changed']}")
     print(f"  分层同步     {stats['tier_synced']}（修 OI-003 数据半边）")
-    print(f"  审定档变化   {len(tier_moves)}")
     return 0
 
 

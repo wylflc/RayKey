@@ -104,7 +104,7 @@ class CalendarEvidenceTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             log = Path(tmp) / "log.csv"
             row = {"market_type": "US", "security_code": "PDD", "security_name": "拼多多",
-                   "quality_tier": "L2", "valuation_tier": "低估", "strategy_tag": "C-GARP成长型",
+                   "quality_tier": "L2", "strategy_tag": "C-GARP成长型",
                    "valuation_reason": "Q1 evidence", "evidence_sources": "issuer_ir",
                    "valuation_batch_id": "overseas_review_20260825"}
             args = (log, [row], "2026-08-25", Path("watch.csv"), Path("pool.md"))
