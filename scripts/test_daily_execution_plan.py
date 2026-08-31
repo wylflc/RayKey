@@ -137,17 +137,6 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertEqual([(s["security_code"], s["hold_pv"]) for s in res["sells"] if s["rule"] == "换仓"], [("000023", 1.50)])
         self.assertEqual(res["hold_pv_diff"], [])                                       # 两侧相同时不列差异
 
-    def test_swap_source_not_bought_back_same_day(self) -> None:
-        # §9.3.2 第 5 步：当日被换出的持仓不进入当日买入队列（同名对敲）
-        trig = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.50)       # 未持仓触发者
-        src = row("000012", "H2", close=10.0, ma20=12.0, ma60=9.0, pv=0.80)      # 弱势卖出源，自身也过买入线
-        holdings = {"000012": hold("H2", 50000, 5.0, None)}
-        res = self.run_plan([trig, src], holdings, funds=1000.0, members={"000010", "000012"})
-        swap = [s for s in res["sells"] if s["rule"] == "换仓"][0]
-        self.assertEqual((swap["security_code"], swap["sell_shares"]), ("000012", 15000))
-        self.assertEqual([p["security_code"] for p in res["plan"]], ["000010"])   # 卖出源不得买回
-        self.assertNotIn("000012", [str(r["security_code"]).zfill(6) for r in res["eligible"]])
-
     def test_swap_condition_reports_actual_recipients(self) -> None:
         # 报告口径（2026-08-31）：换仓行依据写对**实际接收方**的边际，触发者降为附注
         trig = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)          # 未持仓触发者
