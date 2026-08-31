@@ -76,8 +76,8 @@ data/interim/exp_b_market_cache.npz
 data/processed/experiments/universes/cap_all.csv
 # 信号层三表（§12.1 第 9 款）的大件输入：候选排序日志、成交流水与逐条产物，
 # 由回测一条带 --candidate-log/--trade-log 的命令重建；只有小报告入库。
-data/processed/experiments/exp_selection_edge/candidates.csv
-data/processed/experiments/exp_selection_edge/trades_ledger.csv
+data/processed/experiments/*/candidates*.csv
+data/processed/experiments/*/trades_ledger*.csv
 data/processed/experiments/*/*_trades.csv
 data/processed/experiments/*/*_equity.csv
 data/processed/experiments/*/*_periods.csv
