@@ -476,7 +476,7 @@ SEC93_TACTICAL_NONE = re.compile(r"^\W*(无|暂无|不可买)")   # 判「无战
 SEC93_GAIN_SELL = 1.25         # §9.3.1「涨幅减持」（v4.44 用户采纳，回测日志 §12.110/§12.113）：收盘较持仓均价涨幅 ≥ 125%（收盘 ≥ 均价×2.25）
                                # 且收盘 < MA20 → 减一档；资金不足时该类持仓优先作换仓卖出源（涨幅最大者先）。持仓均价 = 买入按股数加权、
                                # 减持不变、除权按 §11.4 折算（持仓表 cost_basis）。回测落点 `--gain-sell 1.25`（gated）。
-SEC93_SWAP_MARGIN = 0.1437     # §9.3.1「换仓」：候选 P/V 须比被换出持仓低至少此差值（与回测 `--swap-margin` 同值）
+SEC93_SWAP_MARGIN = 0.20       # §9.3.1「换仓」：候选 P/V 须比被换出持仓低至少此差值（与回测 `--swap-margin` 同值）
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
@@ -919,11 +919,11 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 worst_pv, worst = max(weak_src)
                 if worst_pv - cand["model_pv"] < SEC93_SWAP_MARGIN:
                     swap_stop_reason = (f"最贵弱势持仓 持仓侧 P/V {worst_pv:.4f} 与候选 {cand.get('security_name', ccode)} "
-                                        f"P/V {cand['model_pv']:.4f} 差 {worst_pv - cand['model_pv']:.4f} < {SEC93_SWAP_MARGIN}")
+                                        f"P/V {cand['model_pv']:.4f} 差 {worst_pv - cand['model_pv']:.4f} < {SEC93_SWAP_MARGIN:.4f}")
                     break
                 src_pv = worst_pv
                 cond = (f"持仓侧 P/V {worst_pv:.4f} − 候选 {cand.get('security_name', ccode)} {cand['model_pv']:.4f} "
-                        f"≥ {SEC93_SWAP_MARGIN} 且弱势")
+                        f"≥ {SEC93_SWAP_MARGIN:.4f} 且弱势")
             hr = by_code[worst]
             hp = to_float(hr.get("close")) or 0.0
             sold = reduce_one(worst, hr, "换仓", cond, hp, swap_for=ccode)
@@ -1033,7 +1033,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         if isinstance(tpv, float):
             gate += f" {tpv:.4f}"
             if src_pv is not None:
-                gate += f"（差 {src_pv - tpv:.4f} ≥ {SEC93_SWAP_MARGIN}）"
+                gate += f"（差 {src_pv - tpv:.4f} ≥ {SEC93_SWAP_MARGIN:.4f}）"
         head = (f"持仓侧 P/V {src_pv:.4f} 且弱势" if src_pv is not None
                 else str(s["condition"]).split("，让位给")[0])
         s["condition"] = f"{head}｜卖出款去向：{dest_txt}{gate}"

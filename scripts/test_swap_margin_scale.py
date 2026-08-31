@@ -9,7 +9,7 @@ import backtest_valuation_strategy as bt
 import sweep_backtest_configs as sweep
 
 
-M = 0.1437                     # 现行换仓边际
+M = 0.20                       # 现行换仓边际（v4.112）
 
 
 class SwapMarginScaleTest(unittest.TestCase):
@@ -21,7 +21,7 @@ class SwapMarginScaleTest(unittest.TestCase):
 
     def test_ratio_is_scale_invariant_and_abs_is_not(self) -> None:
         """OI-114 的动机：两侧 `P/V` 同倍缩放时，相对判据不变、绝对判据会翻转。"""
-        ref, cand = 1.0, 0.80
+        ref, cand = 1.0, 0.75      # 非边界：gap 0.25 > M，缩放后判据才可比
         for k in (0.5, 2.0, 5.0):
             self.assertEqual(bt.swap_margin_gap_ok(ref * k, cand * k, M, "ratio"),
                              bt.swap_margin_gap_ok(ref, cand, M, "ratio"), f"k={k}")
@@ -48,7 +48,7 @@ class SwapMarginScaleTest(unittest.TestCase):
     def test_base_stays_on_the_absolute_scale(self) -> None:
         """`BASE` 不得携带 `--swap-margin-mode`：缺省 abs 即现行生产口径。"""
         self.assertNotIn("--swap-margin-mode", sweep.BASE)
-        self.assertIn("--swap-margin 0.1437", sweep.BASE)
+        self.assertIn("--swap-margin 0.20", sweep.BASE)
 
 
 if __name__ == "__main__":

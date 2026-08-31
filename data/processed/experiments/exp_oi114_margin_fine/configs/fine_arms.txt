@@ -1,0 +1,11 @@
+BASE|
+M15|--swap-margin 0.15
+M16|--swap-margin 0.16
+M17|--swap-margin 0.17
+M18|--swap-margin 0.18
+M19|--swap-margin 0.19
+M20|--swap-margin 0.20
+M21|--swap-margin 0.21
+M22|--swap-margin 0.22
+M23|--swap-margin 0.23
+M24|--swap-margin 0.24
