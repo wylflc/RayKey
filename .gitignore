@@ -9,6 +9,8 @@ __pycache__/
 .venv/
 notebooks/_figs/
 notebooks/.ipynb_checkpoints/
+# SLURM 作业日志（sbatch -o/-e 的落点，见 CLAUDE.md「耗时任务一律提交 sbatch」）
+logs/
 
 # ---------------------------------------------------------------- 原始数据
 # 三者都是**按接口完全可重建**的抓取产物，体量大、每日/每季增长，故不入库。
