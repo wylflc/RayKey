@@ -9,7 +9,7 @@ import backtest_valuation_strategy as bt
 import sweep_backtest_configs as sweep
 
 
-M = 0.20                       # 现行换仓边际（v4.112）
+M = 0.19                       # 现行换仓边际（v4.113）
 
 
 class SwapMarginScaleTest(unittest.TestCase):
@@ -48,7 +48,7 @@ class SwapMarginScaleTest(unittest.TestCase):
     def test_base_stays_on_the_absolute_scale(self) -> None:
         """`BASE` 不得携带 `--swap-margin-mode`：缺省 abs 即现行生产口径。"""
         self.assertNotIn("--swap-margin-mode", sweep.BASE)
-        self.assertIn("--swap-margin 0.20", sweep.BASE)
+        self.assertIn("--swap-margin 0.19", sweep.BASE)
 
 
 if __name__ == "__main__":

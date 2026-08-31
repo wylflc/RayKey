@@ -97,7 +97,7 @@ class ExecutionPlanTest(unittest.TestCase):
         res = self.run_plan([cand, h1, h2], holdings, funds=1000.0, members={"000010", "000011", "000012"})
         swaps = [s for s in res["sells"] if s["rule"] == "换仓"]
         self.assertEqual(swaps[0]["security_code"], "000012")
-        cand_close = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.90)   # 与 H2 P/V 1.00 差 0.10 < 0.20
+        cand_close = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.90)   # 与 H2 P/V 1.00 差 0.10 < 0.19
         h2_close = row("000012", "H2", close=100.0, ma20=110.0, ma60=90.0, pv=1.00)
         holdings = {"000012": hold("H2", 5000, 90.0, None)}
         res = self.run_plan([cand_close, h2_close], holdings, funds=1000.0, members={"000010", "000012"})
@@ -116,7 +116,7 @@ class ExecutionPlanTest(unittest.TestCase):
 
     def test_holding_side_pv_governs_swap_source(self) -> None:
         # v4.92 SPA：换仓来源按持仓侧 `hold_pv` 判；候选侧 `model_pv` 只管买入线与候选排序
-        # 候选 0.60 对持仓侧 0.70 差 0.10 < 0.20 不换（按候选侧 1.50 会误换）
+        # 候选 0.60 对持仓侧 0.70 差 0.10 < 0.19 不换（按候选侧 1.50 会误换）
         cand = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)
         weak = row("000023", "W", close=100.0, ma20=110.0, ma60=90.0, pv=1.50)
         weak["hold_pv"] = 0.70
@@ -161,8 +161,8 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertIn("持仓侧 P/V 1.5000 且弱势", swap["condition"])
         self.assertIn("卖出款去向：", swap["condition"])
         self.assertIn("A 0.3000（边际 +1.2000）", swap["condition"])                  # 对实际接收方的边际
-        self.assertIn("触发闸门：X 0.6000（差 0.9000 ≥ 0.2000）", swap["condition"])
-        # 接收方边际不足时打标：源持仓侧 0.70，接收方 0.60 → 差 0.10 < 0.20（触发者 0.40 差 0.30 过线）
+        self.assertIn("触发闸门：X 0.6000（差 0.9000 ≥ 0.1900）", swap["condition"])
+        # 接收方边际不足时打标：源持仓侧 0.70，接收方 0.60 → 差 0.10 < 0.19（触发者 0.40 差 0.30 过线）
         trig2 = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.40)
         src2 = row("000012", "H2", close=100.0, ma20=110.0, ma60=90.0, pv=1.50)
         src2["hold_pv"] = 0.70

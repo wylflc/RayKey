@@ -23,9 +23,9 @@ class StrategyParameterSyncTest(unittest.TestCase):
     def test_adopted_production_values(self) -> None:
         self.assertEqual(daily_scan.SEC93_MAX_CORR, 0.70)
         self.assertEqual(daily_scan.SEC93_TRANCHE_PCT, 0.05)
-        # v4.92 SPA 候选侧买入线 0.9343；v4.112 换仓边际 0.20（剂量扫描定点，不随买入线缩放）
+        # v4.92 SPA 候选侧买入线 0.9343；v4.113 换仓边际 0.19（剂量扫描定点，不随买入线缩放）
         self.assertEqual(daily_scan.SEC93_BUY_LINE, 0.9343)
-        self.assertEqual(daily_scan.SEC93_SWAP_MARGIN, 0.20)
+        self.assertEqual(daily_scan.SEC93_SWAP_MARGIN, 0.19)
         # v4.109（OI-110）：估值减持线已删除，生产侧不得再有该常量
         self.assertFalse(hasattr(daily_scan, "SEC93_SELL_LINE"))
         self.assertEqual(daily_scan.DEFAULT_HOLD_BANDS, ROOT / "data/processed/a_share_pool_model_bands_hold.csv")
