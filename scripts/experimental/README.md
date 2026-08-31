@@ -18,6 +18,7 @@
 | --- | --- | --- |
 | `selection_edge_audit.py` | 三表：①**边际选择检验**——同日合格集里买到的对没买到的前向总回报（排序＋相关性过滤＋资金分配合起来的边际信息量）；②**排序信息量**——合格集名次对前向回报的单调性；③**换仓方向性**——同日换入目标对换出源的前向回报配对 | 第 9 款 |
 | `delta_attribution.py` | 按代码拆开 A/B 的配对差，报前 1/3/5 只的**净额占比**与**总动量占比**；净额占比 >100% 表示扣掉后 Δ 反号 | 第 10 款 |
+| `swap_regime_control.py` | `selection_edge_audit.py` 表 3 的对照组，四表：A**面板层 `P/V` 信息量**（逐年 Spearman 与三分位价差）、B**合成换仓**（只用面板 `P/V` 档构造的换仓价差，不引用任何持仓）、C**`P/V` 匹配对照**（逐笔换仓与同日同 `P/V` 的在册面板名字比，拆买腿／卖腿超额）、D**样本独立性**（不同 `(源, 标的)` 配对数）| 表 3 的对照 |
 
 ```bash
 # 先跑一次带两份日志的回测（BASE 全参数见 sweep_backtest_configs.py 的 BASE）
@@ -27,10 +28,19 @@ python3 scripts/experimental/selection_edge_audit.py \
     --candidate-log /path/cand.csv --trade-log /path/trades.csv --horizon 250
 python3 scripts/experimental/delta_attribution.py \
     --base /path/bt_base/BASE_trades.csv --arm /path/bt_arm/ARM_trades.csv
+# 表 3 的对照组（两份逐日状态各扫一遍，本机约 1~2 分钟）
+python3 scripts/experimental/swap_regime_control.py \
+    --candidate-log /path/cand.csv --trade-log /path/trades.csv \
+    --states data/processed/a_share_daily_states_adopted.csv \
+    --hold-states data/processed/a_share_daily_states_hold.csv \
+    --panel data/processed/pit_attention/panel_moat_bank_v6b.csv --split 2017
 ```
 
 统计口径：同日多个候选强相关，故**先在日内取中位、再跨日汇总**，报逐日配对差中位与为正日数；
 跨日前向窗口仍重叠，故结论以**逐年同号年数**为准，单一年份撑起来的差值不作证据。
+表 3 还要额外扣一层：换仓的动作就是沿 `P/V` 向下移仓，其符号同时受面板层信号纪元支配，
+故报表 3 时同报 `swap_regime_control.py` 的对照读数；`换仓·减一档` 每天只卖一档，
+同一 `(源, 标的)` 会连周重复，配对数才是「日数」的有效上界（依据见回测日志 §12.144）。
 
 ## 估值神经网络（结论：全部不采纳，见回测日志 §12.28.4 与 §12.29.3/§12.29.4）
 

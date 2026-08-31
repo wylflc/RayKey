@@ -140,6 +140,7 @@ def main() -> int:
     bought: set[tuple[str, str]] = set()
     swap_sell: dict[str, list[str]] = defaultdict(list)
     swap_buy: dict[str, list[str]] = defaultdict(list)
+    swap_pairs: set[tuple[str, str]] = set()
     with args.trade_log.open(newline="", encoding="utf-8") as fh:
         for r in csv.DictReader(fh):
             day, code, action = r["date"], r["security_code"], r["action"]
@@ -153,6 +154,7 @@ def main() -> int:
                     target = "".join(ch for ch in target if ch.isdigit())[:6]
                     if len(target) == 6:
                         swap_buy[day].append(target)
+                        swap_pairs.add((code, target))
 
     codes = {c for _, c in cand} | {c for v in swap_sell.values() for c in v} \
         | {c for v in swap_buy.values() for c in v}
@@ -202,8 +204,14 @@ def main() -> int:
             if code in rets and (fr := forward_return(*rets[code], day, args.horizon)) is not None:
                 g_swap[day][1].append(fr)
     res3 = daily_paired(g_swap)
+    # `换仓·减一档` 每天只卖一档，同一 (源, 标的) 会连着好几周重复出现：不同配对数才是
+    # 表 3「日数」的有效上界。对照组见 `swap_regime_control.py`。
     print_block(f"表 3　换仓方向性（同日：换入目标 − 换出源，前向 {args.horizon} 日总回报）",
-                res3, "换仓的全部理由是把钱押回更便宜的档；为正说明该动作事后成立。")
+                res3, f"换仓的全部理由是把钱押回更便宜的档；为正说明该动作事后成立。\n"
+                      f"  独立性：{sum(len(v) for v in swap_sell.values()):,} 笔换仓只有 "
+                      f"{len(swap_pairs):,} 个不同 (源, 标的) 配对、"
+                      f"{len({c for v in swap_sell.values() for c in v}):,} 个源、"
+                      f"{len({c for v in swap_buy.values() for c in v}):,} 个标的。")
 
     print("\n口径提示：日内先取中位再跨日汇总，故「为正日数」不是独立样本数（前向窗口重叠）；"
           "\n结论以「逐年同号」为准，单一年份撑起来的差值不作证据。")
