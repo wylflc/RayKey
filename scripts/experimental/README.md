@@ -1,7 +1,36 @@
 # 实验脚本（不属于生产流水线）
 
-本目录只放**已做完并已在 `docs/Ashare_backtest_log.md` 记录结论的实验代码**，
-供后续复现或改进用。**不被任何生产流程调用**，`docs/000_Ashare_workflow.md` 也不引用它们。
+本目录放两类代码，都**不被生产流水线（§6.7 / §8 / §9）调用**：
+
+1. **已做完并已在 `docs/Ashare_backtest_log.md` 记录结论的实验代码**，供后续复现或改进；
+2. **`docs/000_Ashare_workflow.md` §12.1 验证纪律点名要跑的常设核验工具**——
+   `align_buy_line.py`（第 12.1 节三线对齐）、`selection_edge_audit.py`（第 9 款）、
+   `panel_tier_forward.py`（第 9 款）、`delta_attribution.py`（第 10 款）。
+   第 2 类改动前先确认 §12.1 的引用是否同步。
+
+## §12.1 常设核验工具（信号层与归因）
+
+回测的路径读数由少数复利段主导，臂间差异常常只反映「谁更妥善地碰到了那几个赢家」。
+以下两个脚本把评价从「这条路径赚了多少」挪到「选择动作本身是否含信息」和
+「这个 Δ 由多少只票撑起来」，样本量与稳健性都与赢家身份无关。
+
+| 文件 | 作用 | §12.1 |
+| --- | --- | --- |
+| `selection_edge_audit.py` | 三表：①**边际选择检验**——同日合格集里买到的对没买到的前向总回报（排序＋相关性过滤＋资金分配合起来的边际信息量）；②**排序信息量**——合格集名次对前向回报的单调性；③**换仓方向性**——同日换入目标对换出源的前向回报配对 | 第 9 款 |
+| `delta_attribution.py` | 按代码拆开 A/B 的配对差，报前 1/3/5 只的**净额占比**与**总动量占比**；净额占比 >100% 表示扣掉后 Δ 反号 | 第 10 款 |
+
+```bash
+# 先跑一次带两份日志的回测（BASE 全参数见 sweep_backtest_configs.py 的 BASE）
+python3 scripts/backtest_valuation_strategy.py <BASE 全参数> --since 2011-11-01 \
+    --candidate-log /path/cand.csv --trade-log /path/trades.csv --out-dir /path/bt
+python3 scripts/experimental/selection_edge_audit.py \
+    --candidate-log /path/cand.csv --trade-log /path/trades.csv --horizon 250
+python3 scripts/experimental/delta_attribution.py \
+    --base /path/bt_base/BASE_trades.csv --arm /path/bt_arm/ARM_trades.csv
+```
+
+统计口径：同日多个候选强相关，故**先在日内取中位、再跨日汇总**，报逐日配对差中位与为正日数；
+跨日前向窗口仍重叠，故结论以**逐年同号年数**为准，单一年份撑起来的差值不作证据。
 
 ## 估值神经网络（结论：全部不采纳，见回测日志 §12.28.4 与 §12.29.3/§12.29.4）
 

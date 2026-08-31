@@ -74,6 +74,13 @@ data/processed/experiments/states/
 data/interim/exp_b_market_cache.npz
 # 实验 A 全市场合格股票库（7.6 MB，build_cap_rank_universe.py 一条命令重建；抽样子集与各带照常入库）
 data/processed/experiments/universes/cap_all.csv
+# 信号层三表（§12.1 第 9 款）的大件输入：候选排序日志、成交流水与逐条产物，
+# 由回测一条带 --candidate-log/--trade-log 的命令重建；只有小报告入库。
+data/processed/experiments/exp_selection_edge/candidates.csv
+data/processed/experiments/exp_selection_edge/trades_ledger.csv
+data/processed/experiments/*/*_trades.csv
+data/processed/experiments/*/*_equity.csv
+data/processed/experiments/*/*_periods.csv
 
 # 海外三表原始 JSON（SEC companyfacts ≈4 MB/家、东财 HK F10 长表）：按需重取，不入库；提取后的 data/interim/overseas_roic_years.csv 入库
 data/raw/overseas_statements/
