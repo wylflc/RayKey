@@ -16,7 +16,8 @@ import csv
 import statistics
 import sys
 
-ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 SRC, DST, MODE = sys.argv[1], sys.argv[2], sys.argv[3]
 MIN_OBS, MIN_CODES, BURN_IN_YEARS = 500, 3, 5
 

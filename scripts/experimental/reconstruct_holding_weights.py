@@ -13,7 +13,8 @@ import json
 import statistics
 import sys
 
-ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 names = json.load(open("/tmp/names.json"))
 
 

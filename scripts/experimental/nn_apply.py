@@ -65,7 +65,7 @@ def pick(day):
 codes=[l.strip() for l in open(f"{SC}/pit116_codes.txt")]
 FIN=D.load_fin()
 R=0.10; H=3.0
-out=open("/Users/yaleiwang/WorkSpace/AgentLab/RayKey/data/processed/vd_pit116_nn.csv","w",newline="",encoding="utf-8")
+out=open(os.path.join(os.path.dirname(os.path.dirname(SC)), "data/processed/vd_pit116_nn.csv"),"w",newline="",encoding="utf-8")
 w=csv.writer(out)
 w.writerow(["security_code","date","close","band_report_date","band_available_at","split_factor",
             "intrinsic_value","band_low","band_high","valuation_ratio","upside_to_low","valuation_label"])

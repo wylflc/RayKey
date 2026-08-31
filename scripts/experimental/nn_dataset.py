@@ -8,7 +8,8 @@
    面板只在回测时用，避免网络对着最终入选名单学。
 """
 import csv, glob, collections, math, bisect, sys, os, json
-ROOT="/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 OUT=os.path.dirname(os.path.abspath(__file__))
 
 def num(x):

@@ -24,7 +24,8 @@
                                [--min-roe 0.10] [--max-pe 60] [--only-nonbank]
 """
 import csv, sys, os, bisect, collections, argparse
-ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 PANEL = f"{ROOT}/data/archive/pit-judgment-2026-08/universe_panel_pit_v2.csv"
 BANDS = f"{ROOT}/data/processed/a_share_historical_valuation_bands_pit116.csv"
 DAILY = f"{ROOT}/data/processed/a_share_historical_valuation_daily_pit116.csv"

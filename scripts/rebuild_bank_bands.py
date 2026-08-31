@@ -38,7 +38,8 @@
 基本面序列取自第四个参数给的估值带——与池子无关。
 """
 import csv, sys, os, bisect, collections, statistics
-ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[1])
 SECURITIES = f"{ROOT}/data/raw/a_share_securities.csv"
 BANDS = f"{ROOT}/data/processed/a_share_historical_valuation_bands_pit116.csv"
 DAILY = f"{ROOT}/data/processed/a_share_historical_valuation_daily_pit116.csv"

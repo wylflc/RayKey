@@ -14,7 +14,8 @@
 import pickle, os, sys, csv, collections
 import numpy as np, torch, torch.nn as nn
 SC = os.path.dirname(os.path.abspath(__file__))
-ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 torch.manual_seed(0); np.random.seed(0)
 
 DATA = sys.argv[1] if len(sys.argv) > 1 else f"{SC}/nn_data.pkl"

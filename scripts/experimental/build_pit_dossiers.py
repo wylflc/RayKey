@@ -18,7 +18,8 @@
 """
 import csv, glob, collections, statistics, argparse, random, math
 
-ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 FIN = f"{ROOT}/data/raw/financials"
 SEC = f"{ROOT}/data/raw/a_share_securities.csv"
 PIT = f"{ROOT}/data/processed/pit_attention"

@@ -11,7 +11,8 @@
 import pickle, os, sys, math, collections, random, csv, bisect
 import numpy as np, torch, torch.nn as nn
 SC = os.path.dirname(os.path.abspath(__file__))
-ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 torch.manual_seed(0); np.random.seed(0); random.seed(0)
 
 d = pickle.load(open(f"{SC}/nn_data.pkl", "rb"))

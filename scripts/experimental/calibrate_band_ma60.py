@@ -14,7 +14,8 @@ MA60 直接从逐日状态文件的 `close` 列算，**与 P/V 分子同源**，
 """
 import bisect, collections, csv, math, statistics, sys
 
-ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 SRC, DST, MODE = sys.argv[1], sys.argv[2], sys.argv[3]
 MIN_OBS, MIN_CODES, BURN, WIN = 500, 3, 5, 60
 

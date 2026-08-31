@@ -760,9 +760,9 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 4. 参数至少扫描相邻区间，优先选择宽平台，不选择单点峰值；±0.15 个百分点以内视为噪声。
 5. 增加互不重叠的持有期或逐年检验；共享终点的多个起点与重叠滚动窗口不视为独立样本。
 6. 检查可执行性、幸存者偏差、未来信息和多重比较；绝对收益不当作未来预期。
-7. 只有第 1~6、9~11 款通过且用户裁定后，才修改 §9.3.1、生产常量和回测 `BASE`。
+7. 只有第 1~6 款通过、第 9~11 款读数齐备且用户裁定后，才修改 §9.3.1、生产常量和回测 `BASE`。
 8. 实验过程写入回测 log；最终版本变化写入 changelog；当前操作只写回本文件。
-9. 信号层三表随采纳复核一并出：`scripts/experimental/selection_edge_audit.py`（边际选择检验、排序信息量、换仓方向性；回测须带 `--candidate-log` 与 `--trade-log`）与 `scripts/experimental/panel_tier_forward.py`（`P/V` 分档前向回报）。各报逐日配对差中位、为正日数与逐年同号年数。三表不进第 2 款的决策读数；逐季随新数据重算，读数写入回测 log。
+9. 信号层三表：`scripts/experimental/selection_edge_audit.py`（边际选择检验、排序信息量、换仓方向性；回测须带 `--candidate-log` 与 `--trade-log`）与 `scripts/experimental/panel_tier_forward.py`（`P/V` 分档前向回报）。采纳候选在候选臂与 `BASE` 上各跑一遍并报差；另每季在 `BASE` 上重算一遍作不变量检验。各表报逐日配对差中位、为正日数与逐年同号年数。三表不进第 2 款的决策读数，读数写入回测 log。
 10. 采纳候选报 `scripts/experimental/delta_attribution.py` 的前三只净额占比；超过 100% 者不作采纳依据。
 11. 引用正读数时同报本族已试臂数，按 `data/processed/backtest/scan_summaries.csv` 的扫描标签计。
 12. 轨道 B 的采纳按季度批处理，季度之间只走轨道 A。

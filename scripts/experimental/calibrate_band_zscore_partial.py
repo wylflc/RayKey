@@ -9,7 +9,8 @@
 两者都逐年扩窗、只用当年之前的数据，样本不足退回不校准。
 """
 import bisect, collections, csv, math, statistics, sys
-ROOT="/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 SRC, DST, MODE, PARAM = sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4])
 MIN_OBS, MIN_CODES, BURN = 500, 3, 5
 K_CLIP = (0.5, 2.0)          # σ 比值的夹断：小样本行业的 σ 可能极小，不夹断会把带炸掉

@@ -11,7 +11,8 @@ import csv
 import math
 import statistics
 
-ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 
 # ---- 被解释量：长期 P/V 中位 ----
 series = collections.defaultdict(list)

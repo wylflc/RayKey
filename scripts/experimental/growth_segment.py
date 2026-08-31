@@ -25,7 +25,8 @@ n1 变成一次重排序，把钱从格力/陕西煤业挪走，全局盈亏 −
 """
 import csv, glob, collections, statistics, argparse
 
-ROOT = "/Users/yaleiwang/WorkSpace/AgentLab/RayKey"
+from pathlib import Path
+ROOT = str(Path(__file__).resolve().parents[2])
 FIN = f"{ROOT}/data/raw/financials"
 SEC = f"{ROOT}/data/raw/a_share_securities.csv"
 PIT = f"{ROOT}/data/processed/pit_attention"
