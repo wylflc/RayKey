@@ -31,6 +31,6 @@
 | `report_backtest_yearly.py` | 2026-08-24 | 2026-11-24 | 按自然年拆解回测净值。逐年读数已由引擎汇总与 `scan_summaries.csv` 承载 | `backtest_valuation_strategy.py` 自带逐年输出 |
 | `justified_multiple.py` | 2026-08-24 | 2026-11-24 | 合理倍数第二层（OI-023 沉淀件）。生产估值统一走 ROIC 引擎后无消费方 | `intrinsic_value.py` + `build_historical_valuation_bands.py` |
 | `apply_quality_tier_column_backfill.py` | 2026-08-24 | 2026-11-24 | OI-024 的一次性回填（L1 `q2_moat_type`、L3 `tactical_thesis`，逐票常量表）。已执行；剩余三列按 §5.7 随季度复核逐票手工回填 | `backfill_quality_tier_columns.py`（六列建列与填充率自检，仍在用） |
-| `build_overseas_dossiers.py`<br>`overseas_dossier_inputs.py` | 2026-08-24 | 2026-11-24 | 海外档案旧建带器（PEG／implied_pe／ddm3／justified_pb 等退役口径的硬编码输入表）。§6.8 已改 ROIC 口径由三表重算；**误跑会用退役口径覆盖 26 行海外估值表** | `fetch_overseas_statements.py` + `build_overseas_roic_bands.py`（§6.8） |
+| `build_overseas_dossiers.py`<br>`overseas_dossier_inputs.py` | 2026-08-24 | 2026-11-24 | 海外档案旧建带器（PEG／implied_pe／ddm3／justified_pb 等退役口径的硬编码输入表）。§6.8 已改 ROIC 口径由三表重算；**误跑会用退役口径覆盖 26 行海外估值表**；v4.111 起已无法 import（依赖的 `effective_valuation_tier` 随五档退役删除） | `fetch_overseas_statements.py` + `build_overseas_roic_bands.py`（§6.8） |
 同类归档：`docs/archive/`（已完成的过程记录与已实施的方案设计）、
 `data/archive/`（已跑完的工作队列与已结束轮次的产物）。
