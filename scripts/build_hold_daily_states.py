@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """持仓侧逐日状态（§6.7 第 3 步）：逐 (代码, 日期) 取候选侧与 B2 两份采纳逐日状态中 `intrinsic_value` 较高的那一行。
 
-§9.3.1 的减持线、换仓来源、簇内升级与 T+1 换仓确认按持仓侧 P/V 判（回测 `--hold-states`），
+§9.3.1 的换仓来源、簇内升级与 T+1 换仓确认按持仓侧 P/V 判（回测 `--hold-states`），
 候选侧（买入线、候选排序）仍读 `a_share_daily_states_adopted.csv`。
 
 用法：

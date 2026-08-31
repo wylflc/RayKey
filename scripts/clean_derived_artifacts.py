@@ -98,8 +98,20 @@ def collect_experiments():
 
 
 def merge_summaries(files):
-    """列头历代不同（滚动三年、手续费等是后加的），故取并集，缺列留空。"""
+    """列头历代不同（滚动三年、手续费等是后加的），故取并集，缺列留空。
+
+    **先读回已有的 `scan_summaries.csv` 再并入本次的 summary**：该表是 §12.1 第 11 款
+    「已试臂数」的累计台账，一个 `扫描标签` 一行、同标签以本次为准。直接按本次磁盘上
+    剩余的 summary 覆写会把历次台账整表抹掉（本次只跑 92 次，表就只剩 230 行）。
+    """
     rows, columns = [], []
+    if MERGED.exists():
+        with open(MERGED, encoding="utf-8") as fh:
+            for row in csv.DictReader(fh):
+                rows.append(row)
+                for key in row:
+                    if key is not None and key not in columns:
+                        columns.append(key)
     for entry in sorted(files, key=lambda e: e.name):
         tag = entry.name[len("summary"):-len(".csv")].lstrip("_") or "-"
         try:
@@ -112,7 +124,10 @@ def merge_summaries(files):
                             columns.append(key)
         except (OSError, UnicodeDecodeError, csv.Error) as exc:
             print(f"  跳过无法解析的 {entry.name}：{exc}", file=sys.stderr)
-    return rows, ["扫描标签"] + [c for c in columns if c != "扫描标签"]
+    keyed = {}
+    for row in rows:                       # 后出现者胜：本次的 summary 覆盖同标签的旧行
+        keyed[(row.get("扫描标签"), row.get("策略"))] = row
+    return list(keyed.values()), ["扫描标签"] + [c for c in columns if c != "扫描标签"]
 
 
 def remove(entries, apply: bool) -> int:
@@ -144,8 +159,9 @@ def main():
         print(f"  历次扫描汇总                     {len(summaries):>8,} 个 {human(size(summaries)):>10}")
         doomed = list(bulk)
         if summaries and not args.keep_summaries:
+            kept = sum(1 for _ in csv.DictReader(open(MERGED, encoding="utf-8"))) if MERGED.exists() else 0
             rows, columns = merge_summaries(summaries)
-            print(f"  归并 → {len(rows):,} 行 × {len(columns)} 列")
+            print(f"  归并 → {len(rows):,} 行 × {len(columns)} 列（台账原有 {kept:,} 行，本次并入 {len(rows) - kept:,} 个新标签）")
             if args.apply:
                 with open(MERGED, "w", encoding="utf-8", newline="") as fh:
                     writer = csv.DictWriter(fh, fieldnames=columns, extrasaction="ignore")

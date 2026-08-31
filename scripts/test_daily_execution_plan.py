@@ -34,14 +34,14 @@ class ExecutionPlanTest(unittest.TestCase):
         return scan.section93_execution_plan(rows, self.nav, funds, holdings, set(), set(),
                                              members, counters if counters is not None else {}, holding_rows)
 
-    def test_pv_trim_requires_weak_close(self) -> None:
+    def test_trim_requires_weak_close(self) -> None:
         rows = [row("000001", "A", close=100.0, ma20=101.0, ma60=90.0, pv=2.5),
                 row("000002", "B", close=100.0, ma20=99.0, ma60=90.0, pv=2.5)]
         holdings = {"000001": hold("A", 5000, 40.0, None), "000002": hold("B", 5000, 40.0, None)}
         res = self.run_plan(rows, holdings, funds=0.0, members={"000001", "000002"})
         rules = {(s["security_code"], s["rule"]) for s in res["sells"]}
-        self.assertIn(("000001", "减持"), rules)            # 收盘 < MA20 → 减一档
-        self.assertNotIn(("000002", "减持"), rules)         # 收盘 ≥ MA20 → 走势闸门挡下
+        self.assertIn(("000001", "涨幅减持"), rules)        # 涨幅 150% 且收盘 < MA20 → 减一档
+        self.assertNotIn(("000002", "涨幅减持"), rules)     # 收盘 ≥ MA20 → 走势闸门挡下
         a = next(s for s in res["sells"] if s["security_code"] == "000001")
         self.assertEqual(a["sell_shares"], 1500)             # 15 万 ÷ 100 = 1500 股
         self.assertTrue(any("走势闸门" in why for _n, why in res["sell_notes"]))
@@ -114,24 +114,16 @@ class ExecutionPlanTest(unittest.TestCase):
         res = self.run_plan([cand, strong], holdings, funds=1000.0, members={"000010", "000013"})
         self.assertEqual(res["plan"][0]["shares"], 100)                      # §9.3.1.1 可用资金不足一档时买到用尽
 
-    def test_holding_side_pv_governs_trim_and_swap(self) -> None:
-        # v4.92 SPA：减持线与换仓来源按持仓侧 `hold_pv` 判；候选侧 `model_pv` 只管买入线与候选排序
-        rich_cand = row("000021", "RC", close=100.0, ma20=110.0, ma60=90.0, pv=2.60)   # 候选侧 ≥ 减持线
-        rich_cand["hold_pv"] = 2.00                                                     # 持仓侧未越线 → 不减
-        rich_hold = row("000022", "RH", close=100.0, ma20=110.0, ma60=90.0, pv=2.00)
-        rich_hold["hold_pv"] = 2.60                                                     # 持仓侧越线且弱势 → 减一档
-        holdings = {"000021": hold("RC", 5000, 90.0, None), "000022": hold("RH", 5000, 90.0, None)}
-        res = self.run_plan([rich_cand, rich_hold], holdings, funds=1e6, members={"000021", "000022"})
-        self.assertEqual([(s["security_code"], s["rule"], s["hold_pv"], s["model_pv"]) for s in res["sells"]],
-                         [("000022", "减持", 2.60, 2.00)])
-        self.assertEqual(sorted(n for n, _h, _c in res["hold_pv_diff"]), ["RC", "RH"])
-        # 换仓来源：候选 0.60 对持仓侧 0.70 差 0.10 < 0.1437 不换（按候选侧 1.50 会误换）
+    def test_holding_side_pv_governs_swap_source(self) -> None:
+        # v4.92 SPA：换仓来源按持仓侧 `hold_pv` 判；候选侧 `model_pv` 只管买入线与候选排序
+        # 候选 0.60 对持仓侧 0.70 差 0.10 < 0.1437 不换（按候选侧 1.50 会误换）
         cand = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)
         weak = row("000023", "W", close=100.0, ma20=110.0, ma60=90.0, pv=1.50)
         weak["hold_pv"] = 0.70
         res = self.run_plan([cand, weak], {"000023": hold("W", 5000, 90.0, None)}, funds=1000.0, members={"000010", "000023"})
         self.assertEqual([s for s in res["sells"] if s["rule"] == "换仓"], [])
         self.assertIn("持仓侧 P/V 0.7000", res["swap_stop_reason"])
+        self.assertEqual([n for n, _h, _c in res["hold_pv_diff"]], ["W"])                # 两侧不同须并列显示
         weak["hold_pv"] = 1.50
         res = self.run_plan([cand, weak], {"000023": hold("W", 5000, 90.0, None)}, funds=1000.0, members={"000010", "000023"})
         self.assertEqual([(s["security_code"], s["hold_pv"]) for s in res["sells"] if s["rule"] == "换仓"], [("000023", 1.50)])
@@ -210,7 +202,7 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertEqual(len(res["plan"]), 1)                        # 计数归零后再买一手
 
     def test_cooldown_shared_with_trim(self) -> None:
-        pricey = row("000022", "R", close=4500.0, ma20=4600.0, ma60=3500.0, pv=3.0)   # 减持条件成立、弱势
+        pricey = row("000022", "R", close=4500.0, ma20=4600.0, ma60=3500.0, pv=3.0)   # 涨幅 350% 且弱势
         holdings = {"000022": hold("R", 300, 1000.0, None)}
         counters: dict[str, int] = {}
         res = self.run_plan([pricey], holdings, funds=0.0, members={"000022"}, counters=counters)
@@ -218,7 +210,7 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertEqual(counters["000022"], 2)
         holdings = {"000022": hold("R", 200, 1000.0, None)}
         res = self.run_plan([pricey], holdings, funds=0.0, members={"000022"}, counters=counters)
-        self.assertEqual([s for s in res["sells"] if s["rule"] == "减持"], [])   # 冷却中跳过
+        self.assertEqual([s for s in res["sells"] if s["rule"] == "涨幅减持"], [])   # 冷却中跳过
         self.assertEqual(counters["000022"], 1)
 
     def test_missing_quote_holding_is_flagged_not_silent(self) -> None:
@@ -243,10 +235,10 @@ class ExecutionPlanTest(unittest.TestCase):
                 self.assertEqual(list(csv.DictReader(fh))[0]["security_name"], "A")
 
     def test_holding_trim_signal_shared_helper(self) -> None:
-        self.assertEqual(scan.holding_trim_signal(100.0, 99.0, 2.5, 40.0)[0], "")       # 收盘 ≥ MA20：闸门挡下
-        self.assertEqual(scan.holding_trim_signal(100.0, 101.0, 2.5, 40.0)[0], "减持")
-        self.assertEqual(scan.holding_trim_signal(100.0, 101.0, 1.0, 40.0)[0], "涨幅减持")
-        self.assertIn("MA20 缺失", scan.holding_trim_signal(100.0, None, 2.5, 40.0)[1])
+        self.assertEqual(scan.holding_trim_signal(100.0, 99.0, 40.0)[0], "")            # 收盘 ≥ MA20：闸门挡下
+        self.assertEqual(scan.holding_trim_signal(100.0, 101.0, 40.0)[0], "涨幅减持")   # 涨幅 150% ≥ 125%
+        self.assertEqual(scan.holding_trim_signal(100.0, 101.0, 50.0)[0], "")           # 涨幅 100% < 125%
+        self.assertIn("MA20 缺失", scan.holding_trim_signal(100.0, None, 40.0)[1])
 
 
 if __name__ == "__main__":

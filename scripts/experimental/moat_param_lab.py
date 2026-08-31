@@ -35,7 +35,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import build_historical_valuation_bands as bhv  # noqa: E402
 
-BUY_LINE, SELL_LINE = 0.9407, 2.5236          # §9.3.1 现行值，只作实验对照
+BUY_LINE, SELL_LINE = 0.9407, 2.5236          # 实验当时冻结的分桶边界，只作描述性对照，不是任何生效阈值
 BUCKETS = ((0, 0.8), (0.8, BUY_LINE), (BUY_LINE, 1.2), (1.2, 1.6), (1.6, 2.0),
            (2.0, SELL_LINE), (SELL_LINE, 4.0), (4.0, 99.0))
 

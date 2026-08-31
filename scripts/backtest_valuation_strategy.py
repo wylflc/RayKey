@@ -1196,7 +1196,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         quota_swappable: bool = False,
         gate: str = "pv", buy_pct: float = 0.05, sell_pct: float = 0.60,
         pct_stop_when_rich: bool = False,
-        addon_trend: str = "full", no_value_sell: bool = False,
+        addon_trend: str = "full",
         swap_require_weak: bool = False, swap_weak_ma: int = 20,
         swap_out_min_pv: float = 0.0,
         mkt: dict[str, float] | None = None, mkt_crash_days: int = 0,
@@ -1219,10 +1219,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         sell_confirm: bool = False, sell_tol: float = 0.0, stop_tol: float = 0.0,
         sell_buffer_exempt_gain: bool = False, sell_buffer_exempt_pv: float = 0.0,
         candidate_log=None) -> dict:
-    """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`、减持线 `P/V ≥ 1+w`。
+    """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`。
 
     `tier_buy_scale`／`tier_sell_scale`（研究开关，§12.95「护城河放到决策层」）：按档位给买入线／
-    减持线乘一个倍数（如 L1 ×1.25 = 强护城河少要安全边际、L3 ×0.875 = 多要），排序与换仓不动。
+    估值减持线乘一个倍数（如 L1 ×1.25 = 强护城河少要安全边际、L3 ×0.875 = 多要），排序与换仓不动。
     缺省 None ＝ 原行为逐位不变。档位来自 2026 年人工分档，含后视，读数只能作上界。
 
     `use_mos`：买入线改按档位的安全边际取 `1 − MOS_档`（L1 0.90／L2 0.80／L3 0.70）。
@@ -1250,13 +1250,14 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     buy_count = sell_count = 0
     turnover = 0.0
     tiers = tiers or {}
-    # 减持线可独立于带宽设定：`--sell-line 1.30` 表示涨到 P/V=1.30 才开始减持，
-    # 用来检验「让利润跑得更远」是否有效（实测 P/V≥1.10 清空的 17 笔中位 +28.6%、胜率 88%）。
-    sell_line = sell_line_override if sell_line_override else 1.0 + width
-    rich_tag = f"分位≥{sell_pct:.0%}" if gate == "self-pct" else f"P/V≥{sell_line:.2f}"
+    # 估值减持是**研究开关**：只有显式给 `--sell-line` 才启用（`--sell-line 1.30` 即涨到 P/V=1.30 才减）。
+    # 不给 = 整条估值减持路径关闭，卖出只剩止损、出名单清仓、涨幅减持与换仓。
+    sell_line = sell_line_override or None
+    rich_tag = (f"分位≥{sell_pct:.0%}" if gate == "self-pct"
+                else f"P/V≥{sell_line:.2f}" if sell_line else "估值减持·未启用")
     # `self-pct-buy` = **非对称闸门**：买入用自身分位（把绝对口径永远够不着的白马放进来——
     # 迈瑞 17 年没有一天 `P/V≤1.00`，却有 43% 的日子在自身 3 年 10 分位以下），
-    # 卖出/止损/换仓一律退回原始比值口径（现行减持线（§9.3.1）多年只触发个位数次，等于让赢家跑）。
+    # 卖出/止损/换仓一律退回原始比值口径。
     # 动机见 §12.61：分位是一把均值回归的尺子，擅长「找到谁便宜」，不擅长「决定何时离场」。
     pct_buy_gate = gate in ("self-pct", "self-pct-buy")
     # 时点股票库：`members` 随日期切换。第一档生效前**一只都不可买**——那段时间还没有
@@ -1449,6 +1450,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 p = pcts.get(code)
                 return p is not None and p >= sell_pct
             line = sell_line
+            if line is None:
+                return False
             if tier_sell_scale:
                 line *= tier_sell_scale.get(tiers.get(code, DEFAULT_TIER), 1.0)
             return ratio is not None and ratio >= line
@@ -1611,7 +1614,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 走势退出：**跟随均线**而非建仓日固定价。用户 2026-08-09：「把跌破120日均线作为
             # 减仓阈值」。与 `--price-stop` 的区别是后者盯建仓当日那条静态止损价，此处盯当日均线。
             # 偏离度卖出：涨到中期均线的 `dev_sell_min` 倍以上即清仓。用户 2026-08-09：
-            # 「涨的比中期均线高很多就卖出」。与 P/V 减持线的区别是它盯**价格相对自身均线的位置**，
+            # 「涨的比中期均线高很多就卖出」。与 P/V 估值减持线的区别是它盯**价格相对自身均线的位置**，
             # 与内在价值无关，故在估值带失真时仍可用。
             if dev_sell_min:
                 ma_now = mas.get(code, {}).get(day, {})
@@ -1756,14 +1759,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if (hold_strong in ("sell", "both") and strong_bull(code, day)):
                 continue
             # `sell_trend_ma`（用户 2026-08-10）：**卖出端的右侧化**。买入端要求
-            # `收盘 > MA20 > MA60`（贵了才卖不够，还要等趋势真的坏掉），卖出端原本是纯估值触发
-            # ——`P/V ≥ 减持线` 当日即开始按一档减。本参数把它改为**还须同时呈空头排列**才减，
-            # 例如 `(5, 20)` 即 `收盘 < MA5 < MA20`。空元组 = 原行为。
+            # `收盘 > MA20 > MA60`（该减的条件成立还不够，还要等趋势真的坏掉）；本参数要求减一档时
+            # **还须同时呈空头排列**，例如 `(5, 20)` 即 `收盘 < MA5 < MA20`。空元组 = 原行为。
             # **只闸这一条路径**：出 §5 名单的清仓与换仓卖出不受影响——前者是基本面退出、
             # 后者是资金驱动，都与趋势无关；闸住它们等于在该走的时候不走。
             # 判据用**信号日**的收盘与均线（与买入端同源），不是成交价。
             # `liquidate_ma` / `liquidate_days`（用户 2026-08-10）：**贵 + 中期趋势确认走坏 → 一次清仓**。
-            # 与 `--trend-exit-ma` 的两点区别：①**须同时 `P/V ≥ 减持线`**（只对已经贵的票生效，
+            # 与 `--trend-exit-ma` 的两点区别：①**须同时 `P/V ≥ 估值减持线`**（只对已经贵的票生效，
             # 便宜票跌破年线是加仓机会不是清仓理由）；②**要求连续 N 日**跌破，不是单日破线，
             # 以滤掉一次性插针。它在减一档之前判——既然要清，就不必先减一档。
             if (liquidate_ma and is_rich(code, ratio)
@@ -1774,15 +1776,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 sell_count += 1
                 stats[f"贵+破MA{liquidate_ma}·一键清仓"] += 1
                 continue
-            # `no_value_sell`（用户 2026-08-15：「删除超过 P/V 之后的减仓规则」）：
-            # **整条估值减持路径关闭**（§9.3.2 第 4 步第②条）。此后卖出只剩三条：
-            # ⓪建仓日均线止损、②出 §5 名单逐步清仓、③换仓。
-            # **注意现行减持线（§9.3.1）多年只触发个位数次**，故这条的直接影响本就很小；
-            # 真正的意义是把「贵了要不要减」这个判断从机械规则里彻底移除。
-            # `gain_sell`（用户 2026-08-22 实验）：**信号日收盘 ≥ 持仓均价 × (1 + G) 也算「该减」**——
-            # 与 `P/V ≥ 减持线` 走同一条减一档路径。`gated`＝同样过走势闸门（`sell_trend_ma`）；
-            # `ungated`＝不过闸门，涨幅达标即每日减一档直到跌回线下或减完。0＝关（逐位不变）。
-            value_rich = (not no_value_sell) and is_rich(code, ratio)
+            # `gain_sell`（§9.3.1 涨幅减持）：**信号日收盘 ≥ 持仓均价 × (1 + G) 即「该减」**。
+            # `gated`＝过走势闸门（`sell_trend_ma`）；`ungated`＝不过闸门，涨幅达标即每日减一档
+            # 直到跌回线下或减完。0＝关（逐位不变）。
+            # `sell_line`（研究开关）：给了才把「`P/V` 过线也算该减」并进同一条减一档路径。
+            value_rich = is_rich(code, ratio)
             gain_hit = bool(gain_sell) and lot.avg_cost > 0 and \
                 (today.get(code, (None,))[0] or price) >= lot.avg_cost * (1.0 + gain_sell)
             if not value_rich and not gain_hit:
@@ -1795,7 +1793,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     stats["T+1确认·减持取消·状态缺失"] += 1
                     continue
                 exec_close, _exec_value, exec_ratio = exec_row
-                value_rich = value_rich and (not no_value_sell) and is_rich(code, exec_ratio)
+                value_rich = value_rich and is_rich(code, exec_ratio)
                 gain_hit = gain_hit and bool(gain_sell) and lot.avg_cost > 0 and \
                     exec_close >= lot.avg_cost * (1.0 + gain_sell)
                 if not value_rich and not gain_hit:
@@ -1841,13 +1839,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # 与 `--dev-sell-min` / `--liquidate-ma` 的区别是它仍只看 P/V 与走势闸门，
                 # 不另加均线条件——即「符合卖出条件就一次性卖完」的直译。
                 if sell_full:
-                    stats["P/V≥减持线·整仓卖出" if value_rich else f"{sell_tag}·整仓卖出"] += 1
+                    stats["P/V≥估值减持线·整仓卖出" if value_rich else f"{sell_tag}·整仓卖出"] += 1
                     turnover += lot.shares * price
                     close_lot(portfolio, code, day, price, ledger=ledger,
                               reason=f"{sell_tag}整仓卖出")
                     sell_count += 1
                     continue
-                stats["P/V≥减持线·减一档" if value_rich else f"{sell_tag}·减一档"] += 1
+                stats["P/V≥估值减持线·减一档" if value_rich else f"{sell_tag}·减一档"] += 1
                 shares = sell_shares(budget / price, lot.shares, price, lot_size, res_floor(price))
                 if (not shares and lot_ratio_cooldown and lot_size
                         and lot.shares >= lot_size
@@ -2764,7 +2762,10 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
     worst, dd_start, dd_end = max_drawdown(curve)
     rf = statistics.fmean([r for _, r in risk_free]) if risk_free else 0.0
     sharpe = (cagr - rf) / vol if vol and not math.isnan(vol) and vol > 0 else float("nan")
-    exposure = statistics.fmean([1 - c / e for _d, e, c, *_r in curve if e > 0])
+    # 「平均仓位」＝**持仓市值 ÷ 净资产**（`持仓市值 = 净资产 − 现金 + 融资负债`），与 --position-cap
+    # 和集中度三列同一分母，融资时可超过 100%。旧口径 `1 − 现金/净资产` 已把负债从分子里扣掉，
+    # 现金不为负时恒 ≤1，只能读出现金有没有闲置，看不见授信形成的总敞口。
+    exposure = statistics.fmean([(e - c + dbt) / e for _d, e, c, _n, dbt, *_r in curve if e > 0])
 
     # 只在实际持仓日统计集中度，避免把空仓日的 0 当作「充分分散」。top1/top3 是股票市值
     # 除以净资产，故融资时允许超过 100%；这与 --position-cap 的分母一致，也最贴近实盘上限口径。
@@ -2991,13 +2992,13 @@ def main() -> int:
                     help="日终剩余现金先还融资，不留到下一笔买入。**纯研究开关**，用于复现 §12.70 的融资场景\n                         A/B（实测近中性、略负）；不对应任何生效规则——同名的账户级机制已于 2026-08-17 退役")
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
     parser.add_argument("--width", type=float, nargs="+", default=[0.10],
-                        help="带的半宽 w：买入线 1−w、减持线 1+w。可给多个做敏感度")
+                        help="带的半宽 w：买入线 1−w。可给多个做敏感度")
     parser.add_argument("--use-mos", action="store_true",
                         help="买入线改按档位安全边际 1−MOS（L1 0.90/L2 0.80/L3 0.70）")
     parser.add_argument("--tier-buy-scale", default="", metavar="L1=1.25,L3=0.875",
                         help="研究开关（§12.95）：买入线按档位乘倍数，未列档位为 1.0；缺省空＝原行为")
     parser.add_argument("--tier-sell-scale", default="", metavar="L1=1.5",
-                        help="研究开关（§12.95）：减持线按档位乘倍数，未列档位为 1.0；缺省空＝原行为")
+                        help="研究开关（§12.95）：估值减持线按档位乘倍数，未列档位为 1.0；缺省空＝原行为")
     parser.add_argument("--price-stop", action="store_true", help="估值组也用建仓日均线止损")
     parser.add_argument("--stop-ma", type=int, choices=(20, 60), default=20,
                         help="止损均线周期（现行 60）；建仓价已在该均线下方时的处理由 --entry-below-ma60 决定")
@@ -3034,7 +3035,7 @@ def main() -> int:
     parser.add_argument("--position-cap", type=float, default=0.0,
                         help="单票买入上限占总资产比例，如 0.10；只挡加仓不强制减持")
     parser.add_argument("--only-tiers", default="", help="只买这些档位，逗号分隔，如 L1")
-    parser.add_argument("--hold-states", type=Path, default=None, help="持仓侧逐日状态（v4.92 SPA，§9.3.1：减持线／换仓来源／簇内升级／T+1 换仓确认读它）；候选侧仍读 --daily-states；不给则持仓侧＝候选侧（v4.92 前口径）")
+    parser.add_argument("--hold-states", type=Path, default=None, help="持仓侧逐日状态（v4.92 SPA，§9.3.1：换仓来源／簇内升级／T+1 换仓确认读它）；候选侧仍读 --daily-states；不给则持仓侧＝候选侧（v4.92 前口径）")
     parser.add_argument("--daily-states", type=Path, help="逐日估值状态文件，缺省 a_share_daily_states_adopted.csv（§6.7 第 3 步产物）")
     parser.add_argument("--universe-file", type=Path,
                         help="时点股票库（现行 panel_moat_bank_v6b.csv，由 build_moat_panel.py 装配）。"
@@ -3068,17 +3069,12 @@ def main() -> int:
                         help="self-pct 下的卖出闸：分位 ≥ Q 才允许减持/换出/止损")
     parser.add_argument("--pct-stop-when-rich", action="store_true",
                         help="止损只对分位 ≥ --sell-pct 的仓位生效，即「抄底之后不止损」")
-    # ---- 用户 2026-08-15 第二批：加仓放宽、删估值减持、换仓加走势条件 ----
+    # ---- 用户 2026-08-15 第二批：加仓放宽、换仓加走势条件 ----
     parser.add_argument("--addon-trend", choices=("full", "ma-only"), default="full",
                         help="full=加仓与新建仓同条件（缺省）；"
                              "ma-only=**已有持仓**只要 MA20>MA60 就继续定投，不再要求 收盘>MA20")
-    parser.add_argument("--no-value-sell", action="store_true",
-                        help="删掉「`P/V` 过减持线就减一档」整条路径（§9.3.2 第 4 步第②条）。"
-                             "此后卖出只剩：建仓日均线止损、出名单清仓、换仓")
-    # 三个「反向开关」：BASE 串里已含 --no-value-sell / --swap-require-weak / --swap 这类
-    # store_true，扫描器只能**追加**参数、无法删除，故各配一个同 dest 的反向旗（后出现者胜）。
-    parser.add_argument("--value-sell", dest="no_value_sell", action="store_false",
-                        help="反向开关：重新启用减持线（覆盖此前的 --no-value-sell）")
+    # 「反向开关」：BASE 串里已含 --swap-require-weak / --swap 这类 store_true，
+    # 扫描器只能**追加**参数、无法删除，故各配一个同 dest 的反向旗（后出现者胜）。
     parser.add_argument("--swap-require-weak", action="store_true",
                         help="换仓的卖出源须同时 `收盘 < MA{--swap-weak-ma}`，"
                              "即只换走势已走坏的持仓，涨势中的不因排名靠后被换掉")
@@ -3105,7 +3101,7 @@ def main() -> int:
     parser.add_argument("--no-rank", dest="rank_by_upside", action="store_false",
                         help="空间只作阈值不作排序：合格集内按代码中性排序，不优先买最便宜的")
     parser.add_argument("--liquidate-ma", type=int, default=0,
-                        help="一键清仓的均线（0=不启用）：`P/V ≥ 减持线` 且连续 N 日跌破它即整仓卖出。"
+                        help="一键清仓的均线（0=不启用，须同时给 --sell-line）：`P/V ≥ 估值减持线` 且连续 N 日跌破它即整仓卖出。"
                              "120=半年线、240=年线。与 --trend-exit-ma 的区别是它须同时满足 P/V 条件")
     parser.add_argument("--liquidate-days", type=int, default=3,
                         help="一键清仓要求的连续跌破天数")
@@ -3165,7 +3161,7 @@ def main() -> int:
                         help="买入下限：`P/V < X` 的候选也不买，即买入区间变成 [X, 买入线]。"
                              "0=不设下限（原行为）。用于检验「过分便宜的是错杀还是市场看对了」")
     parser.add_argument("--sell-line", type=float, default=0.0,
-                        help="减持线（P/V），缺省 1+w；设为 1.30 即涨到 30%% 溢价才减持")
+                        help="研究开关：估值减持线（P/V）。不给＝整条估值减持路径关闭；设为 1.30 即涨到 30%% 溢价才减持")
     parser.add_argument("--trend-tranche", action="store_true",
                         help="走势组改为分批建仓：只要当日仍满足均线与估值条件就按 x%% 继续买入")
     parser.add_argument("--research-gate",
@@ -3269,7 +3265,7 @@ def main() -> int:
                         help="除权日对建仓止损锚与持有期峰价的处理（OI-054）：adjust=按 §11.4 同式折算（缺省，"
                              "§9.3.5 实盘规则）；frozen=不动（v4.31 前旧口径，送转日会把整仓当跌破清空）")
     parser.add_argument("--sell-full", action="store_true",
-                        help="P/V≥减持线（且过走势闸门）时整仓卖出，而非按一档减")
+                        help="减持触发（且过走势闸门）时整仓卖出，而非按一档减")
     parser.add_argument("--stop-partial", action="store_true",
                         help="建仓日均线止损改为「定投式减仓」：每日减一档而非整仓清空（用户 2026-08-14）")
     parser.add_argument("--stop-tranche", type=float, default=1.0, metavar="K",
@@ -3357,7 +3353,7 @@ def main() -> int:
                               ("--tier-mode", args.tier_mode != "none")) if v]
         if bad:
             sys.exit(f"{'、'.join(bad)} 的判据是原始比值口径，与 --gate self-pct 不能同时用")
-        # `--width`/`--sell-line` 在分位口径下**完全不参与判定**。BASE 里一定带着这两个开关，
+        # `--width`/`--sell-line` 在分位口径下**完全不参与判定**，
         # 不喊一声的话很容易以为「买 1.00 减 2.50」还在生效——那正是 §12.1 记着的两次作废教训。
         if args.gate == "self-pct":
             print(f"⚠ --gate self-pct：买卖闸改用**自身分位** ≤{args.buy_pct:.0%} / ≥{args.sell_pct:.0%}"
@@ -3367,9 +3363,10 @@ def main() -> int:
         else:
             print(f"⚠ --gate self-pct-buy：**只有买入闸**改用自身分位 ≤{args.buy_pct:.0%}"
                   f"（窗口 {args.quantile_window or '全历史'} 交易日）；卖出、止损、换仓仍按原始比值"
-                  f"（减持线 {args.sell_line}、换仓改善 {args.swap_margin}）。"
+                  f"（估值减持线 {args.sell_line or '未启用'}、换仓改善 {args.swap_margin}）。"
                   f"\n  --sell-pct 本次**不生效**；--pct-stop-when-rich 仍生效但语义随之变成"
-                  f"「只在 P/V ≥ {args.sell_line} 时才止损」。", file=sys.stderr)
+                  f"「只在 P/V ≥ {args.sell_line} 时才止损」——不给 --sell-line 即恒不成立、等于全程不止损。",
+                  file=sys.stderr)
     states = load_states(args.daily_states,
                          {c for _d, m in universe for c in m} if universe else None)
     hold_states = (load_states(args.hold_states, {c for _d, m in universe for c in m} if universe else None)
@@ -3510,7 +3507,6 @@ def main() -> int:
                      + (f"_hs{args.hold_strong}{len(args.hold_strong_ma)}" if args.hold_strong != "off" else "")
                      + (f"_{args.rank_mode[:1]}{args.quantile_window or 'all'}" if args.rank_mode != "pv" else "")
                      + ("_addma" if args.addon_trend == "ma-only" else "")
-                     + ("_nvs" if args.no_value_sell else "")
                      + (f"_swk{args.swap_weak_ma}" if args.swap_require_weak else "")
                      + (f"_sop{args.swap_out_min_pv:g}" if args.swap_out_min_pv else "")
                      + (f"_q{args.quantile_window or 'all'}b{args.buy_pct:g}"
@@ -3605,7 +3601,7 @@ def main() -> int:
                          quota_swappable=args.quota_swappable,
                          gate=args.gate, buy_pct=args.buy_pct, sell_pct=args.sell_pct,
                          pct_stop_when_rich=args.pct_stop_when_rich,
-                         addon_trend=args.addon_trend, no_value_sell=args.no_value_sell,
+                         addon_trend=args.addon_trend,
                          swap_require_weak=args.swap_require_weak,
                          swap_weak_ma=args.swap_weak_ma,
                          swap_out_min_pv=args.swap_out_min_pv,

@@ -24,11 +24,11 @@
 的假跌破（依据 §12.88.2/§12.89：滚5 +0.59pp、16/23、逐年中性、回撤换手略降）。
 
 **本脚本不产生任何买卖结论。** 卖出只有 §9.3.2 第四步四条（⓪跌破生效止损线
-整仓、①`P/V` 越过 §9.3.1 减持线且破 MA20 减一档、①′ 较持仓均价涨幅 ≥125% 且破 MA20 减一档（v4.44）、②出 §5 名单减一档、③换仓减一档），
+整仓、①较持仓均价涨幅 ≥125% 且破 MA20 减一档、②出 §5 名单减一档、③换仓减一档），
 由执行侧按本脚本输出的 `pv` 与 `stop_hit` 计算。
 
 **刻意不做**的事（退役清单，现由工作流 §11.1 的边界承担）——盈亏、权重、仓位占比、单笔风险、
-大趋势走坏判定、估值卖出减仓梯、加仓资格、账户回撤与杠杆。若将来要加回来，
+大趋势走坏判定、加仓资格、账户回撤与杠杆。若将来要加回来，
 先改工作流 §11 再改这里（§13 第 1 条）。
 
 `重大事项` 由大模型在逐票公告/新闻检索后判定，脚本不产出该取值。
@@ -48,7 +48,7 @@ from a_share_quotes import fetch_spot_quotes
 from a_share_signal_dates import evidence_iso_for_signal
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
 from build_a_share_core_valuation_pool import DEEP_UNDERVALUED_UPSIDE, OVERVALUED_BAND_MULT
-from screen_daily_volume_price_signals import (DEFAULT_HOLD_BANDS, DEFAULT_MODEL_BANDS, SEC93_GAIN_SELL, SEC93_SELL_LINE,
+from screen_daily_volume_price_signals import (DEFAULT_HOLD_BANDS, DEFAULT_MODEL_BANDS, SEC93_GAIN_SELL,
                                                fetch_daily_rows, holding_trim_signal)
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
@@ -59,15 +59,12 @@ DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_holdings_tracking.csv"
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 
-# **减持线的唯一落点在 §9.3.1**；此处直接引用扫描器常量、不再抄数——v2.98 抄下的 2.50 在
-# v4.04 参数表改 2.5548 时没跟上（本文件漂移到 2026-08-19 才被发现，v4.20 修）。
-# §9.3.1 的减持是 `P/V ≥ 线 **且收盘 < MA20**`：MA20 与 MA60 同经 `fetch_daily_rows` 取（前复权，§8.3），
-# 减持／涨幅减持的命中判定用扫描器 `holding_trim_signal`（唯一实现）；执行清单由扫描器 `daily_sell_plan.csv` 给出。
-SELL_LINE = SEC93_SELL_LINE
+# §9.3.1 的涨幅减持是 `较持仓均价涨幅 ≥ 125% **且收盘 < MA20**`：MA20 与 MA60 同经 `fetch_daily_rows` 取（前复权，§8.3），
+# 命中判定用扫描器 `holding_trim_signal`（唯一实现）；执行清单由扫描器 `daily_sell_plan.csv` 给出。
 # v4.62 OI-091：P/V 的净负债/企业价值来自生产带行。OI-095 起不在 import 时读带，
 # 由 track() 按信号日自动推导的证据日载入；与扫描器使用同一时点。
 # 测试可预置桩（非 None 即不再载入）。
-MODEL_BANDS: dict[str, dict] | None = None      # 持仓侧带（v4.92 SPA：§9.3.1 减持线读它）
+MODEL_BANDS: dict[str, dict] | None = None      # 持仓侧带（v4.92 SPA：§9.3.1 换仓来源读它）
 CAND_BANDS: dict[str, dict] | None = None       # 候选侧带（只用于并列显示两侧 P/V）
 # §9.3.1 涨幅减持（v4.44）：收盘较持仓均价（`cost_basis`，按 §11.4 折算）涨幅 ≥ 125% 且收盘 < MA20 → 减一档；
 # 资金不足时优先作换仓卖出源。
@@ -88,7 +85,7 @@ FIELDNAMES = [
     "stop_hit",
     "stop_line",       # 当日生效止损线 = min(锚, 当日 MA60)；锚未设或均线缺失时留空/退锚
     "close",
-    "ma20",            # §8.3 前复权 MA20：减持／涨幅减持的走势闸门
+    "ma20",            # §8.3 前复权 MA20：涨幅减持的走势闸门
     "ma60",            # §8.3 前复权 MA60：生效止损线的当日均线
     "quality_tier",
     # 参考分（工作流 §5.7）：只透传分层表经池 CSV 带过来的 quality_score，供报告显示同档内排序；
@@ -201,7 +198,7 @@ def resolve_prices(codes: list[str], as_of: date,
     is_today = as_of == bj.date()
     intraday = is_today and (bj.hour, bj.minute) < (15, 5)
     out: dict[str, float] = {}
-    ma20s: dict[str, float] = {}          # §9.3.1 减持／涨幅减持的走势闸门均线
+    ma20s: dict[str, float] = {}          # §9.3.1 涨幅减持的走势闸门均线
     ma60s: dict[str, float] = {}          # §9.3.1 v4.25 生效止损线的当日均线；取不到即缺席
     missing: list[str] = []
     for code in codes:
@@ -278,22 +275,20 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
 
         notes: list[str] = []
         if pv is not None and cand_pv is not None and abs(pv - cand_pv) > 5e-5:
-            notes.append(f"持仓侧 `P/V` {pv:.2f}（候选侧 {cand_pv:.2f}；减持线与换仓来源按持仓侧判）")
+            notes.append(f"持仓侧 `P/V` {pv:.2f}（候选侧 {cand_pv:.2f}；换仓来源按持仓侧判）")
         if close is None:
             notes.append("**未取到当日行情**（停牌或接口失败）：`P/V` 未算出，该票当日不进 §9.3 判定")
         if pool_row is None:
             notes.append("不在核心估值合格池内，无带——按 §9.3.2 第四步逐日清仓")
         elif low is None or high is None:
             notes.append("池内无合理价区间（无法估值）：无 `P/V`，当日不进机械判定")
-        # §9.3.1 减持行与涨幅减持行：唯一判定在扫描器 `holding_trim_signal`（P/V 或涨幅 且 收盘 < MA20）。
-        # 无带／无 P/V 的票涨幅行照判（只要有收盘价与成本）。
+        # §9.3.1 涨幅减持行：唯一判定在扫描器 `holding_trim_signal`（涨幅 且 收盘 < MA20）。
+        # 无带／无 P/V 的票照判（只要有收盘价与成本）。
         cost = to_float(h.get("cost_basis"))
         ma20 = ma20s.get(code)
-        trim_rule, trim_why = holding_trim_signal(close, ma20, pv, cost)
+        trim_rule, trim_why = holding_trim_signal(close, ma20, cost)
         gain = (close / cost - 1.0) if (close is not None and cost is not None and cost > 0) else None
-        if trim_rule == "减持":
-            notes.append(f"**减持一档**：`P/V` {pv:.2f} ≥ {SELL_LINE:.4f} 且收盘 {close:g} < MA20 {ma20:g}（§9.3.1）")
-        elif trim_rule == "涨幅减持":
+        if trim_rule == "涨幅减持":
             notes.append(f"**涨幅减持一档**：较持仓均价 {cost:g} 涨幅 {gain:.0%} ≥ {GAIN_SELL:.0%} 且收盘 {close:g} < MA20 {ma20:g}"
                          f"（§9.3.1 涨幅行）；资金不足时优先作换仓卖出源（涨幅最大者先）")
         elif trim_why:
@@ -327,7 +322,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
                 notes.append(
                     f"**收盘 {close:g} < 生效止损线 {stop_line:g}**（{detail}）："
                     f"按 §9.3.1 止损行次日尾盘以现价对当日生效线（min(锚, 当日MA60)）复核，"
-                    f"仍跌破即**当日整仓清空**，先于 `P/V` 减持与换仓执行"
+                    f"仍跌破即**当日整仓清空**，先于涨幅减持与换仓执行"
                 )
             else:
                 stop_hit = "否"
@@ -339,7 +334,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
 
         # §11.3 三取值（v2.56 删去 `割肉提醒`）。无行情时必须落 `数据缺失` 而非 `持有`：
         # `持有` 是唯一读起来像「已检查、没事」的取值，而没有现价恰恰意味着 `P/V` 没算过。
-        # 一只 P/V 已越过减持线、本该减持的停牌股若显示为持有，就在唯一的卖出规则上
+        # 一只涨幅已达标、本该减持的停牌股若显示为持有，就在卖出规则上
         # 制造了静默失效——这正是 §13 第 3 条要拦的形态。
         action = "数据缺失" if close is None else "持有"
 
@@ -525,13 +520,11 @@ def main() -> None:
         writer.writerows(rows)
     log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv, args.valuation_pool)
 
-    trim, gain_trim, gated = [], [], []
+    gain_trim, gated = [], []
     for r in rows:
         c, k = to_float(r.get("close")), to_float(r.get("cost_basis"))
-        rule, why = holding_trim_signal(c, to_float(r.get("ma20")), to_float(r.get("pv")), k)
-        if rule == "减持":
-            trim.append(r)
-        elif rule == "涨幅减持":
+        rule, why = holding_trim_signal(c, to_float(r.get("ma20")), k)
+        if rule == "涨幅减持":
             gain_trim.append((c / k - 1.0, r))
         elif why:
             gated.append((r, why))
@@ -541,7 +534,7 @@ def main() -> None:
     print(f"tracked {len(rows)} holdings as of {as_of}")
     # §11.4 检出排在 P/V 结论之前打印：除权未调时，下面那行 P/V 就是错的（§9.1 第四步）。
     report_ex_dividend(rows, as_of, args.timeout)
-    # §9.3.5 排在 P/V 之前：止损是第 ⓪ 条路径，命中即整仓，不再走减持与换仓。
+    # §9.3.5 排在 P/V 之前：止损是第 ⓪ 条路径，命中即整仓，不再走涨幅减持与换仓。
     # **无事也打印**，且必须把「未设」单列——一行「跌破：无」在 25 只全部未设时是恒真的，
     # 与恒亮的告警同型（§13 第 3 条）。
     stopped = [r for r in rows if r["stop_hit"] == "**已跌破**"]
@@ -550,7 +543,7 @@ def main() -> None:
     if stopped:
         names = "、".join(f"{r['security_name']}(收 {r['close']}，锚 {r['entry_stop_price']}，生效线见 note)"
                           for r in stopped)
-        print(f"  **跌破生效止损线 {len(stopped)} 只**：{names}——按 §9.3.5 次日尾盘**整仓清空**，先于减持与换仓")
+        print(f"  **跌破生效止损线 {len(stopped)} 只**：{names}——按 §9.3.5 次日尾盘**整仓清空**，先于涨幅减持与换仓")
     else:
         print(f"  跌破生效止损线（min(锚, 当日MA60)，§9.3.1 v4.25）：无"
               f"（已设锚 {len(rows) - len(unset)}/{len(rows)} 只"
@@ -558,11 +551,6 @@ def main() -> None:
     if unset:
         print(f"  未设止损锚 {len(unset)} 只：{'、'.join(str(r['security_name']) for r in unset)}"
               f"——§9.3.5 对其不生效，须待清空后重新建仓时按新规则设定")
-    if trim:
-        names = "、".join(f"{r['security_name']}(P/V {r['pv']}，收 {r['close']} < MA20 {r['ma20']})" for r in trim)
-        print(f"  **减持一档（持仓侧 P/V ≥ {SELL_LINE:.4f} 且收盘 < MA20）共 {len(trim)} 只**：{names}——股数见扫描器 `daily_sell_plan.csv`")
-    else:
-        print(f"  减持（持仓侧 P/V ≥ {SELL_LINE:.4f} 且收盘 < MA20）：无")
     no_cost = [r for r in rows if not (to_float(r.get("cost_basis")) or 0) > 0]
     if no_cost:
         print(f"  **持仓均价未填 {len(no_cost)} 只**：{'、'.join(str(r['security_name']) for r in no_cost)}——§9.3.1 涨幅减持行对其无法判定，请补 `cost_basis`（§11.2）")

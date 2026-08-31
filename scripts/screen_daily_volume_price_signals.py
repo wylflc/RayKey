@@ -2,7 +2,7 @@
 """每日行情取数（工作流 §8）＋ §9.3 机械执行层。
 
 v4.18 起本脚本只做判定所需的事：取收盘/MA20/MA60/成交额、算 `P/V`、
-§7.5 冻结排除、§9.3.2 先卖后买（卖出清单 `daily_sell_plan.csv`：止损复核／减持／涨幅减持／出名单／换仓／
+§7.5 冻结排除、§9.3.2 先卖后买（卖出清单 `daily_sell_plan.csv`：止损复核／涨幅减持／出名单／换仓／
 余仓清空；买入计划 `daily_entry_plan.csv`）、§9.3.3 比例冷却计数器（`daily_cooldown_state.csv`，买卖共用）、
 §8.4 缺口回溯（只报区间涨跌与放量峰值）。持仓不在核心池内的票另取行情、只进卖出侧。
 已退役的信号分级/入场阶段/形态识别/市场状态/深度低估关注等展示机制于 v4.18 整体删除
@@ -39,7 +39,7 @@ DEFAULT_INPUT = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_buy_candidates.csv"
 DEFAULT_REVIEW_QUEUE = ROOT / "data/interim/a_share_report_update_queue.csv"
 DEFAULT_MODEL_BANDS = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
-# v4.92 SPA：持仓侧带（逐票取候选侧与 B2 较高 V，`build_hold_model_bands.py`）——§9.3.1 减持线与换仓来源读它
+# v4.92 SPA：持仓侧带（逐票取候选侧与 B2 较高 V，`build_hold_model_bands.py`）——§9.3.1 换仓来源读它
 DEFAULT_HOLD_BANDS = ROOT / "data/processed/a_share_pool_model_bands_hold.csv"
 DEFAULT_PLAN_OUT = ROOT / "data/processed/daily_entry_plan.csv"
 DEFAULT_SELL_PLAN_OUT = ROOT / "data/processed/daily_sell_plan.csv"
@@ -410,7 +410,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-bands", type=Path, default=DEFAULT_MODEL_BANDS,
                         help="批量模型带表；§9.3 的 P/V 用它，不用池里的逐票档案带")
     parser.add_argument("--hold-bands", type=Path, default=DEFAULT_HOLD_BANDS,
-                        help="持仓侧模型带表（§6.7 第 4 步逐票取候选侧与 B2 较高 V）；§9.3.1 减持线与换仓来源的 P/V 读它，"
+                        help="持仓侧模型带表（§6.7 第 4 步逐票取候选侧与 B2 较高 V）；§9.3.1 换仓来源的 P/V 读它，"
                              "买入线与候选排序仍读 --model-bands；文件缺失时持仓侧退回候选侧并显著告警")
     parser.add_argument("--nav", type=float, default=0.0,
                         help="当日净资产，用于定一档 = NAV × §9.3.1 的比例。不给则只算 P/V、不出买入计划")
@@ -422,9 +422,9 @@ def parse_args() -> argparse.Namespace:
                              "缺省取 data/reference/cost_of_equity_inputs.csv 最新一行，与 rebuild_bank_bands 同源")
     parser.add_argument("--plan-out", type=Path, default=DEFAULT_PLAN_OUT)
     parser.add_argument("--sell-out", type=Path, default=DEFAULT_SELL_PLAN_OUT,
-                        help="§9.3.2 第 4 步卖出清单落点（止损复核／减持／涨幅减持／出名单／换仓）")
+                        help="§9.3.2 第 4 步卖出清单落点（止损复核／涨幅减持／出名单／换仓）")
     parser.add_argument("--cooldown-state", type=Path, default=DEFAULT_COOLDOWN_STATE,
-                        help="§9.3.3 比例冷却计数器（买入、减持、换仓共用）；扫描器每日读写")
+                        help="§9.3.3 比例冷却计数器（买入、涨幅减持、换仓共用）；扫描器每日读写")
     parser.add_argument("--holdings", type=Path, default=SEC93_HOLDINGS)
     parser.add_argument("--triage", type=Path, default=SEC93_TRIAGE,
                         help="三类表：持仓不在 worth_attention 者按 §9.3.2 第 4 步每日减一档")
@@ -477,8 +477,6 @@ SEC93_POSITION_CAP = 0.60      # §9.3.1「单票机械上限」（v4.64，用�
                                # 持仓市值 ÷ 当日净资产 N ≥ 60% 不再加仓，不足时本档只补到 60%（可小于一档、按手向下取整）；
                                # **只挡加仓、不触发任何卖出**，上涨越限不回削；新建仓与换仓目标（必为未持仓票）不受影响。
                                # None = 不设限（v4.04~v4.63 旧口径，§12.75）。与回测 `--position-cap` 同语义。
-SEC93_SELL_LINE = 2.4257       # §9.3.1「减持线」，按**持仓侧** P/V 判（v4.92 SPA：持仓侧 max(BASE,B2) 状态对同一上侧面的对齐解，回测日志 §12.136/§12.137；
-                               # v4.62 候选侧解为 2.4671、v4.61 为 2.5263、v4.34 为 2.5008）：持仓侧 P/V ≥ 线且收盘 < MA20 → 减一档。
 SEC93_L3_TACTICAL_GATE = True   # §9.3.1「L3 战术闸门」（v4.53，OI-084 用户裁定①）：L3 且分层表 tactical_thesis 为空或判「无」者不进合格集（新建仓与加仓同）
 SEC93_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 SEC93_TACTICAL_NONE = re.compile(r"^\W*(无|暂无|不可买)")   # 判「无战术理由」的写法
@@ -591,7 +589,7 @@ def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
                     as_of: str, rf: float, prefix: str = "model") -> None:
     """给每行挂上 §9.3 用的 `{prefix}_intrinsic_value` / `{prefix}_pv` / `{prefix}_band_source`。
 
-    `prefix="model"` 为候选侧（买入线、候选排序），`prefix="hold"` 为持仓侧（v4.92 SPA：减持线、换仓来源）。
+    `prefix="model"` 为候选侧（买入线、候选排序），`prefix="hold"` 为持仓侧（v4.92 SPA：换仓来源）。
     **与 §8 的 `fair_price_low/high`（逐票档案带）并存、互不覆盖**：档案带继续供
     §6.2 自动定档用，模型带只供 §9.3 用。"""
     for row in rows:
@@ -665,7 +663,7 @@ def load_exchange_map(path: Path | None = None) -> dict[str, str]:
         return {str(r["security_code"]).zfill(6): r.get("exchange", "") for r in csv.DictReader(fh)}
 
 
-# ---- §9.3.3 比例冷却计数器（买入、减持、换仓共用；按合格次数计，不按自然日）
+# ---- §9.3.3 比例冷却计数器（买入、涨幅减持、换仓共用；按合格次数计，不按自然日）
 DEFAULT_COOLDOWN_STATE = ROOT / "data/processed/daily_cooldown_state.csv"
 COOLDOWN_FIELDS = ["security_code", "security_name", "remaining_skips", "remaining_before", "applied_trade_date"]
 
@@ -725,7 +723,7 @@ def tranche_sell_shares(tranche: float, price: float, held: float) -> float:
 
 
 def hold_pv_of(r: dict[str, object] | None) -> float | None:
-    """持仓侧 P/V（v4.92 SPA：§9.3.1 减持线与换仓来源读它）；行上无 `hold_pv` 时退回候选侧 `model_pv`。"""
+    """持仓侧 P/V（v4.92 SPA：§9.3.1 换仓来源读它）；行上无 `hold_pv` 时退回候选侧 `model_pv`。"""
     r = r or {}
     for key in ("hold_pv", "model_pv"):
         if isinstance(r.get(key), float):
@@ -733,23 +731,20 @@ def hold_pv_of(r: dict[str, object] | None) -> float | None:
     return None
 
 
-def holding_trim_signal(close: float | None, ma20: float | None, pv: float | None,
+def holding_trim_signal(close: float | None, ma20: float | None,
                         cost: float | None) -> tuple[str, str]:
-    """§9.3.1 减持行与涨幅减持行的唯一判定（扫描器与跟踪器同用）。
-    返回 (命中规则, 说明)：规则为 `减持`／`涨幅减持`／空；说明写明被走势闸门挡下或均线缺失。"""
+    """§9.3.1 涨幅减持行的唯一判定（扫描器与跟踪器同用）。
+    返回 (命中规则, 说明)：规则为 `涨幅减持`／空；说明写明被走势闸门挡下或均线缺失。"""
     if close is None:
         return "", ""
-    value_rich = pv is not None and pv >= SEC93_SELL_LINE
     gain = (close / cost - 1.0) if (cost is not None and cost > 0) else None
-    gain_hit = gain is not None and gain >= SEC93_GAIN_SELL
-    if not value_rich and not gain_hit:
+    if gain is None or gain < SEC93_GAIN_SELL:
         return "", ""
-    tag = "减持" if value_rich else "涨幅减持"
     if ma20 is None:
-        return "", f"{tag}条件成立但 MA20 缺失，不减、等数据齐"
+        return "", "涨幅减持条件成立但 MA20 缺失，不减、等数据齐"
     if close >= ma20:
-        return "", f"{tag}条件成立但收盘 {close:g} ≥ MA20 {ma20:g}，走势闸门挡下不减"
-    return tag, ""
+        return "", f"涨幅减持条件成立但收盘 {close:g} ≥ MA20 {ma20:g}，走势闸门挡下不减"
+    return "涨幅减持", ""
 
 
 SELL_FIELDS = ["trade_date", "security_code", "security_name", "rule", "condition", "close", "ma20", "ma60",
@@ -767,9 +762,9 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     """§9.3.2 全部六步：先卖后买。
 
     卖出侧（第 4 步）逐持仓判：⓪止损复核（T+1 尾盘现价对当日生效线，本表只列候选、不计其卖出款）、
-    ②出 `worth_attention` 每日减一档（不加走势条件）、①`P/V ≥ 减持线` 或 ①′涨幅 ≥ 125% 且 `收盘 < MA20` 减一档
-    （二者同日只减一档）、③换仓（资金不足一档时：先换涨幅达标的弱势持仓，否则换最贵的弱势持仓且 P/V 差 ≥ 换仓差）、
-    ④任何减档后余仓不足一手清空。减持与换仓卖出款当日计入可用资金。
+    ②出 `worth_attention` 每日减一档（不加走势条件）、①涨幅 ≥ 125% 且 `收盘 < MA20` 减一档、
+    ③换仓（资金不足一档时：先换涨幅达标的弱势持仓，否则换最贵的弱势持仓且 P/V 差 ≥ 换仓差）、
+    ④任何减档后余仓不足一手清空。涨幅减持与换仓卖出款当日计入可用资金。
     买入侧（第 3、5 步）：`P/V` 升序、去相关、逐个买一档；高价股一档买不起一手时按 §9.3.3 计数器买一手或跳过。
     `holding_rows`：不在输入池内的持仓行情（出名单／无法估值者），只进卖出侧。
     """
@@ -848,7 +843,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                                   note="停牌或取数失败：按 §9.1 执行日停牌跳过并复核"))
             continue
         ma20, ma60 = to_float(r.get("ma20")), to_float(r.get("ma60"))
-        pv = hold_pv_of(r)                                   # 持仓侧 P/V（v4.92 SPA：减持线按它判）
+        pv = hold_pv_of(r)                                   # 持仓侧 P/V（v4.92 SPA：换仓来源按它判）
         # ⓪ 止损复核：生效线 = min(锚, 当日 MA60)；T+1 尾盘现价跌破 T+1 当日线即整仓清空
         stop = h.get("stop")
         if stop:
@@ -863,11 +858,10 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             sold = reduce_one(code, r, "出名单", "已移出 worth_attention，每日减一档直至清空", price)
             cash += sold * price
             continue
-        # ①／①′ 减持：P/V ≥ 线 或 涨幅 ≥ 125%，且收盘 < MA20
-        rule, why = holding_trim_signal(price, ma20, pv, h.get("cost"))
+        # ① 涨幅减持：涨幅 ≥ 125% 且收盘 < MA20
+        rule, why = holding_trim_signal(price, ma20, h.get("cost"))
         if rule:
-            cond = (f"持仓侧 P/V {pv:.4f} ≥ {SEC93_SELL_LINE:.4f} 且收盘 {price:g} < MA20 {ma20:g}" if rule == "减持"
-                    else f"收盘 {price:g} ≥ 均价 {h.get('cost'):g}×{1 + SEC93_GAIN_SELL:.2f} 且收盘 < MA20 {ma20:g}")
+            cond = f"收盘 {price:g} ≥ 均价 {h.get('cost'):g}×{1 + SEC93_GAIN_SELL:.2f} 且收盘 < MA20 {ma20:g}"
             sold = reduce_one(code, r, rule, cond, price)
             cash += sold * price
         elif why:
@@ -1052,9 +1046,9 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         s["condition"] = f"{head}｜卖出款去向：{dest_txt}{gate}"
 
     # §9.3.2 第 6 步：同一信号日同一只股票买卖并存时按较小者对冲，只执行净额，双边费税都不付。
-    # 只对减持、涨幅减持、换仓三条生效：「出名单」是强制退出、同日买入本就不该发生（§10.1 第 1 条），
+    # 只对涨幅减持、换仓两条生效：「出名单」是强制退出、同日买入本就不该发生（§10.1 第 1 条），
     # 抵消会把该矛盾盖住；「止损复核」是提示行、并未在本函数里减仓，故只提示不抵消。
-    NETTABLE = ("减持", "涨幅减持", "换仓")
+    NETTABLE = ("涨幅减持", "换仓")
     by_plan = {str(p["security_code"]).zfill(6): p for p in plan}
     netted_rows: list[tuple[str, float]] = []
     for srow in sells:
@@ -1078,7 +1072,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     stop_conflict = [str(r["security_name"]) for r in sells
                      if r["rule"] == "止损复核" and str(r["security_code"]).zfill(6) in by_plan]
 
-    # 持仓侧与候选侧 P/V 不同的持仓（报告用：减持线与换仓来源按持仓侧判，读者要能看到两侧数）
+    # 持仓侧与候选侧 P/V 不同的持仓（报告用：换仓来源按持仓侧判，读者要能看到两侧数）
     hold_pv_diff = [(h.get("name", code), by_code[code]["hold_pv"], by_code[code]["model_pv"])
                     for code, h in holdings.items()
                     if code in by_code and isinstance(by_code[code].get("hold_pv"), float)
@@ -1103,8 +1097,8 @@ def section93_entry_plan(rows: list[dict[str, object]], nav: float, funds: float
                          holdings: dict[str, float] | None = None,
                          blocked: set[str] | None = None,
                          tactical_gated: set[str] | None = None) -> dict[str, object]:
-    """买入侧兼容入口：只给股数的持仓字典（无成本／止损）→ 走完整执行层，卖出侧只可能出「出名单」以外的
-    P/V 减持（无成本即无涨幅减持、无止损）。生产入口是 `section93_execution_plan`。"""
+    """买入侧兼容入口：只给股数的持仓字典（无成本／止损）→ 走完整执行层，卖出侧只可能出「出名单」
+    （无成本即无涨幅减持、无止损）。生产入口是 `section93_execution_plan`。"""
     detail = {c: {"name": "", "shares": s, "cost": None, "stop": None} for c, s in (holdings or {}).items()}
     return section93_execution_plan(rows, nav, funds, detail, blocked, tactical_gated, members=None, counters={})
 
@@ -1156,7 +1150,7 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
         cap_txt = f"单票上限 {SEC93_POSITION_CAP:.0%}（只挡加仓、不触发卖出）" if SEC93_POSITION_CAP else "单票无上限"
         print(f"     持仓 {result['n_held']} 只已载入｜{cap_txt}")
         for name, hpv, cpv in result.get("hold_pv_diff") or []:
-            print(f"     [持仓侧带] {name}：持仓侧 P/V {hpv:.4f}（候选侧 {cpv:.4f}）——减持线与换仓来源按持仓侧判")
+            print(f"     [持仓侧带] {name}：持仓侧 P/V {hpv:.4f}（候选侧 {cpv:.4f}）——换仓来源按持仓侧判")
     # 3. 卖出清单
     print(f"  3. 卖出清单：{len([s for s in sells if s['rule'] not in ('数据缺失',)])} 条"
           + ("（**今日无卖出**）" if not sells else ""))
@@ -1178,7 +1172,7 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
     # 4. 买入清单
     if result["funds_given"]:
         print(f"  4. 买入清单：可用资金 {float(result['funds0']) / 1e4:,.2f} 万（现金＋未用授信）"
-              f"＋ 当日减持/换仓卖出款 {sold_cash / 1e4:,.2f} 万 → 投入 {invested / 1e4:,.2f} 万"
+              f"＋ 当日涨幅减持/换仓卖出款 {sold_cash / 1e4:,.2f} 万 → 投入 {invested / 1e4:,.2f} 万"
               f"（占净资产 {invested / nav * 100:.1f}%）｜余 {result['cash'] / 1e4:,.2f} 万")
     else:
         print(f"  4. 买入清单：⚠ **未给 `--funds`，按「可用资金＝净资产」估算、不做换仓**"
@@ -1237,7 +1231,7 @@ FIELDNAMES = [
     "model_intrinsic_value",
     "model_band_source",
     "model_pv",
-    # v4.92 SPA 持仓侧带三列：减持线与换仓来源读 `hold_pv`；持仓侧带缺失时等于候选侧三列。
+    # v4.92 SPA 持仓侧带三列：换仓来源读 `hold_pv`；持仓侧带缺失时等于候选侧三列。
     "hold_intrinsic_value",
     "hold_band_source",
     "hold_pv",
@@ -1294,7 +1288,7 @@ def main() -> int:
             print(f"  **无带 {len(rows) - priced} 只**（§9.3 判定不到它们）：{'、'.join(missing)}")
         if rows and not priced:
             print("  **告警：model_pv 整列为空** —— 模型带与池对不上号，§9.3 本次等于没跑")
-        # v4.92 SPA：持仓侧带（减持线／换仓来源）。缺文件不静默——退回候选侧并显著告警（§13 第 3 条）。
+        # v4.92 SPA：持仓侧带（换仓来源）。缺文件不静默——退回候选侧并显著告警（§13 第 3 条）。
         if args.hold_bands and args.hold_bands.exists():
             hold_bands = load_model_bands(args.hold_bands, evidence_date)
             attach_model_pv(rows, hold_bands, args.as_of, args.rf, prefix="hold")
@@ -1302,13 +1296,13 @@ def main() -> int:
             n_diff = sum(1 for r in rows if isinstance(r.get("hold_pv"), float) and isinstance(r.get("model_pv"), float)
                          and abs(r["hold_pv"] - r["model_pv"]) > 5e-5)
             print(f"§9.3 持仓侧带：{len(hold_bands)} 只有带，{n_hold}/{len(rows)} 只算出持仓侧 P/V，其中 {n_diff} 只与候选侧不同"
-                  f"（减持线 {SEC93_SELL_LINE} 与换仓来源按持仓侧判）")
+                  f"（换仓来源按持仓侧判）")
             if rows and priced and not n_hold:
-                print("  **告警：hold_pv 整列为空** —— 持仓侧带与池对不上号，减持／换仓来源本次等于按候选侧判")
+                print("  **告警：hold_pv 整列为空** —— 持仓侧带与池对不上号，换仓来源本次等于按候选侧判")
         else:
             hold_bands = bands
             attach_model_pv(rows, hold_bands, args.as_of, args.rf, prefix="hold")
-            print(f"  ⚠ **持仓侧带文件不存在（{args.hold_bands}）**：减持线与换仓来源退回候选侧 P/V；重建见 §6.7 第 4 步")
+            print(f"  ⚠ **持仓侧带文件不存在（{args.hold_bands}）**：换仓来源退回候选侧 P/V；重建见 §6.7 第 4 步")
     write_csv(args.output_csv, rows, FIELDNAMES)
     review_note = (
         "复核冻结：已启用（读取更新队列）。" if blocked is not None else
