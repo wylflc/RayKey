@@ -43,6 +43,7 @@ ROE_RATIO_SEVERE = 3.0   # 超出 [1/3, 3] 判严重
 BPS_JUMP_WARN = 2.5      # 相邻期 bps 倍数跳变阈值
 SHARE_JUMP_WARN = 1.20   # 相邻期倒推股本跳变阈值（送转/增发已单独扣除）
 MIN_PERIODS = 4
+SHARE_LIVE_WARN = 0.05   # 实时总股本 vs 面板股数 的相对偏差告警线
 
 
 def num(value) -> float | None:
@@ -95,11 +96,18 @@ def main() -> int:
 
     codes = None
     names: dict[str, str] = {}
+    live_shares: dict[str, float] = {}
     if not args.all_market and args.pool.exists():
         with args.pool.open(encoding="utf-8-sig", newline="") as handle:
             rows = list(csv.DictReader(handle))
         codes = {r["security_code"] for r in rows}
         names = {r["security_code"]: r["security_name"] for r in rows}
+        # 实时总股本 = 总市值 ÷ 现价（腾讯 qt.gtimg.cn 字段 45，`total_market_cap_bn` 单位十亿元）。
+        # 池文件里已存好，本脚本不再联网。
+        for r in rows:
+            cap, price = num(r.get("total_market_cap_bn")), num(r.get("valuation_price"))
+            if cap and price and price > 0:
+                live_shares[r["security_code"]] = cap * 1e9 / price
 
     panel = load_panel(args.financials_dir, codes)
     # 订正层（OI-066）先于自洽核对生效：已登记的源侧错值不再逐轮报「严重」，
@@ -206,6 +214,36 @@ def main() -> int:
                 prev_bps, prev_key = bps, key
             if shares_at_period:
                 prev_shares, prev_shares_raw = shares_at_period, shares
+
+    # ⑤ 实时总股本对照。**定期报告滞后于股本变动**：报告期末之后的发行／回购注销要到下一份
+    # 报告才进面板，而带的每股锚走面板。判例：电投能源（002128）2026-06-03 发行 7.1183 亿股
+    # 收购白音华煤电、2026-07-17 配套定增 1.7308 亿股，总股本 22.416→31.2648 亿，中报行只到
+    # 29.53 亿，实时口径高 5.7%（OI-125）。
+    # 只报不改：面板股数取「归母净利 ÷ 基本EPS」＝**加权平均股数**，与实时的**期末时点股数**
+    # 本就不同基，期内发行时前者必然偏小，故本项**不判「严重」、不闸住建带链**，只标出
+    # 「面板每股口径可能滞后于最新股本」的票，供逐票确认。
+    for code, live in sorted(live_shares.items()):
+        periods = panel.get(code)
+        if not periods:
+            continue
+        latest = None
+        for key in sorted(periods):
+            profit, eps = num(periods[key].get("parent_netprofit")), num(periods[key].get("basic_eps"))
+            if profit is not None and eps not in (None, 0) and profit * eps > 0 and abs(eps) >= 0.01:
+                latest = (key, abs(profit / eps))
+        if latest is None:
+            continue
+        key, panel_shares = latest
+        dev = live / panel_shares - 1
+        if abs(dev) > SHARE_LIVE_WARN:
+            findings.append({
+                "security_code": code, "security_name": names.get(code, code), "period": key,
+                "check": "实时股本对照", "severity": "可疑",
+                "detail": (f"最新面板期 {key} 股数 {panel_shares/1e8:.4f}亿（归母÷EPS，加权平均口径）"
+                           f" vs 实时总股本 {live/1e8:.4f}亿（总市值÷现价）＝{dev*100:+.2f}%；"
+                           f"实时口径为最新，偏差含「期内发行的加权平均效应」与「报告期后股本变动」两部分，需逐票分辨"),
+                "suggest_bps": "",
+            })
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     fields = ["security_code", "security_name", "period", "check", "severity", "detail", "suggest_bps"]
