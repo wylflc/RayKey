@@ -1235,6 +1235,8 @@ class Band:
     ev_ps: float | None = None                # 企业价值/股（扣净负债前）
     owner_earnings_true_ps: float | None = None  # CFO − 维持性capex（≈D&A），每股
     roic_path: str | None = None              # growth ／ zero_growth ／ equity_fallback
+    minority_share: float | None = None       # 少数股东经济份额 m（--minority-basis earnings）
+    minority_share_basis: str = ""            # earnings ／ book_fallback ／ none
     roic_nopat_mode: str = ""                 # median ／ onesided ／ cyclical_median
     roic_g_source: str = ""                   # capital ／ trailing ／ none
     mos: float | None = None
@@ -1834,8 +1836,32 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             if latest.cfo is not None:
                 band.owner_earnings_true_ps = (
                     (latest.cfo - latest.dep_amort) / e_op_ref * bps_op)
-            net_debt_ps = ((latest.interest_debt - latest.excess_cash
-                            + latest.minority_equity) / e_op_ref * bps_op) - x_ps
+            # 股权桥的少数股东口径（--minority-basis）。企业价值由**合并口径** NOPAT 折现而来，
+            # 分子含少数股东那部分经营成果：
+            #   book     ＝ 扣减按少数股东权益**账面**（两侧不同口径）
+            #   earnings ＝ 扣减取「账面」与「按盈利份额分得的权益价值 m×(EV−净金融负债)」的较大者，
+            #              m 为窗口内少数股东损益占合并净利的中位（`roic_inputs.minority_share`）。
+            #              账面为下界：子公司只挣到资本成本时权益价值即账面，挣得多时按盈利份额分。
+            # 外生权益 x 是母公司层面的募资/回购，两口径下都不参与少数股东分摊。
+            minority_basis = getattr(args, "minority_basis", "book")
+            fin_net_debt_ps = (latest.interest_debt - latest.excess_cash) / e_op_ref * bps_op
+            minority_book_ps = latest.minority_equity / e_op_ref * bps_op
+            m_share = 0.0
+            if minority_basis == "earnings":
+                m_share, m_basis = roic_inputs.minority_share(history)
+                band.minority_share, band.minority_share_basis = m_share, m_basis
+                ROIC_STATS[f"少数股东份额·{m_basis}"] += 1
+
+            def equity_bridge(ev_value: float) -> float:
+                """每股企业价值 → 每股净负债（含少数股东扣减，已含外生权益 x）。"""
+                minority_ps = minority_book_ps
+                if minority_basis == "earnings" and m_share > 0:
+                    total_equity_ps = ev_value - fin_net_debt_ps
+                    if total_equity_ps > 0:
+                        minority_ps = max(minority_book_ps, m_share * total_equity_ps)
+                return fin_net_debt_ps + minority_ps - x_ps
+
+            net_debt_ps = equity_bridge(nopat_ps / w if w else 0.0)
             band.net_debt_ps = net_debt_ps
             if nopat_ps <= 0:
                 band.status, band.reason = "rejected", "正常化每股 NOPAT 非正"
@@ -1846,7 +1872,9 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             if getattr(args, "roic_zero_anchor", "nopat") == "fcff" and rr is not None and rr > 0:
                 zero_numerator = nopat_ps * (1.0 - min(rr, 0.5))
                 ROIC_STATS["零增长锚·FCFF 分子"] += 1
-            band.v_zero_growth = zero_numerator / w - net_debt_ps
+            zero_ev_ps = zero_numerator / w
+            nd_zero = equity_bridge(zero_ev_ps)
+            band.v_zero_growth = zero_ev_ps - nd_zero
             growth_mode = getattr(args, "roic_growth", "capital")
             # v1（capital）：ROIC、再投资率、增量 ROIC 任一不可用 → 整条退零增长永续。
             # v2（hybrid）：**只有 ROIC0 不可用才退零增长**——ΔIC ≤ 0（现金牛把投入资本
@@ -1861,10 +1889,11 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     band.status, band.reason = "rejected", (
                         f"零增长股权价值 {value:.2f} ≤ 0：净负债超过零增长企业价值")
                     return band
+                band.net_debt_ps = net_debt_ps = nd_zero
                 thin_max = getattr(args, "thin_equity_max", 0.5)
-                if thin_max and net_debt_ps > 0 and (zero_numerator / w) > 0 and net_debt_ps / (zero_numerator / w) >= thin_max:
+                if thin_max and net_debt_ps > 0 and zero_ev_ps > 0 and net_debt_ps / zero_ev_ps >= thin_max:
                     band.status, band.reason = "rejected", (
-                        f"薄权益：每股净负债 {net_debt_ps:.2f} ≥ {thin_max:.0%} × 每股企业价值 {zero_numerator / w:.2f}，"
+                        f"薄权益：每股净负债 {net_debt_ps:.2f} ≥ {thin_max:.0%} × 每股企业价值 {zero_ev_ps:.2f}，"
                         f"股权价值为两大数之差不可估（OI-091）")
                     EXT_EQUITY_STATS["薄权益守卫·拒绝"] += 1
                     return band
@@ -1942,6 +1971,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 band.status, band.reason = "rejected", str(exc)
                 return band
             band.ev_ps = res.intrinsic_value
+            band.net_debt_ps = net_debt_ps = equity_bridge(res.intrinsic_value)
             value = res.intrinsic_value - net_debt_ps
             if value <= 0:
                 band.status, band.reason = "rejected", (
@@ -2378,7 +2408,8 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "incremental_roe_used", "ame_path",
                "nopat_ps", "roic0", "incremental_roic", "reinvestment_rate", "wacc",
                "cost_of_debt", "tax_rate", "net_debt_ps", "ev_ps",
-               "owner_earnings_true_ps", "roic_path", "roic_nopat_mode", "roic_g_source",
+               "owner_earnings_true_ps", "roic_path", "minority_share", "minority_share_basis",
+               "roic_nopat_mode", "roic_g_source",
                "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
                "r_mode", "rf", "erp", "beta", "r", "g_terminal", "roe_terminal",
                "intrinsic_value", "band_low", "band_high", "mos", "max_buy_price",
@@ -2417,6 +2448,8 @@ def band_row(band: Band, tier: str) -> dict:
         "ev_ps": fmt(band.ev_ps),
         "owner_earnings_true_ps": fmt(band.owner_earnings_true_ps),
         "roic_path": band.roic_path or "",
+        "minority_share": fmt(band.minority_share, 4),
+        "minority_share_basis": band.minority_share_basis,
         "roic_nopat_mode": band.roic_nopat_mode, "roic_g_source": band.roic_g_source,
         "payout": fmt(band.payout),
         "g_trailing": fmt(band.g_trailing), "g_sustainable": fmt(band.g_sustainable),
@@ -2651,6 +2684,9 @@ def main() -> int:
                              "ame=All Money Is Equal 的现金流代理版（经营现金流 ＋ iROE，"
                              "**没扣资本开支**，见 §12.65）；"
                              "roic=同框架的真口径（NOPAT/投入资本/FCFF/WACC，需三大报表，见 §12.66）")
+    parser.add_argument("--minority-basis", choices=("book", "earnings"), default="book",
+                        help="股权桥的少数股东口径：book=少数股东权益按账面并入净负债（生产 BASE）；"
+                             "earnings=每股量乘归母经济份额 1−m，m 取窗口内少数股东损益占合并净利中位")
     parser.add_argument("--statements-dir", type=Path, default=roic_inputs.STMT_DIR,
                         help="--value-model roic 的三大报表目录，缺省 data/raw/financials_statements/")
     parser.add_argument("--roic-ic-floor", type=float, default=0.0, metavar="K",

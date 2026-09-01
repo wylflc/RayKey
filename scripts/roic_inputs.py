@@ -110,6 +110,8 @@ class RoicYear:
     interest_expense: float = 0.0
     treasury_shares: float = 0.0      # 库存股（已回购未注销，资产负债表 TREASURY_SHARES；OI-082 周期守卫的权益回加项）
     parent_netprofit: float | None = None   # 归母净利（利润表 PARENT_NETPROFIT）——§6.5.1 股本口径：年报间外生权益 X = ΔE − (综合收益 − 分红)
+    net_profit: float | None = None         # 合并净利（NETPROFIT）——少数股东经济份额的分母
+    minority_profit: float | None = None    # 少数股东损益（MINORITY_INTEREST）——同上分子
     parent_tci: float | None = None         # 归母综合收益总额（PARENT_TCI）；缺失时 X 的留存项退回归母净利
     is_financial: bool = False
     tax_rate_observed: bool = False   # True=税率来自本期 所得税/利润总额；False=利润总额非正时回退法定税率
@@ -168,6 +170,8 @@ def load_statements(codes: set[str] | None = None,
                 for p in parts.values())
             year.revenue = _num(inc.get("TOTAL_OPERATE_INCOME"))
             year.parent_netprofit = _num(inc.get("PARENT_NETPROFIT"))
+            year.net_profit = _num(inc.get("NETPROFIT"))
+            year.minority_profit = _num(inc.get("MINORITY_INTEREST"))
             year.parent_tci = _num(inc.get("PARENT_TCI"))
             year.total_equity = _num(bal.get("TOTAL_EQUITY"))
             year.parent_equity = _num(bal.get("TOTAL_PARENT_EQUITY"))
@@ -222,6 +226,29 @@ def roic_of(year: RoicYear, prev: RoicYear | None) -> float | None:
     if prev is not None and prev.invested_capital:
         base = (year.invested_capital + prev.invested_capital) / 2
     return year.nopat / base if base > 0 else None
+
+
+MINORITY_SHARE_CAP = 0.95        # 少数股东经济份额上限：归母只剩 5% 时每股价值已无判别力
+
+
+def minority_share(history: list[RoicYear]) -> tuple[float, str]:
+    """少数股东在**权益价值**中的经济份额，与其在合并净利中的份额同口径。
+
+    企业价值由合并口径 NOPAT 折现而来，分子含少数股东那部分经营成果；扣减若按账面，
+    两侧不同口径。这里按「谁挣走多少利润就分走多少价值」把 `EV − 净金融负债` 切开：
+    份额取窗口内合并净利为正的财年的 `少数股东损益 ÷ 合并净利` **中位**（单年可为负、
+    可因子公司一次性损益暴涨，中位滤掉），无可用财年时退回账面比 `少数股东权益 ÷ 权益合计`。
+    夹在 [0, MINORITY_SHARE_CAP]。返回 (份额, 口径标记)。"""
+    ratios = [y.minority_profit / y.net_profit for y in history
+              if y.net_profit is not None and y.net_profit > 0 and y.minority_profit is not None]
+    if ratios:
+        share, basis = statistics.median(ratios), "earnings"
+    else:
+        latest = max(history, key=lambda y: y.period) if history else None
+        if latest is None or not latest.total_equity or latest.total_equity <= 0:
+            return 0.0, "none"
+        share, basis = latest.minority_equity / latest.total_equity, "book_fallback"
+    return min(max(share, 0.0), MINORITY_SHARE_CAP), basis
 
 
 def normalized_roic(history: list[RoicYear]) -> float | None:
