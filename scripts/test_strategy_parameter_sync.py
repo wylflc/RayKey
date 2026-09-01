@@ -84,6 +84,13 @@ class StrategyParameterSyncTest(unittest.TestCase):
         import sweep_backtest_configs as sweep
         self.assertIn("年化", sweep.DELTA_KEYS)
         self.assertNotIn("年化", sweep.AUX_DELTA_KEYS)
+        # v4.116（OI-122，§12.157）：臂间比较基准 = 复利读数、对照表按 Δ年化 排序；
+        # 未来年化的水平引用只走全期口径，互不重叠 5 年块中位为必报描述读数
+        self.assertIn("**臂间比较与「未来年化表现」的表述基准一律为复利读数**", workflow)
+        self.assertIn("未来年化的水平引用只用全期口径读数", workflow)
+        self.assertIn("互不重叠 5 年块中位（自最新窗口末月往回每 60 个月一窗、首尾相接零重叠，取中位）", workflow)
+        self.assertIn("互不重叠5年块中位", sweep.FIELDS)
+        self.assertEqual("年化", sweep.PRIMARY_KEY)
         self.assertIn("`data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`", workflow)
         self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)

@@ -2855,7 +2855,16 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
                 "为负的窗口占比": (sum(1 for v in g if v < 0) / len(g)) if g else nan,
                 "窗口数": len(windows)}
     s3 = _stats(rolling_windows(curve, years=3, risk_free=risk_free))
-    s5 = _stats(rolling_windows(curve, years=5, risk_free=risk_free))
+    w5 = rolling_windows(curve, years=5, risk_free=risk_free)
+    s5 = _stats(w5)
+    # 互不重叠 5 年块：自最新窗口末月往回每 60 个月取一个滚 5 窗，首尾相接零重叠。
+    # 重叠滚动中位把水平抬高约 25pp（§12.156），未来年化的水平引用一律走全期口径（§12.1 第 2 款）。
+    blk = {w["end"][:7]: w["cagr"] for w in w5}
+    blocks, mk = [], max(blk, default="")
+    while mk in blk:
+        blocks.append(blk[mk])
+        t = int(mk[:4]) * 12 + int(mk[5:7]) - 1 - 60
+        mk = f"{t // 12:04d}-{t % 12 + 1:02d}"
     # 滚动 10 年：**只有 2009-11 那几条长跑够长**，23 个起点里 2016-11 之后的起点一个 10 年
     # 窗口都凑不出，故该列在多数臂上是空的——**空不等于差，读表时不要把 nan 当成 0**。
     s10 = _stats(rolling_windows(curve, years=10, risk_free=risk_free))
@@ -2886,6 +2895,8 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "滚动5年Sharpe中位": s5["Sharpe中位"],
             "滚动5年为负的窗口占比": s5["为负的窗口占比"],
             "滚动5年窗口数": s5["窗口数"],
+            "互不重叠5年块中位": statistics.median(blocks) if blocks else float("nan"),
+            "互不重叠5年块数": len(blocks),
             "滚动10年年化中位": s10["年化中位"],
             "滚动10年年化P10": s10["年化P10"],
             "滚动10年回撤中位": s10["回撤中位"],
