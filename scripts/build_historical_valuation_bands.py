@@ -1852,16 +1852,23 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 band.minority_share, band.minority_share_basis = m_share, m_basis
                 ROIC_STATS[f"少数股东份额·{m_basis}"] += 1
 
-            def equity_bridge(ev_value: float) -> float:
-                """每股企业价值 → 每股净负债（含少数股东扣减，已含外生权益 x）。"""
-                minority_ps = minority_book_ps
+            def equity_bridge(ev_value: float) -> tuple[float, float]:
+                """每股企业价值 →（每股净负债含少数股东扣减，其中**不随 EV 缩放**的部分）。
+
+                薄权益守卫（OI-091）判的是「股权价值＝两个大数之差」，放大倍数 = EV ÷ 股权价值，
+                只由固定扣减决定；按盈利份额分走的那一份与 `EV − 净金融负债` 同比例缩放，
+                对相对误差无放大作用，不计入守卫。账面下界生效时该份额是固定额，计入。"""
+                minority_ps, proportional = minority_book_ps, 0.0
                 if minority_basis == "earnings" and m_share > 0:
                     total_equity_ps = ev_value - fin_net_debt_ps
                     if total_equity_ps > 0:
-                        minority_ps = max(minority_book_ps, m_share * total_equity_ps)
-                return fin_net_debt_ps + minority_ps - x_ps
+                        by_earnings = m_share * total_equity_ps
+                        if by_earnings > minority_book_ps:
+                            minority_ps, proportional = by_earnings, by_earnings
+                nd = fin_net_debt_ps + minority_ps - x_ps
+                return nd, nd - proportional
 
-            net_debt_ps = equity_bridge(nopat_ps / w if w else 0.0)
+            net_debt_ps, _ = equity_bridge(nopat_ps / w if w else 0.0)
             band.net_debt_ps = net_debt_ps
             if nopat_ps <= 0:
                 band.status, band.reason = "rejected", "正常化每股 NOPAT 非正"
@@ -1873,7 +1880,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 zero_numerator = nopat_ps * (1.0 - min(rr, 0.5))
                 ROIC_STATS["零增长锚·FCFF 分子"] += 1
             zero_ev_ps = zero_numerator / w
-            nd_zero = equity_bridge(zero_ev_ps)
+            nd_zero, nd_zero_fixed = equity_bridge(zero_ev_ps)
             band.v_zero_growth = zero_ev_ps - nd_zero
             growth_mode = getattr(args, "roic_growth", "capital")
             # v1（capital）：ROIC、再投资率、增量 ROIC 任一不可用 → 整条退零增长永续。
@@ -1891,9 +1898,9 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     return band
                 band.net_debt_ps = net_debt_ps = nd_zero
                 thin_max = getattr(args, "thin_equity_max", 0.5)
-                if thin_max and net_debt_ps > 0 and zero_ev_ps > 0 and net_debt_ps / zero_ev_ps >= thin_max:
+                if thin_max and nd_zero_fixed > 0 and zero_ev_ps > 0 and nd_zero_fixed / zero_ev_ps >= thin_max:
                     band.status, band.reason = "rejected", (
-                        f"薄权益：每股净负债 {net_debt_ps:.2f} ≥ {thin_max:.0%} × 每股企业价值 {zero_ev_ps:.2f}，"
+                        f"薄权益：每股净负债 {nd_zero_fixed:.2f} ≥ {thin_max:.0%} × 每股企业价值 {zero_ev_ps:.2f}，"
                         f"股权价值为两大数之差不可估（OI-091）")
                     EXT_EQUITY_STATS["薄权益守卫·拒绝"] += 1
                     return band
@@ -1971,7 +1978,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                 band.status, band.reason = "rejected", str(exc)
                 return band
             band.ev_ps = res.intrinsic_value
-            band.net_debt_ps = net_debt_ps = equity_bridge(res.intrinsic_value)
+            net_debt_ps, nd_fixed = equity_bridge(res.intrinsic_value)
+            band.net_debt_ps = net_debt_ps
             value = res.intrinsic_value - net_debt_ps
             if value <= 0:
                 band.status, band.reason = "rejected", (
@@ -1979,11 +1987,11 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     f"{res.intrinsic_value:.2f}，按 §6.5.2.4 判无法估值")
                 return band
             thin_max = getattr(args, "thin_equity_max", 0.5)
-            if thin_max and net_debt_ps > 0 and res.intrinsic_value > 0 and net_debt_ps / res.intrinsic_value >= thin_max:
+            if thin_max and nd_fixed > 0 and res.intrinsic_value > 0 and nd_fixed / res.intrinsic_value >= thin_max:
                 # OI-091（v4.62）：薄权益守卫——净负债 ≥ 50% 企业价值时每股价值是两个大数之差（EV 10% 的误差 → 股权 ≥20%，超出 ±10% 带宽），
                 # 读数是噪声不是估值（兖矿能源 2014-19 P/V 0.24~94、比亚迪 2012-16 9~226）；按 §6.5.2.4 判无法估值、不进 §9.3。
                 band.status, band.reason = "rejected", (
-                    f"薄权益：每股净负债 {net_debt_ps:.2f} ≥ {thin_max:.0%} × 每股企业价值 {res.intrinsic_value:.2f}，"
+                    f"薄权益：每股净负债 {nd_fixed:.2f} ≥ {thin_max:.0%} × 每股企业价值 {res.intrinsic_value:.2f}，"
                     f"股权价值为两大数之差不可估（OI-091）")
                 EXT_EQUITY_STATS["薄权益守卫·拒绝"] += 1
                 return band

@@ -53,32 +53,66 @@ class EquityBridge(unittest.TestCase):
 
     @staticmethod
     def bridge(ev, fin_nd, book_ps, m, x_ps=0.0, basis="earnings"):
-        minority = book_ps
+        minority, proportional = book_ps, 0.0
         if basis == "earnings" and m > 0:
             total_eq = ev - fin_nd
-            if total_eq > 0:
-                minority = max(book_ps, m * total_eq)
-        return fin_nd + minority - x_ps
+            if total_eq > 0 and m * total_eq > book_ps:
+                minority = proportional = m * total_eq
+        nd = fin_nd + minority - x_ps
+        return nd, nd - proportional
+
+    def nd(self, *a, **k):
+        return self.bridge(*a, **k)[0]
 
     def test_book_basis_unchanged(self):
-        self.assertAlmostEqual(self.bridge(100.0, 10.0, 20.0, 0.5, basis="book"), 30.0)
+        self.assertAlmostEqual(self.nd(100.0, 10.0, 20.0, 0.5, basis="book"), 30.0)
 
     def test_earnings_share_binds_when_above_book(self):
         # 权益价值 90，按 50% 分得 45 > 账面 20
-        self.assertAlmostEqual(self.bridge(100.0, 10.0, 20.0, 0.5), 55.0)
+        self.assertAlmostEqual(self.nd(100.0, 10.0, 20.0, 0.5), 55.0)
 
     def test_book_is_a_floor(self):
         # 权益价值 90，按 10% 分得 9 < 账面 20 → 仍扣账面
-        self.assertAlmostEqual(self.bridge(100.0, 10.0, 20.0, 0.1), 30.0)
+        self.assertAlmostEqual(self.nd(100.0, 10.0, 20.0, 0.1), 30.0)
 
     def test_zero_share_keeps_book(self):
-        self.assertAlmostEqual(self.bridge(100.0, 10.0, 20.0, 0.0), 30.0)
+        self.assertAlmostEqual(self.nd(100.0, 10.0, 20.0, 0.0), 30.0)
 
     def test_external_equity_not_shared_with_minority(self):
-        self.assertAlmostEqual(self.bridge(100.0, 10.0, 20.0, 0.5, x_ps=3.0), 52.0)
+        self.assertAlmostEqual(self.nd(100.0, 10.0, 20.0, 0.5, x_ps=3.0), 52.0)
 
     def test_nonpositive_equity_value_falls_back_to_book(self):
-        self.assertAlmostEqual(self.bridge(10.0, 30.0, 20.0, 0.5), 50.0)
+        self.assertAlmostEqual(self.nd(10.0, 30.0, 20.0, 0.5), 50.0)
+
+
+class ThinEquityGuardInput(unittest.TestCase):
+    """薄权益守卫只看**不随 EV 缩放**的那部分扣减：按盈利份额分走的一份与 EV 同比例，
+    对相对误差无放大作用，计进去会把「比例切分」误判成「杠杆」。"""
+
+    bridge = staticmethod(EquityBridge.bridge)
+
+    def test_proportional_slice_excluded_from_guard(self):
+        nd, fixed = self.bridge(100.0, 10.0, 20.0, 0.5)
+        self.assertAlmostEqual(nd, 55.0)        # 10 + 45
+        self.assertAlmostEqual(fixed, 10.0)     # 只剩净金融负债
+        self.assertLess(fixed / 100.0, 0.5)     # 不触发守卫
+
+    def test_book_floor_counts_as_fixed(self):
+        nd, fixed = self.bridge(100.0, 10.0, 20.0, 0.1)
+        self.assertAlmostEqual(nd, 30.0)
+        self.assertAlmostEqual(fixed, 30.0)     # 账面是固定额，全部计入
+
+    def test_book_basis_guard_unchanged(self):
+        nd, fixed = self.bridge(100.0, 10.0, 45.0, 0.5, basis="book")
+        self.assertAlmostEqual(nd, fixed)       # book 口径下两者恒等，守卫逐位不变
+
+    def test_amplification_matches_fixed_part(self):
+        """放大倍数 = EV ÷ 股权价值，只由固定扣减决定。"""
+        ev, fin_nd, m = 100.0, 10.0, 0.5
+        nd, fixed = self.bridge(ev, fin_nd, 5.0, m)
+        value = ev - nd
+        bumped = (ev * 1.01) - self.bridge(ev * 1.01, fin_nd, 5.0, m)[0]
+        self.assertAlmostEqual((bumped / value - 1) / 0.01, ev / (ev - fixed), places=6)
 
 
 if __name__ == "__main__":
