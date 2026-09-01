@@ -49,6 +49,8 @@ DEFAULT_VALUATION = ROOT / "data/processed/a_share_focus_watchlist_l1_l2_valuati
 DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
 DEFAULT_QUEUE = ROOT / "data/interim/valuation_rebuild_queue.csv"
+DEFAULT_STMT_GAPS = ROOT / "data/interim/valuation_statement_gaps.csv"
+
 
 BAND_TOLERANCE = 0.02  # §6.7 要求 10 第 4 项
 
@@ -354,6 +356,8 @@ def main() -> int:
     parser.add_argument("--tiers", type=Path, default=DEFAULT_TIERS)
     parser.add_argument("--holdings", type=Path, default=DEFAULT_HOLDINGS)
     parser.add_argument("--queue-out", type=Path, default=DEFAULT_QUEUE)
+    parser.add_argument("--statement-gaps", type=Path, default=DEFAULT_STMT_GAPS,
+                        help="建带器写的「名册内无三大报表」清单；其中的池内代码判 blocking")
     parser.add_argument("--log-file", type=Path, default=DEFAULT_DECISION_LOG)
     parser.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
     parser.add_argument("--strict", action="store_true", help="有违规行时以非零码退出（供池物化前置门禁使用）")
@@ -370,9 +374,20 @@ def main() -> int:
         with args.tiers.open(encoding="utf-8-sig") as handle:
             tiers = {r["security_code"]: r.get("quality_tier", "") for r in csv.DictReader(handle)}
 
+    # 无三大报表的代码，其带由权益口径退回路径产出（回测无此估值模式），一律 blocking
+    stmt_gaps: dict[str, str] = {}
+    if args.statement_gaps.exists():
+        with args.statement_gaps.open(encoding="utf-8-sig") as handle:
+            stmt_gaps = {r["security_code"].zfill(6): r.get("security_name", "")
+                         for r in csv.DictReader(handle) if r.get("security_code")}
+
     failures = []
     for row in rows:
         problems, severity = check_row(row)
+        if str(row.get("security_code", "")).strip().zfill(6) in stmt_gaps:
+            problems = problems + ["无三大报表：带由权益口径退回路径产出，回测无此估值模式，须补取报表后重建"]
+            severity = "blocking"
+
         if not problems:
             continue
         code = str(row.get("security_code", "")).strip()

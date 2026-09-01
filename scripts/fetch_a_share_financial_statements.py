@@ -93,6 +93,9 @@ STATEMENTS = {
 RESTATE_FIELDS = ("TOTAL_PARENT_EQUITY", "TOTAL_EQUITY", "TOTAL_ASSETS", "SHARE_CAPITAL", "MONETARYFUNDS", "MINORITY_EQUITY")
 RESTATE_MIN_CHANGE = 0.005
 RESTATE_LOG = ROOT / "data/interim/statement_restatements.csv"
+COVERAGE_GAP_LOG = ROOT / "data/interim/statement_coverage_gaps.csv"
+COVERAGE_MIN_YEARS = 3           # 与建带器 --min-roe-years 缺省一致，少于此数建带必拒
+
 
 REQUIRED = {
     "balance": ("TOTAL_ASSETS", "TOTAL_EQUITY", "TOTAL_PARENT_EQUITY", "MONETARYFUNDS"),
@@ -162,6 +165,39 @@ def latest_period_by_code(rows: list[dict]) -> dict[str, str]:
     return out
 
 
+def periods_by_code(rows: list[dict]) -> dict[str, int]:
+    """代码 → 该代码在行集里不同 `REPORT_DATE` 的个数（判三大报表覆盖是否够建带）。"""
+    seen: dict[str, set[str]] = {}
+    for row in rows:
+        code = (row.get("security_code") or "").zfill(6)
+        period = (row.get("REPORT_DATE") or "")[:10]
+        if code and period:
+            seen.setdefault(code, set()).add(period)
+    return {c: len(p) for c, p in seen.items()}
+
+
+def coverage_gaps(codes: list[str], coverage: dict[str, dict[str, int]],
+                  min_years: int) -> list[dict]:
+    """名单里三大报表覆盖不足以建 ROIC 带的代码。
+
+    建带器对这两种缺口的行为不同：三张表任一为 0 行 → `code not in ROIC_YEARS` → **静默退回
+    权益口径**（回测没有这个估值模式，产出的带不可用于决策）；年报期数不足 → 明确 `rejected`。
+    两者都在这里报，前者是必须处置的告警。"""
+    gaps = []
+    for code in codes:
+        missing = [k for k in STATEMENTS if not coverage.get(k, {}).get(code)]
+        years = min((coverage.get(k, {}).get(code, 0) for k in STATEMENTS), default=0)
+        if missing:
+            gaps.append({"security_code": code, "gap": "无报表",
+                         "detail": f"缺表 {'/'.join(missing)}", "annual_periods": years,
+                         "band_effect": "建带静默退回权益口径"})
+        elif years < min_years:
+            gaps.append({"security_code": code, "gap": "年报期不足",
+                         "detail": f"最少一张表仅 {years} 期 < {min_years}", "annual_periods": years,
+                         "band_effect": "建带 rejected"})
+    return gaps
+
+
 def normalise(rows: list[dict], code: str, table: str) -> list[dict]:
     """丢 `_YOY` 派生列、统一日期到 10 位、补审计与来源字段。"""
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -210,6 +246,7 @@ def main() -> int:
           f"落点 {args.out_dir if args.out_dir.is_absolute() and ROOT not in args.out_dir.parents else args.out_dir.relative_to(ROOT)}/")
 
     failures: list[str] = []
+    coverage: dict[str, dict[str, int]] = {}   # 表 → {代码: 年报期数}
     tables_used: dict[str, int] = {}
     restated: dict[str, list[str]] = {}          # 探针检出重述的代码 → 变了的报告期（OI-126）
     restate_log: list[dict] = []                 # 关键值实变的 (代码, 期, 字段)
@@ -233,6 +270,7 @@ def main() -> int:
             elif kind != "balance":
                 todo = todo + [c for c in settled if c in restated]
             if not todo:
+                coverage[kind] = periods_by_code(existing_rows)
                 print(f"  {kind}: 名单 {len(codes)} 只已全部在库且年报期到 {expected}，跳过（--refresh 全量重取）")
                 continue
             have = len(latest_period_by_code(existing_rows))
@@ -325,6 +363,7 @@ def main() -> int:
                      + ("…" if len(behind) > 12 else "") if behind else ""))
 
         if not all_rows:
+            coverage[kind] = {}
             failures.append(f"{kind}：**0 行**，不落盘")
             continue
         fields: list[str] = []
@@ -337,6 +376,7 @@ def main() -> int:
             writer.writeheader()
             writer.writerows(all_rows)
         got_codes = len({r["security_code"] for r in all_rows})
+        coverage[kind] = periods_by_code(all_rows)
         print(f"  {kind}: {len(all_rows):,} 行、{got_codes} 只（名单 {len(codes)}）、{len(fields)} 列 → {path.name}")
 
         # §13 第 3 条：新增数据源须核对非空行数与关键列覆盖
@@ -366,10 +406,33 @@ def main() -> int:
 
     if tables_used:
         print("\n命中表口径：" + "｜".join(f"{k}×{v}" for k, v in sorted(tables_used.items())))
+
+    gaps = coverage_gaps(codes, coverage, COVERAGE_MIN_YEARS) if coverage else []
+    rel = COVERAGE_GAP_LOG.relative_to(ROOT) if ROOT in COVERAGE_GAP_LOG.parents else COVERAGE_GAP_LOG
+    COVERAGE_GAP_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with COVERAGE_GAP_LOG.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["security_code", "gap", "detail",
+                                                    "annual_periods", "band_effect", "checked_at"])
+        writer.writeheader()
+        for row in gaps:
+            writer.writerow({**row, "checked_at": as_of.isoformat()})
+    if gaps:
+        silent = [g for g in gaps if g["gap"] == "无报表"]
+        print(f"\n⚠ **三大报表覆盖缺口 {len(gaps)} 只**（名单 {len(codes)} 只）→ {rel}")
+        for row in gaps[:20]:
+            print(f"    {row['security_code']}  {row['gap']}：{row['detail']}　→ {row['band_effect']}")
+        if len(gaps) > 20:
+            print(f"    …另 {len(gaps) - 20} 只见文件")
+        if silent:
+            print(f"  **{len(silent)} 只无报表**：这些代码建带会退回权益口径，回测没有该估值模式，"
+                  f"其带不得用于决策。须补取或登记 open issue 后再继续 §6.7。")
+    else:
+        print(f"\n三大报表覆盖：名单 {len(codes)} 只全部三表齐备且年报期 ≥ {COVERAGE_MIN_YEARS} → {rel}（空）")
+
     if failures:
         print(f"\n**失败 {len(failures)} 项**：{'；'.join(failures[:12])}"
               + ("…" if len(failures) > 12 else ""))
-    return 1 if failures else 0
+    return 1 if (failures or gaps) else 0
 
 
 if __name__ == "__main__":

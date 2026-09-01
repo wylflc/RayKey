@@ -97,13 +97,17 @@ class MainMergeTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def _run(self, as_of: str, fetch_stub, probe: bool = False) -> int:
-        argv = ["prog", "--codes", "000001", "600519", "--out-dir", str(self.out),
+    def _run(self, as_of: str, fetch_stub, probe: bool = False, min_years: int = 1,
+             codes: list[str] | None = None) -> int:
+        """`min_years` 缺省 1：夹具只有 2~3 个财年，生产阈值 3 会把每个用例都判成覆盖缺口。"""
+        argv = ["prog", "--codes", *(codes or ["000001", "600519"]), "--out-dir", str(self.out),
                 "--signal-date", as_of, "--pause", "0"] + ([] if probe else ["--no-probe"])
         with mock.patch.object(fs, "fetch", side_effect=fetch_stub), \
                 mock.patch.object(fs.time, "sleep"), \
                 mock.patch.object(sys, "argv", argv), \
-                mock.patch.object(fs, "RESTATE_LOG", self.out / "statement_restatements.csv"):
+                mock.patch.object(fs, "RESTATE_LOG", self.out / "statement_restatements.csv"), \
+                mock.patch.object(fs, "COVERAGE_GAP_LOG", self.out / "statement_coverage_gaps.csv"), \
+                mock.patch.object(fs, "COVERAGE_MIN_YEARS", min_years):
             return fs.main()
 
     def test_stale_code_is_refetched_and_replaced(self):
@@ -213,6 +217,31 @@ class MainMergeTest(unittest.TestCase):
         self.assertEqual(sorted({code for _, code in self.calls}), ["000001", "600519"])
         latest = fs.latest_period_by_code(_read(self.out))
         self.assertEqual(latest, {"000001": "2026-12-31", "600519": "2026-12-31"})
+
+    def test_code_without_statements_is_reported_as_coverage_gap(self):
+        """三表全空的代码：写覆盖缺口、告警、非零退出（不再静默让建带退回权益口径）。"""
+        def stub(report_name, code, timeout):
+            self.calls.append((report_name, code))
+            return (([], None) if code == "300001"
+                    else (_api_rows(["2026-12-31", "2025-12-31"]), None))
+
+        self.assertEqual(self._run("2027-01-05", stub, codes=["000001", "600519", "300001"]), 1)
+        with (self.out / "statement_coverage_gaps.csv").open(encoding="utf-8") as handle:
+            gaps = list(csv.DictReader(handle))
+        self.assertEqual([(g["security_code"], g["gap"]) for g in gaps], [("300001", "无报表")])
+        self.assertEqual(gaps[0]["band_effect"], "建带静默退回权益口径")
+
+    def test_too_few_annual_periods_is_reported_as_coverage_gap(self):
+        """报表在库但年报期不足：同样入册，建带侧表现为 rejected 而非退回。"""
+        def stub(report_name, code, timeout):
+            self.calls.append((report_name, code))
+            return (_api_rows(["2026-12-31", "2025-12-31"]), None)
+
+        self.assertEqual(self._run("2027-01-05", stub, min_years=3), 1)
+        with (self.out / "statement_coverage_gaps.csv").open(encoding="utf-8") as handle:
+            gaps = list(csv.DictReader(handle))
+        self.assertEqual(sorted(g["security_code"] for g in gaps), ["000001", "600519"])
+        self.assertTrue(all(g["gap"] == "年报期不足" for g in gaps))
 
 
 if __name__ == "__main__":

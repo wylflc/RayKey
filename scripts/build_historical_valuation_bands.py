@@ -135,8 +135,59 @@ DEFAULT_TIER = "L2"
 # 缺省为空 dict，即所有既往产出逐位可复现。
 EXTERNAL_ROE: dict[str, list[tuple[str, float]]] = {}
 EXTERNAL_STATS: defaultdict[str, int] = defaultdict(int)
+def report_statement_gaps(all_bands) -> None:
+    """名册内无三大报表 → 退回权益口径，回测没有该估值模式，其带不得用于决策。
+
+    写 `data/interim/valuation_statement_gaps.csv` 并告警；名册外的全市场代码本就不取报表，
+    不在此报（否则每轮几千条噪声）。"""
+    STMT_GAP_LOG.parent.mkdir(parents=True, exist_ok=True)
+    latest: dict[str, tuple[str, str]] = {}
+    for code, band in all_bands:
+        if code in NO_STMT_CODES and band.status == "ok":
+            key = (band.available_at or "", band.name or "")
+            if key[0] >= latest.get(code, ("", ""))[0]:
+                latest[code] = key
+    with STMT_GAP_LOG.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["security_code", "security_name",
+                                                    "latest_band_available_at", "roic_path", "band_effect"])
+        writer.writeheader()
+        for code in sorted(NO_STMT_CODES):
+            avail, name = latest.get(code, ("", ""))
+            writer.writerow({"security_code": code, "security_name": name,
+                             "latest_band_available_at": avail, "roic_path": "equity_fallback",
+                             "band_effect": "回测无此估值模式，带不得用于决策"})
+    rel = STMT_GAP_LOG.relative_to(ROOT) if ROOT in STMT_GAP_LOG.parents else STMT_GAP_LOG
+    if NO_STMT_CODES:
+        print(f"  ⚠ **名册内 {len(NO_STMT_CODES)} 只无三大报表、退回权益口径**："
+              + " ".join(f"{c}{latest.get(c, ('', ''))[1]}" for c in sorted(NO_STMT_CODES)[:15])
+              + ("…" if len(NO_STMT_CODES) > 15 else "")
+              + f" → {rel}；先补取报表并登记 open issue，其带不得用于决策")
+    else:
+        print(f"  名册内无三大报表缺口 → {rel}（空）")
+
+
+def load_statement_roster(paths) -> set[str]:
+    """三大报表名册＝取数脚本的名单文件并集（缺文件跳过，不因此中断建带）。"""
+    roster: set[str] = set()
+    for path in paths:
+        if not path.exists():
+            continue
+        with path.open(encoding="utf-8-sig") as handle:
+            for row in csv.DictReader(handle):
+                code = (row.get("security_code") or "").zfill(6)
+                if code and code != "000000":
+                    roster.add(code)
+    return roster
+
+
 # `--value-model roic` 的三大报表输入，`main()` 里一次性装载（{代码: {财年: RoicYear}}）
 ROIC_YEARS: dict[str, dict[str, "roic_inputs.RoicYear"]] = {}
+# 三大报表名册（＝取数脚本的取数名单）与其中无报表的代码：名册内退回权益口径是数据缺口，须告警
+STMT_ROSTER_FILES = (ROOT / "data/processed/pit_attention/panel_moat_bank_v6b.csv",
+                     ROOT / "data/processed/a_share_watchlist_quality_tiers.csv")
+STMT_GAP_LOG = ROOT / "data/interim/valuation_statement_gaps.csv"
+STMT_ROSTER: set[str] = set()
+NO_STMT_CODES: set[str] = set()
 ROIC_STATS: defaultdict[str, int] = defaultdict(int)
 
 # `--moat-params CSV` 装载的逐票终值/衰减参数覆盖（OI-070 护城河补偿实验，2026-08-20）：
@@ -1452,6 +1503,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
         if code not in ROIC_YEARS:
             band.roic_path = "equity_fallback"
             ROIC_STATS["无三大报表·退回权益口径"] += 1
+            if code in STMT_ROSTER:
+                NO_STMT_CODES.add(code)
         elif len(history) < args.min_roe_years:
             band.reason = f"三大报表年份仅 {len(history)} < 要求 {args.min_roe_years} 年"
             return band
@@ -2772,7 +2825,11 @@ def main() -> int:
                   f"先跑 scripts/fetch_a_share_financial_statements.py")
             return 1
         rows = sum(len(v) for v in ROIC_YEARS.values())
-        print(f"三大报表：{len(ROIC_YEARS)}/{len(codes)} 只、{rows:,} 个财年")
+        STMT_ROSTER.update(load_statement_roster(STMT_ROSTER_FILES))
+        roster_gap = sorted(STMT_ROSTER & (set(codes) - set(ROIC_YEARS)))
+        print(f"三大报表：{len(ROIC_YEARS)}/{len(codes)} 只、{rows:,} 个财年"
+              + (f"｜**名册内无报表 {len(roster_gap)} 只**：{' '.join(roster_gap[:15])}"
+                 + ("…" if len(roster_gap) > 15 else "") if roster_gap else ""))
     print(f"历史带重建：{len(codes)} 只｜报告期起点 {args.since}｜g0={args.g0_source}"
           + (f"｜**分档统一为 {args.uniform_tier}**" if args.uniform_tier else "")
           + f"｜逐日状态生效日={args.state_effective}"
@@ -2889,6 +2946,7 @@ def main() -> int:
         fallback = paths.get("equity_fallback", 0)
         if fallback / total > 0.30:
             print(f"  ⚠ **{fallback / total:.1%} 的带没走 ROIC 口径**，本轮 A/B 主要在测剩下那部分")
+        report_statement_gaps(all_bands)
     report(all_bands, daily_counts, price_counts, args)
     return 0
 

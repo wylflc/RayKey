@@ -390,6 +390,8 @@ python3 scripts/check_swap_margin_scale_drift.py
 
 第 1 步不得跳过；披露窗未关的报告期由脚本强制重取并在结尾告警，除权事件库随第 1 步同批刷新。
 
+第 1 步结束后 `data/interim/statement_coverage_gaps.csv` 须为空；有行即先补取三大报表，补不到的登记 `docs/Ashare_workflow_open_issues.md` 后再继续。第 2 步结尾的 `data/interim/valuation_statement_gaps.csv` 同此，其中的代码在第 6 步判 blocking、冻结新增买入。
+
 第 7 步退出码非 0 即两套 `V` 的差距已越过在册容差，`P/V` 差判据的实际严格度随之改变：按 §12 重扫 §9.3.1 换仓边际，再把 `check_swap_margin_scale_drift.py` 的基准重定到新值；未重扫前不得据该判据下换仓结论。
 
 第 5.5 步只报异常不改数，**「严重」级须逐条处置后才继续**。任一步失败即停止；不得把旧估值表上的校验通过当成新带已生效。完成后核对模型带、档案、估值表和核心池的带值与日期一致，持仓侧带的成员与候选侧生产带一致。校验失败行冻结新增买入，修复后再物化。
