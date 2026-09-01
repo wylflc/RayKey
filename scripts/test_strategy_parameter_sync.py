@@ -91,6 +91,16 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn("互不重叠 5 年块中位（自最新窗口末月往回每 60 个月一窗、首尾相接零重叠，取中位）", workflow)
         self.assertIn("互不重叠5年块中位", sweep.FIELDS)
         self.assertEqual("年化", sweep.PRIMARY_KEY)
+        # v4.117（§12.158/§12.160，用户 2026-09-02 裁定）：标准起点集 = 路径 ≥10 年的半年档起点，
+        # 现 14 个；数据末端推进使新档满 10 年时补入并重登在册读数
+        self.assertIn("标准起点集 = 路径长度 ≥ 10 年的全部半年档起点（现 14 个：2009-11-01 ~ 2016-05-01", workflow)
+        self.assertIn("符号数是 14 个起点层", workflow)
+        self.assertEqual(len(sweep.DEFAULT_STARTS), 14)
+        self.assertEqual(sweep.DEFAULT_STARTS[0], "2009-11-01")
+        self.assertEqual(sweep.DEFAULT_STARTS[-1], "2016-05-01")
+        self.assertIn(sweep.EX5_ANCHOR_START, sweep.DEFAULT_STARTS)
+        for anchor in sweep.LONGRUN_STARTS:
+            self.assertIn(anchor, sweep.DEFAULT_STARTS)
         self.assertIn("`data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`", workflow)
         self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)

@@ -16,7 +16,7 @@
     U6A|--universe-file data/processed/pit_attention/panel_moat_bank_v6a.csv
 
 用法：
-    python3 scripts/sweep_backtest_configs.py <配置文件> --out out.txt          # 缺省 23 个起点
+    python3 scripts/sweep_backtest_configs.py <配置文件> --out out.txt          # 缺省 14 个标准起点（路径 ≥10 年）
     python3 scripts/sweep_backtest_configs.py <配置文件> --out out.txt --starts 2009-11-01,2013-11-01
     python3 scripts/sweep_backtest_configs.py --report out.txt                 # 只出表，不重跑
 
@@ -108,8 +108,11 @@ BASE = (
     "--hold-states data/processed/a_share_daily_states_hold.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv"
 )
-# 每半年一个起点，2009-11 ~ 2020-11 共 23 个（§12.39.2 以来的标准起点集）。
-DEFAULT_STARTS = [f"{y}-{m}-01" for y in range(2009, 2021) for m in ("05", "11")][1:]
+# 用户 2026-09-02 裁定（§12.158/§12.160，v4.117）：标准起点集 = 路径 ≥10 年的全部半年档起点。
+# 此前为 23 个（…~2020-11-01）；短路径 9 个起点的全期 CAGR 68%~100% 由 2020 年后构成、
+# 对臂间 Δ 整块同向投票（1/9~3/9），属符号数假样本，砍掉。**该集随数据末端推进而扩**：
+# 数据到 2026-11 时 2016-11-01 满 10 年，依次补入并按 §12 重登在册读数。
+DEFAULT_STARTS = [f"{y}-{m}-01" for y in range(2009, 2017) for m in ("05", "11")][1:-1]
 
 FIELDS = ("年化", "最大回撤", "Sharpe", "Calmar", "平均仓位", "年均换手",
           "持仓数中位", "单票权重中位", "单票权重P90", "单票权重最大", "前三权重中位", "单票超60%天数占比",
@@ -126,8 +129,8 @@ FIELDS = ("年化", "最大回撤", "Sharpe", "Calmar", "平均仓位", "年均�
 # 用户 2026-08-23 矫正读数层级（回测日志 §12.121）：滚动窗口改**月末锚定**；决策读数只有四项——
 # 主读数 = 滚 5 年 CAGR 中位的配对 Δ，坏情形 = 滚 5 年 CAGR P25 的配对 Δ，闸门 = 滚 5 年回撤中位
 # 不得变深超过 3pp（同 §12.1 第 4 款的平台口径），否决 = 滚 5 年负收益窗口占比由 0 转正；
-# 其余（滚 3、滚 10、逐年、全期）一律只描述。两层分位不要混：表里的「符号」是 23 个起点的配对差，
-# P25／最差是**每个起点内** ~140 个月末窗口的分位。
+# 其余（滚 3、滚 10、逐年、全期）一律只描述。两层分位不要混：表里的「符号」是标准起点集的配对差，
+# P25／最差是**每个起点内**（64~142 个）月末窗口的分位。
 # 用户 2026-09-01：**全期 CAGR 的配对 Δ 升为第五项决策读数（复利读数）**，四项 → 五项，
 # 主读数与复利读数任一为负即不采纳。动机是滚动中位与逐年中位都不含跨窗口复利——逐年 −50%／+50%
 # 交替的路径逐年中位为 0 而实际年化 −13.4%；全期 CAGR 是该起点到共同终点的真实复利结果。
