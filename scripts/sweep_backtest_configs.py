@@ -347,7 +347,8 @@ def _print_group(arms, order: list[str], failed, title: str) -> None:
               + longrun(label) + f"{_fmt(med('滚动10年年化中位'), 100, 9)}{n10:>7}")
 
     print("【标准指标集·配对差】Δ 为逐起点配对差中位，符号 = **该读数变好**的起点数"
-          "（回撤／负窗／换手／仓位越小越好，其 Δ 为负即变好）；第 4 款「不劣」= Δ 方向不坏，或符号数不低于半数")
+          "（回撤／负窗／换手／仓位越小越好，其 Δ 为负即变好）；第 4 款「不劣」= Δ 方向不坏，或符号数不低于半数，"
+          "换手与长跑锚点为参考项、不进该判定")
     challengers = [label for _s, label, _d, _n, _m, _ng in rows if label != "BASE"]
     if challengers:
         print(f"{'指标':<12}" + "".join(f"{c:>16}" for c in challengers))

@@ -116,6 +116,8 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn("**U** = A 与候选臂同起点前五名的并集", workflow)
         self.assertIn("记为**去赢家全面优秀**", workflow)
         self.assertIn("该判定不构成采纳，也不放宽第 2 款的门槛", workflow)
+        self.assertIn("长跑锚点、年均换手与集中度表不计入", workflow)
+        self.assertIn("年均换手（参考项，不进第 4 款判定）", workflow)
         self.assertTrue((ROOT / "scripts/experimental/ex_winner_symmetry.py").exists())
         self.assertIn("`data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`", workflow)
         self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)
