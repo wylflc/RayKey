@@ -1,1 +1,1 @@
-priority,priority_reason,severity,security_code,security_name,quality_tier,strategy_tag,valuation_tier,fair_price_low,fair_price_high,band_derivation,violations,fair_price_basis,queued_at
+priority,priority_reason,severity,security_code,security_name,quality_tier,strategy_tag,fair_price_low,fair_price_high,band_derivation,violations,fair_price_basis,queued_at
