@@ -44,6 +44,8 @@ BPS_JUMP_WARN = 2.5      # 相邻期 bps 倍数跳变阈值
 SHARE_JUMP_WARN = 1.20   # 相邻期倒推股本跳变阈值（送转/增发已单独扣除）
 MIN_PERIODS = 4
 SHARE_LIVE_WARN = 0.05   # 实时总股本 vs 面板股数 的相对偏差告警线
+ISSUE_MIN_FRAC = 0.05    # 检查⑥：增发占发行前股本的最低比例，低于此不判
+RESTATE_EQUITY_MIN = 0.01  # 检查⑥：重述日志里归母权益变动 ≥ 1% 才视为追溯重述
 
 
 def num(value) -> float | None:
@@ -90,6 +92,9 @@ def main() -> int:
                     default=ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv")
     ap.add_argument("--all-market", action="store_true", help="扫面板全部公司，不限于核心池")
     ap.add_argument("--periods", type=int, default=8, help="每只回看多少期")
+    ap.add_argument("--restatements", type=Path, default=ROOT / "data/interim/statement_restatements.csv",
+                    help="取数探针写的重述日志（OI-126）；检查⑥只看其中归母权益实变的年报期")
+    ap.add_argument("--share-changes", type=Path, default=ROOT / "data/raw/share_changes/a_share_share_changes.csv")
     ap.add_argument("--out", type=Path, default=ROOT / "data/interim/financial_panel_anomalies.csv")
     args = ap.parse_args()
     args.as_of = evidence_iso_for_signal(args.signal_date)
@@ -244,6 +249,68 @@ def main() -> int:
                            f"实时口径为最新，偏差含「期内发行的加权平均效应」与「报告期后股本变动」两部分，需逐票分辨"),
                 "suggest_bps": "",
             })
+
+    # ⑥ 重述后年报行的股本基。同一控制下企业合并（CAS 20）把**比较期**的权益追溯重述，东财随之更新年报行的
+    # 归母权益与 `bps`，但 `bps` 的分母仍是**发行前**股本——权益是合并后的、股数是合并前的，混基。
+    # 判例：电投能源 FY2025 bps 21.0472 = 471.79 亿（重述后）÷ 22.4157 亿（发行前），应为 ÷29.534 = 15.9744；
+    # 中国神华 FY2025 25.7696 = 5120.16 ÷ 198.69，应为 ÷212.3177 = 24.1156。两者都让 `external_equity_intra`
+    # 退回 `x_implausible_negative`、外生权益整条失效。
+    # 判据：P 行归母权益在取数探针中**实变 ≥ RESTATE_EQUITY_MIN**（重述日志），且 P 之后有占发行前股本
+    # ≥ ISSUE_MIN_FRAC 的「增发」事件（非送转），且 `重述后归母权益 ÷ bps` 落在发行前股本上（±3%）。
+    # 建议 bps = 归母权益 ÷ 发行后股本（只算首笔合并对价股，配套募集另计）。只报「可疑」——
+    # 员工持股、可转债转股等非合并增发也会命中前两条，第三条挡不住时须人工看公告分辨。
+    # 只看重述日志里「归母权益实变 ≥ RESTATE_EQUITY_MIN」的年报期——这是取数探针留下的、有前后值对照的记录；
+    # 单看 UPDATE_DATE 不行：旧年报行的 UPDATE_DATE 本来就是下一年年报的发布日，恒晚于其间的任何增发。
+    stmt_equity: dict[tuple[str, str], tuple[float, str]] = {}
+    if args.restatements.exists():
+        with args.restatements.open(encoding="utf-8-sig", newline="") as handle:
+            for row in csv.DictReader(handle):
+                c = (row.get("security_code") or "").zfill(6)
+                if row.get("field") != "TOTAL_PARENT_EQUITY" or (codes is not None and c not in codes):
+                    continue
+                pct, new = num(row.get("change_pct")), num(row.get("new_value"))
+                if pct is not None and new and abs(pct) >= RESTATE_EQUITY_MIN * 100:
+                    stmt_equity[(c, (row.get("report_date") or "")[:10])] = (new, (row.get("new_update_date") or "")[:10])
+    issues: dict[str, list[dict]] = defaultdict(list)
+    if args.share_changes.exists():
+        with args.share_changes.open(encoding="utf-8-sig", newline="") as handle:
+            for row in csv.DictReader(handle):
+                issues[(row.get("security_code") or "").zfill(6)].append(row)
+    corrected = set()
+    try:
+        from financials_corrections import load_corrections
+        corrected = {(c, p) for (c, p), rs in load_corrections().items() if any(r.get("field") == "bps" for r in rs)}
+    except Exception:
+        pass
+    for (code, period), (equity, updated) in sorted(stmt_equity.items()):
+        if not period.endswith("-12-31") or (code, period) in corrected:
+            continue
+        row = (panel.get(code) or {}).get(period)
+        bps = num(row.get("bps")) if row else None
+        if not bps or bps <= 0:
+            continue
+        s_bps = equity / bps
+        for ev in issues.get(code, []):
+            ex = ev.get("effective_date") or ""
+            delta, total = num(ev.get("shares_delta")), num(ev.get("total_shares"))
+            reason = ev.get("change_reason") or ""
+            if not (ex > period and delta and total and delta > 0 and "增发" in reason
+                    and not any(x in reason for x in ("转增", "送股"))):
+                continue
+            pre = total - delta
+            if pre <= 0 or delta / pre < ISSUE_MIN_FRAC:
+                continue
+            if abs(s_bps / pre - 1) <= 0.03:
+                findings.append({
+                    "security_code": code, "security_name": names.get(code, code), "period": period,
+                    "check": "重述年报股本基", "severity": "可疑",
+                    "detail": (f"{period} 归母权益 {equity/1e8:.2f}亿 ÷ bps {bps:.4f} = {s_bps/1e8:.4f}亿股，落在发行前股本 "
+                               f"{pre/1e8:.4f}亿上；其后 {ex} {reason} +{delta/1e8:.4f}亿（{delta/pre:.1%}）→ {total/1e8:.4f}亿，"
+                               f"且该年报行归母权益已在取数探针中实变（UPDATE_DATE {updated}）——疑似同一控制下合并追溯重述而 bps 未换基。"
+                               f"须核对公告：若为合并对价股，建议 bps={equity/total:.4f}（÷发行后股本）并登记订正层"),
+                    "suggest_bps": f"{equity/total:.4f}",
+                })
+            break
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     fields = ["security_code", "security_name", "period", "check", "severity", "detail", "suggest_bps"]

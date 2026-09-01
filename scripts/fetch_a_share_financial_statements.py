@@ -41,7 +41,13 @@
 2026-08-24 前只有 ①，「代码已在文件里」就整只跳过——年报披露后按 §6.7 命令跑，已有的
 333 只永远停在首次抓取时的最新年报，三表估值输入静默过期（与逐季脚本的披露窗强制重取同一缺陷类）。
 重取失败（网络或四套表全空）时保留该代码原有行，不丢数据；重取后仍未到应到期的（尚未披露）
-逐次运行都会再试，直到披露。`--refresh` 仍是全量重取（追溯重述等场景）。
+逐次运行都会再试，直到披露。`--refresh` 仍是全量重取。
+
+**追溯重述探针（OI-126）**：已在库且年报期已到的代码不再直接跳过——每次都重取其资产负债表
+（一只一请求，兼作探针），逐期比 `UPDATE_DATE`：远端任一期比本地新即判「重述」，该代码三张表
+整只替换；未变的保留本地行不动。判例：电投能源（002128）2026-06-03 同一控制下合并后，东财把
+FY2025 归母权益 381.9982 亿追溯重述为 471.7883 亿、`UPDATE_DATE` 2026-04-15→2026-08-26，
+旧判据「最新年报期已到即跳过」让它永远进不来。`--no-probe` 关闭探针（只在明确不需要时用）。
 
 用法::
 
@@ -83,6 +89,11 @@ STATEMENTS = {
 }
 
 # §12.65 判定 ROIC/FCFF 可算所必须的列——取数后逐列自检，缺哪列直接说，不静默降级。
+# OI-126 重述日志：探针检出 UPDATE_DATE 变化时，这些字段变动 ≥ RESTATE_MIN_CHANGE 才记为「关键值实变」
+RESTATE_FIELDS = ("TOTAL_PARENT_EQUITY", "TOTAL_EQUITY", "TOTAL_ASSETS", "SHARE_CAPITAL", "MONETARYFUNDS", "MINORITY_EQUITY")
+RESTATE_MIN_CHANGE = 0.005
+RESTATE_LOG = ROOT / "data/interim/statement_restatements.csv"
+
 REQUIRED = {
     "balance": ("TOTAL_ASSETS", "TOTAL_EQUITY", "TOTAL_PARENT_EQUITY", "MONETARYFUNDS"),
     "income": ("OPERATE_PROFIT", "TOTAL_PROFIT", "INCOME_TAX", "PARENT_NETPROFIT"),
@@ -178,6 +189,8 @@ def main() -> int:
     parser.add_argument("--signal-date", type=date.fromisoformat, required=True,
                         help="信号日 YYYY-MM-DD；证据日自动取下一工作日")
     parser.add_argument("--refresh", action="store_true", help="全量重取（含已到应到年报期的代码）")
+    parser.add_argument("--no-probe", action="store_true",
+                        help="关闭追溯重述探针（缺省对已在库代码重取资产负债表比 UPDATE_DATE）")
     parser.add_argument("--timeout", type=float, default=45.0)
     parser.add_argument("--pause", type=float, default=0.25)
     args = parser.parse_args()
@@ -198,41 +211,106 @@ def main() -> int:
 
     failures: list[str] = []
     tables_used: dict[str, int] = {}
+    restated: dict[str, list[str]] = {}          # 探针检出重述的代码 → 变了的报告期（OI-126）
+    restate_log: list[dict] = []                 # 关键值实变的 (代码, 期, 字段)
+    probe_unchanged = 0
+    probe_failed = 0
     for kind, candidates in STATEMENTS.items():
         path = args.out_dir / f"{kind}.csv"
         existing_rows: list[dict] = []
         todo = list(codes)
         stale: list[str] = []
+        probe: set[str] = set()
         if path.exists() and not args.refresh:
             with path.open(encoding="utf-8-sig", newline="") as handle:
                 existing_rows = list(csv.DictReader(handle))
             missing, stale = plan_codes(existing_rows, codes, expected)
             todo = missing + stale
+            settled = [c for c in codes if c not in missing and c not in stale]
+            if kind == "balance" and not args.no_probe:
+                probe = set(settled)                  # 资产负债表全取，兼作重述探针
+                todo = todo + settled
+            elif kind != "balance":
+                todo = todo + [c for c in settled if c in restated]
             if not todo:
                 print(f"  {kind}: 名单 {len(codes)} 只已全部在库且年报期到 {expected}，跳过（--refresh 全量重取）")
                 continue
             have = len(latest_period_by_code(existing_rows))
-            print(f"  {kind}: 已有 {have} 只，新增补取 {len(missing)} 只、年报期落后 {expected} 重取 {len(stale)} 只")
+            print(f"  {kind}: 已有 {have} 只，新增补取 {len(missing)} 只、年报期落后 {expected} 重取 {len(stale)} 只"
+                  + (f"、重述探针 {len(probe)} 只" if probe else "")
+                  + (f"、探针检出重述重取 {len([c for c in todo if c in restated])} 只" if kind != "balance" and restated else ""))
+        local_update: dict[str, dict[str, str]] = {}
+        if probe:
+            for row in existing_rows:
+                code = (row.get("security_code") or "").zfill(6)
+                if code in probe:
+                    local_update.setdefault(code, {})[(row.get("REPORT_DATE") or "")[:10]] = (row.get("UPDATE_DATE") or "")[:10]
         fetched: dict[str, list[dict]] = {}          # 取到行的代码 → 全部年报期（替换其旧行）
         for index, code in enumerate(todo, start=1):
             rows: list[dict] = []
+            errors: list[str] = []
             for table in candidates:
                 got, error = fetch(table, code, args.timeout)
                 if error:
-                    failures.append(f"{code}/{table}：{error}")
+                    errors.append(f"{code}/{table}：{error}")
                     continue
                 if got:
                     rows = normalise(got, code, table)
                     tables_used[f"{kind}:{table}"] = tables_used.get(f"{kind}:{table}", 0) + 1
                     break
                 time.sleep(args.pause)
+            if code in probe and not rows:
+                # 探针取不到（网络或空表）：保留本地行、不计失败——与加探针前「已到期即跳过」的结果一致，只在汇总里报数
+                probe_failed += 1
+                time.sleep(args.pause)
+                continue
+            failures.extend(errors)
+            if rows and code in probe:
+                # 探针：逐期比 UPDATE_DATE，远端任一期更新即判重述；未变则保留本地行不替换
+                local = local_update.get(code, {})
+                remote = {(r.get("REPORT_DATE") or "")[:10]: (r.get("UPDATE_DATE") or "")[:10] for r in rows}
+                changed = sorted(p for p, u in remote.items() if u > local.get(p, ""))
+                if changed:
+                    restated[code] = changed
+                    # 关键值实变的期写入重述日志（OI-126）：只碰日期不改值的不记，下游检查⑥只看这里
+                    old_rows = {(r.get("REPORT_DATE") or "")[:10]: r for r in existing_rows
+                                if (r.get("security_code") or "").zfill(6) == code}
+                    for r in rows:
+                        per = (r.get("REPORT_DATE") or "")[:10]
+                        if per not in changed or per not in old_rows:
+                            continue
+                        for field in RESTATE_FIELDS:
+                            try:
+                                a, b = float(old_rows[per].get(field) or "nan"), float(r.get(field) or "nan")
+                            except ValueError:
+                                continue
+                            if a == a and b == b and a != 0 and abs(b / a - 1) >= RESTATE_MIN_CHANGE:
+                                restate_log.append({
+                                    "security_code": code, "report_date": per, "field": field,
+                                    "old_value": f"{a:.2f}", "new_value": f"{b:.2f}", "change_pct": f"{(b / a - 1) * 100:.2f}",
+                                    "old_update_date": local.get(per, ""), "new_update_date": remote[per],
+                                    "detected_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                                })
+                else:
+                    probe_unchanged += 1
+                    rows = []
+                    if index % 25 == 0:
+                        print(f"    {kind} {index}/{len(todo)}｜探针未变 {probe_unchanged}｜重述 {len(restated)}")
+                    time.sleep(args.pause)
+                    continue
             if rows:
                 fetched[code] = rows
             else:
                 failures.append(f"{code}/{kind}：**四套表全空**" + ("，保留原有行" if code in stale else ""))
             if index % 25 == 0:
-                print(f"    {kind} {index}/{len(todo)}｜取到 {sum(len(v) for v in fetched.values()):,} 行")
+                print(f"    {kind} {index}/{len(todo)}｜取到 {sum(len(v) for v in fetched.values()):,} 行"
+                      + (f"｜探针未变 {probe_unchanged}｜重述 {len(restated)}" if probe else ""))
             time.sleep(args.pause)
+        if probe:
+            print(f"    重述探针：{len(probe)} 只在库，UPDATE_DATE 未变 {probe_unchanged} 只，**检出重述 {len(restated)} 只**"
+                  + (f"，取不到保留本地 {probe_failed} 只" if probe_failed else "")
+                  + ("：" + "；".join(f"{c}({','.join(p[:4] for p in ps)})" for c, ps in sorted(restated.items())[:20])
+                     + ("…" if len(restated) > 20 else "") if restated else ""))
 
         # 合并：重取成功的代码整只替换（超集），失败的保留原有行；新代码追加。
         all_rows: list[dict] = [r for r in existing_rows
@@ -270,6 +348,21 @@ def main() -> int:
         no_notice = sum(1 for r in all_rows if not (r.get("NOTICE_DATE") or "").strip())
         if no_notice:
             print(f"    ⚠ **{no_notice} 行无公告日**——这些行不可用于历史建带（§12.4）")
+
+    if restate_log:
+        RESTATE_LOG.parent.mkdir(parents=True, exist_ok=True)
+        exists = RESTATE_LOG.exists()
+        with RESTATE_LOG.open("a", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(restate_log[0].keys()))
+            if not exists:
+                writer.writeheader()
+            writer.writerows(restate_log)
+        by_code = {}
+        for r in restate_log:
+            by_code.setdefault(r["security_code"], set()).add(r["report_date"])
+        print(f"\n**重述日志**：关键值实变 {len(restate_log)} 项、{len(by_code)} 只 → {RESTATE_LOG.relative_to(ROOT) if ROOT in RESTATE_LOG.parents else RESTATE_LOG}"
+              f"（追加）：" + "；".join(f"{c}({','.join(sorted(p)[:3])})" for c, p in sorted(by_code.items())[:15])
+              + ("…" if len(by_code) > 15 else ""))
 
     if tables_used:
         print("\n命中表口径：" + "｜".join(f"{k}×{v}" for k, v in sorted(tables_used.items())))

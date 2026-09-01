@@ -4,8 +4,12 @@
 Run: ``python3 scripts/test_statement_refresh.py``
 
 锁定的行为：`fetch_a_share_financial_statements.py` 按信号日推导证据日，并据此判应到年报期，
-最新年报期落后的代码**整只重取并替换**、已到期的跳过、重取失败保留原有行。
+最新年报期落后的代码**整只重取并替换**、重取失败保留原有行。
 2026-08-24 前的实现只看「代码是否已在文件里」，年报披露后按 §6.7 命令跑永远不更新已有代码。
+
+**追溯重述探针（OI-126）**：已到期的代码不再跳过——重取资产负债表比 `UPDATE_DATE`，远端更新即三张表整只
+重取替换，未变则本地行一字不动；探针取不到保留本地、不算失败；关键值实变写重述日志。
+`--no-probe` 回到「已到期即跳过」。
 
 无网络：`fetch` 被替换成内存桩，直接驱动 `main()` 走完整的读-合并-写路径。
 """
@@ -23,13 +27,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fetch_a_share_financial_statements as fs  # noqa: E402
 
-FIELDS = ["SECUCODE", "REPORT_DATE", "NOTICE_DATE", "TOTAL_ASSETS", "security_code",
-          "org_table", "source", "retrieved_at_utc"]
+FIELDS = ["SECUCODE", "REPORT_DATE", "NOTICE_DATE", "UPDATE_DATE", "TOTAL_ASSETS", "TOTAL_PARENT_EQUITY",
+          "security_code", "org_table", "source", "retrieved_at_utc"]
 
 
-def _row(code: str, period: str, value: str = "1") -> dict:
+def _row(code: str, period: str, value: str = "1", update: str = "", equity: str = "100") -> dict:
     return {"SECUCODE": fs.secucode(code), "REPORT_DATE": period,
-            "NOTICE_DATE": f"{int(period[:4]) + 1}-04-20", "TOTAL_ASSETS": value,
+            "NOTICE_DATE": f"{int(period[:4]) + 1}-04-20", "UPDATE_DATE": update or f"{int(period[:4]) + 1}-04-20",
+            "TOTAL_ASSETS": value, "TOTAL_PARENT_EQUITY": equity,
             "security_code": code, "org_table": "RPT_F10_FINANCE_GBALANCE",
             "source": "eastmoney RPT_F10_FINANCE_GBALANCE", "retrieved_at_utc": "2026-08-16T00:00:00+00:00"}
 
@@ -47,10 +52,13 @@ def _read(out_dir: Path, kind: str = "balance") -> list[dict]:
         return list(csv.DictReader(handle))
 
 
-def _api_rows(periods: list[str]) -> list[dict]:
-    """东财原始行形态（日期带时间、无 security_code）。"""
-    return [{"SECUCODE": "000001.SZ", "REPORT_DATE": f"{p} 00:00:00",
-             "NOTICE_DATE": f"{int(p[:4]) + 1}-03-28 00:00:00", "TOTAL_ASSETS": "9",
+def _api_rows(periods: list[str], code: str = "000001", update: dict | None = None,
+              equity: str = "100") -> list[dict]:
+    """东财原始行形态（日期带时间、无 security_code）。`update`：{期: UPDATE_DATE}，缺省＝下年 4-20（与本地相同）。"""
+    return [{"SECUCODE": fs.secucode(code), "REPORT_DATE": f"{p} 00:00:00",
+             "NOTICE_DATE": f"{int(p[:4]) + 1}-03-28 00:00:00",
+             "UPDATE_DATE": f"{(update or {}).get(p, f'{int(p[:4]) + 1}-04-20')} 00:00:00",
+             "TOTAL_ASSETS": "9", "TOTAL_PARENT_EQUITY": equity,
              "TOTAL_ASSETS_YOY": "0.1"} for p in periods]
 
 
@@ -89,12 +97,13 @@ class MainMergeTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def _run(self, as_of: str, fetch_stub) -> int:
+    def _run(self, as_of: str, fetch_stub, probe: bool = False) -> int:
         argv = ["prog", "--codes", "000001", "600519", "--out-dir", str(self.out),
-                "--signal-date", as_of, "--pause", "0"]
+                "--signal-date", as_of, "--pause", "0"] + ([] if probe else ["--no-probe"])
         with mock.patch.object(fs, "fetch", side_effect=fetch_stub), \
                 mock.patch.object(fs.time, "sleep"), \
-                mock.patch.object(sys, "argv", argv):
+                mock.patch.object(sys, "argv", argv), \
+                mock.patch.object(fs, "RESTATE_LOG", self.out / "statement_restatements.csv"):
             return fs.main()
 
     def test_stale_code_is_refetched_and_replaced(self):
@@ -115,17 +124,73 @@ class MainMergeTest(unittest.TestCase):
             self.assertEqual(sum(1 for r in rows if r["security_code"] == "000001"
                                  and r["REPORT_DATE"] == "2024-12-31"), 1)   # 旧行被替换、无重复
 
-    def test_all_current_skips_network(self):
+    def test_all_current_skips_network_without_probe(self):
         def stub(report_name, code, timeout):
             self.calls.append((report_name, code))
             return ([], None)
 
-        before = _read(self.out)
         _write(self.out, [_row("600519", "2025-12-31"), _row("000001", "2025-12-31")])
         self.assertEqual(self._run("2026-08-24", stub), 0)
         self.assertEqual(self.calls, [])
         self.assertEqual(len(_read(self.out)), 2)
-        del before
+
+    # ---- 追溯重述探针（OI-126）----
+    def _settle(self):
+        _write(self.out, [_row("600519", "2025-12-31", "A25", equity="100"), _row("600519", "2024-12-31", "A24"),
+                          _row("000001", "2025-12-31", "B25"), _row("000001", "2024-12-31", "B24")])
+
+    def test_probe_unchanged_leaves_rows_byte_identical(self):
+        def stub(report_name, code, timeout):
+            self.calls.append((report_name, code))
+            return (_api_rows(["2025-12-31", "2024-12-31"], code), None)     # UPDATE_DATE 与本地同
+
+        self._settle()
+        before = {k: _read(self.out, k) for k in fs.STATEMENTS}
+        self.assertEqual(self._run("2026-08-24", stub, probe=True), 0)
+        self.assertEqual(sorted(self.calls), [("RPT_F10_FINANCE_GBALANCE", "000001"), ("RPT_F10_FINANCE_GBALANCE", "600519")])
+        for k in fs.STATEMENTS:                                              # 只探针、不替换：retrieved_at_utc 也不动
+            self.assertEqual(_read(self.out, k), before[k])
+        self.assertFalse((self.out / "statement_restatements.csv").exists())
+
+    def test_probe_refetches_restated_code_and_logs_value_change(self):
+        def stub(report_name, code, timeout):
+            self.calls.append((report_name, code))
+            upd = {"2025-12-31": "2026-08-26"} if code == "600519" else None
+            eq = "125" if code == "600519" else "100"
+            return (_api_rows(["2025-12-31", "2024-12-31"], code, upd, eq), None)
+
+        self._settle()
+        self.assertEqual(self._run("2026-08-24", stub, probe=True), 0)
+        by_code = {}
+        for name, code in self.calls:
+            by_code.setdefault(code, []).append(name)
+        self.assertEqual(by_code["000001"], ["RPT_F10_FINANCE_GBALANCE"])           # 未变：只探针
+        self.assertEqual(by_code["600519"], ["RPT_F10_FINANCE_GBALANCE", "RPT_F10_FINANCE_GINCOME",
+                                             "RPT_F10_FINANCE_GCASHFLOW"])          # 重述：三张表整只重取
+        for k in fs.STATEMENTS:
+            rows = _read(self.out, k)
+            a = {r["REPORT_DATE"]: (r["TOTAL_ASSETS"], r["UPDATE_DATE"]) for r in rows if r["security_code"] == "600519"}
+            self.assertEqual(a["2025-12-31"], ("9", "2026-08-26"))                  # 替换成远端行
+            self.assertEqual(a["2024-12-31"], ("9", "2025-04-20"))
+            b = {r["REPORT_DATE"]: r["TOTAL_ASSETS"] for r in rows if r["security_code"] == "000001"}
+            self.assertEqual(b, {"2025-12-31": "B25", "2024-12-31": "B24"})       # 未变的一字不动
+        with (self.out / "statement_restatements.csv").open(encoding="utf-8-sig", newline="") as handle:
+            log = list(csv.DictReader(handle))
+        self.assertEqual([(r["security_code"], r["report_date"], r["field"], r["change_pct"]) for r in log],
+                         [("600519", "2025-12-31", "TOTAL_PARENT_EQUITY", "25.00")])
+        self.assertEqual((log[0]["old_update_date"], log[0]["new_update_date"]), ("2026-04-20", "2026-08-26"))
+
+    def test_probe_failure_keeps_rows_and_is_not_a_failure(self):
+        def stub(report_name, code, timeout):
+            self.calls.append((report_name, code))
+            return ([], "URLError")
+
+        self._settle()
+        before = {k: _read(self.out, k) for k in fs.STATEMENTS}
+        self.assertEqual(self._run("2026-08-24", stub, probe=True), 0)             # 探针取不到 ≠ 失败
+        self.assertEqual(len(self.calls), 8)                                        # 两只 × balance 四套口径，不再试 income/cashflow
+        for k in fs.STATEMENTS:
+            self.assertEqual(_read(self.out, k), before[k])
 
     def test_failed_refetch_keeps_old_rows(self):
         def stub(report_name, code, timeout):
