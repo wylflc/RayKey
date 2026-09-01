@@ -74,8 +74,16 @@ class StrategyParameterSyncTest(unittest.TestCase):
         # v4.110（OI-116）：止盈行不得退回「无」——涨幅减持即按盈利触发的减仓
         self.assertIn("| 止盈 | 只有本表「涨幅减持」一条按盈利触发的减仓", workflow)
         self.assertNotIn("| 止盈 | 无 |", workflow)
-        # v4.110（OI-117）：四项决策读数的取表落点
-        self.assertIn("四项一律取全样本表的读数。", workflow)
+        # v4.110（OI-117）：决策读数的取表落点；v4.115 四项 → 五项（复利读数入列）
+        self.assertIn("五项一律取全样本表的读数。", workflow)
+        # v4.115（用户 2026-09-01）：全期 CAGR 的配对差为第五项决策读数，与主读数同为采纳门槛
+        self.assertIn("复利读数 = **全期 CAGR** 的配对差中位与正号数", workflow)
+        self.assertIn("**主读数与复利读数任一为负即不采纳**", workflow)
+        self.assertIn("主读数与复利读数各自损失不超过 1pp", workflow)
+        # 扫描器的决策读数键须与成文同步（年化 = 全期 CAGR）
+        import sweep_backtest_configs as sweep
+        self.assertIn("年化", sweep.DELTA_KEYS)
+        self.assertNotIn("年化", sweep.AUX_DELTA_KEYS)
         self.assertIn("`data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`", workflow)
         self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)
