@@ -29,6 +29,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "experimental"))
 from window_step_lab import load_curve, rolling_cagrs, disjoint_cagrs, rolling_windows_ends  # noqa: E402
+from benchmark_predictive_lab import spearman  # noqa: E402
 
 FLOORS = ((None, "全部"), (8.0, "≥8年"), (10.0, "≥10年"))
 RECENT = "2020-01-01"
@@ -151,6 +152,31 @@ def main() -> None:
     ok = set(frontier) == set(long_set)
     print(f"\n核验：§12.157 前沿细胞的起点集 {'==' if ok else '!='} ≥10 年起点集"
           f"（{len(frontier)} vs {len(long_set)}）——前沿反向传递本来就是长路径集自己的读数")
+
+    # ---- 【4】滚 10 作主窗口的资格检查（用户 2026-09-02 追问：读数进一步改滚 10 是否更好）----
+    print(f"\n【4】滚 10 作主窗口的资格检查（≥10 年 {len(long_set)} 起点；滚 5 同集为 64~142 窗/起点）")
+    w10 = {s: rolling_cagrs(curves[args.base][s], 10, 1) for s in long_set}
+    ends10 = [e for s in long_set for e in rolling_windows_ends(curves[args.base][s], 10)]
+    cnts = sorted(len(w10[s]) for s in long_set)
+    thin = [s for s in long_set if len(w10[s]) < 12]
+    rec10 = sum(1 for e in ends10 if e >= RECENT)
+    print(f"  每起点滚10窗口数 {cnts[0]}~{cnts[-1]}（中位 {statistics.median(cnts):.0f}）；"
+          f"<12 窗的起点 {len(thin)} 个（{'、'.join(thin)}）；相邻窗重叠 119/120")
+    print(f"  窗口末日范围 {min(ends10)[:7]}~{max(ends10)[:7]}，≥2020 占比 "
+          f"{rec10 / len(ends10) * 100:.1f}%（{rec10}/{len(ends10)}）")
+    m10 = {arm: {s: statistics.median(rolling_cagrs(curves[arm][s], 10, 1)) for s in long_set}
+           for arm in arm_names}
+    print(f"  {'臂':<7}{'Δ滚10中位':>10}{'符号':>7}{'Δ复利':>9}{'符号':>7}")
+    for arm in others:
+        d10 = [m10[arm][s] - m10[args.base][s] for s in long_set]
+        dfu = [per[arm][s]["复利"] - per[args.base][s]["复利"] for s in long_set]
+        print(f"  {arm:<7}{fmt(statistics.median(d10)):>10}{sgn(d10):>7}"
+              f"{fmt(statistics.median(dfu)):>9}{sgn(dfu):>7}")
+    diffs = [abs(m10[args.base][s] - per[args.base][s]["复利"]) for s in long_set]
+    rho = spearman([m10[args.base][s] for s in long_set],
+                   [per[args.base][s]["复利"] for s in long_set])
+    print(f"  BASE 滚10中位 vs 全期CAGR：逐起点 Spearman {rho:+.2f}、|差|中位 "
+          f"{statistics.median(diffs) * 100:.2f}pp、|差|最大 {max(diffs) * 100:.2f}pp")
 
 
 if __name__ == "__main__":
