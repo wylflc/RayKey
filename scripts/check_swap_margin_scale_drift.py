@@ -74,11 +74,14 @@ def read_pv(path: Path, spans) -> dict[tuple[str, str], float]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--baseline", action="store_true", help="只报当前值，不对基准校验")
+    ap.add_argument("--cand-states", type=Path, default=CAND_STATES,
+                    help="候选侧逐日状态；缺省即生产文件。给别的文件时只报读数，供换估值口径的臂作诊断")
+    ap.add_argument("--hold-states", type=Path, default=HOLD_STATES, help="持仓侧逐日状态；缺省即生产文件")
     args = ap.parse_args()
 
     spans = load_spans(PANEL)
-    cand = read_pv(CAND_STATES, spans)
-    hold = read_pv(HOLD_STATES, spans)
+    cand = read_pv(args.cand_states, spans)
+    hold = read_pv(args.hold_states, spans)
 
     gaps = [cand[k] - hold[k] for k in cand.keys() & hold.keys()
             if SOURCE_PV_LO <= hold[k] <= SOURCE_PV_HI]
