@@ -39,8 +39,9 @@ PANEL = ROOT / "data/processed/pit_attention/panel_moat_bank_v6b.csv"
 SOURCE_PV_LO, SOURCE_PV_HI = 0.50, 1.11
 
 # 在册基准。重定基准须同时改本行与 §6.7 的守卫步。
-BASELINE_MEAN_GAP = 0.0164      # 均值：边际 0.19 的实际严格度 ≈ 同标度下 0.2064
-BASELINE_NONZERO_SHARE = 0.195  # 有差观测占比，作辅助描述、不触发
+MARGIN = 0.18                   # 在册换仓边际，与 SEC93_SWAP_MARGIN／BASE --swap-margin 同值
+BASELINE_MEAN_GAP = 0.0164      # 均值：边际的实际严格度 ≈ 同标度下 MARGIN + 本值
+BASELINE_NONZERO_SHARE = 0.175  # 有差观测占比，作辅助描述、不触发
 TOLERANCE = 0.01                # 均值漂移超此值即提示重扫；≈ 0.18~0.20 平台半宽
 
 
@@ -109,7 +110,7 @@ def main() -> int:
           f"｜漂移 {drift:+.4f}｜容差 ±{TOLERANCE:.2f}")
     if abs(drift) > TOLERANCE:
         print(f"\n**标度漂移超限**：两套 V 的差距已变 {drift:+.4f}，"
-              f"换仓边际的实际严格度由 ≈{BASELINE_MEAN_GAP + 0.19:.4f} 变为 ≈{mean_gap + 0.19:.4f}"
+              f"换仓边际的实际严格度由 ≈{BASELINE_MEAN_GAP + MARGIN:.4f} 变为 ≈{mean_gap + MARGIN:.4f}"
               f"——按 §12 重扫换仓边际后再重定本基准。")
         return 1
     print("\n未超限：已标定的换仓边际仍在原标度上，不必重扫。")

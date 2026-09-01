@@ -161,8 +161,9 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertIn("持仓侧 P/V 1.5000 且弱势", swap["condition"])
         self.assertIn("卖出款去向：", swap["condition"])
         self.assertIn("A 0.3000（边际 +1.2000）", swap["condition"])                  # 对实际接收方的边际
-        self.assertIn("触发闸门：X 0.6000（差 0.9000 ≥ 0.1900）", swap["condition"])
-        # 接收方边际不足时打标：源持仓侧 0.70，接收方 0.60 → 差 0.10 < 0.19（触发者 0.40 差 0.30 过线）
+        # 边际写死过一次（v4.120 由 0.19 改 0.18 时漏改），改从在册常量取
+        self.assertIn(f"触发闸门：X 0.6000（差 0.9000 ≥ {scan.SEC93_SWAP_MARGIN:.4f}）", swap["condition"])
+        # 接收方边际不足时打标：源持仓侧 0.70，接收方 0.60 → 差 0.10 < 边际（触发者 0.40 差 0.30 过线）
         trig2 = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.40)
         src2 = row("000012", "H2", close=100.0, ma20=110.0, ma60=90.0, pv=1.50)
         src2["hold_pv"] = 0.70
