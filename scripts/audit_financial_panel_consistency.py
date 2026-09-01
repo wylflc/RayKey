@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import math
 from collections import defaultdict
 from pathlib import Path
 
@@ -139,22 +140,32 @@ def main() -> int:
                 candidates = {"重述口径（÷后续送转）": shares_at_period}
                 if future_split != 1.0:
                     candidates["原口径（未重述）"] = shares
-                basis, sh = min(candidates.items(),
-                                key=lambda kv: abs(profit / (bps * kv[1]) / roe - 1) if roe else 0)
-                implied = profit / (bps * sh) * 100
-                if implied != 0 and roe != 0 and implied * roe > 0:  # 同号才可比
-                    ratio = implied / roe
+                # **两侧同单位再比**：`implied` 与自报 `roe` 都是百分数。旧键写成
+                # `profit / (bps * sh) / roe`（分数 ÷ 百分数），两个候选的键都≈1，`min` 退化成
+                # 「恒取隐含 ROE 更大的一侧」，与「取更自洽的一侧」正相反。判例：新易盛 2024-12-31
+                # 取重述口径 47.71%（2.20×）报可疑，原口径 24.34%（1.12×）本应放行。
+                # 距离取**对数**：阈值是乘性带 [1/2, 2]，对数距离与它同几何，故「取到的一侧超阈」
+                # 严格等价于上段所述的「两个口径都超阈值才报」。
+                ratios = {k: profit / (bps * s) * 100 / roe for k, s in candidates.items()}
+                if all(v > 0 for v in ratios.values()):      # 同号才可比（股本恒正，两侧必同号）
+                    basis = min(ratios, key=lambda k: abs(math.log(ratios[k])))
+                    sh, ratio = candidates[basis], ratios[basis]
+                    implied = profit / (bps * sh) * 100
                     if ratio > ROE_RATIO_WARN or ratio < 1 / ROE_RATIO_WARN:
                         sev = "严重" if (ratio > ROE_RATIO_SEVERE or ratio < 1 / ROE_RATIO_SEVERE) else "可疑"
+                        # 另一口径逐条实算，不再无条件断言「亦超阈」
+                        other = "".join(
+                            f"（{k} 比值 {v:.2f}×，"
+                            + ("亦超阈" if (v > ROE_RATIO_WARN or v < 1 / ROE_RATIO_WARN) else "在阈内")
+                            + f"；后续送转 {future_split:.2f}）"
+                            for k, v in ratios.items() if k != basis)
                         findings.append({
                             "security_code": code, "security_name": name, "period": key,
                             "check": "ROE自洽", "severity": sev,
                             "detail": (f"隐含ROE {implied:.2f}% vs 自报 {roe:.2f}%（比值 {ratio:.2f}×，取自洽侧 {basis}）；"
                                        f"bps={bps:.4f} 归母={profit/1e8:.2f}亿 EPS={eps} "
-                                       f"当期股本={sh/1e8:.2f}亿"
-                                       + (f"（另一口径亦超阈；后续送转 {future_split:.2f}）"
-                                          if future_split != 1.0 else "")),
-                            "suggest_bps": f"{profit / (roe / 100) / sh:.4f}" if roe else "",
+                                       f"当期股本={sh/1e8:.2f}亿" + other),
+                            "suggest_bps": f"{profit / (roe / 100) / sh:.4f}",
                         })
 
             # ② 股本跳变（扣送转）。同一重述不确定性：折回口径与原口径各比各的，
