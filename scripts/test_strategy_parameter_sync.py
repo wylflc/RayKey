@@ -101,6 +101,22 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn(sweep.EX5_ANCHOR_START, sweep.DEFAULT_STARTS)
         for anchor in sweep.LONGRUN_STARTS:
             self.assertIn(anchor, sweep.DEFAULT_STARTS)
+        # 标准指标集入 §12.1 第 2 款：两个口径各出一份，每项报水平／配对差／变好起点数
+        self.assertIn("**标准指标集**（每轮扫描必报，全样本与去赢家两个口径各出一份、同表并列", workflow)
+        self.assertIn("长跑锚点是单起点，只报水平与配对差，不报符号数、不进任何判定", workflow)
+        std = {name for name, *_rest in sweep.STANDARD_SET}
+        for name in ("滚5中位", "滚5P25", "滚5最差", "滚5回撤", "滚5Calmar", "滚5Sharpe", "负窗%",
+                     "年化", "最大回撤", "Calmar", "Sharpe", "5年块中位", "滚3中位", "滚3回撤",
+                     "逐年中位", "逐年最差", "换手", "仓位"):
+            self.assertIn(name, std)
+        for _name, key, *_rest in sweep.STANDARD_SET:
+            self.assertIn(key, sweep.FIELDS)
+        # 去赢家剔除集取 A 与 U 两个；第 4 款「全面优秀」不构成采纳
+        self.assertIn("剔除集取两个：**A** =", workflow)
+        self.assertIn("**U** = A 与候选臂同起点前五名的并集", workflow)
+        self.assertIn("记为**去赢家全面优秀**", workflow)
+        self.assertIn("该判定不构成采纳，也不放宽第 2 款的门槛", workflow)
+        self.assertTrue((ROOT / "scripts/experimental/ex_winner_symmetry.py").exists())
         self.assertIn("`data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`", workflow)
         self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)

@@ -100,7 +100,7 @@ def collect_experiments():
 def merge_summaries(files):
     """列头历代不同（滚动三年、手续费等是后加的），故取并集，缺列留空。
 
-    **先读回已有的 `scan_summaries.csv` 再并入本次的 summary**：该表是 §12.1 第 11 款
+    **先读回已有的 `scan_summaries.csv` 再并入本次的 summary**：该表是 §12.1 第 12 款
     「已试臂数」的累计台账，一个 `扫描标签` 一行、同标签以本次为准。直接按本次磁盘上
     剩余的 summary 覆写会把历次台账整表抹掉（本次只跑 92 次，表就只剩 230 行）。
     """
