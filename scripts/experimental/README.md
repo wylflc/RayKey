@@ -188,3 +188,19 @@ python3 scripts/experimental/drawdown_path.py /tmp/bt_base --top 3
 | `subset_daily_states.py` | 把全市场逐日估值状态按若干面板的代码并集切成子集文件（只为回测提速，逐位等价） |
 | `vp_signal_lab.py` | 量价信号实验室：事件研究（事件等权 / 按日等权、同日市场基准、MFE）＋ 随机抽样持有组合模拟（含费、挂单止盈、安慰剂）。**依赖 numpy，本机用 `python3.11`（miniconda）运行** |
 
+
+## 估值锚顺周期与「买在盈利顶」核查（2026-09-01，OI-115，见回测日志 §12.154）
+
+| 文件 | 作用 |
+| --- | --- |
+| `value_procyclicality.py` | 逐年 `Spearman(Δln 价, Δln V)`（月末观测与去年同月末配对）。两边一起走 `exright_adjust`（交易所除权参考价公式，与建带器折算 `V` 同一函数）复权到同一股本口径；`--no-split-adjust` 复现 §12.144 未复权的首登值（含送转假相关，ρ 约翻倍，只作复现）。可一次给多臂对照 |
+| `cycle_peak_buy_audit.py` | 四表：① 买入按 `s = 买入时 TTM 利润 ÷ 自身十年 TTM 中位` 分档（档界对齐峰守卫坡道）报金额、`P/V`、其后利润低点与前向回报；② 点名核对给定代码在给定窗口的最低 `P/V`、跌破买入线月数与实际成交（可查从未买过的票）；③ `s ≥ 1.3` 的命中清单；④ `s` × 其后利润是否崩塌的交叉表——**只有右上角那格才是「买在周期顶」**，`s` 高本身不等于周期顶 |
+
+```bash
+python3 scripts/experimental/value_procyclicality.py \
+    --states BASE=data/processed/a_share_daily_states_adopted.csv \
+    --panel data/processed/pit_attention/panel_moat_bank_v6b.csv --split 2017
+python3 scripts/experimental/cycle_peak_buy_audit.py \
+    --trade-log <BASE 长跑 --trade-log> --states <候选侧逐日状态> --bands <带文件> \
+    --buy-line 0.9343 --name-check "白酒=600519,000858,000568,002304,600809@2019-01:2022-12"
+```
