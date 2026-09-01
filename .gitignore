@@ -44,6 +44,10 @@ data/processed/a_share_daily_states_hold.csv
 data/processed/roic_bands*_w0.csv
 data/processed/roic_daily_raw*_w0.csv
 data/processed/a_share_daily_states_*_w0.csv
+# A/B 臂的中间产物（GB 级，不入库；重建见 scripts/slurm/）
+data/processed/roic_bands*_mi.csv
+data/processed/roic_daily_raw*_mi.csv
+data/processed/a_share_daily_states*_mi.csv
 data/processed/*_w100.bak.csv
 # 建带引擎的实验臂与一次性变体（跑完即删）
 data/processed/vd_*.csv

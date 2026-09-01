@@ -44,7 +44,7 @@ python3 scripts/experimental/align_buy_line.py \
   $S/a_share_daily_states_adopted.csv $S/a_share_daily_states_mi.csv \
   --base-line 0.9976 --swap-margin 0.18 | tee "$EXP/align_buy_line.txt"
 
-WIDTH=$(grep -oP '`--width \K[0-9.]+' "$EXP/align_buy_line.txt" | tail -1)
+WIDTH=$(grep -oP '`--width \K-?[0-9.]+' "$EXP/align_buy_line.txt" | tail -1)   # 口径整体平移可解出负半宽（买入线 > 1）
 echo "重解买入线 --width $WIDTH"
 [ -n "$WIDTH" ] || { echo "买入线重解失败，停止"; exit 1; }
 
