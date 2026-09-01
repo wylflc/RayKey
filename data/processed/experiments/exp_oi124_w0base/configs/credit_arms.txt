@@ -1,0 +1,16 @@
+# OI-124 credit 剂量扫描：--credit-ratio 0.0~1.2。
+# BASE 行留空 = 生产在册值（现行 --credit-ratio 0.666）；各臂只动这一个旋钮。
+BASE|
+CR000|--credit-ratio 0.0
+CR010|--credit-ratio 0.1
+CR020|--credit-ratio 0.2
+CR030|--credit-ratio 0.3
+CR040|--credit-ratio 0.4
+CR050|--credit-ratio 0.5
+CR060|--credit-ratio 0.6
+CR070|--credit-ratio 0.7
+CR080|--credit-ratio 0.8
+CR090|--credit-ratio 0.9
+CR100|--credit-ratio 1.0
+CR110|--credit-ratio 1.1
+CR120|--credit-ratio 1.2

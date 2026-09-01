@@ -32,7 +32,7 @@ class T1ExecutionConfirmationTest(unittest.TestCase):
         return bt.run(
             "trend", x, states, market(states), {}, mas,
             min(states), max(states), 100_000.0,
-            width=0.0657, trend_tranche=True, trend_ma=(20, 60),
+            width=0.0024, trend_tranche=True, trend_ma=(20, 60),
             exec_delay=1, exec_price="close", sell_trend_ma=(20,),
             sell_line_override=2.4671, stop_ma=60,
             stop_line="min_entry_current", entry_below_ma60="ma60_stop",

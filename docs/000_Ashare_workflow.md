@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.117
+# A股选股-估值-量价操作流程 v4.118
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -332,6 +332,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 --since 2002-01-01 \
   --roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
+  --roic-trail-weight 0 \
   --out-bands data/processed/roic_bands.csv \
   --out-daily data/processed/roic_daily_raw.csv
 # 2b. B2 带与逐日状态（持仓侧第二输入；与第 2 步串行、不得并发）
@@ -339,6 +340,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 --since 2002-01-01 \
   --roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
+  --roic-trail-weight 0 \
   --ttm-trust on --ttm-trust-delta 0.02 \
   --out-bands data/processed/roic_bands_b2.csv \
   --out-daily data/processed/roic_daily_raw_b2.csv
@@ -574,7 +576,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 | --- | --- |
 | 候选池 | 当日 `worth_attention` |
 | 估值 | 候选侧（买入线、排序、换仓触发候选）读 §6.5 当前生产模型带；持仓侧（换仓来源）读 §6.5.2.3 持仓侧带；`P/V = 收盘 ÷ V` |
-| 买入线 | `P/V ≤ 0.9343` |
+| 买入线 | `P/V ≤ 0.9976` |
 | 新建仓走势 | T 日 `收盘 > MA20 > MA60` |
 | 已有持仓加仓走势 | `MA20 > MA60`，不要求收盘高于 MA20 |
 | 排序 | `P/V` 升序，资金用尽即停 |
@@ -759,7 +761,7 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 
 历史面板 `effective_from` 与 `effective_to` 均为有效期边界，结束日包含在内。禁止把区间起点当成完整快照，也禁止手工修改面板 CSV；名单变化先改判定源，再运行装配脚本。
 
-换估值口径或换宇宙做 A/B 时，**买入线必须重解到同一在册合格面**（`scripts/experimental/align_buy_line.py`），否则比的是两条不同宽度的闸门；**换仓边际不随买入线缩放，按 0.01 一档的剂量扫描重定**。现行两线 **候选侧买入线 0.9343／换仓边际 0.19**：买入线对候选侧状态下侧合格面 17.777%，508,154 个在册观测，保留四位小数、不取整。现行基准（`BASE`：候选侧 `a_share_daily_states_adopted.csv`＋持仓侧 `a_share_daily_states_hold.csv`、授信 66.6%、单票上限 60%、T+1 无价跳过、股息税、换仓源同日不重复、同日买卖对冲、配股事件，月末锚定口径）在册读数（全样本）：**滚5 中位／P25／最差 65.23／47.37／18.25、滚5 回撤中位 48.3、滚5 Calmar 1.35、滚5 Sharpe 1.17、负窗口占比 0；年化中位 46.09、最大回撤中位 64.0、Calmar 0.72、Sharpe 0.87；5年块中位 57.03；长跑 2009-11 CAGR 36.92／MDD 64.0、2011-11 CAGR 40.47／MDD 64.0；滚3 中位 51.18、滚3 回撤中位 48.2；逐年中位 43.43、逐年最差 −28.4；换手 4.75、仓位 167**。在册读数（去赢家，剔除集 A）：**滚5 中位／P25／最差 38.56／29.44／19.98、滚5 回撤中位 51.6、滚5 Calmar 0.85、滚5 Sharpe 0.80、负窗口占比 0；年化中位 38.04、最大回撤中位 63.5、Calmar 0.62、Sharpe 0.80；5年块中位 45.81；长跑 2009-11 CAGR 34.78／MDD 62.9、2011-11 CAGR 31.24／MDD 63.6；滚3 中位 36.10、滚3 回撤中位 42.5；逐年中位 32.51、逐年最差 −39.7；换手 5.67、仓位 168**。剔除集 U 随候选臂而变，不入册。配对差一律相对现行基准读数，读数不跨纪元迁移；各纪元的线解与在册读数只查 `docs/Ashare_backtest_log.md`。
+换估值口径或换宇宙做 A/B 时，**买入线必须重解到同一在册合格面**（`scripts/experimental/align_buy_line.py`），否则比的是两条不同宽度的闸门；**换仓边际不随买入线缩放，按 0.01 一档的剂量扫描重定**。现行两线 **候选侧买入线 0.9976／换仓边际 0.19**：买入线对候选侧状态下侧合格面 17.777%，508,154 个在册观测，保留四位小数、不取整。现行基准（`BASE`：候选侧 `a_share_daily_states_adopted.csv`＋持仓侧 `a_share_daily_states_hold.csv`、授信 66.6%、单票上限 60%、T+1 无价跳过、股息税、换仓源同日不重复、同日买卖对冲、配股事件，月末锚定口径）在册读数（全样本）：**滚5 中位／P25／最差 65.23／47.37／18.25、滚5 回撤中位 48.3、滚5 Calmar 1.35、滚5 Sharpe 1.17、负窗口占比 0；年化中位 46.09、最大回撤中位 64.0、Calmar 0.72、Sharpe 0.87；5年块中位 57.03；长跑 2009-11 CAGR 36.92／MDD 64.0、2011-11 CAGR 40.47／MDD 64.0；滚3 中位 51.18、滚3 回撤中位 48.2；逐年中位 43.43、逐年最差 −28.4；换手 4.75、仓位 167**。在册读数（去赢家，剔除集 A）：**滚5 中位／P25／最差 38.56／29.44／19.98、滚5 回撤中位 51.6、滚5 Calmar 0.85、滚5 Sharpe 0.80、负窗口占比 0；年化中位 38.04、最大回撤中位 63.5、Calmar 0.62、Sharpe 0.80；5年块中位 45.81；长跑 2009-11 CAGR 34.78／MDD 62.9、2011-11 CAGR 31.24／MDD 63.6；滚3 中位 36.10、滚3 回撤中位 42.5；逐年中位 32.51、逐年最差 −39.7；换手 5.67、仓位 168**。剔除集 U 随候选臂而变，不入册。配对差一律相对现行基准读数，读数不跨纪元迁移；各纪元的线解与在册读数只查 `docs/Ashare_backtest_log.md`。
 
 当前参数是取舍前沿上的一点，不是三条标准同时占优的峰；援引本基准时说清按哪条标准选的，不称「最优」。
 

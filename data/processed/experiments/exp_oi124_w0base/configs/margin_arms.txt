@@ -1,0 +1,23 @@
+# OI-124 margin 剂量扫描：--swap-margin 0.1~0.3。
+# BASE 行留空 = 生产在册值（现行 --swap-margin 0.19）；各臂只动这一个旋钮。
+BASE|
+SM010|--swap-margin 0.1
+SM011|--swap-margin 0.11
+SM012|--swap-margin 0.12
+SM013|--swap-margin 0.13
+SM014|--swap-margin 0.14
+SM015|--swap-margin 0.15
+SM016|--swap-margin 0.16
+SM017|--swap-margin 0.17
+SM018|--swap-margin 0.18
+SM020|--swap-margin 0.2
+SM021|--swap-margin 0.21
+SM022|--swap-margin 0.22
+SM023|--swap-margin 0.23
+SM024|--swap-margin 0.24
+SM025|--swap-margin 0.25
+SM026|--swap-margin 0.26
+SM027|--swap-margin 0.27
+SM028|--swap-margin 0.28
+SM029|--swap-margin 0.29
+SM030|--swap-margin 0.3

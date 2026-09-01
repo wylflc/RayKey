@@ -29,7 +29,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PIT = ROOT / "data/processed/pit_attention"
-DEFAULT_PANEL = PIT / "panel_moat_bank_v4.csv"      # §9.3.1.2 的基准宇宙
+DEFAULT_PANEL = PIT / "panel_moat_bank_v6b.csv"     # §9.3.1.2 的基准宇宙
 
 
 def load_spans(panel: Path):

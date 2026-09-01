@@ -40,6 +40,11 @@ data/processed/roic_bands_b2.csv
 data/processed/roic_daily_raw_b2.csv
 data/processed/a_share_daily_states_b2.csv
 data/processed/a_share_daily_states_hold.csv
+# 换基准时的暂存与回滚副本（cutover_w0_baseline.sh）
+data/processed/roic_bands*_w0.csv
+data/processed/roic_daily_raw*_w0.csv
+data/processed/a_share_daily_states_*_w0.csv
+data/processed/*_w100.bak.csv
 # 建带引擎的实验臂与一次性变体（跑完即删）
 data/processed/vd_*.csv
 data/processed/vb_*.csv
