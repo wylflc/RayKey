@@ -84,7 +84,8 @@ for r in csv.DictReader(open(BANDS, encoding="utf-8")):
             v = float(r[k]); return v if v == v else None
         except (KeyError, TypeError, ValueError):
             return None
-    seq[r["security_code"]].append((av, num("bps"), num("roe0"), num("payout")))
+    seq[r["security_code"]].append((av, num("bps"), num("roe0"), num("payout"),
+                                   r.get("bps_basis_date") or av))
 for c in seq:
     seq[c].sort(key=lambda x: x[0])
 KEYS = {c: [x[0] for x in seq[c]] for c in seq}
@@ -116,7 +117,7 @@ for r in (csv.DictReader(open(DAILY, encoding="utf-8")) if _needs_peer_pass else
     f = fundamentals(c, d)
     if not f:
         continue
-    _, bps, roe0, payout = f
+    _, bps, roe0, payout, _bd = f
     if not bps or bps <= 0 or roe0 is None or roe0 <= 0 or px <= 0:
         continue
     pb = px / bps
@@ -219,7 +220,35 @@ RFD = [x[0] for x in RFS]
 
 from divspread_dividend import load_distributions, annual_dividend   # OI-099：分子 = 最近已知完整财年分红
 from intrinsic_value import valuation_label
+# OI-131：除权调整复用建带器的唯一实现（`v → (v − 现金红利) ÷ (1 + 送转比)`，交易所除权参考价公式）。
+# 覆盖出来的带同样要跟随真实股价除权——不折算则除息日股价下跳而带不动，`P/V` 凭空下跳一次股息率
+# （与 OI-052／OI-039 同型；ROIC 路径已于 v4.20 修，本覆盖层建在其后、从未同批修）。
+from build_historical_valuation_bands import load_actions, exright_adjust
+ACTIONS = load_actions()
 DIV = load_distributions(codes=BANKS) if RP is not None else {}
+
+
+def ex_adjust(code, since, day, value, split_since=None):
+    """把覆盖出来的每股值折到 `day` 的不复权价同基；返回 (调整后值, 累计送转因子, 累计现金)。"""
+    if not since:
+        return value, 1.0, 0.0
+    (adj,), factor, cash = exright_adjust(ACTIONS.get(code, []), since, day, (value,),
+                                          split_since=split_since or since)
+    return adj, factor, cash
+
+
+def div_annual_since(c, day):
+    """当前 `dv` 的可得日（该财年各笔分红 available_at 的上界）——除权调整的锚。
+
+    锚取可得日而非除权日：与 ROIC 路径取公告日同理，`dv` 自该日起成为在用分子，
+    其后的每一次除权除息都要折算；下一财年分红可得时锚前移、窗口自然复位。"""
+    dists = DIV.get(c, [])
+    got = annual_dividend(dists, day)
+    if not got:
+        return ""
+    _, fy = got
+    return max((d.available_at for d in dists
+                if d.report_date[:4] == fy and d.available_at <= day), default="")
 
 def rf_at(day):
     i = bisect.bisect_right(RFD, day) - 1
@@ -231,7 +260,7 @@ def div_annual(c, day):
     return got[0] if got else 0.0
 
 # ---- 第二遍：重写银行行 ----
-n_rewritten = n_kept = n_dropped = 0
+n_rewritten = n_kept = n_dropped = n_exright = 0
 pb_star = []
 with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newline="") as fo:
     rd = csv.DictReader(fi)
@@ -249,7 +278,7 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         f = fundamentals(c, d)
         if not f or px <= 0:
             n_dropped += 1; continue
-        _, bps, roe0, payout = f
+        _, bps, roe0, payout, _bd = f
         if not bps or bps <= 0:
             n_dropped += 1; continue
         if RP is not None:
@@ -257,6 +286,11 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
             if r10 is None or dv <= 0: n_dropped += 1; continue
             v = dv / (r10 + RP)
             if v <= 0: n_dropped += 1; continue
+            # OI-131：分子是该财年**实付**每股现金分红，其后的送转与除息都要按除权参考价折算
+            v, factor, cash_cum = ex_adjust(c, div_annual_since(c, d), d, v)
+            if v <= 0: n_exright += 1; n_dropped += 1; continue
+            r["split_factor"] = f"{factor:.6f}"
+            r["cash_adjustment"] = f"{cash_cum:.4f}"
             pb_star.append(v / bps)
             r["intrinsic_value"] = f"{v:.4f}"
             r["band_low"] = f"{v*0.9:.4f}"
@@ -273,6 +307,10 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
             if coe is None: n_dropped += 1; continue
             v = (ri_value if PATH_MODE == "ri" else ddm_value)(bps, roe0, payout, coe)
             if v is None or v <= 0: n_dropped += 1; continue
+            v, factor, cash_cum = ex_adjust(c, band_av, d, v, split_since=bps_basis)   # OI-131
+            if v <= 0: n_exright += 1; n_dropped += 1; continue
+            r["split_factor"] = f"{factor:.6f}"
+            r["cash_adjustment"] = f"{cash_cum:.4f}"
             pbs = v / bps
             if not (0.05 < pbs < 15): n_dropped += 1; continue
             pb_star.append(pbs)
@@ -300,6 +338,10 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         v = bps * pbs
         if v <= 0:
             n_dropped += 1; continue
+        v, factor, cash_cum = ex_adjust(c, band_av, d, v, split_since=bps_basis)       # OI-131
+        if v <= 0: n_exright += 1; n_dropped += 1; continue
+        r["split_factor"] = f"{factor:.6f}"
+        r["cash_adjustment"] = f"{cash_cum:.4f}"
         pb_star.append(pbs)
         r["intrinsic_value"] = f"{v:.4f}"
         r["band_low"] = f"{v*0.9:.4f}"
@@ -309,7 +351,9 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         if "pv_equity" in r: r["pv_equity"] = f"{px/v:.4f}"
         if "ev_ps" in r: r["ev_ps"] = ""
         w.writerow(r); n_rewritten += 1
-print(f"银行行重写 {n_rewritten:,}｜丢弃 {n_dropped:,}｜非银行原样保留 {n_kept:,}")
+print(f"银行行重写 {n_rewritten:,}｜丢弃 {n_dropped:,}"
+      + (f"（其中除权折算后带非正 {n_exright:,}）" if n_exright else "")
+      + f"｜非银行原样保留 {n_kept:,}")
 if pb_star:
     q = sorted(pb_star)
     print(f"合理 PB* 分位：P10 {q[len(q)//10]:.2f}｜中位 {q[len(q)//2]:.2f}｜P90 {q[len(q)*9//10]:.2f}")
