@@ -1,0 +1,21 @@
+# §12.178 表 A：买入线直接剂量扫描（不走 §12.30 对齐解）。买入线 L = 1 − width；BASE = 1.0454（--width -0.0454）。
+# 换仓边际固定 0.15、其余与 BASE 同；标签 BLxxxx = 买入线 ×10000。BL9000 = 买入线形同取消（只剩走势条件）。
+BASE|
+BL0700|--width 0.30
+BL0800|--width 0.20
+BL0850|--width 0.15
+BL0900|--width 0.10
+BL0950|--width 0.05
+BL1000|--width 0.0
+BL1020|--width -0.02
+BL1070|--width -0.07
+BL1100|--width -0.10
+BL1125|--width -0.125
+BL1150|--width -0.15
+BL1200|--width -0.20
+BL1250|--width -0.25
+BL1300|--width -0.30
+BL1400|--width -0.40
+BL1500|--width -0.50
+BL2000|--width -1.00
+BL9000|--width -8.00
