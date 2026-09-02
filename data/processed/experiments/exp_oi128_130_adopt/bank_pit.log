@@ -1,0 +1,5 @@
+银行与保险 47 只（保险按 divspread_names.INSURER_CODES）｜模式 divspread:0.02
+隐含 COE 观测 0
+银行行重写 123,379｜丢弃 15,797｜非银行原样保留 15,476,601
+合理 PB* 分位：P10 0.36｜中位 0.62｜P90 0.95
+已写 data/processed/a_share_daily_states_pit.csv

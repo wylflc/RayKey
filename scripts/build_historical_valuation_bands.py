@@ -94,6 +94,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import roic_inputs  # noqa: E402
 from disclosure_dates import available_at as statutory_available_at  # noqa: E402
+import restatement_archive  # noqa: E402
 
 from intrinsic_value import (  # noqa: E402
     DEFAULT_G_TERMINAL,
@@ -199,6 +200,8 @@ MOAT_STATS: defaultdict[str, int] = defaultdict(int)
 # §6.5.2.4 主体重置：{代码: 重置报告期}。报告期 ≥ 重置日的行把比率窗口、十年守卫窗与经营账面基年截到重置日起
 # （复用结构断点 `book_break`），不足三年时锚 = 最新年报比率 × TTM 因子，g0 只由季报趋势给出。早于重置日的行不受影响。
 ENTITY_RESET: dict[str, str] = {}
+ENTITY_RESET_KNOWN: dict[str, str] = {}      # {代码: known_from}，重置事件公开日；早于此日的带不施加重置（OI-130 时点口径）
+VERSIONED_CODES: set[str] = set()            # OI-130：面板里挂有重述前版本的代码，主循环按带的公告日选版本
 ENTITY_RESET_GROWTH: dict[str, str] = {}     # {代码: none|trend}，缺省 none（重置后不足三年判不增长）
 ENTITY_RESET_FILE = ROOT / "data/processed/entity_reset_dates.csv"
 
@@ -296,7 +299,97 @@ def load_financials(codes: set[str] | None, notice_cap: bool = True) -> dict[str
                 out[code][row["report_date"]] = row
     from financials_corrections import apply_corrections, report as _corr_report
     _corr_report(*apply_corrections(out))
+    attach_panel_versions(out, codes, notice_cap)
     return out
+
+
+def attach_panel_versions(out: dict[str, dict[str, dict]], codes: set[str] | None, notice_cap: bool) -> None:
+    """OI-130：给被追溯重述的面板行挂上重述前版本 `row["_superseded"] = [(superseded_at, 旧行)]`（升序）。
+    来源两处：①面板存档 `data/raw/financials/superseded/<报告期>.csv`（取数重写前的原行）；
+    ②三大报表存档推得的版本——`bps = 重述前归母权益 ÷ 股本`，EPS／归母净利／营收取重述前利润表——
+    只在面板现行值已是重述后口径且①无同日版本时生成。重述日志有重述日、却无版本覆盖该日的行，
+    `notice_date` 延后到重述日（现行值在该日之前不可用）。"""
+    versions: dict[tuple[str, str], dict[str, dict]] = defaultdict(dict)
+    for path in sorted((FIN_DIR / "superseded").glob("*.csv")):
+        for arch in restatement_archive.load_archive(path):
+            code = (arch.get("security_code") or "").strip()
+            period = (arch.get("report_date") or path.stem)[:10]
+            sa = (arch.get("superseded_at") or "")[:10]
+            if not sa or (codes is not None and code not in codes) or period not in out.get(code, {}):
+                continue
+            old = {k: v for k, v in arch.items() if k not in restatement_archive.ARCHIVE_FIELDS}
+            notice = (old.get("notice_date") or "").strip()
+            if not notice:
+                continue
+            old["notice_date_raw"] = notice
+            if notice_cap:
+                old["notice_date"] = statutory_available_at(period, notice)
+            versions[(code, period)][sa] = old
+    stmt_versions = roic_inputs.load_superseded_raw(codes)
+    for (code, period), items in stmt_versions.items():
+        row = out.get(code, {}).get(period)
+        if row is None:
+            continue
+        cur_bps = _num(row.get("bps"))
+        for sa in sorted({s for s, _, _ in items}):
+            if sa in versions[(code, period)]:
+                continue
+            bal = min(((s, r) for s, k, r in items if k == "balance" and s >= sa), default=(None, None))[1]
+            inc = min(((s, r) for s, k, r in items if k == "income" and s >= sa), default=(None, None))[1]
+            old = dict(row)
+            changed = False
+            if bal:
+                eq, sc = _num(bal.get("TOTAL_PARENT_EQUITY")), _num(bal.get("SHARE_CAPITAL"))
+                if eq and sc and sc > 0 and cur_bps and abs(cur_bps / (eq / sc) - 1) > 1e-3:
+                    old["bps"] = f"{eq / sc:.6f}"
+                    changed = True
+            if inc:
+                for src, dst in (("BASIC_EPS", "basic_eps"), ("PARENT_NETPROFIT", "parent_netprofit"),
+                                 ("TOTAL_OPERATE_INCOME", "total_operate_income")):
+                    v_old, v_now = _num(inc.get(src)), _num(row.get(dst))
+                    if v_old is not None and (v_now is None or v_old != v_now):
+                        old[dst] = inc.get(src)
+                        changed = True
+            if changed:
+                versions[(code, period)][sa] = old
+    for (code, period), by_date in versions.items():
+        if by_date:
+            out[code][period]["_superseded"] = sorted(by_date.items())
+            VERSIONED_CODES.add(code)
+            roic_inputs.CAP_STATS["financials_versioned"] += 1
+    for (code, period), when in roic_inputs.load_restatement_dates(codes).items():
+        row = out.get(code, {}).get(period)
+        if row is None or any(sa >= when for sa, _ in row.get("_superseded", ())):
+            continue
+        bal_old = [r for _, k, r in stmt_versions.get((code, period), []) if k == "balance"]
+        if bal_old:
+            eq, sc = _num(bal_old[0].get("TOTAL_PARENT_EQUITY")), _num(bal_old[0].get("SHARE_CAPITAL"))
+            cur_bps = _num(row.get("bps"))
+            if eq and sc and sc > 0 and cur_bps and abs(cur_bps / (eq / sc) - 1) <= 1e-3:
+                continue      # 面板仍是重述前口径，当时即可用
+        if (row.get("notice_date") or "") < when:
+            row["notice_date"] = when
+            roic_inputs.CAP_STATS["financials_delayed"] += 1
+
+
+def series_as_of(series: dict[str, dict], as_of: str) -> dict[str, dict]:
+    """OI-130：`as_of` 当日在用的面板——挂有 `_superseded` 的行取最早一个 `superseded_at > as_of` 的旧版本，否则现行。"""
+    out: dict[str, dict] = {}
+    for period, row in series.items():
+        chosen = row
+        for superseded_at, old in row.get("_superseded", ()):
+            if as_of < superseded_at:
+                chosen = old
+                break
+        out[period] = chosen
+    return out
+
+
+def entity_reset_for(code: str, as_of: str) -> str | None:
+    """主体重置日；登记了 `known_from` 且 `as_of` 早于它时视为尚未发生（不施加）。"""
+    reset = ENTITY_RESET.get(code)
+    known = ENTITY_RESET_KNOWN.get(code, "")
+    return reset if reset and (not known or as_of >= known) else None
 
 
 def load_actions() -> dict[str, list[dict]]:
@@ -1231,7 +1324,9 @@ class Band:
     wacc: float | None = None
     cost_of_debt: float | None = None
     tax_rate: float | None = None
-    net_debt_ps: float | None = None          # (有息负债 − 超额现金 + 少数股东权益)/股数
+    net_debt_ps: float | None = None          # 每股净负债 = 净金融负债 + 少数股东扣减 − x（§6.5.1 第 3 条）
+    fin_net_debt_ps: float | None = None      # 每股净金融负债 (有息负债 − 超额现金)/E_op × BPS_op
+    minority_book_ps: float | None = None     # 每股少数股东权益账面（扣减下界）
     ev_ps: float | None = None                # 企业价值/股（扣净负债前）
     owner_earnings_true_ps: float | None = None  # CFO − 维持性capex（≈D&A），每股
     roic_path: str | None = None              # growth ／ zero_growth ／ equity_fallback
@@ -1545,7 +1640,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             x_cum, x_note, book_break = annual_external_equity(
                 long_hist_all, series, actions,
                 getattr(args, "ext_equity_min_frac", EXTERNAL_EQUITY_MIN_FRACTION))
-            reset_date = ENTITY_RESET.get(code)
+            reset_date = entity_reset_for(code, available_at)
             reset_active = bool(reset_date) and period >= reset_date
             if reset_active and (book_break is None or book_break < reset_date):
                 book_break = reset_date
@@ -1838,14 +1933,15 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     (latest.cfo - latest.dep_amort) / e_op_ref * bps_op)
             # 股权桥的少数股东口径（--minority-basis）。企业价值由**合并口径** NOPAT 折现而来，
             # 分子含少数股东那部分经营成果：
-            #   book     ＝ 扣减按少数股东权益**账面**（两侧不同口径）
-            #   earnings ＝ 扣减取「账面」与「按盈利份额分得的权益价值 m×(EV−净金融负债)」的较大者，
+            #   earnings（生产缺省，OI-128）＝ 扣减取「账面」与「按盈利份额分得的权益价值 m×(EV−净金融负债)」的较大者，
+            #   book（研究开关）＝ 扣减按少数股东权益**账面**（两侧不同口径）
             #              m 为窗口内少数股东损益占合并净利的中位（`roic_inputs.minority_share`）。
             #              账面为下界：子公司只挣到资本成本时权益价值即账面，挣得多时按盈利份额分。
             # 外生权益 x 是母公司层面的募资/回购，两口径下都不参与少数股东分摊。
             minority_basis = getattr(args, "minority_basis", "book")
             fin_net_debt_ps = (latest.interest_debt - latest.excess_cash) / e_op_ref * bps_op
             minority_book_ps = latest.minority_equity / e_op_ref * bps_op
+            band.fin_net_debt_ps, band.minority_book_ps = fin_net_debt_ps, minority_book_ps
             m_share = 0.0
             if minority_basis == "earnings":
                 m_share, m_basis = roic_inputs.minority_share(history)
@@ -2415,7 +2511,7 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "incremental_roe", "incremental_roe_basis", "cash_roe0", "owner_earnings0", "v_zero_growth",
                "incremental_roe_used", "ame_path",
                "nopat_ps", "roic0", "incremental_roic", "reinvestment_rate", "wacc",
-               "cost_of_debt", "tax_rate", "net_debt_ps", "ev_ps",
+               "cost_of_debt", "tax_rate", "net_debt_ps", "fin_net_debt_ps", "minority_book_ps", "ev_ps",
                "owner_earnings_true_ps", "roic_path", "minority_share", "minority_share_basis",
                "roic_nopat_mode", "roic_g_source",
                "payout", "g_trailing", "g_sustainable", "g0", "g0_capped",
@@ -2453,6 +2549,7 @@ def band_row(band: Band, tier: str) -> dict:
         "reinvestment_rate": fmt(band.reinvestment_rate, 4),
         "wacc": fmt(band.wacc, 4), "cost_of_debt": fmt(band.cost_of_debt, 4),
         "tax_rate": fmt(band.tax_rate, 4), "net_debt_ps": fmt(band.net_debt_ps),
+        "fin_net_debt_ps": fmt(band.fin_net_debt_ps), "minority_book_ps": fmt(band.minority_book_ps),
         "ev_ps": fmt(band.ev_ps),
         "owner_earnings_true_ps": fmt(band.owner_earnings_true_ps),
         "roic_path": band.roic_path or "",
@@ -2692,9 +2789,9 @@ def main() -> int:
                              "ame=All Money Is Equal 的现金流代理版（经营现金流 ＋ iROE，"
                              "**没扣资本开支**，见 §12.65）；"
                              "roic=同框架的真口径（NOPAT/投入资本/FCFF/WACC，需三大报表，见 §12.66）")
-    parser.add_argument("--minority-basis", choices=("book", "earnings"), default="book",
-                        help="股权桥的少数股东口径：book=少数股东权益按账面并入净负债（生产 BASE）；"
-                             "earnings=每股量乘归母经济份额 1−m，m 取窗口内少数股东损益占合并净利中位")
+    parser.add_argument("--minority-basis", choices=("book", "earnings"), default="earnings",
+                        help="股权桥的少数股东口径（§6.5.1 第 3 条）：earnings=扣减取 max(账面, m×(EV−净金融负债))，"
+                             "m 为窗口内少数股东损益占合并净利的中位（生产缺省，OI-128）；book=少数股东权益按账面并入净负债（研究开关）")
     parser.add_argument("--statements-dir", type=Path, default=roic_inputs.STMT_DIR,
                         help="--value-model roic 的三大报表目录，缺省 data/raw/financials_statements/")
     parser.add_argument("--roic-ic-floor", type=float, default=0.0, metavar="K",
@@ -2833,6 +2930,7 @@ def main() -> int:
     for _c, _r in roic_inputs.load_entity_reset(args.entity_reset_file).items():
         ENTITY_RESET[_c] = _r["reset"]
         ENTITY_RESET_GROWTH[_c] = _r["growth_mode"]
+        ENTITY_RESET_KNOWN[_c] = _r.get("known_from", "")
     if ENTITY_RESET:
         print(f"主体重置：{len(ENTITY_RESET)} 只 ← {args.entity_reset_file}")
     if args.moat_params:
@@ -2887,6 +2985,13 @@ def main() -> int:
             rows, capped = cap.get(rows_key, 0), cap.get(cap_key, 0)
             parts.append(f"{label} {capped:,}/{rows:,} {unit}（{capped / rows:.1%}）" if rows
                          else f"{label} 0 {unit}")
+        versioned = roic_inputs.CAP_STATS["financials_versioned"] + roic_inputs.CAP_STATS["statements_versioned"]
+        delayed = roic_inputs.CAP_STATS["financials_delayed"] + roic_inputs.CAP_STATS["statements_delayed"]
+        if versioned or delayed:
+            print(f"重述前版本（OI-130）：面板行 {roic_inputs.CAP_STATS['financials_versioned']}／三表财年 "
+                  f"{roic_inputs.CAP_STATS['statements_versioned']} 挂有旧版本、按可得日选用；"
+                  f"无存档而延后可得日：面板行 {roic_inputs.CAP_STATS['financials_delayed']}／三表财年 "
+                  f"{roic_inputs.CAP_STATS['statements_delayed']}")
         print("公告日封顶（OI-042，min(记录公告日, 法定截止日)）：" + "｜".join(parts))
     else:
         print("⚠ --notice-cap off：公告日按东财记录日原样（1998-2015 报告期普遍晚一年可用，OI-042），只用于复现旧产物")
@@ -2917,7 +3022,9 @@ def main() -> int:
         CURRENT_PRICES.clear()
         if args.wacc_weights == "market":
             CURRENT_PRICES[code] = prices
-        bands = [build_band(code, name, tier, series, actions.get(code, []), p, args) for p in periods]
+        bands = [build_band(code, name, tier,
+                            series_as_of(series, series[p]["notice_date"]) if code in VERSIONED_CODES else series,
+                            actions.get(code, []), p, args) for p in periods]
         all_bands.extend((code, b) for b in bands)
         band_rows.extend(band_row(b, tier) for b in bands)
         # OI-074 ③：路径分布统计的原料——每只的最新 ok 带路径、市值代理（末日收盘 × 隐含股本）

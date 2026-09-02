@@ -40,15 +40,17 @@ from __future__ import annotations
 import csv
 import statistics
 from collections import Counter
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from disclosure_dates import available_at
+import restatement_archive
 
 CAP_STATS: Counter = Counter()   # 公告日封顶统计（OI-042），建带器结尾打印
 
 ROOT = Path(__file__).resolve().parents[1]
 STMT_DIR = ROOT / "data/raw/financials_statements"
+RESTATE_LOG = ROOT / "data/interim/statement_restatements.csv"   # 取数探针的重述日志（OI-126）
 
 OPERATING_CASH_RATIO = 0.02      # 营运现金 ≈ 2% 营收，其余视为超额现金
 DEFAULT_TAX_RATE = 0.25          # 法定税率，利润总额非正时回退
@@ -114,7 +116,72 @@ class RoicYear:
     minority_profit: float | None = None    # 少数股东损益（MINORITY_INTEREST）——同上分子
     parent_tci: float | None = None         # 归母综合收益总额（PARENT_TCI）；缺失时 X 的留存项退回归母净利
     is_financial: bool = False
+    superseded: list = field(default_factory=list)   # OI-130：[(superseded_at, 重述前版本 RoicYear)]，按日期升序
+    delayed_until: str = ""                            # OI-130：有重述日而无存档版本时，现行值自此日起才可用
     tax_rate_observed: bool = False   # True=税率来自本期 所得税/利润总额；False=利润总额非正时回退法定税率
+
+
+def _year_from_parts(code: str, period: str, parts: dict[str, dict], notice_cap: bool,
+                     ic_floor: float = 0.0) -> RoicYear | None:
+    """三表同一财年的三行 → `RoicYear`；缺资产负债表或利润表、或无公告日时返回 None。"""
+    bal, inc, cfl = parts.get("balance"), parts.get("income"), parts.get("cashflow")
+    if not (bal and inc):
+        return None
+    # 公告日取三表最晚——三表同属一份年报，但东财偶有单表 notice 缺失/提前
+    notice = max((p.get("NOTICE_DATE") or "")[:10] for p in parts.values())
+    if not notice:
+        return None
+    CAP_STATS["statements_rows"] += 1
+    if notice_cap:
+        capped = available_at(period, notice)
+        if capped != notice:
+            CAP_STATS["statements_capped"] += 1
+        notice = capped
+    year = RoicYear(period=period, notice_date=notice)
+    year.is_financial = any(
+        (p.get("org_table") or "").startswith(FINANCIAL_TABLE_PREFIXES)
+        for p in parts.values())
+    year.revenue = _num(inc.get("TOTAL_OPERATE_INCOME"))
+    year.parent_netprofit = _num(inc.get("PARENT_NETPROFIT"))
+    year.net_profit = _num(inc.get("NETPROFIT"))
+    year.minority_profit = _num(inc.get("MINORITY_INTEREST"))
+    year.parent_tci = _num(inc.get("PARENT_TCI"))
+    year.total_equity = _num(bal.get("TOTAL_EQUITY"))
+    year.parent_equity = _num(bal.get("TOTAL_PARENT_EQUITY"))
+    year.minority_equity = _num(bal.get("MINORITY_EQUITY")) or 0.0
+    year.treasury_shares = _num(bal.get("TREASURY_SHARES")) or 0.0
+    year.interest_debt = _sum(bal, DEBT_FIELDS)
+    # 利息费用：新准则单列 `FE_INTEREST_EXPENSE`，早年只有财务费用净额
+    year.interest_expense = (_num(inc.get("FE_INTEREST_EXPENSE"))
+                             or max(_num(inc.get("FINANCE_EXPENSE")) or 0.0, 0.0))
+    total_profit = _num(inc.get("TOTAL_PROFIT"))
+    income_tax = _num(inc.get("INCOME_TAX"))
+    if total_profit is not None:
+        year.ebit = total_profit + year.interest_expense
+        if total_profit > 0 and income_tax is not None:
+            rate = income_tax / total_profit
+            lo, hi = TAX_RATE_BOUNDS
+            year.tax_rate = min(max(rate, lo), hi)
+            year.tax_rate_observed = True
+        else:
+            year.tax_rate = DEFAULT_TAX_RATE
+        year.nopat = year.ebit * (1 - year.tax_rate)
+    cash = (_num(bal.get("MONETARYFUNDS")) or 0.0) \
+        + (_num(bal.get("TRADE_FINASSET")) or 0.0) \
+        + (_num(bal.get("TRADE_FINASSET_NOTFVTPL")) or 0.0)
+    operating_cash = OPERATING_CASH_RATIO * (year.revenue or 0.0)
+    year.excess_cash = max(0.0, cash - operating_cash)
+    if year.total_equity is not None:
+        ic = year.interest_debt + year.total_equity - year.excess_cash
+        if ic_floor > 0:
+            ic = max(ic, ic_floor * year.total_equity)
+        year.invested_capital = ic if ic > 0 else None
+    year.working_capital = _sum(bal, WC_ASSET_FIELDS) - _sum(bal, WC_LIAB_FIELDS)
+    if cfl:
+        year.capex = _num(cfl.get("CONSTRUCT_LONG_ASSET")) or 0.0
+        year.dep_amort = _sum(cfl, DEPR_FIELDS)
+        year.cfo = _num(cfl.get("NETCASH_OPERATE"))
+    return year
 
 
 def load_statements(codes: set[str] | None = None,
@@ -151,70 +218,92 @@ def load_statements(codes: set[str] | None = None,
     out: dict[str, dict[str, RoicYear]] = {}
     for code, periods in raw.items():
         for period, parts in periods.items():
-            bal, inc, cfl = parts.get("balance"), parts.get("income"), parts.get("cashflow")
-            if not (bal and inc):
-                continue
-            # 公告日取三表最晚——三表同属一份年报，但东财偶有单表 notice 缺失/提前
-            notice = max((p.get("NOTICE_DATE") or "")[:10] for p in parts.values())
-            if not notice:
-                continue
-            CAP_STATS["statements_rows"] += 1
-            if notice_cap:
-                capped = available_at(period, notice)
-                if capped != notice:
-                    CAP_STATS["statements_capped"] += 1
-                notice = capped
-            year = RoicYear(period=period, notice_date=notice)
-            year.is_financial = any(
-                (p.get("org_table") or "").startswith(FINANCIAL_TABLE_PREFIXES)
-                for p in parts.values())
-            year.revenue = _num(inc.get("TOTAL_OPERATE_INCOME"))
-            year.parent_netprofit = _num(inc.get("PARENT_NETPROFIT"))
-            year.net_profit = _num(inc.get("NETPROFIT"))
-            year.minority_profit = _num(inc.get("MINORITY_INTEREST"))
-            year.parent_tci = _num(inc.get("PARENT_TCI"))
-            year.total_equity = _num(bal.get("TOTAL_EQUITY"))
-            year.parent_equity = _num(bal.get("TOTAL_PARENT_EQUITY"))
-            year.minority_equity = _num(bal.get("MINORITY_EQUITY")) or 0.0
-            year.treasury_shares = _num(bal.get("TREASURY_SHARES")) or 0.0
-            year.interest_debt = _sum(bal, DEBT_FIELDS)
-            # 利息费用：新准则单列 `FE_INTEREST_EXPENSE`，早年只有财务费用净额
-            year.interest_expense = (_num(inc.get("FE_INTEREST_EXPENSE"))
-                                     or max(_num(inc.get("FINANCE_EXPENSE")) or 0.0, 0.0))
-            total_profit = _num(inc.get("TOTAL_PROFIT"))
-            income_tax = _num(inc.get("INCOME_TAX"))
-            if total_profit is not None:
-                year.ebit = total_profit + year.interest_expense
-                if total_profit > 0 and income_tax is not None:
-                    rate = income_tax / total_profit
-                    lo, hi = TAX_RATE_BOUNDS
-                    year.tax_rate = min(max(rate, lo), hi)
-                    year.tax_rate_observed = True
-                else:
-                    year.tax_rate = DEFAULT_TAX_RATE
-                year.nopat = year.ebit * (1 - year.tax_rate)
-            cash = (_num(bal.get("MONETARYFUNDS")) or 0.0) \
-                + (_num(bal.get("TRADE_FINASSET")) or 0.0) \
-                + (_num(bal.get("TRADE_FINASSET_NOTFVTPL")) or 0.0)
-            operating_cash = OPERATING_CASH_RATIO * (year.revenue or 0.0)
-            year.excess_cash = max(0.0, cash - operating_cash)
-            if year.total_equity is not None:
-                ic = year.interest_debt + year.total_equity - year.excess_cash
-                if ic_floor > 0:
-                    ic = max(ic, ic_floor * year.total_equity)
-                year.invested_capital = ic if ic > 0 else None
-            year.working_capital = _sum(bal, WC_ASSET_FIELDS) - _sum(bal, WC_LIAB_FIELDS)
-            if cfl:
-                year.capex = _num(cfl.get("CONSTRUCT_LONG_ASSET")) or 0.0
-                year.dep_amort = _sum(cfl, DEPR_FIELDS)
-                year.cfo = _num(cfl.get("NETCASH_OPERATE"))
-            out.setdefault(code, {})[period] = year
+            year = _year_from_parts(code, period, parts, notice_cap, ic_floor)
+            if year is not None:
+                out.setdefault(code, {})[period] = year
+    attach_superseded_versions(out, raw, codes, stmt_dir, notice_cap, ic_floor)
     return out
 
 
+def load_superseded_raw(codes: set[str] | None = None, stmt_dir: Path = STMT_DIR
+                        ) -> dict[tuple[str, str], list[tuple[str, str, dict]]]:
+    """重述前版本存档（OI-130，`superseded/<kind>.csv`）→ `{(代码, 财年): [(superseded_at, kind, 旧行)]}`，只取年报期。"""
+    out: dict[tuple[str, str], list[tuple[str, str, dict]]] = {}
+    for kind in ("balance", "income", "cashflow"):
+        for row in restatement_archive.load_archive(stmt_dir / "superseded" / f"{kind}.csv"):
+            code = (row.get("security_code") or "").zfill(6)
+            period = (row.get("REPORT_DATE") or "")[:10]
+            sa = (row.get("superseded_at") or "")[:10]
+            if not sa or not period.endswith("-12-31") or (codes is not None and code not in codes):
+                continue
+            out.setdefault((code, period), []).append((sa, kind, row))
+    return out
+
+
+def load_restatement_dates(codes: set[str] | None = None, path: Path = RESTATE_LOG) -> dict[tuple[str, str], str]:
+    """重述日志（取数探针）→ `{(代码, 报告期): 最近一次重述的远端 UPDATE_DATE}`。"""
+    out: dict[tuple[str, str], str] = {}
+    if not path.exists():
+        return out
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            code = (row.get("security_code") or "").zfill(6)
+            period = (row.get("report_date") or "")[:10]
+            when = (row.get("new_update_date") or "")[:10]
+            if not when or (codes is not None and code not in codes):
+                continue
+            out[(code, period)] = max(out.get((code, period), ""), when)
+    return out
+
+
+def attach_superseded_versions(out: dict[str, dict[str, RoicYear]], raw: dict, codes: set[str] | None,
+                               stmt_dir: Path, notice_cap: bool, ic_floor: float = 0.0) -> None:
+    """给被追溯重述的财年挂上「重述前版本」（`RoicYear.superseded`，按 superseded_at 升序），
+    版本 = 该日之前在用的三行（某表无存档即沿用现行）。重述日志有重述日、却无存档版本覆盖该日的，
+    记 `delayed_until` = 重述日：现行值在该日之前不可用（不假装当时已知）。"""
+    for (code, period), items in load_superseded_raw(codes, stmt_dir).items():
+        year = out.get(code, {}).get(period)
+        parts_now = raw.get(code, {}).get(period)
+        if year is None or not parts_now:
+            continue
+        versions: list[tuple[str, RoicYear]] = []
+        for sa in sorted({s for s, _, _ in items}):
+            parts = dict(parts_now)
+            for kind in ("balance", "income", "cashflow"):
+                cands = [(s, row) for s, k, row in items if k == kind and s >= sa]
+                if cands:
+                    parts[kind] = min(cands, key=lambda c: c[0])[1]
+            old = _year_from_parts(code, period, parts, notice_cap, ic_floor)
+            if old is not None:
+                versions.append((sa, old))
+        year.superseded = versions
+        CAP_STATS["statements_versioned"] += 1
+    for (code, period), when in load_restatement_dates(codes).items():
+        year = out.get(code, {}).get(period)
+        if year is None or any(sa >= when for sa, _ in year.superseded):
+            continue
+        year.delayed_until = when
+        CAP_STATS["statements_delayed"] += 1
+
+
+def version_as_of(year: RoicYear, available_at: str) -> RoicYear:
+    """`available_at` 当日在用的版本：最早一个 `superseded_at > available_at` 的旧版本，否则现行。"""
+    for superseded_at, old in year.superseded:
+        if available_at < superseded_at:
+            return old
+    return year
+
+
 def years_before(years: dict[str, RoicYear], available_at: str, count: int) -> list[RoicYear]:
-    """公告日 ≤ `available_at` 的最近 `count` 个财年，**降序**（与建带模块同规）。"""
-    usable = [y for y in years.values() if y.notice_date and y.notice_date <= available_at]
+    """公告日 ≤ `available_at` 的最近 `count` 个财年，**降序**（与建带模块同规）；
+    被追溯重述的财年取当日在用版本，重述日之前无存档版本的财年在该日之前不可用（OI-130）。"""
+    usable = []
+    for y in years.values():
+        if not y.notice_date or y.notice_date > available_at:
+            continue
+        if y.delayed_until and available_at < y.delayed_until:
+            continue
+        usable.append(version_as_of(y, available_at))
     return sorted(usable, key=lambda y: y.period, reverse=True)[:count]
 
 
@@ -497,7 +586,8 @@ def load_entity_reset(path: Path | None = None) -> dict[str, dict[str, str]]:
             when = (row.get("reset_report_date") or "").strip()
             if code and code != "000000" and when:
                 out[code] = {"reset": when,
-                             "growth_mode": ((row.get("growth_mode") or "none").strip().lower() or "none")}
+                             "growth_mode": ((row.get("growth_mode") or "none").strip().lower() or "none"),
+                             "known_from": (row.get("known_from") or "").strip()}
     return out
 
 

@@ -69,6 +69,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
+import restatement_archive  # noqa: E402
 from a_share_signal_dates import evidence_date_for_signal
 
 OUT_DIR = ROOT / "data/raw/financials_statements"
@@ -93,6 +94,9 @@ STATEMENTS = {
 RESTATE_FIELDS = ("TOTAL_PARENT_EQUITY", "TOTAL_EQUITY", "TOTAL_ASSETS", "SHARE_CAPITAL", "MONETARYFUNDS", "MINORITY_EQUITY")
 RESTATE_MIN_CHANGE = 0.005
 RESTATE_LOG = ROOT / "data/interim/statement_restatements.csv"
+# OI-130 重述前版本存档：探针检出数值实变（≥ restatement_archive.MIN_CHANGE）的期，覆盖前把旧行整行写到
+# `<out-dir>/superseded/<kind>.csv`（列同取数产物，另加 superseded_at＝远端新 UPDATE_DATE）；建带侧按可得日选版本。
+ARCHIVE_KEY = ("security_code", "REPORT_DATE")
 COVERAGE_GAP_LOG = ROOT / "data/interim/statement_coverage_gaps.csv"
 COVERAGE_MIN_YEARS = 3           # 与建带器 --min-roe-years 缺省一致，少于此数建带必拒
 
@@ -216,6 +220,38 @@ def normalise(rows: list[dict], code: str, table: str) -> list[dict]:
     return out
 
 
+def archive_from_backup(out_dir: Path) -> int:
+    """OI-130 一次性回填：`<kind>.csv.bak`（探针刷新前的快照）对现行表逐 (代码, 年报期) 比较，
+    数值实变的旧行存档，superseded_at = 现行行的 UPDATE_DATE（晚于旧行时）否则取现行文件的修改日。"""
+    from datetime import datetime as _dt
+    total = 0
+    for kind in STATEMENTS:
+        cur_path, bak_path = out_dir / f"{kind}.csv", out_dir / f"{kind}.csv.bak"
+        if not cur_path.exists() or not bak_path.exists():
+            print(f"  {kind}: 无 .bak，跳过")
+            continue
+        def _load(path: Path) -> dict[tuple[str, str], dict]:
+            with path.open(newline="", encoding="utf-8-sig") as handle:
+                return {((r.get("security_code") or "").zfill(6), (r.get("REPORT_DATE") or "")[:10]): r
+                        for r in csv.DictReader(handle)}
+        cur, bak = _load(cur_path), _load(bak_path)
+        mtime = _dt.fromtimestamp(cur_path.stat().st_mtime).date().isoformat()
+        batch: list[tuple[dict, str]] = []
+        for key, old in bak.items():
+            new = cur.get(key)
+            if not new or not restatement_archive.rows_differ(old, new):
+                continue
+            new_upd, old_upd = (new.get("UPDATE_DATE") or "")[:10], (old.get("UPDATE_DATE") or "")[:10]
+            batch.append((old, new_upd if new_upd > old_upd else mtime))
+        added = restatement_archive.archive_rows(out_dir / "superseded" / f"{kind}.csv", batch, "backup", ARCHIVE_KEY)
+        total += added
+        detail = "；".join(f"{(r.get('security_code') or '').zfill(6)} {(r.get('REPORT_DATE') or '')[:4]}→{sa}" for r, sa in batch[:12])
+        print(f"  {kind}: .bak {len(bak):,} 行 vs 现行 {len(cur):,} 行，数值实变 {len(batch)} 行，新存档 {added} 行"
+              + (f"：{detail}" + ("…" if len(batch) > 12 else "") if batch else ""))
+    print(f"重述前版本回填合计 {total} 行 → {out_dir / 'superseded'}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="三大报表全量历史取数（ROIC/FCFF 前置）")
     parser.add_argument("--panel", type=Path, nargs="+", default=list(PANELS),
@@ -225,11 +261,15 @@ def main() -> int:
     parser.add_argument("--signal-date", type=date.fromisoformat, required=True,
                         help="信号日 YYYY-MM-DD；证据日自动取下一工作日")
     parser.add_argument("--refresh", action="store_true", help="全量重取（含已到应到年报期的代码）")
+    parser.add_argument("--archive-from-backup", action="store_true",
+                        help="不联网：把 <kind>.csv.bak 与现行 <kind>.csv 数值实变的旧行回填到 superseded/（OI-130 一次性回填）")
     parser.add_argument("--no-probe", action="store_true",
                         help="关闭追溯重述探针（缺省对已在库代码重取资产负债表比 UPDATE_DATE）")
     parser.add_argument("--timeout", type=float, default=45.0)
     parser.add_argument("--pause", type=float, default=0.25)
     args = parser.parse_args()
+    if args.archive_from_backup:
+        return archive_from_backup(args.out_dir)
     as_of = evidence_date_for_signal(args.signal_date)
     expected = expected_annual_period(as_of)
 
@@ -284,6 +324,7 @@ def main() -> int:
                 if code in probe:
                     local_update.setdefault(code, {})[(row.get("REPORT_DATE") or "")[:10]] = (row.get("UPDATE_DATE") or "")[:10]
         fetched: dict[str, list[dict]] = {}          # 取到行的代码 → 全部年报期（替换其旧行）
+        archive_batch: list[tuple[dict, str]] = []   # OI-130：本表被取代的旧行 (旧行, superseded_at)
         for index, code in enumerate(todo, start=1):
             rows: list[dict] = []
             errors: list[str] = []
@@ -317,6 +358,9 @@ def main() -> int:
                         per = (r.get("REPORT_DATE") or "")[:10]
                         if per not in changed or per not in old_rows:
                             continue
+                        # OI-130：数值实变的旧行整行存档（superseded_at = 远端新 UPDATE_DATE），建带按可得日选版本
+                        if restatement_archive.rows_differ(old_rows[per], r):
+                            archive_batch.append((old_rows[per], remote[per]))
                         for field in RESTATE_FIELDS:
                             try:
                                 a, b = float(old_rows[per].get(field) or "nan"), float(r.get(field) or "nan")
@@ -371,6 +415,10 @@ def main() -> int:
             for key in row:
                 if key not in fields:
                     fields.append(key)
+        archived = restatement_archive.archive_rows(args.out_dir / "superseded" / f"{kind}.csv",
+                                                    archive_batch, "probe", ARCHIVE_KEY)
+        if archived:
+            print(f"    重述前版本存档 {archived} 行 → superseded/{kind}.csv（OI-130）")
         with path.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=fields, restval="")
             writer.writeheader()

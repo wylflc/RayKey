@@ -1,0 +1,14 @@
+# NEW 臂换仓边际剂量扫描（§12.1 第 4 款①），买入线固定重解值 --width -0.0453
+BASE|
+NEW_M10|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.10
+NEW_M12|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.12
+NEW_M13|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.13
+NEW_M14|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.14
+NEW_M15|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.15
+NEW_M16|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.16
+NEW_M17|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.17
+NEW_M18|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.18
+NEW_M19|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.19
+NEW_M20|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.20
+NEW_M22|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.22
+NEW_M25|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453 --swap-margin 0.25

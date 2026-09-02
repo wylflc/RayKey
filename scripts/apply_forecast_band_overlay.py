@@ -15,7 +15,7 @@ ROIC 模型的结构是：
 
     nopat_ps = ratio0 × bps          # ratio0 = 归一化 NOPAT/净资产（稳健锚）
     ev_ps    = DCF(nopat_ps, roic0, g0, wacc, roe_terminal)
-    IV       = ev_ps − net_debt_ps
+    IV       = (ev_ps − fin_nd) − max(少数股东账面, m×(ev_ps − fin_nd)) + x     （§6.5.1 第 3 条股权桥）
 
 预告给的是**归母净利润**，它通过留存收益改变**净资产**，因此落在 `bps` 这条通道上，
 **不动 `ratio0`**。这有三个好处：
@@ -26,7 +26,7 @@ ROIC 模型的结构是：
    保持稳健，单个谷底半年不会把周期股的带打穿。
 3. **纯机械、可推导**，不需要人工判断。
 
-`net_debt_ps` **不调整**：预告给不出资产负债表（有息负债／超额现金／少数股东权益），
+净金融负债与账面少数股东 **不调整**（盈利份额扣减随 EV 同比例）：预告给不出资产负债表（有息负债／超额现金／少数股东权益），
 硬估会把一个不可验证的假设混进带里。这一项等正式报告。**该省略使亏损公司的带偏高、
 盈利公司的带偏低，方向已知，见输出的 `overlay_note`。**
 
@@ -270,7 +270,8 @@ def recompute(band: dict, scale: float) -> tuple[float | None, float, str] | Non
     三条路径都**严格线性于各自的盈利输入**，故直接乘 `scale` 即可，不必重算 DCF：
 
     - `growth` / `zero_growth`：`nopat_ps = ratio0 × bps_operating` → 企业价值线性 →
-      `IV = ev_ps×scale − net_debt_ps`（净负债不缩放，它不随利润等比变动）。
+      `IV = (ev_ps×scale − fin_nd) − max(少数股东账面, m×(ev_ps×scale − fin_nd)) + x`
+      （净金融负债与账面少数股东不缩放；按盈利份额分走的那份与 EV 同比例，§6.5.1 第 3 条）。
     - `equity_fallback`（无三大报表或金融企业退回的权益口径）：`eps0 = roe0 × bps_operating`，
       直接给出股权价值、不减净负债 → `IV = (IV − x)×scale + x`（x 为外生权益/股，v4.59）。
 
@@ -297,6 +298,16 @@ def recompute(band: dict, scale: float) -> tuple[float | None, float, str] | Non
         if nopat is None or ev_ps is None or net_debt is None or nopat <= 0:
             return None
         ev_new = ev_ps * scale
+        # §6.5.1 第 3 条股权桥（OI-128）：净金融负债与账面少数股东不随利润缩放，按盈利份额分走的
+        # 少数股东权益价值 m×(EV − fin_nd) 与 EV 同比例变——扣减取两者较大者，再加回外生权益 x。
+        # 旧带文件无 fin_net_debt_ps／minority_book_ps 两列时退回「净负债整体不动」。
+        fin_nd, minority_book = num(band.get("fin_net_debt_ps")), num(band.get("minority_book_ps"))
+        if fin_nd is not None and minority_book is not None:
+            m_share = num(band.get("minority_share")) or 0.0
+            x_ps = num(band.get("external_equity_ps")) or 0.0
+            total_equity = ev_new - fin_nd
+            minority = max(minority_book, m_share * total_equity) if (m_share > 0 and total_equity > 0) else minority_book
+            return ev_new, total_equity - minority + x_ps, "nopat_ps"
         return ev_new, ev_new - net_debt, "nopat_ps"
     return None
 
@@ -524,7 +535,7 @@ def main() -> int:
                 f"股本 {shares/1e8:.2f} 亿股（源 {shares_src}）、期间每股分红 {dps:.4f} 元 → "
                 f"每股净资产 {bps:.4f} → {new_bps:.4f}（×{scale:.4f}）；"
                 f"归一化锚（{'roe0' if path == 'equity_fallback' else 'ratio0'}）不动。"
-                f"**net_debt_ps 未调整**（预告无资产负债表），"
+                f"**净金融负债与账面少数股东未调整**（预告无资产负债表；盈利份额扣减随 EV 同比例），"
                 f"该省略使本行的带{direction}。正式报告披露后由 §6.7 机械带取代。"),
             "report_date": ev["report_date"],
             "available_at": ev["notice_date"],
@@ -535,6 +546,7 @@ def main() -> int:
         })
         if ev_new is not None:
             band["ev_ps"] = f"{ev_new:.4f}"
+            band["net_debt_ps"] = f"{ev_new - iv_new:.4f}"    # 保持 EV − 净负债 = IV（`pv_ratio.trading_pv` 读它）
         scaled_now = num(band.get(scaled_field))
         if scaled_now is not None:
             band[scaled_field] = f"{scaled_now * scale:.4f}"

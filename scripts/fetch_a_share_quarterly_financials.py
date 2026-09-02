@@ -52,6 +52,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+import restatement_archive
 from a_share_signal_dates import evidence_iso_for_signal
 
 OUT_DIR = ROOT / "data/raw/financials"
@@ -79,6 +80,9 @@ COLUMN_MAP = {
     "YSHZ": "revenue_qoq",
 }
 FIELDNAMES = list(COLUMN_MAP.values()) + ["source", "retrieved_at_utc"]
+# OI-130 重述前版本存档：重写已有期文件时，数值实变（≥ restatement_archive.MIN_CHANGE）的旧行整行写到
+# `superseded/<报告期>.csv`（superseded_at = 本次取数的证据日）；建带侧按可得日选版本。
+ARCHIVE_KEY = ("security_code", "report_date")
 
 QUARTER_ENDS = ((3, 31), (6, 30), (9, 30), (12, 31))
 
@@ -196,6 +200,40 @@ def keep_precision(rows: list[dict[str, str]], path: Path) -> int:
     return restored
 
 
+def archive_superseded(rows: list[dict[str, str]], path: Path, superseded_at: str, source: str) -> int:
+    """`rows` 即将覆盖 `path`：把数值实变的旧行整行存到 `superseded/<报告期>.csv`（OI-130）。"""
+    if not path.exists():
+        return 0
+    with path.open(newline="", encoding="utf-8") as handle:
+        old = {r["security_code"]: r for r in csv.DictReader(handle)}
+    batch = [(old[r["security_code"]], superseded_at) for r in rows
+             if r["security_code"] in old and restatement_archive.rows_differ(old[r["security_code"]], r)]
+    return restatement_archive.archive_rows(path.parent / "superseded" / path.name, batch, source, ARCHIVE_KEY)
+
+
+def archive_from_backup(out_dir: Path) -> int:
+    """OI-130 一次性回填：每个 `<报告期>.csv.bak`（全历史重取前的快照）对现行文件比较，数值实变的旧行存档，
+    superseded_at = 现行文件的修改日（本系统看到新值的日期，晚于真实重述日即为保守）。"""
+    from datetime import datetime as _dt
+    total = 0
+    for bak_path in sorted(out_dir.glob("*.csv.bak")):
+        cur_path = bak_path.with_suffix("")
+        if not cur_path.exists():
+            continue
+        with cur_path.open(newline="", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        mtime = _dt.fromtimestamp(cur_path.stat().st_mtime).date().isoformat()
+        with bak_path.open(newline="", encoding="utf-8") as handle:
+            old = {r["security_code"]: r for r in csv.DictReader(handle)}
+        batch = [(old[r["security_code"]], mtime) for r in rows
+                 if r["security_code"] in old and restatement_archive.rows_differ(old[r["security_code"]], r)]
+        added = restatement_archive.archive_rows(out_dir / "superseded" / cur_path.name, batch, "backup", ARCHIVE_KEY)
+        total += added
+        print(f"  {cur_path.name}: .bak {len(old):,} 行，数值实变 {len(batch)} 行，新存档 {added} 行（superseded_at {mtime}）")
+    print(f"重述前版本回填合计 {total} 行 → {out_dir / 'superseded'}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="逐季度历史财务数据全市场取数（OI-034 前置）")
     parser.add_argument("--signal-date", required=True, help="信号日 YYYY-MM-DD；证据日自动取下一工作日")
@@ -204,7 +242,11 @@ def main() -> int:
     parser.add_argument("--refresh", action="store_true", help="重取已存在的报告期")
     parser.add_argument("--timeout", type=float, default=25.0)
     parser.add_argument("--pause", type=float, default=0.25)
+    parser.add_argument("--archive-from-backup", action="store_true",
+                        help="不联网：把 <报告期>.csv.bak 与现行文件数值实变的旧行回填到 superseded/（OI-130 一次性回填）")
     args = parser.parse_args()
+    if args.archive_from_backup:
+        return archive_from_backup(args.out_dir)
     args.as_of = evidence_iso_for_signal(args.signal_date)
 
     until = date.fromisoformat(args.as_of)
@@ -235,13 +277,14 @@ def main() -> int:
             failures.append(f"{report_date}：**0 行**")
             continue
         restored = keep_precision(rows, path)
+        archived = archive_superseded(rows, path, args.as_of, "refetch")
         with path.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=FIELDNAMES)
             writer.writeheader()
             writer.writerows(rows)
         counts[report_date] = len(rows)
         delta = f"  (+{len(rows) - before} 家)" if before else ""
-        kept = f"  ｜保留旧精度 {restored} 格" if restored else ""
+        kept = (f"  ｜保留旧精度 {restored} 格" if restored else "") + (f"  ｜重述前版本存档 {archived} 行" if archived else "")
         print(f"  {report_date}: {len(rows):>5} 行{delta}{kept}")
         if window_open:
             open_note.append(f"{report_date}（{len(rows)} 家，截止日前仍会增加）")

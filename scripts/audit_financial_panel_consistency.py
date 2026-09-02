@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+from datetime import date, timedelta
 import math
 from collections import defaultdict
 from pathlib import Path
@@ -46,6 +47,10 @@ MIN_PERIODS = 4
 SHARE_LIVE_WARN = 0.05   # 实时总股本 vs 面板股数 的相对偏差告警线
 ISSUE_MIN_FRAC = 0.05    # 检查⑥：增发占发行前股本的最低比例，低于此不判
 RESTATE_EQUITY_MIN = 0.01  # 检查⑥：重述日志里归母权益变动 ≥ 1% 才视为追溯重述
+SHARE_EVENT_LOOKBACK_DAYS = 3 * 365   # 检查⑦：回看多久的股本事件
+SHARE_EVENT_SKIP = ("送", "转增", "转股", "拆", "首发", "上市前", "股权分置", "限售", "解禁", "高管", "流通",
+                    "股份性质", "回购", "限制性股票", "股权激励", "配售股份上市", "行权")   # 非增发类事件不判
+SHARE_EVENT_REVIEWS = ROOT / "data/processed/share_event_reviews.csv"
 
 
 def num(value) -> float | None:
@@ -95,6 +100,8 @@ def main() -> int:
     ap.add_argument("--restatements", type=Path, default=ROOT / "data/interim/statement_restatements.csv",
                     help="取数探针写的重述日志（OI-126）；检查⑥只看其中归母权益实变的年报期")
     ap.add_argument("--share-changes", type=Path, default=ROOT / "data/raw/share_changes/a_share_share_changes.csv")
+    ap.add_argument("--share-event-reviews", type=Path, default=SHARE_EVENT_REVIEWS,
+                    help="检查⑦的复核登记（OI-129）：已登记 reset／no_reset 的事件不再报出")
     ap.add_argument("--out", type=Path, default=ROOT / "data/interim/financial_panel_anomalies.csv")
     args = ap.parse_args()
     args.as_of = evidence_iso_for_signal(args.signal_date)
@@ -311,6 +318,53 @@ def main() -> int:
                     "suggest_bps": f"{equity/total:.4f}",
                 })
             break
+
+    # ---- 检查⑦「股本事件复核」（OI-129）：非送转的股本单次变动 ≥ ISSUE_MIN_FRAC 是主体重置的候选触发。
+    # 只报「可疑」——现金增发、员工持股不改主体，发股收购／资产注入／吸收合并才需登记
+    # `entity_reset_dates.csv`；复核结论（reset／no_reset）登记 `share_event_reviews.csv` 后不再报出。
+    reviewed: set[tuple[str, str]] = set()
+    if args.share_event_reviews.exists():
+        with args.share_event_reviews.open(encoding="utf-8-sig", newline="") as handle:
+            for row in csv.DictReader(handle):
+                reviewed.add(((row.get("security_code") or "").zfill(6), (row.get("effective_date") or "")[:10]))
+    resets: dict[str, str] = {}
+    try:
+        from roic_inputs import load_entity_reset
+        resets = {c: r["reset"] for c, r in load_entity_reset().items()}
+    except Exception:
+        pass
+    lookback = (date.fromisoformat(args.as_of) - timedelta(days=SHARE_EVENT_LOOKBACK_DAYS)).isoformat()
+    for code in sorted(issues):
+        if codes is not None and code not in codes:
+            continue
+        for ev in issues[code]:
+            ex = (ev.get("effective_date") or "")[:10]
+            reason = ev.get("change_reason") or ""
+            delta, total = num(ev.get("shares_delta")), num(ev.get("total_shares"))
+            if not (lookback <= ex <= args.as_of) or (code, ex) in reviewed or not delta or not total:
+                continue
+            if any(k in reason for k in SHARE_EVENT_SKIP):
+                continue
+            pre = total - delta
+            if pre <= 0 or abs(delta) / pre < ISSUE_MIN_FRAC:
+                continue
+            # 事件表把送转记成「其他变动原因」时（比亚迪 2025-06-10 10 转 8）：除权表里 ±10 天内有同倍数送转即跳过
+            if delta > 0 and any(abs((date.fromisoformat(ex) - date.fromisoformat(ax)).days) <= 10 and ratio > 0
+                                 and delta / pre <= ratio * 1.02
+                                 for ax, ratio, _ in actions.get(code, []) if len(ax) == 10):
+                continue
+            reset = resets.get(code)
+            findings.append({
+                "security_code": code, "security_name": names.get(code, ev.get("security_name") or code), "period": ex,
+                "check": "股本事件复核", "severity": "可疑",
+                "detail": (f"{ex} {reason}：{pre/1e8:.4f}亿 → {total/1e8:.4f}亿股（{delta/pre:+.1%}），"
+                           f"未在 share_event_reviews.csv 登记复核"
+                           + (f"；主体重置名册已有 reset_report_date {reset}" if reset else "；主体重置名册无此代码")
+                           + f"。发股收购／资产注入／吸收合并等改变主体者：登记 entity_reset_dates.csv"
+                             f"（建议 reset_report_date {ex[:4]}-12-31、known_from 取重述后首份定期报告的可得日）并在复核表记 reset；"
+                             f"现金增发／员工持股等不改主体者记 no_reset"),
+                "suggest_bps": "",
+            })
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     fields = ["security_code", "security_name", "period", "check", "severity", "detail", "suggest_bps"]

@@ -1,0 +1,5 @@
+security_code,security_name,effective_date,change_reason,decision,reviewed_at,note
+002128,电投能源,2026-06-03,增发A股上市,reset,2026-09-02,发股收购白音华煤电（同一控制下合并），已登记 entity_reset_dates.csv：reset_report_date 2025-12-31、known_from 2026-08-26
+002128,电投能源,2026-07-17,增发A股上市,no_reset,2026-09-02,配套募集 45 亿元现金（1.7308 亿股＠26 元），不改变主体；股数与募资由下一份定期报告经 external_equity_intra 承接
+002379,宏桥控股,2026-01-13,增发A股上市,reset,2026-09-02,资产注入（宏创控股→宏桥控股）对价股上市，已登记 entity_reset_dates.csv：reset_report_date 2025-12-31
+601088,中国神华,2026-03-16,增发A股上市,reset,2026-09-02,发股收购国家能源集团资产（同一控制下合并），已登记 entity_reset_dates.csv：reset_report_date 2025-12-31、known_from 2026-08-29

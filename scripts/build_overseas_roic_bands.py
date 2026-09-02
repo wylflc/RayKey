@@ -177,7 +177,19 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     ratio0 = nopat_ps / (latest.parent_equity / shares) if latest.parent_equity else float("nan")
     bps = latest.parent_equity / shares
     cum_buyback_latest = cum
-    net_debt_ps = (latest.interest_debt - latest.excess_cash + latest.minority_equity) / shares
+    # §6.5.1 第 3 条股权桥（OI-128，与 A 股同口径）：少数股东扣减 = max(账面, m×(EV − 净金融负债))。
+    # 海外三表无少数股东损益，m 退回账面份额 少数股东权益÷权益合计（`roic_inputs.minority_share` 的 book_fallback）。
+    fin_nd_ps = (latest.interest_debt - latest.excess_cash) / shares
+    minority_book_ps = latest.minority_equity / shares
+    m_share = (min(max(latest.minority_equity / latest.total_equity, 0.0), roic_inputs.MINORITY_SHARE_CAP)
+               if latest.total_equity and latest.total_equity > 0 else 0.0)
+
+    def bridge(ev_ps: float) -> float:
+        total_equity = ev_ps - fin_nd_ps
+        minority = max(minority_book_ps, m_share * total_equity) if (m_share > 0 and total_equity > 0) else minority_book_ps
+        return fin_nd_ps + minority
+
+    net_debt_ps = bridge(nopat_ps / w) if w else fin_nd_ps + minority_book_ps
     if nopat_ps <= 0:
         res["reason"] = "正常化每股 NOPAT 非正"; return res
     v_zero = nopat_ps / w - net_debt_ps
@@ -210,6 +222,8 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
         iv = intrinsic_value(nopat_ps, roic0, g0, w, roe_terminal=roic_t, g_terminal=g_terminal, n=N_FADE, n1=N1)
     except ValuationError as exc:
         res["reason"] = str(exc); res.update(common); return res
+    net_debt_ps = bridge(iv.intrinsic_value)
+    common["net_debt_ps"] = net_debt_ps
     value = iv.intrinsic_value - net_debt_ps
     if value <= 0:
         res["reason"] = f"股权价值 {value:.2f} ≤ 0：净负债 {net_debt_ps:.2f} 超过企业价值 {iv.intrinsic_value:.2f}"; res.update(common); return res
@@ -236,7 +250,7 @@ def derivation_text(code: str, r: dict, meta: dict, cfg: dict, fx: float, value_
             f"每股 NOPAT 锚（v4.47 OI-082：各年 NOPAT ÷ 最新稀释股数 {r['shares']/1e6:,.0f}m）序列 {nps_txt} → 取 **{r['nopat_ps']:.3f}**（{r['mode']}）；{guard_txt}；"
             f"最新观察点回购 {r['buyback_latest']/1e9:.1f}b；BPS {r['bps']:.2f}；"
             f"ROIC0 {r['roic0']:.1%}；WACC {r['wacc']:.2%}（r {r['r']:.2%} = rf {r['rf']:.2%} + β{r['beta']}×ERP {r['erp']:.2%}；rd {r['rd']:.2%}；t {r['tax']:.0%}；账面权重）；{g_line}；"
-            f"净负债/股 {r['net_debt_ps']:.3f}（有息负债−超额现金＋少数股东权益）；**V = {r['value']:.3f} {ccy_report}/普通股**{fx_line}"
+            f"净负债/股 {r['net_debt_ps']:.3f}（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = {r['value']:.3f} {ccy_report}/普通股**{fx_line}"
             + (f" → **{value_trade:,.2f} {cfg['ccy']}**" if value_trade else "") + f"；带 = V×[0.90,1.10]。标签：{meta.get('tags','')[:400]}")
 
 
@@ -298,7 +312,7 @@ def main() -> int:
             if status == "rejected":
                 text += f"；旧档案带 {old_band} 仅供参考，不再作为合理估值。"
         pv = (price / v_trade) if (price and v_trade) else None
-        print(f"{code:<8}{name:<14}{tier:<4}{status:<12}{(f'{r['value']:.2f}' if status in ('ok',) else '—'):>12}{(f'{v_trade:,.2f}' if v_trade else '—'):>12}{(f'{price:,.2f}' if price else '—'):>10}{(f'{pv:.3f}' if pv else '—'):>7}  {method}{'' if status=='ok' else '：' + text[:90]}")
+        print(f"{code:<8}{name:<14}{tier:<4}{status:<12}{(format(r['value'], '.2f') if status in ('ok',) else '—'):>12}{(format(v_trade, ',.2f') if v_trade else '—'):>12}{(f'{price:,.2f}' if price else '—'):>10}{(f'{pv:.3f}' if pv else '—'):>7}  {method}{'' if status=='ok' else '：' + text[:90]}")
         if args.check:
             continue
         before = (row.get("fair_price_low", ""), row.get("fair_price_high", ""), row.get("band_method", ""))

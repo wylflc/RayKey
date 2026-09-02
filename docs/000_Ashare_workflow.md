@@ -238,7 +238,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 ### 6.3 数据与时点
 
 1. 建带输入不得包含当日现价、现市值、当前 PE 或当前 PB；股本可以用同一时点的总市值÷现价取得。
-2. 财务数据按可得日 `available_at` 生效，禁止用报告期末代替可得日。**可得日 = `min(记录公告日, 法定披露截止日)`**（年报次年 4/30、一季报当年 4/30、半年报 8/31、三季报 10/31；唯一实现 `scripts/disclosure_dates.py`）。
+2. 财务数据按可得日 `available_at` 生效，禁止用报告期末代替可得日。**可得日 = `min(记录公告日, 法定披露截止日)`**（年报次年 4/30、一季报当年 4/30、半年报 8/31、三季报 10/31；唯一实现 `scripts/disclosure_dates.py`）。**被追溯重述的报告期按版本生效**：重述前版本用至重述后值的可得日（存档列 `superseded_at`），其后用重述后版本；无重述前版本存档的期，可得日取 `max(原可得日, 重述可得日)`。存档由 §6.7 第 1 步取数脚本在覆盖旧行前写入：三大报表 `data/raw/financials_statements/superseded/<表>.csv`（`superseded_at` = 远端新 `UPDATE_DATE`）、逐季面板 `data/raw/financials/superseded/<报告期>.csv`（`superseded_at` = 重取的证据日）；重述日志 `data/interim/statement_restatements.csv`。面板无存档而三表有存档的期，面板重述前版本由三表存档推得（`bps = 重述前归母权益 ÷ 股本`，EPS／归母净利／营收取重述前利润表）。
 3. 季报财务为累计口径；单季值用同年累计差分，TTM 用最近四个单季求和。
 4. 一致预期使用逐份研报归母净利润中位数，覆盖少于三家时不得采用；禁止混用送转前后的研报 EPS。
 5. 跨字段比率必须使用同一披露口径；字段缺失时整体退回上一套已披露口径，不拼接半新半旧的数据。
@@ -264,7 +264,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 1. **经营账面 `BPS_op` = 当期 BPS − 外生权益/股 `x`**；`x = BPS_当期 − (最新年报母公司权益 + 其后归母净利 − 其后现金分红) ÷ 当期股数`；「其后现金分红」= 除权日在 (年报期末, 本期期末] 的现金分红，加上已结束财年的年度分配中预案公告日 ≤ 本期期末、除权日晚于本期期末者（仅本期为 06-30 或 09-30 行）；预案公告日 ≤ 年报期末而除权日在其后的中期分红、预案在本期内而除权日晚于期末的中期分红，逐笔按使 `|x|` 更小的解释决定是否计入；每股现金按同日及其后的送转折到本行 BPS 的股本基准；股数 = 年报期末股数（年报权益 ÷ 年报 BPS）× 期间送转因子；「归母净利 ÷ EPS」隐含股数的**相对年报行的倍数**承接稀释／注销的股数变化，采用前先除掉本行之后各次送转的累计因子，且须同时满足三道守卫：EPS 小数位精度（舍入误差 ≤2%）、账面先动（`|x_假定| ≥ 3% BPS`）、方向一致（增发 x>0 且股数增／注销 x<0 且股数减）。合理性边界：`x ≤ 95% BPS`（封顶）、`x < −25% BPS` 视为主体重述／数据错位不调整（记 `x_implausible_negative`）。年报行 `x = 0`；年报行 BPS 被按后来的送转折到之后股本的，由 `bps_restated_factor` 按上一行核对并乘回当时口径。
 2. **年报之间的外生权益逐年识别**：`X_y = ΔE − (归母综合收益 − 现金分红)`（无综合收益时用归母净利），只计 `|X_y| ≥ 5%` 上年母公司权益的年份。比率窗口与十年守卫窗口内各年比率一律按**经营账面** `E_op = E − 未花的募资 − 累计注销` 计，增长态／中位／周期守卫同式。「未花的募资」按先进先出判：每笔募资只在「超额现金较募资前一年持续高出的部分」内算未花，一旦回落即视为已投入经营、此后积累的现金是经营所得（与 ROIC 路径「投入资本剔除超额现金」同一口径）；注销的现金已流出，经营账面按注销前计。**结构断点**：某年 `E_op < 20% × E`（或权益 ≤ 0）时，比率窗口与十年守卫窗口一律从该年重起。权益退路（无三大报表）只做第 1 条。
-3. **外生权益按面值进每股净现金**：ROIC 路径 `net_debt_ps = (有息负债 − 超额现金 + 少数股东权益) ÷ E_op × BPS_op − x`；权益路径 `V = V(eps0 = roe0 × BPS_op) + x`；零增长锚与敏感度带同式。
+3. **外生权益按面值进每股净现金，少数股东按盈利份额扣减**：ROIC 路径 `每股净金融负债 fin_nd = (有息负债 − 超额现金) ÷ E_op × BPS_op`，`少数股东扣减 = max(少数股东权益 ÷ E_op × BPS_op, m × (EV − fin_nd))`，`m` = 比率窗口内合并净利为正财年的 `少数股东损益 ÷ 合并净利` 中位、夹 `[0, 0.95]`，无可用财年取最新财年 `少数股东权益 ÷ 权益合计`；`V = EV − fin_nd − 少数股东扣减 + x`；带文件 `net_debt_ps = fin_nd + 少数股东扣减 − x`，另落 `fin_net_debt_ps`／`minority_book_ps`／`minority_share`／`minority_share_basis`；薄权益守卫的放大倍数只按不随 EV 缩放的扣减计（`fin_nd`，账面下界生效时再加账面额）；§6.4 叠加重算 `IV = (EV × scale − fin_nd) − max(账面, m × (EV × scale − fin_nd)) + x`。权益路径 `V = V(eps0 = roe0 × BPS_op) + x`；零增长锚与敏感度带同式。§6.8 海外链同式，`m` 取 `少数股东权益 ÷ 权益合计`。建带命令 `--minority-basis earnings`（缺省）；`book` 为研究开关。
 4. 带文件写 `bps_operating`／`external_equity_ps`／`external_equity_cum_ps`／`shares_est`／`bps_basis_date`／`equity_anchor_mode` 列；建带结尾打印 `|x|/BPS` 分布、超过 10% 的最新带名单与各退化模式计数（§13 第 3 条）。
 5. **BPS 的股本基准按数据判定**：`bps_basis_date` 由本行与上一行 BPS 之比对照送转因子按对数距离判定；回测逐日展开、生产带除权归一化、档案折算三处的**送转**窗口一律自 `bps_basis_date` 起算，**现金分红**窗口自公告日起算。
 
@@ -294,7 +294,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 ##### 6.5.2.4 主体重置与无法估值
 
-**主体重置**（重组、资产注入、并表或借壳使旧财务主体不可比）：在 `data/processed/entity_reset_dates.csv` 登记 `security_code,security_name,reset_report_date,growth_mode,reviewed_at,note`；`reset_report_date` 取新主体首个年报期末，`growth_mode` 取 `none`（不增长）或 `trend`（按季报趋势给增长）。§6.7 第 2 步自动读取该表：报告期 ≥ 重置日的行把比率窗口、十年守卫窗口与经营账面基年截到重置日起；重置后不足三个年报时，锚 = 最新年报比率 × TTM 因子，`none` 时 `g0 = 0`，`trend` 时 `g0 = min((TTM 因子 − 1) × 增速腿权重, g0 上限)`（TTM 因子 < 1 + `--ttm-trust-delta` 时为 0）；上年同期行早于重置日时由本行 `netprofit_yoy` 反推同期数。重置后满三个年报即回到通用路径，无需人工动作；早于重置日的行不受影响。
+**主体重置**（重组、资产注入、并表或借壳使旧财务主体不可比）：在 `data/processed/entity_reset_dates.csv` 登记 `security_code,security_name,reset_report_date,growth_mode,known_from,reviewed_at,note`；`reset_report_date` 取新主体首个年报期末，`growth_mode` 取 `none`（不增长）或 `trend`（按季报趋势给增长），`known_from` 取重置后首份定期报告的可得日（可得日早于它的带不施加重置；留空即一律施加）。**触发**：§6.7 第 5.5 步检查⑦「股本事件复核」报出核心池内近 3 年非送转、单次变动 ≥ 5% 的股本事件（读 `data/raw/share_changes/a_share_share_changes.csv`）；逐条核对公告后登记 `data/processed/share_event_reviews.csv`（`security_code,security_name,effective_date,change_reason,decision,reviewed_at,note`，`decision` 取 `reset`／`no_reset`），判 `reset` 者同时登记本名册；已登记的事件不再报出。§6.7 第 2 步自动读取该表：报告期 ≥ 重置日的行把比率窗口、十年守卫窗口与经营账面基年截到重置日起；重置后不足三个年报时，锚 = 最新年报比率 × TTM 因子，`none` 时 `g0 = 0`，`trend` 时 `g0 = min((TTM 因子 − 1) × 增速腿权重, g0 上限)`（TTM 因子 < 1 + `--ttm-trust-delta` 时为 0）；上年同期行早于重置日时由本行 `netprofit_yoy` 反推同期数。重置后满三个年报即回到通用路径，无需人工动作；早于重置日的行不受影响。
 
 **无法估值**：亏损、归一化 ROE 非正、`ROE_T` 贴近 `g_T`、零增长股权价值 ≤ 0、薄权益、最新 ok 模型带早于 `2025-01-01` 时点门槛——一律判「无法估值」：档案带清空、池内可见、带显示 —、无 `P/V`、不进 §9.3 任何判定；模型重新可算后自动回归模型带。不设手工带。
 
@@ -322,18 +322,19 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 所有生产命令只接收 `--signal-date`。证据日由 `scripts/a_share_signal_dates.py` 唯一推导为信号日之后的首个工作日（周一至周五）；调用方不得另行指定证据日。
 
 ```bash
-# 1. 刷新财务输入与除权事件（逐季财务、三大报表、除权事件、rf/ERP 序列四份缺一不可）
+# 1. 刷新财务输入与除权事件（逐季财务、三大报表、除权事件、rf/ERP 序列、股本变动事件五份缺一不可）
 python3 scripts/fetch_a_share_quarterly_financials.py --signal-date YYYY-MM-DD --since <当前报告期末>
 python3 scripts/fetch_a_share_financial_statements.py --signal-date YYYY-MM-DD
 python3 scripts/fetch_ohlcv_history.py --signal-date YYYY-MM-DD --actions-only
 python3 scripts/fetch_cost_of_equity_inputs.py   # rf/ERP 序列：银行/保险股利折现（第 3 步、扫描器 --rf 缺省、档案层）与 §6.8 的 r 读它的最新行
+python3 scripts/fetch_a_share_share_changes.py --signal-date YYYY-MM-DD   # 股本变动事件表（第 5.5 步检查⑦读它）
 
 # 2. 构建 ROIC 带与逐日状态
 python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 --since 2002-01-01 \
   --roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
-  --roic-trail-weight 0 \
+  --roic-trail-weight 0 --minority-basis earnings \
   --out-bands data/processed/roic_bands.csv \
   --out-daily data/processed/roic_daily_raw.csv
 # 2b. B2 带与逐日状态（持仓侧第二输入；与第 2 步串行、不得并发）
@@ -341,7 +342,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 --since 2002-01-01 \
   --roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
-  --roic-trail-weight 0 \
+  --roic-trail-weight 0 --minority-basis earnings \
   --ttm-trust on --ttm-trust-delta 0.02 \
   --out-bands data/processed/roic_bands_b2.csv \
   --out-daily data/processed/roic_daily_raw_b2.csv
@@ -590,7 +591,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 | --- | --- |
 | 候选池 | 当日 `worth_attention` |
 | 估值 | 候选侧（买入线、排序、换仓触发候选）读 §6.5 当前生产模型带；持仓侧（换仓来源）读 §6.5.2.3 持仓侧带；`P/V = 收盘 ÷ V` |
-| 买入线 | `P/V ≤ 1.0138` |
+| 买入线 | `P/V ≤ 1.0453` |
 | 新建仓走势 | T 日 `收盘 > MA20 > MA60` |
 | 已有持仓加仓走势 | `MA20 > MA60`，不要求收盘高于 MA20 |
 | 排序 | `P/V` 升序，资金用尽即停 |
@@ -775,7 +776,7 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 
 历史面板 `effective_from` 与 `effective_to` 均为有效期边界，结束日包含在内。禁止把区间起点当成完整快照，也禁止手工修改面板 CSV；名单变化先改判定源，再运行装配脚本。
 
-换估值口径或换宇宙做 A/B 时，**买入线必须重解到同一在册合格面**（`scripts/experimental/align_buy_line.py`），否则比的是两条不同宽度的闸门；**换仓边际不随买入线缩放，按 0.01 一档的剂量扫描重定**。现行两线 **候选侧买入线 1.0138／换仓边际 0.18**：买入线对候选侧状态下侧合格面 17.766%，508,154 个在册观测，保留四位小数、不取整。现行基准（`BASE`：候选侧 `a_share_daily_states_adopted.csv`＋持仓侧 `a_share_daily_states_hold.csv`、授信 66.6%、单票上限 60%、T+1 无价跳过、股息税、换仓源同日不重复、同日买卖对冲、配股事件，月末锚定口径）在册读数（全样本）：**滚5 中位／P25／最差 68.75／55.32／27.36、滚5 回撤中位 47.2、滚5 Calmar 1.45、滚5 Sharpe 1.19、负窗口占比 0；年化中位 48.88、最大回撤中位 64.5、Calmar 0.78、Sharpe 0.92；5年块中位 64.09；长跑 2009-11 CAGR 39.71／MDD 64.7、2011-11 CAGR 44.40／MDD 65.7；滚3 中位 59.96、滚3 回撤中位 46.4；逐年中位 38.98、逐年最差 −17.6；换手 5.16、仓位 167**。在册读数（去赢家，剔除集 A ＝ 002128／000933／601225／601328／002466）：**滚5 中位／P25／最差 42.47／34.08／25.18、滚5 回撤中位 46.4、滚5 Calmar 0.98、滚5 Sharpe 0.90、负窗口占比 0；年化中位 43.29、最大回撤中位 63.8、Calmar 0.68、Sharpe 0.93；5年块中位 53.83；长跑 2009-11 CAGR 35.85／MDD 63.9、2011-11 CAGR 39.80／MDD 63.9；滚3 中位 45.14、滚3 回撤中位 42.4；逐年中位 37.87、逐年最差 −20.7；换手 6.46、仓位 166**。剔除集 U 随候选臂而变，不入册。配对差一律相对现行基准读数，读数不跨纪元迁移；各纪元的线解与在册读数只查 `docs/Ashare_backtest_log.md`。
+换估值口径或换宇宙做 A/B 时，**买入线必须重解到同一在册合格面**（`scripts/experimental/align_buy_line.py`），否则比的是两条不同宽度的闸门；**换仓边际不随买入线缩放，按 0.01 一档的剂量扫描重定**。现行两线 **候选侧买入线 1.0453／换仓边际 0.18**：买入线对候选侧状态下侧合格面 17.766%，508,260 个在册观测，保留四位小数、不取整。现行基准（`BASE`：候选侧 `a_share_daily_states_adopted.csv`＋持仓侧 `a_share_daily_states_hold.csv`、授信 66.6%、单票上限 60%、T+1 无价跳过、股息税、换仓源同日不重复、同日买卖对冲、配股事件，月末锚定口径）在册读数（全样本）：**滚5 中位／P25／最差 39.18／18.98／0.20、滚5 回撤中位 49.5、滚5 Calmar 0.87、滚5 Sharpe 0.74、负窗口占比 0.5；年化中位 31.26、最大回撤中位 81.2、Calmar 0.39、Sharpe 0.53；5年块中位 49.58；长跑 2009-11 CAGR 25.95／MDD 84.6、2011-11 CAGR 27.15／MDD 86.4；滚3 中位 35.36、滚3 回撤中位 45.3；逐年中位 40.41、逐年最差 −49.5；换手 8.23、仓位 166**。在册读数（去赢家，剔除集 A ＝ 688516／000933／002466／002128／601328）：**滚5 中位／P25／最差 44.97／37.41／15.91、滚5 回撤中位 39.6、滚5 Calmar 1.12、滚5 Sharpe 0.95、负窗口占比 0；年化中位 36.70、最大回撤中位 66.6、Calmar 0.55、Sharpe 0.75；5年块中位 51.67；长跑 2009-11 CAGR 32.11／MDD 65.6、2011-11 CAGR 32.31／MDD 70.3；滚3 中位 44.46、滚3 回撤中位 39.6；逐年中位 37.12、逐年最差 −21.9；换手 4.40、仓位 165**。剔除集 U 随候选臂而变，不入册。配对差一律相对现行基准读数，读数不跨纪元迁移；各纪元的线解与在册读数只查 `docs/Ashare_backtest_log.md`。
 
 当前参数是取舍前沿上的一点，不是三条标准同时占优的峰；援引本基准时说清按哪条标准选的，不称「最优」。
 
