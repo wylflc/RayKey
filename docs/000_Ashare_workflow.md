@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.126
+# A股选股-估值-量价操作流程 v4.127
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -16,6 +16,7 @@
 | 更新估值与核心池 | §6 | §6.7 估值重建链 |
 | 财报披露后的滚动更新 | §7 | `build_report_update_queue.py` |
 | 单票研究（含点名建档与 L4） | §5 → §6 → §9.3 | 逐层判断，任一层否决即止 |
+| 海外单票研究（港股／美股／韩股点名） | §5 → §6.8 | 逐层判断；建档、入清单、重出阅读版三步缺一不可 |
 | 修改估值、交易规则或回测参数 | §12-§13 | `sweep_backtest_configs.py` |
 
 所有可复核结论均按 §2 写入决策日志。买卖机制只认 §9.3；账户级风险只认个人投资体系 §4 的两条外生硬约束（券商授信额度、130% 强平线）。
@@ -420,6 +421,17 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 阅读版 `000_a_share_core_valuation_pool.md` 两表列：代码／名称／质量／参考分／估值／估值路径／现价／**合理估值 V**／**`P/V`**／估值时间／估值事件（合理价区间、空间、策略标签、PE、PB 只在 CSV）。表前只保留字段含义与交易边界；估值路径只显示方法名，不带章节号或口径注记。
 
 **回购与分红的处理**：估值只看「可分配现金 = NOPAT × (1 − 维持增长所需留存)」，分红与回购同属可分配现金、不区分、不另按股数缩减重复计量，未来回购计划不进模型。海外引擎每股 NOPAT 锚 = 各年 NOPAT ÷ 最新稀释股数（增长态取最新、否则近 3 年中位），周期守卫比较 NOPAT/(母公司权益＋累计回购)；A 股引擎按 §6.5.1 的每股锚口径，两侧差异成文（OI-082）。A 股分红按 §11.4 除权归一化处理，银行股利折现只计现金股利。
+
+**点名建档**：用户点名的港股／美股／韩股公司，无论初筛结论如何，一律完成以下六步，最后一步重出阅读版后才算结束：
+
+1. 写逐票档案 `data/companies/<代码>_<名称>/README.md`（质量档、四维分与旗标、合理价区间与方法、参考分理由、跟踪指标、复核触发）。
+2. `data/processed/overseas_watchlist_valuation.csv` 加一行：`quality_tier` 按 §5.7 定档，`boundary_pending` 与 `documented_not_attention` 记 L4，`buy_eligibility` 恒为 `off_pipeline_watch_only`，`dossier_dir` 指向第 1 步目录。
+3. `data/reference/overseas_report_evidence.csv` 加最新定期报告的证据行。
+4. 港股在 `fetch_overseas_statements.py` 的 `HK_REPORT_CCY` 与 `build_overseas_roic_bands.py` 的 `COMPANY_CFG` 登记；银行／保险／金融控股进 `FINANCIAL_KEEP`，带取档案带。
+5. 依次运行本节四条命令；三表取数不可得时 `build_overseas_roic_bands.py` 判「无法估值」。
+6. 按 §2 写决策日志。
+
+阅读版海外附表列出清单 CSV 的全部行。`build_a_share_core_valuation_pool.py --md-only` 每次建表核对 `data/companies/` 下每个档案目录都登记在 `a_share_valuation_dossiers.csv` 或本清单，未登记的写 `data/interim/dossier_registration_gaps.csv` 并非零退出；补登记后重跑。
 
 海外最新定期报告只认 `data/reference/overseas_report_evidence.csv` 的公司 IR／交易所／监管申报证据。附表 `估值时间`、清单 `valuation_reviewed_at`／`evidence_available_at`／`last_report_date` 均写该报告的公开可得日，`估值事件` 写报告类型；不得写脚本运行日。`next_report_date` 只作预期提醒，过期日历日期未获官方证据确认时不得当作已披露，且必须报“待核验”并核对公司官方业绩页。报告日、证据日、带和不可买状态维护在 `data/processed/overseas_watchlist_valuation.csv`。
 

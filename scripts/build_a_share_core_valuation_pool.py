@@ -820,6 +820,39 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+DEFAULT_REGISTRATION_GAPS = ROOT / "data/interim/dossier_registration_gaps.csv"
+
+
+def check_dossier_registration(
+    dossier_rows: list[dict[str, str]],
+    overseas_rows: list[dict[str, str]],
+    companies_dir: Path = ROOT / "data/companies",
+    gaps_file: Path = DEFAULT_REGISTRATION_GAPS,
+) -> list[str]:
+    """§6.8 建档不变量：`data/companies/<代码>_<名称>/` 每个目录都必须登记在 A 股档案表或海外关注清单。
+
+    阅读版两张附表（L4 归档区、海外关注清单）都从登记表渲染，只建目录不登记的公司在阅读版里不可见；
+    本检查在 `--md-only` 每日跑批时把这种目录报出来并写 `gaps_file`，主流程据此非零退出。
+    """
+    registered = {str(r.get("security_code", "")).strip() for r in dossier_rows}
+    registered |= {str(r.get("security_code", "")).strip() for r in overseas_rows}
+    gaps: list[str] = []
+    for entry in sorted(companies_dir.iterdir()) if companies_dir.exists() else []:
+        if not entry.is_dir() or "_" not in entry.name:
+            continue
+        code = entry.name.split("_", 1)[0]
+        if code not in registered:
+            gaps.append(entry.name)
+    gaps_file.parent.mkdir(parents=True, exist_ok=True)
+    with gaps_file.open("w", newline="", encoding="utf-8") as fh:
+        fh.write("dossier_dir,expected_registry\n")
+        for name in gaps:
+            fh.write(f"data/companies/{name},a_share_valuation_dossiers.csv 或 overseas_watchlist_valuation.csv\n")
+    if gaps:
+        print(f"✗ 档案目录未登记 {len(gaps)} 个（阅读版不可见）→ {_rel(gaps_file)}：" + "；".join(gaps))
+    return gaps
+
+
 def main() -> None:
     global MODEL_BANDS
     args = parse_args()
@@ -831,6 +864,7 @@ def main() -> None:
     triage_rows = load_csv(args.attention_triage) if args.attention_triage.exists() else []
     l4_section, l4_count = build_l4_dossier_section(dossier_rows, triage_rows)
     overseas_rows = load_overseas(args.overseas)
+    registration_gaps = check_dossier_registration(dossier_rows, overseas_rows)
     # §6.8 复核触发① 的落地校验（OI-039）：财报已披露而带还建在披露前的证据上，当天就喊出来。
     # 放在这里是因为本脚本是 §9.1 第二步**每日必跑**的那一个，而海外行不进 §9.1 1a 的机械覆盖；
     # 检查只读清单里已存的日期列，不联网，故不增加每日跑批的耗时。日期源由
@@ -921,6 +955,8 @@ def main() -> None:
     else:
         log_pool_decisions(args.log_file, rows, args.as_of, args.valuation, args.tiers, args.output_csv, args.output_md)
         print(f"wrote {len(rows)} pool rows to {args.output_csv}; {summary}")
+    if registration_gaps:
+        raise SystemExit(f"档案目录未登记 {len(registration_gaps)} 个：登记到 A 股档案表或海外关注清单后重跑")
 
 
 if __name__ == "__main__":
