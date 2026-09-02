@@ -121,6 +121,10 @@ HK_ITEMS = {
     "st_loan": ("balance", ["短期贷款"]),
     "notes_nc": ("balance", ["应付票据(非流动)"]),
     "notes_c": ("balance", ["应付票据"]),
+    "bonds": ("balance", ["应付债券"]),
+    "convertibles": ("balance", ["可转换票据及债券", "可转换债券及票据"]),
+    "lease_nc": ("balance", ["融资租赁负债(非流动)"]),
+    "lease_c": ("balance", ["融资租赁负债(流动)"]),
     "cash": ("balance", ["现金及等价物"]),
     "deposits": ("balance", ["短期存款"]),
     "capex": ("cashflow", ["购建固定资产"]),
@@ -129,6 +133,8 @@ HK_ITEMS = {
     "buybacks": ("cashflow", ["回购股份"]),
     "dividends_paid": ("cashflow", ["已付股息(融资)", "已付股息"]),
 }
+# 有息负债 = 贷款 + 应付票据 + 应付债券 + 可转换票据及债券 + 租赁负债（流动＋非流动），与 A 股 `roic_inputs.DEBT_FIELDS` 同口径
+HK_DEBT_KEYS = ("lt_loan", "st_loan", "notes_nc", "notes_c", "bonds", "convertibles", "lease_nc", "lease_c")
 
 
 def _num(v):
@@ -489,7 +495,7 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
         if rev is None and pretax is None:
             continue
         intexp = pick(period, "interest_expense") or 0.0
-        debt = sum(pick(period, k) or 0.0 for k in ("lt_loan", "st_loan", "notes_nc", "notes_c"))
+        debt = sum(pick(period, k) or 0.0 for k in HK_DEBT_KEYS)
         cash = (pick(period, "cash") or 0.0) + (pick(period, "deposits") or 0.0)
         rows.append(_build_row("HK", code, name, period, period, HK_REPORT_CCY.get(code, "CNY"), rev, opinc, pretax,
                                None if taxv is None else abs(taxv), intexp, pick(period, "total_equity"), pick(period, "parent_equity"),
@@ -552,7 +558,7 @@ def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shar
     interest = ttm("interest_expense") or 0.0
     total_eq, parent_eq = pick("current", "total_equity"), pick("current", "parent_equity")
     minority = pick("current", "minority_equity") or 0.0
-    debt = sum(pick("current", key) or 0.0 for key in ("lt_loan", "st_loan", "notes_nc", "notes_c"))
+    debt = sum(pick("current", key) or 0.0 for key in HK_DEBT_KEYS)
     cash = (pick("current", "cash") or 0.0) + (pick("current", "deposits") or 0.0)
     if revenue is None or (pretax is None and opinc is None) or parent_eq is None or not shares:
         return None

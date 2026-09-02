@@ -143,13 +143,57 @@ class MaterializedEvidenceTest(unittest.TestCase):
     def test_every_supported_latest_interim_report_has_matching_ttm_row(self):
         with (ROOT / "data/reference/overseas_report_evidence.csv").open(encoding="utf-8-sig") as handle:
             evidence = {r["security_code"]: r for r in csv.DictReader(handle)}
-        unsupported_or_annual = {"06862", "MSFT", "005930", "000660", "BRK.B", "SPCX"}
+        unsupported_or_annual = {"06862", "00267", "MSFT", "005930", "000660", "BRK.B", "SPCX"}
         with (ROOT / "data/interim/overseas_roic_years.csv").open(encoding="utf-8-sig") as handle:
             current = {(r["security_code"], r["period"]) for r in csv.DictReader(handle)
                        if r["period_type"] == "ttm"}
         expected = {(code, row["report_period"]) for code, row in evidence.items()
                     if code not in unsupported_or_annual}
         self.assertEqual(current, expected)
+
+
+class HkInterestDebtTest(unittest.TestCase):
+    """OI-133：港股有息负债须计入租赁负债、应付债券与可转换票据。"""
+
+    @staticmethod
+    def _tables(period: str, balance: dict[str, float], date_type: str = "001") -> dict[str, list[dict]]:
+        def rows(kind: str, items: dict[str, float]) -> list[dict]:
+            return [{"REPORT_DATE": f"{period} 00:00:00", "DATE_TYPE_CODE": date_type,
+                     "STD_ITEM_NAME": name, "AMOUNT": amount} for name, amount in items.items()]
+        income = {"营业额": 1000.0, "经营溢利": 200.0, "除税前溢利": 190.0, "税项": 30.0, "融资成本": 10.0}
+        cashflow = {"购建固定资产": -50.0, "加:折旧及摊销": 40.0, "经营业务现金净额": 220.0}
+        return {"balance": rows("balance", balance), "income": rows("income", income), "cashflow": rows("cashflow", cashflow)}
+
+    _BALANCE = {"总权益": 900.0, "股东权益": 880.0, "少数股东权益": 20.0, "现金及等价物": 300.0,
+                "长期贷款": 100.0, "短期贷款": 20.0, "应付票据(非流动)": 60.0, "应付票据": 5.0,
+                "应付债券": 30.0, "可转换票据及债券": 45.0,
+                "融资租赁负债(非流动)": 70.0, "融资租赁负债(流动)": 15.0,
+                "递延税项负债": 12.0, "合同负债": 33.0, "总负债": 500.0}
+    _EXPECTED_DEBT = 100.0 + 20.0 + 60.0 + 5.0 + 30.0 + 45.0 + 70.0 + 15.0
+
+    def test_annual_debt_includes_leases_bonds_and_convertibles(self):
+        rows = statements.hk_extract("TEST", "测试", self._tables("2025-12-31", self._BALANCE), 10.0)
+        self.assertEqual(len(rows), 1)
+        self.assertAlmostEqual(rows[0]["interest_debt"], self._EXPECTED_DEBT)
+        for key in ("bonds", "convertibles", "lease_nc", "lease_c"):
+            self.assertIn(f"{key}=balance:", rows[0]["tags_used"], key)
+
+    def test_alternate_convertible_label_is_mapped(self):
+        balance = dict(self._BALANCE)
+        balance["可转换债券及票据"] = balance.pop("可转换票据及债券")
+        rows = statements.hk_extract("TEST", "测试", self._tables("2025-12-31", balance), 10.0)
+        self.assertAlmostEqual(rows[0]["interest_debt"], self._EXPECTED_DEBT)
+
+    def test_ttm_snapshot_uses_same_debt_keys(self):
+        annual_tables = self._tables("2025-12-31", self._BALANCE)
+        annual = statements.hk_extract("TEST", "测试", annual_tables, 10.0)[0]
+        interim = self._tables("2026-06-30", self._BALANCE, date_type="002")
+        previous = self._tables("2025-06-30", self._BALANCE, date_type="002")
+        tables = {kind: annual_tables[kind] + interim[kind] + previous[kind] for kind in annual_tables}
+        row = statements.hk_current_extract("TEST", "测试", tables, 10.0, [annual], evidence_date="2026-08-27")
+        self.assertIsNotNone(row)
+        self.assertEqual(row["period"], "2026-06-30")
+        self.assertAlmostEqual(row["interest_debt"], self._EXPECTED_DEBT)
 
 
 class RefreshFallbackTest(unittest.TestCase):
