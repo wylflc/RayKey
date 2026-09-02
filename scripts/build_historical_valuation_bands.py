@@ -1773,7 +1773,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     trough_w = 1.0 if 1.0 / peak_s > args.roic_peak_k else 0.0
                 nopat_cyclical = peak_w >= 0.5
             else:
-                nopat_cyclical = len(ratios) >= 3 and trend_efficiency(ratios) < 0.35
+                nopat_cyclical = (len(ratios) >= 3
+                                  and trend_efficiency(ratios) < getattr(args, "roic_eff_threshold", 0.35))
                 peak_w = 1.0 if nopat_cyclical else 0.0
                 trough_w = 0.0
             band.peak_weight, band.trough_weight = peak_w, trough_w
@@ -1889,6 +1890,12 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                     trough_w = 0.0
                     band.trough_weight = 0.0
                     ROIC_STATS["λ=0 谷守卫不抬锚（trend_only）"] += 1
+                # 研究开关 --trough-guard off（§12.171 GUARDEFF 拆解）：只关 v4.62 的谷底对称守卫，
+                # 峰守卫与坡道不动。`efficiency` 分支恒无谷守卫，本开关把「换探测器」与「丢谷守卫」分开量。
+                if getattr(args, "trough_guard", "on") == "off" and trough_w:
+                    trough_w = 0.0
+                    band.trough_weight = 0.0
+                    ROIC_STATS["谷底对称守卫关（--trough-guard off）"] += 1
                 # 峰／谷坡道：在非周期锚与窗口中位之间按 w = max(峰权重, 谷权重) 线性混合（w=0／1 即旧的两个分支）
                 w_any = max(peak_w, trough_w)
                 ratio0 = (1.0 - w_any) * ratio_noncyc + w_any * ratio_cyc
@@ -2847,6 +2854,11 @@ def main() -> int:
                              "0 = 旧的单点阈值（缺省 0.3＝生产）")
     parser.add_argument("--roic-peak-k", type=float, default=1.6, metavar="K",
                         help="peak 守卫的倍数阈值，缺省 1.6")
+    parser.add_argument("--roic-eff-threshold", type=float, default=0.35, metavar="E",
+                        help="研究开关（§12.171）：--roic-cycle-guard efficiency 的走势单调度阈值，缺省 0.35")
+    parser.add_argument("--trough-guard", choices=("on", "off"), default="on",
+                        help="研究开关（§12.171 GUARDEFF 拆解）：off=只关 v4.62 的谷底对称守卫（trough_w 恒 0），"
+                             "峰守卫与坡道不变；on=缺省＝生产。`--roic-cycle-guard efficiency` 分支本就无谷守卫，不受本开关影响")
     parser.add_argument("--dcf-peak-guard", type=float, default=0.0, metavar="K",
                         help="DCF 臂的 peak 守卫：当期 TTM ROE > K×十年年度 ROE 中位时不做单边上抬"
                              "（周期利润顶不外推）。缺省 0 = 关（现行生产行为）")
