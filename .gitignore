@@ -104,3 +104,7 @@ data/processed/experiments/*/val/*/build_*.log
 data/processed/experiments/*/val/*/bank_*.log
 # §12.171 表 K 归因用的闭合周期／净值产物（重建 scripts/slurm/reaudit_minority_attrib.sbatch）
 data/processed/experiments/*/attrib/*/
+# §12.174 表 U／V 信号层长跑的候选日志、成交流水与运行日志（每臂数百 MB，由 scripts/slurm/oi136_137_signal.sbatch 重建；小报告入库）
+data/processed/experiments/*/sig/*/candidates.csv
+data/processed/experiments/*/sig/*/ledger.csv
+data/processed/experiments/*/sig/*/run.log

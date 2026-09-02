@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""把 `ex_winner_symmetry.py` 的读数文件汇总成 §12.1 第 4 款的对称性表（A／镜像 B／并集 U 各一行）。
+"""把 `ex_winner_symmetry.py`／`ex_winner_dose.py` 的读数文件汇总成 §12.1 第 4 款的表（剔除集 A／B／U 或 K1／K3／K5／K10 各一行）。
 
 每个剔除集下，候选臂对同集 `BASE` 的逐起点配对差：主读数（滚 5 中位）、复利读数（全期 CAGR）、坏情形（滚 5 P25）、
 滚 5 回撤中位；报中位（pp）与变好的起点数（回撤以「更浅」计）。另按第 4 款列出标准指标集里配对差中位 < −0.15pp 的项。
@@ -39,9 +39,12 @@ def main() -> None:
         parts = line.split("|")
         if len(parts) < 3 or not parts[0].startswith("EX5:"):
             continue
-        tag, label = parts[0][4], parts[0][5:]
-        if parts[2] in ("ERR", "EMPTY"):
+        full = parts[0][4:]
+        # 集合标签可多字符（对称性 A/B/U、剂量 K1/K3/K5/K10）：取能与 `#SET` 行匹配的最长前缀
+        tag = max((t for t in sets if full.startswith(t)), key=len, default=None)
+        if tag is None or parts[2] in ("ERR", "EMPTY"):
             continue
+        label = full[len(tag):]
         rows.setdefault((tag, label), {})[parts[1]] = dict(zip(FIELDS, map(float, parts[2:])))
     print(f"候选 {args.challenger}；剔除集：" + "；".join(f"{t} = {c.replace(',', '/')}" for t, c in sets.items()))
     print("| 剔除集 | " + " | ".join(n for n, *_ in DECISION) + " | 第 4 款劣于 −0.15pp 的项 |")
