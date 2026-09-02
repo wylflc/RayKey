@@ -807,7 +807,9 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         return c > m20                       # 新建仓：还要站上 MA20
 
     # ---------------- 卖出侧
-    cash = nav if funds is None else max(funds, 0.0)
+    # §10.2：`--funds` 为负（券商可用保证金为负、已超授信）时照负值起算——卖出款先补足该缺口，余额才进买入；
+    # 负预算在买入段落入「不足一手」分支跳过，不会产生负手数。
+    cash = nav if funds is None else funds
     funds0 = cash
     sells: list[dict[str, object]] = []
     sell_notes: list[tuple[str, str]] = []     # (名称, 说明)：条件成立但未卖的解释行
@@ -1191,9 +1193,14 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
         print(f"     [⚠ 止损冲突] {name} 当日既在止损复核又在买入清单——止损命中即整仓清空，不得同日买回")
     # 4. 买入清单
     if result["funds_given"]:
-        print(f"  4. 买入清单：可用资金 {float(result['funds0']) / 1e4:,.2f} 万（现金＋未用授信）"
+        funds0 = float(result["funds0"])
+        left = float(result["cash"])
+        funds_txt = (f"可用资金 {funds0 / 1e4:,.2f} 万（现金＋未用授信）" if funds0 >= 0 else
+                     f"可用资金 **{funds0 / 1e4:,.2f} 万（为负：已超授信 {-funds0 / 1e4:,.2f} 万，§10.2 卖出款先补缺口）**")
+        left_txt = f"余 {left / 1e4:,.2f} 万" if left >= 0 else f"**仍超授信 {-left / 1e4:,.2f} 万，不可新增买入**"
+        print(f"  4. 买入清单：{funds_txt}"
               f"＋ 当日涨幅减持/换仓卖出款 {sold_cash / 1e4:,.2f} 万 → 投入 {invested / 1e4:,.2f} 万"
-              f"（占净资产 {invested / nav * 100:.1f}%）｜余 {result['cash'] / 1e4:,.2f} 万")
+              f"（占净资产 {invested / nav * 100:.1f}%）｜{left_txt}")
     else:
         print(f"  4. 买入清单：⚠ **未给 `--funds`，按「可用资金＝净资产」估算、不做换仓**"
               f"（OI-062：满仓/带融资账户上此计划资金上不可执行）"

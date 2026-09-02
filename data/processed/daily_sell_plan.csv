@@ -1,1 +1,2 @@
 trade_date,security_code,security_name,rule,condition,close,ma20,ma60,model_pv,hold_pv,cost_basis,gain_pct,entry_stop_price,stop_line,current_shares,sell_shares,amount,swap_for,cooldown_skips,note
+2026-09-02,601899,紫金矿业,换仓,持仓侧 P/V 1.2533 且弱势｜卖出款去向：格力电器 0.5568（边际 +0.6965）、工商银行 0.9989（边际 +0.2544）｜触发闸门：成都银行 0.8090（差 0.4443 ≥ 0.1800）,32.95,33.6455,30.3768,1.2533,1.2533,32.34,0.0189,29.6,,4200.0,4100,135095.0,601838,0,

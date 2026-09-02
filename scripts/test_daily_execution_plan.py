@@ -131,6 +131,27 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertEqual([(s["security_code"], s["hold_pv"]) for s in res["sells"] if s["rule"] == "换仓"], [("000023", 1.50)])
         self.assertEqual(res["hold_pv_diff"], [])                                       # 两侧相同时不列差异
 
+    def test_negative_funds_repays_shortfall_before_buy(self) -> None:
+        # §10.2：券商可用保证金为负（已超授信）时 `--funds` 照负值起算，换仓卖出款先补缺口，余额才买入
+        trig = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.50)       # 未持仓触发者
+        src = row("000012", "H2", close=10.0, ma20=12.0, ma60=9.0, pv=2.00)      # 弱势卖出源，不过买入线
+        holdings = {"000012": hold("H2", 50000, 5.0, None)}
+        res = self.run_plan([trig, src], holdings, funds=-50_000.0, members={"000010", "000012"})
+        swap = [s for s in res["sells"] if s["rule"] == "换仓"][0]
+        self.assertEqual((swap["security_code"], swap["sell_shares"]), ("000012", 15000))   # 卖一档 15 万
+        # 15 万卖出款先还 5 万缺口，余 10 万 → 触发者只买 10,000 股（不是一档 15,000 股）
+        self.assertEqual([(p["security_code"], p["shares"]) for p in res["plan"]], [("000010", 10000)])
+        self.assertAlmostEqual(res["cash"], 0.0)
+
+    def test_negative_funds_without_sale_buys_nothing(self) -> None:
+        cand = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.50)
+        strong = row("000013", "S", close=10.0, ma20=9.0, ma60=8.0, pv=2.00)     # 持仓走势未坏，无可换出源
+        res = self.run_plan([cand, strong], {"000013": hold("S", 50000, 5.0, None)}, funds=-50_000.0,
+                            members={"000010", "000013"})
+        self.assertEqual(res["sells"], [])
+        self.assertEqual(res["plan"], [])
+        self.assertAlmostEqual(res["cash"], -50_000.0)                            # 缺口原样带出，报告显示仍超授信
+
     def test_same_day_buy_sell_netted(self) -> None:
         # §9.3.2 第 6 步：同日买卖按较小者抵消，只执行净额
         trig = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.50)       # 未持仓触发者
