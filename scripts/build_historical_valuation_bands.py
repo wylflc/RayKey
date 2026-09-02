@@ -2967,6 +2967,11 @@ def main() -> int:
                   f"先跑 scripts/fetch_a_share_financial_statements.py")
             return 1
         rows = sum(len(v) for v in ROIC_YEARS.values())
+        annualized = [(c, p) for c, ys in ROIC_YEARS.items() for p, y in ys.items() if y.annualized_months]
+        if annualized:
+            print(f"购买法收购当年分子年化（§6.5.2.4，consolidation_events.csv）：{len(annualized)} 个年报行、"
+                  f"{len({c for c, _p in annualized})} 只——"
+                  + "、".join(f"{c} {p[:4]}（并表 {ROIC_YEARS[c][p].annualized_months} 个月起）" for c, p in sorted(annualized)[:12]))
         STMT_ROSTER.update(load_statement_roster(STMT_ROSTER_FILES))
         roster_gap = sorted(STMT_ROSTER & (set(codes) - set(ROIC_YEARS)))
         print(f"三大报表：{len(ROIC_YEARS)}/{len(codes)} 只、{rows:,} 个财年"

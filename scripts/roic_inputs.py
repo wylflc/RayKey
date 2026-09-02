@@ -119,6 +119,7 @@ class RoicYear:
     superseded: list = field(default_factory=list)   # OI-130：[(superseded_at, 重述前版本 RoicYear)]，按日期升序
     delayed_until: str = ""                            # OI-130：有重述日而无存档版本时，现行值自此日起才可用
     tax_rate_observed: bool = False   # True=税率来自本期 所得税/利润总额；False=利润总额非正时回退法定税率
+    annualized_months: int = 0        # OI-132：购买法收购当年 NOPAT／EBIT 已按并表月数年化（0 = 未调整）
 
 
 def _year_from_parts(code: str, period: str, parts: dict[str, dict], notice_cap: bool,
@@ -222,6 +223,7 @@ def load_statements(codes: set[str] | None = None,
             if year is not None:
                 out.setdefault(code, {})[period] = year
     attach_superseded_versions(out, raw, codes, stmt_dir, notice_cap, ic_floor)
+    annualize_consolidation(out, load_consolidation_events(codes=codes))
     return out
 
 
@@ -569,6 +571,73 @@ def wacc(cost_equity: float, cost_debt: float, tax_rate: float,
     if total <= 0 or equity <= 0:
         return cost_equity
     return (equity * cost_equity + debt * cost_debt * (1 - tax_rate)) / total
+
+
+# §6.5.2.4 购买法收购当年分子年化（OI-132）：手工登记表，每行一笔非同一控制下企业合并。
+CONSOLIDATION_EVENTS_FILE = Path(__file__).resolve().parents[1] / "data/reference/consolidation_events.csv"
+CONSOLIDATION_FIELDS = ["security_code", "security_name", "acquiree", "acquisition_date", "report_period",
+                        "months_consolidated", "acquiree_revenue_since", "acquiree_net_profit_since",
+                        "source", "reviewed_at", "note"]
+
+
+def consolidated_months(acquisition_date: str, report_period: str) -> int:
+    """购买日到年报期末的并表月数：购买日在 15 日（含）前算整月，之后不算；夹在 [1, 12]（12 = 全年并表，不调整）。"""
+    y, m, d = (int(x) for x in acquisition_date[:10].split("-"))
+    py = int(report_period[:4])
+    months = (py - y) * 12 + (12 - m) + (1 if d <= 15 else 0)
+    return max(1, min(12, months))
+
+
+def load_consolidation_events(path: Path | None = None, codes: set[str] | None = None
+                              ) -> dict[str, dict[str, list[dict]]]:
+    """`consolidation_events.csv` → `{代码: {年报期: [事件]}}`；事件含 `months`（并表月数）、`net_profit`、`revenue`（元）。
+    `months_consolidated` 留空时按 `acquisition_date` 算；非年报期、月数不在 [1, 12] 或净利润缺失的行跳过。"""
+    path = path or CONSOLIDATION_EVENTS_FILE
+    out: dict[str, dict[str, list[dict]]] = {}
+    if not path or not Path(path).exists():
+        return out
+    with Path(path).open(encoding="utf-8-sig", newline="") as fh:
+        for row in csv.DictReader(fh):
+            code = (row.get("security_code") or "").strip().zfill(6)
+            period = (row.get("report_period") or "").strip()[:10]
+            if codes is not None and code not in codes:
+                continue
+            if not code or code == "000000" or not period.endswith("-12-31"):
+                continue
+            months = _num(row.get("months_consolidated"))
+            acq = (row.get("acquisition_date") or "").strip()
+            if months is None and acq:
+                months = consolidated_months(acq, period)
+            profit = _num(row.get("acquiree_net_profit_since"))
+            if months is None or not (1 <= months <= 12) or profit is None:
+                continue
+            out.setdefault(code, {}).setdefault(period, []).append({
+                "acquiree": (row.get("acquiree") or "").strip(), "acquisition_date": acq,
+                "months": int(months), "net_profit": profit,
+                "revenue": _num(row.get("acquiree_revenue_since")) or 0.0})
+    return out
+
+
+def annualize_consolidation(years: dict[str, dict[str, RoicYear]],
+                            events: dict[str, dict[str, list[dict]]]) -> int:
+    """收购当年的 NOPAT 与 EBIT 各加 `被购买方自购买日至期末净利润 × (12 ÷ 并表月数 − 1)`（EBIT 按本年税率还原）；
+    权益、股本、现金流与归母／合并净利不动。重述前版本（`superseded`）同调。返回调整的年报行数。"""
+    adjusted = 0
+    for code, by_period in events.items():
+        for period, rows in by_period.items():
+            year = years.get(code, {}).get(period)
+            if year is None:
+                continue
+            for target in [year] + [old for _at, old in year.superseded]:
+                if target.nopat is None or target.annualized_months:
+                    continue
+                extra = sum(e["net_profit"] * (12.0 / e["months"] - 1.0) for e in rows)
+                target.nopat += extra
+                if target.ebit is not None and target.tax_rate is not None and target.tax_rate < 1:
+                    target.ebit += extra / (1 - target.tax_rate)
+                target.annualized_months = min(e["months"] for e in rows)
+            adjusted += 1
+    return adjusted
 
 
 # §6.5.2.4 主体重置表：{代码: {"reset": 重置报告期, "growth_mode": none|trend}}；文件不存在即空。
