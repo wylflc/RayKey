@@ -461,7 +461,7 @@ def load_blocked_codes(path: Path) -> set[str] | None:
 #     而前复权序列**锚在最新一根**，故 `--as-of` 为最近交易日时末根收盘即未复权现价，两者同尺度；
 #     **回溯历史日期时该等式不成立**，故本层只在 `--as-of` 为最新交易日时给出买入计划。
 #   * 银行走工作流 §6.5.1 的股利折现口径。
-SEC93_BUY_LINE = 0.9976        # §9.3.1 买入线（v4.62：季度当期化纪元对齐解、保留四位小数，用户裁定「三线按对齐解」；合格面 17.622%，回测日志 §12.120；v4.61 为 0.9505、v4.34 为 0.9434）
+SEC93_BUY_LINE = 1.0138        # §9.3.1 买入线（对齐解、保留四位小数；下侧合格面 17.766%，回测日志 §12.166）
 SEC93_MAX_CORR = 0.70          # §9.3.1，252 日日收益率皮尔逊相关上限
 SEC93_SCAN_DEPTH = 40          # §9.3.2 第 3 步：相关性过滤时最多下扫多少名
 SEC93_TRANCHE_PCT = 0.05       # §9.3.1 单次买入比例
@@ -539,12 +539,32 @@ def _dividend_distributions() -> dict[str, list]:
     return load_distributions()
 
 
+@lru_cache(maxsize=1)
+def _corporate_actions() -> dict[str, list]:
+    from build_historical_valuation_bands import load_actions
+    return load_actions()
+
+
 def bank_dividend_intrinsic(code: str, as_of: str, rf: float) -> float | None:
     """§12.31：`V = 最近已知完整财年每股现金分红 ÷ (十年国债 + 2%)`（分子口径 `divspread_dividend`，
-    与 `rebuild_bank_bands.py` 历史逐日同一实现）。无分红返回 None。"""
-    from divspread_dividend import annual_dividend, dividend_value
-    got = annual_dividend(_dividend_distributions().get(code.zfill(6), []), as_of)
-    return dividend_value(got[0], rf, BANK_RISK_PREMIUM) if got else None
+    与 `rebuild_bank_bands.py` 历史逐日同一实现）。无分红返回 None。
+
+    OI-131：分子是该财年**实付**每股现金分红，故自其可得日起的送转与除息都要按交易所除权参考价
+    折算 `v → (v − 现金红利) ÷ (1 + 送转比)`——不折则除息日股价下跳而 V 不动，`P/V` 凭空下跳一次
+    股息率。锚与除权实现均与 `rebuild_bank_bands.py` 同源。"""
+    from divspread_dividend import annual_dividend, annual_dividend_since, dividend_value
+    from build_historical_valuation_bands import exright_adjust
+    dists = _dividend_distributions().get(code.zfill(6), [])
+    got = annual_dividend(dists, as_of)
+    if not got:
+        return None
+    value = dividend_value(got[0], rf, BANK_RISK_PREMIUM)
+    since = annual_dividend_since(dists, as_of)
+    if value is None or not since:
+        return value
+    (adjusted,), _factor, _cash = exright_adjust(
+        _corporate_actions().get(code.zfill(6), []), since, as_of, (value,), split_since=since)
+    return adjusted if adjusted > 0 else None
 
 
 # §9.3.1 相关性的数据源（OI-093）：扫描当日逐票已取的前复权K线（`scan_one` 落入本表），

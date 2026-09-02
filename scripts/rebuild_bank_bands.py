@@ -218,7 +218,7 @@ if RP is not None:
     RFS.sort()
 RFD = [x[0] for x in RFS]
 
-from divspread_dividend import load_distributions, annual_dividend   # OI-099：分子 = 最近已知完整财年分红
+from divspread_dividend import load_distributions, annual_dividend, annual_dividend_since   # OI-099：分子 = 最近已知完整财年分红
 from intrinsic_value import valuation_label
 # OI-131：除权调整复用建带器的唯一实现（`v → (v − 现金红利) ÷ (1 + 送转比)`，交易所除权参考价公式）。
 # 覆盖出来的带同样要跟随真实股价除权——不折算则除息日股价下跳而带不动，`P/V` 凭空下跳一次股息率
@@ -238,17 +238,8 @@ def ex_adjust(code, since, day, value, split_since=None):
 
 
 def div_annual_since(c, day):
-    """当前 `dv` 的可得日（该财年各笔分红 available_at 的上界）——除权调整的锚。
-
-    锚取可得日而非除权日：与 ROIC 路径取公告日同理，`dv` 自该日起成为在用分子，
-    其后的每一次除权除息都要折算；下一财年分红可得时锚前移、窗口自然复位。"""
-    dists = DIV.get(c, [])
-    got = annual_dividend(dists, day)
-    if not got:
-        return ""
-    _, fy = got
-    return max((d.available_at for d in dists
-                if d.report_date[:4] == fy and d.available_at <= day), default="")
+    """当前 `dv` 的可得日——除权调整的锚（唯一实现在 `divspread_dividend`，与扫描器共用）。"""
+    return annual_dividend_since(DIV.get(c, []), day)
 
 def rf_at(day):
     i = bisect.bisect_right(RFD, day) - 1

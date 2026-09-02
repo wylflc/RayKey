@@ -94,6 +94,19 @@ def annual_dividend(dists: list[Distribution], as_of: str) -> tuple[float, str] 
     return (total, f"{fiscal_year:04d}") if total > 0 else None
 
 
+def annual_dividend_since(dists: list[Distribution], as_of: str) -> str:
+    """`annual_dividend` 当前分子的**可得日上界**——除权调整的锚（OI-131）。
+
+    分子是该财年**实付**每股现金分红，自这一天起成为在用值；其后的每一次除权除息都要按
+    交易所除权参考价折算，下一财年分红可得时锚前移、窗口复位。"""
+    got = annual_dividend(dists, as_of)
+    if not got:
+        return ""
+    _, fiscal_year = got
+    return max((d.available_at for d in dists
+                if d.report_date[:4] == fiscal_year and d.available_at <= as_of), default="")
+
+
 def dividend_value(annual: float, rf: float, rp: float = RISK_PREMIUM) -> float | None:
     """`V = 年度分红 ÷ (rf + rp)`；分母非正返回 None。"""
     return annual / (rf + rp) if (rf + rp) > 0 else None
