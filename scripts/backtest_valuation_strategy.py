@@ -752,6 +752,8 @@ class Lot:
     lock_level: float = 0.0     # 盈利锁定线（`--profit-lock`）：收益达 x 后抬到 持仓均价×η，只升不降；除权日与锚同式折算；开关关时恒 0
     lock_eta: float = 0.0       # 设定当前锁定线的 η（流水标签用）
     avg_cost: float = 0.0       # 持仓均价：买入按股数加权、减持不变、除权日与锚同式折算（`--addon-max-gain`／`--gain-sell` 用）
+    bought_shares: float = 0.0  # 本周期累计买入股数（`--gain-ladder` 的分母；除权日与股数同倍放大，减持不变）
+    ladder_sold: float = 0.0    # 本周期按阶梯涨幅减持已卖出的股数（除权日同倍放大）
     peak_intrinsic: float = 0.0 # 持有期内内在价值的峰值——**基本面退出**按它的回撤触发
     sublots: list = field(default_factory=list)   # 股息税用：[买入日, 股数, 该批已收现金红利] 按买入先后排列（FIFO）
     tax_paid: float = 0.0       # 本周期已缴差别化股息税
@@ -892,6 +894,8 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
             lot.invested += cost
             lot.sublots.append([day, new_shares, 0.0])
         lot.shares *= denom
+        lot.bought_shares *= denom      # 阶梯分母与已减股数同倍放大，减持比例在除权前后不变
+        lot.ladder_sold *= denom
         if lot.trail_peak > 0:          # 上移锚峰值按 §11.4 同式折算
             lot.trail_peak = max(0.0, (lot.trail_peak + shift) / denom)
         if lot.lock_level > 0:          # 盈利锁定线与锚同式折算；现金红利高于线价的极端情形只折送转
@@ -1070,7 +1074,7 @@ def log_partial_sell(ledger: list | None, day: str, code: str, shares: float,
 
 
 def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: str,
-              ledger: list | None = None, net_reg: dict | None = None) -> None:
+              ledger: list | None = None, net_reg: dict | None = None, ladder: bool = False) -> None:
     lot = portfolio.lots.pop(code)
     ledger_idx = None
     if ledger is not None:
@@ -1089,7 +1093,7 @@ def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: s
     lot.sells += 1
     portfolio.closed.append(lot)
     register_sale(net_reg, code, lot, sold, price, consumed, True,
-                  len(portfolio.closed) - 1, ledger_idx)
+                  len(portfolio.closed) - 1, ledger_idx, ladder)
 
 
 def _fee_quiet(amount: float, day: str, side: str) -> float:
@@ -1101,12 +1105,13 @@ def _fee_quiet(amount: float, day: str, side: str) -> float:
 
 def register_sale(reg: dict | None, code: str, lot: Lot, shares: float, price: float,
                   consumed: list, whole: bool, closed_idx: int | None,
-                  ledger_idx: int | None) -> None:
-    """登记当日一笔卖出，供 §9.3.2 同日买卖对冲使用（`--net-same-day`；不开时 reg 为 None）。"""
+                  ledger_idx: int | None, ladder: bool = False) -> None:
+    """登记当日一笔卖出，供 §9.3.2 同日买卖对冲使用（`--net-same-day`；不开时 reg 为 None）。
+    `ladder`＝这笔是阶梯涨幅减持（`--gain-ladder`），被对冲的部分要从 `ladder_sold` 退回。"""
     if reg is None or shares <= 0:
         return
     reg.setdefault(code, []).append(
-        {"lot": lot, "shares": shares, "left": shares, "price": price,
+        {"lot": lot, "shares": shares, "left": shares, "price": price, "ladder": ladder,
          "consumed": consumed, "whole": whole, "closed_idx": closed_idx, "ledger_idx": ledger_idx})
 
 
@@ -1161,6 +1166,8 @@ def net_off_sale(reg: dict, portfolio: Portfolio, code: str, buy_shares: float,
                 portfolio.closed.pop(sale["closed_idx"])
             portfolio.lots[code] = lot
         lot.shares += n
+        if sale.get("ladder"):
+            lot.ladder_sold = max(0.0, lot.ladder_sold - n)
         sale["left"] = after
         if after <= 1e-9:                            # 整笔被对冲：卖出记录一并撤销
             lot.sells -= 1
@@ -1238,6 +1245,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         exec_confirm_close: bool = False,
         sell_confirm: bool = False, sell_tol: float = 0.0, stop_tol: float = 0.0,
         sell_buffer_exempt_gain: bool = False, sell_buffer_exempt_pv: float = 0.0,
+        sell_x: float = 0.0, gain_ladder: tuple[tuple[float, float], ...] = (),
+        swap_mode: str = "legacy", swap_sell_set: str = "weak", swap_spare_frac: float = 0.5,
         candidate_log=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`。
 
@@ -1345,6 +1354,19 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
     def swap_gap_floor(ref: float, scale: float) -> float:
         return swap_margin_gap_floor(ref, swap_margin, swap_margin_mode, scale)
+
+    def ladder_state(lot: Lot, close: float | None) -> tuple[float, float]:
+        """`--gain-ladder`（用户 2026-09-02 实验）：返回 (命中的最高档涨幅 g_k, 尚待减持股数)。
+        目标 = x_k × 本周期累计买入股数 − 已按阶梯减持股数；成本与分母都不随卖出变化，回落后再涨不重复卖。
+        开关关、无均价或未命中任何档时返回 (0, 0)。"""
+        if not gain_ladder or lot.avg_cost <= 0 or lot.bought_shares <= 0 or not close:
+            return 0.0, 0.0
+        gain = close / lot.avg_cost - 1.0
+        rung, frac = 0.0, 0.0
+        for g, xk in gain_ladder:
+            if gain >= g:
+                rung, frac = g, xk
+        return rung, (frac * lot.bought_shares - lot.ladder_sold) if rung else 0.0
 
     # ---- 分位表预热：把 `since` 之前**已经发生过**的观测先灌进去。
     # 不预热的话每个起点都要空等 `quantile_min_obs` 天才有第一只可买票，而这段空窗
@@ -1547,6 +1569,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             stats["**穿仓·净资产归零**"] += 1
             break
         budget = equity * x
+        # `--sell-x`（用户 2026-09-02：买入与卖出不必同一档位）：卖出侧一档 = 净资产 × sell_x，
+        # 涨幅减持／出名单减持／换仓卖出／簇内升级／止损减档同用；不给即与买入一档相同（逐位不变）。
+        sell_budget = equity * (sell_x or x)
         # §9.3.2：同一信号日同一只股票的买卖直接对冲，只执行净额（`--net-same-day`）。
         net_reg: dict | None = {} if net_same_day else None
 
@@ -1619,10 +1644,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 按与减持同一速度卖，不一次性砸出——一年一次的换库若全额出清，会在每年 5 月
             # 制造一次集中抛售，测出来的是流动性冲击而不是规则优劣。
             if members is not None and code not in members:
-                shares = sell_shares(budget / price, lot.shares, price, lot_size, res_floor(price))
+                shares = sell_shares(sell_budget / price, lot.shares, price, lot_size, res_floor(price))
                 if (not shares and lot_ratio_cooldown and lot_size
                         and lot.shares >= lot_size
-                        and lot_ratio_ready(lot_counters_sell, code, price * lot_size, budget)):
+                        and lot_ratio_ready(lot_counters_sell, code, price * lot_size, sell_budget)):
                     shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
                     stats["高价股·按手减持"] += 1
                 if shares > 0:
@@ -1743,10 +1768,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if stop_partial:
                     # `stop_tranche` 是减仓速度的倍数：1.0 = 与定投同速，∞ = 退回整仓清空。
                     # 用它做剂量-反应，检验「减得慢」到底是不是 STP 变差的原因。
-                    shares = sell_shares(budget * stop_tranche / price, lot.shares, price, lot_size, res_floor(price))
+                    shares = sell_shares(sell_budget * stop_tranche / price, lot.shares, price, lot_size, res_floor(price))
                     if (not shares and lot_ratio_cooldown and lot_size
                             and lot.shares >= lot_size
-                            and lot_ratio_ready(lot_counters_sell, code, price * lot_size, budget)):
+                            and lot_ratio_ready(lot_counters_sell, code, price * lot_size, sell_budget)):
                         shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
                         stats["高价股·按手减持"] += 1
                     if shares > 0:
@@ -1809,8 +1834,14 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 直到跌回线下或减完。0＝关（逐位不变）。
             # `sell_line`（研究开关）：给了才把「`P/V` 过线也算该减」并进同一条减一档路径。
             value_rich = is_rich(code, ratio)
-            gain_hit = bool(gain_sell) and lot.avg_cost > 0 and \
-                (today.get(code, (None,))[0] or price) >= lot.avg_cost * (1.0 + gain_sell)
+            # `gain_ladder`（用户 2026-09-02 实验）：给了阶梯即取代单线 `gain_sell`——命中最高档 g_k 后
+            # 每日减一档，直到本周期按阶梯累计卖出 ≥ x_k × 累计买入股数；跌回线下即停、回落后再涨不重复卖。
+            ladder_rung, ladder_pending = ladder_state(lot, today.get(code, (None,))[0] or price)
+            if gain_ladder:
+                gain_hit = ladder_pending >= 1.0
+            else:
+                gain_hit = bool(gain_sell) and lot.avg_cost > 0 and \
+                    (today.get(code, (None,))[0] or price) >= lot.avg_cost * (1.0 + gain_sell)
             if not value_rich and not gain_hit:
                 continue
             # 先保留 T 日逐路径信号，再要求**同一路径**在 T+1 收盘仍成立。不能用 T+1 新出现的
@@ -1822,12 +1853,17 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 exec_close, _exec_value, exec_ratio = exec_row
                 value_rich = value_rich and is_rich(code, exec_ratio)
-                gain_hit = gain_hit and bool(gain_sell) and lot.avg_cost > 0 and \
-                    exec_close >= lot.avg_cost * (1.0 + gain_sell)
+                if gain_ladder:
+                    ladder_rung, ladder_pending = ladder_state(lot, exec_close)
+                    gain_hit = gain_hit and ladder_pending >= 1.0
+                else:
+                    gain_hit = gain_hit and bool(gain_sell) and lot.avg_cost > 0 and \
+                        exec_close >= lot.avg_cost * (1.0 + gain_sell)
                 if not value_rich and not gain_hit:
                     stats["T+1确认·减持取消·价格线恢复"] += 1
                     continue
-            sell_tag = rich_tag if value_rich else f"涨幅≥{gain_sell:.0%}"
+            sell_tag = rich_tag if value_rich else (f"阶梯≥{ladder_rung:.0%}" if gain_ladder else f"涨幅≥{gain_sell:.0%}")
+            ladder_sale = bool(gain_ladder) and gain_hit and not value_rich
             if sell_trend_ma and not (gain_hit and gain_sell_mode == "ungated"):
                 judge_close = (exec_today[code][0] if exec_confirm_close else
                                today.get(code, (None,))[0])
@@ -1874,17 +1910,23 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     sell_count += 1
                     continue
                 stats["P/V≥估值减持线·减一档" if value_rich else f"{sell_tag}·减一档"] += 1
-                shares = sell_shares(budget / price, lot.shares, price, lot_size, res_floor(price))
+                # 阶梯：本档只卖到「尚待减持」为止；待减不足一手时不动（高价股按手兜底同样要求待减 ≥ 一手）
+                want = min(sell_budget / price, ladder_pending) if ladder_sale else sell_budget / price
+                shares = sell_shares(want, lot.shares, price, lot_size, res_floor(price))
                 if (not shares and lot_ratio_cooldown and lot_size
                         and lot.shares >= lot_size
-                        and lot_ratio_ready(lot_counters_sell, code, price * lot_size, budget)):
+                        and (not ladder_sale or ladder_pending >= lot_size)
+                        and lot_ratio_ready(lot_counters_sell, code, price * lot_size, sell_budget)):
                     shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
                     stats["高价股·按手减持"] += 1
                 if shares <= 0:
                     continue
+                if ladder_sale:
+                    lot.ladder_sold += (lot.shares if shares >= lot.shares * 0.999 else shares)
                 if shares >= lot.shares * 0.999:
                     turnover += lot.shares * price
-                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"{sell_tag}清空", net_reg=net_reg)
+                    close_lot(portfolio, code, day, price, ledger=ledger, reason=f"{sell_tag}清空", net_reg=net_reg,
+                              ladder=ladder_sale)
                 else:
                     log_partial_sell(ledger, day, code, shares, price, f"{sell_tag}·减一档")
                     lot.shares -= shares
@@ -1892,7 +1934,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     portfolio.cash -= sell_dividend_tax(portfolio, lot, shares, day, _consumed)
                     portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
                     register_sale(net_reg, code, lot, shares, price, _consumed, False, None,
-                                  (len(ledger) - 1) if ledger is not None else None)
+                                  (len(ledger) - 1) if ledger is not None else None, ladder_sale)
                     lot.proceeds += shares * price
                     lot.sells += 1
                     turnover += shares * price
@@ -2097,10 +2139,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # §12.3 里正在复利的仓位。`cluster_reduced` 保证同一只每日至多被削一档。
                 lot_w = portfolio.lots[worst]
                 if swap_partial and worst not in cluster_reduced:
-                    shares = sell_shares(budget / price, lot_w.shares, price, lot_size, res_floor(price))
+                    shares = sell_shares(sell_budget / price, lot_w.shares, price, lot_size, res_floor(price))
                     if (not shares and lot_ratio_cooldown and lot_size
                             and lot_w.shares >= lot_size
-                            and lot_ratio_ready(lot_counters_sell, worst, price * lot_size, budget)):
+                            and lot_ratio_ready(lot_counters_sell, worst, price * lot_size, sell_budget)):
                         shares = lot_size if lot_w.shares - lot_size >= lot_size else lot_w.shares
                     if not shares:
                         continue                     # 一手都减不动 → 本日不升级
@@ -2166,8 +2208,84 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_gain_proceeds = 0.0             # 涨幅让位卖出款：不受闸门约束
         swap_src_min_pv = float("inf")       # 当日 P/V 授权换仓卖出源的最低持仓侧 P/V
         swap_sources_today: set[str] = set()  # 当日全部换仓卖出源（含涨幅让位）
+        # `swap_mode=pairwise`（用户 2026-09-02 实验：「谁触发换仓就换成谁」）：可买集（当日合格集，含已持仓）
+        # 逐个与可卖集（`swap_sell_set`：weak＝收盘<MA20 的持仓／all＝全部持仓；同日在可买集里的持仓不进可卖集）
+        # 两两比较，持仓侧 P/V − 候选侧 P/V ≥ `swap_margin` 即配对；每个有配对的卖出源当日减一档（卖出侧一档），
+        # 卖出款由其配对买入股平分；一只买入股可从多个来源收款。不再要求「资金不足才换」，也不看谁先触发。
+        # 账上原有正额度（现金＋剩余授信）不足买入一档 × `swap_spare_frac` 时并入均分（负额度即超额还款吃掉的部分
+        # 同样均摊），当日不再走第 5 步；否则只定向卖出款、正额度照旧按 P/V 升序逐个买一档（用户 2026-09-02 裁定）。
+        pair_sales: list[tuple[str, float, list[str]]] = []   # (卖出源, 净卖出款, 配对买入股)
+        pair_alloc: dict[str, float] = {}                     # 买入段：配对买入股当日定向额度
+        pair_regular = True                                   # 买入段：当日是否仍走第 5 步
+        if swap and eligible and swap_mode == "pairwise":
+            if (exec_confirm_close or sell_confirm or cluster_swap or swap_held_trigger or swap_proceeds != "pv"
+                    or swap_recipient_margin or swap_source_block >= 0.0 or swap_post_corr_trigger
+                    or gate != "pv" or rank_mode != "pv" or lump_sum or not swap_partial
+                    or len(portfolio.lots) >= max_positions):
+                raise ValueError("--swap-mode pairwise 只定义于现行 BASE 口径（不与 T+1 确认／簇内升级／定向／"
+                                 "接收方守卫／整仓换仓等研究开关同用）")
+            cand_pv: dict[str, float] = {}
+            for r in eligible:
+                if position_cap and r[0] in portfolio.lots \
+                        and portfolio.lots[r[0]].shares * r[1] >= equity * position_cap:
+                    continue                          # 已到单票上限的持仓收不了钱，也就不该触发别人卖出
+                cand_pv[r[0]] = r[3]
+            buy_codes = [r[0] for r in eligible if r[0] in cand_pv]      # 保持 P/V 升序
+            sources: list[tuple[float, str]] = []
+            for c in portfolio.lots:
+                if c not in hold_today or c in cand_pv or c in quota_hold_today or c in reduced_today:
+                    continue
+                if swap_sell_set == "weak":
+                    _m = mas.get(c, {}).get(sig_day, {})
+                    if _m.get(swap_weak_ma) is None or hold_today[c][0] >= _m[swap_weak_ma]:
+                        continue
+                sources.append((hold_today[c][2], c))
+            sources.sort(reverse=True)                # 最贵的先卖，与现行「最贵的弱势持仓」同序
+            for src_pv, c in sources:
+                matches = [b for b in buy_codes if swap_gap_ok(src_pv, cand_pv[b])]
+                if not matches:
+                    continue
+                price = fill_price(c, marks.get(c))
+                if not price:
+                    continue
+                lot_s = portfolio.lots[c]
+                shares = sell_shares(sell_budget / price, lot_s.shares, price, lot_size, res_floor(price))
+                if (not shares and lot_ratio_cooldown and lot_size and lot_s.shares >= lot_size
+                        and lot_ratio_ready(lot_counters_sell, c, price * lot_size, sell_budget)):
+                    shares = lot_size if lot_s.shares - lot_size >= lot_size else lot_s.shares
+                    stats["高价股·按手换仓"] += 1
+                if shares <= 0:
+                    continue
+                who = "/".join(matches[:3]) + ("…" if len(matches) > 3 else "")
+                cash_before = portfolio.cash
+                if shares < lot_s.shares * 0.999:
+                    stats["配对换仓·减一档"] += 1
+                    lot_s.shares -= shares
+                    _consumed = []
+                    portfolio.cash -= sell_dividend_tax(portfolio, lot_s, shares, day, _consumed)
+                    portfolio.cash += shares * price - trade_fee(shares * price, day, "sell")
+                    lot_s.proceeds += shares * price
+                    lot_s.sells += 1
+                    turnover += shares * price
+                    log_partial_sell(ledger, day, c, shares, price, f"配对换仓·减一档：让位给{who}")
+                    register_sale(net_reg, c, lot_s, shares, price, _consumed, False, None,
+                                  (len(ledger) - 1) if ledger is not None else None)
+                else:
+                    stats["配对换仓·余仓不足一手清空"] += 1
+                    turnover += lot_s.shares * price
+                    close_lot(portfolio, c, day, price, ledger=ledger,
+                              reason=f"配对换仓·余仓不足一手清空：让位给{who}", net_reg=net_reg)
+                sell_count += 1
+                reduced_today.add(c)
+                swap_sources_today.add(c)
+                stats["配对换仓·配对数"] += len(matches)
+                pair_sales.append((c, portfolio.cash - cash_before, matches))
+                for b in matches:
+                    if b not in swap_targets:
+                        swap_target_order.append(b)
+                    swap_targets.add(b)
         if swap and eligible:
-            for code, close, value, ratio in eligible[:max_positions]:
+            for code, close, value, ratio in (eligible[:max_positions] if swap_mode == "legacy" else []):
                 # `swap_held_trigger`（OI-101 研究开关）：已持仓候选想加仓而资金不足时同样触发换仓，
                 # 边际对实际接收资金的候选比；缺省沿用「只由未持仓候选触发」。
                 if code in portfolio.lots and not swap_held_trigger:
@@ -2219,10 +2337,16 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # 取涨幅最大的一只让位（当日已减过的不重复选）；`gated` 沿用 `swap_require_weak` 的弱势要求，
                 # `ungated` 不要求。没有这类持仓时回到现行的「最贵且弱势」选法。
                 gain_src = []
-                if gain_sell:
+                if gain_sell or gain_ladder:
                     for c, l in portfolio.lots.items():
                         if (c not in today or c == code or l.avg_cost <= 0 or c in quota_hold_today
-                                or c in reduced_today or today[c][0] < l.avg_cost * (1.0 + gain_sell)):
+                                or c in reduced_today):
+                            continue
+                        # 阶梯口径下「涨幅让位」= 该持仓仍有待减股数（含当日卖出段已减的部分）
+                        if gain_ladder:
+                            if ladder_state(l, today[c][0])[1] < (lot_size or 1.0):
+                                continue             # 待减不足一手的不作让位源
+                        elif today[c][0] < l.avg_cost * (1.0 + gain_sell):
                             continue
                         if gain_sell_mode == "gated" and swap_require_weak:
                             _m = mas.get(c, {}).get(sig_day, {})
@@ -2233,8 +2357,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 swap_tag = ""
                 if gain_src:
                     worst = max(gain_src)[1]
-                    swap_tag = f"·涨幅≥{gain_sell:.0%}让位"
-                    stats[f"涨幅≥{gain_sell:.0%}·换仓让位"] += 1
+                    swap_tag = "·阶梯让位" if gain_ladder else f"·涨幅≥{gain_sell:.0%}让位"
+                    stats["阶梯·换仓让位" if gain_ladder else f"涨幅≥{gain_sell:.0%}·换仓让位"] += 1
                 else:
                     if not held:
                         break
@@ -2262,7 +2386,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         continue
                     if swap_tag:
                         if not (lot_worst := portfolio.lots.get(worst)) or lot_worst.avg_cost <= 0 \
-                                or source_close < lot_worst.avg_cost * (1.0 + gain_sell):
+                                or (ladder_state(lot_worst, source_close)[1] < 1.0 if gain_ladder
+                                    else source_close < lot_worst.avg_cost * (1.0 + gain_sell)):
                             stats["T+1确认·换仓取消·涨幅回落"] += 1
                             continue
                     elif not swap_gap_ok(source_ratio, cand_ratio):
@@ -2285,15 +2410,24 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # 只会每天空转地削持仓。故槽位满时仍整仓卖出。
                 lot_worst = portfolio.lots[worst]
                 partial = swap_partial and len(portfolio.lots) < max_positions and worst not in reduced_today
-                shares = (sell_shares(budget / price, lot_worst.shares, price, lot_size, res_floor(price))
+                ladder_swap = bool(swap_tag) and bool(gain_ladder)
+                want = sell_budget / price
+                if ladder_swap:
+                    want = min(want, ladder_state(lot_worst, today[worst][0])[1])
+                shares = (sell_shares(want, lot_worst.shares, price, lot_size, res_floor(price))
                           if partial else lot_worst.shares)
                 if (partial and not shares and lot_ratio_cooldown and lot_size
                         and lot_worst.shares >= lot_size
-                        and lot_ratio_ready(lot_counters_sell, worst, price * lot_size, budget)):
+                        and (not ladder_swap or want >= lot_size)
+                        and lot_ratio_ready(lot_counters_sell, worst, price * lot_size, sell_budget)):
                     shares = (lot_size if lot_worst.shares - lot_size >= lot_size
                               else lot_worst.shares)
                     stats["高价股·按手换仓"] += 1
+                if ladder_swap and partial and shares <= 0:
+                    continue                         # 阶梯待减不足一手：本日不让位（非阶梯路径逐位保留原行为）
                 sold_qty = shares if (partial and shares < lot_worst.shares * 0.999) else lot_worst.shares
+                if ladder_swap:
+                    lot_worst.ladder_sold += sold_qty
                 if partial and shares < lot_worst.shares * 0.999:
                     stats["换仓·减一档"] += 1
                     lot_worst.shares -= shares
@@ -2305,12 +2439,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     turnover += shares * price
                     log_partial_sell(ledger, day, worst, shares, price, f"换仓·减一档{swap_tag}：让位给{code}")
                     register_sale(net_reg, worst, lot_worst, shares, price, _consumed, False, None,
-                                  (len(ledger) - 1) if ledger is not None else None)
+                                  (len(ledger) - 1) if ledger is not None else None, ladder_swap)
                     reduced_today.add(worst)
                 else:
                     stats["换仓·整仓卖出"] += 1
                     turnover += lot_worst.shares * price
-                    close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓{swap_tag}：让位给空间更大的{code}", net_reg=net_reg)
+                    close_lot(portfolio, worst, day, price, ledger=ledger, reason=f"换仓{swap_tag}：让位给空间更大的{code}", net_reg=net_reg,
+                              ladder=ladder_swap)
                 sell_count += 1
                 swap_sources_today.add(worst)
                 if swap_tag:
@@ -2324,6 +2459,32 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         if credit_over_limit == "repay" and credit_ratio > 0:
             if repay_over_limit(portfolio, credit_limit) > 0:
                 stats["超额授信·换仓款先还"] += 1
+        # 配对换仓的分配：每个卖出源一个池子 = 自己的净卖出款（＋均摊的正／负额度），池子由其配对买入股平分。
+        # 正额度 = 还款后的可用资金 − 全部净卖出款；负值即超额还款吃掉的部分。池子为负时缺口摊给其余池子。
+        if pair_sales:
+            k = len(pair_sales)
+            spare = buying_power(portfolio, credit_limit) - sum(n for _c, n, _m in pair_sales)
+            if spare < swap_spare_frac * budget:
+                pools = [n + spare / k for _c, n, _m in pair_sales]
+                deficit = -sum(v for v in pools if v < 0)
+                pools = [max(0.0, v) for v in pools]
+                while deficit > 1e-6 and any(v > 0 for v in pools):
+                    alive = [i for i, v in enumerate(pools) if v > 0]
+                    cut, deficit = deficit / len(alive), 0.0
+                    for i in alive:
+                        take = min(pools[i], cut)
+                        pools[i] -= take
+                        deficit += cut - take
+                pair_regular = False
+                stats["配对换仓·正负额度并入均分" if spare >= 0 else "配对换仓·负额度均摊"] += 1
+            else:
+                pools = [n for _c, n, _m in pair_sales]
+                stats["配对换仓·正额度走第5步"] += 1
+            for (_c, _n, matches), pool in zip(pair_sales, pools):
+                if pool <= 0:
+                    continue
+                for b in matches:
+                    pair_alloc[b] = pair_alloc.get(b, 0.0) + pool / len(matches)
         # 两个闸门共用「当日换仓卖出源」这一事实，各自派生自己的下限。
         swap_floor_pv = swap_gap_floor(swap_src_min_pv, swap_recipient_scale)
         # `swap_source_block`（OI-107，用户 2026-08-31）：当日换仓卖出源**不进买入队列**，
@@ -2423,7 +2584,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     decided = rc is not None and rh is not None and rc > rh
                 if not decided:
                     continue
-                shares = sell_shares(budget / price_h, lot_h.shares, price_h, lot_size, res_floor(price_h))
+                shares = sell_shares(sell_budget / price_h, lot_h.shares, price_h, lot_size, res_floor(price_h))
                 if not shares:
                     continue
                 corr_reduced.add(h)
@@ -2471,7 +2632,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 eligible = picks + [r for r in eligible if r[0] not in already]
                 stats["配置通道·当日候选"] += len(picks)
 
-        for code, close, value, ratio in eligible[:max_positions]:
+        # 买入顺序：配对换仓的定向额度先按 P/V 升序买（金额 = 该股当日收到的额度），随后（当日仍走第 5 步时）
+        # 对合格集按 P/V 升序逐个买一档。`pair_alloc` 为空且 `pair_regular` 为真即现行逐位路径。
+        buy_plan = ([(r, pair_alloc[r[0]]) for r in eligible[:max_positions] if pair_alloc.get(r[0], 0.0) > 0]
+                    + ([(r, None) for r in eligible[:max_positions]] if pair_regular else []))
+        for (code, close, value, ratio), pair_amount in buy_plan:
             if buying_power(portfolio, credit_limit) <= 0:
                 break
             # T 日候选排序与相关性过滤已经结束后才确认；失败只取消这笔，不会让被它挡住的
@@ -2514,7 +2679,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     stats[f"加仓·涨幅≥{addon_max_gain:.0%}·跳过"] += 1
                     continue
             avail = buying_power(portfolio, credit_limit)
-            if lump_sum:
+            if pair_amount is not None:
+                amount = min(pair_amount, avail)      # 配对换仓定向额度：不按一档，按收到多少买多少
+            elif lump_sum:
                 amount = min(equity * lump_sum, avail)
             else:
                 amount = min(budget if (strategy == "valuation" or tranche)
@@ -2618,6 +2785,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             lot.avg_cost = ((lot.avg_cost * lot.shares + amount) / (lot.shares + shares)
                             if lot.shares + shares > 0 else 0.0)   # 持仓均价：买入加权、减持不变
             lot.shares += shares
+            lot.bought_shares += shares                            # 阶梯分母：本周期累计买入股数
             lot.sublots.append([day, shares, 0.0])
             lot.invested += amount
             lot.buys += 1
@@ -2637,7 +2805,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                                "shares": f"{shares:.0f}", "price": f"{fill:.3f}",
                                "amount": f"{amount:.0f}", "pv_ratio": f"{ratio:.4f}",
                                "intrinsic_value": f"{value:.3f}",
-                               "reason": "定投加仓" if lot.buys > 1 else "首次建仓"})
+                               "reason": ("配对换仓买入" if pair_amount is not None
+                                          else "定投加仓" if lot.buys > 1 else "首次建仓")})
+            if pair_amount is not None:
+                stats["配对换仓·定向买入"] += 1
             buy_count += 1
             turnover += amount
 
@@ -3264,6 +3435,23 @@ def main() -> int:
     parser.add_argument("--swap-source-block", type=float, default=-1.0, metavar="K",
                         help="OI-107：当日换仓卖出源不进买入队列，并一并剔除所有「不比卖出源便宜 swap-margin × K」"
                              "的候选；-1=关。K=1 与换仓触发同线，K=0 只挡卖出源与比它更贵的")
+    parser.add_argument("--sell-x", type=float, default=0.0, metavar="PCT",
+                        help="卖出侧一档占净资产的百分比（用户 2026-09-02 实验：买入与卖出可取不同档位）；"
+                             "涨幅减持／出名单／换仓卖出／簇内升级／止损减档同用。0=与 --x 相同（逐位不变）。例 7.5")
+    parser.add_argument("--gain-ladder", default="", metavar="G:X[,G:X...]",
+                        help="阶梯涨幅减持（用户 2026-09-02 实验）：信号日收盘 ≥ 持仓均价×(1+G) 后每日减一档，"
+                             "直到本周期按阶梯累计卖出股数 ≥ X × 本周期累计买入股数；多档逗号分隔、G 与 X 同向递增。"
+                             "给了即取代 --gain-sell（卖出段与换仓让位源都按阶梯判，走势闸门仍按 --gain-sell-mode）。"
+                             "空=关（逐位不变）。例 0.3:0.333,0.5:0.667,1.0:1.0")
+    parser.add_argument("--swap-mode", choices=("legacy", "pairwise"), default="legacy",
+                        help="换仓机制（用户 2026-09-02 实验）：legacy=现行（未持仓候选资金不足时换最贵弱势持仓一档，"
+                             "卖出款不定向）；pairwise=可买集（含已持仓）与可卖集两两比较，持仓侧 P/V − 候选侧 P/V ≥ "
+                             "--swap-margin 即配对，每个有配对的卖出源减一档、卖出款由其配对买入股平分")
+    parser.add_argument("--swap-sell-set", choices=("weak", "all"), default="weak",
+                        help="pairwise 的可卖集：weak=收盘<MA20 的持仓（与现行换仓源同）；all=全部持仓")
+    parser.add_argument("--swap-spare-frac", type=float, default=0.5, metavar="F",
+                        help="pairwise：换仓前账上正额度不足买入一档 × F 时并入各卖出源均分、当日不走第 5 步；"
+                             "否则只定向卖出款、正额度照第 5 步买。缺省 0.5（用户 2026-09-02 裁定）")
     parser.add_argument("--net-same-day", action="store_true",
                         help="同一信号日同一只股票的买入与卖出直接对冲，只执行净额、双边费税都不付（§9.3.2）")
     parser.add_argument("--no-net-same-day", dest="net_same_day", action="store_false",
@@ -3372,6 +3560,24 @@ def main() -> int:
                 sys.exit(f"--profit-lock 每级须满足 X>0、0<ETA<1+X（否则设线当天即触发），收到 {item!r}")
             steps.append((x, eta))
         profit_lock = tuple(sorted(steps))
+    gain_ladder: tuple[tuple[float, float], ...] = ()
+    if args.gain_ladder:
+        rungs = []
+        for item in args.gain_ladder.split(","):
+            try:
+                g_s, x_s = item.split(":")
+                g, xk = float(g_s), float(x_s)
+            except ValueError:
+                sys.exit(f"--gain-ladder 格式须为 G:X[,G:X...]，收到 {args.gain_ladder!r}")
+            if g <= 0 or not 0 < xk <= 1:
+                sys.exit(f"--gain-ladder 每档须满足 G>0、0<X≤1，收到 {item!r}")
+            rungs.append((g, xk))
+        rungs.sort()
+        if any(b[1] < a[1] for a, b in zip(rungs, rungs[1:])):
+            sys.exit(f"--gain-ladder 的 X 须随 G 递增，收到 {args.gain_ladder!r}")
+        gain_ladder = tuple(rungs)
+    if args.swap_mode == "pairwise" and not args.swap:
+        sys.exit("--swap-mode pairwise 需要同时给 --swap")
 
     if args.fee_preset == "user":       # 用户 2026-08-12 提供的券商口径
         args.commission = args.commission or 0.0001
@@ -3539,6 +3745,9 @@ def main() -> int:
                      + (("_pl" + args.profit_lock.replace(":", "at").replace(",", "_")) if args.profit_lock else "")
                      + (f"_ag{args.addon_max_gain:g}" if args.addon_max_gain else "")
                      + (f"_gs{args.gain_sell:g}{'u' if args.gain_sell_mode == 'ungated' else ''}" if args.gain_sell else "")
+                     + (("_gl" + args.gain_ladder.replace(":", "at").replace(",", "_")) if args.gain_ladder else "")
+                     + (f"_sx{args.sell_x:g}" if args.sell_x else "")
+                     + (f"_pair{args.swap_sell_set}" if args.swap_mode == "pairwise" else "")
                      + ("_swc" if args.swap_trigger == "cash" else "")
                      + ("_colk" if args.credit_over_limit == "keep" else "")
                      + ("_skipma60" if args.entry_below_ma60 == "skip" else "")
@@ -3680,6 +3889,9 @@ def main() -> int:
                          sell_confirm=args.sell_confirm, sell_tol=args.sell_tol, stop_tol=args.stop_tol,
                          sell_buffer_exempt_gain=args.sell_buffer_exempt_gain,
                          sell_buffer_exempt_pv=args.sell_buffer_exempt_pv,
+                         sell_x=args.sell_x / 100.0, gain_ladder=gain_ladder,
+                         swap_mode=args.swap_mode, swap_sell_set=args.swap_sell_set,
+                         swap_spare_frac=args.swap_spare_frac,
                          candidate_log=cand_writer)
             if cand_handle is not None:
                 cand_handle.close()
