@@ -1,0 +1,13 @@
+# OI-131 采纳前置：换仓边际在 FIXALIGN 臂上按 0.01 一档重定（§12.1「不随买入线缩放，按剂量扫描重定」）。
+BASE|
+FA_M13|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.13
+FA_M14|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.14
+FA_M15|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.15
+FA_M16|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.16
+FA_M17|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.17
+FA_M18|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.18
+FA_M19|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.19
+FA_M20|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.20
+FA_M21|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.21
+FA_M22|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.22
+FA_M24|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138 --swap-margin 0.24

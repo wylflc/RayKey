@@ -1,0 +1,4 @@
+# OI-131：银行覆盖补除权调整。FIXALIGN 买入线按 §12.30 重解；FIXASIS 沿用在册 0.9976。换仓边际两臂都不动。
+BASE|
+FIXALIGN|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width -0.0138
+FIXASIS|--daily-states data/processed/a_share_daily_states_fix.csv --hold-states data/processed/a_share_daily_states_hold_fix.csv --width 0.0024
