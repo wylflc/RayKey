@@ -24,7 +24,7 @@
 的假跌破（依据 §12.88.2/§12.89：滚5 +0.59pp、16/23、逐年中性、回撤换手略降）。
 
 **本脚本不产生任何买卖结论。** 卖出只有 §9.3.2 第四步四条（⓪跌破生效止损线
-整仓、①较持仓均价涨幅 ≥125% 且破 MA20 减一档、②出 §5 名单减一档、③换仓减一档），
+整仓、①较持仓均价涨幅 ≥110% 减一档（不看走势）、②出 §5 名单减一档、③换仓减一档），
 由执行侧按本脚本输出的 `pv` 与 `stop_hit` 计算。
 
 **刻意不做**的事（退役清单，现由工作流 §11.1 的边界承担）——盈亏、权重、仓位占比、单笔风险、
@@ -58,14 +58,14 @@ DEFAULT_VALUATION_POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/daily_holdings_tracking.csv"
 DEFAULT_DECISION_LOG = ROOT / "data/processed/a_share_workflow_decision_log.csv"
 
-# §9.3.1 的涨幅减持是 `较持仓均价涨幅 ≥ 125% **且收盘 < MA20**`：MA20 与 MA60 同经 `fetch_daily_rows` 取（前复权，§8.3），
+# §9.3.1 的涨幅减持是 `较持仓均价涨幅 ≥ 110%`、不看走势；MA20 与 MA60 同经 `fetch_daily_rows` 取（前复权，§8.3），
 # 命中判定用扫描器 `holding_trim_signal`（唯一实现）；执行清单由扫描器 `daily_sell_plan.csv` 给出。
 # v4.62 OI-091：P/V 的净负债/企业价值来自生产带行。OI-095 起不在 import 时读带，
 # 由 track() 按信号日自动推导的证据日载入；与扫描器使用同一时点。
 # 测试可预置桩（非 None 即不再载入）。
 MODEL_BANDS: dict[str, dict] | None = None      # 持仓侧带（v4.92 SPA：§9.3.1 换仓来源读它）
 CAND_BANDS: dict[str, dict] | None = None       # 候选侧带（只用于并列显示两侧 P/V）
-# §9.3.1 涨幅减持（v4.44）：收盘较持仓均价（`cost_basis`，按 §11.4 折算）涨幅 ≥ 125% 且收盘 < MA20 → 减一档；
+# §9.3.1 涨幅减持：收盘较持仓均价（`cost_basis`，按 §11.4 折算）涨幅 ≥ 110% → 减一档，不看走势；
 # 资金不足时优先作换仓卖出源。
 GAIN_SELL = SEC93_GAIN_SELL
 
@@ -84,7 +84,7 @@ FIELDNAMES = [
     "stop_hit",
     "stop_line",       # 当日生效止损线 = min(锚, 当日 MA60)；锚未设或均线缺失时留空/退锚
     "close",
-    "ma20",            # §8.3 前复权 MA20：涨幅减持的走势闸门
+    "ma20",            # §8.3 前复权 MA20（展示项；涨幅减持不看走势）
     "ma60",            # §8.3 前复权 MA60：生效止损线的当日均线
     "quality_tier",
     # 参考分（工作流 §5.7）：只透传分层表经池 CSV 带过来的 quality_score，供报告显示同档内排序；
@@ -271,14 +271,14 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
             notes.append("不在核心估值合格池内，无带——按 §9.3.2 第四步逐日清仓")
         elif low is None or high is None:
             notes.append("池内无合理价区间（无法估值）：无 `P/V`，当日不进机械判定")
-        # §9.3.1 涨幅减持行：唯一判定在扫描器 `holding_trim_signal`（涨幅 且 收盘 < MA20）。
+        # §9.3.1 涨幅减持行：唯一判定在扫描器 `holding_trim_signal`（只看涨幅，不看走势）。
         # 无带／无 P/V 的票照判（只要有收盘价与成本）。
         cost = to_float(h.get("cost_basis"))
         ma20 = ma20s.get(code)
         trim_rule, trim_why = holding_trim_signal(close, ma20, cost)
         gain = (close / cost - 1.0) if (close is not None and cost is not None and cost > 0) else None
         if trim_rule == "涨幅减持":
-            notes.append(f"**涨幅减持一档**：较持仓均价 {cost:g} 涨幅 {gain:.0%} ≥ {GAIN_SELL:.0%} 且收盘 {close:g} < MA20 {ma20:g}"
+            notes.append(f"**涨幅减持一档**：较持仓均价 {cost:g} 涨幅 {gain:.0%} ≥ {GAIN_SELL:.0%}（不看走势）"
                          f"（§9.3.1 涨幅行）；资金不足时优先作换仓卖出源（涨幅最大者先）")
         elif trim_why:
             notes.append(trim_why)
@@ -508,14 +508,12 @@ def main() -> None:
         writer.writerows(rows)
     log_decisions(args.log_file, rows, as_of, args.holdings, args.output_csv, args.valuation_pool)
 
-    gain_trim, gated = [], []
+    gain_trim = []
     for r in rows:
         c, k = to_float(r.get("close")), to_float(r.get("cost_basis"))
-        rule, why = holding_trim_signal(c, to_float(r.get("ma20")), k)
+        rule, _why = holding_trim_signal(c, to_float(r.get("ma20")), k)
         if rule == "涨幅减持":
             gain_trim.append((c / k - 1.0, r))
-        elif why:
-            gated.append((r, why))
     gain_trim.sort(key=lambda t: -t[0])
     no_pv = [r for r in rows if not str(r["pv"]).strip()]
     no_band = [r for r in rows if not r["fair_price_low"]]
@@ -543,13 +541,11 @@ def main() -> None:
     if no_cost:
         print(f"  **持仓均价未填 {len(no_cost)} 只**：{'、'.join(str(r['security_name']) for r in no_cost)}——§9.3.1 涨幅减持行对其无法判定，请补 `cost_basis`（§11.2）")
     if gain_trim:
-        names = "、".join(f"{r['security_name']}(+{g:.0%}，收 {r['close']} < MA20 {r['ma20']})" for g, r in gain_trim)
-        print(f"  **涨幅减持一档（涨幅 ≥ {GAIN_SELL:.0%} 且收盘 < MA20）共 {len(gain_trim)} 只**：{names}——"
+        names = "、".join(f"{r['security_name']}(+{g:.0%}，收 {r['close']})" for g, r in gain_trim)
+        print(f"  **涨幅减持一档（涨幅 ≥ {GAIN_SELL:.0%}，不看走势）共 {len(gain_trim)} 只**：{names}——"
               f"资金不足时按此顺序优先作换仓卖出源；股数见 `daily_sell_plan.csv`")
     else:
-        print(f"  涨幅减持（涨幅 ≥ {GAIN_SELL:.0%} 且收盘 < MA20）：无")
-    for r, why in gated:
-        print(f"  [条件成立未减] {r['security_name']}：{why}")
+        print(f"  涨幅减持（涨幅 ≥ {GAIN_SELL:.0%}，不看走势）：无")
     if no_pv:
         print(f"  **P/V 未算出 {len(no_pv)} 只**：{'、'.join(str(r['security_name']) for r in no_pv)}（无行情或无带，当日不进 §9.3 判定）")
     if no_band:

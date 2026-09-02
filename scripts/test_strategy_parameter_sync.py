@@ -21,11 +21,12 @@ def option_value(args: list[str], option: str) -> str:
 
 class StrategyParameterSyncTest(unittest.TestCase):
     def test_adopted_production_values(self) -> None:
-        self.assertEqual(daily_scan.SEC93_MAX_CORR, 0.70)
+        # v4.132（OI-136）：相关性只计算列报告、不过滤（上限 1.0 = 无一被跳过）
+        self.assertEqual(daily_scan.SEC93_MAX_CORR, 1.0)
         self.assertEqual(daily_scan.SEC93_TRANCHE_PCT, 0.05)
-        # 候选侧买入线 1.0454（OI-132 购买法收购当年分子年化后重解）；换仓边际 0.18
+        # 候选侧买入线 1.0454（OI-132 购买法收购当年分子年化后重解）；换仓边际 0.16（v4.132，§12.174 表 R）
         self.assertEqual(daily_scan.SEC93_BUY_LINE, 1.0454)
-        self.assertEqual(daily_scan.SEC93_SWAP_MARGIN, 0.18)
+        self.assertEqual(daily_scan.SEC93_SWAP_MARGIN, 0.16)
         # v4.109（OI-110）：估值减持线已删除，生产侧不得再有该常量
         self.assertFalse(hasattr(daily_scan, "SEC93_SELL_LINE"))
         self.assertEqual(daily_scan.DEFAULT_HOLD_BANDS, ROOT / "data/processed/a_share_pool_model_bands_hold.csv")
@@ -43,10 +44,10 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(option_value(args, "--daily-states"), "data/processed/a_share_daily_states_adopted.csv")
         self.assertEqual(option_value(args, "--hold-states"), "data/processed/a_share_daily_states_hold.csv")
         import track_holdings_daily
-        # v4.44：涨幅减持 125%（gated）与融资口径（66.6%、不设金额上限）
-        self.assertEqual(daily_scan.SEC93_GAIN_SELL, 1.25)
+        # v4.132（OI-137）：涨幅减持 110% ungated（不看走势）；融资口径（66.6%、不设金额上限）
+        self.assertEqual(daily_scan.SEC93_GAIN_SELL, 1.10)
         self.assertEqual(float(option_value(args, "--gain-sell")), daily_scan.SEC93_GAIN_SELL)
-        self.assertEqual(option_value(args, "--gain-sell-mode"), "gated")
+        self.assertEqual(option_value(args, "--gain-sell-mode"), "ungated")
         self.assertEqual(track_holdings_daily.GAIN_SELL, daily_scan.SEC93_GAIN_SELL)
         self.assertEqual(float(option_value(args, "--credit-ratio")), 0.666)
         self.assertGreaterEqual(float(option_value(args, "--credit-cap")), 1e11)   # 不设金额上限
@@ -67,7 +68,8 @@ class StrategyParameterSyncTest(unittest.TestCase):
 
     def test_workflow_current_table_matches_production(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("| 相关性 | 与在手及已选标的近 252 日相关性 `≤ 0.70`", workflow)
+        self.assertIn("| 相关性 | 只计算并在报告列出与在手及已选标的近 252 日相关性，不作过滤", workflow)
+        self.assertNotIn("超限跳过", workflow)
         self.assertIn("| 单次买入 | 当日净资产 `N × 5.0%` |", workflow)
         self.assertIn(f"| 买入线 | `P/V ≤ {daily_scan.SEC93_BUY_LINE:.4f}` |", workflow)
         self.assertNotIn("| 减持 |", workflow)                # v4.109（OI-110）：估值减持行已删
@@ -124,7 +126,8 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertTrue((ROOT / "scripts/experimental/ex_winner_symmetry.py").exists())
         self.assertIn("`data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`", workflow)
         self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)
-        self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`", workflow)
+        self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`（收盘 ≥ 均价 × {1 + daily_scan.SEC93_GAIN_SELL:.2f}），减一档，不看走势", workflow)
+        self.assertIn(f"至少低 `{daily_scan.SEC93_SWAP_MARGIN:.2f}`", workflow)
         self.assertIn("授信 = 净资产 × 66.6%，不设金额上限", workflow)
         self.assertIn(f"| 单票机械上限 | 单票市值 ÷ 当日净资产 `N` ≥ {daily_scan.SEC93_POSITION_CAP:.0%} 时不再加仓", workflow)
         # v4.68/v4.69（OI-092）：§9.3 成文与回测实现同口径的关键句

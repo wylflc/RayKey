@@ -35,18 +35,18 @@ class ExecutionPlanTest(unittest.TestCase):
                                              members, counters if counters is not None else {}, holding_rows,
                                              sell_counters=sell_counters)
 
-    def test_trim_requires_weak_close(self) -> None:
+    def test_trim_ignores_trend(self) -> None:
         rows = [row("000001", "A", close=100.0, ma20=101.0, ma60=90.0, pv=2.5),
                 row("000002", "B", close=100.0, ma20=99.0, ma60=90.0, pv=2.5)]
         holdings = {"000001": hold("A", 5000, 40.0, None), "000002": hold("B", 5000, 40.0, None)}
         res = self.run_plan(rows, holdings, funds=0.0, members={"000001", "000002"})
         rules = {(s["security_code"], s["rule"]) for s in res["sells"]}
-        self.assertIn(("000001", "涨幅减持"), rules)        # 涨幅 150% 且收盘 < MA20 → 减一档
-        self.assertNotIn(("000002", "涨幅减持"), rules)     # 收盘 ≥ MA20 → 走势闸门挡下
+        self.assertIn(("000001", "涨幅减持"), rules)        # 涨幅 150%、收盘 < MA20 → 减一档
+        self.assertIn(("000002", "涨幅减持"), rules)        # 涨幅 150%、收盘 ≥ MA20 → 同样减一档（v4.132 不看走势）
         a = next(s for s in res["sells"] if s["security_code"] == "000001")
         self.assertEqual(a["sell_shares"], 1500)             # 15 万 ÷ 100 = 1500 股
-        self.assertTrue(any("走势闸门" in why for _n, why in res["sell_notes"]))
-        self.assertAlmostEqual(res["cash"], 150_000.0)       # 卖出款当日计入可用资金（无可买标的）
+        self.assertFalse(any("走势闸门" in why for _n, why in res["sell_notes"]))
+        self.assertAlmostEqual(res["cash"], 300_000.0)       # 两笔卖出款当日计入可用资金（无可买标的）
 
     def test_gain_trim_and_residual_clear(self) -> None:
         # P/V 须高于买入线：否则同票当日买卖对冲（NETTABLE）会把减持行冲掉，本例只验卖出侧
@@ -99,7 +99,7 @@ class ExecutionPlanTest(unittest.TestCase):
         res = self.run_plan([cand, h1, h2], holdings, funds=1000.0, members={"000010", "000011", "000012"})
         swaps = [s for s in res["sells"] if s["rule"] == "换仓"]
         self.assertEqual(swaps[0]["security_code"], "000012")
-        cand_close = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.90)   # 与 H2 P/V 1.00 差 0.10 < 0.19
+        cand_close = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.90)   # 与 H2 P/V 1.00 差 0.10 < 0.16
         h2_close = row("000012", "H2", close=100.0, ma20=110.0, ma60=90.0, pv=1.00)
         holdings = {"000012": hold("H2", 5000, 90.0, None)}
         res = self.run_plan([cand_close, h2_close], holdings, funds=1000.0, members={"000010", "000012"})
@@ -108,8 +108,8 @@ class ExecutionPlanTest(unittest.TestCase):
 
     def test_swap_requires_weak_holding(self) -> None:
         cand = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)
-        strong = row("000013", "S", close=120.0, ma20=110.0, ma60=90.0, pv=2.0)     # 收盘 ≥ MA20 → 不换
-        holdings = {"000013": hold("S", 5000, 40.0, None)}
+        strong = row("000013", "S", close=120.0, ma20=110.0, ma60=90.0, pv=2.0)     # 收盘 ≥ MA20 且涨幅 20% → 不换
+        holdings = {"000013": hold("S", 5000, 100.0, None)}
         res = self.run_plan([cand, strong], holdings, funds=500.0, members={"000010", "000013"})
         self.assertEqual([s for s in res["sells"] if s["rule"] == "换仓"], [])
         self.assertEqual(res["plan"], [])                                    # 500 元不足一手（1,000 元）
@@ -118,7 +118,7 @@ class ExecutionPlanTest(unittest.TestCase):
 
     def test_holding_side_pv_governs_swap_source(self) -> None:
         # v4.92 SPA：换仓来源按持仓侧 `hold_pv` 判；候选侧 `model_pv` 只管买入线与候选排序
-        # 候选 0.60 对持仓侧 0.70 差 0.10 < 0.19 不换（按候选侧 1.50 会误换）
+        # 候选 0.60 对持仓侧 0.70 差 0.10 < 0.16 不换（按候选侧 1.50 会误换）
         cand = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)
         weak = row("000023", "W", close=100.0, ma20=110.0, ma60=90.0, pv=1.50)
         weak["hold_pv"] = 0.70
@@ -285,10 +285,10 @@ class ExecutionPlanTest(unittest.TestCase):
                 self.assertEqual(list(csv.DictReader(fh))[0]["security_name"], "A")
 
     def test_holding_trim_signal_shared_helper(self) -> None:
-        self.assertEqual(scan.holding_trim_signal(100.0, 99.0, 40.0)[0], "")            # 收盘 ≥ MA20：闸门挡下
-        self.assertEqual(scan.holding_trim_signal(100.0, 101.0, 40.0)[0], "涨幅减持")   # 涨幅 150% ≥ 125%
-        self.assertEqual(scan.holding_trim_signal(100.0, 101.0, 50.0)[0], "")           # 涨幅 100% < 125%
-        self.assertIn("MA20 缺失", scan.holding_trim_signal(100.0, None, 40.0)[1])
+        self.assertEqual(scan.holding_trim_signal(100.0, 99.0, 40.0)[0], "涨幅减持")   # 收盘 ≥ MA20 也减（v4.132 不看走势）
+        self.assertEqual(scan.holding_trim_signal(100.0, 101.0, 40.0)[0], "涨幅减持")  # 涨幅 150% ≥ 110%
+        self.assertEqual(scan.holding_trim_signal(100.0, 101.0, 50.0)[0], "")           # 涨幅 100% < 110%
+        self.assertEqual(scan.holding_trim_signal(100.0, None, 40.0)[0], "涨幅减持")   # MA20 缺失不影响
 
 
 if __name__ == "__main__":

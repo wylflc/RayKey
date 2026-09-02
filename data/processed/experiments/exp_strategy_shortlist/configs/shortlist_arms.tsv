@@ -7,12 +7,11 @@ TW100	上一纪元对照	self	--roic-trail-weight 1.0	-	-	-	增速腿权重 1（
 MINBOOK	上一纪元对照	self	--minority-basis book	-	-	-	少数股东按账面扣减（OI-128 前基准口径）
 DIVS03	估值输入	self	-	0.03	-	-	银行/保险股利折现利差 3%（只重跑 §6.7 第 3 步）
 U6A	宇宙	-	-	-	data/processed/pit_attention/panel_moat_bank_v6a.csv	-	宇宙 v6a（银行只含招行/宁波），买入线按 §12.30 对同一合格面重解
-C100	操作规则	-	-	-	-	--max-corr 1.0	无相关性约束（§12.171 表 G：0.84~1.00 同读数，0.88 为平台中心）
-G110U	操作规则	-	-	-	-	--gain-sell 1.10 --gain-sell-mode ungated	涨幅减持不看走势、阈值 110%
+C070	风险约束	-	-	-	-	--max-corr 0.70	恢复相关性上限 0.70（v4.131 前在册；v4.132 起只报告不过滤）
+G125G	操作规则	-	-	-	-	--gain-sell 1.25 --gain-sell-mode gated	恢复涨幅减持 125% 且收盘 < MA20（v4.131 前在册；v4.132 起 110% 不看走势）
 NOGAIN	操作规则	-	-	-	-	--gain-sell 0	无涨幅减持
 NOSWAP	操作规则	-	-	-	-	--no-swap	无换仓：买入持有＋止损＋减持
 TRAIL067	操作规则	-	-	-	-	--trail-ratio 0.667	上移锚止损 K=2/3（0.70 起为悬崖）
 NOSPA	操作规则	-	-	-	-	--hold-states data/processed/a_share_daily_states_adopted.csv	单侧估值：持仓侧回读候选侧（v4.92 前）
 CR000	资金口径	-	-	-	-	--credit-ratio 0.0	不融资
 CAP40	集中度	-	-	-	-	--position-cap 0.40	单票上限 40%
-TRO_C088_G110U	组合	GE_TROUGHOFF	-	-	-	--max-corr 0.88 --gain-sell 1.10 --gain-sell-mode ungated	§12.171 三条候选三合一（读 GE_TROUGHOFF 两侧状态与其对齐买入线）

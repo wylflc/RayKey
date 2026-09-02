@@ -462,8 +462,8 @@ def load_blocked_codes(path: Path) -> set[str] | None:
 #     **回溯历史日期时该等式不成立**，故本层只在 `--as-of` 为最新交易日时给出买入计划。
 #   * 银行走工作流 §6.5.1 的股利折现口径。
 SEC93_BUY_LINE = 1.0454        # §9.3.1 买入线（对齐解、保留四位小数；下侧合格面 17.771%，回测日志 §12.170）
-SEC93_MAX_CORR = 0.70          # §9.3.1，252 日日收益率皮尔逊相关上限
-SEC93_SCAN_DEPTH = 40          # §9.3.2 第 3 步：相关性过滤时最多下扫多少名
+SEC93_MAX_CORR = 1.0           # §9.3.1：252 日相关性只计算并列报告、不作过滤（1.0 = 无一被跳过；与回测 `--max-corr` 同值）
+SEC93_SCAN_DEPTH = 40          # 每日最多考察的合格候选名次（与回测 `--scan-depth` 同值；相关性不过滤后不绑定）
 SEC93_TRANCHE_PCT = 0.05       # §9.3.1 单次买入比例
 SEC93_LOT = 100                # A 股一手
 SEC93_POSITION_CAP = 0.60      # §9.3.1「单票机械上限」（v4.64，用户 2026-08-23 裁定 60%；回测日志 §12.123）：
@@ -473,10 +473,10 @@ SEC93_POSITION_CAP = 0.60      # §9.3.1「单票机械上限」（v4.64，用�
 SEC93_L3_TACTICAL_GATE = True   # §9.3.1「L3 战术闸门」（v4.53，OI-084 用户裁定①）：L3 且分层表 tactical_thesis 为空或判「无」者不进合格集（新建仓与加仓同）
 SEC93_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 SEC93_TACTICAL_NONE = re.compile(r"^\W*(无|暂无|不可买)")   # 判「无战术理由」的写法
-SEC93_GAIN_SELL = 1.25         # §9.3.1「涨幅减持」（v4.44 用户采纳，回测日志 §12.110/§12.113）：收盘较持仓均价涨幅 ≥ 125%（收盘 ≥ 均价×2.25）
-                               # 且收盘 < MA20 → 减一档；资金不足时该类持仓优先作换仓卖出源（涨幅最大者先）。持仓均价 = 买入按股数加权、
-                               # 减持不变、除权按 §11.4 折算（持仓表 cost_basis）。回测落点 `--gain-sell 1.25`（gated）。
-SEC93_SWAP_MARGIN = 0.18       # §9.3.1「换仓」：候选 P/V 须比被换出持仓低至少此差值（与回测 `--swap-margin` 同值）
+SEC93_GAIN_SELL = 1.10         # §9.3.1「涨幅减持」：收盘较持仓均价涨幅 ≥ 110%（收盘 ≥ 均价×2.10）→ 减一档，不看走势；
+                               # 资金不足时该类持仓优先作换仓卖出源（涨幅最大者先，同样不要求弱势）。持仓均价 = 买入按股数加权、
+                               # 减持不变、除权按 §11.4 折算（持仓表 cost_basis）。回测落点 `--gain-sell 1.10 --gain-sell-mode ungated`。
+SEC93_SWAP_MARGIN = 0.16       # §9.3.1「换仓」：候选 P/V 须比被换出持仓低至少此差值（与回测 `--swap-margin` 同值）
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
@@ -751,16 +751,13 @@ def hold_pv_of(r: dict[str, object] | None) -> float | None:
 def holding_trim_signal(close: float | None, ma20: float | None,
                         cost: float | None) -> tuple[str, str]:
     """§9.3.1 涨幅减持行的唯一判定（扫描器与跟踪器同用）。
-    返回 (命中规则, 说明)：规则为 `涨幅减持`／空；说明写明被走势闸门挡下或均线缺失。"""
+    收盘 ≥ 持仓均价 × (1 + SEC93_GAIN_SELL) 即命中，不看走势；`ma20` 只为保持调用签名，不参与判定。
+    返回 (命中规则, 说明)：规则为 `涨幅减持`／空。"""
     if close is None:
         return "", ""
     gain = (close / cost - 1.0) if (cost is not None and cost > 0) else None
     if gain is None or gain < SEC93_GAIN_SELL:
         return "", ""
-    if ma20 is None:
-        return "", "涨幅减持条件成立但 MA20 缺失，不减、等数据齐"
-    if close >= ma20:
-        return "", f"涨幅减持条件成立但收盘 {close:g} ≥ MA20 {ma20:g}，走势闸门挡下不减"
     return "涨幅减持", ""
 
 
@@ -880,10 +877,10 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             sold = reduce_one(code, r, "出名单", "已移出 worth_attention，每日减一档直至清空", price)
             cash += sold * price
             continue
-        # ① 涨幅减持：涨幅 ≥ 125% 且收盘 < MA20
+        # ① 涨幅减持：涨幅 ≥ 110%，不看走势
         rule, why = holding_trim_signal(price, ma20, h.get("cost"))
         if rule:
-            cond = f"收盘 {price:g} ≥ 均价 {h.get('cost'):g}×{1 + SEC93_GAIN_SELL:.2f} 且收盘 < MA20 {ma20:g}"
+            cond = f"收盘 {price:g} ≥ 均价 {h.get('cost'):g}×{1 + SEC93_GAIN_SELL:.2f}（不看走势）"
             sold = reduce_one(code, r, rule, cond, price)
             cash += sold * price
         elif why:
@@ -929,18 +926,21 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                     continue
                 hr = by_code.get(hcode)
                 hp, hm20 = to_float((hr or {}).get("close")), to_float((hr or {}).get("ma20"))
-                if hp is None or hm20 is None or not hp < hm20:
-                    continue                                   # 只换走势已走坏（收盘 < MA20）的持仓
+                if hp is None:
+                    continue
                 cost = h.get("cost")
                 if cost and cost > 0 and hp >= cost * (1.0 + SEC93_GAIN_SELL):
-                    gain_src.append((hp / cost - 1.0, hcode))
+                    gain_src.append((hp / cost - 1.0, hcode))   # 涨幅源不要求弱势（§9.3.1 换仓行）
+                    continue
+                if hm20 is None or not hp < hm20:
+                    continue                                   # 其余只换走势已走坏（收盘 < MA20）的持仓
                 hpv = hold_pv_of(hr)                          # 换仓来源按持仓侧 P/V（v4.92 SPA）
                 if hpv is not None:
                     weak_src.append((hpv, hcode))
             src_pv = None
             if gain_src:
                 gain, worst = max(gain_src)
-                cond = f"涨幅 {gain:.0%} ≥ {SEC93_GAIN_SELL:.0%} 且弱势，让位给 {cand.get('security_name', ccode)}"
+                cond = f"涨幅 {gain:.0%} ≥ {SEC93_GAIN_SELL:.0%}（不要求弱势），让位给 {cand.get('security_name', ccode)}"
             else:
                 if not weak_src:
                     swap_stop_reason = "无弱势持仓可换"
@@ -962,7 +962,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 swap_targets.add(ccode)
                 swap_src_meta[worst] = (src_pv, ccode)
 
-    # ---------------- 相关性过滤
+    # ---------------- 相关性（只计算并列报告；SEC93_MAX_CORR = 1.0 时无一被剔除）
     held_rows = [by_code[c] for c in holdings if c in by_code and float(holdings[c]["shares"]) > 0]
     picked: list[dict] = []
     dropped: list[tuple[dict, float, str]] = []
@@ -981,6 +981,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 continue
             if value > worst:
                 worst, worst_name = value, str(held.get("security_name", ""))
+        if worst_name:
+            cand["corr_max"], cand["corr_with"] = worst, worst_name   # 只列报告（§9.3.1 相关性行）
         if worst > SEC93_MAX_CORR:
             dropped.append((cand, worst, worst_name))
             continue
@@ -1150,10 +1152,11 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
           f"是靠这条放宽进来的回踩加仓）；"
           f"§7.5 冻结硬排除 {len(result.get('frozen_out') or [])} 只；"
           f"L3 战术闸门排除 {len(result.get('tactical_out') or [])} 只；"
-          f"相关性 >{SEC93_MAX_CORR} 剔除 {len(dropped)} 只")
+          f"相关性只列报告不过滤（上限 {SEC93_MAX_CORR:g}，剔除 {len(dropped)} 只）")
     for r in result["eligible"]:
         print(f"     {r['security_code']} {str(r.get('security_name', '')):<9}｜P/V {r['model_pv']:.4f}"
-              + ("｜换仓目标" if str(r['security_code']).zfill(6) in (result.get('swap_targets') or set()) else ""))
+              + ("｜换仓目标" if str(r['security_code']).zfill(6) in (result.get('swap_targets') or set()) else "")
+              + (f"｜相关 {r['corr_max']:.2f}（{r['corr_with']}）" if r.get("corr_with") else ""))
     for tg in result.get("tactical_out") or []:
         print(f"     [L3 战术闸门排除·§9.3.1] {tg.get('security_name','')} P/V {tg['model_pv']:.2f}"
               f"（分层表 tactical_thesis 为空或判「无」；补判为条件式战术理由后按当日名次重入）")

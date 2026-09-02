@@ -39,7 +39,7 @@ PANEL = ROOT / "data/processed/pit_attention/panel_moat_bank_v6b.csv"
 SOURCE_PV_LO, SOURCE_PV_HI = 0.50, 1.11
 
 # 在册基准。重定基准须同时改本行与 §6.7 的守卫步。
-MARGIN = 0.18                   # 在册换仓边际，与 SEC93_SWAP_MARGIN／BASE --swap-margin 同值
+MARGIN = 0.16                   # 在册换仓边际，与 SEC93_SWAP_MARGIN／BASE --swap-margin 同值
 BASELINE_MEAN_GAP = 0.0164      # 均值：边际的实际严格度 ≈ 同标度下 MARGIN + 本值
 BASELINE_NONZERO_SHARE = 0.175  # 有差观测占比，作辅助描述、不触发
 TOLERANCE = 0.01                # 均值漂移超此值即提示重扫；≈ 0.18~0.20 平台半宽
