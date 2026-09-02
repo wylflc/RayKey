@@ -87,9 +87,9 @@ data/processed/experiments/universes/cap_all.csv
 # 由回测一条带 --candidate-log/--trade-log 的命令重建；只有小报告入库。
 data/processed/experiments/*/candidates*.csv
 data/processed/experiments/*/trades_ledger*.csv
-data/processed/experiments/*/*_trades.csv
-data/processed/experiments/*/*_equity.csv
-data/processed/experiments/*/*_periods.csv
+data/processed/experiments/**/*_trades.csv
+data/processed/experiments/**/*_equity.csv
+data/processed/experiments/**/*_periods.csv
 
 # 海外三表原始 JSON（SEC companyfacts ≈4 MB/家、东财 HK F10 长表）：按需重取，不入库；提取后的 data/interim/overseas_roic_years.csv 入库
 data/raw/overseas_statements/
