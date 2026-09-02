@@ -48,7 +48,8 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertAlmostEqual(res["cash"], 150_000.0)       # 卖出款当日计入可用资金（无可买标的）
 
     def test_gain_trim_and_residual_clear(self) -> None:
-        rows = [row("000003", "C", close=100.0, ma20=105.0, ma60=80.0, pv=1.0)]
+        # P/V 须高于买入线：否则同票当日买卖对冲（NETTABLE）会把减持行冲掉，本例只验卖出侧
+        rows = [row("000003", "C", close=100.0, ma20=105.0, ma60=80.0, pv=2.5)]
         holdings = {"000003": hold("C", 1700, 40.0, None)}   # 涨幅 150%；一档 1500 股，减后余 200 ≥ 一手 → 只减 1500
         res = self.run_plan(rows, holdings, funds=0.0, members={"000003"})
         s = res["sells"][0]
