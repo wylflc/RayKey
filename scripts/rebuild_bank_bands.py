@@ -278,7 +278,7 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         f = fundamentals(c, d)
         if not f or px <= 0:
             n_dropped += 1; continue
-        _, bps, roe0, payout, _bd = f
+        band_av, bps, roe0, payout, bps_basis = f
         if not bps or bps <= 0:
             n_dropped += 1; continue
         if RP is not None:
