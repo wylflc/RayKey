@@ -1,0 +1,3 @@
+# §12.174 表 O（OI-135 C2）：GE_TROUGHOFF 的剔除集 A／镜像 B／并集 U（ex_winner_symmetry.py）。
+BASE|
+GE_TROUGHOFF|--daily-states data/processed/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_hold.csv --width -0.0757
