@@ -1211,6 +1211,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         cluster_min_upside: float = 0.20, swap_partial: bool = False,
         lot_size: int = 0, rebuy: str = "off", ledger: list | None = None,
         min_lot_cooldown: int = 0, lot_ratio_cooldown: bool = False,
+        lot_cooldown_shared: bool = False,
         quota_members: dict | None = None, quota_pct: float = 0.0,
         quota_swappable: bool = False,
         gate: str = "pv", buy_pct: float = 0.05, sell_pct: float = 0.60,
@@ -1361,7 +1362,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
     prev_day = None
     margin_events: list[dict] = []
-    lot_counters: dict[str, int] = {}   # §9.3.3 比例冷却，买卖共用
+    # §9.3.3 比例冷却：买入侧与卖出侧各自计数（OI-120）；`lot_cooldown_shared` 为旧口径研究开关（买卖共用一个计数器）。
+    lot_counters_buy: dict[str, int] = {}
+    lot_counters_sell: dict[str, int] = lot_counters_buy if lot_cooldown_shared else {}
     min_ratio, min_ratio_day = float("inf"), ""
     credit_limit = 0.0
     prev_trading = {n: d for d, n in zip(days, days[1:])}
@@ -1619,7 +1622,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 shares = sell_shares(budget / price, lot.shares, price, lot_size, res_floor(price))
                 if (not shares and lot_ratio_cooldown and lot_size
                         and lot.shares >= lot_size
-                        and lot_ratio_ready(lot_counters, code, price * lot_size, budget)):
+                        and lot_ratio_ready(lot_counters_sell, code, price * lot_size, budget)):
                     shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
                     stats["高价股·按手减持"] += 1
                 if shares > 0:
@@ -1743,7 +1746,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     shares = sell_shares(budget * stop_tranche / price, lot.shares, price, lot_size, res_floor(price))
                     if (not shares and lot_ratio_cooldown and lot_size
                             and lot.shares >= lot_size
-                            and lot_ratio_ready(lot_counters, code, price * lot_size, budget)):
+                            and lot_ratio_ready(lot_counters_sell, code, price * lot_size, budget)):
                         shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
                         stats["高价股·按手减持"] += 1
                     if shares > 0:
@@ -1874,7 +1877,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 shares = sell_shares(budget / price, lot.shares, price, lot_size, res_floor(price))
                 if (not shares and lot_ratio_cooldown and lot_size
                         and lot.shares >= lot_size
-                        and lot_ratio_ready(lot_counters, code, price * lot_size, budget)):
+                        and lot_ratio_ready(lot_counters_sell, code, price * lot_size, budget)):
                     shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
                     stats["高价股·按手减持"] += 1
                 if shares <= 0:
@@ -2097,7 +2100,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     shares = sell_shares(budget / price, lot_w.shares, price, lot_size, res_floor(price))
                     if (not shares and lot_ratio_cooldown and lot_size
                             and lot_w.shares >= lot_size
-                            and lot_ratio_ready(lot_counters, worst, price * lot_size, budget)):
+                            and lot_ratio_ready(lot_counters_sell, worst, price * lot_size, budget)):
                         shares = lot_size if lot_w.shares - lot_size >= lot_size else lot_w.shares
                     if not shares:
                         continue                     # 一手都减不动 → 本日不升级
@@ -2286,7 +2289,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                           if partial else lot_worst.shares)
                 if (partial and not shares and lot_ratio_cooldown and lot_size
                         and lot_worst.shares >= lot_size
-                        and lot_ratio_ready(lot_counters, worst, price * lot_size, budget)):
+                        and lot_ratio_ready(lot_counters_sell, worst, price * lot_size, budget)):
                     shares = (lot_size if lot_worst.shares - lot_size >= lot_size
                               else lot_worst.shares)
                     stats["高价股·按手换仓"] += 1
@@ -2551,7 +2554,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     # v2.77 起冷却由「自然日」改为「合格次数」（`lot_ratio_ready`，§9.3.3）；
                     # `--min-lot-cooldown` 保留为旧口径，两者互斥，都不给则不建仓（原行为）。
                     if lot_ratio_cooldown:
-                        ready = lot_ratio_ready(lot_counters, code, fill * lot_size, budget)
+                        ready = lot_ratio_ready(lot_counters_buy, code, fill * lot_size, budget)
                     else:
                         prior = last_buy.get(code)
                         ready = (min_lot_cooldown
@@ -3213,7 +3216,9 @@ def main() -> int:
     parser.add_argument("--research-missing", choices=("pass", "block"), default="pass",
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
     parser.add_argument("--lot-ratio-cooldown", action="store_true",
-                        help="§9.3.3 比例冷却：一手价值是一档的 x 倍时，成交一手后跳过 round(x)−1 次合格机会（买卖共用）")
+                        help="§9.3.3 比例冷却：一手价值是一档的 x 倍时，成交一手后跳过 round(x)−1 次合格机会（买入侧与卖出侧各自计数）")
+    parser.add_argument("--lot-cooldown-shared", action="store_true",
+                        help="研究开关（OI-120 前旧口径）：比例冷却买卖共用一个计数器，买入触发的冷却会跳过减持与换仓卖出")
     parser.add_argument("--min-lot-cooldown", type=int, default=0, metavar="D",
                         help="高价股一档买不起一手时，改为每 D 个自然日买一手；0 表示跳过不买")
     parser.add_argument("--trade-log", type=Path, help="导出逐笔成交流水（人工核对用）")
@@ -3565,7 +3570,8 @@ def main() -> int:
                      + (f"_ex{len(excluded_codes)}" if excluded_codes else "")
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
                      + (f"_ml{args.min_lot_cooldown}" if args.min_lot_cooldown else "")
-                     + ("_lrc" if args.lot_ratio_cooldown else "")
+                     + ("_lrc" if args.lot_ratio_cooldown and args.lot_cooldown_shared else "")
+                     + ("_lrc2" if args.lot_ratio_cooldown and not args.lot_cooldown_shared else "")
                      + (f"_rb{args.rebuy}" if args.rebuy != "off" else "")
                      + (f"_cl{args.cluster_delta:g}u{args.cluster_min_upside:g}" if args.cluster_swap else "")
                      + (f"_rg{args.research_gate}{args.research_window}"
@@ -3639,6 +3645,7 @@ def main() -> int:
                          swap_partial=args.swap_partial, lot_size=args.lot_size, rebuy=args.rebuy,
                          ledger=ledger, min_lot_cooldown=args.min_lot_cooldown,
                          lot_ratio_cooldown=args.lot_ratio_cooldown,
+                         lot_cooldown_shared=args.lot_cooldown_shared,
                          quota_members=quota, quota_pct=args.quota_pct,
                          quota_swappable=args.quota_swappable,
                          gate=args.gate, buy_pct=args.buy_pct, sell_pct=args.sell_pct,

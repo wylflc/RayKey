@@ -3,7 +3,7 @@
 
 v4.18 起本脚本只做判定所需的事：取收盘/MA20/MA60/成交额、算 `P/V`、
 §7.5 冻结排除、§9.3.2 先卖后买（卖出清单 `daily_sell_plan.csv`：止损复核／涨幅减持／出名单／换仓／
-余仓清空；买入计划 `daily_entry_plan.csv`）、§9.3.3 比例冷却计数器（`daily_cooldown_state.csv`，买卖共用）、
+余仓清空；买入计划 `daily_entry_plan.csv`）、§9.3.3 比例冷却计数器（`daily_cooldown_state.csv`，买入侧与卖出侧各自计数）、
 §8.4 缺口回溯（只报区间涨跌与放量峰值）。持仓不在核心池内的票另取行情、只进卖出侧。
 已退役的信号分级/入场阶段/形态识别/市场状态/深度低估关注等展示机制于 v4.18 整体删除
 （OI-063，用户 2026-08-19 裁定）——那批代码不进任何买卖判定，历史结论沉淀在回测日志 §12.8。
@@ -678,39 +678,43 @@ def load_exchange_map(path: Path | None = None) -> dict[str, str]:
 
 # ---- §9.3.3 比例冷却计数器（买入、涨幅减持、换仓共用；按合格次数计，不按自然日）
 DEFAULT_COOLDOWN_STATE = ROOT / "data/processed/daily_cooldown_state.csv"
-COOLDOWN_FIELDS = ["security_code", "security_name", "remaining_skips", "remaining_before", "applied_trade_date"]
+COOLDOWN_FIELDS = ["security_code", "security_name", "side", "remaining_skips", "remaining_before", "applied_trade_date"]
+COOLDOWN_SIDES = ("buy", "sell")
 
 
-def load_cooldown_state(path: Path, as_of: str) -> tuple[dict[str, int], dict[str, str], bool]:
-    """返回 (计数器, 名称, 可写)。同一信号日重跑从 `remaining_before` 重算（幂等）；
-    状态文件的 `applied_trade_date` 晚于 `as_of`（历史重放）时不应用也不回写。"""
-    counters: dict[str, int] = {}
+def load_cooldown_state(path: Path, as_of: str) -> tuple[dict[str, dict[str, int]], dict[str, str], bool]:
+    """返回 ({"buy": 买入侧计数器, "sell": 卖出侧计数器}, 名称, 可写)。同一信号日重跑从 `remaining_before` 重算（幂等）；
+    状态文件的 `applied_trade_date` 晚于 `as_of`（历史重放）时不应用也不回写。无 `side` 列的旧行按买入侧读。"""
+    counters: dict[str, dict[str, int]] = {side: {} for side in COOLDOWN_SIDES}
     names: dict[str, str] = {}
     if not path.exists():
         return counters, names, True
     with path.open(newline="", encoding="utf-8-sig") as fh:
         rows = list(csv.DictReader(fh))
     if any((r.get("applied_trade_date") or "") > as_of for r in rows):
-        return {}, {}, False
+        return {side: {} for side in COOLDOWN_SIDES}, {}, False
     for r in rows:
         code = str(r.get("security_code") or "").zfill(6)
+        side = (r.get("side") or "buy").strip().lower()
         applied = r.get("applied_trade_date") or ""
         value = to_float(r.get("remaining_before") if applied == as_of else r.get("remaining_skips")) or 0
-        if code and value > 0:
-            counters[code] = int(value)
+        if code and side in counters and value > 0:
+            counters[side][code] = int(value)
             names[code] = r.get("security_name", "")
     return counters, names, True
 
 
-def save_cooldown_state(path: Path, before: dict[str, int], after: dict[str, int],
+def save_cooldown_state(path: Path, before: dict[str, dict[str, int]], after: dict[str, dict[str, int]],
                         names: dict[str, str], as_of: str) -> None:
     rows = []
-    for code in sorted(set(before) | set(after)):
-        if (after.get(code, 0) or 0) <= 0 and (before.get(code, 0) or 0) <= 0:
-            continue
-        rows.append({"security_code": code, "security_name": names.get(code, ""),
-                     "remaining_skips": after.get(code, 0), "remaining_before": before.get(code, 0),
-                     "applied_trade_date": as_of})
+    for side in COOLDOWN_SIDES:
+        b, a = before.get(side, {}), after.get(side, {})
+        for code in sorted(set(b) | set(a)):
+            if (a.get(code, 0) or 0) <= 0 and (b.get(code, 0) or 0) <= 0:
+                continue
+            rows.append({"security_code": code, "security_name": names.get(code, ""), "side": side,
+                         "remaining_skips": a.get(code, 0), "remaining_before": b.get(code, 0),
+                         "applied_trade_date": as_of})
     write_csv(path, rows, COOLDOWN_FIELDS)
 
 
@@ -771,7 +775,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                              tactical_gated: set[str] | None = None,
                              members: set[str] | None = None,
                              counters: dict[str, int] | None = None,
-                             holding_rows: list[dict[str, object]] | None = None) -> dict[str, object]:
+                             holding_rows: list[dict[str, object]] | None = None,
+                             sell_counters: dict[str, int] | None = None) -> dict[str, object]:
     """§9.3.2 全部六步：先卖后买。
 
     卖出侧（第 4 步）逐持仓判：⓪止损复核（T+1 尾盘现价对当日生效线，本表只列候选、不计其卖出款）、
@@ -779,10 +784,12 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     ③换仓（资金不足一档时：先换涨幅达标的弱势持仓，否则换最贵的弱势持仓且 P/V 差 ≥ 换仓差）、
     ④任何减档后余仓不足一手清空。涨幅减持与换仓卖出款当日计入可用资金。
     买入侧（第 3、5 步）：`P/V` 升序、去相关、逐个买一档；高价股一档买不起一手时按 §9.3.3 计数器买一手或跳过。
+    `counters` 是买入侧计数器、`sell_counters` 是卖出侧计数器（§9.3.3，两侧互不消费）。
     `holding_rows`：不在输入池内的持仓行情（出名单／无法估值者），只进卖出侧。
     """
     holdings = holdings or {}
     counters = counters if counters is not None else {}
+    sell_counters = sell_counters if sell_counters is not None else {}
     blocked = blocked or set()
     tactical_gated = tactical_gated or set()
     tranche = nav * SEC93_TRANCHE_PCT
@@ -833,12 +840,12 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         shares = tranche_sell_shares(tranche, price, held)
         cooldown = 0
         if not shares and held >= SEC93_LOT:
-            if lot_ratio_ready(counters, code, price * SEC93_LOT, tranche):
+            if lot_ratio_ready(sell_counters, code, price * SEC93_LOT, tranche):
                 shares = SEC93_LOT if held - SEC93_LOT >= SEC93_LOT else held
-                cooldown = counters.get(code, 0)
+                cooldown = sell_counters.get(code, 0)
             else:
                 sell_notes.append((holdings[code].get("name", code),
-                                   f"{rule}命中但一手金额 > 一档，§9.3.3 冷却中跳过（余 {counters.get(code, 0)} 次）"))
+                                   f"{rule}命中但一手金额 > 一档，§9.3.3 冷却中跳过（余 {sell_counters.get(code, 0)} 次）"))
                 return 0.0
         if not shares:
             return 0.0
@@ -1347,21 +1354,22 @@ def main() -> int:
             members = load_worth_attention_codes(args.triage)
             if members is None:
                 print(f"  ⚠ 三类表缺失（{args.triage}）：本次不判「出名单」")
-            counters, cd_names, cd_writable = load_cooldown_state(args.cooldown_state, args.as_of)
-            before = dict(counters)
+            cd_state, cd_names, cd_writable = load_cooldown_state(args.cooldown_state, args.as_of)
+            before = {side: dict(cd_state[side]) for side in COOLDOWN_SIDES}
             if not cd_writable:
                 print(f"  ⚠ 冷却计数器 {args.cooldown_state} 的应用日晚于 {args.as_of}（历史重放）：本次不应用、不回写")
             result = section93_execution_plan(rows, args.nav, args.funds, holdings, blocked or set(),
-                                              load_tactical_gate_codes(), members, counters, holding_rows)
+                                              load_tactical_gate_codes(), members, cd_state["buy"], holding_rows,
+                                              sell_counters=cd_state["sell"])
             report_section93(result, args.nav, args.plan_out, args.as_of, args.sell_out)
             if cd_writable:
-                for c in set(before) | set(counters):
+                for c in set().union(*before.values(), *cd_state.values()):
                     cd_names.setdefault(c, holdings.get(c, {}).get("name", "") or next(
                         (str(r.get("security_name", "")) for r in rows if str(r.get("security_code", "")).zfill(6) == c), ""))
-                save_cooldown_state(args.cooldown_state, before, counters, cd_names, args.as_of)
-                active = {c: n for c, n in counters.items() if n > 0}
-                print(f"  §9.3.3 冷却计数器已写 {args.cooldown_state}（冷却中 {len(active)} 只"
-                      + ("：" + "、".join(f"{cd_names.get(c, c)} 余 {n}" for c, n in active.items()) if active else "") + "）")
+                save_cooldown_state(args.cooldown_state, before, cd_state, cd_names, args.as_of)
+                active = [(side, c, n) for side in COOLDOWN_SIDES for c, n in cd_state[side].items() if n > 0]
+                print(f"  §9.3.3 冷却计数器已写 {args.cooldown_state}（冷却中 {len(active)} 项"
+                      + ("：" + "、".join(f"{cd_names.get(c, c)}[{side}] 余 {n}" for side, c, n in active) if active else "") + "）")
         else:
             print("§9.3 未给 --nav，只算 P/V 不出执行清单（一档以净资产为基数）")
     else:

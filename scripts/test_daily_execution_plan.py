@@ -30,9 +30,10 @@ class ExecutionPlanTest(unittest.TestCase):
         scan.CLOSE_SERIES.clear()      # 无K线序列 → 相关性未知 → 放行（OI-093 语义）
         self.nav = 3_000_000.0        # 一档 15 万
 
-    def run_plan(self, rows, holdings, funds, members=None, counters=None, holding_rows=None):
+    def run_plan(self, rows, holdings, funds, members=None, counters=None, holding_rows=None, sell_counters=None):
         return scan.section93_execution_plan(rows, self.nav, funds, holdings, set(), set(),
-                                             members, counters if counters is not None else {}, holding_rows)
+                                             members, counters if counters is not None else {}, holding_rows,
+                                             sell_counters=sell_counters)
 
     def test_trim_requires_weak_close(self) -> None:
         rows = [row("000001", "A", close=100.0, ma20=101.0, ma60=90.0, pv=2.5),
@@ -203,17 +204,42 @@ class ExecutionPlanTest(unittest.TestCase):
         res = self.run_plan([pricier], {}, funds=1_000_000.0, members={"000021"}, counters=counters)
         self.assertEqual(len(res["plan"]), 1)                        # 计数归零后再买一手
 
-    def test_cooldown_shared_with_trim(self) -> None:
+    def test_cooldown_sell_side_counts_trim(self) -> None:
         pricey = row("000022", "R", close=4500.0, ma20=4600.0, ma60=3500.0, pv=3.0)   # 涨幅 350% 且弱势
         holdings = {"000022": hold("R", 300, 1000.0, None)}
-        counters: dict[str, int] = {}
-        res = self.run_plan([pricey], holdings, funds=0.0, members={"000022"}, counters=counters)
+        buy: dict[str, int] = {}
+        sell: dict[str, int] = {}
+        res = self.run_plan([pricey], holdings, funds=0.0, members={"000022"}, counters=buy, sell_counters=sell)
         self.assertEqual(res["sells"][0]["sell_shares"], 100)        # 一档不足一手 → 按手减
-        self.assertEqual(counters["000022"], 2)
+        self.assertEqual(sell["000022"], 2)
+        self.assertEqual(buy, {})                                    # 卖出冷却不写买入侧
         holdings = {"000022": hold("R", 200, 1000.0, None)}
-        res = self.run_plan([pricey], holdings, funds=0.0, members={"000022"}, counters=counters)
+        res = self.run_plan([pricey], holdings, funds=0.0, members={"000022"}, counters=buy, sell_counters=sell)
         self.assertEqual([s for s in res["sells"] if s["rule"] == "涨幅减持"], [])   # 冷却中跳过
-        self.assertEqual(counters["000022"], 1)
+        self.assertEqual(sell["000022"], 1)
+
+    def test_cooldown_buy_side_does_not_block_trim(self) -> None:
+        pricey = row("000022", "R", close=4500.0, ma20=4600.0, ma60=3500.0, pv=3.0)   # 涨幅 350% 且弱势
+        holdings = {"000022": hold("R", 300, 1000.0, None)}
+        buy = {"000022": 2}                                          # 买入侧冷却中
+        sell: dict[str, int] = {}
+        res = self.run_plan([pricey], holdings, funds=0.0, members={"000022"}, counters=buy, sell_counters=sell)
+        self.assertEqual(res["sells"][0]["rule"], "涨幅减持")          # 减持照常
+        self.assertEqual(res["sells"][0]["sell_shares"], 100)
+        self.assertEqual(buy["000022"], 2)                           # 买入侧计数不被消费
+        self.assertEqual(sell["000022"], 2)
+
+    def test_cooldown_state_round_trip_by_side(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "cooldown.csv"
+            before = {"buy": {"000021": 2}, "sell": {"000022": 3}}
+            after = {"buy": {"000021": 1}, "sell": {"000022": 2, "000023": 1}}
+            scan.save_cooldown_state(path, before, after, {"000021": "P", "000022": "R", "000023": "S"}, "2026-09-02")
+            state, names, writable = scan.load_cooldown_state(path, "2026-09-03")
+            self.assertTrue(writable)
+            self.assertEqual(state, {"buy": {"000021": 1}, "sell": {"000022": 2, "000023": 1}})
+            state, _names, _w = scan.load_cooldown_state(path, "2026-09-02")   # 同日重跑从 remaining_before 重算
+            self.assertEqual(state, {"buy": {"000021": 2}, "sell": {"000022": 3}})
 
     def test_missing_quote_holding_is_flagged_not_silent(self) -> None:
         holdings = {"000030": hold("M", 1000, 10.0, 9.0)}
@@ -224,14 +250,15 @@ class ExecutionPlanTest(unittest.TestCase):
     def test_cooldown_state_roundtrip_idempotent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "cd.csv"
-            scan.save_cooldown_state(path, {"000001": 0}, {"000001": 2}, {"000001": "A"}, "2026-08-24")
+            scan.save_cooldown_state(path, {"buy": {"000001": 0}}, {"buy": {"000001": 2}}, {"000001": "A"}, "2026-08-24")
+            empty = {"buy": {}, "sell": {}}
             counters, names, writable = scan.load_cooldown_state(path, "2026-08-24")
-            self.assertEqual(counters, {})                           # 同日重跑：从 remaining_before 起算
+            self.assertEqual(counters, empty)                        # 同日重跑：从 remaining_before 起算
             self.assertTrue(writable)
             counters, _n, writable = scan.load_cooldown_state(path, "2026-08-25")
-            self.assertEqual(counters, {"000001": 2})
+            self.assertEqual(counters, {"buy": {"000001": 2}, "sell": {}})
             counters, _n, writable = scan.load_cooldown_state(path, "2026-08-20")
-            self.assertEqual(counters, {})
+            self.assertEqual(counters, empty)
             self.assertFalse(writable)                               # 历史重放：不应用不回写
             with path.open(encoding="utf-8") as fh:
                 self.assertEqual(list(csv.DictReader(fh))[0]["security_name"], "A")

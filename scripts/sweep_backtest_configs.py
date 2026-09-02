@@ -63,6 +63,7 @@ BASE = (
     "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 "
     "--corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 0.70 "
     "--swap --swap-partial --sell-trend-ma 20 "
+    # `--lot-ratio-cooldown` 自 v4.129（OI-120）起买入侧与卖出侧各自计数；旧口径（买卖共用）为研究开关 `--lot-cooldown-shared`。
     "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
     "--fee-preset user --no-artifacts "
     # **回测基础设置＝融资口径**（用户 2026-08-17 裁定，2026-08-22 改为不封顶）：本金 300 万、授信 = 净资产×66.6%（v4.66）
@@ -131,8 +132,10 @@ FIELDS = ("年化", "最大回撤", "Sharpe", "Calmar", "平均仓位", "年均�
 # 不得变深超过 3pp（同 §12.1 第 5 款的平台口径），否决 = 滚 5 年负收益窗口占比由 0 转正；
 # 其余（滚 3、滚 10、逐年、全期）一律只描述。两层分位不要混：表里的「符号」是标准起点集的配对差，
 # P25／最差是**每个起点内**（64~142 个）月末窗口的分位。
-# 用户 2026-09-01：**全期 CAGR 的配对 Δ 升为第五项决策读数（复利读数）**，四项 → 五项，
-# 主读数与复利读数任一为负即不采纳。动机是滚动中位与逐年中位都不含跨窗口复利——逐年 −50%／+50%
+# 用户 2026-09-01：**全期 CAGR 的配对 Δ 升为第五项决策读数（复利读数）**，四项 → 五项。
+# 用户 2026-09-02（OI-118／OI-119，v4.129）：主读数与复利读数在全样本表与去赢家表（剔除集 A）各取一份，
+# 四个读数均 ≥ −0.15pp 可采纳；一表某项落在 [−1pp, −0.15pp) 且另一表同项 ≥ +1pp 报用户裁定；其余不采纳。
+# 正号起点数只报不判（14 起点共享终点，实测 580 臂配对差的起点间相关 0.95、有效样本量约 1，回测日志 §12.169）。动机是滚动中位与逐年中位都不含跨窗口复利——逐年 −50%／+50%
 # 交替的路径逐年中位为 0 而实际年化 −13.4%；全期 CAGR 是该起点到共同终点的真实复利结果。
 # **两个长跑锚点（LONGRUN_STARTS）仍只描述**：它们是单起点水平值、常反号，比较一律走逐起点配对差。
 # 用户 2026-09-01（OI-122，§12.157）：**臂间比较与「未来年化表现」的表述基准 = 复利读数**，
@@ -176,6 +179,10 @@ LONGRUN_STARTS = ("2009-11-01", "2011-11-01")
 AUX_DELTA_KEYS = ("滚动3年年化中位", "逐年收益中位")
 PRIMARY_KEY = "年化"             # 排序键 = 复利读数（OI-122：臂间比较基准）
 DRAWDOWN_GATE = 0.03      # 滚 5 年回撤中位配对 Δ 超过 +3pp（更深）即触发闸门标记
+NOISE_BAND = 0.0015       # §12.1 第 2 款：配对差中位 ≥ −0.15pp 视为不劣
+RULING_TOLERANCE = 0.01   # 一表落在 [−1pp, −0.15pp) 且另一表同项 ≥ CLEAR_GAIN → 报用户裁定
+CLEAR_GAIN = 0.01
+VERDICT_KEYS = (("主读数", "滚动5年年化中位"), ("复利读数", "年化"))
 
 
 def summary_tag(label: str, since: str, exclude: str = "") -> str:
@@ -250,6 +257,60 @@ def report(path: Path, title: str) -> None:
                      f"{title}｜去赢家（剔除集 A：{ex5_note or '剔除 BASE 前五赢家'}；Δ 对同剔除集的 BASE 配对）"
                      f"。§12.1 第 4 款的「去赢家全面优秀」判定走剔除集 U，"
                      f"用 scripts/experimental/ex_winner_symmetry.py 另跑")
+    print()
+    _print_verdicts(groups[""], groups[EX5_PREFIX], orders[""])
+
+
+def _paired_median(arms, label: str, key: str) -> float:
+    """某臂对 BASE 的逐起点配对差中位；臂或 BASE 缺失时 NaN。"""
+    base, arm = arms.get("BASE"), arms.get(label)
+    if not base or not arm:
+        return float("nan")
+    common = [s for s in arm if s in base]
+    return statistics.median(arm[s][key] - base[s][key] for s in common) if common else float("nan")
+
+
+def _print_verdicts(arms_all, arms_ex, order: list[str]) -> None:
+    """§12.1 第 2 款采纳判定（OI-118／OI-119）：主读数与复利读数两表各取，闸门与否决取全样本表。"""
+    print("【采纳判定】§12.1 第 2 款：主读数／复利读数在全样本表与去赢家表（剔除集 A）各取；"
+          f"均 ≥ −{NOISE_BAND*100:.2f}pp → 可采纳；一表某项在 [−{RULING_TOLERANCE*100:.0f}pp, −{NOISE_BAND*100:.2f}pp) "
+          f"且另一表同项 ≥ +{CLEAR_GAIN*100:.0f}pp → 报用户裁定；其余不采纳。闸门／否决取全样本表；正号数只报不判")
+    if not arms_ex:
+        print("  去赢家表缺失（--no-ex-top5 或第二遍跑挂）：双表判定不可做，本轮只有描述读数")
+        return
+    print(f"{'配置':<14}{'Δ主(全)':>9}{'Δ主(去)':>9}{'Δ复利(全)':>10}{'Δ复利(去)':>10}  判定")
+    base_all = arms_all.get("BASE", {})
+    for label in order:
+        if label == "BASE" or label not in arms_all:
+            continue
+        vals = {}
+        for name, key in VERDICT_KEYS:
+            vals[name] = (_paired_median(arms_all, label, key), _paired_median(arms_ex, label, key))
+        verdict, reasons = "可采纳", []
+        for name, (a, e) in vals.items():
+            if a != a or e != e:
+                verdict, reasons = "不可判", [f"{name}缺表"]
+                break
+            lo, hi = min(a, e), max(a, e)
+            if lo < -RULING_TOLERANCE:
+                verdict = "不采纳"; reasons.append(f"{name} {lo*100:+.2f}pp < −{RULING_TOLERANCE*100:.0f}pp"); break
+            if lo < -NOISE_BAND:
+                if hi >= CLEAR_GAIN and verdict != "不采纳":
+                    verdict = "报用户裁定"; reasons.append(f"{name}两表反向（{a*100:+.2f}／{e*100:+.2f}）")
+                else:
+                    verdict = "不采纳"; reasons.append(f"{name}一表 {lo*100:+.2f}pp 而另一表不到 +{CLEAR_GAIN*100:.0f}pp"); break
+        arm = arms_all.get(label, {})
+        common = [s for s in arm if s in base_all]
+        if common and verdict != "不可判":
+            dd = statistics.median(arm[s]["滚动5年回撤中位"] - base_all[s]["滚动5年回撤中位"] for s in common)
+            neg_up = sum(1 for s in common if arm[s]["滚动5年为负的窗口占比"] > base_all[s]["滚动5年为负的窗口占比"])
+            if dd > DRAWDOWN_GATE:
+                verdict = "不采纳"; reasons.append(f"闸门：回撤 Δ {dd*100:+.1f}pp")
+            if neg_up > len(common) / 2:
+                verdict = "不采纳"; reasons.append(f"否决：负窗↑ {neg_up}/{len(common)}")
+        fmt = lambda x: f"{'—':>9}" if x != x else f"{x*100:>+9.2f}"
+        print(f"{label:<14}{fmt(vals['主读数'][0])}{fmt(vals['主读数'][1])}{fmt(vals['复利读数'][0]):>10}{fmt(vals['复利读数'][1]):>10}"
+              f"  {verdict}" + (f"（{'；'.join(reasons)}）" if reasons else ""))
 
 
 def _print_group(arms, order: list[str], failed, title: str) -> None:
@@ -301,7 +362,7 @@ def _print_group(arms, order: list[str], failed, title: str) -> None:
     rows.sort(key=lambda t: -t[0])
 
     print(f"{title}（{len(starts)} 个起点，对照＝BASE；Δ 按年化（复利读数）排序；月末锚定滚动窗口）")
-    print("【决策读数】Δ 为逐起点配对差中位（pp），符号 = 该读数为正的起点数；回撤 Δ 正 = 更深，"
+    print("【决策读数】Δ 为逐起点配对差中位（pp），符号 = 该读数为正的起点数（只报不判）；回撤 Δ 正 = 更深，"
           f"「更浅」= 回撤变浅的起点数；负窗↑ = 负收益窗口占比变大的起点数；闸门：回撤 Δ > +{DRAWDOWN_GATE*100:.0f}pp 或 负窗↑ 过半")
     print(f"{'配置':<14}{'Δ滚5中位':>9}{'符号':>7}{'Δ年化':>8}{'符号':>7}{'Δ滚5P25':>9}{'符号':>7}{'Δ滚5回撤':>9}{'更浅':>7}{'负窗↑':>7}"
           f"{'滚5中位':>8}{'滚5P25':>8}{'滚5最差':>8}{'滚5回撤':>8}{'滚5Calmar':>10}{'滚5Sharpe':>10}{'负窗%':>6}{'换手':>6}{'仓位':>5}  闸门")
@@ -314,8 +375,8 @@ def _print_group(arms, order: list[str], failed, title: str) -> None:
                 flags.append("回撤变深")
             if neg_up > n / 2:
                 flags.append("负窗转正")
-            if statistics.median(d5) < 0 or statistics.median(dcg) < 0:
-                flags.append("主/复利为负")
+            if statistics.median(d5) < -NOISE_BAND or statistics.median(dcg) < -NOISE_BAND:
+                flags.append("主/复利 < −0.15pp")
         print(f"{label:<14}"
               f"{statistics.median(d5) * 100:>+9.2f}{f'{sum(1 for v in d5 if v > 0)}/{n}':>7}"
               f"{statistics.median(dcg) * 100:>+8.2f}{f'{sum(1 for v in dcg if v > 0)}/{n}':>7}"
@@ -347,8 +408,8 @@ def _print_group(arms, order: list[str], failed, title: str) -> None:
               + longrun(label) + f"{_fmt(med('滚动10年年化中位'), 100, 9)}{n10:>7}")
 
     print("【标准指标集·配对差】Δ 为逐起点配对差中位，符号 = **该读数变好**的起点数"
-          "（回撤／负窗／换手／仓位越小越好，其 Δ 为负即变好）；第 4 款「不劣」= Δ 方向不坏，或符号数不低于半数，"
-          "换手与长跑锚点为参考项、不进该判定")
+          "（回撤／负窗／换手／仓位越小越好，其 Δ 为负即变好）；第 4 款「不劣」= 变好方向的 Δ 中位 ≥ −0.15pp，"
+          "换手与长跑锚点为参考项、不进该判定；符号数只报不判")
     challengers = [label for _s, label, _d, _n, _m, _ng in rows if label != "BASE"]
     if challengers:
         print(f"{'指标':<12}" + "".join(f"{c:>16}" for c in challengers))
