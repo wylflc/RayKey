@@ -3217,6 +3217,8 @@ def main() -> int:
                         help="无研报覆盖时放行还是拦截。**block 会把它变成规模过滤器**")
     parser.add_argument("--lot-ratio-cooldown", action="store_true",
                         help="§9.3.3 比例冷却：一手价值是一档的 x 倍时，成交一手后跳过 round(x)−1 次合格机会（买入侧与卖出侧各自计数）")
+    parser.add_argument("--no-lot-ratio-cooldown", dest="lot_ratio_cooldown", action="store_false",
+                        help="研究开关（§9.3.3 冷却启用前的口径）：一手价值超过一档时照常成交、不消费任何合格机会")
     parser.add_argument("--lot-cooldown-shared", action="store_true",
                         help="研究开关（OI-120 前旧口径）：比例冷却买卖共用一个计数器，买入触发的冷却会跳过减持与换仓卖出")
     parser.add_argument("--min-lot-cooldown", type=int, default=0, metavar="D",
@@ -3264,6 +3266,8 @@ def main() -> int:
                              "的候选；-1=关。K=1 与换仓触发同线，K=0 只挡卖出源与比它更贵的")
     parser.add_argument("--net-same-day", action="store_true",
                         help="同一信号日同一只股票的买入与卖出直接对冲，只执行净额、双边费税都不付（§9.3.2）")
+    parser.add_argument("--no-net-same-day", dest="net_same_day", action="store_false",
+                        help="研究开关（v4.104 前旧口径）：同日买卖各自成交、双边费税照付，不做净额对冲")
     parser.add_argument("--min-buy-frac", type=float, default=0.0, metavar="F",
                         help="碎仓下限：本笔可投金额不足一档的 F 倍即不执行（建仓与加仓同）；0=关。例 0.10")
     parser.add_argument("--swap-post-corr-trigger", action="store_true",
@@ -3317,6 +3321,8 @@ def main() -> int:
                         help="--stop-partial 的减仓速度倍数：1=与定投同速，3=每日减三档；只在 --stop-partial 下生效")
     parser.add_argument("--swap-partial", action="store_true",
                         help="换仓由整仓卖出改为按定投同速减一档（仅在只差钱、槽位未满时）")
+    parser.add_argument("--no-swap-partial", dest="swap_partial", action="store_false",
+                        help="研究开关（2026-08-09 前旧口径）：换仓按整仓卖出，不改为减一档")
     parser.add_argument("--cluster-swap", action="store_true",
                         help="簇内升级模式：相关性用作「替换谁」的判据而非排除过滤器，持仓数不设上限")
     parser.add_argument("--cluster-delta", type=float, default=0.85,

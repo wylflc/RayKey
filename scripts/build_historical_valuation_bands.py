@@ -82,6 +82,7 @@ from __future__ import annotations
 import argparse
 import csv
 import math
+import os
 import statistics
 import sys
 from bisect import bisect_left, bisect_right
@@ -186,7 +187,9 @@ ROIC_YEARS: dict[str, dict[str, "roic_inputs.RoicYear"]] = {}
 # 三大报表名册（＝取数脚本的取数名单）与其中无报表的代码：名册内退回权益口径是数据缺口，须告警
 STMT_ROSTER_FILES = (ROOT / "data/processed/pit_attention/panel_moat_bank_v6b.csv",
                      ROOT / "data/processed/a_share_watchlist_quality_tiers.csv")
-STMT_GAP_LOG = ROOT / "data/interim/valuation_statement_gaps.csv"
+# 并发跑多条研究臂时用 `RK_STMT_GAP_LOG` 把缺口文件指到臂目录，避免多进程同写生产 interim 文件
+STMT_GAP_LOG = Path(os.environ["RK_STMT_GAP_LOG"]) if os.environ.get("RK_STMT_GAP_LOG") \
+    else ROOT / "data/interim/valuation_statement_gaps.csv"
 STMT_ROSTER: set[str] = set()
 NO_STMT_CODES: set[str] = set()
 ROIC_STATS: defaultdict[str, int] = defaultdict(int)
