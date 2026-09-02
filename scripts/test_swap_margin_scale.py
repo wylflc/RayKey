@@ -49,7 +49,7 @@ class SwapMarginScaleTest(unittest.TestCase):
         """`BASE` 不得携带 `--swap-margin-mode`：缺省 abs 即现行生产口径。"""
         import screen_daily_volume_price_signals as daily_scan
         self.assertNotIn("--swap-margin-mode", sweep.BASE)
-        self.assertIn(f"--swap-margin {daily_scan.SEC93_SWAP_MARGIN:g}", sweep.BASE)   # 在册边际随生产常量走（v4.132 起 0.16）
+        self.assertIn(f"--swap-margin {daily_scan.SEC93_SWAP_MARGIN:g}", sweep.BASE)   # 在册边际随生产常量走（v4.133 起 0.15）
 
 
 if __name__ == "__main__":

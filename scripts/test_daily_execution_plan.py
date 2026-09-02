@@ -99,7 +99,7 @@ class ExecutionPlanTest(unittest.TestCase):
         res = self.run_plan([cand, h1, h2], holdings, funds=1000.0, members={"000010", "000011", "000012"})
         swaps = [s for s in res["sells"] if s["rule"] == "换仓"]
         self.assertEqual(swaps[0]["security_code"], "000012")
-        cand_close = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.90)   # 与 H2 P/V 1.00 差 0.10 < 0.16
+        cand_close = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.90)   # 与 H2 P/V 1.00 差 0.10 < 0.15
         h2_close = row("000012", "H2", close=100.0, ma20=110.0, ma60=90.0, pv=1.00)
         holdings = {"000012": hold("H2", 5000, 90.0, None)}
         res = self.run_plan([cand_close, h2_close], holdings, funds=1000.0, members={"000010", "000012"})
@@ -118,7 +118,7 @@ class ExecutionPlanTest(unittest.TestCase):
 
     def test_holding_side_pv_governs_swap_source(self) -> None:
         # v4.92 SPA：换仓来源按持仓侧 `hold_pv` 判；候选侧 `model_pv` 只管买入线与候选排序
-        # 候选 0.60 对持仓侧 0.70 差 0.10 < 0.16 不换（按候选侧 1.50 会误换）
+        # 候选 0.60 对持仓侧 0.70 差 0.10 < 0.15 不换（按候选侧 1.50 会误换）
         cand = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)
         weak = row("000023", "W", close=100.0, ma20=110.0, ma60=90.0, pv=1.50)
         weak["hold_pv"] = 0.70

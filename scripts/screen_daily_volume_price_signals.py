@@ -476,7 +476,7 @@ SEC93_TACTICAL_NONE = re.compile(r"^\W*(无|暂无|不可买)")   # 判「无战
 SEC93_GAIN_SELL = 1.10         # §9.3.1「涨幅减持」：收盘较持仓均价涨幅 ≥ 110%（收盘 ≥ 均价×2.10）→ 减一档，不看走势；
                                # 资金不足时该类持仓优先作换仓卖出源（涨幅最大者先，同样不要求弱势）。持仓均价 = 买入按股数加权、
                                # 减持不变、除权按 §11.4 折算（持仓表 cost_basis）。回测落点 `--gain-sell 1.10 --gain-sell-mode ungated`。
-SEC93_SWAP_MARGIN = 0.16       # §9.3.1「换仓」：候选 P/V 须比被换出持仓低至少此差值（与回测 `--swap-margin` 同值）
+SEC93_SWAP_MARGIN = 0.15       # §9.3.1「换仓」：候选 P/V 须比被换出持仓低至少此差值（与回测 `--swap-margin` 同值）
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
