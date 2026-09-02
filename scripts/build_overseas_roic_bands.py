@@ -58,8 +58,11 @@ COMPANY_CFG = {
     "03690": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
     "06862": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
     "03888": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "00316": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "00267": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
 }
-FINANCIAL_KEEP = {"BRK.B": "金融资本型（保险浮存金＋控股）：ROIC 口径的投入资本/NOPAT 对金融企业不可定义，与 A 股「金融企业退回权益口径」同规；沿用档案 §6.5.2 J 隐含 PB 带，不按 ROIC 重算"}
+FINANCIAL_KEEP = {"BRK.B": "金融资本型（保险浮存金＋控股）：ROIC 口径的投入资本/NOPAT 对金融企业不可定义，与 A 股「金融企业退回权益口径」同规；沿用档案 §6.5.2 J 隐含 PB 带，不按 ROIC 重算",
+                  "00267": "金融资本型（银行并表、归母利润约八成来自中信银行）：ROIC 口径的投入资本/NOPAT 对金融企业不可定义，与 A 股「金融企业退回权益口径」同规；东财 HK F10 三表自 2014 年起为银行格式（营业额与股东权益字段为空），ROIC 路径被拒。沿用档案 §6.5.2 J 隐含 PB 带，不按 ROIC 重算"}
 NO_SOURCE = {"005930": "韩股无免密钥三表取数源（东财 HK F10／SEC 均不覆盖），ROIC 口径不可算",
              "000660": "韩股无免密钥三表取数源（东财 HK F10／SEC 均不覆盖），ROIC 口径不可算",
              "SPCX": "无 SEC 申报（无 CIK），三表不可得"}

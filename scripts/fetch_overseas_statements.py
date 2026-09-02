@@ -45,7 +45,7 @@ UA = "RayKey-AShareQuant research bot (personal research use)"
 HK_API = "https://datacenter.eastmoney.com/securities/api/data/v1/get"
 # 港股清单的报表货币（东财 HK F10 不带币种列；人民币列报公司显式登记）
 HK_REPORT_CCY = {"00700": "CNY", "09992": "CNY", "09618": "CNY", "09988": "CNY", "03690": "CNY", "06862": "CNY",
-                 "03888": "CNY"}
+                 "03888": "CNY", "00316": "CNY", "00267": "CNY"}
 TAX_DEFAULT = {"US": 0.21, "HK": 0.165}
 
 FIELDS = ["market", "security_code", "security_name", "period", "fiscal_year", "notice_date", "report_currency",
