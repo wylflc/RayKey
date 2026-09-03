@@ -27,6 +27,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         # 候选侧买入线 1.0454（OI-132 购买法收购当年分子年化后重解）；换仓边际 0.15（v4.133，§12.174 表 R／§12.176）
         self.assertEqual(daily_scan.SEC93_BUY_LINE, 1.0454)
         self.assertEqual(daily_scan.SEC93_SWAP_MARGIN, 0.15)
+        self.assertEqual(daily_scan.SEC93_SWAP_SOURCE_BLOCK, 1.0)   # v4.135 换仓接收方守卫 K=1
         # v4.109（OI-110）：估值减持线已删除，生产侧不得再有该常量
         self.assertFalse(hasattr(daily_scan, "SEC93_SELL_LINE"))
         self.assertEqual(daily_scan.DEFAULT_HOLD_BANDS, ROOT / "data/processed/a_share_pool_model_bands_hold.csv")
@@ -38,6 +39,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         # 两条线（v4.20 起入测——track_holdings 的线曾漂移三个月无人发现）；v4.34 起生产值 = 对齐解四位小数、不取整（§12.1）
         self.assertAlmostEqual(1 - float(option_value(args, "--width")), daily_scan.SEC93_BUY_LINE, places=4)
         self.assertEqual(float(option_value(args, "--swap-margin")), daily_scan.SEC93_SWAP_MARGIN)
+        self.assertEqual(float(option_value(args, "--swap-source-block")), daily_scan.SEC93_SWAP_SOURCE_BLOCK)
         # v4.109（OI-110）：BASE 不得带 `--sell-line`——给了就把估值减持重新打开
         self.assertNotIn("--sell-line", args)
         # v4.92 SPA：候选侧与持仓侧逐日状态都显式入 BASE（`--hold-states` 缺省 None = 持仓侧同候选侧，会静默退回旧口径）

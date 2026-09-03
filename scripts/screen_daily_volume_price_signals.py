@@ -477,6 +477,8 @@ SEC93_GAIN_SELL = 1.10         # §9.3.1「涨幅减持」：收盘较持仓均�
                                # 资金不足时该类持仓优先作换仓卖出源（涨幅最大者先，同样不要求弱势）。持仓均价 = 买入按股数加权、
                                # 减持不变、除权按 §11.4 折算（持仓表 cost_basis）。回测落点 `--gain-sell 1.10 --gain-sell-mode ungated`。
 SEC93_SWAP_MARGIN = 0.15       # §9.3.1「换仓」：候选 P/V 须比被换出持仓低至少此差值（与回测 `--swap-margin` 同值）
+SEC93_SWAP_SOURCE_BLOCK = 1.0  # §9.3.1 换仓行接收方守卫（v4.135）：当日换仓卖出源不进买入队列，且候选侧 P/V 高于
+                               # 「最低换仓源持仓侧 P/V − SEC93_SWAP_MARGIN × K」的候选一并剔除（与回测 `--swap-source-block` 同值；-1 = 关）
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
@@ -965,6 +967,25 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 swap_targets.add(ccode)
                 swap_src_meta[worst] = (src_pv, ccode)
 
+    # ---------------- 换仓接收方守卫（§9.3.1 换仓行、§9.3.2 第 5 步；与回测 --swap-source-block 同式）：
+    # 当日换仓卖出源不进买入队列；候选侧 P/V 高于「最低换仓源持仓侧 P/V − SEC93_SWAP_MARGIN × K」的候选一并剔除。
+    # 涨幅让位源没有 P/V 边际，只剔除自身。
+    swap_blocked: list[tuple[dict, str]] = []
+    if SEC93_SWAP_SOURCE_BLOCK >= 0 and swap_src_meta:
+        floors = [pv for pv, _t in swap_src_meta.values() if pv is not None]
+        floor = (min(floors) - SEC93_SWAP_MARGIN * SEC93_SWAP_SOURCE_BLOCK) if floors else None
+        kept = []
+        for cand in eligible:
+            ccode = str(cand["security_code"]).zfill(6)
+            if ccode in swap_src_meta:
+                swap_blocked.append((cand, "当日换仓卖出源"))
+            elif floor is not None and cand["model_pv"] > floor:
+                swap_blocked.append((cand, f"P/V {cand['model_pv']:.4f} > 最低换仓源持仓侧 P/V − "
+                                           f"{SEC93_SWAP_MARGIN * SEC93_SWAP_SOURCE_BLOCK:.4f} = {floor:.4f}"))
+            else:
+                kept.append(cand)
+        eligible = kept
+
     # ---------------- 相关性（只计算并列报告；SEC93_MAX_CORR = 1.0 时无一被剔除）
     held_rows = [by_code[c] for c in holdings if c in by_code and float(holdings[c]["shares"]) > 0]
     picked: list[dict] = []
@@ -1108,7 +1129,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     return {"plan": plan, "sells": sells, "sell_notes": sell_notes, "missing_holdings": missing_holdings,
             "netted": netted_rows, "stop_conflict": stop_conflict,
             "hold_pv_diff": hold_pv_diff,
-            "swap_targets": swap_targets, "swap_stop_reason": swap_stop_reason,
+            "swap_targets": swap_targets, "swap_stop_reason": swap_stop_reason, "swap_blocked": swap_blocked,
             "dropped": dropped, "corr_unknown": corr_unknown,
             "eligible": eligible, "capped": capped, "cooled": cooled,
             "frozen_out": frozen_out, "tactical_out": tactical_out,
@@ -1171,6 +1192,8 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
     for cand, who in result.get("corr_unknown") or []:
         print(f"     [相关性缺数据·OI-093] {cand.get('security_name','')} P/V {cand['model_pv']:.2f}"
               f"｜与 {who} 的重叠K线不足 {CORR_MIN_OVERLAP} 根，按未知放行（与回测同语义），如需人工核对相关性再执行")
+    for cand, why in result.get("swap_blocked") or []:
+        print(f"     [换仓接收方守卫剔除·§9.3.1] {cand.get('security_name','')} P/V {cand['model_pv']:.4f}｜{why}")
     if result["n_held"] == 0:
         print("  ⚠ **没读到任何持仓**（data/processed/a_share_holdings.csv 缺失或为空）"
               "——卖出清单为空、加仓放宽退回旧口径，买入计划不可直接照做")
