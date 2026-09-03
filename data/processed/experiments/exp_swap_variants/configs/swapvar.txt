@@ -1,0 +1,44 @@
+# §12.179 换仓机制变体（用户 2026-09-03 三条建议＋附带方向），全部相对 BASE（换仓边际 0.15、卖出款按 P/V 流向、只由未持仓触发）。
+# ① 接收方守卫（建议 1：当日买入须比卖出源便宜出换仓边际）：SB1 = --swap-source-block 1（当日全部买入，K=1）；
+#    SPT_SB0/SB1 = 定向（谁触发先买谁）＋守卫 K=0/1；SPT_RG0/RG1 = 定向＋只挡换仓款那部分（K=0/1）。
+# ② 触发期（建议 2）：TWnn = 触发后 nn 个交易日内已持仓仍可触发（fixed：只由未持仓触发刷新）；TW20R = rolling（每次触发重新起算）；
+#    SPT_TWnn = 定向＋触发期；HT1/HT2 = 触发期的仓位版替代（持仓不足 1/2 档的已持仓候选可触发）。
+# ③ 卖出款去向（建议 3b）：SPL = 触发者与 P/V 不高于它的全部可买对象平分；SPLW = 同上按 1/P/V 加权；×触发期。
+# ④ 三条合一：SPT_TW20_SB1／SPT_TW20_RG1／SPL_TW20_SB1。
+# ⑤ OI-142：GSO = 同一持仓同日「涨幅减持＋涨幅让位」合计至多一档。
+# ⑥ 边际粗扫（0.10/0.12/0.18/0.20）：SPT_TW20 与 SPL 两臂，供 §12.1 第 4 款①细扫前定向。
+BASE|
+SB1|--swap-source-block 1
+SPT_SB0|--swap-proceeds target --swap-source-block 0
+SPT_SB1|--swap-proceeds target --swap-source-block 1
+SPT_RG0|--swap-proceeds target --swap-recipient-margin --swap-recipient-scale 0
+SPT_RG1|--swap-proceeds target --swap-recipient-margin --swap-recipient-scale 1
+TW05|--swap-trigger-window 5
+TW10|--swap-trigger-window 10
+TW20|--swap-trigger-window 20
+TW40|--swap-trigger-window 40
+TW20R|--swap-trigger-window 20 --swap-trigger-window-mode rolling
+SPT_TW05|--swap-proceeds target --swap-trigger-window 5
+SPT_TW10|--swap-proceeds target --swap-trigger-window 10
+SPT_TW20|--swap-proceeds target --swap-trigger-window 20
+SPT_TW40|--swap-proceeds target --swap-trigger-window 40
+SPT_TW20R|--swap-proceeds target --swap-trigger-window 20 --swap-trigger-window-mode rolling
+HT1|--swap-held-trigger-max-tiers 1
+SPT_HT1|--swap-proceeds target --swap-held-trigger-max-tiers 1
+SPT_HT2|--swap-proceeds target --swap-held-trigger-max-tiers 2
+SPL|--swap-proceeds split
+SPLW|--swap-proceeds splitw
+SPL_TW20|--swap-proceeds split --swap-trigger-window 20
+SPLW_TW20|--swap-proceeds splitw --swap-trigger-window 20
+SPT_TW20_SB1|--swap-proceeds target --swap-trigger-window 20 --swap-source-block 1
+SPT_TW20_RG1|--swap-proceeds target --swap-trigger-window 20 --swap-recipient-margin --swap-recipient-scale 1
+SPL_TW20_SB1|--swap-proceeds split --swap-trigger-window 20 --swap-source-block 1
+GSO|--swap-gain-once
+SPT_TW20_M10|--swap-proceeds target --swap-trigger-window 20 --swap-margin 0.10
+SPT_TW20_M12|--swap-proceeds target --swap-trigger-window 20 --swap-margin 0.12
+SPT_TW20_M18|--swap-proceeds target --swap-trigger-window 20 --swap-margin 0.18
+SPT_TW20_M20|--swap-proceeds target --swap-trigger-window 20 --swap-margin 0.20
+SPL_M10|--swap-proceeds split --swap-margin 0.10
+SPL_M12|--swap-proceeds split --swap-margin 0.12
+SPL_M18|--swap-proceeds split --swap-margin 0.18
+SPL_M20|--swap-proceeds split --swap-margin 0.20

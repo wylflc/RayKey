@@ -1247,6 +1247,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         sell_buffer_exempt_gain: bool = False, sell_buffer_exempt_pv: float = 0.0,
         sell_x: float = 0.0, gain_ladder: tuple[tuple[float, float], ...] = (),
         swap_mode: str = "legacy", swap_sell_set: str = "weak", swap_spare_frac: float = 0.5,
+        swap_trigger_window: int = 0, swap_trigger_window_mode: str = "fixed",
+        swap_held_trigger_max_tiers: float = 0.0, swap_gain_once: bool = False,
         candidate_log=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`。
 
@@ -1409,7 +1411,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
         def mk_ma(i: int, n: int) -> float | None:
             return sum(mk_close[i - n + 1:i + 1]) / n if n and i + 1 >= n else None
-    for day in days:
+    # `swap_trigger_window`（用户 2026-09-03 实验）：候选触发换仓后 N 个交易日内即使已成持仓仍可继续触发；
+    # 记「代码 → 可触发到的交易日序号」。
+    trigger_win: dict[str, int] = {}
+    for day_no, day in enumerate(days):
         apply_corporate_actions(portfolio, day, actions, adjust_stops=(exright_stop == "adjust"))
 
         # ---- 融资计息（不需要价格，故放在循环头）----
@@ -1635,6 +1640,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 lot.max_money_drawdown = max(lot.max_money_drawdown, 1 - money / lot.peak_money)
 
         # ---- 卖出（先卖后买：卖出释放的现金当日即可用，与「有资金就买」一致）
+        gain_trimmed_today: set[str] = set()   # 当日已按涨幅减持减过一档的持仓（`swap_gain_once` 用，OI-142）
         for code in list(portfolio.lots):
             lot, price = portfolio.lots[code], fill_price(code, marks.get(code))
             if not price:
@@ -1939,6 +1945,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     lot.sells += 1
                     turnover += shares * price
                 sell_count += 1
+                if gain_hit and not value_rich:
+                    gain_trimmed_today.add(code)
 
         # ---- 常规卖出之后、换仓与买入之前：负债超出当日额度的部分先用现金偿还（§10.2，OI-081）
         if credit_over_limit == "repay" and credit_ratio > 0:
@@ -2177,6 +2185,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 豁免相关性检查：既然已经付出了卖出的代价，就该买到它。
         swap_targets: set[str] = set()
         swap_target_order: list[str] = []    # 触发顺序（`swap_proceeds=target` 时买入段先按此顺序买）
+        swap_target_pv: dict[str, float] = {}  # 触发者的候选侧 P/V（`swap_proceeds=split` 的分摊上限）
+        swap_net_sales = 0.0                 # 当日现行路径换仓卖出的净到账款（含涨幅让位；`split` 的分摊池）
         reduced_today: set[str] = set()      # 同一只每日最多被换仓减一档，防止一天削十次
         # 簇内升级之后仍保留原换仓作为**兜底**：用户方案里「没有强相关持仓就直接建仓或加仓」
         # 隐含了「有钱」这个前提，而簇内升级是自筹资金的（卖一只买一只），**不产生新增现金**。
@@ -2288,8 +2298,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             for code, close, value, ratio in (eligible[:max_positions] if swap_mode == "legacy" else []):
                 # `swap_held_trigger`（OI-101 研究开关）：已持仓候选想加仓而资金不足时同样触发换仓，
                 # 边际对实际接收资金的候选比；缺省沿用「只由未持仓候选触发」。
+                held_kind = ""
                 if code in portfolio.lots and not swap_held_trigger:
-                    continue
+                    # `swap_trigger_window`（用户 2026-09-03 实验）：触发期内的已持仓候选仍可触发（其余触发条件不变）；
+                    # `swap_held_trigger_max_tiers`：持仓市值不足 T 档的已持仓候选同样可触发。缺省两者都关，逐位不变。
+                    # 已到单票上限的持仓收不了钱，也就不该触发别人卖出（与配对换仓同一口径）。
+                    if position_cap and portfolio.lots[code].shares * close >= equity * position_cap:
+                        continue
+                    if swap_trigger_window and trigger_win.get(code, -1) >= day_no:
+                        held_kind = "触发期内已持仓"
+                    elif swap_held_trigger_max_tiers and \
+                            portfolio.lots[code].shares * close < budget * swap_held_trigger_max_tiers:
+                        held_kind = f"持仓不足{swap_held_trigger_max_tiers:g}档"
+                    else:
+                        continue
                 # `swap_trigger`（OI-081，用户 2026-08-22 裁定）：`power`（缺省）＝按 §10.2 可用资金
                 # （现金＋剩余授信）不足一档才换仓——授信还有余量时先融资买；`cash`＝v4.39 前旧口径，
                 # 只看现金、不计剩余授信，只用于复现旧读数。
@@ -2340,7 +2362,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if gain_sell or gain_ladder:
                     for c, l in portfolio.lots.items():
                         if (c not in today or c == code or l.avg_cost <= 0 or c in quota_hold_today
-                                or c in reduced_today):
+                                or c in reduced_today or (swap_gain_once and c in gain_trimmed_today)):
                             continue
                         # 阶梯口径下「涨幅让位」= 该持仓仍有待减股数（含当日卖出段已减的部分）
                         if gain_ladder:
@@ -2426,6 +2448,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if ladder_swap and partial and shares <= 0:
                     continue                         # 阶梯待减不足一手：本日不让位（非阶梯路径逐位保留原行为）
                 sold_qty = shares if (partial and shares < lot_worst.shares * 0.999) else lot_worst.shares
+                _cash_before_swap = portfolio.cash
                 if ladder_swap:
                     lot_worst.ladder_sold += sold_qty
                 if partial and shares < lot_worst.shares * 0.999:
@@ -2448,6 +2471,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                               ladder=ladder_swap)
                 sell_count += 1
                 swap_sources_today.add(worst)
+                swap_net_sales += portfolio.cash - _cash_before_swap
                 if swap_tag:
                     swap_gain_proceeds += sold_qty * price
                 else:
@@ -2455,6 +2479,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if code not in swap_targets:
                     swap_target_order.append(code)
                 swap_targets.add(code)
+                swap_target_pv[code] = ratio
+                if held_kind:
+                    stats[f"换仓触发·{held_kind}"] += 1
+                # 触发期：`fixed`＝只由未持仓触发刷新（持仓期内触发不延长）；`rolling`＝每次触发都重新起算。
+                if swap_trigger_window and (swap_trigger_window_mode == "rolling" or code not in portfolio.lots):
+                    trigger_win[code] = day_no + swap_trigger_window
         # 换仓卖出款同样先还超额负债（§10.2，用户 2026-08-22 裁定），再进入买入段
         if credit_over_limit == "repay" and credit_ratio > 0:
             if repay_over_limit(portfolio, credit_limit) > 0:
@@ -2485,6 +2515,19 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     continue
                 for b in matches:
                     pair_alloc[b] = pair_alloc.get(b, 0.0) + pool / len(matches)
+        # `swap_proceeds=split／splitw`（用户 2026-09-03 实验）：当日换仓卖出款（含涨幅让位）由触发者与候选侧 P/V
+        # 不高于它的全部可买对象平分（`splitw` 按 1/P/V 加权）；账上其余正额度按 `swap_spare_frac` 与配对换仓同一口径：
+        # 不足一档 × F 时并入分摊池、当日不走第 5 步，否则只分摊卖出款、正额度照第 5 步买。接收方集在买入段前按最终合格集定。
+        swap_split_pool = 0.0
+        if swap_proceeds in ("split", "splitw") and swap_target_order and swap_net_sales > 0:
+            spare = buying_power(portfolio, credit_limit) - swap_net_sales
+            if spare < swap_spare_frac * budget:
+                swap_split_pool = max(0.0, buying_power(portfolio, credit_limit))
+                pair_regular = False
+                stats["分摊换仓·正负额度并入均分" if spare >= 0 else "分摊换仓·负额度均摊"] += 1
+            else:
+                swap_split_pool = swap_net_sales
+                stats["分摊换仓·正额度走第5步"] += 1
         # 两个闸门共用「当日换仓卖出源」这一事实，各自派生自己的下限。
         swap_floor_pv = swap_gap_floor(swap_src_min_pv, swap_recipient_scale)
         # `swap_source_block`（OI-107，用户 2026-08-31）：当日换仓卖出源**不进买入队列**，
@@ -2632,6 +2675,31 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 eligible = picks + [r for r in eligible if r[0] not in already]
                 stats["配置通道·当日候选"] += len(picks)
 
+        # 分摊换仓的接收方：最终合格集里候选侧 P/V ≤ 当日最贵触发者的全部对象（含已持仓），已到单票上限或
+        # 涨幅 ≥ addon_max_gain 不再加仓者除外；没有接收方时退回第 5 步。
+        if swap_split_pool > 0:
+            _cut = max(swap_target_pv.values())
+            _recips = []
+            for r in eligible[:max_positions]:
+                if r[3] > _cut:
+                    continue
+                _l = portfolio.lots.get(r[0])
+                if _l is not None and position_cap and _l.shares * r[1] >= equity * position_cap:
+                    continue
+                if _l is not None and addon_max_gain and _l.avg_cost > 0 \
+                        and r[1] >= _l.avg_cost * (1.0 + addon_max_gain):
+                    continue
+                _recips.append(r)
+            if _recips:
+                _w = [(1.0 / r[3] if r[3] > 0 else 0.0) if swap_proceeds == "splitw" else 1.0 for r in _recips]
+                _tot = sum(_w) or 1.0
+                for r, w in zip(_recips, _w):
+                    pair_alloc[r[0]] = pair_alloc.get(r[0], 0.0) + swap_split_pool * w / _tot
+                stats["分摊换仓·接收方数"] += len(_recips)
+                stats["分摊换仓·触发者在接收方内"] += sum(1 for r in _recips if r[0] in swap_targets)
+            else:
+                pair_regular = True
+                stats["分摊换仓·无接收方·退回第5步"] += 1
         # 买入顺序：配对换仓的定向额度先按 P/V 升序买（金额 = 该股当日收到的额度），随后（当日仍走第 5 步时）
         # 对合格集按 P/V 升序逐个买一档。`pair_alloc` 为空且 `pair_regular` 为真即现行逐位路径。
         buy_plan = ([(r, pair_alloc[r[0]]) for r in eligible[:max_positions] if pair_alloc.get(r[0], 0.0) > 0]
@@ -3422,8 +3490,17 @@ def main() -> int:
                         help="研究开关（用户 2026-08-22）：信号日收盘 ≥ 持仓均价×(1+G) 即触发减一档并可作换仓卖出源；0=关。例 1.0")
     parser.add_argument("--gain-sell-mode", choices=("gated", "ungated"), default="gated",
                         help="gated=涨幅减持／换仓同样过走势闸门（收<MA20 / 弱势）；ungated=不过闸门")
-    parser.add_argument("--swap-proceeds", choices=("pv", "target"), default="pv",
-                        help="OI-101 研究开关：换仓卖出款去向——pv=按 P/V 升序买（缺省）；target=谁触发换仓先买谁，余款再按 P/V")
+    parser.add_argument("--swap-proceeds", choices=("pv", "target", "split", "splitw"), default="pv",
+                        help="OI-101 研究开关：换仓卖出款去向——pv=按 P/V 升序买（缺省）；target=谁触发换仓先买谁，余款再按 P/V；"
+                             "split=触发者与候选侧 P/V 不高于它的全部可买对象平分（用户 2026-09-03 实验）；splitw=同上、按 1/P/V 加权")
+    parser.add_argument("--swap-trigger-window", type=int, default=0, metavar="N",
+                        help="研究开关（用户 2026-09-03）：候选触发换仓后 N 个交易日内即使已成持仓仍可触发换仓（其余触发条件不变）；0=关")
+    parser.add_argument("--swap-trigger-window-mode", choices=("fixed", "rolling"), default="fixed",
+                        help="触发期起算：fixed=只由未持仓时的触发刷新、持仓期内触发不延长；rolling=每次触发都重新起算")
+    parser.add_argument("--swap-held-trigger-max-tiers", type=float, default=0.0, metavar="T",
+                        help="研究开关：持仓市值不足一档 × T 的已持仓候选也可触发换仓（触发期的仓位版替代）；0=关")
+    parser.add_argument("--swap-gain-once", action="store_true",
+                        help="OI-142 研究开关：当日已按涨幅减持减过一档的持仓不再作涨幅让位换仓源（同一持仓同日合计至多一档）")
     parser.add_argument("--swap-held-trigger", action="store_true",
                         help="OI-101 研究开关：已持仓候选想加仓而资金不足时也触发换仓（缺省只由未持仓候选触发）")
     parser.add_argument("--swap-recipient-margin", action="store_true",
@@ -3781,6 +3858,11 @@ def main() -> int:
                      + ("_relm" if args.swap_margin_mode == "ratio" else "")
                      + ("_sht" if args.swap_held_trigger else "")
                      + ("_spt" if args.swap_proceeds == "target" else "")
+                     + ({"split": "_sps", "splitw": "_spsw"}.get(args.swap_proceeds, ""))
+                     + (f"_tw{args.swap_trigger_window}{'r' if args.swap_trigger_window_mode == 'rolling' else ''}"
+                        if args.swap_trigger_window else "")
+                     + (f"_ht{args.swap_held_trigger_max_tiers:g}" if args.swap_held_trigger_max_tiers else "")
+                     + ("_gso" if args.swap_gain_once else "")
                      + ("_spct" if args.swap_post_corr_trigger else "")
                      + (f"_ex{len(excluded_codes)}" if excluded_codes else "")
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
@@ -3892,6 +3974,10 @@ def main() -> int:
                          sell_x=args.sell_x / 100.0, gain_ladder=gain_ladder,
                          swap_mode=args.swap_mode, swap_sell_set=args.swap_sell_set,
                          swap_spare_frac=args.swap_spare_frac,
+                         swap_trigger_window=args.swap_trigger_window,
+                         swap_trigger_window_mode=args.swap_trigger_window_mode,
+                         swap_held_trigger_max_tiers=args.swap_held_trigger_max_tiers,
+                         swap_gain_once=args.swap_gain_once,
                          candidate_log=cand_writer)
             if cand_handle is not None:
                 cand_handle.close()
