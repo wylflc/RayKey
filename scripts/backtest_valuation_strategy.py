@@ -1640,7 +1640,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 lot.max_money_drawdown = max(lot.max_money_drawdown, 1 - money / lot.peak_money)
 
         # ---- 卖出（先卖后买：卖出释放的现金当日即可用，与「有资金就买」一致）
-        gain_trimmed_today: set[str] = set()   # 当日已按涨幅减持减过一档的持仓（`swap_gain_once` 用，OI-142）
+        gain_trimmed_today: set[str] = set()   # 当日已按涨幅减持减过一档的持仓：`swap_gain_once` 下不作换仓卖出源（OI-142，v4.134）
         for code in list(portfolio.lots):
             lot, price = portfolio.lots[code], fill_price(code, marks.get(code))
             if not price:
@@ -2344,6 +2344,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                           (scores.get(c, hold_today[c][2]) if rank_mode != "pv" else hold_today[c][2])), c)
                         for c in portfolio.lots if c in today and c != code
                         and (swap_repeat == "whole" or c not in reduced_today)
+                        and not (swap_gain_once and c in gain_trimmed_today)
                         and (gate != "self-pct" or c in pcts)
                         and (not swap_require_weak
                              or ((_m := mas.get(c, {}).get(sig_day, {})).get(swap_weak_ma) is not None
@@ -3500,7 +3501,11 @@ def main() -> int:
     parser.add_argument("--swap-held-trigger-max-tiers", type=float, default=0.0, metavar="T",
                         help="研究开关：持仓市值不足一档 × T 的已持仓候选也可触发换仓（触发期的仓位版替代）；0=关")
     parser.add_argument("--swap-gain-once", action="store_true",
-                        help="OI-142 研究开关：当日已按涨幅减持减过一档的持仓不再作涨幅让位换仓源（同一持仓同日合计至多一档）")
+                        help="§9.3.1 换仓行（v4.134，OI-142）：当日已按涨幅减持减过一档的持仓不作换仓卖出源（涨幅让位与弱势路径都不作），"
+                             "同一持仓每日合计至多减一档；`sweep_backtest_configs.BASE` 带此开关")
+    parser.add_argument("--no-swap-gain-once", dest="swap_gain_once", action="store_false",
+                        help="研究开关（v4.134 前旧口径）：涨幅减持后的持仓同日仍可作涨幅让位换仓源，合计可减两档"),
+
     parser.add_argument("--swap-held-trigger", action="store_true",
                         help="OI-101 研究开关：已持仓候选想加仓而资金不足时也触发换仓（缺省只由未持仓候选触发）")
     parser.add_argument("--swap-recipient-margin", action="store_true",

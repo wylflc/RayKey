@@ -80,6 +80,20 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertEqual(s["sell_shares"], 1000)
         self.assertAlmostEqual(res["cash"], 0.0)             # 止损候选卖出款不计入买入预算
 
+    def test_gain_trimmed_holding_is_not_swap_source_same_day(self) -> None:
+        # v4.134（OI-142）：H1 涨幅 150% 先减一档（1600 股 × 90 = 14.4 万 < 一档），同日不再作涨幅让位源；
+        # 换仓改取最贵弱势持仓 H2（持仓侧 P/V 1.50 − 候选 0.60 ≥ 0.15）
+        cand = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)
+        h1 = row("000011", "H1", close=90.0, ma20=100.0, ma60=80.0, pv=1.20)
+        h2 = row("000012", "H2", close=100.0, ma20=110.0, ma60=90.0, pv=1.50)
+        holdings = {"000011": hold("H1", 5000, 36.0, None), "000012": hold("H2", 5000, 90.0, None)}
+        res = self.run_plan([cand, h1, h2], holdings, funds=0.0, members={"000010", "000011", "000012"})
+        rules = [(s["security_code"], s["rule"]) for s in res["sells"]]
+        self.assertEqual(rules, [("000011", "涨幅减持"), ("000012", "换仓")])
+        self.assertEqual(res["sells"][0]["sell_shares"], 1600)
+        self.assertIn("持仓侧 P/V", res["sells"][1]["condition"])          # 走弱势路径，不是「涨幅 … 让位」
+        self.assertEqual(res["sells"][1]["swap_for"], "000010")
+
     def test_trim_then_swap_priciest_weak(self) -> None:
         cand = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)
         h1 = row("000011", "H1", close=100.0, ma20=110.0, ma60=90.0, pv=1.20)   # 弱势、涨幅 150%（先走涨幅减持）

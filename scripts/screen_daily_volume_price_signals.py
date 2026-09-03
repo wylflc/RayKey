@@ -853,6 +853,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         holdings[code]["shares"] = held - shares
         return shares
 
+    trimmed_today: set[str] = set()    # 当日已涨幅减持的持仓：不作换仓卖出源（§9.3.1 换仓行，同一持仓每日合计至多减一档）
     for code, h in holdings.items():
         r = by_code.get(code)
         price = to_float((r or {}).get("close"))
@@ -883,6 +884,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             cond = f"收盘 {price:g} ≥ 均价 {h.get('cost'):g}×{1 + SEC93_GAIN_SELL:.2f}（不看走势）"
             sold = reduce_one(code, r, rule, cond, price)
             cash += sold * price
+            if sold:
+                trimmed_today.add(code)
         elif why:
             sell_notes.append((h.get("name", code), why))
 
@@ -922,8 +925,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             gain_src = []
             weak_src = []
             for hcode, h in holdings.items():
-                if hcode in reduced_today or float(h["shares"]) <= 0:
-                    continue
+                if hcode in reduced_today or hcode in trimmed_today or float(h["shares"]) <= 0:
+                    continue                                   # 当日已换仓或已涨幅减持的持仓不再作卖出源
                 hr = by_code.get(hcode)
                 hp, hm20 = to_float((hr or {}).get("close")), to_float((hr or {}).get("ma20"))
                 if hp is None:

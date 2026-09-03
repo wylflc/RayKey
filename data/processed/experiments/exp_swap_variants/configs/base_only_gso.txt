@@ -1,0 +1,2 @@
+# v4.134 落地后基准核对（OI-142 同日一档：BASE 带 --swap-gain-once）
+BASE|

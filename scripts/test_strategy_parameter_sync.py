@@ -48,6 +48,9 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(daily_scan.SEC93_GAIN_SELL, 1.10)
         self.assertEqual(float(option_value(args, "--gain-sell")), daily_scan.SEC93_GAIN_SELL)
         self.assertEqual(option_value(args, "--gain-sell-mode"), "ungated")
+        # v4.134（OI-142）：当日已涨幅减持的持仓不作换仓卖出源，BASE 显式带开关、不得带反向开关
+        self.assertIn("--swap-gain-once", args)
+        self.assertNotIn("--no-swap-gain-once", args)
         self.assertEqual(track_holdings_daily.GAIN_SELL, daily_scan.SEC93_GAIN_SELL)
         self.assertEqual(float(option_value(args, "--credit-ratio")), 0.666)
         self.assertGreaterEqual(float(option_value(args, "--credit-cap")), 1e11)   # 不设金额上限
