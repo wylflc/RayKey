@@ -9,6 +9,7 @@ from pathlib import Path
 
 import screen_daily_volume_price_signals as daily_scan
 import sweep_backtest_configs as sweep
+import backtest_valuation_strategy as bt
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -123,6 +124,8 @@ class StrategyParameterSyncTest(unittest.TestCase):
             self.assertIn(key, sweep.FIELDS)
         # 去赢家剔除集取 A 与 U 两个；第 4 款「全面优秀」不构成采纳
         self.assertIn("剔除集取两个：**A** =", workflow)
+        self.assertIn("按代码汇总逐日「盈亏 ÷ 前一日净资产」累计贡献的前五名", workflow)
+        self.assertIn("contrib", bt.TRADE_FIELDS)
         self.assertIn("**U** = A 与候选臂同起点前五名的并集", workflow)
         self.assertIn("记为**去赢家全面优秀**", workflow)
         self.assertIn("该判定不构成采纳，也不放宽第 2 款的门槛", workflow)

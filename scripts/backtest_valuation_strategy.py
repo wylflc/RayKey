@@ -757,6 +757,7 @@ class Lot:
     peak_intrinsic: float = 0.0 # 持有期内内在价值的峰值——**基本面退出**按它的回撤触发
     sublots: list = field(default_factory=list)   # 股息税用：[买入日, 股数, 该批已收现金红利] 按买入先后排列（FIFO）
     tax_paid: float = 0.0       # 本周期已缴差别化股息税
+    contrib: float = 0.0        # 本周期逐日「盈亏 ÷ 前一日净资产」累计（§12.1 第 3 款赢家尺；盈亏 = 市值变动 − 买入 + 卖出与分红）
     exit_date: str = ""
     exit_reason: str = ""
 
@@ -1278,6 +1279,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     days = sorted(d for d in states if since <= d <= until)
     last_price: dict[str, float] = {}   # 停牌日没有行情，须沿用最后成交价盯市
     equity_curve: list[tuple[str, float, float, int]] = []
+    # 逐代码「盈亏 ÷ 前一日净资产」累计贡献（§12.1 第 3 款的赢家尺）：日盈亏 = 市值变动 − 当日买入 + 当日卖出与分红，
+    # 盯市价与 `equity()` 同一套；费用、股息税与融资利息不摊。名义盈亏被复利放大的账户体量主导，末期持仓必占前五，
+    # 相对贡献把每日盈亏除以当日之前的净资产，早年与末期同一把尺。只在日末记账，不进任何交易判据。
+    contrib: dict[str, float] = collections.defaultdict(float)
+    prev_mv: dict[str, float] = {}                    # 代码 → 上一日末持仓市值（为 0 的不留）
+    prev_flow: dict[str, tuple[float, float]] = {}    # 代码 → 上一日末累计 (invested, proceeds)，含已闭合周期
+    closed_flow: dict[str, tuple[float, float]] = {}  # 代码 → 已闭合周期累计 (invested, proceeds)
+    closed_seen = 0                                   # `portfolio.closed` 已计入 closed_flow 的条数（同日对冲只会弹出当日新增条目）
+    last_lot: dict[str, Lot] = {}                     # 代码 → 当日贡献记到哪个周期（在持的周期，否则最近闭合的周期）
     buy_count = sell_count = 0
     turnover = 0.0
     tiers = tiers or {}
@@ -2899,6 +2909,36 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 与前三大合计，写进净值曲线。不记的话「集中度」只能靠事后从流水重建，而流水按构造
         # 缺部分减持（本次一并补上），重建值会系统性偏高。
         eq_now = portfolio.equity(marks)
+        # ---- 逐代码贡献记账（只读持仓与闭合周期，不改任何交易状态）----
+        eq_prev = equity_curve[-1][1] if equity_curve else capital
+        touched = set(prev_mv) | set(portfolio.lots)
+        while closed_seen < len(portfolio.closed):
+            _cl = portfolio.closed[closed_seen]
+            _ci, _cp = closed_flow.get(_cl.code, (0.0, 0.0))
+            closed_flow[_cl.code] = (_ci + _cl.invested, _cp + _cl.proceeds)
+            last_lot[_cl.code] = _cl
+            touched.add(_cl.code)
+            closed_seen += 1
+        for code, lot in portfolio.lots.items():
+            last_lot[code] = lot
+        for code in touched:
+            lot = portfolio.lots.get(code)
+            mv = lot.shares * marks[code] if lot is not None and marks.get(code) else 0.0
+            ci, cp = closed_flow.get(code, (0.0, 0.0))
+            if lot is not None:
+                ci, cp = ci + lot.invested, cp + lot.proceeds
+            pi, pp = prev_flow.get(code, (0.0, 0.0))
+            pnl = (mv - prev_mv.get(code, 0.0)) - (ci - pi) + (cp - pp)
+            if pnl and eq_prev > 0:
+                share = pnl / eq_prev
+                contrib[code] += share
+                if code in last_lot:
+                    last_lot[code].contrib += share
+            if mv:
+                prev_mv[code] = mv
+            else:
+                prev_mv.pop(code, None)
+            prev_flow[code] = (ci, cp)
         weights = sorted((lot.shares * marks[c] / eq_now
                           for c, lot in portfolio.lots.items() if c in marks and eq_now > 0),
                          reverse=True)
@@ -2914,7 +2954,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if price:
                 close_lot(portfolio, code, last, price, "回测截止清算")
     return {"equity": equity_curve, "closed": portfolio.closed, "fees": FEES["paid"] - fees0,
-            "buys": buy_count, "sells": sell_count, "turnover": turnover,
+            "contrib": dict(contrib), "buys": buy_count, "sells": sell_count, "turnover": turnover,
             "margin_events": margin_events, "min_margin_ratio": min_ratio,
             "min_margin_day": min_ratio_day, "interest_paid": portfolio.interest_paid,
             "dividend_tax_paid": portfolio.dividend_tax_paid, "rights_paid": portfolio.rights_paid,
@@ -3054,13 +3094,16 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
         return ordered[lo] + (ordered[hi] - ordered[lo]) * (pos - lo)
 
     closed = result["closed"]
-    # 前五大赢家（§12.1 去赢家压力测试的赢家定义）：全部闭合周期按代码汇总 `proceeds − invested`
-    # （卖出款＋现金分红−买入金额；不摊融资利息与费用），取前五；期末未平仓已按截止清算并入 closed。
-    pnl_by_code: dict[str, float] = collections.defaultdict(float)
-    for l in closed:
-        pnl_by_code[l.code] += l.proceeds - l.invested
-    top5 = [kv for kv in sorted(pnl_by_code.items(), key=lambda kv: (-kv[1], kv[0]))[:5] if kv[1] > 0]
-    pos_total = sum(v for v in pnl_by_code.values() if v > 0)
+    # 前五大赢家（§12.1 第 3 款去赢家压力测试的赢家定义）：按代码汇总逐日「盈亏 ÷ 前一日净资产」的累计贡献
+    # （run() 日末记账的 `contrib`；盈亏 = 市值变动 − 买入 + 卖出与分红，费用、股息税、融资利息不摊），
+    # 取贡献为正的前五。没有 `contrib` 的旧结果退回按闭合周期 `proceeds − invested` 名义盈亏排。
+    contrib_by_code = result.get("contrib")
+    if contrib_by_code is None:
+        contrib_by_code = collections.defaultdict(float)
+        for l in closed:
+            contrib_by_code[l.code] += l.proceeds - l.invested
+    top5 = [kv for kv in sorted(contrib_by_code.items(), key=lambda kv: (-kv[1], kv[0]))[:5] if kv[1] > 0]
+    pos_total = sum(v for v in contrib_by_code.values() if v > 0)
     wins = [l for l in closed if l.proceeds > l.invested]
     profits = [l.proceeds - l.invested for l in closed]
     holding = [_days_between(l.entry_date, l.exit_date) for l in closed if l.exit_date]
@@ -3180,7 +3223,7 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "年均换手": (result["turnover"] / years / statistics.fmean([e for _d, e, *_r in curve])
                      if years else float("nan")),
             "前五赢家": "/".join(c for c, _v in top5),
-            "前五赢家盈亏": sum(v for _c, v in top5),
+            "前五赢家贡献": sum(v for _c, v in top5),
             "前五赢家占正贡献": (sum(v for _c, v in top5) / pos_total) if pos_total > 0 else float("nan"),
             "累计手续费": result.get("fees", 0.0),
             "手续费占初始本金": result.get("fees", 0.0) / capital if capital else float("nan"),
@@ -3195,7 +3238,7 @@ def _days_between(a: str, b: str) -> int:
 TRADE_FIELDS = ["security_code", "security_name", "entry_date", "exit_date", "holding_days",
                 "buys", "sells", "invested", "proceeds", "dividends", "return_pct",
                 "max_drawdown_in_cycle", "max_money_drawdown", "entry_stop", "entry_stop_ma", "entry_pv_ratio", "entry_upside", "entry_intrinsic_value",
-                "entry_band_low", "entry_band_high", "exit_reason"]
+                "entry_band_low", "entry_band_high", "exit_reason", "contrib"]
 
 
 def write_trades(path: Path, lots, names: dict[str, str]) -> None:
@@ -3219,7 +3262,8 @@ def write_trades(path: Path, lots, names: dict[str, str]) -> None:
                 "entry_intrinsic_value": f"{lot.entry_value:.4f}",
                 "entry_band_low": f"{lot.entry_band_low:.4f}",
                 "entry_band_high": f"{lot.entry_band_high:.4f}",
-                "exit_reason": lot.exit_reason})
+                "exit_reason": lot.exit_reason,
+                "contrib": f"{lot.contrib:.6f}"})
 
 
 def write_equity(path: Path, curve) -> None:

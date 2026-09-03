@@ -6,8 +6,9 @@
 
     **这个 Δ 由多少只股票撑起来？**
 
-口径：逐臂读 `*_trades.csv` 的闭合周期，按代码汇总 `proceeds − invested + dividends`
-（与 §12.1 第 3 款「前五赢家」同一把尺），逐代码相减得 `Δ_code`，再报集中度。
+口径：逐臂读 `*_trades.csv` 的闭合周期，按代码汇总 `contrib` 列（逐日「盈亏 ÷ 前一日净资产」的累计贡献，
+与 §12.1 第 3 款「前五赢家」同一把尺），逐代码相减得 `Δ_code`，再报集中度。两个文件任一没有 `contrib` 列
+（旧引擎产物）时退回名义盈亏 `proceeds − invested + dividends`。
 
 集中度按两个分母各报一次，因为它们回答不同的问题：
 * **净额占比** `前 N 个 Δ_code 之和 ÷ 总 Δ`——「结论靠谁撑」。可以 >100%（其余为负时）。
@@ -40,6 +41,21 @@ def load_pnl(path: Path) -> dict[str, float]:
     return dict(out)
 
 
+def load_contrib(path: Path) -> tuple[dict[str, float], bool]:
+    """逐代码累计贡献 = Σ `contrib`（逐日「盈亏 ÷ 前一日净资产」累计）；返回 (字典, 是否贡献口径)。
+    文件没有 `contrib` 列时退回 `load_pnl` 的名义盈亏并返回 False。"""
+    with path.open(newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        if "contrib" not in (reader.fieldnames or []):
+            return load_pnl(path), False
+        out: dict[str, float] = defaultdict(float)
+        for r in reader:
+            if not r.get("exit_date"):
+                continue
+            out[r["security_code"]] += float(r["contrib"] or 0.0)
+    return dict(out), True
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", type=Path, required=True, help="对照臂 *_trades.csv")
@@ -48,7 +64,12 @@ def main() -> int:
     ap.add_argument("--top", type=int, default=10)
     args = ap.parse_args()
 
-    base, arm = load_pnl(args.base), load_pnl(args.arm)
+    (base, b_rel), (arm, a_rel) = load_contrib(args.base), load_contrib(args.arm)
+    rel = b_rel and a_rel
+    if not rel:                                   # 两臂必须同一把尺
+        base, arm = load_pnl(args.base), load_pnl(args.arm)
+    fmt = (lambda v: f"{v:+.4f}") if rel else (lambda v: f"{v:,.0f}")
+    unit = "贡献（盈亏÷当时净资产）" if rel else "已实现盈亏"
     codes = set(base) | set(arm)
     delta = {c: arm.get(c, 0.0) - base.get(c, 0.0) for c in codes}
     delta = {c: v for c, v in delta.items() if abs(v) > 1e-6}
@@ -60,9 +81,10 @@ def main() -> int:
     gross = sum(abs(v) for v in delta.values())
     ranked = sorted(delta.items(), key=lambda kv: -abs(kv[1]))
 
-    print(f"对照臂 {args.base.name}：{len(base):,} 只、已实现盈亏 {sum(base.values()):,.0f}")
-    print(f"待测臂 {args.arm.name}：{len(arm):,} 只、已实现盈亏 {sum(arm.values()):,.0f}")
-    print(f"\n净 Δ = {total:,.0f}    有 Δ 的代码 {len(delta):,} 只    Σ|Δ_code| = {gross:,.0f}")
+    print(f"尺度：{unit}")
+    print(f"对照臂 {args.base.name}：{len(base):,} 只、合计 {fmt(sum(base.values()))}")
+    print(f"待测臂 {args.arm.name}：{len(arm):,} 只、合计 {fmt(sum(arm.values()))}")
+    print(f"\n净 Δ = {fmt(total)}    有 Δ 的代码 {len(delta):,} 只    Σ|Δ_code| = {fmt(gross)}")
 
     print(f"\n{'#':>3} {'代码':<8}{'Δ_code':>16}{'净额累计占比':>14}{'动量累计占比':>14}")
     cum = cum_abs = 0.0
@@ -70,7 +92,7 @@ def main() -> int:
         cum += v
         cum_abs += abs(v)
         share = f"{cum / total:.1%}" if abs(total) > 1e-6 else "—"
-        print(f"{i:>3} {code:<8}{v:>16,.0f}{share:>14}{cum_abs / gross:>14.1%}")
+        print(f"{i:>3} {code:<8}{fmt(v):>16}{share:>14}{cum_abs / gross:>14.1%}")
 
     print("\n集中度：")
     for n in (1, 3, 5):

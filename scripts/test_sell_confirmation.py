@@ -219,8 +219,16 @@ class SellConfirmationTest(unittest.TestCase):
         mas = {c: {d: {20: 9.0, 60: 8.0} for d in states} for c in ("A", "B")}
         result = self.run_case(states, mas)
         summary = bt.summarize("t", result, 100_000.0, {}, [])
-        self.assertEqual(summary["前五赢家"], "A")          # 只列盈利为正的代码，B 亏损不入列
-        self.assertGreater(summary["前五赢家盈亏"], 0)
+        self.assertEqual(summary["前五赢家"], "A")          # 只列贡献为正的代码，B 亏损不入列
+        # 赢家尺 = 逐日「盈亏 ÷ 前一日净资产」累计：A 只在 D2 盯市日有盈亏，分母是 D1 日末净资产
+        lot_a = next(l for l in result["closed"] if l.code == "A")
+        equity = {d: e for d, e, *_rest in result["equity"]}
+        expected = (lot_a.proceeds - lot_a.invested) / equity["2024-01-03"]
+        self.assertGreater(expected, 0)
+        self.assertAlmostEqual(summary["前五赢家贡献"], expected, places=9)
+        self.assertAlmostEqual(lot_a.contrib, expected, places=9)
+        self.assertAlmostEqual(result["contrib"]["A"], expected, places=9)
+        self.assertLess(result["contrib"]["B"], 0)
         self.assertAlmostEqual(summary["前五赢家占正贡献"], 1.0)
 
 

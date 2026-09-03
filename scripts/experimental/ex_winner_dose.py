@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""剔除赢家只数的剂量曲线（§12.1 第 4 款②）：K = 1／3／5／10，赢家取 `BASE` 锚定起点闭合周期按代码汇总的已实现盈亏前 K 名。
+"""剔除赢家只数的剂量曲线（§12.1 第 4 款②）：K = 1／3／5／10，赢家取 `BASE` 锚定起点 trades 的 `contrib` 列（逐日「盈亏 ÷ 前一日净资产」累计贡献）按代码汇总的前 K 名；旧文件无该列时退回已实现盈亏。
 
 每档 K 下把同一组代码用 `--exclude-codes` 从配置里**全部臂**统一剔除、跑标准起点集，结果行沿用
 `ex_winner_symmetry.py` 的格式（`#SET|K<k>|codes` ＋ `EX5:K<k><label>|since|…`），
@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "scripts/experimental"))
-from delta_attribution import load_pnl  # noqa: E402
+from delta_attribution import load_contrib  # noqa: E402
 from sweep_backtest_configs import DEFAULT_STARTS, run_one  # noqa: E402
 
 
@@ -35,8 +35,11 @@ def main() -> None:
         if line.strip() and not line.lstrip().startswith("#"):
             label, extra = line.split("|", 1)
             arms.append((label.strip(), extra))
-    ranked = sorted(load_pnl(args.trades).items(), key=lambda kv: -kv[1])
-    print("赢家排序（已实现盈亏，亿）：" + "、".join(f"{c} {v/1e8:.2f}" for c, v in ranked[:12]), file=sys.stderr)
+    pnl, is_contrib = load_contrib(args.trades)
+    ranked = sorted(pnl.items(), key=lambda kv: (-kv[1], kv[0]))
+    unit = "贡献（盈亏÷当时净资产）" if is_contrib else "已实现盈亏，亿（旧文件无 contrib 列）"
+    print(f"赢家排序（{unit}）：" + "、".join(f"{c} {v:+.3f}" if is_contrib else f"{c} {v/1e8:.2f}"
+                                       for c, v in ranked[:12]), file=sys.stderr)
 
     with args.out.open("w", encoding="utf-8") as fh:
         for k in (int(x) for x in args.ks.split(",")):
