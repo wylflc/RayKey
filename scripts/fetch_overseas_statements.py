@@ -19,13 +19,20 @@
   nopat = ebit×(1−t)；excess_cash = max(0, 现金类 − 2%×营收)；invested_capital = 有息负债 + 总权益 − 超额现金。
   §6.5.2.3 股本口径用的留存项：net_income = 归母净利、tci = 归母综合收益（年度与 TTM 均为区间值）；
   TTM 行另给 net_income_ytd／dividends_paid_ytd = 最新年报期末之后的本财年累计值（年报行留空；季报现金流量表无已付股息行时，
-  上一财年未付股息的公司记 0、付过股息的公司留空）。
+  上一财年未付股息的公司记 0，付过股息的公司改由分红事件表折算——见下）。
+  补缺源（东财数据中心，原始 JSON 同样落 `data/raw/overseas_statements/`）：
+  * 港股现金流量表缺「已付股息」行（东财 F10 部分中报只给摘要、阿里巴巴年报也只有 8 行）→ `RPT_HKF10_INFO_DIVIDEND` 分红事件，
+    除净日落在 (上期期末, 本期期末] 的现金分派按「每股派 × 最新已发行股数」折成报表币（`overseas_valuation_inputs.csv` 汇率）；
+  * `overseas_statement_overrides.csv` 维护行未填归母净利／综合收益／年报后累计值 → `RPT_USF10_FN_INCOME`（归属于母公司股东净利润、
+    本公司拥有人占全面收益总额，报表币）与 `RPT_USF10_INFO_DIVIDEND`（每 ADR 美元派息 ÷ 每 ADR 股数 × 股数 × 汇率）。
+  补缺来源都写进 `tags_used`（`eastmoney:` 前缀）。
 """
 from __future__ import annotations
 
 import argparse
 import csv
 import json
+import re
 import sys
 import time
 import urllib.parse
@@ -44,6 +51,7 @@ RAW_DIR = ROOT / "data/raw/overseas_statements"
 OUT = ROOT / "data/interim/overseas_roic_years.csv"
 REPORT_EVIDENCE = ROOT / "data/reference/overseas_report_evidence.csv"
 STATEMENT_OVERRIDES = ROOT / "data/reference/overseas_statement_overrides.csv"
+VALUATION_INPUTS = ROOT / "data/reference/overseas_valuation_inputs.csv"
 UA = "RayKey-AShareQuant research bot (personal research use)"
 HK_API = "https://datacenter.eastmoney.com/securities/api/data/v1/get"
 # 港股清单的报表货币（东财 HK F10 不带币种列；人民币列报公司显式登记）
@@ -148,6 +156,158 @@ HK_ITEMS = {
 }
 # 有息负债 = 贷款 + 应付票据 + 应付债券 + 可转换票据及债券 + 租赁负债（流动＋非流动），与 A 股 `roic_inputs.DEBT_FIELDS` 同口径
 HK_DEBT_KEYS = ("lt_loan", "st_loan", "notes_nc", "notes_c", "bonds", "convertibles", "lease_nc", "lease_c")
+# 东财数据中心补缺源：美股利润表（报表币）、美股分红事件（每 ADR 美元）、港股分红事件（每股港币／人民币／美元）
+EM_US_INCOME_ITEMS = {"net_income": "归属于母公司股东净利润", "tci": "本公司拥有人占全面收益总额"}
+EM_HEADERS = {"User-Agent": "Mozilla/5.0", "Referer": "https://emweb.securities.eastmoney.com/"}
+HK_DPS_RE = re.compile(r"每股派(港币|人民币|美元)([\d.]+)元")
+US_ADR_DPS_RE = re.compile(r"每1份ADR派([\d.]+)")
+US_SHARE_DPS_RE = re.compile(r"每1股派([\d.]+)美元")
+CCY_NAME = {"港币": "HKD", "人民币": "CNY", "美元": "USD"}
+
+
+def load_fx() -> dict[str, float]:
+    """`overseas_valuation_inputs.csv` 的汇率键（fx_usd_cny／fx_usd_hkd／fx_usd_twd／fx_usd_eur 等，均为 1 美元折多少目标币）。"""
+    if not VALUATION_INPUTS.exists():
+        return {}
+    return {r["key"]: float(r["value"]) for r in csv.DictReader(VALUATION_INPUTS.open(encoding="utf-8")) if r["key"].startswith("fx_")}
+
+
+def fx_convert(amount: float, ccy: str, target: str, fx: dict[str, float]) -> float | None:
+    """ccy → target，经美元中转；缺汇率返回 None。"""
+    if ccy == target:
+        return amount
+    per_usd = {"USD": 1.0}
+    for key, val in fx.items():
+        if key.startswith("fx_usd_"):
+            per_usd[key[len("fx_usd_"):].upper()] = val
+    if ccy not in per_usd or target not in per_usd:
+        return None
+    return amount / per_usd[ccy] * per_usd[target]
+
+
+def em_datacenter(report: str, flt: str, cache: Path, refresh: bool, sort: str = "") -> list[dict]:
+    """东财数据中心分页拉取（pageSize 500），落原始 JSON；下载失败沿用缓存。"""
+    if cache.exists() and cache.stat().st_size > 2 and not refresh:
+        return json.loads(cache.read_text(encoding="utf-8"))
+    cached = json.loads(cache.read_text(encoding="utf-8")) if cache.exists() and cache.stat().st_size > 2 else []
+    allrows, page = [], 1
+    while True:
+        url = (f"{HK_API}?reportName={report}&columns=ALL&pageSize=500&pageNumber={page}{sort}&filter="
+               + urllib.parse.quote(flt))
+        try:
+            d = json.loads(_get(url, EM_HEADERS, 30).decode("utf-8"))
+        except Exception as exc:  # noqa: BLE001
+            print(f"  东财 {report} p{page}: 下载失败 {exc}")
+            return cached
+        res = d.get("result") or {}
+        data = res.get("data") or []
+        if not d.get("success") and "为空" not in str(d.get("message", "")):
+            print(f"  东财 {report}: {d.get('message')}")
+            return cached
+        allrows += data
+        if not data or page >= int(res.get("pages") or 1):
+            break
+        page += 1
+        time.sleep(0.3)
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(json.dumps(allrows, ensure_ascii=False), encoding="utf-8")
+    time.sleep(0.3)
+    return allrows
+
+
+def hk_dividend_events(code: str, refresh: bool) -> list[dict]:
+    return em_datacenter("RPT_HKF10_INFO_DIVIDEND", f'(SECUCODE="{code}.HK")', RAW_DIR / "hk" / f"{code}_dividend.json",
+                         refresh, "&sortColumns=NOTICE_DATE&sortTypes=-1")
+
+
+def us_income_items(code: str, refresh: bool) -> list[dict]:
+    rows: list[dict] = []
+    for item in EM_US_INCOME_ITEMS.values():
+        rows += em_datacenter("RPT_USF10_FN_INCOME", f'(SECURITY_CODE="{code}")(ITEM_NAME="{item}")',
+                              RAW_DIR / "sec" / f"{code}_em_income_{item}.json", refresh, "&sortColumns=REPORT_DATE&sortTypes=-1")
+    return rows
+
+
+def us_dividend_events(code: str, refresh: bool) -> list[dict]:
+    return em_datacenter("RPT_USF10_INFO_DIVIDEND", f'(SECURITY_CODE="{code}")', RAW_DIR / "sec" / f"{code}_em_dividend.json",
+                         refresh, "&sortColumns=NOTICE_DATE&sortTypes=-1")
+
+
+def dividends_from_events(events: list[dict], start: str, end: str, shares: float | None, target_ccy: str,
+                          fx: dict[str, float], per_adr_shares: float = 1.0, market: str = "HK") -> float | None:
+    """除净日落在 (start, end] 的现金分派合计（报表币，总额）。港股按「每股派 X 币」，美股按「每 1 份 ADR 派 X 美元」÷ 每 ADR 股数
+    或「每 1 股派 X 美元」。
+    无可解析事件返回 0；股数或汇率缺失返回 None。"""
+    if not shares:
+        return None
+    total = 0.0
+    for ev in events:
+        ex = str(ev.get("EX_DIVIDEND_DATE") or "")[:10]
+        if not ex or not (start < ex <= end):
+            continue
+        plan = str(ev.get("PLAN_EXPLAIN") or "")
+        if market == "HK":
+            m = HK_DPS_RE.search(plan)
+            if not m:
+                continue
+            per_share, ccy = float(m.group(2)), CCY_NAME[m.group(1)]
+        else:
+            if str(ev.get("ASSIGN_TYPE") or "Cash") != "Cash":
+                continue
+            m = US_ADR_DPS_RE.search(plan)
+            if m:
+                per_share, ccy = float(m.group(1)) / per_adr_shares, "USD"       # 每 ADR 美元 ÷ 每 ADR 普通股数
+            else:
+                m = US_SHARE_DPS_RE.search(plan)
+                if not m:
+                    continue
+                per_share, ccy = float(m.group(1)), "USD"                        # 本土发行人：每 1 股派 X 美元
+        amount = fx_convert(per_share * shares, ccy, target_ccy, fx)
+        if amount is None:
+            return None
+        total += amount
+    return total
+
+
+def fill_override_from_eastmoney(row: dict, annual: dict | None, income: list[dict], events: list[dict],
+                                 shares_per_adr: float, fx: dict[str, float]) -> list[str]:
+    """维护行缺归母净利／综合收益／年报后累计值时按东财补：年报行取 DATE_TYPE_CODE 001，TTM 行取本期累计（002／004／...）。返回补了哪些字段。"""
+    filled: list[str] = []
+    ccy = row["report_currency"]
+    by_period: dict[tuple[str, str], dict[str, float]] = {}
+    for it in income:
+        if it.get("CURRENCY_ABBR") and it["CURRENCY_ABBR"] != ccy:
+            continue
+        by_period.setdefault((str(it["REPORT_DATE"])[:10], str(it["REPORT_TYPE"])), {})[it["ITEM_NAME"]] = _num(it.get("AMOUNT"))
+    tags = dict(t.split("=", 1) for t in row["tags_used"].split(";") if "=" in t) if row.get("tags_used") else {}
+    period = row["period"]
+    if row["period_type"] == "annual":
+        items = by_period.get((period, "年报"), {})
+        for key, name in EM_US_INCOME_ITEMS.items():
+            if row.get(key) is None and items.get(name) is not None:
+                row[key], tags[key] = items[name], f"eastmoney:RPT_USF10_FN_INCOME:{name}"
+                filled.append(key)
+    else:
+        items = by_period.get((period, "累计季报"), {})
+        if row.get("net_income_ytd") is None and items.get(EM_US_INCOME_ITEMS["net_income"]) is not None:
+            row["net_income_ytd"] = items[EM_US_INCOME_ITEMS["net_income"]]
+            tags["net_income_ytd"] = "eastmoney:RPT_USF10_FN_INCOME:累计季报"
+            filled.append("net_income_ytd")
+        if row.get("dividends_paid_ytd") is None and annual:
+            paid = dividends_from_events(events, annual["period"], period, _num(row.get("shares")), ccy, fx, shares_per_adr, "US")
+            if paid is not None:
+                row["dividends_paid_ytd"], tags["dividends_paid_ytd"] = paid, "eastmoney:RPT_USF10_INFO_DIVIDEND"
+                filled.append("dividends_paid_ytd")
+        if row.get("net_income") is None and annual and _num(annual.get("net_income")) is not None:
+            prior = f"{int(period[:4]) - 1:04d}{period[4:]}"
+            old = next((v.get(EM_US_INCOME_ITEMS["net_income"]) for (p, t), v in by_period.items()
+                        if t == "累计季报" and abs((date.fromisoformat(p) - date.fromisoformat(prior)).days) <= 7), None)
+            if old is not None and row.get("net_income_ytd") is not None:
+                row["net_income"] = _num(annual["net_income"]) + row["net_income_ytd"] - old
+                tags["net_income"] = "eastmoney:RPT_USF10_FN_INCOME:TTM"
+                filled.append("net_income")
+    row["tags_used"] = ";".join(f"{k}={v}" for k, v in sorted(tags.items()))
+    return filled
 
 
 def _num(v):
@@ -524,7 +684,8 @@ def hk_download(code: str, refresh: bool) -> dict[str, list[dict]]:
     return out_all
 
 
-def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: float | None) -> list[dict]:
+def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: float | None,
+               events: list[dict] | None = None, fx: dict[str, float] | None = None) -> list[dict]:
     def table_map(kind: str) -> dict[str, dict[str, float]]:
         out: dict[str, dict[str, float]] = {}
         for r in tables.get(kind, []):
@@ -546,6 +707,7 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
                 tags[key] = f"{kind}:{n}"
                 return maps[kind][period][n]
         return None
+    prev_period = ""
     for period in periods:
         rev, pretax, opinc, taxv = pick(period, "revenue"), pick(period, "pretax"), pick(period, "operating_income"), pick(period, "income_tax")
         if rev is None and pretax is None:
@@ -553,19 +715,27 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
         intexp = pick(period, "interest_expense") or 0.0
         debt = sum(pick(period, k) or 0.0 for k in HK_DEBT_KEYS)
         cash = (pick(period, "cash") or 0.0) + (pick(period, "deposits") or 0.0)
+        dividends = pick(period, "dividends_paid")
+        if dividends is None and events and prev_period:
+            # 现金流量表无「已付股息」行：按分红事件（除净日落在上一财年末与本期末之间）× 最新已发行股数折报表币
+            dividends = dividends_from_events(events, prev_period, period, shares, HK_REPORT_CCY.get(code, "CNY"), fx or {})
+            if dividends is not None:
+                tags["dividends_paid"] = "eastmoney:RPT_HKF10_INFO_DIVIDEND"
+        prev_period = period
         rows.append(_build_row("HK", code, name, period, period, HK_REPORT_CCY.get(code, "CNY"), rev, opinc, pretax,
                                None if taxv is None else abs(taxv), intexp, pick(period, "total_equity"), pick(period, "parent_equity"),
                                pick(period, "minority_equity") or 0.0, debt, cash, abs(pick(period, "capex") or 0.0),
                                pick(period, "dep_amort") or 0.0, pick(period, "cfo"), shares, tags,
                                "eastmoney HK F10 (RPT_HKF10_FN_*_PC, DATE_TYPE_CODE=001)", TAX_DEFAULT["HK"],
-                               buybacks=abs(pick(period, "buybacks") or 0.0), dividends=abs(pick(period, "dividends_paid") or 0.0),
+                               buybacks=abs(pick(period, "buybacks") or 0.0), dividends=abs(dividends or 0.0),
                                net_income=pick(period, "net_income"), tci=pick(period, "tci"),
                                period_type="annual", report_label=f"年报（FY{period[:4]}，截至 {period}）"))
     return rows
 
 
 def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shares: float | None,
-                       annuals: list[dict], evidence_date: str = "") -> dict | None:
+                       annuals: list[dict], evidence_date: str = "", events: list[dict] | None = None,
+                       fx: dict[str, float] | None = None) -> dict | None:
     """Build the latest verified HK quarterly/interim TTM snapshot from F10 cumulative statements."""
     if not annuals or not evidence_date:
         return None
@@ -619,6 +789,11 @@ def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shar
     cash = (pick("current", "cash") or 0.0) + (pick("current", "deposits") or 0.0)
     if revenue is None or (pretax is None and opinc is None) or parent_eq is None or not shares:
         return None
+    dividends_ytd = _ytd_dividends(pick("current", "dividends_paid"), annual_values["dividends_paid"])
+    if dividends_ytd is None and events:
+        dividends_ytd = dividends_from_events(events, annual["period"], period, shares, HK_REPORT_CCY.get(code, "CNY"), fx or {})
+        if dividends_ytd is not None:
+            tags["dividends_paid_ytd"] = "eastmoney:RPT_HKF10_INFO_DIVIDEND"
     annual_date, current_date = date.fromisoformat(annual["period"]), date.fromisoformat(period)
     quarter = ((current_date.year - annual_date.year) * 12 + current_date.month - annual_date.month) // 3
     label = {1: "一季报", 2: "中报", 3: "三季报"}.get(quarter, "定期报告")
@@ -629,7 +804,7 @@ def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shar
                       tags, "eastmoney HK F10 TTM", TAX_DEFAULT["HK"],
                       buybacks=abs(ttm("buybacks") or 0.0), dividends=abs(ttm("dividends_paid") or 0.0),
                       net_income=ttm("net_income"), tci=ttm("tci"), net_income_ytd=pick("current", "net_income"),
-                      dividends_ytd=_ytd_dividends(pick("current", "dividends_paid"), annual_values["dividends_paid"]),
+                      dividends_ytd=dividends_ytd,
                       period_type="ttm", report_label=f"{label}（FY{fiscal_year}，截至 {period}）")
 
 
@@ -675,6 +850,12 @@ def main() -> int:
     evidence = load_report_evidence(args.as_of)
     overrides = load_statement_overrides(args.as_of)
     override_keys = {(r["security_code"], r["period"], r["period_type"]) for r in overrides}
+    fx = load_fx()
+    try:
+        from build_overseas_roic_bands import COMPANY_CFG  # 每 ADR 普通股数（美股分红事件折每股用）
+    except Exception:  # noqa: BLE001
+        COMPANY_CFG = {}
+    fills: list[str] = []
     rows: list[dict] = []
     summary = []
     for r in watch:
@@ -698,15 +879,27 @@ def main() -> int:
                 got.append(current)
         elif market == "HK":
             tables = hk_download(code, args.refresh)
-            got = hk_extract(code, name, tables, hk_shares.get(code))
-            current = hk_current_extract(code, name, tables, hk_shares.get(code), got, item.get("evidence_date", ""))
+            events = hk_dividend_events(code, args.refresh)
+            got = hk_extract(code, name, tables, hk_shares.get(code), events, fx)
+            current = hk_current_extract(code, name, tables, hk_shares.get(code), got, item.get("evidence_date", ""), events, fx)
             if current and current["period"] == item.get("report_period"):
                 got.append(current)
         else:
             summary.append(f"{market} {code} {name}: 该市场无三表取数源，不出行（清单保持无法估值）"); continue
         # 官方报表维护行优先于自动提取；SEC companyfacts 对 6-K 境外发行人季报通常没有结构化事实。
         got = [g for g in got if (code, g["period"], g["period_type"]) not in override_keys]
-        got += [g for g in overrides if g["security_code"] == code]
+        own_overrides = [g for g in overrides if g["security_code"] == code]
+        if own_overrides and market == "US" and any(g.get(k) is None for g in own_overrides
+                                                    for k in ("net_income", "tci", "net_income_ytd", "dividends_paid_ytd")):
+            income, events = us_income_items(code, args.refresh), us_dividend_events(code, args.refresh)
+            adr = float(COMPANY_CFG.get(code, {}).get("adr", 1) or 1)
+            for g in own_overrides:
+                annual_ref = max((a for a in got + own_overrides if a["period_type"] == "annual" and a["period"] < g["period"]),
+                                 key=lambda a: a["period"], default=None) if g["period_type"] == "ttm" else None
+                done = fill_override_from_eastmoney(g, annual_ref, income, events, adr, fx)
+                if done:
+                    fills.append(f"{code} {g['period']} {g['period_type']}: 东财补 {'/'.join(done)}")
+        got += own_overrides
         got = apply_evidence(got, evidence)
         got.sort(key=lambda g: (g["period"], 0 if g["period_type"] == "annual" else 1))
         rows += got
@@ -724,6 +917,8 @@ def main() -> int:
         for row in rows:
             w.writerow({k: ("" if row.get(k) is None else row.get(k)) for k in FIELDS})
     print("\n".join(summary))
+    if fills:
+        print("维护行补缺：" + "；".join(fills))
     print(f"wrote {len(rows)} rows → {args.out}")
     return 0
 
