@@ -477,8 +477,8 @@ SEC93_GAIN_SELL = 1.10         # §9.3.1「涨幅减持」：收盘较持仓均�
                                # 资金不足时该类持仓优先作换仓卖出源（涨幅最大者先，同样不要求弱势）。持仓均价 = 买入按股数加权、
                                # 减持不变、除权按 §11.4 折算（持仓表 cost_basis）。回测落点 `--gain-sell 1.10 --gain-sell-mode ungated`。
 SEC93_SWAP_MARGIN = 0.15       # §9.3.1「换仓」：候选 P/V 须比被换出持仓低至少此差值（与回测 `--swap-margin` 同值）
-SEC93_SWAP_SOURCE_BLOCK = 1.0  # §9.3.1 换仓行接收方守卫（v4.135）：当日换仓卖出源不进买入队列，且候选侧 P/V 高于
-                               # 「最低换仓源持仓侧 P/V − SEC93_SWAP_MARGIN × K」的候选一并剔除（与回测 `--swap-source-block` 同值；-1 = 关）
+SEC93_SWAP_SOURCE_BLOCK = -1.0  # 换仓接收方守卫研究开关（与回测 `--swap-source-block` 同值；-1 = 关，现行）：K ≥ 0 时当日换仓卖出源
+                                # 不进买入队列，且候选侧 P/V 高于「最低换仓源持仓侧 P/V − SEC93_SWAP_MARGIN × K」的候选一并剔除
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"

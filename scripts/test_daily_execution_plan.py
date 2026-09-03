@@ -167,21 +167,40 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertAlmostEqual(res["cash"], -50_000.0)                            # 缺口原样带出，报告显示仍超授信
 
     def test_swap_source_block_guards_buy_queue(self) -> None:
-        # v4.135：当日换仓卖出源不进买入队列；候选侧 P/V 高于「最低换仓源持仓侧 P/V − 0.15」的候选一并剔除
+        # 研究开关（生产关，K=-1）：临时置 K=1 时当日换仓卖出源不进买入队列；候选侧 P/V 高于「最低换仓源持仓侧 P/V − 0.15」的候选一并剔除
         trig = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)        # 未持仓触发者
         src = row("000012", "H2", close=10.0, ma20=12.0, ma60=9.0, pv=1.00)       # 弱势卖出源，自身也过买入线
         near = row("000015", "N", close=10.0, ma20=9.0, ma60=8.0, pv=0.90)        # 0.90 > 1.00 − 0.15 → 剔除
         ok = row("000014", "A", close=10.0, ma20=9.0, ma60=8.0, pv=0.80)          # 0.80 ≤ 0.85 → 可买
         holdings = {"000012": hold("H2", 50000, 5.0, None)}
-        res = self.run_plan([trig, ok, near, src], holdings, funds=1000.0,
-                            members={"000010", "000012", "000014", "000015"})
+        saved = scan.SEC93_SWAP_SOURCE_BLOCK
+        scan.SEC93_SWAP_SOURCE_BLOCK = 1.0
+        try:
+            res = self.run_plan([trig, ok, near, src], holdings, funds=1000.0,
+                                members={"000010", "000012", "000014", "000015"})
+        finally:
+            scan.SEC93_SWAP_SOURCE_BLOCK = saved
         self.assertEqual([s["security_code"] for s in res["sells"] if s["rule"] == "换仓"], ["000012"])
         self.assertEqual([p["security_code"] for p in res["plan"]], ["000010", "000014"])   # 15 万给 X，余 1,000 元买 A 一手
         self.assertEqual(sorted(str(c["security_code"]).zfill(6) for c, _w in res["swap_blocked"]), ["000012", "000015"])
         self.assertEqual(res["netted"], [])                                       # 卖出源当日不再买回，无可对冲
 
     def test_same_day_buy_sell_netted(self) -> None:
-        # §9.3.2 第 6 步：同日买卖按较小者抵消，只执行净额——涨幅减持后同日买回（换仓卖出源当日不进买入队列，见上一条）
+        # §9.3.2 第 6 步：同日买卖按较小者抵消，只执行净额（守卫关，换仓卖出源可当日买回）
+        trig = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.50)       # 未持仓触发者
+        src = row("000012", "H2", close=10.0, ma20=12.0, ma60=9.0, pv=0.80)      # 弱势卖出源，自身也过买入线
+        holdings = {"000012": hold("H2", 50000, 5.0, None)}
+        res = self.run_plan([trig, src], holdings, funds=1000.0, members={"000010", "000012"})
+        swap = [s for s in res["sells"] if s["rule"] == "换仓"][0]
+        self.assertEqual(swap["security_code"], "000012")
+        self.assertEqual(swap["sell_shares"], 14900)                 # 原 15,000 卖出，抵消 100 股
+        self.assertIn("同日对冲 100 股", str(swap["note"]))
+        self.assertEqual([(p["security_code"], p["shares"]) for p in res["plan"]], [("000010", 15000)])
+        self.assertEqual(res["netted"], [("000012", 100.0)])
+        self.assertEqual(res["swap_blocked"], [])
+
+    def test_gain_trim_buyback_netted(self) -> None:
+        # §9.3.2 第 6 步：涨幅减持后同日买回同样只执行净额
         t = row("000016", "T", close=100.0, ma20=90.0, ma60=80.0, pv=0.50)        # 涨幅 150%、过买入线、走势合格
         holdings = {"000016": hold("T", 5000, 40.0, None)}
         res = self.run_plan([t], holdings, funds=200_000.0, members={"000016"})
@@ -219,9 +238,8 @@ class ExecutionPlanTest(unittest.TestCase):
         res = self.run_plan([trig2, src2, near], holdings, funds=1000.0,
                             members={"000010", "000012", "000015"})
         swap = [s for s in res["sells"] if s["rule"] == "换仓"][0]
-        # v4.135 接收方守卫：N 0.60 > 0.70 − 0.15 不进买入队列，卖出款只到触发者
-        self.assertNotIn("N 0.6000", swap["condition"])
-        self.assertEqual([str(c["security_code"]).zfill(6) for c, _w in res["swap_blocked"]], ["000015"])
+        self.assertIn("N 0.6000（边际 +0.1000⚠不足）", swap["condition"])           # 守卫关：接收方边际不足只打标不剔除
+        self.assertEqual(res["swap_blocked"], [])
         self.assertIn("X 0.4000（边际 +0.3000）", swap["condition"])                  # 触发者本身过线、不打标
         # 卖出款一分未投出时明写（唯一候选一手 20 万 > 卖出款 15 万）
         pricey = row("000010", "X", close=2000.0, ma20=1800.0, ma60=1700.0, pv=0.50)

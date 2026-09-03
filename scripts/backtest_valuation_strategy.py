@@ -2224,7 +2224,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 涨幅让位的卖出不由 `P/V` 边际授权，其卖出款不受本闸门约束。
         if (swap_recipient_margin or swap_source_block >= 0.0) and (gate != "pv" or rank_mode != "pv"):
             raise ValueError("--swap-recipient-margin／--swap-source-block 目前只定义于 --gate pv 且 --rank-mode pv"
-                             "（BASE 带 --swap-source-block 1；研究臂改 gate／rank-mode 时须同时给 --swap-source-block -1）")
+                             "（BASE 带 --swap-source-block -1；研究臂改 gate／rank-mode 时须同时给 --swap-source-block -1）")
         swap_funds_before = buying_power(portfolio, credit_limit) if swap_recipient_margin else 0.0
         swap_gain_proceeds = 0.0             # 涨幅让位卖出款：不受闸门约束
         swap_src_min_pv = float("inf")       # 当日 P/V 授权换仓卖出源的最低持仓侧 P/V
@@ -3562,8 +3562,8 @@ def main() -> int:
                         help="接收方边际守卫的相邻区间扫描：要求的边际 = swap-margin × K；"
                              "K=1 为与换仓触发同一条线，K=0 为「接收方不得比卖出源更贵」")
     parser.add_argument("--swap-source-block", type=float, default=-1.0, metavar="K",
-                        help="§9.3.1 换仓行接收方守卫（v4.135，OI-107 开关转生产）：当日换仓卖出源不进买入队列，并一并剔除所有"
-                             "「不比最低换仓源便宜 swap-margin × K」的候选；BASE 带 K=1（与换仓触发同线），-1=关（v4.135 前口径），"
+                        help="换仓接收方守卫（研究开关；v4.135 曾作生产 K=1，v4.137 回退）：当日换仓卖出源不进买入队列，并一并剔除所有"
+                             "「不比最低换仓源便宜 swap-margin × K」的候选；-1=关（BASE 现行），K=1 与换仓触发同线，"
                              "K=0 只挡卖出源与比它更贵的")
     parser.add_argument("--sell-x", type=float, default=0.0, metavar="PCT",
                         help="卖出侧一档占净资产的百分比（用户 2026-09-02 实验：买入与卖出可取不同档位）；"

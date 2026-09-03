@@ -28,7 +28,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         # 候选侧买入线 1.0454（OI-132 购买法收购当年分子年化后重解）；换仓边际 0.15（v4.133，§12.174 表 R／§12.176）
         self.assertEqual(daily_scan.SEC93_BUY_LINE, 1.0454)
         self.assertEqual(daily_scan.SEC93_SWAP_MARGIN, 0.15)
-        self.assertEqual(daily_scan.SEC93_SWAP_SOURCE_BLOCK, 1.0)   # v4.135 换仓接收方守卫 K=1
+        self.assertEqual(daily_scan.SEC93_SWAP_SOURCE_BLOCK, -1.0)  # 换仓接收方守卫关（v4.137 回退 v4.135）
         # v4.109（OI-110）：估值减持线已删除，生产侧不得再有该常量
         self.assertFalse(hasattr(daily_scan, "SEC93_SELL_LINE"))
         self.assertEqual(daily_scan.DEFAULT_HOLD_BANDS, ROOT / "data/processed/a_share_pool_model_bands_hold.csv")
