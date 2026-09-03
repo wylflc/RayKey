@@ -3,13 +3,10 @@ security_code,report_period,evidence_date,report_event,evidence_source,evidence_
 09992,2026-06-30,2026-08-20,中报（2026H1）,issuer_ir,https://www.popmart.com.cn/home/investor
 09618,2026-06-30,2026-08-13,二季报（2026Q2）,issuer_ir,https://ir.jd.com/news-releases/news-release-details/jdcom-announces-second-quarter-and-interim-2026-results
 09988,2026-06-30,2026-08-20,一季报（FY2027Q1）,issuer_ir,https://www.alibabagroup.com/en-US/ir-financial-reports-quarterly-results
-03690,2026-03-31,2026-06-01,一季报（2026Q1）,issuer_ir,https://www.meituan.com/en-US/investor/results
-06862,2025-12-31,2026-03-24,年报（FY2025）,hkex_results,https://www1.hkexnews.hk/search/titlesearch.xhtml?category=0&market=SEHK&stockId=199151
 TSM,2026-06-30,2026-07-16,二季报（2026Q2）,issuer_ir,https://investor.tsmc.com/english/quarterly-results/2026/q2
 ADBE,2026-05-29,2026-06-11,二季报（FY2026Q2）,issuer_ir,https://news.adobe.com/news/2026/06/adobe-q2fy26-financial-results
 PDD,2026-06-30,2026-08-24,二季报（2026Q2）,issuer_ir,https://pinduoduo.gcs-web.com/news-releases/news-release-details/pdd-holdings-announces-second-quarter-2026-unaudited-financial
 MU,2026-05-28,2026-06-24,三季报（FY2026Q3）,issuer_ir,https://investors.micron.com/news/press-release/2026/Micron-Technology-Inc--Reports-Record-Results-for-the-Third-Quarter-of-Fiscal-2026/default.aspx
-NVDA,2026-04-26,2026-05-20,一季报（FY2027Q1）,issuer_ir,https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-First-Quarter-Fiscal-2027/default.aspx
 ASML,2026-06-28,2026-07-15,二季报（2026Q2）,issuer_ir,https://www.asml.com/en/news/press-releases/2026/q2-2026-financial-results
 GOOGL,2026-06-30,2026-07-22,二季报（2026Q2）,issuer_ir,https://abc.xyz/investor/
 AAPL,2026-06-27,2026-07-30,三季报（FY2026Q3）,issuer_ir,https://www.apple.com/newsroom/2026/07/apple-reports-third-quarter-results/
@@ -28,3 +25,6 @@ INTC,2026-06-27,2026-07-23,二季报（2026Q2）,issuer_ir,https://www.intc.com/
 03888,2026-06-30,2026-08-19,中报（2026H1）,issuer_ir,https://www.kingsoft.com/ksnet/ft/attachment/KS-O00002026081919585617007/73bc3116-2677-48ba-8e48-dd01c7d4f3fd.pdf
 00267,2026-06-30,2026-08-28,中报（2026H1）,hkex_results,https://www.citic.com/
 00316,2026-06-30,2026-08-27,中报（2026H1）,hkex_results,https://www.ooilgroup.com/
+NVDA,2026-07-26,2026-08-26,二季报（FY2027Q2）,issuer_ir,https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2027
+03690,2026-06-30,2026-08-28,二季报（2026Q2）,issuer_ir,https://www.meituan.com/en-US/investor-relations
+06862,2026-06-30,2026-08-25,中报（2026H1）,issuer_ir,https://www.haidilao.com/
