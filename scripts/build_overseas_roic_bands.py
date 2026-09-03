@@ -4,10 +4,14 @@
 与 `build_historical_valuation_bands.py --value-model roic`（§6.7 第 2 步生产参数）逐项同式：
   history = 最近 5 个财年（至少 3 年）；ROIC0 = 归一化 ROIC；增量 ROIC（端点）；再投资率；
   rd = 历史利息/有息负债（夹 2%~12%，缺省 4.5%）；税率 = 最新报告口径观测；WACC 账面权重；
-  **锚**：比率 = 各年 NOPAT ÷ 当年母公司权益，季报观察点的「当期」= 最新年报比率 × f（f = NOPAT TTM ÷ 最新年报 NOPAT），
-  增长态信任度 λ = 近两次年度变动中上行次数 ÷ 2，非周期锚 = 三年中位 + λ×(当期 − 三年中位)；
+  **锚**：比率 = 各年 NOPAT ÷ 当年经营账面 E_op（§6.5.2.3 股本口径第 2 条：年报间外生权益 X_y = ΔE − (归母综合收益 − 已付股息)，
+  综合收益缺失用归母净利，|X_y| ≥ 5% 上年母公司权益才计；E_op = E − 未花的募资（先进先出，按超额现金判） − 累计注销，十年窗首年
+  X_cum = 0；某年 E − X_cum < 20% E 判结构断点，比率窗与守卫窗自该年重起），季报观察点的「当期」= 最新年报比率 × f
+  （f = NOPAT TTM ÷ 最新年报 NOPAT），增长态信任度 λ = 近两次年度变动中上行次数 ÷ 2，非周期锚 = 三年中位 + λ×(当期 − 三年中位)；
   周期守卫坡道（OI-088／OI-090）：s = 当期比率 ÷ 十年中位，w = clip((s − 1.3)/0.6, 0, 1)，谷 v 同式取 1/s，
-  ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；λ 与三年／五年／十年中位只取年报；每股 NOPAT 锚 = ratio0 × 当期 BPS；
+  ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；λ 与三年／五年／十年中位只取年报；
+  每股 NOPAT 锚 = ratio0 × 经营账面 BPS_op（§6.5.2.3 股本口径第 1 条）：BPS_op = 当期 BPS − x − X_cum/股，
+  x = 当期 BPS − (最新年报母公司权益 + 其后归母净利 − 其后已付股息) ÷ 当期稀释股数（年报行 x = 0；x 封顶 95% BPS）；
   g0 = max(min(增量ROIC,40%)×再投资率, NOPAT 3 年 CAGR × W × (1−w) × d) 夹 [0,25%]，W = `TRAIL_WEIGHT` = 0（与 §6.7 第 2 步
   `--roic-trail-weight 0` 同），d = min(1, 最新年报/上年) × min(1, TTM/最新年报)；ROIC_T = min(WACC + 档位终值超额, ROIC0)；
   g_T = min(3%, 无风险利率)；fade 10 年；每股价值 = intrinsic_value(NOPAT/股) − 净负债/股；带 = V × [0.90, 1.10]。
@@ -16,7 +20,11 @@
     （`data/reference/overseas_valuation_inputs.csv`），β 按质量档与 A 股同表（L1 0.9／L2 1.0／L3、L4 1.3）；
   * 报表货币 ≠ 交易货币时按同文件汇率折算，ADR 按每 ADR 普通股数折算；
   * 金融企业（伯克希尔）ROIC 不适用，沿用档案带并标明；韩股无三表源、SpaceX 无申报 → 无法估值；
-  * 经营账面 E_op 取母公司权益（海外三表无外生权益／未花募资／注销识别）；季报当期的 f 取 NOPAT TTM ÷ 年报 NOPAT（A 股用归母净利 TTM 因子）；
+  * 季报观察点有完整三表与申报稀释股数：x 直接按上式算，不走 A 股的股数估计与 −25% BPS 下界（|x| 超过 25% BPS 记
+    `x_large_negative` 留痕）；净负债与少数股东取季报资产负债表（A 股按年报净负债 × BPS_op/E_op 再加 x 近似），x 的现金
+    已在其中、不再另进股权桥；年报间已付股息取现金流量表；`overseas_statement_overrides.csv` 维护行未填净利时该年 X_y = 0
+    （`earn_gap`）、季报 x = 0（`np_gap`）；分红公司的季报现金流量表缺已付股息（东财 HK F10 部分中报只给摘要）时 x = 0
+    （`div_gap`）；季报当期的 f 取 NOPAT TTM ÷ 年报 NOPAT（A 股用归母净利 TTM 因子）；
   * ROIC 路径被拒（NOPAT 非正、终值 ROIC 距 g_T 不足、净负债超过企业价值等）→ 无法估值，原因写入 `band_derivation_text`，
     旧档案带只作参考文本保留（与 A 股「没算完的带一律判无法估值」同规）。
 用法：
@@ -47,6 +55,8 @@ BETA_BY_TIER = {"L1": 0.9, "L2": 1.0, "L3": 1.3, "L4": 1.3}
 TERMINAL_EXCESS_BY_TIER = {"L1": 0.06, "L2": 0.03, "L3": 0.0, "L4": 0.0}
 ROE_YEARS, MIN_YEARS, IROE_CAP, G0_CAP, G0_FLOOR = 5, 3, 0.40, 0.25, 0.0
 N_FADE, N1, MIN_TERMINAL_SPREAD, PEAK_K, PEAK_RAMP, TRAIL_WEIGHT = 10, 0, 0.02, 1.6, 0.3, 0.0
+# §6.5.2.3 股本口径（与 build_historical_valuation_bands 同值）：|X_y| ≥ 5% 上年母公司权益才计；经营账面 < 20% 账面判结构断点；x 封顶 95% BPS
+EXTERNAL_EQUITY_MIN_FRACTION, OPERATING_BOOK_MIN_FRACTION, X_CAP_FRACTION, LONG_YEARS = 0.05, 0.20, 0.95, 10
 # 经营地 ERP 键、交易货币、每 ADR/港股对应普通股数、报表币→交易币汇率键
 COMPANY_CFG = {
     # US 上市
@@ -100,6 +110,9 @@ def load_years() -> dict[str, list[roic_inputs.RoicYear]]:
         y.shares = _f(r["shares"])  # type: ignore[attr-defined]
         y.buybacks = _f(r.get("buybacks")) or 0.0  # type: ignore[attr-defined]
         y.dividends_paid = _f(r.get("dividends_paid")) or 0.0  # type: ignore[attr-defined]
+        y.parent_netprofit, y.parent_tci = _f(r.get("net_income")), _f(r.get("tci"))
+        y.netprofit_ytd = _f(r.get("net_income_ytd"))  # type: ignore[attr-defined]
+        y.dividends_ytd = _f(r.get("dividends_paid_ytd"))  # type: ignore[attr-defined]
         row_meta = {"ccy": r["report_currency"], "source": r["source"], "tags": r["tags_used"],
                     "report_label": r.get("report_label", ""), "evidence_url": r.get("evidence_url", "")}
         if r.get("period_type") == "ttm":
@@ -123,6 +136,69 @@ def load_report_evidence(as_of: str) -> dict[str, dict[str, str]]:
             if r.get("evidence_date", "") <= as_of}
 
 
+def annual_external_equity(long_hist: list[roic_inputs.RoicYear]) -> tuple[dict[str, float], dict[str, float], str, str | None]:
+    """§6.5.2.3 股本口径第 2 条（与 `build_historical_valuation_bands.annual_external_equity` 同式）：
+    `X_y = ΔE − (归母综合收益 − 已付股息)`，综合收益缺失用归母净利；只计 |X_y| ≥ 5% 上年母公司权益的年份；
+    每年应从账面摘掉的外生权益 = 未花的募资（先进先出：每笔募资只在超额现金较募资前一年持续高出的部分内算未花）+ 累计注销；
+    某年 E − X_cum < 20% E（或权益 ≤ 0）判结构断点，自该年重起；权益缺失的年份只记 `equity_gap`，不断点、不推进 prev。
+    返回 ({期末: 摘掉额}, {期末: X_y}, 备注, 断点期末或 None)。"""
+    ordered = sorted(long_hist, key=lambda y: y.period)
+    deduct: dict[str, float] = {}
+    x_by_year: dict[str, float] = {}
+    if not ordered:
+        return deduct, x_by_year, "", None
+    deduct[ordered[0].period] = 0.0
+    cum = neg_cum = 0.0
+    raises: list[list[float]] = []
+    notes: set[str] = set()
+    prev = ordered[0]
+    break_period = ordered[0].period if (prev.parent_equity is None or prev.parent_equity <= 0) else None
+    for year in ordered[1:]:
+        if year.parent_equity is None:
+            # 缺权益的年份是取数缺口（F10 个别年份无股东权益项）：不作结构断点、不动 X_cum／募资追踪，prev 不推进
+            notes.add("equity_gap")
+            x_by_year[year.period] = 0.0
+            deduct[year.period] = deduct[prev.period]
+            continue
+        x_year = 0.0
+        if prev.parent_equity is not None:
+            earn = year.parent_tci if year.parent_tci is not None else year.parent_netprofit
+            if earn is None:
+                notes.add("earn_gap")
+            else:
+                div = getattr(year, "dividends_paid", 0.0) or 0.0
+                x_year = (year.parent_equity - prev.parent_equity) - (earn - div)
+                if prev.parent_equity > 0 and abs(x_year) < EXTERNAL_EQUITY_MIN_FRACTION * prev.parent_equity:
+                    x_year = 0.0
+        else:
+            notes.add("equity_gap")
+        cum += x_year
+        neg_cum += min(x_year, 0.0)
+        cash_now = year.excess_cash or 0.0
+        if x_year > 0:
+            raises.append([x_year, prev.excess_cash or 0.0, float("inf")])
+        idle = 0.0
+        for item in raises:
+            item[2] = min(item[2], max(0.0, cash_now - item[1]))
+            idle += min(item[0], item[2])
+        equity = year.parent_equity
+        if equity <= 0 or equity - cum < OPERATING_BOOK_MIN_FRACTION * equity:
+            cum, neg_cum, raises, idle, break_period = 0.0, 0.0, [], 0.0, year.period
+            notes.add("book_break")
+        x_by_year[year.period] = x_year
+        deduct[year.period] = idle + neg_cum
+        prev = year
+    return deduct, x_by_year, ",".join(sorted(notes)), break_period
+
+
+def operating_equity(year: roic_inputs.RoicYear, deduct: dict[str, float]) -> float | None:
+    """经营账面 `E_op = E − 未花的募资 − 累计注销`；非正返回 None。"""
+    if year.parent_equity is None:
+        return None
+    value_ = year.parent_equity - deduct.get(year.period, 0.0)
+    return value_ if value_ > 0 else None
+
+
 def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: dict[str, float],
                   current: roic_inputs.RoicYear | None = None) -> dict:
     """复刻 ROIC 路径，返回 {status, value_report_ccy, path, text, ...}。"""
@@ -131,7 +207,20 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     history = years[-ROE_YEARS:]
     if len(history) < MIN_YEARS:
         res["reason"] = f"三大报表年份仅 {len(history)} < 要求 {MIN_YEARS} 年"; return res
+    # §6.5.2.3 股本口径第 2 条：十年窗内逐年识别外生权益，比率窗与守卫窗按经营账面；结构断点起重切两窗
+    long_hist = years[-LONG_YEARS:]
+    deduct, x_by_year, x_note, book_break = annual_external_equity(long_hist)
+    if book_break is not None:
+        history = [y for y in history if y.period >= book_break]
+        long_hist = [y for y in long_hist if y.period >= book_break]
+        if len(history) < MIN_YEARS:
+            res["reason"] = f"结构断点 {book_break} 之后财年仅 {len(history)} < 要求 {MIN_YEARS} 年"; return res
     annual_latest = history[-1]
+    if operating_equity(annual_latest, deduct) is None and annual_latest.parent_equity and annual_latest.parent_equity > 0:
+        deduct, x_note = {}, (x_note + ",eop_nonpositive").strip(",")   # 累计外生权益吃光账面：退回不调整并留痕
+
+    def e_op(y: roic_inputs.RoicYear) -> float | None:
+        return operating_equity(y, deduct)
     latest = current if current and current.period > annual_latest.period else annual_latest
     rf, erp = inp["rf_usd"], inp[cfg["erp"]]
     beta = BETA_BY_TIER.get(tier, 1.0)
@@ -153,11 +242,10 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
         res["reason"] = f"最新报告口径 NOPAT={latest.nopat/1e9:.2f}b ≤ 0：息税前利润非正，按现金折现无意义（A 股同规，按 §6.5.2.4 判无法估值）"; return res
     # ---- §6.5.2.3 锚（A 股生产口径 ratio_bps）：比率 = 各年 NOPAT ÷ 当年母公司权益，锚 = ratio0 × 当期 BPS。
     # 季报观察点的「当期」= 最新年报比率 × f，f = NOPAT TTM ÷ 最新年报 NOPAT；λ 与三年／五年／十年中位只取年报。
-    ratios = [y.nopat / y.parent_equity for y in history if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
+    ratios = [y.nopat / e_op(y) for y in history if y.nopat is not None and e_op(y)]
     if not ratios:
-        res["reason"] = "无可用的 NOPAT/母公司权益比率"; return res
-    long_hist = years[-10:]
-    long_ratios = [y.nopat / y.parent_equity for y in long_hist if y.nopat is not None and y.parent_equity and y.parent_equity > 0]
+        res["reason"] = "无可用的 NOPAT/经营账面比率"; return res
+    long_ratios = [y.nopat / e_op(y) for y in long_hist if y.nopat is not None and e_op(y)]
     f_ttm = 1.0
     if latest is not annual_latest and latest.nopat is not None and annual_latest.nopat and annual_latest.nopat > 0:
         f_ttm = latest.nopat / annual_latest.nopat
@@ -193,8 +281,31 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
         mode = "median3"
     else:
         mode = f"blend(λ={trust:.1f},w={peak_w:.2f},v={trough_w:.2f})"
+    # §6.5.2.3 股本口径第 1／3 条：分子锚乘经营账面 BPS_op = BPS − x − X_cum/股；x = 最新年报之后的外生权益/股
+    # （季报观察点有完整三表与申报稀释股数，直接按定义算；年报行 x = 0）；净负债取季报资产负债表，x 的现金已在其中不另加。
     bps = latest.parent_equity / shares
-    nopat_ps = ratio0 * bps
+    e_op_ref = e_op(annual_latest) or annual_latest.parent_equity
+    x_ps, x_mode, np_ytd, div_ytd = 0.0, "annual_row", None, None
+    if latest is not annual_latest:
+        np_ytd = getattr(latest, "netprofit_ytd", None)
+        div_ytd = getattr(latest, "dividends_ytd", None)
+        if np_ytd is None:
+            x_mode = "np_gap"
+        elif div_ytd is None:
+            x_mode, np_ytd = "div_gap", None      # 分红公司的季报现金流量表缺已付股息：x 不可验证即不调整
+        else:
+            x_ps = bps - (annual_latest.parent_equity + np_ytd - div_ytd) / shares
+            x_mode = "ttm_x"
+            if x_ps > X_CAP_FRACTION * bps:
+                x_ps, x_mode = X_CAP_FRACTION * bps, x_mode + ",x_capped"
+            elif x_ps < -0.25 * bps:
+                x_mode += ",x_large_negative"
+    applied = annual_latest.parent_equity - e_op_ref          # 年报已计入、实际从经营账面摘掉的外生权益（未花的募资＋注销）
+    x_cum_ps = applied / shares
+    bps_op = bps - x_ps - x_cum_ps
+    if bps_op <= 0:
+        x_ps, x_cum_ps, bps_op, x_mode = 0.0, 0.0, bps, x_mode + ",bps_op_nonpositive_fallback"
+    nopat_ps = ratio0 * bps_op
     # §6.5.1 第 3 条股权桥（OI-128，与 A 股同口径）：少数股东扣减 = max(账面, m×(EV − 净金融负债))。
     # 海外三表无少数股东损益，m 退回账面份额 少数股东权益÷权益合计（`roic_inputs.minority_share` 的 book_fallback）。
     fin_nd_ps = (latest.interest_debt - latest.excess_cash) / shares
@@ -220,7 +331,10 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
                   buyback_latest=getattr(latest, "buybacks", 0.0) or 0.0,
                   current_period=(latest.period if latest is not annual_latest else ""),
                   peak_s=peak_s, peak_w=peak_w, trough_w=trough_w, trust=trust, base3=base3,
-                  ratio_noncyc=ratio_noncyc, ratio_cyc=ratio_cyc)
+                  ratio_noncyc=ratio_noncyc, ratio_cyc=ratio_cyc,
+                  x_ps=x_ps, x_cum_ps=x_cum_ps, bps_op=bps_op, x_mode=x_mode, x_note=x_note, np_ytd=np_ytd, div_ytd=div_ytd,
+                  x_by_year={k: v for k, v in x_by_year.items() if v}, applied=applied, e_op_ref=e_op_ref,
+                  equity_ref=annual_latest.parent_equity, book_break=book_break)
     if not roic_ok:
         if v_zero <= 0:
             res["reason"] = f"零增长股权价值 {v_zero:.2f} ≤ 0：净负债超过零增长企业价值"; res.update(common); return res
@@ -267,14 +381,25 @@ def derivation_text(code: str, r: dict, meta: dict, cfg: dict, fx: float, value_
               f"{('=CAGR %.1f%%×(1−w %.2f)×d %.2f' % (r['cagr']*100, r['peak_w'], r['damp'])) if r.get('g_trail') is not None else ''}），ROIC_T=min(WACC+档位超额, ROIC0)={r['roic_t']:.1%}，g_T={r['g_terminal']:.1%}，fade {N_FADE} 年，终值占比 {r['terminal_share']:.0%}")
     fx_line = (f"；报表币 {ccy_report} → 交易币 {cfg['ccy']} 汇率 {fx:.4f}" + (f"，每 ADR {cfg['adr']} 股" if cfg['adr'] != 1 else "")) if (ccy_report != cfg["ccy"] or cfg["adr"] != 1) else ""
     ratio_txt = "／".join(f"{v:.3f}" for v in r["ratios"])
-    guard_txt = (f"周期守卫 NOPAT/母公司权益：当期 {r['ratio_cur']:.3f}（最新年报 {r['ratios'][-1]:.3f} × f {r['f_ttm']:.2f}）vs 十年中位 {r['long_median']:.3f}"
+    guard_txt = (f"周期守卫 NOPAT/经营账面：当期 {r['ratio_cur']:.3f}（最新年报 {r['ratios'][-1]:.3f} × f {r['f_ttm']:.2f}）vs 十年中位 {r['long_median']:.3f}"
                  f" = {r['peak_s']:.2f}×，坡道 w={r['peak_w']:.2f}／谷 v={r['trough_w']:.2f}" if r.get("peak_s") is not None else "周期守卫：无可比比率（w=v=0）")
     anchor_txt = (f"信任度 λ={r['trust']:.1f}，非周期锚 = 三年中位 {r['base3']:.3f} + λ×(当期 − 三年中位) = {r['ratio_noncyc']:.3f}，"
                   f"五年中位 {r['ratio_cyc']:.3f}，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位")
     period_text = (f"财年 {r['years'][0]}~{r['years'][-1]}＋截至 {r['current_period']} TTM"
                    if r.get("current_period") else f"财年 {r['years'][0]}~{r['years'][-1]}")
+    xy = r.get("x_by_year") or {}
+    years_txt = (("十年窗 |X_y|≥5% 年份 " + "／".join(f"FY{k[:4]} {v/1e9:+.1f}b" for k, v in sorted(xy.items())))
+                 if xy else "十年窗无 |X_y|≥5% 年份")
+    if r.get("book_break"):
+        years_txt += f"；结构断点 {r['book_break']} 起重切窗口"
+    x_detail = ""
+    if r.get("np_ytd") is not None:
+        x_detail = f"；其后归母净利 {r['np_ytd']/1e9:.2f}b、已付股息 {(r['div_ytd'] or 0.0)/1e9:.2f}b"
+    x_txt = (f"股本口径：{years_txt}；年报已计累计外生权益 {r['applied']/1e9:+.1f}b（最新年报经营账面 E_op {r['e_op_ref']/1e9:.1f}b，母公司权益 {r['equity_ref']/1e9:.1f}b）；"
+             f"年报后 x {r['x_ps']:+.2f}/股（{r['x_mode']}{('|' + r['x_note']) if r.get('x_note') else ''}{x_detail}）；"
+             f"BPS_op = 当期 BPS {r['bps']:.2f} − x − X_cum/股 {r['x_cum_ps']:+.2f} = {r['bps_op']:.2f}")
     return (f"ROIC·{'增长' if r['path']=='growth' else '零增长'}（§6.5.2.3 同口径，{period_text}，{meta.get('source','')}）："
-            f"NOPAT/母公司权益财年序列 {ratio_txt} → ratio0 **{r['ratio0']:.3f}**（{r['mode']}）× 当期 BPS {r['bps']:.2f}（母公司权益 ÷ 稀释股数 {r['shares']/1e6:,.0f}m）= 每股 NOPAT 锚 **{r['nopat_ps']:.3f}**；{guard_txt}；{anchor_txt}；"
+            f"NOPAT/经营账面财年序列 {ratio_txt} → ratio0 **{r['ratio0']:.3f}**（{r['mode']}）× 经营账面 BPS_op {r['bps_op']:.2f}（稀释股数 {r['shares']/1e6:,.0f}m）= 每股 NOPAT 锚 **{r['nopat_ps']:.3f}**；{x_txt}；{guard_txt}；{anchor_txt}；"
             f"最新观察点回购 {r['buyback_latest']/1e9:.1f}b；"
             f"ROIC0 {r['roic0']:.1%}；WACC {r['wacc']:.2%}（r {r['r']:.2%} = rf {r['rf']:.2%} + β{r['beta']}×ERP {r['erp']:.2%}；rd {r['rd']:.2%}；t {r['tax']:.0%}；账面权重）；{g_line}；"
             f"净负债/股 {r['net_debt_ps']:.3f}（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = {r['value']:.3f} {ccy_report}/普通股**{fx_line}"

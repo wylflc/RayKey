@@ -17,6 +17,9 @@
 字段口径与 `roic_inputs.load_statements` 逐项对齐：
   ebit = 除税前溢利 + 利息费用；tax_rate = 所得税/除税前溢利（利润非正回退市场法定税率，夹 [0,40%]）；
   nopat = ebit×(1−t)；excess_cash = max(0, 现金类 − 2%×营收)；invested_capital = 有息负债 + 总权益 − 超额现金。
+  §6.5.2.3 股本口径用的留存项：net_income = 归母净利、tci = 归母综合收益（年度与 TTM 均为区间值）；
+  TTM 行另给 net_income_ytd／dividends_paid_ytd = 最新年报期末之后的本财年累计值（年报行留空；季报现金流量表无已付股息行时，
+  上一财年未付股息的公司记 0、付过股息的公司留空）。
 """
 from __future__ import annotations
 
@@ -51,7 +54,8 @@ TAX_DEFAULT = {"US": 0.21, "HK": 0.165}
 FIELDS = ["market", "security_code", "security_name", "period", "fiscal_year", "notice_date", "report_currency",
           "revenue", "operating_income", "pretax", "income_tax", "interest_expense", "ebit", "tax_rate", "tax_rate_observed",
           "nopat", "total_equity", "parent_equity", "minority_equity", "interest_debt", "cash_like", "excess_cash",
-          "invested_capital", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid", "tags_used", "source"]
+          "invested_capital", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid",
+          "net_income", "tci", "net_income_ytd", "dividends_paid_ytd", "tags_used", "source"]
 
 PERIOD_META_FIELDS = ["period_type", "report_label", "evidence_url"]
 FIELDS += PERIOD_META_FIELDS
@@ -84,6 +88,9 @@ GAAP = {
     # OI-082：回购与分红现金流（回购用于权益回加，分红只作展示）
     "buybacks": ["PaymentsForRepurchaseOfCommonStock", "PaymentsForRepurchaseOfEquity"],
     "dividends_paid": ["PaymentsOfDividends", "PaymentsOfDividendsCommonStock", "PaymentsOfOrdinaryDividends"],
+    # §6.5.2.3 股本口径：年报间外生权益 X_y = ΔE − (归母综合收益 − 已付股息)，综合收益缺失用归母净利；季报观察点 x 用其后归母净利
+    "net_income": ["NetIncomeLoss", "NetIncomeLossAvailableToCommonStockholdersBasic", "ProfitLoss"],
+    "tci": ["ComprehensiveIncomeNetOfTax", "ComprehensiveIncomeNetOfTaxIncludingPortionAttributableToNoncontrollingInterest"],
 }
 IFRS = {
     "revenue": ["Revenue", "RevenueFromSaleOfGoods", "RevenueFromContractsWithCustomers"],
@@ -107,8 +114,11 @@ IFRS = {
     "shares_instant": ["NumberOfSharesOutstanding", "NumberOfSharesIssued"],
     "buybacks": ["PaymentsToAcquireOrRedeemEntitysShares"],
     "dividends_paid": ["DividendsPaidClassifiedAsFinancingActivities", "DividendsPaid"],
+    "net_income": ["ProfitLossAttributableToOwnersOfParent", "ProfitLoss"],
+    "tci": ["ComprehensiveIncomeAttributableToOwnersOfParent", "ComprehensiveIncome"],
 }
-DURATION = {"revenue", "operating_income", "pretax", "income_tax", "interest_expense", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid"}
+DURATION = {"revenue", "operating_income", "pretax", "income_tax", "interest_expense", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid",
+            "net_income", "tci"}
 HK_ITEMS = {
     "revenue": ("income", ["营业额", "营运收入"]),
     "operating_income": ("income", ["经营溢利"]),
@@ -133,6 +143,8 @@ HK_ITEMS = {
     "cfo": ("cashflow", ["经营业务现金净额"]),
     "buybacks": ("cashflow", ["回购股份"]),
     "dividends_paid": ("cashflow", ["已付股息(融资)", "已付股息"]),
+    "net_income": ("income", ["股东应占溢利"]),
+    "tci": ("income", ["本公司拥有人应占全面收益总额"]),
 }
 # 有息负债 = 贷款 + 应付票据 + 应付债券 + 可转换票据及债券 + 租赁负债（流动＋非流动），与 A 股 `roic_inputs.DEBT_FIELDS` 同口径
 HK_DEBT_KEYS = ("lt_loan", "st_loan", "notes_nc", "notes_c", "bonds", "convertibles", "lease_nc", "lease_c")
@@ -174,6 +186,8 @@ def load_statement_overrides(as_of: str) -> list[dict]:
             TAX_DEFAULT.get(raw["market"], 0.25),
             buybacks=_num(raw.get("buybacks")) or 0.0,
             dividends=_num(raw.get("dividends_paid")) or 0.0,
+            net_income=_num(raw.get("net_income")), tci=_num(raw.get("tci")),
+            net_income_ytd=_num(raw.get("net_income_ytd")), dividends_ytd=_num(raw.get("dividends_paid_ytd")),
             period_type=raw.get("period_type") or "ttm",
             report_label=raw.get("report_label") or "",
             evidence_url=raw.get("evidence_url") or "",
@@ -365,6 +379,14 @@ def _shares_value(tax: dict, concepts: list[str], end: str, filed: str) -> tuple
     return (float(hit["val"]) if hit else None), concept
 
 
+def _ytd_dividends(current: float | None, annual_paid: float | None) -> float | None:
+    """年报期末之后的已付股息：季报现金流量表有该行取其值；无该行时，上一财年未付股息的公司记 0，
+    付过股息的公司记缺（None，估值侧 x 不可验证即不调整）。"""
+    if current is not None:
+        return abs(current)
+    return 0.0 if not annual_paid else None
+
+
 def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: list[dict],
                         evidence_date: str = "") -> dict | None:
     """Build a latest TTM snapshot from a domestic issuer's latest 10-Q."""
@@ -388,6 +410,10 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
         tags[key] = concept
         return value
 
+    def ytd(key: str) -> float | None:
+        cur, _old, _concept = _duration_pair(tax, maps[key], end, filed)
+        return cur
+
     revenue, opinc, pretax, taxv = ttm("revenue"), ttm("operating_income"), ttm("pretax"), ttm("income_tax")
     interest = ttm("interest_expense") or 0.0
     total_eq, parent_eq, minority = inst("total_equity"), inst("parent_equity"), inst("minority_equity") or 0.0
@@ -408,6 +434,8 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
                       abs(ttm("capex") or 0.0), ttm("dep_amort") or 0.0, ttm("cfo"), shares, tags,
                       "SEC companyfacts 10-Q TTM", TAX_DEFAULT["US"],
                       buybacks=abs(ttm("buybacks") or 0.0), dividends=abs(ttm("dividends_paid") or 0.0),
+                      net_income=ttm("net_income"), tci=ttm("tci"), net_income_ytd=ytd("net_income"),
+                      dividends_ytd=_ytd_dividends(ytd("dividends_paid"), _num(annual.get("dividends_paid"))),
                       period_type="ttm", report_label=f"{label}（FY{fy} {fp}，截至 {end}）")
 
 
@@ -455,6 +483,7 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
                                total_eq, parent_eq, minority, debt, cash, v("capex") or 0.0, v("dep_amort") or 0.0,
                                v("cfo"), shares, tags, src, TAX_DEFAULT["US"],
                                buybacks=abs(v("buybacks") or 0.0), dividends=abs(v("dividends_paid") or 0.0),
+                               net_income=v("net_income"), tci=v("tci"),
                                period_type="annual", report_label=f"年报（FY{end[:4]}，截至 {end}）"))
     return rows
 
@@ -530,6 +559,7 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
                                pick(period, "dep_amort") or 0.0, pick(period, "cfo"), shares, tags,
                                "eastmoney HK F10 (RPT_HKF10_FN_*_PC, DATE_TYPE_CODE=001)", TAX_DEFAULT["HK"],
                                buybacks=abs(pick(period, "buybacks") or 0.0), dividends=abs(pick(period, "dividends_paid") or 0.0),
+                               net_income=pick(period, "net_income"), tci=pick(period, "tci"),
                                period_type="annual", report_label=f"年报（FY{period[:4]}，截至 {period}）"))
     return rows
 
@@ -570,7 +600,7 @@ def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shar
 
     annual_values = {key: _num(annual.get(key)) for key in
                      ("revenue", "operating_income", "pretax", "income_tax", "interest_expense",
-                      "capex", "dep_amort", "cfo", "buybacks", "dividends_paid")}
+                      "capex", "dep_amort", "cfo", "buybacks", "dividends_paid", "net_income", "tci")}
 
     def ttm(key: str) -> float | None:
         cur, old, base = pick("current", key), pick("previous", key), annual_values[key]
@@ -598,11 +628,14 @@ def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shar
                       minority, debt, cash, abs(ttm("capex") or 0.0), ttm("dep_amort") or 0.0, ttm("cfo"), shares,
                       tags, "eastmoney HK F10 TTM", TAX_DEFAULT["HK"],
                       buybacks=abs(ttm("buybacks") or 0.0), dividends=abs(ttm("dividends_paid") or 0.0),
+                      net_income=ttm("net_income"), tci=ttm("tci"), net_income_ytd=pick("current", "net_income"),
+                      dividends_ytd=_ytd_dividends(pick("current", "dividends_paid"), annual_values["dividends_paid"]),
                       period_type="ttm", report_label=f"{label}（FY{fiscal_year}，截至 {period}）")
 
 
 def _build_row(market, code, name, period, notice, ccy, rev, opinc, pretax, taxv, intexp, total_eq, parent_eq, minority,
                debt, cash, capex, dep, cfo, shares, tags, src, tax_default, buybacks=0.0, dividends=0.0,
+               net_income=None, tci=None, net_income_ytd=None, dividends_ytd=None,
                period_type="annual", report_label="", evidence_url="") -> dict:
     # 与 roic_inputs.load_statements 同式
     ebit = (pretax + intexp) if pretax is not None else opinc
@@ -624,6 +657,7 @@ def _build_row(market, code, name, period, notice, ccy, rev, opinc, pretax, taxv
         "invested_capital": ic if (ic is not None and ic > 0) else None,
         "capex": capex, "dep_amort": dep, "cfo": cfo, "shares": shares,
         "buybacks": buybacks, "dividends_paid": dividends,
+        "net_income": net_income, "tci": tci, "net_income_ytd": net_income_ytd, "dividends_paid_ytd": dividends_ytd,
         "tags_used": ";".join(f"{k}={v}" for k, v in sorted(tags.items())), "source": src,
         "period_type": period_type, "report_label": report_label, "evidence_url": evidence_url,
     }
