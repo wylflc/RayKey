@@ -411,7 +411,7 @@ python3 scripts/build_a_share_core_valuation_pool.py \
 
 港股、美股和韩股只作为观察附表，不写入 A 股核心池，也不进入 §9.3。质量判断沿用 §5，估值遵守价格独立、证据改带和可证伪原则；交易货币不得跨市场直接比较（`P/V` 可以）。
 
-**估值口径与 A 股相同**：合理估值按 §6.5.2.3 的 ROIC 口径由三大报表重算（`build_historical_valuation_bands.py --value-model roic` 的生产参数同式，差异项见本节锚句与 OI-143），最新季报／中报按「最近完整财年＋本期累计−上年同期累计」合成 TTM 作为当前观察点，年度历史仍用于 ROIC0、增量 ROIC 与再投资率。r = 美债 10Y ＋ β×经营地 Damodaran ERP（β 按档与 A 股同表），报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（伯克希尔）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」，旧档案带只作参考文本。三表来源：美股 SEC XBRL companyfacts、港股东财 HK F10；6-K／境外发行人未进入 companyfacts 的季报按官方财报维护 `data/reference/overseas_statement_overrides.csv`（原始文件不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。
+**估值口径与 A 股相同**：合理估值按 §6.5.2.3 的 ROIC 口径由三大报表重算（`build_historical_valuation_bands.py --value-model roic` 的生产参数逐项同式），最新季报／中报按「最近完整财年＋本期累计−上年同期累计」合成 TTM 作为当前观察点，年度历史仍用于 ROIC0、增量 ROIC 与再投资率。r = 美债 10Y ＋ β×经营地 Damodaran ERP（β 按档与 A 股同表），报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（伯克希尔）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」，旧档案带只作参考文本。三表来源：美股 SEC XBRL companyfacts、港股东财 HK F10；6-K／境外发行人未进入 companyfacts 的季报按官方财报维护 `data/reference/overseas_statement_overrides.csv`（原始文件不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。
 
 ```bash
 python3 scripts/fetch_overseas_earnings_calendar.py --as-of YYYY-MM-DD --apply
@@ -423,7 +423,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 
 阅读版 `000_a_share_core_valuation_pool.md` 两表列：代码／名称／质量／参考分／估值／估值路径／现价／**合理估值 V**／**`P/V`**／估值时间／估值事件（合理价区间、空间、策略标签、PE、PB 只在 CSV）。表前只保留字段含义与交易边界；估值路径只显示方法名，不带章节号或口径注记。
 
-**回购与分红的处理**：估值只看「可分配现金 = NOPAT × (1 − 维持增长所需留存)」，分红与回购同属可分配现金、不区分、不另按股数缩减重复计量，未来回购计划不进模型。海外引擎每股 NOPAT 锚 = 各年 NOPAT ÷ 最新稀释股数，锚序列 = 近 5 财年＋TTM 观察点，信任度 λ、周期守卫坡道 w、谷底守卫 v、增速腿 ×(1−w)×d 与 §6.5.2.3 同式，三年／五年／十年中位含 TTM 观察点，守卫比率取 NOPAT/(母公司权益＋累计回购)，增速腿权重 1；A 股引擎按 §6.5.1 的每股锚口径，两侧差异成文（OI-082、OI-143）。A 股分红按 §11.4 除权归一化处理，银行股利折现只计现金股利。
+**回购与分红的处理**：估值只看「可分配现金 = NOPAT × (1 − 维持增长所需留存)」，分红与回购同属可分配现金、不区分、不另按股数缩减重复计量，未来回购计划不进模型。海外引擎锚与 §6.5.2.3 同式：比率 = 各年 NOPAT ÷ 当年母公司权益，季报观察点当期 = 最新年报比率 × (NOPAT TTM ÷ 最新年报 NOPAT)，λ 与三年／五年／十年中位只取年报，周期守卫坡道与谷底守卫同式，每股 NOPAT 锚 = ratio0 × 当期 BPS，增速腿权重 0，经营账面取母公司权益。A 股分红按 §11.4 除权归一化处理，银行股利折现只计现金股利。
 
 **点名建档**：用户点名的港股／美股／韩股公司，无论初筛结论如何，一律完成以下六步，最后一步重出阅读版后才算结束：
 
