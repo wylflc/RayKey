@@ -5,15 +5,20 @@
   history = 最近 5 个财年（至少 3 年）；ROIC0 = 归一化 ROIC；增量 ROIC（端点）；再投资率；
   rd = 历史利息/有息负债（夹 2%~12%，缺省 4.5%）；税率 = 最新报告口径观测；WACC 账面权重；
   **每股 NOPAT 锚（v4.47，OI-082 海外先行）**：各年 NOPAT ÷ **最新稀释股数**（送转/拆股自动消除、回购缩股不进历史），
-  增长态（近 3 年严格上升）取最新、否则取近 3 年中位；周期守卫比较 **NOPAT/(母公司权益＋累计回购)** 的最新值 vs 10 年中位
-  （> 1.6× → 周期峰 → 取 5 年中位每股 NOPAT）——回购造成的权益缩水不再被读成周期峰（A 股引擎仍用 NOPAT/权益×BPS，待 §12.1 A/B）；
-  g0 = max(min(增量ROIC,40%)×再投资率, NOPAT 3 年 CAGR) 夹 [0,25%]；ROIC_T = min(WACC + 档位终值超额, ROIC0)；
+  锚序列 = 近 5 财年＋TTM 观察点；**增长态信任度** λ = 近两次变动中上行次数 ÷ 2，非周期锚 = 三年中位 + λ×(当期 − 三年中位)；
+  **周期守卫坡道**（OI-088／OI-090 同式）：s = 当期 **NOPAT/(母公司权益＋累计回购)** ÷ 10 年中位，
+  w = clip((s − 1.3)/0.6, 0, 1)，谷 v 同式取 1/s，锚 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；
+  回购造成的权益缩水不被读成周期峰（A 股引擎用 NOPAT/权益×BPS，OI-082 两侧成文）；
+  g0 = max(min(增量ROIC,40%)×再投资率, NOPAT 3 年 CAGR × W × (1−w) × d) 夹 [0,25%]，d = min(1, 最新年报/上年) × min(1, TTM/最新年报)；
+  ROIC_T = min(WACC + 档位终值超额, ROIC0)；
   g_T = min(3%, 无风险利率)；fade 10 年；每股价值 = intrinsic_value(NOPAT/股) − 净负债/股；带 = V × [0.90, 1.10]。
 差别（成文于此，不藏在代码里）：
   * r = rf + β×ERP 中 rf 取美债 10Y（美元 ADR 与联系汇率港股同用），ERP 按**经营地**取 Damodaran 国家 ERP
     （`data/reference/overseas_valuation_inputs.csv`），β 按质量档与 A 股同表（L1 0.9／L2 1.0／L3、L4 1.3）；
   * 报表货币 ≠ 交易货币时按同文件汇率折算，ADR 按每 ADR 普通股数折算；
   * 金融企业（伯克希尔）ROIC 不适用，沿用档案带并标明；韩股无三表源、SpaceX 无申报 → 无法估值；
+  * 三年／五年／十年中位窗口都含 TTM 观察点（海外 TTM 是三表合成的完整观察点；A 股季报行只有归母净利 TTM 因子，中位取年报）；
+  * 增速腿权重 `TRAIL_WEIGHT` = 1.0（A 股生产自 v4.119 起 `--roic-trail-weight 0`，海外未同步，见 OI-143）；
   * ROIC 路径被拒（NOPAT 非正、终值 ROIC 距 g_T 不足、净负债超过企业价值等）→ 无法估值，原因写入 `band_derivation_text`，
     旧档案带只作参考文本保留（与 A 股「没算完的带一律判无法估值」同规）。
 用法：
@@ -43,7 +48,7 @@ BAND_LOW_COEF, BAND_HIGH_COEF = 0.90, 1.10
 BETA_BY_TIER = {"L1": 0.9, "L2": 1.0, "L3": 1.3, "L4": 1.3}
 TERMINAL_EXCESS_BY_TIER = {"L1": 0.06, "L2": 0.03, "L3": 0.0, "L4": 0.0}
 ROE_YEARS, MIN_YEARS, IROE_CAP, G0_CAP, G0_FLOOR = 5, 3, 0.40, 0.25, 0.0
-N_FADE, N1, MIN_TERMINAL_SPREAD, PEAK_K, TRAIL_WEIGHT = 10, 0, 0.02, 1.6, 1.0
+N_FADE, N1, MIN_TERMINAL_SPREAD, PEAK_K, PEAK_RAMP, TRAIL_WEIGHT = 10, 0, 0.02, 1.6, 0.3, 1.0
 # 经营地 ERP 键、交易货币、每 ADR/港股对应普通股数、报表币→交易币汇率键
 COMPANY_CFG = {
     # US 上市
@@ -160,20 +165,42 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     long_ratios = [adj_ratio_by_period[y.period] for y in long_hist if y.period in adj_ratio_by_period]
     if latest is not annual_latest and latest.nopat is not None and latest.parent_equity is not None and latest.parent_equity + cum > 0:
         long_ratios.append(latest.nopat / (latest.parent_equity + cum))
-    nopat_cyclical = (len(long_ratios) >= 4 and long_ratios[-1] > 0 and long_ratios[-1] > PEAK_K * statistics.median(long_ratios))
+    # §6.5.2.3 周期守卫坡道（OI-088）与谷底对称守卫（OI-090）：s = 当期比率 ÷ 十年中位，
+    # w = clip((s − (K − ramp)) / (2·ramp), 0, 1)，v 同式取 1/s；ramp = 0 退回单点阈值。
+    peak_s = None
+    if len(long_ratios) >= 4 and long_ratios[-1] > 0 and statistics.median(long_ratios) > 0:
+        peak_s = long_ratios[-1] / statistics.median(long_ratios)
+    peak_w = trough_w = 0.0
+    if peak_s is not None and PEAK_RAMP > 0:
+        peak_w = min(1.0, max(0.0, (peak_s - (PEAK_K - PEAK_RAMP)) / (2 * PEAK_RAMP)))
+        trough_w = min(1.0, max(0.0, (1.0 / peak_s - (PEAK_K - PEAK_RAMP)) / (2 * PEAK_RAMP)))
+    elif peak_s is not None:
+        peak_w = 1.0 if peak_s > PEAK_K else 0.0
+        trough_w = 1.0 if 1.0 / peak_s > PEAK_K else 0.0
+    nopat_cyclical = peak_w >= 0.5
     nps = [y.nopat / shares for y in history if y.nopat is not None]
     if latest is not annual_latest and latest.nopat is not None:
         nps.append(latest.nopat / shares)
     if not nps:
         res["reason"] = "无可用的每股 NOPAT"; return res
-    if nopat_cyclical:
-        nopat_ps, mode = statistics.median(nps[-5:]), "cyclical_median"
-    elif len(nps) >= 3 and nps[-1] > nps[-2] > nps[-3]:
-        nopat_ps, mode = nps[-1], "ttm_growth"
-    elif len(nps) >= 3:
-        nopat_ps, mode = statistics.median(nps[-3:]), "median3"
+    # 增长态信任度 λ = 近两次变动中上行次数 ÷ 2（graded）；非周期锚 = 三年中位 + λ×(当期 − 三年中位)；
+    # 周期锚 = 五年中位；锚 = (1−max(w,v))×非周期锚 + max(w,v)×周期锚（w=v=0 且 λ=1 即 ttm_growth、λ=0 即 median3）。
+    trust = (sum(1 for i in (-1, -2) if nps[i] > nps[i - 1]) / 2.0) if len(nps) >= 3 else 0.0
+    base3 = statistics.median(nps[-3:])
+    nopat_noncyc = base3 + trust * (nps[-1] - base3)
+    nopat_cyc = statistics.median(nps[-5:])
+    w_any = max(peak_w, trough_w)
+    nopat_ps = (1.0 - w_any) * nopat_noncyc + w_any * nopat_cyc
+    if len(nps) < 3:
+        mode = "median"
+    elif w_any >= 1.0:
+        mode = "cyclical_median" if peak_w >= trough_w else "trough_median"
+    elif w_any <= 0.0 and trust >= 1.0:
+        mode = "ttm_growth"
+    elif w_any <= 0.0 and trust <= 0.0:
+        mode = "median3"
     else:
-        nopat_ps, mode = statistics.median(nps), "median"
+        mode = f"blend(λ={trust:.1f},w={peak_w:.2f},v={trough_w:.2f})"
     ratio0 = nopat_ps / (latest.parent_equity / shares) if latest.parent_equity else float("nan")
     bps = latest.parent_equity / shares
     cum_buyback_latest = cum
@@ -200,18 +227,24 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
                   nps=nps, adj_ratio_latest=(long_ratios[-1] if long_ratios else None),
                   adj_ratio_median=(statistics.median(long_ratios) if long_ratios else None),
                   cum_buybacks=cum_buyback_latest, buyback_latest=getattr(latest, "buybacks", 0.0) or 0.0,
-                  current_period=(latest.period if latest is not annual_latest else ""))
+                  current_period=(latest.period if latest is not annual_latest else ""),
+                  peak_s=peak_s, peak_w=peak_w, trough_w=trough_w, trust=trust, base3=base3,
+                  nopat_noncyc=nopat_noncyc, nopat_cyc=nopat_cyc)
     if not roic_ok:
         if v_zero <= 0:
             res["reason"] = f"零增长股权价值 {v_zero:.2f} ≤ 0：净负债超过零增长企业价值"; res.update(common); return res
         res.update(common, status="ok", path="zero_growth", value=v_zero, g0=0.0, roic_t=None, terminal_share=1.0)
         return res
     g_capital = min(iroic, IROE_CAP) * min(rr, 1.0) if (rr is not None and iroic is not None and iroic > 0 and rr > 0) else None
-    g_trail = None
-    if not nopat_cyclical:
-        cagr = roic_inputs.trailing_nopat_cagr(history)
-        if cagr is not None and cagr > 0:
-            g_trail = cagr * TRAIL_WEIGHT
+    # 增速腿 × (1−w) × d（OI-088／OI-089）：d = min(1, 最新年报 NOPAT/上年) × min(1, TTM NOPAT/最新年报 NOPAT)
+    g_trail, cagr, damp = None, roic_inputs.trailing_nopat_cagr(history), 1.0
+    ordered_np = [y.nopat for y in history if y.nopat is not None]
+    if len(ordered_np) >= 2 and ordered_np[-1] > 0 and ordered_np[-2] > 0:
+        damp = min(1.0, ordered_np[-1] / ordered_np[-2])
+    if latest is not annual_latest and latest.nopat and annual_latest.nopat and annual_latest.nopat > 0:
+        damp *= max(0.0, min(1.0, latest.nopat / annual_latest.nopat))
+    if cagr is not None and cagr > 0 and (1.0 - peak_w) > 0:
+        g_trail = cagr * TRAIL_WEIGHT * (1.0 - peak_w) * damp
     cands = [g for g in (g_capital, g_trail) if g is not None]
     g0 = max(min(max(cands) if cands else 0.0, G0_CAP), G0_FLOOR)
     g_src = ("trailing" if g_trail is not None and (g_capital is None or g_trail >= g_capital) else "capital" if g_capital is not None else "none")
@@ -228,7 +261,7 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     if value <= 0:
         res["reason"] = f"股权价值 {value:.2f} ≤ 0：净负债 {net_debt_ps:.2f} 超过企业价值 {iv.intrinsic_value:.2f}"; res.update(common); return res
     res.update(common, status="ok", path="growth", value=value, g0=g0, g_src=g_src, g_capital=g_capital, g_trail=g_trail,
-               roic_t=roic_t, terminal_share=iv.terminal_share, ev_ps=iv.intrinsic_value)
+               cagr=cagr, damp=damp, roic_t=roic_t, terminal_share=iv.terminal_share, ev_ps=iv.intrinsic_value)
     return res
 
 
@@ -239,15 +272,18 @@ def derivation_text(code: str, r: dict, meta: dict, cfg: dict, fx: float, value_
             base += f"；已算到 WACC {r['wacc']:.2%}（r={r['r']:.2%}=rf {r['rf']:.2%}+β{r['beta']}×ERP {r['erp']:.2%}，rd {r['rd']:.2%}，t {r['tax']:.0%}）"
         return base
     g_line = ("零增长：V = NOPAT/股 ÷ WACC − 净负债/股" if r["path"] == "zero_growth" else
-              f"增长 g0={r['g0']:.1%}（来源 {r['g_src']}：资本腿 {('%.1f%%' % (r['g_capital']*100)) if r.get('g_capital') is not None else '—'}=min(增量ROIC {('%.1f%%' % (r['iroic']*100)) if r['iroic'] is not None else '—'},40%)×再投资率 {('%.0f%%' % (r['rr']*100)) if r['rr'] is not None else '—'}，增速腿 {('%.1f%%' % (r['g_trail']*100)) if r.get('g_trail') is not None else '—'}），ROIC_T=min(WACC+档位超额, ROIC0)={r['roic_t']:.1%}，g_T={r['g_terminal']:.1%}，fade {N_FADE} 年，终值占比 {r['terminal_share']:.0%}")
+              f"增长 g0={r['g0']:.1%}（来源 {r['g_src']}：资本腿 {('%.1f%%' % (r['g_capital']*100)) if r.get('g_capital') is not None else '—'}=min(增量ROIC {('%.1f%%' % (r['iroic']*100)) if r['iroic'] is not None else '—'},40%)×再投资率 {('%.0f%%' % (r['rr']*100)) if r['rr'] is not None else '—'}，增速腿 {('%.1f%%' % (r['g_trail']*100)) if r.get('g_trail') is not None else '—'}"
+              f"{('=CAGR %.1f%%×(1−w %.2f)×d %.2f' % (r['cagr']*100, r['peak_w'], r['damp'])) if r.get('g_trail') is not None else ''}），ROIC_T=min(WACC+档位超额, ROIC0)={r['roic_t']:.1%}，g_T={r['g_terminal']:.1%}，fade {N_FADE} 年，终值占比 {r['terminal_share']:.0%}")
     fx_line = (f"；报表币 {ccy_report} → 交易币 {cfg['ccy']} 汇率 {fx:.4f}" + (f"，每 ADR {cfg['adr']} 股" if cfg['adr'] != 1 else "")) if (ccy_report != cfg["ccy"] or cfg["adr"] != 1) else ""
     nps_txt = "／".join(f"{v:.2f}" for v in r["nps"])
     guard_txt = (f"周期守卫 NOPAT/(权益＋累计回购 {r['cum_buybacks']/1e9:.1f}b)：最新 {r['adj_ratio_latest']:.3f} vs 10 年中位 {r['adj_ratio_median']:.3f}"
-                 f"（{'命中→取 5 年中位' if r['cyclical'] else '未命中'}）" if r.get("adj_ratio_latest") is not None else "周期守卫：无可比比率")
+                 f" = {r['peak_s']:.2f}×，坡道 w={r['peak_w']:.2f}／谷 v={r['trough_w']:.2f}" if r.get("peak_s") is not None else "周期守卫：无可比比率（w=v=0）")
+    anchor_txt = (f"信任度 λ={r['trust']:.1f}，非周期锚 = 三年中位 {r['base3']:.3f} + λ×(当期 − 三年中位) = {r['nopat_noncyc']:.3f}，"
+                  f"五年中位 {r['nopat_cyc']:.3f}，锚 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位")
     period_text = (f"财年 {r['years'][0]}~{r['years'][-1]}＋截至 {r['current_period']} TTM"
                    if r.get("current_period") else f"财年 {r['years'][0]}~{r['years'][-1]}")
     return (f"ROIC·{'增长' if r['path']=='growth' else '零增长'}（§6.5.2.3 同口径，{period_text}，{meta.get('source','')}）："
-            f"每股 NOPAT 锚（v4.47 OI-082：各年 NOPAT ÷ 最新稀释股数 {r['shares']/1e6:,.0f}m）序列 {nps_txt} → 取 **{r['nopat_ps']:.3f}**（{r['mode']}）；{guard_txt}；"
+            f"每股 NOPAT 锚（v4.47 OI-082：各年 NOPAT ÷ 最新稀释股数 {r['shares']/1e6:,.0f}m）序列 {nps_txt} → 取 **{r['nopat_ps']:.3f}**（{r['mode']}）；{guard_txt}；{anchor_txt}；"
             f"最新观察点回购 {r['buyback_latest']/1e9:.1f}b；BPS {r['bps']:.2f}；"
             f"ROIC0 {r['roic0']:.1%}；WACC {r['wacc']:.2%}（r {r['r']:.2%} = rf {r['rf']:.2%} + β{r['beta']}×ERP {r['erp']:.2%}；rd {r['rd']:.2%}；t {r['tax']:.0%}；账面权重）；{g_line}；"
             f"净负债/股 {r['net_debt_ps']:.3f}（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = {r['value']:.3f} {ccy_report}/普通股**{fx_line}"

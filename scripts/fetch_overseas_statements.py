@@ -73,7 +73,8 @@ GAAP = {
     "lt_debt_total": ["LongTermDebt", "LongTermDebtAndCapitalLeaseObligations"],
     "st_debt": ["ShortTermBorrowings", "CommercialPaper", "DebtCurrent"],
     "cash": ["CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"],
-    "cash_invest": ["MarketableSecuritiesCurrent", "ShortTermInvestments", "AvailableForSaleSecuritiesDebtSecuritiesCurrent"],
+    "cash_invest": ["MarketableSecuritiesCurrent", "ShortTermInvestments", "AvailableForSaleSecuritiesDebtSecuritiesCurrent",
+                    "DebtSecuritiesCurrent"],
     "capex": ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets"],
     "dep_amort": ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization",
                   "DepreciationAmortizationAndAccretionNet", "Depreciation"],
@@ -250,10 +251,31 @@ def _sec_series(tax: dict, concepts: list[str], duration: bool) -> tuple[dict[st
                 # 同一期末取最新申报；不同标签之间按候选顺序，先到者优先（只补缺）
                 if end in merged and concept not in used[:1]:
                     continue
-                merged[end] = (filed, float(e["val"]))
+                merged[end] = (filed, float(e["val"]), "")
         if node and concept not in used:
             used.append(concept)
             unit_used = unit_used or unit
+    if not duration:
+        # 换签期的年末时点值：发行人在 10-K 只打新签之外的总额签、新签只出现在后续 10-Q 的比较期时，
+        # 同一资产负债表日从 10-Q 比较期按候选顺序补缺（只补 10-K 未给出的期末，取最新申报）。
+        for concept in concepts:
+            node = tax.get(concept)
+            if not node:
+                continue
+            units = node.get("units", {})
+            unit = next((u for u in units if u not in ("pure",)), None)
+            if unit is None:
+                continue
+            for e in units[unit]:
+                end, filed = e.get("end"), str(e.get("filed") or "")
+                if not end or e.get("start") or not str(e.get("form", "")).startswith("10-Q"):
+                    continue
+                if end in merged and (merged[end][0] >= filed or merged[end][2] != concept):
+                    continue
+                merged[end] = (filed, float(e["val"]), concept)
+            if concept not in used:
+                used.append(concept)
+                unit_used = unit_used or unit
     return {k: v[1] for k, v in merged.items()}, "+".join(used), unit_used
 
 
@@ -321,13 +343,18 @@ def _duration_pair(tax: dict, concepts: list[str], end: str, filed: str) -> tupl
 
 
 def _instant_value(tax: dict, concepts: list[str], end: str, filed: str) -> tuple[float | None, str]:
+    """期末时点值：先取最新申报的标签；该标签在 `end` 无值时按候选顺序逐个补缺（发行人换签时旧签只到上一期）。"""
     entries, concept = _sec_entries(tax, concepts)
-    exact = [e for e in entries if e.get("end") == end and not e.get("start")
-             and str(e.get("filed") or "") <= filed]
-    if not exact:
-        exact = [e for e in entries if e.get("end") == end and str(e.get("filed") or "") <= filed]
-    hit = max(exact, key=lambda e: str(e.get("filed") or ""), default=None)
-    return (float(hit["val"]) if hit else None), concept
+    ordered = [(entries, concept)] + [(_sec_entries(tax, [c])[0], c) for c in concepts if c != concept]
+    for cand_entries, cand_concept in ordered:
+        exact = [e for e in cand_entries if e.get("end") == end and not e.get("start")
+                 and str(e.get("filed") or "") <= filed]
+        if not exact:
+            exact = [e for e in cand_entries if e.get("end") == end and str(e.get("filed") or "") <= filed]
+        hit = max(exact, key=lambda e: str(e.get("filed") or ""), default=None)
+        if hit is not None:
+            return float(hit["val"]), cand_concept
+    return None, concept
 
 
 def _shares_value(tax: dict, concepts: list[str], end: str, filed: str) -> tuple[float | None, str]:
