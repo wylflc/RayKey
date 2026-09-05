@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.143
+# A股选股-估值-量价操作流程 v4.144
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -778,7 +778,7 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 9. 实验过程写入回测 log：每节不超过 1.5 KB，只写「测了什么／结论／决策读数／落地」，完整表格与逐臂读数放 `data/experiments/<实验目录>/` 并在节内给目录名；最终版本变化写入 changelog，每行只写规则变化与落点、依据只给回测日志节号；当前操作只写回本文件。
 10. 信号层三表：`scripts/experimental/selection_edge_audit.py`（边际选择检验、排序信息量、换仓方向性；回测须带 `--candidate-log` 与 `--trade-log`）与 `scripts/experimental/panel_tier_forward.py`（`P/V` 分档前向回报）。采纳候选在候选臂与 `BASE` 上各跑一遍并报差；另每季在 `BASE` 上重算一遍作不变量检验。各表报逐日配对差中位、为正日数与逐年同号年数。换仓方向性一表须同报 `scripts/experimental/swap_regime_control.py` 的四表对照（面板层 `P/V` 信息量、合成换仓、`P/V` 匹配对照、样本独立性），匹配对照的容差至少取 ±0.04／±0.10／±0.15 三档、只报符号稳健的读数；该表的样本量按不同 `(源, 标的)` 配对数计，不按日数；只有与合成换仓反号的年份计入机制层结论。三表不进第 2 款的决策读数，读数写入回测 log。
 11. 采纳候选报 `scripts/experimental/delta_attribution.py` 的前三只贡献占比（按 trades `contrib` 列，与第 3 款同一把尺）；超过 100% 者不作采纳依据。
-12. 引用正读数时同报本族已试臂数，按 `data/backtest/scan_summaries.csv` 的扫描标签计。
+12. 引用正读数时同报本族已试臂数，按 `data/backtest/scan_arms_index.csv` 的臂名计（`clean_derived_artifacts.py` 归并后自动重建；现行计量口径的逐路径读数在 `data/backtest/scan_summaries.csv`，旧口径在 `data/archive/scan_summaries_m1.csv`）。
 
 历史面板 `effective_from` 与 `effective_to` 均为有效期边界，结束日包含在内。禁止把区间起点当成完整快照，也禁止手工修改面板 CSV；名单变化先改判定源，再运行装配脚本。
 

@@ -6,7 +6,9 @@
 **两个区块，各自可单独跑**：
 
 - `backtest`：`data/backtest/` 下的 `_equity`／`_trades`／`_periods` 三类删除；
-  所有 `summary*.csv` 归并成 `scan_summaries.csv`（多一列 `扫描标签`，并集列头、缺列留空，**一个数字都不丢**）。
+  所有 `summary*.csv` 归并成 `scan_summaries.csv`（多一列 `扫描标签`，并集列头、缺列留空，**一个数字都不丢**），
+  随后按臂聚合重建 `scan_arms_index.csv`（§12.1 第 12 款数臂用；同时计入 `data/archive/scan_summaries_m1.csv` 的旧口径行）。
+- `index`：只重建 `scan_arms_index.csv`。
 - `bands`：`data/processed/` 下一次性估值带变体（`vd_*`／`vb_*`／`hd_*`／`hb_*`／`hist_daily_*`／
   `a_share_daily_g*`、退役的 `a_share_historical_valuation_*`、`dcf_*`／`roiccond*`／`roicmed_*` 实验臂、
   `diag_*` 诊断集）删除，并清空实验缓存目录 `metric_states/`、`experiments/states/` 与 `exp_b_market_cache.npz`。
@@ -21,6 +23,7 @@
     python3 scripts/clean_derived_artifacts.py --apply              # 两个区块都清
     python3 scripts/clean_derived_artifacts.py backtest --apply     # 只清回测产物
     python3 scripts/clean_derived_artifacts.py bands --apply        # 只清估值带变体
+    python3 scripts/clean_derived_artifacts.py index                # 只重建按臂索引
 """
 import argparse
 import csv
@@ -33,6 +36,10 @@ ROOT = Path(__file__).resolve().parents[1]
 PROCESSED = ROOT / "data/processed"
 BACKTEST = ROOT / "data/backtest"
 MERGED = BACKTEST / "scan_summaries.csv"
+ARCHIVED_LEDGER = ROOT / "data/archive/scan_summaries_m1.csv"   # 旧计量口径行，只供数臂与复现
+ARMS_INDEX = BACKTEST / "scan_arms_index.csv"
+# 扫描标签 = [EX5:][<批次前缀><YYYYMMDD>_]<臂名><起点 YYYYMMDD>[ex5]；无起点日的标签整个作臂名
+LABEL_RE = re.compile(r"^(?:EX5:)?(?:(?P<batch>[A-Za-z0-9]+?\d{8})_)?(?P<arm>.+?)(?P<start>\d{8})(?P<ex>ex5)?$")
 
 BULK_SUFFIXES = ("_equity.csv", "_trades.csv", "_periods.csv")
 # `summary.csv` 是每次运行的落点，留给下一次覆盖；`scan_summaries.csv` 是归并结果。
@@ -130,6 +137,48 @@ def merge_summaries(files):
     return list(keyed.values()), ["扫描标签"] + [c for c in columns if c != "扫描标签"]
 
 
+def arm_name(label: str):
+    """把扫描标签拆成（臂名, 批次, 起点日, 是否剔除赢家遍）；拆不开的标签整个作臂名。"""
+    m = LABEL_RE.match(label or "")
+    if not m:
+        return (label or "-", "", "", "")
+    return (m.group("arm"), m.group("batch") or "", m.group("start"), "ex5" if m.group("ex") else "")
+
+
+def build_arms_index(apply: bool):
+    """按臂聚合现行台账与归档台账，写 `scan_arms_index.csv`（一臂一行）。"""
+    arms = {}
+    for src, ledger in (("current", MERGED), ("archive", ARCHIVED_LEDGER)):
+        if not ledger.exists():
+            continue
+        with open(ledger, encoding="utf-8") as fh:
+            for row in csv.DictReader(fh):
+                arm, batch, start, ex = arm_name(row.get("扫描标签", ""))
+                rec = arms.setdefault(arm, {"批次": set(), "计量版本": set(), "起点": set(), "行数": 0,
+                                            "剔除赢家行数": 0, "台账": set(), "策略示例": ""})
+                rec["行数"] += 1
+                rec["剔除赢家行数"] += 1 if ex else 0
+                rec["台账"].add(src)
+                if batch:
+                    rec["批次"].add(batch)
+                if start:
+                    rec["起点"].add(start)
+                rec["计量版本"].add(row.get("计量版本") or "m1")
+                if not rec["策略示例"]:
+                    rec["策略示例"] = re.sub(r"_?[A-Za-z0-9]*\d{8}(ex5)?$", "", row.get("策略") or "")
+    fields = ["臂名", "台账", "计量版本", "批次", "起点数", "行数", "剔除赢家行数", "策略示例"]
+    rows = [{"臂名": arm, "台账": "+".join(sorted(rec["台账"])), "计量版本": "+".join(sorted(rec["计量版本"])),
+             "批次": ";".join(sorted(rec["批次"])), "起点数": len(rec["起点"]), "行数": rec["行数"],
+             "剔除赢家行数": rec["剔除赢家行数"], "策略示例": rec["策略示例"]}
+            for arm, rec in sorted(arms.items())]
+    if apply:
+        with open(ARMS_INDEX, "w", encoding="utf-8", newline="") as fh:
+            writer = csv.DictWriter(fh, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(rows)
+    return rows
+
+
 def remove(entries, apply: bool) -> int:
     if not apply:
         return 0
@@ -145,7 +194,7 @@ def remove(entries, apply: bool) -> int:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("block", nargs="?", choices=("backtest", "bands", "all"), default="all")
+    ap.add_argument("block", nargs="?", choices=("backtest", "bands", "index", "all"), default="all")
     ap.add_argument("--apply", action="store_true", help="真的写与删；缺省只报告")
     ap.add_argument("--keep-summaries", action="store_true", help="不归并也不删 summary*.csv")
     args = ap.parse_args()
@@ -168,10 +217,17 @@ def main():
                     writer.writeheader()
                     writer.writerows(rows)
                 print(f"  已写 {MERGED.relative_to(ROOT)}（{human(MERGED.stat().st_size)}）")
+                arms = build_arms_index(apply=True)
+                print(f"  已重建 {ARMS_INDEX.relative_to(ROOT)}：{len(arms):,} 个臂")
             doomed += summaries
         freed += size(doomed)
         print(f"  待删 {len(doomed):,} 个 {human(size(doomed))}"
               + (f" → 已删 {remove(doomed, args.apply):,} 个" if args.apply else "  （未加 --apply）"))
+
+    if args.block == "index":
+        arms = build_arms_index(apply=True)
+        print(f"[index] 已重建 {ARMS_INDEX.relative_to(ROOT)}：{len(arms):,} 个臂（{human(ARMS_INDEX.stat().st_size)}）")
+        return
 
     if args.block in ("bands", "all"):
         doomed = collect_bands()

@@ -338,7 +338,7 @@ def do_report() -> None:
     manifest["artifact_identity"] = art
     manifest["path_identity_max_abs_diff"] = worst
     manifest["paths_checked"] = n_paths
-    # 台账归档：同批 m2 摘要以前缀入 scan_summaries.csv，旧 m1 行全部保留（§12.1 第 12 款已试臂数）
+    # 台账归档：同批 m2 摘要以前缀入 scan_summaries.csv；旧 m1 行在 data/archive/scan_summaries_m1.csv，数臂用 scan_arms_index.csv（§12.1 第 12 款）
     entries = [SimpleNamespace(name=f"summary_{LEDGER_PREFIX}" + p.name.removeprefix("summary_"), path=str(p))
                for p in (EXP / "summaries").glob("summary_*.csv")]
     for cand in CANDIDATES:
@@ -350,6 +350,7 @@ def do_report() -> None:
         writer = csv.DictWriter(fh, fieldnames=columns)
         writer.writeheader()
         writer.writerows(rows)
+    archive.build_arms_index(apply=True)   # 台账变了就重建 scan_arms_index.csv（§12.1 第 12 款数臂）
     manifest["ledger"] = dict(archived=len(entries), rows_before=before, rows_after=len(rows))
     save_json("manifest.json", manifest)
     print("\n".join(lines))

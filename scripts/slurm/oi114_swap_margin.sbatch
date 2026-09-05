@@ -33,7 +33,7 @@ def read(path):
     rows = [r for r in csv.DictReader(open(path, encoding="utf-8")) if r["策略"].startswith("trend_")]
     return rows[-1]
 
-led = [r for r in csv.DictReader(open("data/backtest/scan_summaries.csv", encoding="utf-8"))
+led = [r for r in csv.DictReader(open("data/archive/scan_summaries_m1.csv", encoding="utf-8"))
        if r.get("扫描标签") == "BASE20111101"][-1]
 abs_ = read("data/backtest/summary_OI114ABS.csv")
 rel = read("data/backtest/summary_OI114REL.csv")

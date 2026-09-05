@@ -7,6 +7,7 @@
 | `decision_log_2026-06-14_to_2026-08-30.csv` | 决策日志旧纪元行（43,369 行） | 自 `data/processed/a_share_workflow_decision_log.csv` 移出；`build_a_share_company_analysis_index.py` 同读 |
 | `daily_scan_log_2026-07-10_to_2026-08-10.md` | 旧账户纪元每日扫描日志 | 自扫描日志移出 |
 | `daily_scan_log_2026-08-13_to_2026-08-30.md` | v2.90~v4.99 每日扫描日志 | 自 `docs/000_daily_scan_log.md` 移出 |
+| `scan_summaries_m1.csv` | 回测扫描台账旧计量口径 m1 的 29,643 行（81 列） | 自 `data/backtest/scan_summaries.csv` 移出；只供 `scan_arms_index.csv` 数臂与 `start_sign_correlation.py` 复现 |
 | `pretrade_decisions_2026-08-03.csv` | v2.05 退役的买前裁决记录 | 只作历史 |
 | `a_share_company_profiles.csv` | 早期聚合站公司简介（16.7 MB） | 生产脚本已退役；只有 `scripts/experimental/` 的旧校准实验引用 |
 | `financials_original/` | 新浪原始披露口径逐期财务（111 文件） | 只有 `scripts/archive/fetch_sina_original_financials.py`／`build_judgment_input.py` 引用 |

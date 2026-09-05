@@ -25,14 +25,14 @@ A 股上市公司研究与数据分析仓库（附带港/美/韩观察清单）�
 - `data/interim/` — 活跃队列与取证中间件（报告更新队列、估值证据、建带卡等）。
 - `data/processed/` — 现行产物与唯一真值表（三类表、分层表、档案表、生产带、核心池、持仓、决策日志）；`pit_attention/` 只保留回测宇宙的现行世系（`panel_moat_bank_v6b.csv` 及其判定源）。
 - `data/experiments/` — 回测实验证据，每个实验一个目录（配置、小报告、逐臂读数）；GB 级中间件按 `.gitignore` 不入库。
-- `data/backtest/` — 扫描读数台账 `scan_summaries.csv`；回测原件不入库。
+- `data/backtest/` — 扫描读数台账 `scan_summaries.csv`（现行计量口径）与按臂索引 `scan_arms_index.csv`；回测原件不入库。
 - `data/companies/<代码>_<名称>/` — 逐票研究目录：`README.md`（档案渲染件）＋部分早期 `fundamentals.md`/`research_ledger.md` 台账。
 - `data/archive/` — 已结束轮次的产物与旧纪元日志：`pit-judgment-2026-08/`、`completed-queues/`、`2026-06-two-layer-review/`、`model-blind-trial-2026-08-30/`、`full_market_screen/`、`financials_original/`、决策日志与每日扫描日志的旧纪元文件；索引见 `data/archive/README.md`。
 - `scripts/` — 确定性流水线脚本（公司判断是模型作业，不在脚本里设阈值，ADR-0004/0006）。
 - `scripts/experimental/` — 已出结论的实验代码（README 索引到回测日志各节）；`scripts/archive/` — 退役脚本（三个月后可永久删除，见其 README 表）。
 - `notebooks/` — 诊断可视化（估值带 vs 股价、买卖点通道）。
 
-**派生产物皆可重建、不入库**：逐日估值状态、ROIC 带、回测原件由 `scripts/clean_derived_artifacts.py` 统一清理（缺省只报告，`--apply` 才删）；历次扫描读数归并在 `data/backtest/scan_summaries.csv`。参数扫描一律走 `scripts/sweep_backtest_configs.py`（`BASE` 即 §9.3.1.2 基准，不手抄命令）。
+**派生产物皆可重建、不入库**：逐日估值状态、ROIC 带、回测原件由 `scripts/clean_derived_artifacts.py` 统一清理（缺省只报告，`--apply` 才删）；现行计量口径的逐路径读数归并在 `data/backtest/scan_summaries.csv`，按臂聚合的索引 `scan_arms_index.csv` 供 §12.1 第 12 款数臂，旧口径行在 `data/archive/scan_summaries_m1.csv`。参数扫描一律走 `scripts/sweep_backtest_configs.py`（`BASE` 即 §9.3.1.2 基准，不手抄命令）。
 
 ## 常用入口
 
