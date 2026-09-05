@@ -1,0 +1,28 @@
+{
+  "main_sweep_sha256": "dd9f5873b4e2a55ebbab2be8bd11a929f39eab73e800550e81f5561d20fc193a",
+  "base": "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 --corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 --swap --swap-partial --sell-trend-ma 20 --lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close --fee-preset user --no-artifacts --capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 --maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay --gain-sell 1.10 --gain-sell-mode ungated --swap-gain-once --swap-source-block -1 --width -0.0454 --swap-margin 0.15 --stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma60_stop --stop-basis exec --residual-clear lot --position-cap 0.6 --net-same-day --fill-missing skip --dividend-tax --swap-repeat skip --addon-trend ma-only --swap-require-weak --daily-states data/processed/a_share_daily_states_adopted.csv --hold-states data/processed/a_share_daily_states_hold.csv --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv",
+  "engine_sha256": "e97929f09b318aedafece2c06bc853d84a799365f2140155826d046f06b99e1c",
+  "panel_sha256": "b3093d2ca24f1c6f157ce931df32d088a8b1cf35da270e1fcdfeac6d580811e9",
+  "rebuilt_states_sha256": {
+    "on/cand": "6a0f966d4cfa3fde94f2aabcb518605385222f0e28995acce65ec9b3ea8fe7ea",
+    "on/hold": "0e2d809a07ad21551b389e00e82e2411e0e3a4e0179300e179ed7aa333cc3e4f",
+    "off/cand": "4de61ea4b8247ae7643ca92cd5bd32aeb6091952071189345495d31b8c4f4021",
+    "off/hold": "d64e89fdf075acd2d6c5f8214cf471af4af3f1bce8c0026ec94a3f5ec18cfff7"
+  },
+  "starts": [
+    "2009-11-01",
+    "2010-05-01",
+    "2010-11-01",
+    "2011-05-01",
+    "2011-11-01",
+    "2012-05-01",
+    "2012-11-01",
+    "2013-05-01",
+    "2013-11-01",
+    "2014-05-01",
+    "2014-11-01",
+    "2015-05-01",
+    "2015-11-01",
+    "2016-05-01"
+  ]
+}
