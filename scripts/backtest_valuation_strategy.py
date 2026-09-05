@@ -1250,6 +1250,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         pct_stop_when_rich: bool = False,
         addon_trend: str = "full",
         swap_require_weak: bool = False, swap_weak_ma: int = 20,
+        swap_weak_days: int = 1, swap_weak_slope: int = 0, swap_weak_slope_min: float = 0.0,
+        swap_weak_max_cross: int = 0, swap_weak_cross_window: int = 20,
+        swap_weak_deep: float = 0.0,
+        swap_source_cooldown: int = 0, weak_block_log=None,
         swap_out_min_pv: float = 0.0,
         mkt: dict[str, float] | None = None, mkt_crash_days: int = 0,
         mkt_crash_pct: float = 0.10, mkt_trend_ma: int = 0,
@@ -1452,6 +1456,62 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     # `swap_trigger_window`（用户 2026-09-03 实验）：候选触发换仓后 N 个交易日内即使已成持仓仍可继续触发；
     # 记「代码 → 可触发到的交易日序号」。
     trigger_win: dict[str, int] = {}
+    # 换仓卖出源「弱势」的走势形态判据（用户 2026-09-06 实验：牧原在 MA20 上下三次穿越触发三次换仓减一档）。
+    # 四个研究开关都只收紧「收盘 < MA{swap_weak_ma}」这一条卖出源条件，缺省全关、逐位不变：
+    #   `swap_weak_days` N：连续 N 个信号日收盘低于均线才算弱势（1 = 现行单日）；
+    #   `swap_weak_slope` k：均线本身须低于 k 个交易日前（均线走平或上行时的下穿不算弱势）；
+    #   `swap_weak_max_cross` m／`swap_weak_cross_window` W：近 W 个信号日收盘与均线的穿越次数 ≥ m 视为震荡区、不算弱势；
+    #   `swap_source_cooldown` K：同一持仓被 P/V 边际换出一档后 K 个交易日内不再作 P/V 换仓卖出源；
+    #   `swap_weak_slope_min` F：斜率判据改为「均线较 k 日前至少下行 F」（走平不算下行）；
+    #   `swap_weak_deep` G：收盘低于均线 ≥ G 视为走坏，免做连续日／斜率／穿越三项形态复核（冷却仍适用）。
+    # 计数**对全池逐日累计**（与 `below_ma_run` 同理），不只对持仓算。
+    weak_extra_on = bool(swap_require_weak) and (swap_weak_days > 1 or swap_weak_slope > 0
+                                                 or swap_weak_max_cross > 0 or swap_source_cooldown > 0)
+    weak_run: dict[str, int] = {}                      # 代码 → 连续「收盘 < 均线」的信号日数
+    weak_hist: dict[str, collections.deque] = {}       # 代码 → 近 W 个信号日的「收盘 < 均线」布尔序列
+    swap_cool: dict[str, int] = {}                     # 代码 → 冷却到的交易日序号（含）
+    _ma_days_cache: dict[str, list[str]] = {}
+
+    def _ma_prev(c: str, sday: str, k: int) -> float | None:
+        """代码 c 在信号日 sday 之前第 k 个交易日（按该票自身行情日历）的 MA{swap_weak_ma}；取不到为 None。"""
+        if day_index is not None:
+            ds, pos = day_index[0].get(c, []), day_index[1].get(c, {})
+            i = pos.get(sday)
+        else:
+            ds = _ma_days_cache.get(c)
+            if ds is None:
+                ds = _ma_days_cache[c] = sorted(mas.get(c, {}))
+            i = bisect.bisect_left(ds, sday)
+            if i >= len(ds) or ds[i] != sday:
+                i = None
+        if i is None or i - k < 0:
+            return None
+        return mas.get(c, {}).get(ds[i - k], {}).get(swap_weak_ma)
+
+    def _weak_cross_count(c: str) -> int:
+        h = weak_hist.get(c)
+        if not h:
+            return 0
+        return sum(1 for a, b in zip(h, list(h)[1:]) if a is not None and b is not None and a != b)
+
+    def weak_extra_ok(c: str, sday: str, dno: int) -> tuple[bool, str]:
+        """基础弱势成立之后的形态复核；返回 (是否仍算弱势, 被挡原因)。"""
+        ma_now = mas.get(c, {}).get(sday, {}).get(swap_weak_ma)
+        deep = (swap_weak_deep > 0 and ma_now is not None and c in today
+                and today[c][0] <= ma_now * (1.0 - swap_weak_deep))
+        if not deep:
+            if swap_weak_days > 1 and weak_run.get(c, 0) < swap_weak_days:
+                return False, f"连续{weak_run.get(c, 0)}日<{swap_weak_days}"
+            if swap_weak_slope > 0:
+                ma_prev = _ma_prev(c, sday, swap_weak_slope)
+                if ma_now is None or ma_prev is None or not ma_now <= ma_prev * (1.0 - swap_weak_slope_min) \
+                        or (swap_weak_slope_min <= 0 and not ma_now < ma_prev):
+                    return False, "均线未下行" if (ma_now is not None and ma_prev is not None) else "均线历史不足"
+            if swap_weak_max_cross > 0 and _weak_cross_count(c) >= swap_weak_max_cross:
+                return False, f"穿越{_weak_cross_count(c)}次≥{swap_weak_max_cross}"
+        if swap_source_cooldown > 0 and dno <= swap_cool.get(c, -1):
+            return False, f"冷却余{swap_cool[c] - dno + 1}日"
+        return True, ""
     for day_no, day in enumerate(days):
         apply_corporate_actions(portfolio, day, actions, adjust_stops=(exright_stop == "adjust"))
 
@@ -1516,6 +1576,17 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     below_ma_run[c] = 0
                 else:
                     below_ma_run[c] = below_ma_run.get(c, 0) + 1 if r[0] < ma_l else 0
+        if weak_extra_on and (swap_weak_days > 1 or swap_weak_max_cross > 0):
+            for c, r in today.items():
+                ma_w = mas.get(c, {}).get(sig_day, {}).get(swap_weak_ma)
+                below = None if ma_w is None else (r[0] < ma_w)
+                weak_run[c] = (weak_run.get(c, 0) + 1) if below else 0
+                if swap_weak_max_cross > 0:
+                    h = weak_hist.get(c)
+                    if h is None:
+                        h = weak_hist[c] = collections.deque(maxlen=max(2, swap_weak_cross_window))
+                    h.append(below)
+        weak_blocked_logged: set[str] = set()
         # ---- 自身分位闸门（用户 2026-08-15 的重构口径）----
         # **每只股票只跟自己比**：把当日估值指标换算成「在该股自身历史里的分位」，
         # 买入闸 = 分位 ≤ `buy_pct`、卖出闸 = 分位 ≥ `sell_pct`。
@@ -2299,6 +2370,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     _m = mas.get(c, {}).get(sig_day, {})
                     if _m.get(swap_weak_ma) is None or hold_today[c][0] >= _m[swap_weak_ma]:
                         continue
+                    if weak_extra_on and not weak_extra_ok(c, sig_day, day_no)[0]:
+                        continue
                 sources.append((hold_today[c][2], c))
             sources.sort(reverse=True)                # 最贵的先卖，与现行「最贵的弱势持仓」同序
             for src_pv, c in sources:
@@ -2407,6 +2480,35 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         and (not swap_out_min_pv or hold_today[c][2] >= swap_out_min_pv)
                         and c not in quota_hold_today
                         and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
+                if weak_extra_on and held:
+                    # 形态复核：基础弱势成立但形态不符者剔出卖出源。只在「它本来会被选中（最贵）且边际成立」
+                    # 时记一行被挡事件，供 whipsaw_swap_diag.py 复盘该笔被规避的换仓其后走势。
+                    _kept, _blocked = [], {}
+                    for _r, _c in held:
+                        _ok, _why = weak_extra_ok(_c, sig_day, day_no)
+                        if _ok:
+                            _kept.append((_r, _c))
+                        else:
+                            _blocked[_c] = (_r, _why)
+                    if _blocked:
+                        _base_ratio, _base_worst = max(held)
+                        _cand_score = (pcts[code] if gate == "self-pct" else
+                                       (scores.get(code, ratio) if rank_mode != "pv" else ratio))
+                        if _base_worst in _blocked and swap_gap_ok(_base_ratio, _cand_score) \
+                                and _base_worst not in weak_blocked_logged:
+                            weak_blocked_logged.add(_base_worst)
+                            stats["换仓卖出源·形态复核挡下"] += 1
+                            if weak_block_log is not None:
+                                _mw = mas.get(_base_worst, {}).get(sig_day, {}).get(swap_weak_ma)
+                                _mp = _ma_prev(_base_worst, sig_day, swap_weak_slope or 5)
+                                _next = max(_kept)[1] if _kept and swap_gap_ok(max(_kept)[0], _cand_score) else ""
+                                weak_block_log.writerow([
+                                    sig_day, day, _base_worst, f"{today[_base_worst][0]:.4f}",
+                                    f"{_mw:.4f}" if _mw is not None else "", f"{_mp:.4f}" if _mp is not None else "",
+                                    weak_run.get(_base_worst, 0), _weak_cross_count(_base_worst),
+                                    f"{_base_ratio:.4f}", code, f"{_cand_score:.4f}", _blocked[_base_worst][1], _next,
+                                    f"{portfolio.lots[_base_worst].shares:.0f}"])
+                    held = _kept
                 # `gain_sell`（用户 2026-08-22 实验）：**涨幅 ≥ G 的持仓也是换仓卖出源**——不比 P/V 边际，
                 # 取涨幅最大的一只让位（当日已减过的不重复选）；`gated` 沿用 `swap_require_weak` 的弱势要求，
                 # `ungated` 不要求。没有这类持仓时回到现行的「最贵且弱势」选法。
@@ -2524,6 +2626,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                               ladder=ladder_swap)
                 sell_count += 1
                 swap_sources_today.add(worst)
+                if swap_source_cooldown > 0 and not swap_tag:
+                    swap_cool[worst] = day_no + swap_source_cooldown
                 swap_net_sales += portfolio.cash - _cash_before_swap
                 if swap_tag:
                     swap_gain_proceeds += sold_qty * sp
@@ -3533,6 +3637,23 @@ def main() -> int:
                              "（「高估严重才换，排序变了不轻易换」）。缺省 0 = 关")
     parser.add_argument("--swap-weak-ma", type=int, default=20,
                         help="配 --swap-require-weak 用的均线周期，缺省 20")
+    wk = parser.add_argument_group("换仓卖出源弱势的形态复核（研究开关，缺省全关、逐位不变；只配 --swap-require-weak）")
+    wk.add_argument("--swap-weak-days", type=int, default=1, metavar="N",
+                    help="连续 N 个信号日收盘低于均线才算弱势；1 = 现行单日判")
+    wk.add_argument("--swap-weak-slope", type=int, default=0, metavar="K",
+                    help="均线本身须低于 K 个交易日前才算弱势（走平／上行时的下穿不算）；0 = 关")
+    wk.add_argument("--swap-weak-slope-min", type=float, default=0.0, metavar="F",
+                    help="配 --swap-weak-slope：均线须较 K 日前至少下行 F（比例，0.5% 填 0.005）；0 = 只要求严格低于")
+    wk.add_argument("--swap-weak-deep", type=float, default=0.0, metavar="G",
+                    help="收盘低于均线 ≥ G（比例）视为走坏，免做连续日／斜率／穿越复核（冷却仍适用）；0 = 关")
+    wk.add_argument("--swap-weak-max-cross", type=int, default=0, metavar="M",
+                    help="近 --swap-weak-cross-window 个信号日收盘与均线穿越 ≥ M 次视为震荡区、不算弱势；0 = 关")
+    wk.add_argument("--swap-weak-cross-window", type=int, default=20, metavar="W",
+                    help="穿越计数的回看信号日数，缺省 20")
+    wk.add_argument("--swap-source-cooldown", type=int, default=0, metavar="K",
+                    help="同一持仓被 P/V 边际换出一档后 K 个交易日内不再作 P/V 换仓卖出源；0 = 关")
+    wk.add_argument("--weak-block-log", type=Path, default=None,
+                    help="被形态复核挡下的换仓卖出（本会被选中且边际成立）逐笔记录，供 whipsaw_swap_diag.py 复盘")
     parser.add_argument("--hold-strong", choices=("off", "swap", "sell", "both"), default="off",
                         help="强势多头排列的持仓豁免：swap=不被换出／sell=不减持／both=两者")
     parser.add_argument("--hold-strong-ma", nargs="+", type=int, default=[20, 60, 120, 240],
@@ -3804,6 +3925,18 @@ def main() -> int:
         sys.exit("--sell-confirm 与 --exec-confirm-close 二选一：后者已含卖侧复核")
     if not 0 <= args.sell_tol < 1 or not 0 <= args.stop_tol < 1:
         sys.exit("--sell-tol / --stop-tol 是比例，须落在 [0,1)，例如 1% 填 0.01")
+    if args.swap_weak_days < 1 or args.swap_weak_slope < 0 or args.swap_weak_max_cross < 0 \
+            or args.swap_weak_cross_window < 2 or args.swap_source_cooldown < 0:
+        sys.exit("--swap-weak-days ≥ 1、--swap-weak-slope/--swap-weak-max-cross/--swap-source-cooldown ≥ 0、--swap-weak-cross-window ≥ 2")
+    if (args.swap_weak_days > 1 or args.swap_weak_slope or args.swap_weak_max_cross or args.swap_source_cooldown) \
+            and not args.swap_require_weak:
+        sys.exit("换仓卖出源的形态复核开关只定义于 --swap-require-weak")
+    if not 0 <= args.swap_weak_slope_min < 1 or not 0 <= args.swap_weak_deep < 1:
+        sys.exit("--swap-weak-slope-min / --swap-weak-deep 是比例，须落在 [0,1)")
+    if args.swap_weak_slope_min and not args.swap_weak_slope:
+        sys.exit("--swap-weak-slope-min 只配 --swap-weak-slope K 使用")
+    if args.swap_weak_deep and not (args.swap_weak_days > 1 or args.swap_weak_slope or args.swap_weak_max_cross):
+        sys.exit("--swap-weak-deep 只在连续日／斜率／穿越三项形态复核至少一项打开时有意义")
     profit_lock: tuple[tuple[float, float], ...] = ()
     if args.profit_lock:
         steps = []
@@ -4030,6 +4163,12 @@ def main() -> int:
                      + (f"_{args.rank_mode[:1]}{args.quantile_window or 'all'}" if args.rank_mode != "pv" else "")
                      + ("_addma" if args.addon_trend == "ma-only" else "")
                      + (f"_swk{args.swap_weak_ma}" if args.swap_require_weak else "")
+                     + (f"_swkd{args.swap_weak_days}" if args.swap_weak_days > 1 else "")
+                     + (f"_swks{args.swap_weak_slope}" if args.swap_weak_slope else "")
+                     + (f"_swksm{args.swap_weak_slope_min * 100:g}" if args.swap_weak_slope_min else "")
+                     + (f"_swkdp{args.swap_weak_deep * 100:g}" if args.swap_weak_deep else "")
+                     + (f"_swkx{args.swap_weak_max_cross}w{args.swap_weak_cross_window}" if args.swap_weak_max_cross else "")
+                     + (f"_swcd{args.swap_source_cooldown}" if args.swap_source_cooldown else "")
                      + (f"_sop{args.swap_out_min_pv:g}" if args.swap_out_min_pv else "")
                      + (f"_q{args.quantile_window or 'all'}b{args.buy_pct:g}"
                         + (f"s{args.sell_pct:g}" if args.gate == "self-pct" else "A")
@@ -4071,6 +4210,14 @@ def main() -> int:
                 research.blocked.clear()
             run_stats = collections.Counter()
             ledger = [] if args.trade_log else None
+            wb_handle = wb_writer = None
+            if args.weak_block_log:
+                args.weak_block_log.parent.mkdir(parents=True, exist_ok=True)
+                wb_handle = args.weak_block_log.open("w", newline="", encoding="utf-8")
+                wb_writer = csv.writer(wb_handle)
+                wb_writer.writerow(["signal_date", "exec_date", "source_code", "close", "ma", "ma_prev",
+                                    "weak_run", "cross_count", "hold_pv", "trigger_code", "trigger_pv",
+                                    "block_reason", "next_source", "shares_held"])
             cand_handle = cand_writer = None
             if args.candidate_log:
                 args.candidate_log.parent.mkdir(parents=True, exist_ok=True)
@@ -4135,6 +4282,12 @@ def main() -> int:
                          addon_trend=args.addon_trend,
                          swap_require_weak=args.swap_require_weak,
                          swap_weak_ma=args.swap_weak_ma,
+                         swap_weak_days=args.swap_weak_days, swap_weak_slope=args.swap_weak_slope,
+                         swap_weak_slope_min=args.swap_weak_slope_min, swap_weak_deep=args.swap_weak_deep,
+                         swap_weak_max_cross=args.swap_weak_max_cross,
+                         swap_weak_cross_window=args.swap_weak_cross_window,
+                         swap_source_cooldown=args.swap_source_cooldown,
+                         weak_block_log=wb_writer,
                          swap_out_min_pv=args.swap_out_min_pv,
                          mkt=mkt_series, mkt_crash_days=args.mkt_crash_days,
                          mkt_crash_pct=args.mkt_crash_pct, mkt_trend_ma=args.mkt_trend_ma,
@@ -4168,6 +4321,9 @@ def main() -> int:
             if cand_handle is not None:
                 cand_handle.close()
                 print(f"    合格集排序记录 → {args.candidate_log}")
+            if wb_handle is not None:
+                wb_handle.close()
+                print(f"    形态复核挡下的换仓卖出 → {args.weak_block_log}")
             if not result["equity"]:
                 print(f"  {label}: 无交易日")
                 continue

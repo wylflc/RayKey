@@ -1,0 +1,24 @@
+# 换仓卖出源「弱势」的走势形态复核（用户 2026-09-06：牧原在 MA20 上下三次穿越触发三次换仓减一档，轨道 B）。
+# 第一轮 15 臂，全部只收紧 §9.3.1 换仓行「被换出持仓 收盘 < MA20」这一条件，其余沿用 BASE：
+#   WKn   = 连续 n 个信号日收盘 < MA20 才算弱势（--swap-weak-days）
+#   SLPk  = MA20 须低于 k 个交易日前（均线走平／上行时的下穿不算弱势，--swap-weak-slope）
+#   XCm   = 近 20 个信号日收盘与 MA20 穿越 ≥ m 次视为震荡区、不算弱势（--swap-weak-max-cross）
+#   CDk   = 同一持仓被 P/V 边际换出一档后 k 个交易日内不再作卖出源（--swap-source-cooldown）
+#   SWK60 = 弱势均线改 MA60（--swap-weak-ma 60）
+#   两条组合臂：WK2_SLP5、SLP5_CD10
+BASE|
+WK2|--swap-weak-days 2
+WK3|--swap-weak-days 3
+WK5|--swap-weak-days 5
+SLP3|--swap-weak-slope 3
+SLP5|--swap-weak-slope 5
+SLP10|--swap-weak-slope 10
+XC2|--swap-weak-max-cross 2
+XC3|--swap-weak-max-cross 3
+XC4|--swap-weak-max-cross 4
+CD5|--swap-source-cooldown 5
+CD10|--swap-source-cooldown 10
+CD20|--swap-source-cooldown 20
+SWK60|--swap-weak-ma 60
+WK2_SLP5|--swap-weak-days 2 --swap-weak-slope 5
+SLP5_CD10|--swap-weak-slope 5 --swap-source-cooldown 10

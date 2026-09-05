@@ -1,0 +1,5 @@
+# 稳健性：截去共享末段（2025-26 奥特维／神火窗口），全部臂含 BASE 以 --until 2024-12-31 复跑第一轮两条最好的臂。
+BASE|--until 2024-12-31
+SLP5|--swap-weak-slope 5 --until 2024-12-31
+WK3|--swap-weak-days 3 --until 2024-12-31
+XC4|--swap-weak-max-cross 4 --until 2024-12-31

@@ -1,0 +1,16 @@
+# 第二轮（用户 2026-09-06 研究思路：看细节后优化提案再回测）。第一轮复盘（diag_r1_2011.txt）：信号日形态分不开假摔与走坏，
+# 损失来自换仓资金回流减少、末段赢家（奥特维／神火）买得少。本轮只挡「浅且短且均线走平」的下穿，深破或持续破线照常换出：
+#   DPg  = 收盘低于 MA20 ≥ g% 视为走坏、免形态复核（--swap-weak-deep）
+#   SMf  = 斜率判据改为 MA20 较 5 日前至少下行 f%（--swap-weak-slope-min）
+BASE|
+WK2_DP2|--swap-weak-days 2 --swap-weak-deep 0.02
+WK2_DP3|--swap-weak-days 2 --swap-weak-deep 0.03
+WK3_DP2|--swap-weak-days 3 --swap-weak-deep 0.02
+WK3_DP3|--swap-weak-days 3 --swap-weak-deep 0.03
+SLP5_DP2|--swap-weak-slope 5 --swap-weak-deep 0.02
+SLP5_DP3|--swap-weak-slope 5 --swap-weak-deep 0.03
+SLP5_SM05|--swap-weak-slope 5 --swap-weak-slope-min 0.005
+SLP5_SM1|--swap-weak-slope 5 --swap-weak-slope-min 0.01
+SLP5_SM05_DP2|--swap-weak-slope 5 --swap-weak-slope-min 0.005 --swap-weak-deep 0.02
+SLP10_SM1|--swap-weak-slope 10 --swap-weak-slope-min 0.01
+XC4_DP2|--swap-weak-max-cross 4 --swap-weak-deep 0.02
