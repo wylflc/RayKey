@@ -7,7 +7,8 @@
   universe   SEC XBRL frames 逐年营收横截面（四个营收概念取最大）→ 剔除 SIC 6000–6799 → 每年前 N 名 CIK；
              代码与交易所取 `submissions`／`company_tickers_exchange.json`；写 `universe.csv`／`universe_ciks.csv`
   facts      下载股票池全部 CIK 的 companyfacts JSON
-  prices     腾讯 `fqkline` 未复权日线（美股符号 us<代码>.<OQ|N|A>），写 `raw/prices/<代码>.csv` 与 `price_index.csv`
+  prices     腾讯 `fqkline` 未复权日线（美股符号 us<代码>.<OQ|N|A>，每次 2000 根从今向前翻页），写 `raw/prices/<代码>.csv`
+             与 `price_index.csv`；已有价格文件的代码跳过（`--refresh` 强制重取）；接口失败全线程退避重试，不写 0 行
   value      逐公司逐月末：事实按 `filed ≤ t` 截断 → `fetch_overseas_statements.sec_extract`／`sec_current_extract`
              → `build_overseas_roic_bands.value_company`（L2 档，rf 取 t 前最新美债 10Y，ERP 常数）→ `pv_monthly.csv`
   report     拆股（SEC 事实＋价跳推断）与分红（SEC 每股宣派）重建总回报 → 前向 3／5 年年化 → 分档、年组 Spearman、判据 → `report.md`
@@ -32,6 +33,7 @@ import math
 import re
 import statistics
 import sys
+import threading
 import time
 import urllib.request
 from collections import defaultdict
@@ -239,11 +241,67 @@ def cmd_facts(args) -> int:
 
 
 # ------------------------------------------------------------------ prices
+TX_MAX_BARS = 2000                  # 接口单次上限（更大报 param error），返回区间内最近的 N 根，故从今天起逐段向前翻页
+TX_MAX_ROUNDS = 12                  # 同一区间连续失败轮数上限（退避 60→600 s，累计约 95 分钟），超出则中止 prices
+_tx_lock = threading.Lock()
+_tx_state = {"block_until": 0.0, "backoff": 0.0, "abort": False}
+
+
+class TencentError(RuntimeError):
+    """接口失败（限流／网络／参数错）；与「区间无数据」（正常返回 day=[]）严格区分。"""
+
+
 def tencent_bars(symbol: str, start: str, end: str) -> list[tuple[str, float]]:
-    url = f"https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={symbol},day,{start},{end},640,"
-    d = json.loads(_get(url, TX_HDR, timeout=30))
-    data = d.get("data", {}).get(symbol, {})
-    return [(b[0], float(b[2])) for b in (data.get("day") or []) if float(b[2]) > 0]
+    url = f"https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={symbol},day,{start},{end},{TX_MAX_BARS},"
+    try:
+        d = json.loads(_get(url, TX_HDR, timeout=30, retries=1))
+    except Exception as exc:  # noqa: BLE001
+        raise TencentError(f"{type(exc).__name__}: {str(exc).split(': ', 1)[-1][:120]}") from None
+    data = d.get("data") if isinstance(d, dict) else None
+    sym = data.get(symbol) if isinstance(data, dict) else None
+    if (isinstance(d, dict) and d.get("msg")) or not isinstance(sym, dict) or "day" not in sym:
+        raise TencentError(f"响应异常 msg={d.get('msg') if isinstance(d, dict) else d!r} data={str(data)[:60]}")
+    return [(b[0], float(b[2])) for b in (sym.get("day") or [])]
+
+
+def _tx_wait() -> None:
+    while True:
+        with _tx_lock:
+            if _tx_state["abort"]:
+                raise RuntimeError("prices 已中止")
+            remain = _tx_state["block_until"] - time.time()
+        if remain <= 0:
+            return
+        time.sleep(min(remain, 5.0))
+
+
+def _tx_failed(what: str, exc: Exception) -> None:
+    with _tx_lock:
+        now = time.time()
+        if now < _tx_state["block_until"]:
+            return                                       # 本轮拦截已由其他线程登记
+        _tx_state["backoff"] = min(max(2 * _tx_state["backoff"], 60.0), 600.0)
+        _tx_state["block_until"] = now + _tx_state["backoff"]
+        print(f"  腾讯取数失败 {what}: {exc} → 全线程暂停 {_tx_state['backoff']:.0f}s", file=sys.stderr, flush=True)
+
+
+def _tx_succeeded() -> None:
+    with _tx_lock:
+        _tx_state["backoff"] = 0.0
+
+
+def tencent_window(symbol: str, start: str, end: str) -> list[tuple[str, float]]:
+    for rnd in range(1, TX_MAX_ROUNDS + 1):
+        _tx_wait()
+        try:
+            got = tencent_bars(symbol, start, end)
+        except TencentError as exc:
+            _tx_failed(f"{symbol} {start}~{end}（第 {rnd} 轮）", exc)
+            continue
+        _tx_succeeded()
+        time.sleep(0.15)
+        return got
+    raise RuntimeError(f"{symbol} {start}~{end}: 连续 {TX_MAX_ROUNDS} 轮取数失败，中止 prices（已取文件保留，重跑续取）")
 
 
 def symbol_candidates(ticker: str, exchange: str) -> list[str]:
@@ -258,23 +316,19 @@ def symbol_candidates(ticker: str, exchange: str) -> list[str]:
 
 
 def fetch_price_series(ticker: str, exchange: str) -> tuple[str, list[tuple[str, float]]]:
+    today = date.today().isoformat()
     for sym in symbol_candidates(ticker, exchange):
         bars: dict[str, float] = {}
-        start = date.fromisoformat(PRICE_FROM)
-        today = date.today()
-        empty_windows = 0
-        while start < today:
-            end = min(start + timedelta(days=700), today)
-            try:
-                got = tencent_bars(sym, start.isoformat(), end.isoformat())
-            except Exception:  # noqa: BLE001
-                got = []
-            if got:
-                bars.update(got)
-            else:
-                empty_windows += 1
-            start = end + timedelta(days=1)
-            time.sleep(0.15)
+        end = today
+        while True:
+            got = tencent_window(sym, PRICE_FROM, end)
+            if not got:
+                break
+            bars.update((d, c) for d, c in got if c > 0)
+            first = min(d for d, _ in got)
+            if len(got) < TX_MAX_BARS or first <= PRICE_FROM:
+                break
+            end = (date.fromisoformat(first) - timedelta(days=1)).isoformat()
         if bars:
             return sym, sorted(bars.items())
     return "", []
@@ -292,27 +346,42 @@ def cmd_prices(args) -> int:
         todo = [t for t in todo if t[0] in only]
     todo = sorted(set(todo))
     index_path = EXP / "price_index.csv"
+    fields = ["ticker", "exchange", "symbol", "first", "last", "bars"]
     index = {r["ticker"]: r for r in read_csv(index_path)} if index_path.exists() else {}
 
     def work(item):
         ticker, exchange = item
         p = price_path(ticker)
-        if p.exists() and ticker in index and not args.refresh:
-            return ticker, index[ticker]
+        if p.exists() and not args.refresh:              # 已有价格文件即跳过；索引缺行或为 0 时按文件重建
+            old = index.get(ticker) or {}
+            if int(old.get("bars") or 0) > 0:
+                return ticker, old
+            rows = read_csv(p)
+            return ticker, dict(ticker=ticker, exchange=exchange, symbol=old.get("symbol", ""),
+                                first=rows[0]["date"], last=rows[-1]["date"], bars=len(rows))
         sym, series = fetch_price_series(ticker, exchange)
         if series:
             write_csv(p, [dict(date=d, close=f"{c:.4f}") for d, c in series], ["date", "close"])
-        row = dict(ticker=ticker, exchange=exchange, symbol=sym, first=series[0][0] if series else "",
-                   last=series[-1][0] if series else "", bars=len(series))
-        return ticker, row
+        return ticker, dict(ticker=ticker, exchange=exchange, symbol=sym, first=series[0][0] if series else "",
+                            last=series[-1][0] if series else "", bars=len(series))
 
-    with ThreadPoolExecutor(max_workers=args.threads) as pool:
-        for i, (ticker, row) in enumerate(pool.map(work, todo), 1):
+    pool = ThreadPoolExecutor(max_workers=args.threads)
+    futures = [pool.submit(work, item) for item in todo]
+    try:
+        for i, fut in enumerate(futures, 1):
+            ticker, row = fut.result()
             index[ticker] = row
             if i % 25 == 0:
                 print(f"  {i}/{len(todo)}", flush=True)
-                write_csv(index_path, list(index.values()), ["ticker", "exchange", "symbol", "first", "last", "bars"])
-    write_csv(index_path, list(index.values()), ["ticker", "exchange", "symbol", "first", "last", "bars"])
+                write_csv(index_path, list(index.values()), fields)
+    except BaseException:
+        with _tx_lock:
+            _tx_state["abort"] = True
+        pool.shutdown(wait=False, cancel_futures=True)
+        write_csv(index_path, list(index.values()), fields)
+        raise
+    pool.shutdown(wait=True)
+    write_csv(index_path, list(index.values()), fields)
     have = sum(1 for r in index.values() if int(r["bars"] or 0) > 0)
     print(f"价格：{have}/{len(todo)} 个代码有历史价 → {index_path}")
     return 0

@@ -11,4 +11,4 @@
 
 ### OI-150｜待办：海外市场估值信号的预登记前向检验（第三批次，可选）
 
-**来源（2026-09-05，[指标审核与最终方案](reports/backtest_metric_review_plan.zh.md)第三批次）**：先预登记固定 `P/V` 分档对未来收益的检验，再考虑完整组合回测。前提：历史时点股票池、退市与公司行动、原始财报可得时间、本地税费与执行规则齐备；当前海外关注清单与当前估值不构成无偏历史样本。港美股与 A 股共享宏观风险，不当作独立抽样；据结果改规则后该市场同样转为研究样本。无前置项。**当前处置（2026-09-05）**：用户指令启动；预登记书与数据前提审计见 [overseas_pv_forward_prereg.zh.md](reports/overseas_pv_forward_prereg.zh.md)（美股为正式样本，港股无历史池不作正式样本），管线 `scripts/experimental/overseas_pv_forward.py` 建设中。
+**来源（2026-09-05，[指标审核与最终方案](reports/backtest_metric_review_plan.zh.md)第三批次）**：先预登记固定 `P/V` 分档对未来收益的检验，再考虑完整组合回测。前提：历史时点股票池、退市与公司行动、原始财报可得时间、本地税费与执行规则齐备；当前海外关注清单与当前估值不构成无偏历史样本。港美股与 A 股共享宏观风险，不当作独立抽样；据结果改规则后该市场同样转为研究样本。无前置项。**当前处置（2026-09-06）**：用户裁定暂时搁置。已完成：预登记书与数据前提审计 [overseas_pv_forward_prereg.zh.md](reports/overseas_pv_forward_prereg.zh.md)（美股为正式样本，港股无历史池不作正式样本）；管线 `scripts/experimental/overseas_pv_forward.py` 五步写完并冒烟通过；股票池 653 家与 companyfacts 已缓存，价格取到 141 只（原始缓存 2.1 GB 在 `data/experiments/exp_oi150_overseas_forward/raw/`，不入库）。首跑在取价步因腾讯接口限流（约 250 次请求／33 分钟）未完成，取价器已改为失败退避重试、按已有文件续取（翻页取数与旧结果逐根一致）。重启即提交 `scripts/slurm/oi150_overseas_forward.sbatch`，各步自动续跑。
