@@ -208,3 +208,7 @@ python3 scripts/experimental/cycle_peak_buy_audit.py \
     --trade-log <BASE 长跑 --trade-log> --states <候选侧逐日状态> --bands <带文件> \
     --buy-line 0.9343 --name-check "白酒=600519,000858,000568,002304,600809@2019-01:2022-12"
 ```
+
+## MA20 震荡续研（§12.198）
+
+`whipsaw_joint_run.py`、`whipsaw_joint_diag.py`、`whipsaw_joint_validate.py`、`whipsaw_joint_census.py`、`whipsaw_joint_signal_audit.py`：预登记联合形态与重复净换出保护，逐笔资金路径、相邻参数、成本／时期、去重事件与信号审计。报告见 `docs/reports/whipsaw_joint_review.zh.md`。`whipsaw_swap_diag.py` 的前向收益已改为只计持有区间公司行动，旧数不再作为诊断依据。

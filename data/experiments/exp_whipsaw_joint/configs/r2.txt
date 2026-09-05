@@ -1,0 +1,11 @@
+# Track B; fixed RF5 sensitivity after event audit; eight new arms
+BASE |  --until 2026-08-28
+WJ_RF5 | --swap-chop-mode repeat-flat --swap-chop-cooldown 5 --until 2026-08-28
+WJ_RF3 | --swap-chop-mode repeat-flat --swap-chop-cooldown 5 --swap-chop-cooldown 3 --until 2026-08-28
+WJ_RF4 | --swap-chop-mode repeat-flat --swap-chop-cooldown 5 --swap-chop-cooldown 4 --until 2026-08-28
+WJ_RF6 | --swap-chop-mode repeat-flat --swap-chop-cooldown 5 --swap-chop-cooldown 6 --until 2026-08-28
+WJ_RF7 | --swap-chop-mode repeat-flat --swap-chop-cooldown 5 --swap-chop-cooldown 7 --until 2026-08-28
+WJ_RF5S04 | --swap-chop-mode repeat-flat --swap-chop-cooldown 5 --swap-chop-slope 0.004 --until 2026-08-28
+WJ_RF5S06 | --swap-chop-mode repeat-flat --swap-chop-cooldown 5 --swap-chop-slope 0.006 --until 2026-08-28
+WJ_RF5X3 | --swap-chop-mode repeat-flat --swap-chop-cooldown 5 --swap-chop-crosses 3 --until 2026-08-28
+WJ_RF5X5 | --swap-chop-mode repeat-flat --swap-chop-cooldown 5 --swap-chop-crosses 5 --until 2026-08-28

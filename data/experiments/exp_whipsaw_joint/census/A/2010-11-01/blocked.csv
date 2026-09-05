@@ -1,0 +1,4 @@
+signal_date,exec_date,source_code,close,ma,ma_prev,weak_run,cross_count,hold_pv,trigger_code,trigger_pv,block_reason,next_source,shares_held
+2021-03-08,2021-03-09,601818,4.1200,4.1460,4.1375,0,0,1.0731,600897,0.7694,chop:repeat-flat;gap=-0.00627;run=2;slope=0.0020543806646526885;cross=6,,1571700
+2021-03-22,2021-03-23,601818,4.1300,4.1430,4.1530,0,0,1.0757,600016,0.7864,chop:repeat-flat;gap=-0.00314;run=2;slope=-0.002407897905128742;cross=7,600000,148600
+2025-03-24,2025-03-25,601229,9.3100,9.3575,9.3580,0,0,0.7997,000661,0.6105,chop:repeat-flat;gap=-0.00508;run=2;slope=-5.3430220132710815e-05;cross=4,,4213400

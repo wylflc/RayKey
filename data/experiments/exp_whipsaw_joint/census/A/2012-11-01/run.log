@@ -1,0 +1,12 @@
+载入…（逐日估值状态、行情、除权除息、均线）
+  逐日状态 930,804 行｜2002-04-17 ~ 2026-08-28｜行情 282 只｜基准 沪深300 5245 日
+  **时点股票库**：240 档｜2003-04-30 起生效｜每档 7~226 只｜并集 282 只
+  **研究剔除**：5 只｜000338,000651,000933,002128,601088
+    形态复核挡下的换仓卖出 → /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey/data/experiments/exp_whipsaw_joint/census/A/2012-11-01/blocked.csv
+    成交流水 2,636 笔 → /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey/data/experiments/exp_whipsaw_joint/census/A/2012-11-01/ledger.csv
+  trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_choprepeat-flatd0.02n3s0.005x4c5p0.005_cap0.6_sp_gso_ex5_lot100_lrc2_wjcA20121101: 期末 74,167.6 万｜年化 48.99%｜最大回撤 67.5%｜周期 244
+    买不足一手·跳过 5,768｜超额授信·当日无新增买入 1,885｜超额授信·卖出款先还 294｜成交日无价·跳过 273｜换仓·减一档 174｜止损触发·confirmed 168｜涨幅≥110%·减一档 162｜超额授信·换仓款先还 155｜换仓·整仓卖出 68｜同日买卖对冲 55｜换仓卖出源·形态复核挡下 7｜高价股·按手建仓 2
+
+落点 data/experiments/exp_whipsaw_joint/census/A/2012-11-01/：汇总 summary.csv（--no-artifacts，未落逐条产物）
+退市处置：名册 344 只，过末个交易日的持仓按最后成交价整仓清出（协议 §8）；退市股三表缺失只能走权益口径、判定者后视不可消除——残余偏差见判定协议「退市股第二遍盲判」一节（OI-040 已归档）。
+交易成本已计入：佣金 1.0‱（最低 5 元）、过户费 0.10‱ 双边、印花税 5.0‱ 单边卖出

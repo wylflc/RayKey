@@ -1,0 +1,4 @@
+signal_date,exec_date,source_code,close,ma,ma_prev,weak_run,cross_count,hold_pv,trigger_code,trigger_pv,block_reason,next_source,shares_held
+2024-11-20,2024-11-21,600919,9.0200,9.0205,9.0035,0,0,0.8304,000338,0.6339,chop:repeat-flat;gap=-0.00006;run=1;slope=0.001888154606541903;cross=5,,850300
+2025-03-24,2025-03-25,601229,9.3100,9.3575,9.3580,0,0,0.7997,000661,0.6105,chop:repeat-flat;gap=-0.00508;run=2;slope=-5.3430220132710815e-05;cross=4,,4162200
+2025-07-21,2025-07-22,601229,10.8700,10.9855,10.9560,0,0,0.8058,000792,0.6168,chop:repeat-flat;gap=-0.01051;run=1;slope=0.0026925885359618817;cross=7,601328,760900

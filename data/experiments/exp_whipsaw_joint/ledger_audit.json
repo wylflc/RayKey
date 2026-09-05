@@ -1,0 +1,29 @@
+{
+  "new_rows": 980,
+  "archive_changed": false,
+  "archive_sha256": "553a54c1a82acbb6f1f928af917845c7d611a58b4812c6cca781dc83d2094697",
+  "baseline_paired_paths_identical": 28,
+  "current_family_index_names": [
+    "WJFD15",
+    "WJFD25",
+    "WJFLAT",
+    "WJFS04",
+    "WJFS06",
+    "WJFX3",
+    "WJFX5",
+    "WJR10",
+    "WJR3",
+    "WJR5",
+    "WJRF10",
+    "WJRF3",
+    "WJRF4",
+    "WJRF5",
+    "WJRF5S04",
+    "WJRF5S06",
+    "WJRF5X3",
+    "WJRF5X5",
+    "WJRF6",
+    "WJRF7",
+    "WJWK3DP3"
+  ]
+}

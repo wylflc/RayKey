@@ -1,0 +1,15 @@
+# Track B; predefined round 1; all paths frozen at 2026-08-28
+BASE |  --until 2026-08-28
+WJ_WK3DP3 | --swap-weak-days 3 --swap-weak-deep 0.03 --until 2026-08-28
+WJ_FLAT | --swap-chop-mode flat --until 2026-08-28
+WJ_FS04 | --swap-chop-mode flat --swap-chop-slope 0.004 --until 2026-08-28
+WJ_FS06 | --swap-chop-mode flat --swap-chop-slope 0.006 --until 2026-08-28
+WJ_FX3 | --swap-chop-mode flat --swap-chop-crosses 3 --until 2026-08-28
+WJ_FX5 | --swap-chop-mode flat --swap-chop-crosses 5 --until 2026-08-28
+WJ_FD15 | --swap-chop-mode flat --swap-chop-depth 0.015 --until 2026-08-28
+WJ_FD25 | --swap-chop-mode flat --swap-chop-depth 0.025 --until 2026-08-28
+WJ_R3 | --swap-chop-mode repeat --swap-chop-cooldown 3 --until 2026-08-28
+WJ_R5 | --swap-chop-mode repeat --swap-chop-cooldown 5 --until 2026-08-28
+WJ_R10 | --swap-chop-mode repeat --swap-chop-cooldown 10 --until 2026-08-28
+WJ_RF5 | --swap-chop-mode repeat-flat --swap-chop-cooldown 5 --until 2026-08-28
+WJ_RF10 | --swap-chop-mode repeat-flat --swap-chop-cooldown 10 --until 2026-08-28

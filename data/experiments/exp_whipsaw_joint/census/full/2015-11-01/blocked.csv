@@ -1,0 +1,2 @@
+signal_date,exec_date,source_code,close,ma,ma_prev,weak_run,cross_count,hold_pv,trigger_code,trigger_pv,block_reason,next_source,shares_held
+2025-03-24,2025-03-25,601229,9.3100,9.3575,9.3580,0,0,0.7997,000661,0.6105,chop:repeat-flat;gap=-0.00508;run=2;slope=-5.3430220132710815e-05;cross=4,,3628500

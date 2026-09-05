@@ -51,6 +51,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from swap_chop_guard import ChopConfig, ChopGuard
+
 DAILY_STATES = ROOT / "data/processed/a_share_daily_states_adopted.csv"
 OHLCV_DIR = ROOT / "data/raw/ohlcv"
 RESEARCH_DIR = ROOT / "data/raw/research_reports"
@@ -1254,6 +1256,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_weak_max_cross: int = 0, swap_weak_cross_window: int = 20,
         swap_weak_deep: float = 0.0,
         swap_source_cooldown: int = 0, weak_block_log=None,
+        swap_chop: ChopConfig | None = None,
         swap_out_min_pv: float = 0.0,
         mkt: dict[str, float] | None = None, mkt_crash_days: int = 0,
         mkt_crash_pct: float = 0.10, mkt_trend_ma: int = 0,
@@ -1465,8 +1468,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     #   `swap_weak_slope_min` F：斜率判据改为「均线较 k 日前至少下行 F」（走平不算下行）；
     #   `swap_weak_deep` G：收盘低于均线 ≥ G 视为走坏，免做连续日／斜率／穿越三项形态复核（冷却仍适用）。
     # 计数**对全池逐日累计**（与 `below_ma_run` 同理），不只对持仓算。
+    chop_guard = ChopGuard(swap_chop, prices, mas, actions, swap_weak_ma) if swap_chop and swap_chop.mode != "off" else None
     weak_extra_on = bool(swap_require_weak) and (swap_weak_days > 1 or swap_weak_slope > 0
-                                                 or swap_weak_max_cross > 0 or swap_source_cooldown > 0)
+                                                 or swap_weak_max_cross > 0 or swap_source_cooldown > 0 or chop_guard is not None)
     weak_run: dict[str, int] = {}                      # 代码 → 连续「收盘 < 均线」的信号日数
     weak_hist: dict[str, collections.deque] = {}       # 代码 → 近 W 个信号日的「收盘 < 均线」布尔序列
     swap_cool: dict[str, int] = {}                     # 代码 → 冷却到的交易日序号（含）
@@ -1511,6 +1515,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 return False, f"穿越{_weak_cross_count(c)}次≥{swap_weak_max_cross}"
         if swap_source_cooldown > 0 and dno <= swap_cool.get(c, -1):
             return False, f"冷却余{swap_cool[c] - dno + 1}日"
+        if chop_guard is not None:
+            why = chop_guard.blocked(c, sday, dno, portfolio.lots.get(c))
+            if why:
+                return False, why
         return True, ""
     for day_no, day in enumerate(days):
         apply_corporate_actions(portfolio, day, actions, adjust_stops=(exright_stop == "adjust"))
@@ -1587,6 +1595,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         h = weak_hist[c] = collections.deque(maxlen=max(2, swap_weak_cross_window))
                     h.append(below)
         weak_blocked_logged: set[str] = set()
+        chop_sales = {}
         # ---- 自身分位闸门（用户 2026-08-15 的重构口径）----
         # **每只股票只跟自己比**：把当日估值指标换算成「在该股自身历史里的分位」，
         # 买入闸 = 分位 ≤ `buy_pct`、卖出闸 = 分位 ≥ `sell_pct`。
@@ -2626,6 +2635,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                               ladder=ladder_swap)
                 sell_count += 1
                 swap_sources_today.add(worst)
+                if chop_guard is not None and not swap_tag and sold_qty > 0:
+                    chop_sales[worst] = (lot_worst, sold_qty,
+                        net_reg[worst][-1] if net_reg and worst in net_reg else None)
                 if swap_source_cooldown > 0 and not swap_tag:
                     swap_cool[worst] = day_no + swap_source_cooldown
                 swap_net_sales += portfolio.cash - _cash_before_swap
@@ -3050,6 +3062,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if max_daily_buys and daily_buys == max_daily_buys:
                 stats["每日买入上限·达到上限天数"] += 1
             turnover += amount
+
+        if chop_guard is not None:
+            for c, (lot, quantity, sale) in chop_sales.items():
+                chop_guard.record_sale(c, sig_day, day_no, lot, sale["left"] if sale is not None else quantity)
 
         # **收盘净值必须对当日新建的仓位也取到价**：`marks` 是开盘前按当时持仓建的，
         # 当天新买的票不在里面，`equity()` 会把它们记作 0——现金花掉了、股票却不算数，
@@ -3652,6 +3668,14 @@ def main() -> int:
                     help="穿越计数的回看信号日数，缺省 20")
     wk.add_argument("--swap-source-cooldown", type=int, default=0, metavar="K",
                     help="同一持仓被 P/V 边际换出一档后 K 个交易日内不再作 P/V 换仓卖出源；0 = 关")
+    wk.add_argument("--swap-chop-mode", choices=("off", "flat", "repeat", "repeat-flat"), default="off",
+                    help="研究：flat 只挡浅短平且多穿越的交集；repeat 首次照卖、再减须进一步走弱；repeat-flat 两者交集")
+    wk.add_argument("--swap-chop-depth", type=float, default=0.02, help="浅跌上限；达到该跌幅即放行")
+    wk.add_argument("--swap-chop-days", type=int, default=3, help="连续线下达到 N 日即放行")
+    wk.add_argument("--swap-chop-slope", type=float, default=0.005, help="走平 = MA 较五日前绝对变化不超过该比例，按信号日除权基准")
+    wk.add_argument("--swap-chop-crosses", type=int, default=4, help="震荡要求最近20根行情至少穿越几次")
+    wk.add_argument("--swap-chop-cooldown", type=int, default=5, help="repeat 净换出后的交易日冷却上限")
+    wk.add_argument("--swap-chop-progress", type=float, default=0.005, help="repeat 较前次信号价进一步下跌该比例即放行")
     wk.add_argument("--weak-block-log", type=Path, default=None,
                     help="被形态复核挡下的换仓卖出（本会被选中且边际成立）逐笔记录，供 whipsaw_swap_diag.py 复盘")
     parser.add_argument("--hold-strong", choices=("off", "swap", "sell", "both"), default="off",
@@ -3937,6 +3961,14 @@ def main() -> int:
         sys.exit("--swap-weak-slope-min 只配 --swap-weak-slope K 使用")
     if args.swap_weak_deep and not (args.swap_weak_days > 1 or args.swap_weak_slope or args.swap_weak_max_cross):
         sys.exit("--swap-weak-deep 只在连续日／斜率／穿越三项形态复核至少一项打开时有意义")
+    try:
+        chop_config = ChopConfig(args.swap_chop_mode, args.swap_chop_depth, args.swap_chop_days,
+                                 args.swap_chop_slope, args.swap_chop_crosses,
+                                 args.swap_chop_cooldown, args.swap_chop_progress)
+    except ValueError as exc:
+        sys.exit(str(exc))
+    if args.swap_chop_mode != "off" and not args.swap_require_weak:
+        sys.exit("--swap-chop-mode 只配 --swap-require-weak")
     profit_lock: tuple[tuple[float, float], ...] = ()
     if args.profit_lock:
         steps = []
@@ -4169,6 +4201,7 @@ def main() -> int:
                      + (f"_swkdp{args.swap_weak_deep * 100:g}" if args.swap_weak_deep else "")
                      + (f"_swkx{args.swap_weak_max_cross}w{args.swap_weak_cross_window}" if args.swap_weak_max_cross else "")
                      + (f"_swcd{args.swap_source_cooldown}" if args.swap_source_cooldown else "")
+                     + (f"_chop{args.swap_chop_mode}d{args.swap_chop_depth}n{args.swap_chop_days}s{args.swap_chop_slope}x{args.swap_chop_crosses}c{args.swap_chop_cooldown}p{args.swap_chop_progress}" if args.swap_chop_mode != "off" else "")
                      + (f"_sop{args.swap_out_min_pv:g}" if args.swap_out_min_pv else "")
                      + (f"_q{args.quantile_window or 'all'}b{args.buy_pct:g}"
                         + (f"s{args.sell_pct:g}" if args.gate == "self-pct" else "A")
@@ -4287,7 +4320,7 @@ def main() -> int:
                          swap_weak_max_cross=args.swap_weak_max_cross,
                          swap_weak_cross_window=args.swap_weak_cross_window,
                          swap_source_cooldown=args.swap_source_cooldown,
-                         weak_block_log=wb_writer,
+                         weak_block_log=wb_writer, swap_chop=chop_config,
                          swap_out_min_pv=args.swap_out_min_pv,
                          mkt=mkt_series, mkt_crash_days=args.mkt_crash_days,
                          mkt_crash_pct=args.mkt_crash_pct, mkt_trend_ma=args.mkt_trend_ma,

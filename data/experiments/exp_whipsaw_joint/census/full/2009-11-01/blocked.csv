@@ -1,0 +1,3 @@
+signal_date,exec_date,source_code,close,ma,ma_prev,weak_run,cross_count,hold_pv,trigger_code,trigger_pv,block_reason,next_source,shares_held
+2014-10-13,2014-10-14,600660,10.1700,10.2790,10.2505,0,0,0.7546,600031,0.5812,chop:repeat-flat;gap=-0.01060;run=2;slope=0.002780352177942591;cross=5,,110800
+2025-03-24,2025-03-25,601229,9.3100,9.3575,9.3580,0,0,0.7997,000661,0.6105,chop:repeat-flat;gap=-0.00508;run=2;slope=-5.3430220132710815e-05;cross=4,,1772400

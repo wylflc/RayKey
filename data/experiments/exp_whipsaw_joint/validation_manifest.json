@@ -1,0 +1,59 @@
+{
+  "scenarios": {
+    "slip0": [
+      [
+        "BASE",
+        "--slippage-bp 0 --until 2026-08-28"
+      ],
+      [
+        "WJ_RF5",
+        "--swap-chop-mode repeat-flat --swap-chop-cooldown 5 --slippage-bp 0 --until 2026-08-28"
+      ]
+    ],
+    "slip10": [
+      [
+        "BASE",
+        "--slippage-bp 10 --until 2026-08-28"
+      ],
+      [
+        "WJ_RF5",
+        "--swap-chop-mode repeat-flat --swap-chop-cooldown 5 --slippage-bp 10 --until 2026-08-28"
+      ]
+    ],
+    "slip20": [
+      [
+        "BASE",
+        "--slippage-bp 20 --until 2026-08-28"
+      ],
+      [
+        "WJ_RF5",
+        "--swap-chop-mode repeat-flat --swap-chop-cooldown 5 --slippage-bp 20 --until 2026-08-28"
+      ]
+    ],
+    "slip30": [
+      [
+        "BASE",
+        "--slippage-bp 30 --until 2026-08-28"
+      ],
+      [
+        "WJ_RF5",
+        "--swap-chop-mode repeat-flat --swap-chop-cooldown 5 --slippage-bp 30 --until 2026-08-28"
+      ]
+    ],
+    "trunc2024": [
+      [
+        "BASE",
+        "--until 2024-12-31"
+      ],
+      [
+        "WJ_RF5",
+        "--swap-chop-mode repeat-flat --swap-chop-cooldown 5 --until 2024-12-31"
+      ],
+      [
+        "WJ_R5",
+        "--swap-chop-mode repeat --swap-chop-cooldown 5 --until 2024-12-31"
+      ]
+    ]
+  },
+  "excluded": "601088,002128,000933,000651,000338"
+}

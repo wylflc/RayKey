@@ -1,0 +1,35 @@
+{
+  "full": {
+    "path_events": 25,
+    "distinct_dates_sources": 11,
+    "distinct_sources": 6,
+    "categories": {
+      "假摔": 5,
+      "中间": 4,
+      "走坏": 2,
+      "无后续": 0
+    }
+  },
+  "A": {
+    "path_events": 52,
+    "distinct_dates_sources": 9,
+    "distinct_sources": 5,
+    "categories": {
+      "假摔": 3,
+      "中间": 4,
+      "走坏": 2,
+      "无后续": 0
+    }
+  },
+  "pooled": {
+    "path_events": 77,
+    "distinct_dates_sources": 14,
+    "distinct_sources": 6,
+    "categories": {
+      "假摔": 5,
+      "中间": 6,
+      "走坏": 3,
+      "无后续": 0
+    }
+  }
+}

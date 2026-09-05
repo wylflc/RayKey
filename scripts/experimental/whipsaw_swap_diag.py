@@ -5,7 +5,7 @@
 `*_trades.csv`（周期产物，含 contrib）与 `summary_*.csv`，出四段：
 
 A. **BASE 换仓卖出的走势解剖**：每一笔 P/V 边际换仓卖出（不含涨幅让位），按信号日形态（收盘对 MA20 的偏离、连续线下日数、
-   MA20 斜率、近 20 日穿越次数、MA20/MA60）与其后走势（成交日起 5／10／20／60 日前复权收益、几日内站回 MA20）分两类：
+   MA20 斜率、近 20 日穿越次数、MA20/MA60）与其后走势（成交日起 5／10／20／60 日含现金分红收益、几日内站回 MA20）分两类：
    **假摔**（whipsaw：10 日内站回 MA20 且 20 日收益 ≥ 0）与 **走坏**（breakdown：20 日收益 ≤ −5% 或 20 日内未站回 MA20），
    其余为**中间**。再报每条候选判据在两类上各挡下多少——这就是「能否区分两种走势」的直接读数。
 B. **各臂被挡事件的其后走势**：被挡的卖出源与触发候选自成交日起 20／60 日收益及其差；挡对（源其后跑赢候选）还是挡错。
@@ -44,12 +44,32 @@ def f(x, w=7, p=1, scale=100.0):
     return f"{'—':>{w}}" if x != x else f"{x * scale:>{w}.{p}f}"
 
 
+def holding_return_path(prices: dict, actions: dict, days: list[str]) -> list[float]:
+    """Cash-inclusive gross holding return; entry close is after entry-day actions."""
+    if not days or prices[days[0]] <= 0:
+        return []
+    initial, shares, cash = prices[days[0]], 1.0, 0.0
+    result = [0.0]
+    event_days = [d for d in sorted(actions) if days[0] < d <= days[-1]]
+    cursor = 0
+    for day in days[1:]:
+        while cursor < len(event_days) and event_days[cursor] <= day:
+            dividend, bonus, rights, subscription = actions[event_days[cursor]]
+            cash += shares * (dividend - rights * subscription)
+            shares *= 1.0 + bonus + rights
+            cursor += 1
+        result.append((shares * prices[day] + cash) / initial - 1)
+    return result
+
+
 class Market:
     """涉及代码的前复权收盘与均线（引擎同一函数），供形态与前向收益计算。"""
 
     def __init__(self, codes: set[str]):
         raw = bt.load_prices(codes)
         actions = bt.load_actions()
+        self.actions = actions
+        self._return_paths = {}
         self.days: dict[str, list[str]] = {}
         self.adj: dict[str, list[float]] = {}
         self.pos: dict[str, dict[str, int]] = {}
@@ -73,18 +93,31 @@ class Market:
         i = self.idx(c, day)
         return self.days[c][i - 1] if i else None
 
-    def fwd(self, c: str, day: str, n: int) -> float:
+    def return_path(self, c: str, day: str, n: int) -> list[float]:
+        """One initial share, cash dividends retained, rights subscribed at their cost.
+
+        Only actions after entry and through the horizon enter the return. Latest-date
+        affine adjusted prices are unsuitable return denominators: future cash dividends
+        can drive an old adjusted price near/below zero and amplify or invert returns.
+        """
+        key = (c, day, n)
+        if key in self._return_paths:
+            return self._return_paths[key]
         i = self.idx(c, day)
-        if i is None or i + n >= len(self.adj[c]):
-            return float("nan")
-        return self.adj[c][i + n] / self.adj[c][i] - 1.0
+        if i is None or i + n >= len(self.days[c]):
+            return []
+        ds = self.days[c][i:i + n + 1]
+        result = holding_return_path(self.raw[c], self.actions.get(c, {}), ds)
+        self._return_paths[key] = result
+        return result
+
+    def fwd(self, c: str, day: str, n: int) -> float:
+        path = self.return_path(c, day, n)
+        return path[-1] if path else float("nan")
 
     def fwd_min(self, c: str, day: str, n: int) -> float:
-        i = self.idx(c, day)
-        if i is None or i + 1 >= len(self.adj[c]):
-            return float("nan")
-        base = self.adj[c][i]
-        return min(self.adj[c][i + 1:i + n + 1]) / base - 1.0
+        path = self.return_path(c, day, n)
+        return min(path[1:]) if len(path) > 1 else float("nan")
 
     def back_above_within(self, c: str, day: str, n: int) -> int | None:
         """自 day 起 n 日内首次「不复权收盘 ≥ 当日 MA20」的日数（含 day 当日为 0）；没有为 None。"""
