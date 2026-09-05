@@ -1,0 +1,6 @@
+基准 a_share_daily_states_adopted.csv × panel_moat_bank_v6b.csv：在册观测 508,260
+  买入线 1.0454 → 下侧合格面 17.771%
+
+a_share_daily_states_adopted.csv × panel_moat_bank_v6a.csv：在册观测 421,877
+  买入线 **1.1953**（`--width -0.1953`）→ 下侧合格面 17.773%
+  换仓改善 **0.1715**（`--swap-margin 0.1715`，按买入线同倍缩放）
