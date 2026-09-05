@@ -6,7 +6,7 @@
   1. 0bp 逐位复现：14 起点 × 全部列对 `exp_metric_m2/sweep.txt` 同臂同起点逐值核对；2011 锚点产物逐字节核对；
   2. 各档 BASE 成本表：水平（各起点再取中位）＋对 0bp 的逐起点配对差中位，全样本与 A 各一份；
   3. 各档候选（BUY2）与同档 BASE 配对：§12.1 第 2 款五项决策读数与判定，A／U 均按 0bp 锚点固定；
-  4. 第 4 款 U 全面性：标准指标集各项配对差，比率项按两种读法（OI-151：两位小数显示 0.005／字面 0.0015）；
+  4. 第 4 款 U 全面性：标准指标集各项配对差，比率项按 0.005 比率单位（§12.1 第 4 款）；
   5. 成交价核对：2011 锚点 0bp 与 30bp 成交流水首批同笔成交的价格比（买 1.003／卖 0.997）。
 不预设任何档位为否决线；只报读数与判定变化。"""
 import argparse
@@ -22,8 +22,8 @@ import sweep_backtest_configs as sweep  # noqa: E402
 
 TIERS = (0, 10, 20, 30)
 NAN = float("nan")
-DISPLAY_TOL = 0.005      # 比率项「两位小数显示」读法：|Δ| < 0.005 视为不劣
-STRICT_TOL = 0.0015      # 比率项字面读法：与 pp 项同用 0.0015
+RATIO_TOL = 0.005        # 比率项阈值（§12.1 第 4 款：0.005 对应 −0.15pp、0.033 对应 −1pp）
+RATIO_RULING = 0.033
 
 
 def base_label(t: int) -> str:
@@ -96,9 +96,9 @@ def verdict(arms_all, arms_ex, label, ref):
 
 
 def clause4(arms_u, label, ref):
-    """第 4 款 U 全面性：pp 项阈值 0.0015；比率项按显示读法（0.005）与字面读法（0.0015）各判一次。返回两种读法的 (通过?, 越带项)。"""
+    """第 4 款 U 全面性：pp 项阈值 0.0015／裁定带 0.01；比率项 0.005／0.033。返回 {读法: (通过?, 越带项)}。"""
     out = {}
-    for mode, ratio_tol in (("显示读法", DISPLAY_TOL), ("字面读法", STRICT_TOL)):
+    for mode, ratio_tol in (("第 4 款", RATIO_TOL),):
         bad, worse = [], []
         for name, key, scale, _w, _p, good in sweep.STANDARD_SET:
             if name in ("换手", "仓位"):
@@ -112,7 +112,7 @@ def clause4(arms_u, label, ref):
                 worse.append((name, d_good, scale))
         # 第 4 款：均 ≥ −tol，或至多一项落在 [−1pp, −0.15pp)（比率项按各自阈值的同倍放宽）
         ok = not bad and (len(worse) == 0 or (len(worse) == 1 and all(
-            (d >= -sweep.RULING_TOLERANCE) if scale != 1 else (d >= -ratio_tol / sweep.NOISE_BAND * sweep.RULING_TOLERANCE)
+            (d >= -sweep.RULING_TOLERANCE) if scale != 1 else (d >= -RATIO_RULING)
             for _n, d, scale in worse)))
         out[mode] = (ok, [f"{n} {d*(100 if sc != 1 else 1):+.{2 if sc != 1 else 4}f}{'pp' if sc != 1 else ''}" for n, d, sc in worse] + bad)
     return out
@@ -238,12 +238,12 @@ def main():
     flips = [f"{a}bp→{b}bp" for a, b in zip(TIERS, TIERS[1:]) if verdicts.get(a) != verdicts.get(b)]
     say(f"判定随档位变化：{'、'.join(flips) if flips else '无'}；各档判定 {' / '.join(f'{t}bp {verdicts[t]}' for t in TIERS)}")
 
-    say("\n## 4. 第 4 款 U 全面性（标准指标集各项配对差中位；比率项按两种读法，OI-151）")
+    say("\n## 4. 第 4 款 U 全面性（标准指标集各项配对差中位；比率项按 0.005 比率单位）")
     if not arms_u:
         say("  U 单遍缺失")
     else:
-        say("| 档 | " + " | ".join(n for n, *_ in sweep.STANDARD_SET) + " | 显示读法 | 字面读法 |")
-        say("| --- | " + " | ".join("---:" for _ in sweep.STANDARD_SET) + " | --- | --- |")
+        say("| 档 | " + " | ".join(n for n, *_ in sweep.STANDARD_SET) + " | 第 4 款 |")
+        say("| --- | " + " | ".join("---:" for _ in sweep.STANDARD_SET) + " | --- |")
         for t in TIERS:
             b, c = base_label(t), cand_label(t)
             cells = []
