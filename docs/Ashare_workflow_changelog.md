@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.152 | 2026-09-06 | 执行时点研究开关 `--exec-price open_sell_close_buy`（缺省不变）、四臂对照作业 `scripts/slurm/exec_timing_sweep.sbatch` 与配对脚本 `scripts/experimental/exec_timing_pairwise.py`；T 日收盘／T+1 开盘／T+1 开盘卖收盘买三臂不采纳，§9.3.1 执行时点与 BASE 不改。依据 §12.199 |
 | v4.151 | 2026-09-06 | OI-156 按用户裁定不做结案；RF5（`--swap-chop-mode repeat-flat`）不采纳，§9.3.1、生产常量与 BASE 不改。依据 §12.198 |
 | v4.150 | 2026-09-06 | 换仓震荡交集与重复净换出保护研究开关 `--swap-chop-*`（默认 off）；`swap_chop_guard.py`、联合复盘／相邻参数／成本与时期／事件普查／信号审计工具及 SLURM 作业；旧前向诊断改为区间内含现金分红收益。§9.3.1 不改；X3/X5 登记 OI-156。依据 §12.198 |
 | v4.149 | 2026-09-06 | 换仓卖出源弱势的形态复核研究开关（缺省全关、逐位不变）：引擎 `--swap-weak-days`／`--swap-weak-slope`／`--swap-weak-slope-min`／`--swap-weak-max-cross`／`--swap-weak-cross-window`／`--swap-weak-deep`／`--swap-source-cooldown`、被挡事件记录 `--weak-block-log`；复盘脚本 `scripts/experimental/whipsaw_swap_diag.py`；作业 `scripts/slurm/whipsaw_swap_sweep.sbatch`／`whipsaw_swap_diag.sbatch`；测试 `test_swap_weak_regime.py`。§9.3.1 不改。依据 §12.197 |
