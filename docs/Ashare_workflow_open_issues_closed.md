@@ -5,6 +5,9 @@
 
 | 编号 | 主题 | 处置 | 结案 | 详见 |
 | --- | --- | --- | --- | --- |
+| OI-148 | 待办：执行成本压力档位 0／10／20／30bp（第二批次） | 引擎 `--slippage-bp` 每边滑点（买加卖减、只进成交量、净额对冲后收、强平与退市同收、公司行动不收），0bp 14 起点读数与 2011 锚点产物逐位复现；BASE 各档对 0bp 复利 Δ +0.81／−2.48／−2.74（A −1.43／−1.89／−2.10），无强平、最低担保不变；`BUY2` 同档 0／10／30bp 可采纳、20bp 两表反向；§12.1 第 7 款加采纳前必报的同档配对、第 3 款加 `--exclude-codes` 固定剔除；扫描器 summary 改进程私有目录 | v4.147 | §12.193 |
+| OI-141 | 待办：宇宙 v6a/v6b、银行保险股利折现利差、持仓只数上限、三个走势／相关性形状参数在 OI-128 纪元一条臂也没重扫 | C12～C14 在现行基准（v4.137，m2）补齐 22 臂：`U6A` 不采纳（主读数 −4.83、触闸门）；`divspread` 0.01～0.03 五档 0.02 为峰值；`--max-positions` 五档与 `--trend-ma` 六档全负；`--scan-depth ≥ 40`／`--corr-window` 在相关性上限 1.0 下逐位同 BASE。四类在册值全部维持 | —（不改） | §12.195 |
+| OI-140 | 待办：`GE_TROUGHOFF`／`C088`／`G110U` 三条候选从未做过组合臂，Δ 归因高度重叠 | 组合臂已跑（作业 26323059）：单臂 Δ复利 之和 23.1 对三合一 13.80，不叠加成立，三合一触回撤闸门 +4.38pp；两两组合双表过。随后 OI-135 裁定维持谷守卫（`GE_TROUGHOFF` 不落地）、OI-136／137 以组合臂 `C100_G110U` 落地，本条的组合问题已在落地路径里消化，无剩余动作 | v4.132 | §12.174 表 N |
 | OI-155 | 缺陷：全市场排队脚本移入 `scripts/archive/` 后导入路径与仓库根目录错误 | `sys.path` 改插上级 `scripts/`、`ROOT` 取 `parents[2]`；同型的 `analyze_research_expectation_signal.py` 一并改；归档测试 28 例通过 | v4.145 | [审核报告](reports/repository_structure_audit_2026-09-05.zh.md) |
 | OI-154 | 缺陷：核心池阅读版迁入 `docs/` 后 10 个 L4 档案链接失效 | `build_l4_dossier_section()` 增 `output_md` 参数，链接按输出文件所在目录用 `os.path.relpath` 生成，`main()` 传实际输出路径；阅读版 10 个链接改 `../data/companies/`，与生成器输出逐行相同；单测加输出位置用例 | v4.145 | 同上 |
 | OI-153 | 缺陷：旧实验报告会把 m1 摘要重新合并进现行 m2 台账，且不重建按臂索引 | 台账写入统一为 `clean_derived_artifacts.write_ledger()`：读回两本台账并入本次 summary，`计量版本` 等于现行引擎版本的行进 `scan_summaries.csv`、其余进 `data/archive/scan_summaries_m1.csv`（已混入现行台账的旧口径行同样搬走），随后重建 `scan_arms_index.csv`；`sb1_daily_buys_evidence.py`／`trough_guard_evidence.py`／`metric_m2_reregister.py` 改走该接口；`test_scan_ledger.py` 3 例；真实 SB1 420 份摘要只读模拟：现行 140 行不变、420 行归档 | v4.145 | 同上 |

@@ -43,7 +43,8 @@ def main() -> None:
     ap.add_argument("--tsv", type=Path, default=None, help="缺省 <exp>/configs/shortlist_arms.tsv")
     ap.add_argument("--list-builds", action="store_true")
     args = ap.parse_args()
-    tsv = args.tsv or args.exp / "configs/shortlist_arms.tsv"
+    args.exp = (ROOT / args.exp).resolve()          # 允许相对仓库根的 --exp（sbatch 里常这样给）
+    tsv = (ROOT / args.tsv).resolve() if args.tsv else args.exp / "configs/shortlist_arms.tsv"
     arms = read_arms(tsv)
     by_label = {r["label"]: r for r in arms}
 
@@ -79,7 +80,7 @@ def main() -> None:
         if base_row["universe"] != "-":
             parts = [f"--universe-file {base_row['universe']} --width {width}"]
         else:
-            d = args.exp / "val" / base_arm
+            d = (args.exp / "val" / base_arm).relative_to(ROOT)   # 配置里写相对仓库根的路径，扫描器在仓库根运行
             parts = [f"--daily-states {d}/states_base.csv --hold-states {d}/states_hold.csv --width {width}"]
         if extra:
             parts.append(extra)

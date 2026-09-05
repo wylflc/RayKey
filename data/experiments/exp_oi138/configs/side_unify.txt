@@ -1,0 +1,5 @@
+# OI-138 C11 第一阶段：两侧估值口径统一族，买入线各自重解到同一在册合格面（边际 0.15）。
+BASE|
+B2ALL|--daily-states data/processed/a_share_daily_states_b2.csv --hold-states data/processed/a_share_daily_states_b2.csv --width -0.0303
+MAXBOTH|--daily-states data/processed/a_share_daily_states_hold.csv --width -0.0261
+MAXRAW|--daily-states data/processed/a_share_daily_states_hold.csv

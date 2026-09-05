@@ -72,6 +72,7 @@ data/backtest/*_equity.csv
 data/backtest/*_trades.csv
 data/backtest/*_periods.csv
 data/backtest/summary_*.csv
+data/backtest/.run_*/
 data/backtest/summary.csv
 data/backtest/summary[A-Z]*.csv
 data/backtest/*trade_log.csv

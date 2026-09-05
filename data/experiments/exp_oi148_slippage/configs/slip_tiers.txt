@@ -1,0 +1,10 @@
+# OI-148 执行成本压力档位：每边滑点 0／10／20／30bp（--slippage-bp），BASE 与在评候选 BUY2（OI-145）同档配对。
+# 剔除集 A 由本扫描的 BASE（0bp）2011-11-01 起点自动取，即按 0bp 锚点固定；U 另以 --exclude-codes 固定单遍。
+BASE|
+S10|--slippage-bp 10
+S20|--slippage-bp 20
+S30|--slippage-bp 30
+BUY2|--max-daily-buys 2
+BUY2_S10|--max-daily-buys 2 --slippage-bp 10
+BUY2_S20|--max-daily-buys 2 --slippage-bp 20
+BUY2_S30|--max-daily-buys 2 --slippage-bp 30

@@ -1,0 +1,7 @@
+# 备用策略清单（data/experiments/exp_oi141/configs/shortlist_arms.tsv）：需重建两侧逐日状态或换宇宙的臂；买入线各自按 §12.30 重解到同一在册合格面，换仓边际沿用在册。
+BASE|
+U6A|--universe-file data/processed/pit_attention/panel_moat_bank_v6a.csv --width -0.1953
+DIVS01|--daily-states data/experiments/exp_oi141/val/DIVS01/states_base.csv --hold-states data/experiments/exp_oi141/val/DIVS01/states_hold.csv --width 0.0512
+DIVS015|--daily-states data/experiments/exp_oi141/val/DIVS015/states_base.csv --hold-states data/experiments/exp_oi141/val/DIVS015/states_hold.csv --width -0.0003
+DIVS025|--daily-states data/experiments/exp_oi141/val/DIVS025/states_base.csv --hold-states data/experiments/exp_oi141/val/DIVS025/states_hold.csv --width -0.0840
+DIVS03|--daily-states data/experiments/exp_oi141/val/DIVS03/states_base.csv --hold-states data/experiments/exp_oi141/val/DIVS03/states_hold.csv --width -0.1311

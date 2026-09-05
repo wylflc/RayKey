@@ -1,0 +1,19 @@
+# 备用策略清单（data/experiments/exp_oi141/configs/shortlist_arms.tsv）：只动规则／参数的臂，逐日状态、宇宙、两线沿用当前 BASE。
+BASE|
+MP3|--max-positions 3
+MP4|--max-positions 4
+MP5|--max-positions 5
+MP8|--max-positions 8
+MP12|--max-positions 12
+SD10|--scan-depth 10
+SD20|--scan-depth 20
+SD80|--scan-depth 80
+SD200|--scan-depth 200
+CW126|--corr-window 126
+CW504|--corr-window 504
+TM1030|--trend-ma 10 30
+TM20120|--trend-ma 20 120
+TM3090|--trend-ma 30 90
+TM50200|--trend-ma 50 200
+TM20|--trend-ma 20
+TM60|--trend-ma 60

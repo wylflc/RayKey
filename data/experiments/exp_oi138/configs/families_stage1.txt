@@ -1,0 +1,17 @@
+# OI-138 C11 第一阶段：§12.171 表 C／H 翻号的三个规则族在现行 BASE 上带邻档重跑（轨道 B）；逐日状态、宇宙、两线沿用 BASE。
+BASE|
+ST10|--sell-tol 0.01
+ST15|--sell-tol 0.015
+ST20|--sell-tol 0.02
+ST25|--sell-tol 0.025
+ST30|--sell-tol 0.03
+TRAIL055|--trail-ratio 0.55
+TRAIL060|--trail-ratio 0.60
+TRAIL063|--trail-ratio 0.63
+TRAIL067|--trail-ratio 0.667
+TRAIL070|--trail-ratio 0.70
+ADDMAX40|--addon-max-gain 0.40
+ADDMAX50|--addon-max-gain 0.50
+ADDMAX60|--addon-max-gain 0.60
+ADDMAX75|--addon-max-gain 0.75
+ADDMAX100|--addon-max-gain 1.0

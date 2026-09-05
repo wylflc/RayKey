@@ -11,11 +11,11 @@ while IFS=$'\t' read -r arm extra divs panel; do
   if [ -f "$EXP/val/$arm/align_buy_line.txt" ]; then
     echo "跳过 $arm（$EXP/val/$arm 已建）"; continue
   fi
-  jid=$(sbatch --parsable --job-name="rk_slval_$arm" scripts/slurm/strategy_shortlist_val_arm.sbatch "$arm" "$extra" "$divs" "$panel")
+  jid=$(sbatch --parsable --export=ALL,EXP="$EXP" --job-name="rk_slval_$arm" scripts/slurm/strategy_shortlist_val_arm.sbatch "$arm" "$extra" "$divs" "$panel")
   deps+=":$jid"; echo "$arm → 作业 $jid（$extra ｜ divspread $divs ｜ $panel）"
 done < <(python3 scripts/experimental/make_shortlist_configs.py --exp "$EXP" --list-builds)
 if [ -n "$deps" ]; then
-  sbatch --dependency="afterok$deps" scripts/slurm/strategy_shortlist.sbatch
+  sbatch --export=ALL,EXP="$EXP" --dependency="afterok$deps" scripts/slurm/strategy_shortlist.sbatch
 else
-  sbatch scripts/slurm/strategy_shortlist.sbatch
+  sbatch --export=ALL,EXP="$EXP" scripts/slurm/strategy_shortlist.sbatch
 fi

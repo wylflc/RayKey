@@ -1,0 +1,24 @@
+label	group	states_from	build_extra	divspread	universe	rule_extra	note
+BASE	对照	-	-	-	-	-	现行生产基准
+U6A	宇宙	-	-	-	data/processed/pit_attention/panel_moat_bank_v6a.csv	-	C12：宇宙 v6a（银行只含招行／宁波），买入线对同一合格面重解
+DIVS01	估值输入	self	-	0.01	-	-	C13：银行/保险股利折现利差 1%
+DIVS015	估值输入	self	-	0.015	-	-	C13：利差 1.5%
+DIVS025	估值输入	self	-	0.025	-	-	C13：利差 2.5%
+DIVS03	估值输入	self	-	0.03	-	-	C13：利差 3%
+MP3	策略参数	-	-	-	-	--max-positions 3	C14：持仓只数上限（BASE 999，持仓数中位 6）
+MP4	策略参数	-	-	-	-	--max-positions 4	C14
+MP5	策略参数	-	-	-	-	--max-positions 5	C14
+MP8	策略参数	-	-	-	-	--max-positions 8	C14
+MP12	策略参数	-	-	-	-	--max-positions 12	C14
+SD10	策略参数	-	-	-	-	--scan-depth 10	C14：候选扫描深度（BASE 40）
+SD20	策略参数	-	-	-	-	--scan-depth 20	C14
+SD80	策略参数	-	-	-	-	--scan-depth 80	C14
+SD200	策略参数	-	-	-	-	--scan-depth 200	C14
+CW126	策略参数	-	-	-	-	--corr-window 126	C14：相关性回看（BASE 252；上限 1.0 时预期无作用）
+CW504	策略参数	-	-	-	-	--corr-window 504	C14
+TM1030	策略参数	-	-	-	-	--trend-ma 10 30	C14：买入走势均线（BASE 20 60）
+TM20120	策略参数	-	-	-	-	--trend-ma 20 120	C14
+TM3090	策略参数	-	-	-	-	--trend-ma 30 90	C14
+TM50200	策略参数	-	-	-	-	--trend-ma 50 200	C14
+TM20	策略参数	-	-	-	-	--trend-ma 20	C14：只要求站上 MA20
+TM60	策略参数	-	-	-	-	--trend-ma 60	C14：只要求站上 MA60

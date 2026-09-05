@@ -30,10 +30,13 @@
 `BASE` 配对。运行次数因此翻倍；`--no-ex-top5` 只用于复现旧读数或纯补跑。
 """
 import argparse
+import atexit
 import collections
+import os
 import csv
 import re
 import shlex
+import shutil
 import statistics
 import subprocess
 import sys
@@ -42,6 +45,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "data/backtest"
+# 本进程的 summary 私有落点：并发提交的多个扫描共用 OUT_DIR 时，同臂同起点（如 BASE）的 summary 文件名相同，
+# 会互相 unlink／覆盖，导致读数行 ERR 或去赢家第二遍因读不到 BASE 锚点 summary 而被跳过。
+# 每次运行先写到私有目录、读数后再复制一份到 OUT_DIR 供台账归并；私有目录退出时删除。
+RUN_DIR = OUT_DIR / f".run_{os.getpid()}"
+atexit.register(lambda: shutil.rmtree(RUN_DIR, ignore_errors=True))
 sys.path.insert(0, str(ROOT / "scripts"))
 from backtest_valuation_strategy import METRIC_VERSION  # noqa: E402  计量口径版本（§12.1 第 2 款）
 
@@ -236,15 +244,23 @@ def run_one(job):
     label, extra, since, exclude = job
     tag = summary_tag(label, since, exclude)
     out_label = (EX5_PREFIX + label) if exclude else label
-    summary = OUT_DIR / f"summary_{tag}.csv"
+    extra_args = shlex.split(extra)
+    explicit_dir = "--out-dir" in extra_args           # 调用方自带 --out-dir（如 metric_m2_reregister）：直接读那里、不复制
+    run_dir = Path(extra_args[extra_args.index("--out-dir") + 1]) if explicit_dir else RUN_DIR
+    run_dir.mkdir(parents=True, exist_ok=True)
+    summary = run_dir / f"summary_{tag}.csv"
     summary.unlink(missing_ok=True)
     cmd = ([sys.executable, str(ROOT / "scripts/backtest_valuation_strategy.py")]
-           + shlex.split(BASE) + ["--since", since, "--label-suffix", "_" + tag]
-           + shlex.split(extra) + (["--exclude-codes", exclude] if exclude else []))
+           + shlex.split(BASE) + ["--since", since, "--label-suffix", "_" + tag, "--out-dir", str(RUN_DIR)]
+           + extra_args + (["--exclude-codes", exclude] if exclude else []))
     subprocess.run(cmd, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         rows = [r for r in csv.DictReader(summary.open(encoding="utf-8"))
                 if r["策略"].startswith("trend_")]
+        if not explicit_dir:
+            tmp = OUT_DIR / f".{summary.name}.{os.getpid()}"
+            shutil.copyfile(summary, tmp)
+            os.replace(tmp, OUT_DIR / summary.name)  # 原子落到 OUT_DIR 供台账归并；同名者内容相同
     except (OSError, csv.Error, KeyError):
         return f"{out_label}|{since}|ERR"
     if not rows:
@@ -258,7 +274,7 @@ def run_one(job):
 def read_top5_winners(starts: list[str]) -> tuple[str, str]:
     """从第一遍 `BASE` 臂锚定起点的 summary 读前五赢家，返回 (起点, 逗号分隔代码)；读不到返回空代码。"""
     anchor = EX5_ANCHOR_START if EX5_ANCHOR_START in starts else starts[0]
-    summary = OUT_DIR / f"summary_{summary_tag('BASE', anchor)}.csv"
+    summary = RUN_DIR / f"summary_{summary_tag('BASE', anchor)}.csv"     # 读本进程私有落点，不受并发扫描影响
     try:
         rows = [r for r in csv.DictReader(summary.open(encoding="utf-8"))
                 if r["策略"].startswith("trend_")]
@@ -289,7 +305,8 @@ def load_scan(path: Path):
             continue
         if line.startswith("#EX5|"):
             _tag, anchor, codes = line.split("|", 2)
-            ex5_note = f"剔除 BASE {anchor} 起点前五赢家 {codes.replace(',', '/')}"
+            ex5_note = (f"固定剔除集 {codes.replace(',', '/')}" if anchor == "fixed"
+                        else f"剔除 BASE {anchor} 起点前五赢家 {codes.replace(',', '/')}")
             continue
         if line.startswith("#") or not line.strip():
             continue
@@ -332,7 +349,8 @@ def report(path: Path, title: str) -> None:
     if version != METRIC_VERSION:
         print(f"⚠ 本文件计量版本 {version}，现行引擎 {METRIC_VERSION}：读数只读，不得与现行 BASE 或其它版本的读数配对"
               f"（m1 = 全期年化按净值条数 ÷ 244、Sharpe 以 CAGR 作分子）", file=sys.stderr)
-    ex_title = (f"{title}｜去赢家（剔除集 A：{ex5_note or '剔除 BASE 前五赢家'}；Δ 对同剔除集的 BASE 配对）"
+    ex_set = ex5_note if ex5_note.startswith("固定剔除集") else f"剔除集 A：{ex5_note or '剔除 BASE 前五赢家'}"
+    ex_title = (f"{title}｜去赢家（{ex_set}；Δ 对同剔除集的 BASE 配对）"
                 f"。§12.1 第 4 款的「去赢家全面优秀」判定走剔除集 U，用 scripts/experimental/ex_winner_symmetry.py 另跑")
     full = _prepare_group(groups[""], orders[""], failed[""], title)
     ex = (_prepare_group(groups[EX5_PREFIX], orders[EX5_PREFIX], failed[EX5_PREFIX], ex_title)
@@ -591,6 +609,9 @@ def main():
     ap.add_argument("--no-ex-top5", action="store_true",
                     help="不跑去赢家第二遍（§12.1 第 3 款要求每轮都跑；只在复现旧读数或纯补跑时给）")
     ap.add_argument("--title", default="扫描结果")
+    ap.add_argument("--exclude-codes", default="",
+                    help="固定剔除集（逗号分隔代码）：只跑一遍，全部臂统一剔除这些代码，行以 EX5: 前缀写出（与自动第二遍同格式）；"
+                         "用于剔除集须按锚点固定的场合（OI-148 各滑点档按 0bp 锚点、剔除集 U 复现）")
     args = ap.parse_args()
 
     if not args.report:
@@ -619,6 +640,14 @@ def main():
         with args.out.open("w", encoding="utf-8") as fh:
             fh.write(metric_header() + "\n")       # 计量版本与列名先落盘，--report 据此解析
             fh.flush()
+            if args.exclude_codes:
+                fixed = ",".join(sorted({c.strip() for c in args.exclude_codes.split(",") if c.strip()}))
+                fh.write(f"#EX5|fixed|{fixed}\n")
+                fh.flush()
+                run_pass([(label, extra, s, fixed) for label, extra in arms for s in starts], fh,
+                         f"固定剔除集单遍（统一剔除 {fixed}）")
+                report(args.out, args.title)
+                return
             run_pass([(label, extra, s, "") for label, extra in arms for s in starts], fh, "第一遍（全样本）")
             if not args.no_ex_top5:
                 anchor, winners = read_top5_winners(starts)
