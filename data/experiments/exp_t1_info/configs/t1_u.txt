@@ -1,0 +1,4 @@
+# §12.1 第 4 款剔除集 U 复核用：只含 BASE 与两条在剔除集 A 下全面优秀的挑战臂（ex_winner_symmetry.py 对配置内每臂各跑 A／B／U 三组）。
+BASE|
+SC|--sell-confirm
+T1_GAIN|--t1-judge gain

@@ -1,0 +1,23 @@
+# T+1 信息依赖审核（用户 2026-09-06）：现行规则里只有止损按 T+1 尾盘现价与 T+1 均线判（`--stop-basis exec`，
+# 等价于止损零延迟）；其余操作 T 日收盘判、T+1 收盘成交。本轮：①止损收拢到 T 日信息（SB_SIG）／两时点任一（SB_BOTH）；
+# ②其他操作也只按 T+1 收盘判（`--t1-judge`：涨幅减持／换仓卖出源／合格集及其组合）；③旧纪元的 T+1 确认（否决式）两臂重跑。
+#   BASE    = 现行（止损 T+1 判；其余 T 日判、T+1 收盘成交）
+#   SB_SIG  = 止损改 T 日收盘对 T 日线判、T+1 收盘卖（§12.126 F2 口径重跑）
+#   SB_BOTH = 止损两时点任一跌破即清
+#   T1_GAIN = 涨幅减持（含涨幅让位来源）只按 T+1 收盘判
+#   T1_SWAP = 换仓卖出源弱势与两侧 P/V 边际只按 T+1 收盘判
+#   T1_BUY  = 合格集（买入线、走势、排序）只按 T+1 收盘形成
+#   T1_SELL = T1_GAIN ＋ T1_SWAP
+#   T1_ALL  = 三者全开（≈ §12.199 T0，差别仅 V 冻结在 T 日）
+#   C1      = `--exec-confirm-close`（T 日发信号、T+1 收盘同条件复核，§12.136 前 口径）
+#   SC      = `--sell-confirm`（只复核卖侧弱势，§12.138 口径）
+BASE|
+SB_SIG|--stop-basis signal
+SB_BOTH|--stop-basis both
+T1_GAIN|--t1-judge gain
+T1_SWAP|--t1-judge swap
+T1_BUY|--t1-judge buy
+T1_SELL|--t1-judge gain,swap
+T1_ALL|--t1-judge gain,swap,buy
+C1|--exec-confirm-close
+SC|--sell-confirm

@@ -1280,7 +1280,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_recipient_margin: bool = False, swap_recipient_scale: float = 1.0,
         swap_source_block: float = -1.0, min_buy_frac: float = 0.0,
         net_same_day: bool = False, max_daily_buys: int = 0,
-        exec_confirm_close: bool = False,
+        exec_confirm_close: bool = False, t1_judge: frozenset[str] = frozenset(),
         sell_confirm: bool = False, sell_tol: float = 0.0, stop_tol: float = 0.0,
         sell_buffer_exempt_gain: bool = False, sell_buffer_exempt_pv: float = 0.0,
         sell_x: float = 0.0, gain_ladder: tuple[tuple[float, float], ...] = (),
@@ -1558,9 +1558,14 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 分红送转造成的机械跳价误判为价格变化。买入/加仓复核 P/V 与各自走势条件；估值/涨幅减持复核对应价格线与
         # 卖侧均线；换仓复核目标仍可买、原卖出源仍弱且 P/V 边际仍成立。止损本来就按成交日
         # 收盘与成交日均线判，无需再套第二层；出名单、强平与退市不是价格触发，也不参与。
+        # `t1_judge`（研究开关，用户 2026-09-06）：指定操作改为**只按 T+1 收盘判**（零延迟——与现行止损同一
+        # 时点口径：成交日收盘对成交日均线、同日判同日成交），不再先看 T 日；V 同样冻结在 T 日，
+        # 复用下面为 `exec_confirm_close` 准备的 T+1 状态。gain＝涨幅减持（含涨幅让位来源）；
+        # swap＝换仓卖出源的弱势与两侧 P/V 边际；buy＝合格集（买入线、走势、排序）。
         exec_today = {}
         hold_exec_today = {}
-        if exec_confirm_close:
+        t1_gain, t1_swap, t1_buy = ("gain" in t1_judge), ("swap" in t1_judge), ("buy" in t1_judge)
+        if exec_confirm_close or t1_judge:
             state_on_exec = {code: (close, value, ratio)
                              for code, close, value, ratio in states.get(day, [])}
             hold_state_on_exec = ({code: (close, value, ratio) for code, close, value, ratio in hold_states.get(day, [])}
@@ -1581,6 +1586,21 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     exec_today[code] = state_on_exec[code]
                 elif signal_value and signal_value > 0:
                     exec_today[code] = (exec_close, signal_value, exec_close / signal_value)
+        src_ma_day = day if t1_swap else sig_day
+
+        def src_close(c: str) -> float:
+            """换仓卖出源弱势判据用的收盘：`t1_swap` 取 T+1 收盘，否则 T 日收盘。"""
+            return hold_exec_today[c][0] if t1_swap else today[c][0]
+
+        def src_pv(c: str) -> float:
+            """换仓卖出源的持仓侧 P/V：`t1_swap` 取 T+1 收盘 ÷ T 日 V，否则 T 日。"""
+            return hold_exec_today[c][2] if t1_swap else hold_today[c][2]
+
+        def gain_close(c: str, fallback: float | None = None) -> float | None:
+            """涨幅判据用的收盘：`t1_gain` 取 T+1 收盘（成交日），否则 T 日收盘；缺失退 fallback。"""
+            if t1_gain:
+                return (hold_exec_today.get(c) or (None,))[0] or fallback
+            return today.get(c, (None,))[0] or fallback
         # `liquidate_ma` 的连续天数计数（用户 2026-08-10）：**对全池逐日累计**，不能只对持仓算
         # ——一只票可能在计数中途被卖光又买回，只对持仓算会把计数错误地清零。
         if liquidate_ma:
@@ -1884,6 +1904,17 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 )
             elif not stop_enabled:
                 lot.stop_breach_streak = 0
+            # `stop_basis=both`（研究开关）：成交日未破时再按 T 日收盘对 T 日线判一次，任一跌破即止损。
+            if stop_basis == "both" and stop_enabled and not stop_trigger:
+                sig_close = today.get(code, (None,))[0]
+                sig_level = lot.entry_stop
+                if stop_line == "min_entry_current" and lot.entry_stop and lot.entry_stop_ma:
+                    ma_sig = mas.get(code, {}).get(sig_day, {}).get(lot.entry_stop_ma, 0.0)
+                    if ma_sig:
+                        sig_level = min(sig_level, ma_sig)
+                if sig_close and sig_level and sig_close < sig_level:
+                    stop_trigger = "confirmed"
+                    stats["止损·信号日跌破补触发"] += 1
             if pct_stop_when_rich and not is_rich(code, ratio):
                 if stop_level and price < stop_level:
                     stats["止损·因仍便宜而不触发"] += 1   # 只数**真的被压住**的那些，不数每一天
@@ -1977,12 +2008,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             value_rich = is_rich(code, ratio)
             # `gain_ladder`（用户 2026-09-02 实验）：给了阶梯即取代单线 `gain_sell`——命中最高档 g_k 后
             # 每日减一档，直到本周期按阶梯累计卖出 ≥ x_k × 累计买入股数；跌回线下即停、回落后再涨不重复卖。
-            ladder_rung, ladder_pending = ladder_state(lot, today.get(code, (None,))[0] or price)
+            ladder_rung, ladder_pending = ladder_state(lot, gain_close(code, price))
             if gain_ladder:
                 gain_hit = ladder_pending >= 1.0
             else:
                 gain_hit = bool(gain_sell) and lot.avg_cost > 0 and \
-                    (today.get(code, (None,))[0] or price) >= lot.avg_cost * (1.0 + gain_sell)
+                    gain_close(code, price) >= lot.avg_cost * (1.0 + gain_sell)
             if not value_rich and not gain_hit:
                 continue
             # 先保留 T 日逐路径信号，再要求**同一路径**在 T+1 收盘仍成立。不能用 T+1 新出现的
@@ -2089,7 +2120,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 stats["超额授信·卖出款先还"] += 1
 
         # ---- 买入：合格集为空则持币（用户 2026-08-08 裁定），**不硬凑前十**
-        pool = states[sig_day] if members is None else [r for r in states[sig_day] if r[0] in members]
+        if t1_buy:
+            # 合格集按 T+1 收盘形成：行 = (代码, T+1 收盘, T 日 V, T+1 收盘 ÷ T 日 V)，走势用成交日均线。
+            pool = [(c, cl, v, r) for c, (cl, v, r) in exec_today.items() if members is None or c in members]
+        else:
+            pool = states[sig_day] if members is None else [r for r in states[sig_day] if r[0] in members]
+        buy_day = day if t1_buy else sig_day
         # 配置通道的当日成员（见下方买入段）。**必须在换仓之前算好**——换仓要用它把通道持仓
         # 排除在卖出源之外，而换仓在买入之前跑。
         quota_today: set[str] = set()
@@ -2147,7 +2183,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         if strategy == "trend" and entry_mode in ("deviation", "both"):
             kept = []
             for r in eligible:
-                base = mas.get(r[0], {}).get(sig_day, {}).get(dev_ma)
+                base = mas.get(r[0], {}).get(buy_day, {}).get(dev_ma)
                 if base and r[1] <= base * dev_buy_max:
                     kept.append(r)
             eligible = kept
@@ -2165,7 +2201,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 语义是「建仓那一刻要确认趋势成立，此后回踩不打断定投」；
             # **它必然放大回撤**——回踩途中继续投钱，而止损仍是唯一的截断（见 §9.3.5）。
             def _trend_ok(r):
-                ma = mas.get(r[0], {}).get(sig_day)
+                ma = mas.get(r[0], {}).get(buy_day)
                 if not ma or not all(w in ma for w in trend_ma):
                     return False
                 if len(trend_ma) >= 2 and not ma[trend_ma[0]] > ma[trend_ma[1]] * k:
@@ -2365,7 +2401,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         pair_alloc: dict[str, float] = {}                     # 买入段：配对买入股当日定向额度
         pair_regular = True                                   # 买入段：当日是否仍走第 5 步
         if swap and eligible and swap_mode == "pairwise":
-            if (exec_confirm_close or sell_confirm or cluster_swap or swap_held_trigger or swap_proceeds != "pv"
+            if (exec_confirm_close or sell_confirm or t1_judge or cluster_swap or swap_held_trigger or swap_proceeds != "pv"
                     or swap_recipient_margin or swap_source_block >= 0.0 or swap_post_corr_trigger
                     or gate != "pv" or rank_mode != "pv" or lump_sum or not swap_partial
                     or len(portfolio.lots) >= max_positions):
@@ -2436,6 +2472,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     swap_targets.add(b)
         if swap and eligible:
             for code, close, value, ratio in (eligible[:max_positions] if swap_mode == "legacy" else []):
+                # `t1_swap`：边际两侧同取 T+1 收盘 ÷ T 日 V（候选侧无 T+1 状态时退 T 日 P/V，该笔本就成交不了）。
+                cand_ratio = exec_today.get(code, (None, None, ratio))[2] if t1_swap else ratio
                 # `swap_held_trigger`（OI-101 研究开关）：已持仓候选想加仓而资金不足时同样触发换仓，
                 # 边际对实际接收资金的候选比；缺省沿用「只由未持仓候选触发」。
                 held_kind = ""
@@ -2481,19 +2519,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 def _pv_exempt(c: str) -> bool:
                     return bool(sell_buffer_exempt_pv) and hold_today[c][2] >= sell_buffer_exempt_pv
                 held = [((pcts[c] if gate == "self-pct" else
-                          (scores.get(c, hold_today[c][2]) if rank_mode != "pv" else hold_today[c][2])), c)
+                          (scores.get(c, src_pv(c)) if rank_mode != "pv" else src_pv(c))), c)
                         for c in portfolio.lots if c in today and c != code
+                        and (not t1_swap or c in hold_exec_today)
                         and (swap_repeat == "whole" or c not in reduced_today)
                         and not (swap_gain_once and c in gain_trimmed_today)
                         and (gate != "self-pct" or c in pcts)
                         and (not swap_require_weak
-                             or ((_m := mas.get(c, {}).get(sig_day, {})).get(swap_weak_ma) is not None
-                                 and today[c][0] < _m[swap_weak_ma] * (1.0 - (0.0 if _pv_exempt(c) else sell_tol))))
+                             or ((_m := mas.get(c, {}).get(src_ma_day, {})).get(swap_weak_ma) is not None
+                                 and src_close(c) < _m[swap_weak_ma] * (1.0 - (0.0 if _pv_exempt(c) else sell_tol))))
                         # `swap_out_min_pv`（用户 2026-08-15：「只有高估严重了才允许换仓，
                         # 而不是仅仅排序变了就轻易地换」）：卖出源还须自身 `P/V ≥ 阈值`。
                         # 与 `swap_margin`（候选须比持仓便宜出边际）正交——那是**相对**条件，
                         # 这是**绝对**条件：持仓本身不算贵时，谁更便宜都不换。缺省 0 = 关。
-                        and (not swap_out_min_pv or hold_today[c][2] >= swap_out_min_pv)
+                        and (not swap_out_min_pv or src_pv(c) >= swap_out_min_pv)
                         and c not in quota_hold_today
                         and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
                 if weak_extra_on and held:
@@ -2509,7 +2548,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     if _blocked:
                         _base_ratio, _base_worst = max(held)
                         _cand_score = (pcts[code] if gate == "self-pct" else
-                                       (scores.get(code, ratio) if rank_mode != "pv" else ratio))
+                                       (scores.get(code, cand_ratio) if rank_mode != "pv" else cand_ratio))
                         if _base_worst in _blocked and swap_gap_ok(_base_ratio, _cand_score) \
                                 and _base_worst not in weak_blocked_logged:
                             weak_blocked_logged.add(_base_worst)
@@ -2534,18 +2573,19 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         if (c not in today or c == code or l.avg_cost <= 0 or c in quota_hold_today
                                 or c in reduced_today or (swap_gain_once and c in gain_trimmed_today)):
                             continue
+                        _gc = gain_close(c, today[c][0])
                         # 阶梯口径下「涨幅让位」= 该持仓仍有待减股数（含当日卖出段已减的部分）
                         if gain_ladder:
-                            if ladder_state(l, today[c][0])[1] < (lot_size or 1.0):
+                            if ladder_state(l, _gc)[1] < (lot_size or 1.0):
                                 continue             # 待减不足一手的不作让位源
-                        elif today[c][0] < l.avg_cost * (1.0 + gain_sell):
+                        elif _gc < l.avg_cost * (1.0 + gain_sell):
                             continue
                         if gain_sell_mode == "gated" and swap_require_weak:
                             _m = mas.get(c, {}).get(sig_day, {})
                             _tol_c = 0.0 if (sell_buffer_exempt_gain or _pv_exempt(c)) else sell_tol
-                            if _m.get(swap_weak_ma) is None or today[c][0] >= _m[swap_weak_ma] * (1.0 - _tol_c):
+                            if _m.get(swap_weak_ma) is None or _gc >= _m[swap_weak_ma] * (1.0 - _tol_c):
                                 continue
-                        gain_src.append((today[c][0] / l.avg_cost, c))
+                        gain_src.append((_gc / l.avg_cost, c))
                 swap_tag = ""
                 if gain_src:
                     worst = max(gain_src)[1]
@@ -2556,7 +2596,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         break
                     worst_ratio, worst = max(held)
                     cand_score = (pcts[code] if gate == "self-pct" else
-                                  (scores.get(code, ratio) if rank_mode != "pv" else ratio))
+                                  (scores.get(code, cand_ratio) if rank_mode != "pv" else cand_ratio))
                     if not swap_gap_ok(worst_ratio, cand_score):
                         break
                 if exec_confirm_close:
@@ -3738,6 +3778,11 @@ def main() -> int:
     parser.add_argument("--exec-confirm-close", action="store_true",
                         help="研究开关：T 日生成操作后，T+1 收盘按当天 P/V 与均线复核同一价格触发条件；"
                              "不重排 T 日候选，出名单/强平/退市不参与，止损沿用本来就有的成交日确认")
+    parser.add_argument("--t1-judge", default="", metavar="OP[,OP...]",
+                        help="研究开关：指定操作只按 T+1 收盘判（零延迟，与现行止损同一时点口径：成交日收盘对成交日均线、"
+                             "同日判同日成交），不先看 T 日；V 冻结在 T 日。OP ∈ gain（涨幅减持与涨幅让位）、"
+                             "swap（换仓卖出源弱势与两侧 P/V 边际）、buy（合格集：买入线、走势、排序）。"
+                             "须 --exec-delay 1 --exec-price close；空＝关（逐位不变）")
     parser.add_argument("--sell-confirm", action="store_true",
                         help="研究开关：只复核卖侧走势——减持／涨幅减持／换仓来源的 `收盘 < MA` 弱势判据在 T+1 收盘"
                              "再判一次（T+1 收盘对 T+1 均线），不成立则该笔跳过；P/V 与涨幅条件不复核，买入不复核。"
@@ -3883,10 +3928,10 @@ def main() -> int:
                              " MA60 时锚退 MA20（研究口径，与现行噪声级）；"
                              "skip=T 日收盘对成交日 MA60 放弃（研究口径，与现行噪声级）；"
                              "skip_fill=成交日收盘对成交日 MA60 放弃（OI-092① 研究口径，§12.126 不采纳）")
-    parser.add_argument("--stop-basis", choices=("exec", "signal"), default="exec",
+    parser.add_argument("--stop-basis", choices=("exec", "signal", "both"), default="exec",
                         help="止损判据时点（OI-092②）：exec=成交日收盘对成交日均线、同日判同日卖"
                              "（现行，§9.3.1 止损行）；signal=T 日收盘对 T 日均线判、T+1 按成交价卖"
-                             "（研究口径，§12.126 不采纳）")
+                             "（研究口径，§12.126 不采纳）；both=两个时点任一跌破即止损（研究口径）")
     parser.add_argument("--residual-clear", choices=("lot", "tranche"), default="lot",
                         help="减档后余仓清空阈值（OI-092③）：lot=不足一手才清（现行，§9.3.2 第 4 步）；"
                              "tranche=不足一档即清空（研究口径，§12.126 不采纳）")
@@ -3955,6 +4000,21 @@ def main() -> int:
         sys.exit("--sell-confirm 只定义于 --exec-delay 1 --exec-price close")
     if args.sell_confirm and args.exec_confirm_close:
         sys.exit("--sell-confirm 与 --exec-confirm-close 二选一：后者已含卖侧复核")
+    t1_judge = frozenset(s for s in args.t1_judge.split(",") if s)
+    if t1_judge - {"gain", "swap", "buy"}:
+        sys.exit("--t1-judge 只认 gain／swap／buy（逗号分隔）")
+    if t1_judge and (args.exec_delay != 1 or args.exec_price != "close"):
+        sys.exit("--t1-judge 只定义于 --exec-delay 1 --exec-price close")
+    if t1_judge and (args.exec_confirm_close or args.sell_confirm or args.gate != "pv" or args.rank_mode != "pv"
+                     or args.swap_mode != "legacy" or args.cluster_swap or args.gain_ladder
+                     or args.swap_weak_days > 1 or args.swap_weak_slope or args.swap_weak_max_cross
+                     or args.swap_source_cooldown or args.swap_chop_mode != "off" or args.swap_trigger_window
+                     or args.swap_held_trigger or args.swap_held_trigger_max_tiers):
+        sys.exit("--t1-judge 只定义于现行 BASE 口径（不与 T+1 确认／自身分位／配对换仓／簇内升级／阶梯／"
+                 "形态复核／触发期等研究开关同用）")
+    if args.stop_basis == "both" and (args.stop_confirm_days != 1 or args.stop_deep_pct or args.stop_tol
+                                      or args.trail_ratio or args.profit_lock or args.sell_buffer_exempt_pv):
+        sys.exit("--stop-basis both 只定义于单日跌破口径（不与多日确认／深跌旁路／容差／上移锚／盈利锁定同用）")
     if not 0 <= args.sell_tol < 1 or not 0 <= args.stop_tol < 1:
         sys.exit("--sell-tol / --stop-tol 是比例，须落在 [0,1)，例如 1% 填 0.01")
     if args.swap_weak_days < 1 or args.swap_weak_slope < 0 or args.swap_weak_max_cross < 0 \
@@ -4189,6 +4249,8 @@ def main() -> int:
                      + ("_skipfill" if args.entry_below_ma60 == "skip_fill" else "")
                      + ("_ma60stop" if args.entry_below_ma60 == "ma60_stop" else "")
                      + ("_stopsig" if args.stop_basis == "signal" else "")
+                     + ("_stopboth" if args.stop_basis == "both" else "")
+                     + (f"_t1j{'-'.join(sorted(t1_judge))}" if t1_judge else "")
                      + ("_rct" if args.residual_clear == "tranche" else "")
                      + ("_rawma" if args.ma_basis == "raw" else "")
                      + ("_frzstop" if args.exright_stop == "frozen" else "")
@@ -4347,7 +4409,7 @@ def main() -> int:
                          swap_source_block=args.swap_source_block,
                          min_buy_frac=args.min_buy_frac, net_same_day=args.net_same_day,
                          max_daily_buys=args.max_daily_buys,
-                         exec_confirm_close=args.exec_confirm_close,
+                         exec_confirm_close=args.exec_confirm_close, t1_judge=t1_judge,
                          sell_confirm=args.sell_confirm, sell_tol=args.sell_tol, stop_tol=args.stop_tol,
                          sell_buffer_exempt_gain=args.sell_buffer_exempt_gain,
                          sell_buffer_exempt_pv=args.sell_buffer_exempt_pv,
