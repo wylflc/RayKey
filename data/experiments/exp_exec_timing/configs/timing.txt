@@ -1,0 +1,9 @@
+# 执行时点四臂对照（用户 2026-09-06）：信号一律按 T 日收盘计算，只改成交时点与成交价。
+#   BASE = 基于 T 日收盘信息，T+1 收盘执行卖出与买入（现行 §9.3.1）
+#   T0   = T 日基于当天收盘信息、当日收盘成交
+#   T1O  = T+1 开盘执行卖出与买入
+#   T1OC = T+1 开盘执行卖出、T+1 收盘执行买入
+BASE|
+T0|--exec-delay 0
+T1O|--exec-delay 1 --exec-price open
+T1OC|--exec-delay 1 --exec-price open_sell_close_buy

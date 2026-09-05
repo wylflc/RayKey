@@ -127,6 +127,10 @@ def trade_fee(amount: float, day: str, side: str) -> float:
 SLIPPAGE = 0.0
 
 
+# `--exec-price` 在策略名里的缩写：c=收盘、o=开盘、oc=卖开盘买收盘。
+EXEC_PRICE_TAG = {"close": "c", "open": "o", "open_sell_close_buy": "oc"}
+
+
 def px_buy(price: float) -> float:
     """买入成交价 = 成交日价 × (1 + 滑点)。"""
     return price * (1.0 + SLIPPAGE) if SLIPPAGE else price
@@ -1166,7 +1170,9 @@ def _restore_dividends(portfolio: Portfolio, lot: Lot, consumed: list, shares: f
 def net_off_sale(reg: dict, portfolio: Portfolio, code: str, buy_shares: float,
                  day: str, ledger: list | None) -> tuple[float, float]:
     """§9.3.2：同一信号日同一只股票的买入与卖出直接对冲，只执行净额，双边费税都不付。
-    返回 (被对冲股数, turnover 调整量)。卖出与买入同日同价（`--exec-price close`），故对冲是精确的。
+    返回 (被对冲股数, turnover 调整量)。卖出与买入同日同价（`--exec-price close`），故对冲是精确的；
+    `--exec-price open_sell_close_buy` 下卖出价是开盘、买入价是收盘，被对冲部分仍按登记的卖出价原样退回
+    （净额之外不成交），只有净买入按收盘成交。
     有滑点时（`--slippage-bp`）：登记的是含滑点的卖出成交价，被对冲部分按同价原样退回，故净额之外不收滑点；
     剩余净买入按买入成交价成交。"""
     sales = reg.get(code) or []
@@ -1651,10 +1657,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # （OI-092 A/B，§12.126）；盯市净值用当日收盘（停牌沿用末价）。
         # T+1 无价（停牌/最后一日）：`fill_missing=skip`（现行，§9.1「执行日停牌则跳过」）该笔不成交、计数；
         # `signal_close`（研究/复现口径）回落 T 日收盘成交。
-        def fill_price(code: str, fallback: float | None) -> float | None:
+        def fill_price(code: str, fallback: float | None, side: str = "sell") -> float | None:
             if exec_delay == 0:
                 return fallback                      # 成交价即 T 日收盘
-            src = (opens or {}) if exec_price == "open" else prices
+            use_open = exec_price == "open" or (exec_price == "open_sell_close_buy" and side == "sell")
+            src = (opens or {}) if use_open else prices
             got = src.get(code, {}).get(day)
             if got and got > 0:
                 return got
@@ -2898,7 +2905,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 走势组默认一笔建仓（总资产 ÷ 持仓上限）且不加仓；`trend_tranche` 打开后改为
             # **与估值组同一套定投**——只要当日仍满足「P/V 合格 且 收盘>MA20>MA60」就继续买入
             # 总资产 × x%。用户 2026-08-09：「走势满足要求的情况下分批进行建仓」。
-            fill = fill_price(code, close)
+            fill = fill_price(code, close, side="buy")
             if not fill:
                 continue                      # 成交日无价（停牌／末日）：该笔跳过，资金顺位下一名
             bp = px_buy(fill)                 # 买入成交价（含滑点）；`fill` 仍是成交日价，供止损锚与空间口径
@@ -3725,8 +3732,9 @@ def main() -> int:
                              "空=原行为（纯估值触发）。只闸 P/V 减持，不闸出名单清仓与换仓")
     parser.add_argument("--exec-delay", type=int, choices=(0, 1), default=0,
                         help="0=T 日收盘算信号当日成交；1=T 日收盘算信号、T+1 日成交（现行）")
-    parser.add_argument("--exec-price", choices=("close", "open"), default="close",
-                        help="--exec-delay 1 时的成交价取 T+1 的开盘还是收盘")
+    parser.add_argument("--exec-price", choices=("close", "open", "open_sell_close_buy"), default="close",
+                        help="--exec-delay 1 时的成交价：close=买卖都取 T+1 收盘（现行）；open=买卖都取 T+1 开盘；"
+                             "open_sell_close_buy=卖出取 T+1 开盘、买入取 T+1 收盘（研究开关）")
     parser.add_argument("--exec-confirm-close", action="store_true",
                         help="研究开关：T 日生成操作后，T+1 收盘按当天 P/V 与均线复核同一价格触发条件；"
                              "不重排 T 日候选，出名单/强平/退市不参与，止损沿用本来就有的成交日确认")
@@ -4061,7 +4069,7 @@ def main() -> int:
                   for day, rows in states.items()}
     prices = load_prices({r[0] for rows in states.values() for r in rows})
     opens = (load_opens({r[0] for rows in states.values() for r in rows})
-             if args.exec_delay and args.exec_price == "open" else None)
+             if args.exec_delay and args.exec_price != "close" else None)
     actions = load_actions(include_rights=not args.no_rights_events)
     DELISTED_LAST.update(load_delisted())
     names, benchmark, risk_free = load_names(), load_benchmark(), load_risk_free()
@@ -4134,7 +4142,7 @@ def main() -> int:
           for trend_tol in args.trend_tol:
             label = (f"{strategy}_x{x:g}_w{width:g}"
                      + (f"_tol{trend_tol:g}" if trend_tol else "")
-                     + (f"_x{args.exec_delay}{args.exec_price[0]}" if args.exec_delay else "")
+                     + (f"_x{args.exec_delay}{EXEC_PRICE_TAG[args.exec_price]}" if args.exec_delay else "")
                      + ("_c1" if args.exec_confirm_close else "")
                      + ("_sc" if args.sell_confirm else "")
                      + (f"_stl{args.sell_tol * 100:g}" if args.sell_tol else "")
