@@ -1,0 +1,9 @@
+# 备用策略清单（data/experiments/exp_strategy_shortlist/configs/shortlist_arms.tsv）：需重建两侧逐日状态或换宇宙的臂；买入线各自按 §12.30 重解到同一在册合格面，换仓边际沿用在册。
+BASE|
+GE_TROUGHOFF|--daily-states data/experiments/exp_strategy_shortlist/val/GE_TROUGHOFF/states_base.csv --hold-states data/experiments/exp_strategy_shortlist/val/GE_TROUGHOFF/states_hold.csv --width -0.0757
+GUARDEFF|--daily-states data/experiments/exp_strategy_shortlist/val/GUARDEFF/states_base.csv --hold-states data/experiments/exp_strategy_shortlist/val/GUARDEFF/states_hold.csv --width -0.0437
+NPMEDIAN|--daily-states data/experiments/exp_strategy_shortlist/val/NPMEDIAN/states_base.csv --hold-states data/experiments/exp_strategy_shortlist/val/NPMEDIAN/states_hold.csv --width -0.0517
+TW100|--daily-states data/experiments/exp_strategy_shortlist/val/TW100/states_base.csv --hold-states data/experiments/exp_strategy_shortlist/val/TW100/states_hold.csv --width 0.0222
+MINBOOK|--daily-states data/experiments/exp_strategy_shortlist/val/MINBOOK/states_base.csv --hold-states data/experiments/exp_strategy_shortlist/val/MINBOOK/states_hold.csv --width -0.0140
+DIVS03|--daily-states data/experiments/exp_strategy_shortlist/val/DIVS03/states_base.csv --hold-states data/experiments/exp_strategy_shortlist/val/DIVS03/states_hold.csv --width -0.1311
+U6A|--universe-file data/processed/pit_attention/panel_moat_bank_v6a.csv --width -0.1953

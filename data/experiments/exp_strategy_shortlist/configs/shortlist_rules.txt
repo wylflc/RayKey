@@ -1,0 +1,10 @@
+# 备用策略清单（data/experiments/exp_strategy_shortlist/configs/shortlist_arms.tsv）：只动规则／参数的臂，逐日状态、宇宙、两线沿用当前 BASE。
+BASE|
+C070|--max-corr 0.70
+G125G|--gain-sell 1.25 --gain-sell-mode gated
+NOGAIN|--gain-sell 0
+NOSWAP|--no-swap
+TRAIL067|--trail-ratio 0.667
+NOSPA|--hold-states data/processed/a_share_daily_states_adopted.csv
+CR000|--credit-ratio 0.0
+CAP40|--position-cap 0.40

@@ -112,3 +112,4 @@ data/experiments/*/attrib/*/
 data/experiments/*/sig/*/candidates.csv
 data/experiments/*/sig/*/ledger.csv
 data/experiments/*/sig/*/run.log
+data/experiments/exp_oi150_overseas_forward/raw/

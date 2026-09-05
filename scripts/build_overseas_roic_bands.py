@@ -92,27 +92,33 @@ def load_inputs() -> dict[str, float]:
     return {r["key"]: float(r["value"]) for r in csv.DictReader(INPUTS_CSV.open(encoding="utf-8"))}
 
 
+def year_from_row(r: dict) -> roic_inputs.RoicYear:
+    """`overseas_roic_years.csv` 一行（或 `fetch_overseas_statements._build_row` 的字典）→ RoicYear。"""
+    y = roic_inputs.RoicYear(period=r["period"], notice_date=r["notice_date"])
+    y.revenue, y.ebit, y.nopat = _f(r["revenue"]), _f(r["ebit"]), _f(r["nopat"])
+    y.tax_rate = _f(r["tax_rate"]); y.tax_rate_observed = str(r["tax_rate_observed"]) == "1"
+    y.total_equity, y.parent_equity = _f(r["total_equity"]), _f(r["parent_equity"])
+    y.minority_equity = _f(r["minority_equity"]) or 0.0
+    y.interest_debt, y.excess_cash = _f(r["interest_debt"]) or 0.0, _f(r["excess_cash"]) or 0.0
+    y.invested_capital = _f(r["invested_capital"])
+    y.capex, y.dep_amort, y.cfo = _f(r["capex"]) or 0.0, _f(r["dep_amort"]) or 0.0, _f(r["cfo"])
+    y.interest_expense = _f(r["interest_expense"]) or 0.0
+    y.shares = _f(r["shares"])  # type: ignore[attr-defined]
+    y.buybacks = _f(r.get("buybacks")) or 0.0  # type: ignore[attr-defined]
+    y.dividends_paid = _f(r.get("dividends_paid")) or 0.0  # type: ignore[attr-defined]
+    y.parent_netprofit, y.parent_tci = _f(r.get("net_income")), _f(r.get("tci"))
+    y.netprofit_ytd = _f(r.get("net_income_ytd"))  # type: ignore[attr-defined]
+    y.dividends_ytd = _f(r.get("dividends_paid_ytd"))  # type: ignore[attr-defined]
+    return y
+
+
 def load_years() -> dict[str, list[roic_inputs.RoicYear]]:
     out: dict[str, list[roic_inputs.RoicYear]] = {}
     meta: dict[str, dict] = {}
     current: dict[str, roic_inputs.RoicYear] = {}
     current_meta: dict[str, dict] = {}
     for r in csv.DictReader(YEARS_CSV.open(encoding="utf-8")):
-        y = roic_inputs.RoicYear(period=r["period"], notice_date=r["notice_date"])
-        y.revenue, y.ebit, y.nopat = _f(r["revenue"]), _f(r["ebit"]), _f(r["nopat"])
-        y.tax_rate = _f(r["tax_rate"]); y.tax_rate_observed = r["tax_rate_observed"] == "1"
-        y.total_equity, y.parent_equity = _f(r["total_equity"]), _f(r["parent_equity"])
-        y.minority_equity = _f(r["minority_equity"]) or 0.0
-        y.interest_debt, y.excess_cash = _f(r["interest_debt"]) or 0.0, _f(r["excess_cash"]) or 0.0
-        y.invested_capital = _f(r["invested_capital"])
-        y.capex, y.dep_amort, y.cfo = _f(r["capex"]) or 0.0, _f(r["dep_amort"]) or 0.0, _f(r["cfo"])
-        y.interest_expense = _f(r["interest_expense"]) or 0.0
-        y.shares = _f(r["shares"])  # type: ignore[attr-defined]
-        y.buybacks = _f(r.get("buybacks")) or 0.0  # type: ignore[attr-defined]
-        y.dividends_paid = _f(r.get("dividends_paid")) or 0.0  # type: ignore[attr-defined]
-        y.parent_netprofit, y.parent_tci = _f(r.get("net_income")), _f(r.get("tci"))
-        y.netprofit_ytd = _f(r.get("net_income_ytd"))  # type: ignore[attr-defined]
-        y.dividends_ytd = _f(r.get("dividends_paid_ytd"))  # type: ignore[attr-defined]
+        y = year_from_row(r)
         row_meta = {"ccy": r["report_currency"], "source": r["source"], "tags": r["tags_used"],
                     "report_label": r.get("report_label", ""), "evidence_url": r.get("evidence_url", "")}
         if r.get("period_type") == "ttm":
