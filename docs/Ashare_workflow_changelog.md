@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.151 | 2026-09-06 | OI-156 按用户裁定不做结案；RF5（`--swap-chop-mode repeat-flat`）不采纳，§9.3.1、生产常量与 BASE 不改。依据 §12.198 |
 | v4.150 | 2026-09-06 | 换仓震荡交集与重复净换出保护研究开关 `--swap-chop-*`（默认 off）；`swap_chop_guard.py`、联合复盘／相邻参数／成本与时期／事件普查／信号审计工具及 SLURM 作业；旧前向诊断改为区间内含现金分红收益。§9.3.1 不改；X3/X5 登记 OI-156。依据 §12.198 |
 | v4.149 | 2026-09-06 | 换仓卖出源弱势的形态复核研究开关（缺省全关、逐位不变）：引擎 `--swap-weak-days`／`--swap-weak-slope`／`--swap-weak-slope-min`／`--swap-weak-max-cross`／`--swap-weak-cross-window`／`--swap-weak-deep`／`--swap-source-cooldown`、被挡事件记录 `--weak-block-log`；复盘脚本 `scripts/experimental/whipsaw_swap_diag.py`；作业 `scripts/slurm/whipsaw_swap_sweep.sbatch`／`whipsaw_swap_diag.sbatch`；测试 `test_swap_weak_regime.py`。§9.3.1 不改。依据 §12.197 |
 | v4.148 | 2026-09-05 | §12.1 第 4 款比率项（滚 5／全期 Calmar、Sharpe）阈值定为比率单位 0.005（对应 −0.15pp）／0.033（对应 −1pp）。落点：§12.1 第 4 款、`oi148_slippage_report.py`。OI-151 结案；OI-145／OI-138 按用户裁定不采纳结案；OI-149 按用户裁定不实施结案 |
