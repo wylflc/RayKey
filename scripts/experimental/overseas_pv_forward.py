@@ -140,6 +140,24 @@ def doc_ticker(sub: dict | None) -> str:
     return best.upper() if n >= 3 else ""
 
 
+def instance_ticker(cik: str, sub: dict | None) -> str:
+    """退市公司的代码：最近三份 10-K／20-F 的申报目录里 XBRL 实例文件按惯例命名 `<代码>-<期末日>.xml`（yhoo-20161231.xml）。
+    目录 index.json 缓存到 raw/filing_index/。"""
+    if not sub:
+        return ""
+    rec = (sub.get("filings") or {}).get("recent") or {}
+    accs = [a for f, a in zip(rec.get("form", []), rec.get("accessionNumber", [])) if f in ("10-K", "20-F", "10-K405")]
+    for accn in accs[:3]:
+        idx = _cached_json(RAW / "filing_index" / f"CIK{cik}_{accn}.json",
+                           f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accn.replace('-', '')}/index.json", SEC_HDR)
+        names = [it.get("name", "") for it in ((idx or {}).get("directory") or {}).get("item", [])]
+        for n in names:
+            m = re.match(r"^([a-z0-9]{1,6})-\d{8}(?:_htm)?\.xml$", n.lower())
+            if m:
+                return m.group(1).upper()
+    return ""
+
+
 def cmd_universe(args) -> int:
     ticker_map: dict[str, tuple[str, str]] = {}
     ex = _cached_json(RAW / "company_tickers_exchange.json", "https://www.sec.gov/files/company_tickers_exchange.json", SEC_HDR)
@@ -177,6 +195,8 @@ def cmd_universe(args) -> int:
             if not ticker and cik in ticker_map:
                 ticker, exch = ticker_map[cik]
                 source = "company_tickers_exchange"
+            if not ticker:
+                ticker, source = instance_ticker(cik, sub), "xbrl_instance"
             if not ticker:
                 ticker, source = doc_ticker(sub), "primary_document"
             if not ticker:
