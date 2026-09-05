@@ -6,7 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
-| v4.148 | 2026-09-05 | §12.1 第 4 款比率项（滚 5／全期 Calmar、Sharpe）阈值定为比率单位 0.005（对应 −0.15pp）／0.033（对应 −1pp）。落点：§12.1 第 4 款、`oi148_slippage_report.py`。OI-151 结案；OI-145／OI-138 按用户裁定不采纳结案 |
+| v4.148 | 2026-09-05 | §12.1 第 4 款比率项（滚 5／全期 Calmar、Sharpe）阈值定为比率单位 0.005（对应 −0.15pp）／0.033（对应 −1pp）。落点：§12.1 第 4 款、`oi148_slippage_report.py`。OI-151 结案；OI-145／OI-138 按用户裁定不采纳结案；OI-149 按用户裁定不实施结案 |
 | v4.147 | 2026-09-05 | 执行成本压力档位（OI-148）：引擎 `--slippage-bp`（每边滑点，买加卖减，只进成交量，0 逐位不变）；扫描器 `--exclude-codes` 固定剔除集单遍，summary 先落进程私有目录再原子复制到 `data/backtest/`（并发扫描不再互删同名 summary、不再漏跑去赢家第二遍）；§12.1 第 7 款加采纳前必报的 0／10／20／30bp 同档配对、第 3 款指向固定剔除。另：备用清单配置生成器接受相对仓库根的 `--exp`，提交脚本显式 `--export=ALL,EXP`。落点：`backtest_valuation_strategy.py`、`sweep_backtest_configs.py`、`oi148_slippage_report.py`、`scripts/slurm/oi148_slippage.sbatch`、`make_shortlist_configs.py`、`submit_strategy_shortlist.sh`。依据 §12.193 |
 | v4.146 | 2026-09-05 | 删除退役的海外旧建带器 `scripts/archive/build_overseas_dossiers.py` 与 `overseas_dossier_inputs.py`（PEG／implied_pe／ddm3／justified_pb 口径，v4.111 起不可 import，误跑会覆盖海外估值表）；海外估值只走 §6.8 的 `fetch_overseas_statements.py` + `build_overseas_roic_bands.py`。落点：`scripts/archive/README.md` |
 | v4.145 | 2026-09-05 | 目录迁移补遗：16 个实验配置内路径改 `data/experiments/`；台账写入统一为 `clean_derived_artifacts.write_ledger()`，行按 `计量版本` 分流 `scan_summaries.csv`／`data/archive/scan_summaries_m1.csv` 并重建按臂索引，三个实验证据脚本改走该接口；核心池阅读版 L4 档案链接按输出文件所在目录算相对路径；`scripts/archive/` 脚本导入上级 `scripts/`、仓库根取 `parents[2]`。落点：`clean_derived_artifacts.py`、`build_a_share_core_valuation_pool.py`、`test_scan_ledger.py`、`docs/000_a_share_core_valuation_pool.md`。OI-152～155 结案。依据 `docs/reports/repository_structure_audit_2026-09-05.zh.md` |
