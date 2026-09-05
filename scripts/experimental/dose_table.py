@@ -20,20 +20,12 @@ import sweep_backtest_configs as sbc  # noqa: E402
 
 
 def load(path: Path):
-    groups = {"": {}, sbc.EX5_PREFIX: {}}
-    order: list[str] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.startswith("#"):
-            continue
-        parts = line.split("|")
-        if len(parts) != 2 + len(sbc.FIELDS):
-            continue
-        grp = sbc.EX5_PREFIX if parts[0].startswith(sbc.EX5_PREFIX) else ""
-        label = parts[0][len(grp):]
-        groups[grp].setdefault(label, {})[parts[1]] = dict(zip(sbc.FIELDS, map(float, parts[2:])))
-        if grp == "" and label not in order:
-            order.append(label)
-    return groups[""], groups[sbc.EX5_PREFIX], order
+    """读扫描文件 → (全样本臂, 去赢家臂, 臂顺序)。解析走 `sweep_backtest_configs.load_scan`（按 `#METRIC` 首行
+    或行宽识别计量版本）；版本与现行引擎不同只告警不中断，读数不得与现行 BASE 配对。"""
+    groups, orders, _failed, _note, version, _fields = sbc.load_scan(path)
+    if version != sbc.METRIC_VERSION:
+        print(f"⚠ {path}：计量版本 {version}，现行 {sbc.METRIC_VERSION}，读数只读不配对", file=sys.stderr)
+    return dict(groups[""]), dict(groups[sbc.EX5_PREFIX]), orders[""]
 
 
 def paired(arms, label, key):

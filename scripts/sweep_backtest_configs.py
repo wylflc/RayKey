@@ -42,6 +42,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "data/processed/backtest"
+sys.path.insert(0, str(ROOT / "scripts"))
+from backtest_valuation_strategy import METRIC_VERSION  # noqa: E402  计量口径版本（§12.1 第 2 款）
 
 # §9.3.1.2 的现行基准臂，逐字对应。**改这里之前先改工作流正文，不得单方面漂移。**
 #
@@ -127,13 +129,42 @@ BASE = (
 # 数据到 2026-11 时 2016-11-01 满 10 年，依次补入并按 §12 重登在册读数。
 DEFAULT_STARTS = [f"{y}-{m}-01" for y in range(2009, 2017) for m in ("05", "11")][1:-1]
 
-FIELDS = ("年化", "最大回撤", "Sharpe", "Calmar", "平均仓位", "年均换手",
-          "持仓数中位", "单票权重中位", "单票权重P90", "单票权重最大", "前三权重中位", "单票超60%天数占比",
-          "滚动3年年化中位", "滚动3年回撤中位", "滚动3年Calmar中位", "滚动3年Sharpe中位", "滚动3年为负的窗口占比",
-          "滚动5年年化中位", "滚动5年年化P25", "滚动5年年化最差", "滚动5年回撤中位", "滚动5年Calmar中位",
-          "滚动5年Sharpe中位", "滚动5年为负的窗口占比", "滚动5年窗口数", "互不重叠5年块中位",
-          "滚动10年年化中位", "滚动10年窗口数",
-          "逐年收益中位", "逐年为正比例", "逐年最差", "完整自然年数")
+# 计量版本 m1 的输出列。无 `#METRIC` 首行且行宽等于此列数的旧扫描文件按 m1 解析——只读不与现行 BASE 配对。
+FIELDS_M1 = ("年化", "最大回撤", "Sharpe", "Calmar", "平均仓位", "年均换手",
+             "持仓数中位", "单票权重中位", "单票权重P90", "单票权重最大", "前三权重中位", "单票超60%天数占比",
+             "滚动3年年化中位", "滚动3年回撤中位", "滚动3年Calmar中位", "滚动3年Sharpe中位", "滚动3年为负的窗口占比",
+             "滚动5年年化中位", "滚动5年年化P25", "滚动5年年化最差", "滚动5年回撤中位", "滚动5年Calmar中位",
+             "滚动5年Sharpe中位", "滚动5年为负的窗口占比", "滚动5年窗口数", "互不重叠5年块中位",
+             "滚动10年年化中位", "滚动10年窗口数",
+             "逐年收益中位", "逐年为正比例", "逐年最差", "完整自然年数")
+# 现行输出列 = m1 列 ＋ 跨起点尾部（§12.1 第 2 款）所需的融资尾部、缓冲、覆盖与时点列。
+# 日期列按 YYYYMMDD 写成数字，行格式仍是纯数字、行宽 = 2 + len(FIELDS)。
+FIELDS = FIELDS_M1 + ("强平次数", "最低担保比例", "最低股票同跌缓冲", "最低总资产冲击缓冲", "rf覆盖率",
+                      "年化_交易日口径", "最低担保比例日", "最低股票同跌缓冲日", "滚动5年年化最差窗口末日",
+                      "最大回撤起日", "最大回撤止日", "末次净值日")
+DATE_FIELDS = frozenset({"最低担保比例日", "最低股票同跌缓冲日", "滚动5年年化最差窗口末日",
+                         "最大回撤起日", "最大回撤止日", "末次净值日"})
+METRIC_HEADER = "#METRIC|"        # 扫描文件首行：`#METRIC|<计量版本>|<列名,…>`，--report 据此解析、拒绝跨版本配对
+
+
+def metric_header() -> str:
+    return f"{METRIC_HEADER}{METRIC_VERSION}|{','.join(FIELDS)}"
+
+
+def _field_value(row: dict, key: str) -> float:
+    """summary 单元格 → 输出行数字：日期列 YYYY-MM-DD → YYYYMMDD，空 → 0；其余 float（inf／nan 原样）。"""
+    raw = (row.get(key) or "").strip()
+    if key in DATE_FIELDS:
+        return float(raw.replace("-", "")) if raw else 0.0
+    return float(raw or 0)
+
+
+def _date_str(value: float) -> str:
+    """输出行里的 YYYYMMDD 数字 → YYYY-MM-DD；0／nan → —。"""
+    if value != value or value <= 0:
+        return "—"
+    s = f"{int(value):08d}"
+    return f"{s[:4]}-{s[4:6]}-{s[6:]}"
 # 用户 2026-08-17 重审：**判优劣不再用「某年至今的年化」**——那条读数被单个起点决定，
 # 一次崩盘落在窗口内外就能翻转结论。缺省以更接近个人投资复利周期的滚动 5 年为收益主口径，
 # 滚动 3 年只作较短状态诊断，逐年只描述单年分布；预计持有期改变时须在看结果前改主窗口。
@@ -219,8 +250,9 @@ def run_one(job):
     if not rows:
         return f"{out_label}|{since}|EMPTY"
     row = rows[-1]
-    get = lambda k: float(row.get(k) or 0)
-    return "|".join([out_label, since] + [f"{get(k):.6f}" for k in FIELDS])
+    if row.get("计量版本", "") != METRIC_VERSION:
+        return f"{out_label}|{since}|ERR"       # 引擎与扫描器计量版本不一致，宁可缺行也不混版本
+    return "|".join([out_label, since] + [f"{_field_value(row, k):.6f}" for k in FIELDS])
 
 
 def read_top5_winners(starts: list[str]) -> tuple[str, str]:
@@ -237,40 +269,89 @@ def read_top5_winners(starts: list[str]) -> tuple[str, str]:
     return anchor, ",".join(c for c in rows[-1][EX5_FIELD].split("/") if c)
 
 
-def report(path: Path, title: str) -> None:
-    """对照表。Δ 相对 `BASE` 臂，按 §12.1 同时给中位与符号数——单看中位会把掷硬币读成效应。
+def load_scan(path: Path):
+    """读 --out 扫描文件 → (groups, orders, failed, ex5_note, version, fields)。
 
-    结果文件里 `EX5:` 前缀的行是去赢家第二遍，单独成表、Δ 对 `EX5:BASE` 配对。"""
+    首行 `#METRIC|版本|列名,…` 给出计量版本与列名（自描述，未来改列也能解析）。无首行的文件按行宽推断：
+    与现行 FIELDS 等宽视为现行版本，与 FIELDS_M1 等宽视为 m1；两种宽度混杂直接报错。
+    结果行 `标签|起点|数字…`，`EX5:` 前缀为去赢家第二遍；`标签|起点|ERR/EMPTY` 是跑挂的运行。"""
     groups: dict[str, dict[str, dict[str, dict]]] = {"": collections.defaultdict(dict),
                                                        EX5_PREFIX: collections.defaultdict(dict)}
     orders: dict[str, list[str]] = {"": [], EX5_PREFIX: []}
     failed: dict[str, collections.Counter] = {"": collections.Counter(), EX5_PREFIX: collections.Counter()}
-    ex5_note = ""
-    for line in path.read_text(encoding="utf-8").splitlines():
+    ex5_note, version, fields = "", "", None
+    widths: collections.Counter = collections.Counter()
+    lines = path.read_text(encoding="utf-8").splitlines()
+    for line in lines:
+        if line.startswith(METRIC_HEADER):
+            _tag, version, names = line.split("|", 2)
+            fields = tuple(n for n in names.split(",") if n)
+            continue
         if line.startswith("#EX5|"):
             _tag, anchor, codes = line.split("|", 2)
             ex5_note = f"剔除 BASE {anchor} 起点前五赢家 {codes.replace(',', '/')}"
             continue
+        if line.startswith("#") or not line.strip():
+            continue
         parts = line.split("|")
         grp = EX5_PREFIX if parts[0].startswith(EX5_PREFIX) else ""
-        parts[0] = parts[0][len(grp):]
         if len(parts) == 3 and parts[2] in ("ERR", "EMPTY"):
-            failed[grp][parts[0]] += 1
-        if len(parts) != 2 + len(FIELDS):
+            failed[grp][parts[0][len(grp):]] += 1
             continue
-        label, since = parts[0], parts[1]
+        widths[len(parts) - 2] += 1
+    if fields is None:
+        if not widths:
+            version, fields = METRIC_VERSION, FIELDS
+        elif set(widths) == {len(FIELDS)}:
+            version, fields = METRIC_VERSION, FIELDS
+        elif set(widths) == {len(FIELDS_M1)}:
+            version, fields = "m1", FIELDS_M1
+        else:
+            raise SystemExit(f"{path}：结果行宽度混杂 {dict(widths)}，既不是现行 {len(FIELDS)} 列也不是 m1 {len(FIELDS_M1)} 列")
+    for line in lines:
+        if line.startswith("#") or not line.strip():
+            continue
+        parts = line.split("|")
+        if len(parts) != 2 + len(fields):
+            continue
+        grp = EX5_PREFIX if parts[0].startswith(EX5_PREFIX) else ""
+        label, since = parts[0][len(grp):], parts[1]
         if label not in orders[grp]:
             orders[grp].append(label)
-        groups[grp][label][since] = dict(zip(FIELDS, map(float, parts[2:])))
-    _print_group(groups[""], orders[""], failed[""], title)
-    if groups[EX5_PREFIX] or failed[EX5_PREFIX]:
-        print()
-        _print_group(groups[EX5_PREFIX], orders[EX5_PREFIX], failed[EX5_PREFIX],
-                     f"{title}｜去赢家（剔除集 A：{ex5_note or '剔除 BASE 前五赢家'}；Δ 对同剔除集的 BASE 配对）"
-                     f"。§12.1 第 4 款的「去赢家全面优秀」判定走剔除集 U，"
-                     f"用 scripts/experimental/ex_winner_symmetry.py 另跑")
-    print()
+        groups[grp][label][since] = dict(zip(fields, map(float, parts[2:])))
+    return groups, orders, failed, ex5_note, version, fields
+
+
+def report(path: Path, title: str) -> None:
+    """对照表。Δ 相对 `BASE` 臂，按 §12.1 同时给中位与符号数——单看中位会把掷硬币读成效应。
+
+    版面（§12.1 第 2 款）：首页 = 【决策读数】（全样本、去赢家 A 各一份）→【采纳判定】→【跨起点尾部】；
+    附表 = 标准指标集、配对差、集中度（含长跑锚点与滚 10）。字段、台账与第 4 款资格计算不因版面而变。
+    结果文件里 `EX5:` 前缀的行是去赢家第二遍，单独成表、Δ 对 `EX5:BASE` 配对。"""
+    groups, orders, failed, ex5_note, version, fields = load_scan(path)
+    if version != METRIC_VERSION:
+        print(f"⚠ 本文件计量版本 {version}，现行引擎 {METRIC_VERSION}：读数只读，不得与现行 BASE 或其它版本的读数配对"
+              f"（m1 = 全期年化按净值条数 ÷ 244、Sharpe 以 CAGR 作分子）", file=sys.stderr)
+    ex_title = (f"{title}｜去赢家（剔除集 A：{ex5_note or '剔除 BASE 前五赢家'}；Δ 对同剔除集的 BASE 配对）"
+                f"。§12.1 第 4 款的「去赢家全面优秀」判定走剔除集 U，用 scripts/experimental/ex_winner_symmetry.py 另跑")
+    full = _prepare_group(groups[""], orders[""], failed[""], title)
+    ex = (_prepare_group(groups[EX5_PREFIX], orders[EX5_PREFIX], failed[EX5_PREFIX], ex_title)
+          if groups[EX5_PREFIX] or failed[EX5_PREFIX] else None)
+    print(f"计量版本 {version}（引擎现行 {METRIC_VERSION}）")
+    for grp in (full, ex):
+        if grp:
+            _print_decision(grp)
+            print()
     _print_verdicts(groups[""], groups[EX5_PREFIX], orders[""])
+    for grp in (full, ex):
+        if grp:
+            print()
+            _print_tail(grp, fields)
+    print("\n═══ 附表（只描述不判；字段、台账与第 4 款资格计算不变）═══")
+    for grp in (full, ex):
+        if grp:
+            print()
+            _print_appendix(grp)
 
 
 def _paired_median(arms, label: str, key: str) -> float:
@@ -325,9 +406,19 @@ def _print_verdicts(arms_all, arms_ex, order: list[str]) -> None:
               f"  {verdict}" + (f"（{'；'.join(reasons)}）" if reasons else ""))
 
 
-def _print_group(arms, order: list[str], failed, title: str) -> None:
+def _med(vals):
+    v = [x for x in vals if x == x]
+    return statistics.median(v) if v else float("nan")
+
+
+def _fmt(x, scale=100.0, width=8, prec=2):
+    return f"{'—':>{width}}" if x != x else f"{x * scale:>{width}.{prec}f}"
+
+
+def _prepare_group(arms, order: list[str], failed, title: str) -> dict | None:
+    """一个口径（全样本或去赢家）的公共准备：跑挂告警、短臂告警、逐臂 Δ 与排序。返回 None 表示没有 BASE、无法算 Δ。"""
     # 跑挂的运行以 `标签|起点|ERR`（或 `EMPTY`）落盘。**必须在这里数出来**——
-    # 上面按字段数过滤会把它们丢掉，于是**整条臂全挂时它连一行都没有，表里完全不出现**，
+    # 按字段数过滤会把它们丢掉，于是**整条臂全挂时它连一行都没有，表里完全不出现**，
     # 短臂告警（比较起点数）也发现不了。2026-08-15 实测撞到一次：`--stop-ma 120` 不在
     # argparse 的 choices 里，23 次运行全部退出，而对照表看上去一切正常。
     if failed:
@@ -338,7 +429,7 @@ def _print_group(arms, order: list[str], failed, title: str) -> None:
                  if dead else ""), file=sys.stderr)
     if "BASE" not in arms:
         print(f"{title}：没有 BASE 臂，无法算 Δ", file=sys.stderr)
-        return
+        return None
     base = arms["BASE"]
     starts = sorted({s for a in arms.values() for s in a})
     # **跑挂的运行必须喊出来**：`run_one` 对失败返回 `ERR`/`EMPTY`，那种行的字段数对不上、
@@ -350,13 +441,6 @@ def _print_group(arms, order: list[str], failed, title: str) -> None:
         print("⚠ 以下臂的起点不全（其余起点跑挂了，读数不可与满起点的臂直接比较）："
               + "、".join(f"{k} {v}/{len(starts)}" for k, v in short.items())
               + "\n  → 重跑这些臂，或降低 --workers（并发过高会因内存被打挂）", file=sys.stderr)
-    def _med(vals):
-        v = [x for x in vals if x == x]
-        return statistics.median(v) if v else float("nan")
-
-    def _fmt(x, scale=100.0, width=8, prec=2):
-        return f"{'—':>{width}}" if x != x else f"{x * scale:>{width}.{prec}f}"
-
     rows = []
     for label in order:
         arm = arms[label]
@@ -372,8 +456,13 @@ def _print_group(arms, order: list[str], failed, title: str) -> None:
         neg_up = sum(1 for s in common if arm[s]["滚动5年为负的窗口占比"] > base[s]["滚动5年为负的窗口占比"])
         rows.append((statistics.median(dz[PRIMARY_KEY]), label, dz, len(common), med, neg_up))
     rows.sort(key=lambda t: -t[0])
+    return {"arms": arms, "base": base, "starts": starts, "rows": rows, "title": title}
 
-    print(f"{title}（{len(starts)} 个起点，对照＝BASE；Δ 按年化（复利读数）排序；月末锚定滚动窗口）")
+
+def _print_decision(grp: dict) -> None:
+    """首页第一段：五项决策读数的 Δ 与符号数，附滚 5 水平、换手、仓位与闸门标记。"""
+    rows, starts = grp["rows"], grp["starts"]
+    print(f"{grp['title']}（{len(starts)} 个起点，对照＝BASE；Δ 按年化（复利读数）排序；月末锚定滚动窗口）")
     print("【决策读数】Δ 为逐起点配对差中位（pp），符号 = 该读数为正的起点数（只报不判）；回撤 Δ 正 = 更深，"
           f"「更浅」= 回撤变浅的起点数；负窗↑ = 负收益窗口占比变大的起点数；闸门：回撤 Δ > +{DRAWDOWN_GATE*100:.0f}pp 或 负窗↑ 过半")
     print(f"{'配置':<14}{'Δ滚5中位':>9}{'符号':>7}{'Δ年化':>8}{'符号':>7}{'Δ滚5P25':>9}{'符号':>7}{'Δ滚5回撤':>9}{'更浅':>7}{'负窗↑':>7}"
@@ -399,6 +488,46 @@ def _print_group(arms, order: list[str], failed, title: str) -> None:
               f"{_fmt(med('滚动5年为负的窗口占比'), 100, 6, 1)}{_fmt(med('年均换手'), 1, 6)}{_fmt(med('平均仓位'), 100, 5, 0)}"
               f"  {'、'.join(flags) if flags else ('—' if label != 'BASE' else '')}")
 
+
+def _print_tail(grp: dict, fields) -> None:
+    """首页第三段：跨起点尾部（§12.1 第 2 款）——直接取各起点的最值并注明发生起点／日期，不取中位、不判。"""
+    arms, rows = grp["arms"], grp["rows"]
+    print(f"【跨起点尾部】{grp['title'].split('（')[0]}：直接取起点集的最值（不是各起点再取中位），只描述不判；"
+          "强平为模拟路径次数，不是独立市场事件数；缓冲为担保比例检查同一时点的静态冲击，负值原样保留")
+    if "最低股票同跌缓冲" not in fields:
+        print("  本文件计量版本无尾部字段（m1），本段不可出")
+        return
+
+    def extreme(arm: dict, key: str, better_high: bool):
+        pick = max if better_high else min
+        items = [(v[key], s) for s, v in arm.items() if v[key] == v[key]]
+        return pick(items) if items else (float("nan"), "")
+
+    print(f"{'配置':<14}{'最差滚5':>8}{'起点/窗末':>22}{'最深MDD':>8}{'起点/区间':>34}"
+          f"{'最低担保':>9}{'起点/日':>22}{'最低股票缓冲':>13}{'起点/日':>22}{'强平次/起点':>12}{'5年亏损起点':>12}{'rf覆盖min':>10}{'数据末端':>12}")
+    for _sort, label, _dz, _n, _med, _neg in rows:
+        arm = arms[label]
+        w5, w5_s = extreme(arm, "滚动5年年化最差", better_high=False)
+        mdd, mdd_s = extreme(arm, "最大回撤", better_high=True)
+        mr, mr_s = extreme(arm, "最低担保比例", better_high=False)
+        mb, mb_s = extreme(arm, "最低股票同跌缓冲", better_high=False)
+        liq_total = sum(int(v["强平次数"]) for v in arm.values())
+        liq_starts = sum(1 for v in arm.values() if v["强平次数"] > 0)
+        neg_starts = sum(1 for v in arm.values() if v["滚动5年为负的窗口占比"] > 0)
+        rf_min = min((v["rf覆盖率"] for v in arm.values() if v["rf覆盖率"] == v["rf覆盖率"]), default=float("nan"))
+        data_end = max((v["末次净值日"] for v in arm.values()), default=0.0)
+        print(f"{label:<14}{_fmt(w5)}{(w5_s[:7] + '/' + _date_str(arm[w5_s]['滚动5年年化最差窗口末日'])) if w5_s else '—':>22}"
+              f"{_fmt(mdd, prec=1)}"
+              f"{(mdd_s[:7] + '/' + _date_str(arm[mdd_s]['最大回撤起日']) + '~' + _date_str(arm[mdd_s]['最大回撤止日'])) if mdd_s else '—':>34}"
+              f"{_fmt(mr, 100, 9, 1)}{(mr_s[:7] + '/' + _date_str(arm[mr_s]['最低担保比例日'])) if mr_s else '—':>22}"
+              f"{_fmt(mb, 100, 13, 1)}{(mb_s[:7] + '/' + _date_str(arm[mb_s]['最低股票同跌缓冲日'])) if mb_s else '—':>22}"
+              f"{f'{liq_total}/{liq_starts}':>12}{f'{neg_starts}/{len(arm)}':>12}{_fmt(rf_min, 100, 10, 1)}{_date_str(data_end):>12}")
+
+
+def _print_appendix(grp: dict) -> None:
+    """附表：标准指标集（含长跑锚点与滚 10）、标准指标集配对差、集中度。字段与第 4 款资格计算不变。"""
+    arms, base, starts, rows = grp["arms"], grp["base"], grp["starts"], grp["rows"]
+
     def longrun(label: str) -> str:
         """两个长跑锚点各自的全期 CAGR 与最大回撤；该锚点不在本轮起点集里就留空。"""
         out = ""
@@ -408,6 +537,7 @@ def _print_group(arms, order: list[str], failed, title: str) -> None:
                     if row else f"{'—':>11}{'—':>10}")
         return out
 
+    print(f"{grp['title'].split('（')[0]}")
     print("【标准指标集】§12.1 第 2 款必报；除第 2 款五项决策读数外一律只描述不排序。"
           "长跑锚点是单起点水平值、常反号，不报符号数、不进第 4 款判定；滚 10 只在够长的起点上有值（空≠差）")
     print(f"{'配置':<14}"
@@ -487,6 +617,8 @@ def main():
                         print(f"  {done}/{len(jobs)}", file=sys.stderr)
 
         with args.out.open("w", encoding="utf-8") as fh:
+            fh.write(metric_header() + "\n")       # 计量版本与列名先落盘，--report 据此解析
+            fh.flush()
             run_pass([(label, extra, s, "") for label, extra in arms for s in starts], fh, "第一遍（全样本）")
             if not args.no_ex_top5:
                 anchor, winners = read_top5_winners(starts)

@@ -73,6 +73,10 @@ OUT_DIR = ROOT / "data/processed/backtest"
 INITIAL_CAPITAL = 3_000_000.0
 MAX_POSITIONS = 10
 TRADING_DAYS = 244
+# 计量口径版本（工作流 §12.1 第 2 款）：m2 = 全期 CAGR 按日历年数、Sharpe 按逐期超额简单收益、rf 按时点对齐。
+# 改口径就升版本号；summary 与扫描输出行都带它，`sweep_backtest_configs.py --report` 拒绝跨版本配对。
+METRIC_VERSION = "m2"
+DAYS_PER_YEAR = 365.25
 
 # ------------------------------------------------------------------ 交易成本
 # 缺省全零 → 与历史全部回测逐位可复现。开启后买卖两侧都从现金里扣，不改成交股数。
@@ -1402,6 +1406,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     lot_counters_buy: dict[str, int] = {}
     lot_counters_sell: dict[str, int] = lot_counters_buy if lot_cooldown_shared else {}
     min_ratio, min_ratio_day = float("inf"), ""
+    min_buf_total, min_buf_total_day = float("inf"), ""     # 强平缓冲（§12.1 第 2 款），与担保比例同一时点
+    min_buf_stock, min_buf_stock_day = float("inf"), ""
     credit_limit = 0.0
     prev_trading = {n: d for d, n in zip(days, days[1:])}
     # `residual_clear`（OI-092③）：减档后余仓清空阈值。`lot`（现行，§9.3.2 第 4 步）＝不足一手
@@ -1569,8 +1575,16 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if credit_over_limit == "keep":
                 credit_limit = max(portfolio.debt, credit_limit)
             ratio_now = portfolio.margin_ratio(marks)
-            if portfolio.debt > 0 and ratio_now < min_ratio:
-                min_ratio, min_ratio_day = ratio_now, day
+            if portfolio.debt > 0:
+                if ratio_now < min_ratio:
+                    min_ratio, min_ratio_day = ratio_now, day
+                cash_now = portfolio.cash
+                buf_total, buf_stock = liquidation_buffers(portfolio.gross(marks) - cash_now, cash_now,
+                                                           portfolio.debt, maintenance)
+                if buf_total == buf_total and buf_total < min_buf_total:
+                    min_buf_total, min_buf_total_day = buf_total, day
+                if buf_stock == buf_stock and buf_stock < min_buf_stock:
+                    min_buf_stock, min_buf_stock_day = buf_stock, day
             if portfolio.debt > 0 and ratio_now < maintenance:
                 res = force_liquidate(portfolio, day, marks, maintenance, recover_to, ledger)
                 marks = {c: p for c, p in marks.items() if c in portfolio.lots}
@@ -2970,7 +2984,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     return {"equity": equity_curve, "closed": portfolio.closed, "fees": FEES["paid"] - fees0,
             "contrib": dict(contrib), "buys": buy_count, "sells": sell_count, "turnover": turnover,
             "margin_events": margin_events, "min_margin_ratio": min_ratio,
-            "min_margin_day": min_ratio_day, "interest_paid": portfolio.interest_paid,
+            "min_margin_day": min_ratio_day,
+            "min_stock_buffer": min_buf_stock, "min_stock_buffer_day": min_buf_stock_day,
+            "min_total_buffer": min_buf_total, "min_total_buffer_day": min_buf_total_day,
+            "interest_paid": portfolio.interest_paid,
             "dividend_tax_paid": portfolio.dividend_tax_paid, "rights_paid": portfolio.rights_paid,
             "final_debt": portfolio.debt, "stats": dict(stats)}
 
@@ -3018,6 +3035,62 @@ def month_end_indices(curve) -> list[int]:
     return idx
 
 
+def calendar_cagr(first_value: float, last_value: float, first_day: str, last_day: str) -> float:
+    """全期 CAGR（m2）：(末值 ÷ 首值)^(365.25 ÷ 首末日历天数) − 1。首值是首个净值日对应时点的资本，
+    末值是末次净值；天数不足一天或值非正时 nan。"""
+    if first_value <= 0 or last_value <= 0:
+        return float("nan")
+    span = _days_between(first_day, last_day) / DAYS_PER_YEAR
+    return (last_value / first_value) ** (1 / span) - 1 if span > 0 else float("nan")
+
+
+def rf_series(risk_free: list[tuple[str, float]] | None) -> tuple[list[str], list[float]]:
+    """把 `load_risk_free()` 的 (observed_on, 年率) 列表拆成两列，供 bisect 按时点取值。"""
+    if not risk_free:
+        return [], []
+    return [d for d, _ in risk_free], [r for _, r in risk_free]
+
+
+def sharpe_ratio(curve, rf_dates: list[str], rf_vals: list[float]) -> tuple[float, float]:
+    """标准 Sharpe（m2，全期与滚动窗口共用）：逐期超额简单收益的均值 ÷ 样本标准差 × √244。
+
+    期 = 相邻两个净值日 (d0, d1]；净值收益 = N1/N0 − 1；无风险收益 = `observed_on` ≤ d0 的最新年率 × 日历天数 ÷ 365.25，
+    不用 d0 之后才观测到的利率回填；d0 之前没有任何观测的期按 0 计。返回 (sharpe, rf覆盖率)，
+    覆盖率 = 有可得利率的期数 ÷ 总期数。少于 3 期或标准差为 0 时 sharpe 为 nan。"""
+    excess, covered = [], 0
+    for i in range(1, len(curve)):
+        d0, n0 = curve[i - 1][0], curve[i - 1][1]
+        d1, n1 = curve[i][0], curve[i][1]
+        if n0 <= 0:
+            continue
+        k = bisect.bisect_right(rf_dates, d0) - 1
+        rf = 0.0
+        if k >= 0:
+            rf = rf_vals[k] * _days_between(d0, d1) / DAYS_PER_YEAR
+            covered += 1
+        excess.append(n1 / n0 - 1 - rf)
+    if not excess:
+        return float("nan"), float("nan")
+    coverage = covered / len(excess)
+    if len(excess) < 3:
+        return float("nan"), coverage
+    sd = statistics.stdev(excess)
+    return (statistics.fmean(excess) / sd * math.sqrt(TRADING_DAYS) if sd > 0 else float("nan")), coverage
+
+
+def liquidation_buffers(stock: float, cash: float, debt: float, maintenance: float) -> tuple[float, float]:
+    """强平缓冲（§12.1 第 2 款），在担保比例检查的同一时点计算，返回 (总资产冲击缓冲, 股票同跌缓冲)。
+
+    R = (S + C) ÷ D；总资产冲击缓冲 = 1 − k ÷ R；股票同跌缓冲 = (S + C − kD) ÷ S。D ≤ 0 两者 nan（不适用）；
+    S ≤ 0 时股票同跌缓冲 nan。负值原样返回，不截为 0。"""
+    if debt <= 0:
+        return float("nan"), float("nan")
+    ratio = (stock + cash) / debt
+    total = 1.0 - maintenance / ratio if ratio > 0 else float("nan")
+    stock_only = (stock + cash - maintenance * debt) / stock if stock > 0 else float("nan")
+    return total, stock_only
+
+
 def rolling_windows(curve, years: int = 3,
                     risk_free: list[tuple[str, float]] | None = None) -> list[dict]:
     """滚动 `years` 年窗口，**月末锚定**：窗口末日 = 每个自然月最后一个交易日，窗口首日 =
@@ -3036,9 +3109,7 @@ def rolling_windows(curve, years: int = 3,
     """
     ends = month_end_indices(curve)
     by_month = {curve[i][0][:7]: i for i in ends}
-    rf_dates = [d for d, _ in risk_free] if risk_free else []
-    rf_vals = [r for _, r in risk_free] if risk_free else []
-    rf_all = statistics.fmean(rf_vals) if rf_vals else 0.0
+    rf_dates, rf_vals = rf_series(risk_free)
     out: list[dict] = []
     for i in ends:
         end_day = curve[i][0]
@@ -3052,23 +3123,16 @@ def rolling_windows(curve, years: int = 3,
         start_day = curve[j][0]
         span = (date.fromisoformat(end_day) - date.fromisoformat(start_day)).days / 365.25
         cagr = (last / first) ** (1 / span) - 1
-        peak, worst, prev, rets = -1.0, 0.0, 0.0, []
+        peak, worst = -1.0, 0.0
         for _d, equity, *_r in curve[j:i + 1]:
             peak = max(peak, equity)
             if peak > 0:
                 worst = max(worst, 1 - equity / peak)
-            if prev > 0:
-                rets.append(equity / prev - 1)
-            prev = equity
-        vol = statistics.pstdev(rets) * math.sqrt(TRADING_DAYS) if len(rets) > 2 else float("nan")
-        if rf_dates:
-            lo, hi = bisect.bisect_left(rf_dates, start_day), bisect.bisect_right(rf_dates, end_day)
-            rf = statistics.fmean(rf_vals[lo:hi]) if hi > lo else rf_all
-        else:
-            rf = 0.0
+        # Sharpe 与全期同一函数（m2）：窗口内逐期超额简单收益，rf 按期首可得值对齐
+        sharpe, _cov = sharpe_ratio(curve[j:i + 1], rf_dates, rf_vals)
         out.append({"end": end_day, "start": start_day, "cagr": cagr, "mdd": worst,
                     "calmar": cagr / worst if worst > 0 else float("nan"),
-                    "sharpe": (cagr - rf) / vol if vol == vol and vol > 0 else float("nan")})
+                    "sharpe": sharpe})
     return out
 
 
@@ -3079,12 +3143,15 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
         return {}
     final = curve[-1][1]
     years = len(curve) / TRADING_DAYS
-    cagr = (final / capital) ** (1 / years) - 1 if years > 0 and final > 0 else float("nan")
+    first_day, last_day = curve[0][0], curve[-1][0]
+    # 全期 CAGR（m2）按日历年数；`年化_交易日口径` 是 m1 的净值条数 ÷ 244 口径，只作跨版本核对同一交易路径的桥接列
+    cagr = calendar_cagr(capital, final, first_day, last_day)
+    cagr_244 = (final / capital) ** (1 / years) - 1 if years > 0 and final > 0 else float("nan")
     rets = [curve[i][1] / curve[i - 1][1] - 1 for i in range(1, len(curve)) if curve[i - 1][1] > 0]
     vol = statistics.pstdev(rets) * math.sqrt(TRADING_DAYS) if len(rets) > 2 else float("nan")
     worst, dd_start, dd_end = max_drawdown(curve)
-    rf = statistics.fmean([r for _, r in risk_free]) if risk_free else 0.0
-    sharpe = (cagr - rf) / vol if vol and not math.isnan(vol) and vol > 0 else float("nan")
+    rf_dates, rf_vals = rf_series(risk_free)
+    sharpe, rf_coverage = sharpe_ratio(curve, rf_dates, rf_vals)
     # 「平均仓位」＝**持仓市值 ÷ 净资产**（`持仓市值 = 净资产 − 现金 + 融资负债`），与 --position-cap
     # 和集中度三列同一分母，融资时可超过 100%。旧口径 `1 − 现金/净资产` 已把负债从分子里扣掉，
     # 现金不为负时恒 ≤1，只能读出现金有没有闲置，看不见授信形成的总敞口。
@@ -3126,9 +3193,8 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
     if benchmark:
         pair = [(d, benchmark[d]) for d, *_ in curve if d in benchmark]
         if len(pair) > 1:
-            # 基准年化须用**基准自身覆盖到的天数**，不能套策略的 years（两者起点可能不同）
-            bench_years = len(pair) / TRADING_DAYS
-            bench_cagr = (pair[-1][1] / pair[0][1]) ** (1 / bench_years) - 1
+            # 基准年化须用**基准自身覆盖到的区间**，不能套策略的年数（两者起点可能不同）；与策略同为日历年化（m2）
+            bench_cagr = calendar_cagr(pair[0][1], pair[-1][1], pair[0][0], pair[-1][0])
             bench = f"{bench_cagr:.2%}（同期超额 {cagr - bench_cagr:+.2%}）"
 
     # ---- 滚动口径（用户 2026-08-15 指定三条读数：滚动 3 年 / 滚动 5 年 / 逐年；
@@ -3158,6 +3224,7 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
     s3 = _stats(rolling_windows(curve, years=3, risk_free=risk_free))
     w5 = rolling_windows(curve, years=5, risk_free=risk_free)
     s5 = _stats(w5)
+    worst5_end = min(w5, key=lambda w: w["cagr"])["end"] if w5 else ""
     # 互不重叠 5 年块：自最新窗口末月往回每 60 个月取一个滚 5 窗，首尾相接零重叠。
     # 重叠滚动中位把水平抬高约 25pp（§12.156），未来年化的水平引用一律走全期口径（§12.1 第 2 款）。
     blk = {w["end"][:7]: w["cagr"] for w in w5}
@@ -3177,7 +3244,11 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             if not (y == first_y and curve[0][0][5:] > "01-10")
             and not (y == last_y and curve[-1][0][5:] < "12-20")]
     yg = sorted(v for _y, v in full)
-    return {"策略": name, "期末资产": final,
+
+    def _finite(value) -> float:
+        return value if isinstance(value, (int, float)) and math.isfinite(value) else float("nan")
+    return {"策略": name, "期末资产": final, "计量版本": METRIC_VERSION,
+            "首个净值日": first_day, "末次净值日": last_day,
             "滚动3年Calmar中位": s3["Calmar中位"],
             "滚动3年Calmar_P10": s3["Calmar_P10"],
             "滚动3年Calmar_P90": s3["Calmar_P90"],
@@ -3196,6 +3267,7 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "滚动5年Sharpe中位": s5["Sharpe中位"],
             "滚动5年为负的窗口占比": s5["为负的窗口占比"],
             "滚动5年窗口数": s5["窗口数"],
+            "滚动5年年化最差窗口末日": worst5_end,
             "互不重叠5年块中位": statistics.median(blocks) if blocks else float("nan"),
             "互不重叠5年块数": len(blocks),
             "滚动10年年化中位": s10["年化中位"],
@@ -3209,12 +3281,19 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "逐年最好": yg[-1] if yg else float("nan"),
             "逐年为正比例": (sum(1 for v in yg if v > 0)/len(yg)) if yg else float("nan"),
             "完整自然年数": len(yg),
-            "总收益": final / capital - 1, "年化": cagr,
+            "总收益": final / capital - 1, "年化": cagr, "年化_交易日口径": cagr_244,
             "年化波动": vol, "最大回撤": worst, "回撤区间": f"{dd_start}~{dd_end}",
-            "Calmar": cagr / worst if worst else float("nan"), "Sharpe": sharpe,
+            "最大回撤起日": dd_start, "最大回撤止日": dd_end,
+            "Calmar": cagr / worst if worst else float("nan"), "Sharpe": sharpe, "rf覆盖率": rf_coverage,
             # 融资尾部（2026-08-22 授信比例扫描起加，纯追加列；无杠杆时 0／inf）
             "强平次数": len(result.get("margin_events") or []),
             "最低担保比例": result.get("min_margin_ratio", float("inf")),
+            "最低担保比例日": result.get("min_margin_day", ""),
+            # 强平缓冲（m2，§12.1 第 2 款）：与担保比例检查同一时点记 S／C／D 算出，全路径最小值；无负债路径 nan
+            "最低股票同跌缓冲": _finite(result.get("min_stock_buffer")),
+            "最低股票同跌缓冲日": result.get("min_stock_buffer_day", ""),
+            "最低总资产冲击缓冲": _finite(result.get("min_total_buffer")),
+            "最低总资产冲击缓冲日": result.get("min_total_buffer_day", ""),
             "平均仓位": exposure, "周期数": len(closed),
             "持仓数中位": statistics.median(position_counts) if position_counts else float("nan"),
             "持仓数P25": _quantile(position_counts, 0.25),
