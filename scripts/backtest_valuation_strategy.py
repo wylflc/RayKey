@@ -1242,7 +1242,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_post_corr_trigger: bool = False,
         swap_recipient_margin: bool = False, swap_recipient_scale: float = 1.0,
         swap_source_block: float = -1.0, min_buy_frac: float = 0.0,
-        net_same_day: bool = False,
+        net_same_day: bool = False, max_daily_buys: int = 0,
         exec_confirm_close: bool = False,
         sell_confirm: bool = False, sell_tol: float = 0.0, stop_tol: float = 0.0,
         sell_buffer_exempt_gain: bool = False, sell_buffer_exempt_pv: float = 0.0,
@@ -1288,6 +1288,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     closed_flow: dict[str, tuple[float, float]] = {}  # 代码 → 已闭合周期累计 (invested, proceeds)
     closed_seen = 0                                   # `portfolio.closed` 已计入 closed_flow 的条数（同日对冲只会弹出当日新增条目）
     last_lot: dict[str, Lot] = {}                     # 代码 → 当日贡献记到哪个周期（在持的周期，否则最近闭合的周期）
+    if max_daily_buys < 0:
+        raise ValueError("max_daily_buys must be nonnegative (0 means unlimited)")
     buy_count = sell_count = 0
     turnover = 0.0
     tiers = tiers or {}
@@ -2716,9 +2718,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 对合格集按 P/V 升序逐个买一档。`pair_alloc` 为空且 `pair_regular` 为真即现行逐位路径。
         buy_plan = ([(r, pair_alloc[r[0]]) for r in eligible[:max_positions] if pair_alloc.get(r[0], 0.0) > 0]
                     + ([(r, None) for r in eligible[:max_positions]] if pair_regular else []))
+        daily_buys = 0
         for (code, close, value, ratio), pair_amount in buy_plan:
             if buying_power(portfolio, credit_limit) <= 0:
                 break
+            # 研究开关：成交日新建仓与加仓合计最多 N 笔。到限后仍可抵消同名卖单，
+            # 纯对冲不占买入名额；普通候选不再进入整手／比例冷却计数。
+            if max_daily_buys and daily_buys >= max_daily_buys and not (net_reg and code in net_reg):
+                stats["每日买入上限·跳过候选"] += 1
+                continue
             # T 日候选排序与相关性过滤已经结束后才确认；失败只取消这笔，不会让被它挡住的
             # 相关候选在 T+1 顺位补入。换仓目标在卖出来源前也调用同一缓存，因此一对操作同进同退。
             if not buy_confirmed((code, close, value, ratio)):
@@ -2839,6 +2847,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     amount = shares * fill
                     if shares <= 0:
                         continue
+            if max_daily_buys and daily_buys >= max_daily_buys:
+                stats["每日买入上限·跳过净买入"] += 1
+                continue
             # 整手取整、按手建仓与割肉买回都可能绕过上面的截断，这里按最终金额兜底。
             if swap_recipient_margin and ratio > swap_floor_pv:
                 if amount > swap_unguarded - spent_unguarded + 1e-6:
@@ -2890,6 +2901,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if pair_amount is not None:
                 stats["配对换仓·定向买入"] += 1
             buy_count += 1
+            daily_buys += 1
+            if max_daily_buys and daily_buys == max_daily_buys:
+                stats["每日买入上限·达到上限天数"] += 1
             turnover += amount
 
         # **收盘净值必须对当日新建的仓位也取到价**：`marks` 是开盘前按当时持仓建的，
@@ -3588,6 +3602,9 @@ def main() -> int:
                         help="研究开关（v4.104 前旧口径）：同日买卖各自成交、双边费税照付，不做净额对冲")
     parser.add_argument("--min-buy-frac", type=float, default=0.0, metavar="F",
                         help="碎仓下限：本笔可投金额不足一档的 F 倍即不执行（建仓与加仓同）；0=关。例 0.10")
+    parser.add_argument("--max-daily-buys", type=int, default=0, metavar="N",
+                        help="研究开关：每个成交日新建仓与加仓合计最多 N 笔净买入，沿用候选排序和单笔金额；"
+                             "未成交与完全对冲不占名额，卖出规则不变；0=不限，N 必须非负")
     parser.add_argument("--swap-post-corr-trigger", action="store_true",
                         help="OI-101 第四臂：只有先通过生产相关性过滤、实际可买的未持仓候选才能触发换仓；"
                              "卖出款仍按全局 P/V 排序（目前只定义于 corr-conflict=skip）")
@@ -4020,6 +4037,7 @@ def main() -> int:
                          swap_recipient_scale=args.swap_recipient_scale,
                          swap_source_block=args.swap_source_block,
                          min_buy_frac=args.min_buy_frac, net_same_day=args.net_same_day,
+                         max_daily_buys=args.max_daily_buys,
                          exec_confirm_close=args.exec_confirm_close,
                          sell_confirm=args.sell_confirm, sell_tol=args.sell_tol, stop_tol=args.stop_tol,
                          sell_buffer_exempt_gain=args.sell_buffer_exempt_gain,
