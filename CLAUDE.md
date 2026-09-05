@@ -50,7 +50,7 @@ A 股交易时段（北京）：09:30-11:30、13:00-15:00。`--as-of` 用北京�
 **预计超过 10 分钟、或需要多进程并发、或峰值内存超过当前 session 配额的作业，必须写成 sbatch 脚本提交，
 不得在交互 session 里前台或后台直接跑。** 交互 session 只留给分钟级的读表、核对、单票查询。
 
-sbatch 脚本放 `scripts/slurm/`（入库），日志写 `logs/`（不入库）。模板：
+sbatch 脚本放 `scripts/slurm/`（入库），日志写 `logs/`（不入库，只保留 14 天：提交新作业前先跑 `find logs -type f -mtime +14 -delete`）。模板：
 
 ```bash
 #!/bin/bash
