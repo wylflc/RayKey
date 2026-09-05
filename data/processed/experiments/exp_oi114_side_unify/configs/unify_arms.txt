@@ -1,4 +1,0 @@
-BASE|
-MAXBOTH|--daily-states data/processed/a_share_daily_states_hold.csv --width 0.0810 --swap-margin 0.1413
-MAXRAW|--daily-states data/processed/a_share_daily_states_hold.csv
-UNIBASE|--hold-states data/processed/a_share_daily_states_adopted.csv

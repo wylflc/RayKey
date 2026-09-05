@@ -29,7 +29,7 @@
 * `membership_stats.csv`  每档人数、换手率（相对上一档）。
 
 用法：
-    python3 scripts/experimental/build_cap_rank_universe.py --out-dir data/processed/experiments/universes
+    python3 scripts/experimental/build_cap_rank_universe.py --out-dir data/experiments/universes
 """
 from __future__ import annotations
 
@@ -160,7 +160,7 @@ def sampled(code: str, pct: int, salt: str) -> bool:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--out-dir", type=Path, default=ROOT / "data/processed/experiments/universes")
+    ap.add_argument("--out-dir", type=Path, default=ROOT / "data/experiments/universes")
     ap.add_argument("--first-year", type=int, default=2004, help="首个排名年（其 12 月档自次年首个交易日生效）")
     ap.add_argument("--min-age", type=int, default=250, help="上市满多少个交易日才可入选")
     ap.add_argument("--grace-days", type=int, default=10, help="排名日前多少个自然日内须有收盘")

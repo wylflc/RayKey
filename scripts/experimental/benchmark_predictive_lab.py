@@ -18,7 +18,7 @@
 相邻细胞的未来窗口共享 59/60 个月，细胞不是独立样本；按截止年分组的剖面即为此而设。
 
 用法：
-    python3 scripts/experimental/benchmark_predictive_lab.py --exp data/processed/experiments/exp_window_step
+    python3 scripts/experimental/benchmark_predictive_lab.py --exp data/experiments/exp_window_step
 目录下每臂一个子目录（`BASE`、`TW000`…），内含各起点的 `*_equity.csv`。
 """
 from __future__ import annotations

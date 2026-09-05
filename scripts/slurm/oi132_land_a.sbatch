@@ -12,7 +12,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 S=data/processed
-EXP=data/processed/experiments/exp_oi132_consolidation
+EXP=data/experiments/exp_oi132_consolidation
 COMMON="--all --value-model roic --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 \
   --since 2002-01-01 --roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
@@ -56,7 +56,7 @@ def load(p):
     for r in csv.DictReader(open(p, encoding="utf-8-sig")):
         out[(r.get("security_code") or "").zfill(6)] = r
     return out
-a = load("data/processed/experiments/exp_oi132_consolidation/roic_bands_pre_oi132.csv"); b = load("data/processed/roic_bands.csv")
+a = load("data/experiments/exp_oi132_consolidation/roic_bands_pre_oi132.csv"); b = load("data/processed/roic_bands.csv")
 keys = [k for k in ("fair_value", "value", "nopat_ps", "roic0", "g0") if a and k in next(iter(a.values()))]
 changed = 0
 for code in sorted(set(a) | set(b)):

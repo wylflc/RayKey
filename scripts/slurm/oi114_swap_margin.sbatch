@@ -14,11 +14,11 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-EXP=data/processed/experiments/exp_oi114_swap_margin
+EXP=data/experiments/exp_oi114_swap_margin
 
 echo "=== [$(date +%H:%M:%S)] 第 1 段：abs 逐位复现 ＋ ratio 确实生效 ==="
 BASE=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE)")
-rm -f data/processed/backtest/summary_OI114ABS.csv data/processed/backtest/summary_OI114REL.csv
+rm -f data/backtest/summary_OI114ABS.csv data/backtest/summary_OI114REL.csv
 # shellcheck disable=SC2086
 python3 scripts/backtest_valuation_strategy.py $BASE --swap-margin-mode abs \
   --since 2011-11-01 --label-suffix _OI114ABS
@@ -33,10 +33,10 @@ def read(path):
     rows = [r for r in csv.DictReader(open(path, encoding="utf-8")) if r["策略"].startswith("trend_")]
     return rows[-1]
 
-led = [r for r in csv.DictReader(open("data/processed/backtest/scan_summaries.csv", encoding="utf-8"))
+led = [r for r in csv.DictReader(open("data/backtest/scan_summaries.csv", encoding="utf-8"))
        if r.get("扫描标签") == "BASE20111101"][-1]
-abs_ = read("data/processed/backtest/summary_OI114ABS.csv")
-rel = read("data/processed/backtest/summary_OI114REL.csv")
+abs_ = read("data/backtest/summary_OI114ABS.csv")
+rel = read("data/backtest/summary_OI114REL.csv")
 
 skip = {"策略", "扫描标签"}
 keys = [k for k in abs_ if k not in skip and (abs_[k] or led.get(k))]

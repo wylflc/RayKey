@@ -37,6 +37,6 @@ Rejected for now:
 
 ## 1.4 Sources
 
-This first-pass group review uses the local full-coverage scoring evidence and company-profile evidence already stored in `data/processed/a_share_company_triage_reviews.csv`, `data/processed/a_share_full_coverage_scores.csv`, and `data/interim/a_share_company_profiles.csv`. Each decision row also includes the relevant exchange disclosure landing page and official company website.
+This first-pass group review uses the local full-coverage scoring evidence and company-profile evidence already stored in `data/processed/a_share_company_triage_reviews.csv`, `data/processed/a_share_full_coverage_scores.csv`, and `data/archive/a_share_company_profiles.csv`. Each decision row also includes the relevant exchange disclosure landing page and official company website.
 
 Representative external checks for this group included 2025 annual-report or disclosure materials for 网宿科技、用友网络、数据港、光环新网、奥飞数据、城地香江、首都在线 and public disclosure information for *ST云创. Later deep-company reviews should use annual reports, data-center utilization and PUE disclosures, power and land-resource evidence, customer concentration and contract-duration evidence, cloud revenue mix, product retention metrics, and reputable institutional research.

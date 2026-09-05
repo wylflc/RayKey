@@ -13,7 +13,7 @@
 重述污染的处置
 --------------
 凡 `restatement_contamination.csv` 标 `resolution=overridden` 的公司-年，
-**改用 `data/raw/financials_original/` 的新浪原始披露值**（协议 §7.5）；
+**改用 `data/archive/financials_original/` 的新浪原始披露值**（协议 §7.5）；
 标 `unjudgeable` 的年份行输出为 `数据不可用`，**不静默丢弃**。
 
 已知残留泄露（须记录，不假装没有）
@@ -40,7 +40,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FIN = ROOT / "data/raw/financials"
-ORIG = ROOT / "data/raw/financials_original"
+ORIG = ROOT / "data/archive/financials_original"
 QUEUE = ROOT / "data/archive/pit-judgment-2026-08/judgment_queue.csv"
 CONTAM = ROOT / "data/archive/pit-judgment-2026-08/restatement_contamination.csv"
 SEC = ROOT / "data/raw/a_share_securities.csv"

@@ -1,0 +1,10 @@
+/on/
+/off/
+/summaries/
+/cutoff_summaries/
+/union_summaries/
+/dose_summaries/
+/artifacts/
+/production_*.csv
+/trades_*.csv
+/cands_*.csv

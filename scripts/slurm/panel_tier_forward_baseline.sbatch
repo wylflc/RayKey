@@ -10,7 +10,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-OUT=data/processed/experiments/exp_selection_edge
+OUT=data/experiments/exp_selection_edge
 mkdir -p "$OUT"
 
 echo "=== [$(date +%H:%M:%S)] P/V 分档前向回报（全池，含银行）==="

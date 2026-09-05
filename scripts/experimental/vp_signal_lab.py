@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """实验 B（无选股、无估值）：纯量价信号的事件研究 + 随机抽样持有组合模拟。
 
-**这是研究工具，不是生产流程的一部分**；结论与数据集说明见 `docs/Ashare_quant_exp2_volume_price.md`。
+**这是研究工具，不是生产流程的一部分**；结论与数据集说明见 `docs/reports/Ashare_quant_exp2_volume_price.md`。
 依赖 numpy（仓库生产代码不依赖它）：本机用 `python3.11`（miniconda，自带 numpy/pandas）运行：
 
     python3.11 scripts/experimental/vp_signal_lab.py event \
-        --signals "vol_up(r=0.05,k=2)" "ma_pullback(ma=20)" --universe all --out-dir data/processed/experiments/exp_b
+        --signals "vol_up(r=0.05,k=2)" "ma_pullback(ma=20)" --universe all --out-dir data/experiments/exp_b
     python3.11 scripts/experimental/vp_signal_lab.py portfolio \
         --signal "vol_up(r=0.05,k=2)" --hold 20 --k 10 --seeds 30 --universe all
 
@@ -699,7 +699,7 @@ def main() -> None:
     common.add_argument("--max-stocks", type=int, default=0, help="调试：只载入前 N 只")
     common.add_argument("--cache", type=Path, default=ROOT / "data/interim/exp_b_market_cache.npz")
     common.add_argument("--no-cache", action="store_true")
-    common.add_argument("--out-dir", type=Path, default=ROOT / "data/processed/experiments/exp_b")
+    common.add_argument("--out-dir", type=Path, default=ROOT / "data/experiments/exp_b")
     common.add_argument("--tag", default="", help="输出文件名附加标记")
     e = sub.add_parser("event", parents=[common], help="事件研究")
     e.add_argument("--signals", nargs="+", required=True)

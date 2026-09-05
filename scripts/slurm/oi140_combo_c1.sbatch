@@ -10,7 +10,7 @@
 # C2 依赖 C1 先落 GE_TROUGHOFF 单臂的 summary（镜像集 B 从它读前五赢家），故串行。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_reaudit_minority
+EXP=data/experiments/exp_reaudit_minority
 
 echo "=== [$(date +%T)] 表 N：三条候选的组合臂 ==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/combo_c1.txt" \

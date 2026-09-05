@@ -41,7 +41,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT_DIR = ROOT / "data/processed/backtest"
+OUT_DIR = ROOT / "data/backtest"
 sys.path.insert(0, str(ROOT / "scripts"))
 from backtest_valuation_strategy import METRIC_VERSION  # noqa: E402  计量口径版本（§12.1 第 2 款）
 

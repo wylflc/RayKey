@@ -48,7 +48,7 @@ def run(tag, label):
     for r in ledger:
         by_day[r["date"]].append(r)
 
-    eq = list(csv.DictReader(open(f"{ROOT}/data/processed/backtest/"
+    eq = list(csv.DictReader(open(f"{ROOT}/data/backtest/"
                                   f"trend_x1_w-0.5853_x1c_sma20_swap_corr{'0.85' if tag=='C085' else '0.6'}"
                                   f"_tranche_sl1.1_sp_lot100_lrc_{tag}_equity.csv", encoding="utf-8")))
     all_days = [r["date"] for r in eq]

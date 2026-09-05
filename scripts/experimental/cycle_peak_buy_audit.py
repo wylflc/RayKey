@@ -18,7 +18,7 @@ OI-115 登记的顺周期只是**统计性质**；能决定要不要动 §6.5.1 
 
 用法：
     python3 scripts/experimental/cycle_peak_buy_audit.py \\
-        --trade-log data/processed/experiments/exp_oi114_adopt_m19/trades_ledger_m19.csv \\
+        --trade-log data/experiments/exp_oi114_adopt_m19/trades_ledger_m19.csv \\
         --states data/processed/a_share_daily_states_adopted.csv \\
         --bands data/processed/roic_bands.csv \\
         --buy-line 0.9343 \\

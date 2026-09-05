@@ -1,4 +1,0 @@
-# OI-128/129/130：PIT = 重述版本＋主体重置触发（账面少数股东）；NEW = PIT ＋ 少数股东盈利份额扣减。买入线各自重解，换仓边际 0.18 不动。
-BASE|
-PIT|--daily-states data/processed/a_share_daily_states_pit.csv --hold-states data/processed/a_share_daily_states_hold_pit.csv --width -0.0138
-NEW|--daily-states data/processed/a_share_daily_states_new.csv --hold-states data/processed/a_share_daily_states_hold_new.csv --width -0.0453

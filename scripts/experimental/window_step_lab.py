@@ -13,7 +13,7 @@
    本表按起点集 23／5／3 个分别重算，并印出逐年的「被多少个起点覆盖」权重剖面。
 
 用法：
-    python3 scripts/experimental/window_step_lab.py --exp data/processed/experiments/exp_window_step
+    python3 scripts/experimental/window_step_lab.py --exp data/experiments/exp_window_step
 目录下每臂一个子目录，内含各起点的 `*_equity.csv`（回测不带 --no-artifacts 时落）。
 """
 from __future__ import annotations

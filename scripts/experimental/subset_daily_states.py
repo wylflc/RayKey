@@ -3,7 +3,7 @@
 
 用法：
     python3 scripts/experimental/subset_daily_states.py data/processed/a_share_daily_states_adopted.csv \
-        --out-dir data/processed/experiments/states  <panel1.csv> [<panel2.csv> ...]
+        --out-dir data/experiments/states  <panel1.csv> [<panel2.csv> ...]
 
 每个面板产出 `states_<面板文件名>.csv`，一遍流式读完源文件。
 """

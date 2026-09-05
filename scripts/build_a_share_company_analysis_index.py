@@ -231,6 +231,15 @@ def write_markdown(path: Path, rows: list[dict[str, str]], generated_at: str) ->
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
+def load_decision_logs(current: Path) -> list[dict[str, str]]:
+    """现行决策日志 ＋ `data/archive/decision_log_*.csv` 的旧纪元行（§2 归档口径），按时间顺序拼接。"""
+    rows: list[dict[str, str]] = []
+    for archived in sorted((ROOT / "data/archive").glob("decision_log_*.csv")):
+        rows.extend(load_csv(archived))
+    rows.extend(load_csv(current))
+    return rows
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--universe", type=Path, default=DEFAULT_UNIVERSE)
@@ -254,7 +263,7 @@ def main() -> None:
         load_csv(args.prior_tiers),
         load_csv(args.prior_valuation),
         load_csv(args.prior_pool),
-        load_csv(args.decision_log),
+        load_decision_logs(args.decision_log),
     )
     write_csv(args.output_csv, rows)
     generated_at = datetime.now(timezone.utc).isoformat(timespec="seconds")

@@ -14,7 +14,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-EXP=data/processed/experiments/exp_startset14
+EXP=data/experiments/exp_startset14
 mkdir -p "$EXP/configs"
 printf 'BASE|\n' > "$EXP/configs/base.txt"
 

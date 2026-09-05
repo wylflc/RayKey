@@ -6,7 +6,7 @@
 #SBATCH -o logs/%x_%j.out
 #SBATCH -e logs/%x_%j.err
 
-# 备用策略清单里一条「需重建」臂的建带链（docs/Ashare_strategy_shortlist.md）。用法：
+# 备用策略清单里一条「需重建」臂的建带链（docs/reports/Ashare_strategy_shortlist.md）。用法：
 #   sbatch --job-name=rk_slval_<臂> scripts/slurm/strategy_shortlist_val_arm.sbatch <臂> "<建带追加开关|->" [divspread|-] [宇宙面板|-]
 # 三种形态：①追加开关非 "-"：跑 §6.7 第 2／2b／3 步；②开关 "-" 且 divspread 非 "-"：只跑第 3 步（读生产 raw 逐日）；
 #           ③两者都 "-" 且面板非 "-"：只对换宇宙重解买入线。产物落 $EXP/val/<臂>/，末尾按 §12.30 重解买入线。
@@ -15,7 +15,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 ARM="$1"; EXTRA="${2:--}"; DIVS_ARG="${3:--}"; PANEL="${4:--}"; DIVS="$DIVS_ARG"
-EXP="${EXP:-data/processed/experiments/exp_strategy_shortlist}"
+EXP="${EXP:-data/experiments/exp_strategy_shortlist}"
 S=data/processed
 E="$EXP/val/$ARM"
 mkdir -p "$E"

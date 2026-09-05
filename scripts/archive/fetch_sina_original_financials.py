@@ -45,7 +45,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT_DIR = ROOT / "data/raw/financials_original"
+OUT_DIR = ROOT / "data/archive/financials_original"
 URL = ("https://money.finance.sina.com.cn/corp/go.php/vFD_FinancialGuideLine"
        "/stockid/{code}/ctrl/{year}/displaytype/4.phtml")
 HEADERS = {"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn/"}

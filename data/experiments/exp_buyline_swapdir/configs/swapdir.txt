@@ -1,0 +1,26 @@
+# §12.178 表 B：换仓机制变体。SPTddd = 「谁触发换仓就换成谁」（--swap-proceeds target：触发者排到买入段队首、卖一档买它一档，
+# 余款再按 P/V 升序）× 换仓边际 0.ddd（§12.1 第 4 款①：候选臂上边际按 0.01 一档重扫）。相关性已不过滤（v4.132），
+# 故 target 即「卖了就买到它」。RG0/RG1 = 接收方边际守卫 K=0（接收方不得比卖出源贵）／K=1（接收方须同样过边际）；
+# SB0 = 当日卖出源与不比它便宜的候选不进买入队列；SPTNW = 定向且卖出源不要求弱势；NOSWAP = P/V 路径换仓关（边际 9.0，涨幅让位路径仍在）——只作参照。
+BASE|
+SPT005|--swap-proceeds target --swap-margin 0.05
+SPT008|--swap-proceeds target --swap-margin 0.08
+SPT010|--swap-proceeds target --swap-margin 0.10
+SPT011|--swap-proceeds target --swap-margin 0.11
+SPT012|--swap-proceeds target --swap-margin 0.12
+SPT013|--swap-proceeds target --swap-margin 0.13
+SPT014|--swap-proceeds target --swap-margin 0.14
+SPT015|--swap-proceeds target --swap-margin 0.15
+SPT016|--swap-proceeds target --swap-margin 0.16
+SPT017|--swap-proceeds target --swap-margin 0.17
+SPT018|--swap-proceeds target --swap-margin 0.18
+SPT019|--swap-proceeds target --swap-margin 0.19
+SPT020|--swap-proceeds target --swap-margin 0.20
+SPT022|--swap-proceeds target --swap-margin 0.22
+SPT025|--swap-proceeds target --swap-margin 0.25
+SPT030|--swap-proceeds target --swap-margin 0.30
+RG0|--swap-recipient-margin --swap-recipient-scale 0
+RG1|--swap-recipient-margin --swap-recipient-scale 1
+SB0|--swap-source-block 0
+SPTNW|--swap-proceeds target --no-swap-require-weak
+NOSWAP|--swap-margin 9.0

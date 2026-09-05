@@ -20,7 +20,7 @@ SRC, DST, MODE = sys.argv[1], sys.argv[2], sys.argv[3]
 MIN_OBS, MIN_CODES, BURN, WIN = 500, 3, 5, 60
 
 ind = {}
-for r in csv.DictReader(open(f"{ROOT}/data/interim/a_share_company_profiles.csv", encoding="utf-8-sig")):
+for r in csv.DictReader(open(f"{ROOT}/data/archive/a_share_company_profiles.csv", encoding="utf-8-sig")):
     c = (r.get("security_code") or "").zfill(6)
     if r.get("eastmoney_industry"):
         ind[c] = r["eastmoney_industry"].split("-")[0]

@@ -5,7 +5,7 @@
 `build_historical_valuation_bands.py` 每个模型变体落一份 50~140MB 的逐日状态。
 **两个区块，各自可单独跑**：
 
-- `backtest`：`data/processed/backtest/` 下的 `_equity`／`_trades`／`_periods` 三类删除；
+- `backtest`：`data/backtest/` 下的 `_equity`／`_trades`／`_periods` 三类删除；
   所有 `summary*.csv` 归并成 `scan_summaries.csv`（多一列 `扫描标签`，并集列头、缺列留空，**一个数字都不丢**）。
 - `bands`：`data/processed/` 下一次性估值带变体（`vd_*`／`vb_*`／`hd_*`／`hb_*`／`hist_daily_*`／
   `a_share_daily_g*`、退役的 `a_share_historical_valuation_*`、`dcf_*`／`roiccond*`／`roicmed_*` 实验臂、
@@ -31,7 +31,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED = ROOT / "data/processed"
-BACKTEST = PROCESSED / "backtest"
+BACKTEST = ROOT / "data/backtest"
 MERGED = BACKTEST / "scan_summaries.csv"
 
 BULK_SUFFIXES = ("_equity.csv", "_trades.csv", "_periods.csv")
@@ -56,7 +56,7 @@ KEEP = {
 # 实验缓存目录/文件：整目录可由对应脚本一条命令重建（scripts/experimental/README.md）。
 EXPERIMENT_DIRS = (
     PROCESSED / "metric_states",              # scripts/archive/build_metric_states.py
-    PROCESSED / "experiments" / "states",     # scripts/experimental/subset_daily_states.py
+    ROOT / "data/experiments" / "states",     # scripts/experimental/subset_daily_states.py
 )
 EXPERIMENT_FILES = (
     ROOT / "data/interim/exp_b_market_cache.npz",   # scripts/experimental/vp_signal_lab.py 自动重建

@@ -1,8 +1,8 @@
-# A股选股-估值-量价操作流程 v4.142
+# A股选股-估值-量价操作流程 v4.143
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
-> 历史版本变化见 `docs/Ashare_workflow_changelog.md`；回测过程、参数比较与被否决方案见 `docs/Ashare_backtest_log.md`；已知未修缺陷见 `docs/Ashare_workflow_open_issues.md`。正文不保存历史参数、实验读数或退役机制。
+> 历史版本变化见 `docs/Ashare_workflow_changelog.md`；回测过程、参数比较与被否决方案见 `docs/Ashare_backtest_log.md`；已知未修缺陷见 `docs/Ashare_workflow_open_issues.md`，已结案索引见 `docs/Ashare_workflow_open_issues_closed.md`。正文不保存历史参数、实验读数或退役机制。
 
 ## 0. 任务路由
 
@@ -51,7 +51,7 @@
 | 当前生产模型带 | `data/processed/a_share_pool_model_bands_adopted.csv`（候选侧） |
 | 持仓侧模型带 | `data/processed/a_share_pool_model_bands_hold.csv`（逐票取候选侧与 B2 较高 V；§9.3.1 换仓来源读它） |
 | 核心估值池 | `data/processed/a_share_core_valuation_pool.csv` |
-| 核心池阅读版 | `data/processed/000_a_share_core_valuation_pool.md` |
+| 核心池阅读版 | `docs/000_a_share_core_valuation_pool.md` |
 | 持仓 | `data/processed/a_share_holdings.csv` |
 | 持仓除权处理台账 | `data/processed/holdings_corporate_actions_applied.csv`（§11.4，只追加） |
 | 账户快照 | `data/processed/portfolio_account_snapshot.csv`；可用资金按 §10.2（券商可用保证金优先），策略收益率、峰值与回撤按 §10.3；`credit_line_cny` 列已退役，仅存历史数据 |
@@ -59,8 +59,8 @@
 | 每日卖出清单 | `data/processed/daily_sell_plan.csv`（止损复核、涨幅减持、出名单、换仓、余仓清空） |
 | 比例冷却计数器 | `data/processed/daily_cooldown_state.csv`（§9.3.3，扫描器每日读写） |
 | 每日持仓跟踪 | `data/processed/daily_holdings_tracking.csv` |
-| 每日阅读日志 | `data/processed/000_daily_scan_log.md` |
-| 审计日志 | `data/processed/a_share_workflow_decision_log.csv`，只追加不覆盖 |
+| 每日阅读日志 | `docs/000_daily_scan_log.md` |
+| 审计日志 | `data/processed/a_share_workflow_decision_log.csv`，只追加不覆盖；核心池重建每次写一行汇总，逐票只在 `pool_layer` 变化时写行；换纪元时把旧纪元行移入 `data/archive/decision_log_<起>_to_<止>.csv`（公司分析索引同读） |
 | 财报更新队列 | `data/interim/a_share_report_update_queue.csv` |
 
 每条质量、估值、名单迁移、规则采纳或成交结论必须写入决策日志，至少包含：时间、阶段、对象、结论、简要理由、输入文件、输出文件、执行者、工作流版本和稳定 `decision_id`。纠错或替代旧结论时填写 `supersedes_decision_id`。
@@ -233,7 +233,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 ### 6.1 执行范围
 
-对全部 `worth_attention` 公司维护估值带。用户点名的任何公司也建档并给出估值区间（含结论为 L4 者，§6.5.2）。用户点名建档但未进入 `worth_attention` 的公司，在 `data/processed/000_a_share_core_valuation_pool.md` 的 L4 归档区列示，并保留其结构化 `attention_class`；合理价只读逐票档案，不入池 CSV、不落生产带文件、无 `P/V`、不取每日行情、不进扫描与 §9.3 的任何判定。估值只生成合理价 `V`；买卖资格由 §7 的冻结状态和 §9.3 决定。
+对全部 `worth_attention` 公司维护估值带。用户点名的任何公司也建档并给出估值区间（含结论为 L4 者，§6.5.2）。用户点名建档但未进入 `worth_attention` 的公司，在 `docs/000_a_share_core_valuation_pool.md` 的 L4 归档区列示，并保留其结构化 `attention_class`；合理价只读逐票档案，不入池 CSV、不落生产带文件、无 `P/V`、不取每日行情、不进扫描与 §9.3 的任何判定。估值只生成合理价 `V`；买卖资格由 §7 的冻结状态和 §9.3 决定。
 
 ### 6.3 数据与时点
 
@@ -559,7 +559,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 3. **取行情与生成买入计划**：运行 §8.2，确认净资产、可用资金、持仓和模型带均已加载。
 4. **跟踪持仓与公司行动**：运行 `track_holdings_daily.py --as-of`；先按 §11.4 用 `apply_holdings_corporate_action.py` 处理除权除息并登记台账，再检查止损、公告与估值。
 5. **形成执行清单**：由第 3 步的扫描器按 §9.3.2 先卖后买生成 `daily_sell_plan.csv` 与 `daily_entry_plan.csv`，四张表即使为空也必须显示；止损行只列候选，T+1 尾盘按现价对当日生效线复核后执行，其卖出款不计入当日买入预算。
-6. **输出与留痕**：回复用户，并将同一内容置顶写入 `data/processed/000_daily_scan_log.md`；成交后按 §11.5 回写。
+6. **输出与留痕**：回复用户，并将同一内容置顶写入 `docs/000_daily_scan_log.md`；成交后按 §11.5 回写。每月首个扫描日把上月以前的条目移入 `data/archive/daily_scan_log_<起>_to_<止>.md`。
 
 当日无估值更新时可以省略 §6.7 重建，但必须明确写“当日无估值更新”。
 
@@ -775,10 +775,10 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 6. 增加互不重叠的持有期或逐年检验；共享终点的多个起点与重叠滚动窗口不视为独立样本。
 7. 检查可执行性、幸存者偏差、未来信息和多重比较；绝对收益不当作未来预期。
 8. 只有第 1~7 款通过、第 10~12 款读数齐备且用户裁定后，才修改 §9.3.1、生产常量和回测 `BASE`。
-9. 实验过程写入回测 log；最终版本变化写入 changelog；当前操作只写回本文件。
+9. 实验过程写入回测 log：每节不超过 1.5 KB，只写「测了什么／结论／决策读数／落地」，完整表格与逐臂读数放 `data/experiments/<实验目录>/` 并在节内给目录名；最终版本变化写入 changelog，每行只写规则变化与落点、依据只给回测日志节号；当前操作只写回本文件。
 10. 信号层三表：`scripts/experimental/selection_edge_audit.py`（边际选择检验、排序信息量、换仓方向性；回测须带 `--candidate-log` 与 `--trade-log`）与 `scripts/experimental/panel_tier_forward.py`（`P/V` 分档前向回报）。采纳候选在候选臂与 `BASE` 上各跑一遍并报差；另每季在 `BASE` 上重算一遍作不变量检验。各表报逐日配对差中位、为正日数与逐年同号年数。换仓方向性一表须同报 `scripts/experimental/swap_regime_control.py` 的四表对照（面板层 `P/V` 信息量、合成换仓、`P/V` 匹配对照、样本独立性），匹配对照的容差至少取 ±0.04／±0.10／±0.15 三档、只报符号稳健的读数；该表的样本量按不同 `(源, 标的)` 配对数计，不按日数；只有与合成换仓反号的年份计入机制层结论。三表不进第 2 款的决策读数，读数写入回测 log。
 11. 采纳候选报 `scripts/experimental/delta_attribution.py` 的前三只贡献占比（按 trades `contrib` 列，与第 3 款同一把尺）；超过 100% 者不作采纳依据。
-12. 引用正读数时同报本族已试臂数，按 `data/processed/backtest/scan_summaries.csv` 的扫描标签计。
+12. 引用正读数时同报本族已试臂数，按 `data/backtest/scan_summaries.csv` 的扫描标签计。
 
 历史面板 `effective_from` 与 `effective_to` 均为有效期边界，结束日包含在内。禁止把区间起点当成完整快照，也禁止手工修改面板 CSV；名单变化先改判定源，再运行装配脚本。
 
@@ -812,6 +812,6 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 
 ## 15. 版本与历史
 
-当前版本只认第 1 行。版本变化记入 `docs/Ashare_workflow_changelog.md`，回测依据记入 `docs/Ashare_backtest_log.md`；完整旧正文可从 Git 历史恢复，不复制回本文件。
+当前版本只认第 1 行。版本变化记入 `docs/Ashare_workflow_changelog.md`，回测依据记入 `docs/Ashare_backtest_log.md`；两者只保留当前纪元，旧纪元在 `docs/archive/`；完整旧正文可从 Git 历史恢复，不复制回本文件。
 
 2026-08-19 以前的历史记录（changelog、回测日志、扫描日志、决策日志）使用旧章节编号，新旧对照表见 changelog v4.19 行。

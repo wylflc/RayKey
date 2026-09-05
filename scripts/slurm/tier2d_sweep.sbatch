@@ -10,7 +10,7 @@
 # 以 afterany 依赖挂在表 A2 作业之后（BASE 臂 summary 文件名相同，不可并行）。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_ladder_pairswap
+EXP=data/experiments/exp_ladder_pairswap
 echo "=== [$(date +%T)] 表 C（$(grep -c '|' "$EXP/configs/tier2d_base.txt") 臂 × 14 起点 × 两遍）==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/tier2d_base.txt" \
   --out "$EXP/sweep_tier2d.txt" --workers 60 \

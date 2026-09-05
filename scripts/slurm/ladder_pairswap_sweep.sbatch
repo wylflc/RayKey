@@ -10,7 +10,7 @@
 # 各 14 起点两遍（全样本＋去赢家）。两表串行——BASE 臂的 summary 文件名相同，不可并行跑两份扫描。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_ladder_pairswap
+EXP=data/experiments/exp_ladder_pairswap
 for a in ladder pairswap; do
   echo "=== [$(date +%T)] 表 $a（$(grep -c '|' "$EXP/configs/$a.txt") 臂 × 14 起点 × 两遍）==="
   python3 scripts/sweep_backtest_configs.py "$EXP/configs/$a.txt" \

@@ -27,8 +27,8 @@
 用法::
 
     python3 scripts/experimental/swap_regime_control.py \\
-        --candidate-log data/processed/experiments/exp_selection_edge/candidates.csv \\
-        --trade-log data/processed/experiments/exp_selection_edge/trades_ledger.csv \\
+        --candidate-log data/experiments/exp_selection_edge/candidates.csv \\
+        --trade-log data/experiments/exp_selection_edge/trades_ledger.csv \\
         --states data/processed/a_share_daily_states_adopted.csv \\
         --hold-states data/processed/a_share_daily_states_hold.csv \\
         --panel data/processed/pit_attention/panel_moat_bank_v6b.csv \\

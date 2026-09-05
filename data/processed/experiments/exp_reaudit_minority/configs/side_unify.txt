@@ -1,7 +1,0 @@
-# §12.171 表 C2：候选侧估值口径族（§12.140 B2 全量替换、§12.150 MAXBOTH），买入线各自重解到同一在册合格面。
-BASE|
-B2ALL|--daily-states data/processed/a_share_daily_states_b2.csv --hold-states data/processed/a_share_daily_states_b2.csv --width -0.0303
-B2RAW|--daily-states data/processed/a_share_daily_states_b2.csv --hold-states data/processed/a_share_daily_states_b2.csv
-MAXBOTH|--daily-states data/processed/a_share_daily_states_hold.csv --width -0.0261
-MAXRAW|--daily-states data/processed/a_share_daily_states_hold.csv
-UNIBASE|--hold-states data/processed/a_share_daily_states_adopted.csv

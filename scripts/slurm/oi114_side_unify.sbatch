@@ -15,7 +15,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-EXP=data/processed/experiments/exp_oi114_side_unify
+EXP=data/experiments/exp_oi114_side_unify
 
 echo "=== [$(date +%H:%M:%S)] 4 臂 × 23 起点 × 两遍 = 184 次运行 ==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/unify_arms.txt" \

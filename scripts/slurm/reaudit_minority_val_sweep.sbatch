@@ -12,7 +12,7 @@
 
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_reaudit_minority
+EXP=data/experiments/exp_reaudit_minority
 V=$EXP/val
 CFG=$EXP/configs/val_revert.txt
 

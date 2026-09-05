@@ -75,4 +75,4 @@ The remaining companies are rejected for now because they are ordinary project-b
 
 ## 1.4 Sources
 
-This first-pass group review uses the local full-coverage scoring evidence and company-profile evidence already stored in `data/processed/a_share_company_triage_reviews.csv`, `data/processed/a_share_full_coverage_scores.csv`, and `data/interim/a_share_company_profiles.csv`. The decision rows preserve source URLs. Final deep-company reviews should replace aggregator discovery URLs with direct annual reports, exchange filings, product-certification evidence, customer/project evidence, and reputable institutional research where needed.
+This first-pass group review uses the local full-coverage scoring evidence and company-profile evidence already stored in `data/processed/a_share_company_triage_reviews.csv`, `data/processed/a_share_full_coverage_scores.csv`, and `data/archive/a_share_company_profiles.csv`. The decision rows preserve source URLs. Final deep-company reviews should replace aggregator discovery URLs with direct annual reports, exchange filings, product-certification evidence, customer/project evidence, and reputable institutional research where needed.

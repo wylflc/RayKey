@@ -25,7 +25,7 @@ from align_buy_line import load_spans, ratios
 from sb1_daily_buys import subset
 from sb1_daily_buys_checks import run_pass
 
-EXP = ROOT / "data/processed/experiments/exp_trough_guard_review"
+EXP = ROOT / "data/experiments/exp_trough_guard_review"
 PANEL = ROOT / "data/processed/pit_attention/panel_moat_bank_v6b.csv"
 
 

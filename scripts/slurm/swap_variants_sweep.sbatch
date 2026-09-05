@@ -10,7 +10,7 @@
 # 末尾另跑 2011-11-01 单起点三臂的成交流水，供 swap_flow_diag.py 对照 §12.178 的 BASE／SPT015 读数。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_swap_variants
+EXP=data/experiments/exp_swap_variants
 echo "=== [$(date +%T)] swapvar（$(grep -c '|' "$EXP/configs/swapvar.txt") 臂 × 14 起点 × 两遍）==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/swapvar.txt" \
   --out "$EXP/sweep_swapvar.txt" --workers 60 \
@@ -34,9 +34,9 @@ echo "=== [$(date +%T)] 完成 ==="
 echo "=== [$(date +%T)] 两侧逐日状态按流水涉及代码抽子集，出 swap_flow_diag 读数 ==="
 python3 - <<'PY'
 import csv, glob
-EXP = "data/processed/experiments/exp_swap_variants"
+EXP = "data/experiments/exp_swap_variants"
 codes = set()
-for f in glob.glob(f"{EXP}/trades_*_2011.csv") + glob.glob("data/processed/experiments/exp_buyline_swapdir/trades_*_2011.csv"):
+for f in glob.glob(f"{EXP}/trades_*_2011.csv") + glob.glob("data/experiments/exp_buyline_swapdir/trades_*_2011.csv"):
     for r in csv.DictReader(open(f, encoding="utf-8")):
         codes.add(r["security_code"])
 for src, dst in (("data/processed/a_share_daily_states_hold.csv", f"{EXP}/states_hold_sub.csv"),
@@ -53,8 +53,8 @@ for a in spttw20 spl spttw20sb1 sb1; do
     "$EXP/states_hold_sub.csv" "$EXP/states_cand_sub.csv" > "$EXP/flow_${a}_2011.txt"
 done
 for a in base spt; do
-  python3 scripts/experimental/swap_flow_diag.py "data/processed/experiments/exp_buyline_swapdir/trades_${a}_2011.csv" \
-    "data/processed/experiments/exp_buyline_swapdir/cands_${a}_2011.csv" \
+  python3 scripts/experimental/swap_flow_diag.py "data/experiments/exp_buyline_swapdir/trades_${a}_2011.csv" \
+    "data/experiments/exp_buyline_swapdir/cands_${a}_2011.csv" \
     "$EXP/states_hold_sub.csv" "$EXP/states_cand_sub.csv" > "$EXP/flow_${a}_2011.txt"
 done
 echo "=== [$(date +%T)] 全部完成 ==="

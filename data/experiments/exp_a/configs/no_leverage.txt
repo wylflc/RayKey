@@ -1,0 +1,9 @@
+# 实验 A：现行三线，去掉融资（--credit-ratio 0 --credit-cap 0），把策略与杠杆爆仓分开看
+BASE|
+BASE_nolev|--credit-ratio 0 --credit-cap 0
+T300s50a_nolev|--universe-file data/processed/experiments/universes/cap_top300_s50.csv --daily-states data/processed/experiments/states/states_cap_top300_s50.csv --credit-ratio 0 --credit-cap 0
+M500s40a_nolev|--universe-file data/processed/experiments/universes/cap_301_800_s40.csv --daily-states data/processed/experiments/states/states_cap_301_800_s40.csv --credit-ratio 0 --credit-cap 0
+S1000s30a_nolev|--universe-file data/processed/experiments/universes/cap_801_1800_s30.csv --daily-states data/processed/experiments/states/states_cap_801_1800_s30.csv --credit-ratio 0 --credit-cap 0
+ALLs15a_nolev|--universe-file data/processed/experiments/universes/cap_all_s15.csv --daily-states data/processed/experiments/states/states_cap_all_s15.csv --credit-ratio 0 --credit-cap 0
+HS300now_nolev|--universe-file data/processed/experiments/universes/hs300_now.csv --daily-states data/processed/experiments/states/states_hs300_now.csv --credit-ratio 0 --credit-cap 0
+ZZ1000now_nolev|--universe-file data/processed/experiments/universes/zz1000_now.csv --daily-states data/processed/experiments/states/states_zz1000_now.csv --credit-ratio 0 --credit-cap 0

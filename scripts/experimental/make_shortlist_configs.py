@@ -39,7 +39,7 @@ def width_from_align(path: Path) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--exp", type=Path, default=ROOT / "data/processed/experiments/exp_strategy_shortlist")
+    ap.add_argument("--exp", type=Path, default=ROOT / "data/experiments/exp_strategy_shortlist")
     ap.add_argument("--tsv", type=Path, default=None, help="缺省 <exp>/configs/shortlist_arms.tsv")
     ap.add_argument("--list-builds", action="store_true")
     args = ap.parse_args()

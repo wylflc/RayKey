@@ -13,7 +13,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-EXP=data/processed/experiments/exp_oi110_sellline
+EXP=data/experiments/exp_oi110_sellline
 
 echo "=== [$(date +%H:%M:%S)] 23 起点 × 2 臂 × 两遍 ==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/sellline_arms.txt" \

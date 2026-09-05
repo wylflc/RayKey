@@ -182,9 +182,9 @@ python3 scripts/experimental/drawdown_path.py /tmp/bt_base --top 3
 
 ## 谷底守卫复测（2026-09-05，回测日志§12.189）
 
-`trough_guard_review.py` 新建当前口径on/off估值状态、核对生产等价并扫描每日笔数与换仓边际；`trough_guard_checks.py` 补统一截止日、相对贡献赢家并集与赢家只数剂量；`trough_guard_evidence.py` 核对单变量、保留滚动回撤诊断并归档摘要。提交入口为 `scripts/slurm/trough_guard_review.sbatch` 与依赖其成功结束的 `trough_guard_checks.sbatch`。产物隔离在 `exp_trough_guard_review/`，不覆盖历史GE_TROUGHOFF或生产文件。解释见 `docs/trough_guard_review.zh.md`。
+`trough_guard_review.py` 新建当前口径on/off估值状态、核对生产等价并扫描每日笔数与换仓边际；`trough_guard_checks.py` 补统一截止日、相对贡献赢家并集与赢家只数剂量；`trough_guard_evidence.py` 核对单变量、保留滚动回撤诊断并归档摘要。提交入口为 `scripts/slurm/trough_guard_review.sbatch` 与依赖其成功结束的 `trough_guard_checks.sbatch`。产物隔离在 `exp_trough_guard_review/`，不覆盖历史GE_TROUGHOFF或生产文件。解释见 `docs/reports/trough_guard_review.zh.md`。
 
-## 实验 A/B：无选股与纯量价（结论见 `docs/Ashare_quant_exp1_index_universe.md`、`docs/Ashare_quant_exp2_volume_price.md`）
+## 实验 A/B：无选股与纯量价（结论见 `docs/reports/Ashare_quant_exp1_index_universe.md`、`docs/reports/Ashare_quant_exp2_volume_price.md`）
 
 | 文件 | 作用 |
 | --- | --- |

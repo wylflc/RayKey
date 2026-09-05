@@ -12,7 +12,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-EXP=data/processed/experiments/exp_oi115_trailleg
+EXP=data/experiments/exp_oi115_trailleg
 
 python3 scripts/experimental/ex_winner_symmetry.py "$EXP/configs/trail_arms.txt" \
   --challenger TW000 \

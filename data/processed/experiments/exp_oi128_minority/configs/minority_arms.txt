@@ -1,3 +1,0 @@
-# OI-128：少数股东扣减口径 A/B（轨道 A 护栏轮）。两侧逐日状态与重解买入线一并给全，换仓边际不动。
-BASE|
-MINEARN|--daily-states data/processed/a_share_daily_states_mi.csv --hold-states data/processed/a_share_daily_states_hold_mi.csv --width -0.0278

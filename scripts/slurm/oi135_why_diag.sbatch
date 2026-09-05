@@ -9,7 +9,7 @@
 # §12.173 机理诊断：三条通过双门槛的候选各出一份成交流水与闭合周期，2011-11-01 标准长跑。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_reaudit_minority
+EXP=data/experiments/exp_reaudit_minority
 D=$EXP/why; mkdir -p "$D"
 BASECMD=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE.replace('--no-artifacts ',''))")
 G="--daily-states $EXP/val/GUARDEFF/states_base.csv --hold-states $EXP/val/GUARDEFF/states_hold.csv --width -0.0437"

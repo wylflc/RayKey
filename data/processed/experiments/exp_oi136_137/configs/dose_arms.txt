@@ -1,5 +1,0 @@
-# §12.174 表 T：剔除赢家只数 1／3／5／10 的剂量曲线（§12.1 第 4 款②），三条候选臂对同剔除集的 BASE。
-BASE|
-C100|--max-corr 1.0
-G110U|--gain-sell 1.10 --gain-sell-mode ungated
-C100_G110U|--max-corr 1.0 --gain-sell 1.10 --gain-sell-mode ungated

@@ -26,6 +26,7 @@
 | `build_metric_states.py` | 2026-08-16 | 2026-11-16 | §12.61「每只股票只跟自己比」实验的指标层（pb／pe／pbroe 逐日状态，产物 `data/processed/metric_states/` 已随清理删除） | 无——§12.61 结论：自身分位无前瞻信息 |
 | `fix_panel_entry_lookahead.py` | 2026-08-16 | 2026-11-16 | 把 v4 面板「入选早于证据可得日」的成员推迟到合法日、产出 v5 面板的一次性修复（§12.71 前置） | 无——v5 已固化为 `build_moat_panel.py` 的基座 |
 | `build_pit_attention_candidates.py`<br>`build_pit_attention_yearly.py`<br>`build_point_in_time_universe.py`<br>`pit_panel.py`<br>`build_judgment_input.py`<br>`analyze_survivorship_bias.py` | 2026-08-24 | 2026-11-24 | **时点关注度判定（OI-034/OI-040）全链工具**。判定轮 2026-08-12 完成、退市二遍盲判 08-21 完成，回测宇宙固化为 `panel_moat_bank_v6b.csv`（装配走 `build_moat_panel.py`）；中间产物在 `data/archive/pit-judgment-2026-08/`，协议在 `docs/archive/Ashare_pit_judgment_protocol.md`。重开判定按协议 §12，从这里取回工具 | `build_moat_panel.py`（面板装配唯一入口） |
+| `build_full_market_screen_queue.py`<br>`test_full_market_screen_queue.py` | 2026-09-05 | 2026-12-05 | OI-036 全市场重筛的取数与排队工具，该轮已于 2026-08-31 收口（v4.102），产物归 `data/archive/full_market_screen/` | 季度审查走 `build_quarterly_quality_review_queue.py`（§5.3） |
 | `analyze_research_expectation_signal.py` | 2026-08-24 | 2026-11-24 | 研报预期方向的前瞻收益检验（OI-034 第 8 步配套）。结论已沉淀，研报门槛未进任何现行规则 | 无；回测研究开关 `--research-gate` 仍在引擎 |
 | `backtest_signal_replay.py` | 2026-08-24 | 2026-11-24 | 量价信号历史回放器。其对象（扫描器信号动物园）已于 v4.18（OI-063）整体删除，回放无信号可回放 | 无 |
 | `report_backtest_yearly.py` | 2026-08-24 | 2026-11-24 | 按自然年拆解回测净值。逐年读数已由引擎汇总与 `scan_summaries.csv` 承载 | `backtest_valuation_strategy.py` 自带逐年输出 |

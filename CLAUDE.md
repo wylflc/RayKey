@@ -6,7 +6,8 @@ Research and data analysis for listed companies in mainland China and Hong Kong 
 
 - **`docs/000_Ashare_workflow.md`** is the master execution spec for the entire A-share pipeline. Route every pipeline task through its §0 task-routing table and execute the matching section without asking the user to re-explain the process. **Standards live only in that file** — if one looks wrong, edit it first, then re-run. Do not restate its content, thresholds, or section numbers anywhere else, this file included: the doc changes near-daily and restatements have repeatedly gone stale and misled sessions.
 - **`docs/000_personal-investment-system-v1.zh.md`** is the governing standard for investment judgment; single-company, stock-defence, watchlist, valuation, and position analysis follow it directly.
-- **`docs/Ashare_workflow_open_issues.md`** registers confirmed-but-unfixed defects. Check it before trusting a mechanism it lists.
+- **`docs/Ashare_workflow_open_issues.md`** registers confirmed-but-unfixed defects. Check it before trusting a mechanism it lists. Closed items live in `docs/Ashare_workflow_open_issues_closed.md`; open it only when you need a closed item.
+- **`docs/Ashare_backtest_log.md`** and **`docs/Ashare_workflow_changelog.md`** hold only the current epoch (one ≤1.5 KB section per experiment; one line per version). Grep for the section you need instead of reading them whole; older epochs are in `docs/archive/`. Experiment evidence goes to `data/experiments/<exp>/`, the scan ledger is `data/backtest/scan_summaries.csv`.
 - **`CONTEXT.md`** holds the stable domain vocabulary; **`docs/adr/`** holds architectural decisions.
 
 Treat the latest user request and committed project docs as the source of truth for current priorities.
@@ -18,7 +19,7 @@ Treat the latest user request and committed project docs as the source of truth 
 - Keep changes scoped to the request and match the repository's existing style.
 - Do not add dependencies, data providers, databases, schedulers, or external services unless the request clearly needs them.
 - `docs/xzy/` holds another person's investment-system materials. Do not use or reference it in analysis unless the user explicitly cites it.
-- **`000_` filename prefix is reserved for files the user opens and reads directly** — it exists to keep those files sorted to the top. Do not add it to design notes, audits, changelogs, issue registers, or any other agent/program working document. Currently prefixed: `docs/000_Ashare_workflow.md`, `docs/000_personal-investment-system-v1.zh.md`, `data/processed/000_a_share_core_valuation_pool.md`, `000_daily_scan_log.md`.
+- **`000_` filename prefix is reserved for files the user opens and reads directly** — it exists to keep those files sorted to the top. Do not add it to design notes, audits, changelogs, issue registers, or any other agent/program working document. Currently prefixed (all in `docs/`): `000_Ashare_workflow.md`, `000_personal-investment-system-v1.zh.md`, `000_a_share_core_valuation_pool.md`, `000_daily_scan_log.md`.
 - After any completed file-change batch, create a git commit before the final response. Do not push unless explicitly asked.
 - Git commit messages: one short sentence. No body, trailers, attribution, co-author tags, or any tool-generated signature.
 - Never store API keys, tokens, cookies, account identifiers, or paid-data credentials in the repository.

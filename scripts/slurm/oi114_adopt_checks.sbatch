@@ -12,8 +12,8 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-SRC=data/processed/experiments/exp_oi114_swap_margin
-EXP=data/processed/experiments/exp_oi114_adopt
+SRC=data/experiments/exp_oi114_swap_margin
+EXP=data/experiments/exp_oi114_adopt
 PANEL=data/processed/pit_attention/panel_moat_bank_v6b.csv
 ST=data/processed/a_share_daily_states_adopted.csv
 HST=data/processed/a_share_daily_states_hold.csv

@@ -12,7 +12,7 @@
 
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_oi128_minority
+EXP=data/experiments/exp_oi128_minority
 S=data/processed
 P=$S/pit_attention/panel_moat_bank_v6b.csv
 

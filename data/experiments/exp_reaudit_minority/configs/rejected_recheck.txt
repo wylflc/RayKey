@@ -1,0 +1,26 @@
+# §12.171 表 C：旧估值纪元下被否决的候选，在 OI-128 纪元上重测（轨道 B）。
+# 全部只动规则开关，逐日状态、宇宙、两条线沿用当前 BASE。
+BASE|
+SC|--sell-confirm
+ST1|--sell-tol 0.01
+ST2|--sell-tol 0.02
+LC|--stop-confirm-days 2
+LT1|--stop-tol 0.01
+AT1|--sell-tol 0.01 --stop-tol 0.01
+AT2|--sell-tol 0.02 --stop-tol 0.02
+XCONF|--exec-confirm-close
+CORRSPACE|--corr-conflict swap_space
+CORRSTR|--corr-conflict swap_strength
+RECIP|--swap-recipient-margin
+SWAPHELD|--swap-held-trigger
+SWAPTGT|--swap-proceeds target
+PL200|--profit-lock 2.0:2.0
+PL100|--profit-lock 1.0:1.2
+TRAIL05|--trail-ratio 0.5
+TRAIL067|--trail-ratio 0.667
+MKTC5L|--mkt-crash-days 5 --mkt-crash-pct 0.10 --mkt-action liquidate
+MKTC20B|--mkt-crash-days 20 --mkt-crash-pct 0.15 --mkt-action block
+MKTMA200|--mkt-trend-ma 200
+ADDMAX50|--addon-max-gain 0.5
+STOPDEEP|--stop-deep-pct 0.10 --stop-confirm-days 2
+MINBUY10|--min-buy-frac 0.10

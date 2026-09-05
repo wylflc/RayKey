@@ -46,7 +46,7 @@ DEFAULT_TIERS = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
 DEFAULT_DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 DEFAULT_TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"
 DEFAULT_OUTPUT_CSV = ROOT / "data/processed/a_share_core_valuation_pool.csv"
-DEFAULT_OUTPUT_MD = ROOT / "data/processed/000_a_share_core_valuation_pool.md"
+DEFAULT_OUTPUT_MD = ROOT / "docs/000_a_share_core_valuation_pool.md"
 DEFAULT_FORECASTS = ROOT / "data/interim/a_share_earnings_forecasts.csv"
 DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_OVERSEAS = ROOT / "data/processed/overseas_watchlist_valuation.csv"
@@ -633,35 +633,63 @@ def log_pool_decisions(
     tiers_file: Path,
     output_csv: Path,
     output_md: Path,
+    previous: dict[str, dict[str, str]] | None = None,
 ) -> None:
+    """§2 核心池重建的日志口径：每次一行汇总（`core_valuation_pool_rebuild`），
+    逐票只在 `pool_layer` 相对上一次物化变化时写行（新入池、移出、改层、可估值性变化）。"""
     logged_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     decision_types = {"excluded": "scan_excluded"}
-    append_decision_log(
-        log_file,
-        [
-            {
-                "logged_at_utc": logged_at,
-                "workflow_stage": "core_valuation_pool",
-                "run_id": f"core_valuation_pool:{as_of}",
-                "as_of": as_of,
-                "security_code": row["security_code"],
-                "security_name": row["security_name"],
-                "decision_type": decision_types.get(row["pool_layer"], "core_valuation_eligible"),
-                "decision_result": (
-                    f"{row['pool_layer']}（无法估值）"
-                    if row["pool_layer"] in decision_types
-                    else row["pool_layer"]
-                ),
-                "summary_reason": row.get("valuation_reason", ""),
-                "input_files": f"{valuation_file};{tiers_file}",
-                "source_urls": "",
-                "output_file": f"{output_csv};{output_md}",
-                "operator_or_script": "scripts/build_a_share_core_valuation_pool.py",
-                "workflow_version": WORKFLOW_VERSION,
-            }
-            for row in rows
-        ],
-    )
+    previous = previous or {}
+    base = {
+        "logged_at_utc": logged_at,
+        "workflow_stage": "core_valuation_pool",
+        "run_id": f"core_valuation_pool:{as_of}",
+        "as_of": as_of,
+        "input_files": f"{valuation_file};{tiers_file}",
+        "source_urls": "",
+        "output_file": f"{output_csv};{output_md}",
+        "operator_or_script": "scripts/build_a_share_core_valuation_pool.py",
+        "workflow_version": WORKFLOW_VERSION,
+    }
+    changed: list[dict[str, object]] = []
+    current_codes = {row["security_code"] for row in rows}
+    for row in rows:
+        before = previous.get(row["security_code"], {}).get("pool_layer")
+        if before == row["pool_layer"]:
+            continue
+        changed.append({
+            **base,
+            "security_code": row["security_code"],
+            "security_name": row["security_name"],
+            "decision_type": decision_types.get(row["pool_layer"], "core_valuation_eligible"),
+            "decision_result": (
+                f"{row['pool_layer']}（无法估值）" if row["pool_layer"] in decision_types else row["pool_layer"]
+            ) + f"；此前 {before or '不在池'}",
+            "summary_reason": row.get("valuation_reason", ""),
+        })
+    for code, prev in previous.items():
+        if code in current_codes:
+            continue
+        changed.append({
+            **base,
+            "security_code": code,
+            "security_name": prev.get("security_name", ""),
+            "decision_type": "pool_removed",
+            "decision_result": f"移出核心池；此前 {prev.get('pool_layer', '')}",
+            "summary_reason": "",
+        })
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[row["pool_layer"]] = counts.get(row["pool_layer"], 0) + 1
+    summary = {
+        **base,
+        "security_code": "POOL",
+        "security_name": "核心池重建",
+        "decision_type": "core_valuation_pool_rebuild",
+        "decision_result": "; ".join(f"{k} {v}" for k, v in sorted(counts.items())) + f"; changed {len(changed)}",
+        "summary_reason": f"逐票行只记 pool_layer 变化；上一次物化 {len(previous)} 只",
+    }
+    append_decision_log(log_file, [summary, *changed])
 
 
 def log_overseas_decisions(
@@ -923,7 +951,10 @@ def main() -> None:
         "pool_as_of",
         "source_file",
     ]
+    previous_pool: dict[str, dict[str, str]] = {}
     if not args.md_only:
+        if args.output_csv.exists():
+            previous_pool = {row["security_code"]: row for row in load_csv(args.output_csv)}
         write_csv(args.output_csv, rows, fieldnames)
     overseas_section = build_overseas_section(overseas_rows, overseas_quotes)
     flags = write_markdown(
@@ -953,7 +984,7 @@ def main() -> None:
         )
         print(f"refreshed {args.output_md} with {len(quotes)}/{len(rows)} quotes; {summary}")
     else:
-        log_pool_decisions(args.log_file, rows, args.as_of, args.valuation, args.tiers, args.output_csv, args.output_md)
+        log_pool_decisions(args.log_file, rows, args.as_of, args.valuation, args.tiers, args.output_csv, args.output_md, previous_pool)
         print(f"wrote {len(rows)} pool rows to {args.output_csv}; {summary}")
     if registration_gaps:
         raise SystemExit(f"档案目录未登记 {len(registration_gaps)} 个：登记到 A 股档案表或海外关注清单后重跑")

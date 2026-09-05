@@ -9,7 +9,7 @@
 # §12.179 后续：SB1 候选臂的 K 剂量 ＋ 换仓边际 0.01 一档重扫（20 臂 × 14 起点两遍），随后剔除集对称性 A/B/U（ex_winner_symmetry.py）。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_swap_variants
+EXP=data/experiments/exp_swap_variants
 echo "=== [$(date +%T)] sb1_platform（$(grep -c '|' "$EXP/configs/sb1_platform.txt") 臂 × 14 起点 × 两遍）==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/sb1_platform.txt" \
   --out "$EXP/sweep_sb1_platform.txt" --workers 60 \

@@ -11,7 +11,7 @@
 # ③§12.1 第 11 款归因集中度；④第 4 款② 剔除赢家只数 1/3/5/10 剂量；⑤新基准单起点流水 swap_flow_diag。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_swap_variants
+EXP=data/experiments/exp_swap_variants
 echo "=== [$(date +%T)] ① 新基准 vs v4.134 两遍 14 起点 ==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/base_sb1_land.txt" \
   --out "$EXP/sweep_newbase_sb1.txt" --workers 60 \
@@ -34,9 +34,9 @@ python3 scripts/experimental/ex_winner_symmetry_report.py "$EXP/sweep_sb1_dose.t
 echo "=== [$(date +%T)] ⑤ 新基准单起点流水诊断 ==="
 python3 - <<'PY'
 import csv, glob
-EXP = "data/processed/experiments/exp_swap_variants"
+EXP = "data/experiments/exp_swap_variants"
 codes = set()
-for f in glob.glob(f"{EXP}/trades_*_2011.csv") + glob.glob("data/processed/experiments/exp_buyline_swapdir/trades_*_2011.csv"):
+for f in glob.glob(f"{EXP}/trades_*_2011.csv") + glob.glob("data/experiments/exp_buyline_swapdir/trades_*_2011.csv"):
     for r in csv.DictReader(open(f, encoding="utf-8")):
         codes.add(r["security_code"])
 for src, dst in (("data/processed/a_share_daily_states_hold.csv", f"{EXP}/states_hold_sub.csv"),

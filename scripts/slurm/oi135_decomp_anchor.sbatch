@@ -9,7 +9,7 @@
 # §12.172 表 L（GUARDEFF 单变量拆解阶梯的 14 起点两遍 A/B）＋ 表 M（§12.67 锚点关卡重跑）。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_reaudit_minority
+EXP=data/experiments/exp_reaudit_minority
 V=$EXP/val
 CFG=$EXP/configs/guard_decomp.txt
 

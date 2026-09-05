@@ -12,8 +12,8 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-SE=data/processed/experiments/exp_selection_edge
-CF=data/processed/experiments/exp_corr_filter
+SE=data/experiments/exp_selection_edge
+CF=data/experiments/exp_corr_filter
 COMMON=(--states data/processed/a_share_daily_states_adopted.csv
         --hold-states data/processed/a_share_daily_states_hold.csv
         --panel data/processed/pit_attention/panel_moat_bank_v6b.csv

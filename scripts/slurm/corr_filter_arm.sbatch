@@ -16,7 +16,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-EXP=data/processed/experiments/exp_corr_filter
+EXP=data/experiments/exp_corr_filter
 mkdir -p "$EXP"
 
 echo "=== [$(date +%H:%M:%S)] 第 1 段：23 起点 × 4 臂 × 两遍 ==="

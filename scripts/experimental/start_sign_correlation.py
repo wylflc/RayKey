@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """OI-119：14 个标准起点上「正号起点数」的证据强度实测（回测日志 §12.169）。
 
-读 `data/processed/backtest/scan_summaries.csv`，把扫描标签按「臂名＋起点日」拆开，取 14 个标准起点齐全的臂，
+读 `data/backtest/scan_summaries.csv`，把扫描标签按「臂名＋起点日」拆开，取 14 个标准起点齐全的臂，
 随机抽臂对算逐起点配对差（年化），报：起点间相关矩阵的平均相关与有效样本量（Kish 与特征值两种）、
 按 |配对差中位| 分桶的「≥11/14 同号」「14/14 同号」出现率，以及二项分布参照。
 
@@ -20,7 +20,7 @@ from math import comb
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SUMMARIES = ROOT / "data/processed/backtest/scan_summaries.csv"
+SUMMARIES = ROOT / "data/backtest/scan_summaries.csv"
 STD_STARTS = ["20091101", "20100501", "20101101", "20110501", "20111101", "20120501", "20121101",
               "20130501", "20131101", "20140501", "20141101", "20150501", "20151101", "20160501"]
 LABEL = re.compile(r"^(.*?)(\d{8})$")

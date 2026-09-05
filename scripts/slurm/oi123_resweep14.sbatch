@@ -14,7 +14,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-EXP=data/processed/experiments/exp_oi115_trailleg
+EXP=data/experiments/exp_oi115_trailleg
 
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/trail_arms.txt" \
   --out "$EXP/sweep_trailleg_14.txt" \

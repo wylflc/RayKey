@@ -8,7 +8,7 @@
 
 # §12.171 表 D：一条估值口径回退臂的建带链。用法：
 #   sbatch --job-name=rk_reval_<臂> scripts/slurm/reaudit_minority_val_arm.sbatch <臂> "<相对生产口径改了什么>"
-# 产物落 data/processed/experiments/exp_reaudit_minority/val/<臂>/，末尾按 §12.30 重解买入线（只报数）。
+# 产物落 data/experiments/exp_reaudit_minority/val/<臂>/，末尾按 §12.30 重解买入线（只报数）。
 
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey

@@ -20,7 +20,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT_DIR = ROOT / "data/processed/backtest"
+OUT_DIR = ROOT / "data/backtest"
 INDEX = ROOT / "data/raw/ohlcv/INDEX_000300.csv"
 
 

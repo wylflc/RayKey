@@ -10,7 +10,7 @@
 # 本作业：换仓边际标度漂移守卫 ＋ 新基准两遍 14 起点重扫（在册读数重登、剔除集 A 复核）。规则臂不改逐日状态，不重建生产链。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_oi136_137
+EXP=data/experiments/exp_oi136_137
 
 echo "=== [$(date +%T)] 换仓边际标度漂移守卫（MARGIN 0.15）==="
 python3 scripts/check_swap_margin_scale_drift.py || echo "（守卫非零：V 标度已变，须按 --baseline 现值重定基准）"

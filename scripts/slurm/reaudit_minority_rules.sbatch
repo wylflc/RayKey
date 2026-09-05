@@ -11,7 +11,7 @@
 
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_reaudit_minority
+EXP=data/experiments/exp_reaudit_minority
 
 echo "=== [$(date +%T)] 表 A：操作规则逐项回退（25 臂 × 14 起点 × 两遍）==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/rules_revert.txt" \

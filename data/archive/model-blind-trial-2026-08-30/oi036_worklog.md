@@ -12,9 +12,9 @@
 
 | 文件 | 内容 |
 | --- | --- |
-| `data/processed/full_market_screen/screen_queue.csv` | 全市场 5,677 只的取数与排队（A_核心 778／B_观察 1,486／C_排除 3,413） |
-| `data/processed/full_market_screen/verdicts.csv` | **判定档**：`reference_score`（参考分 0-100）、`attention_class`、`never_admit` + 理由、`moat_note`（护城河论述）、`rule`（依据规则）、`basis`（取数口径）、`reviewed_at` |
-| `scripts/build_full_market_screen_queue.py` | 取数、排队、批次输出；`--preview` 为 2025 年报打底的预审模式 |
+| `data/archive/full_market_screen/screen_queue.csv` | 全市场 5,677 只的取数与排队（A_核心 778／B_观察 1,486／C_排除 3,413） |
+| `data/archive/full_market_screen/verdicts.csv` | **判定档**：`reference_score`（参考分 0-100）、`attention_class`、`never_admit` + 理由、`moat_note`（护城河论述）、`rule`（依据规则）、`basis`（取数口径）、`reviewed_at` |
+| `scripts/archive/build_full_market_screen_queue.py` | 取数、排队、批次输出；`--preview` 为 2025 年报打底的预审模式 |
 
 **已定口径**
 

@@ -21,9 +21,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-EXP = ROOT / "data/processed/experiments/exp_oi115_trailleg"
-STATES = ROOT / "data/processed/experiments/states/exp_oi115_trailleg"
-CODES = ROOT / "data/processed/experiments/exp_oi115_procyclic/configs/v6b_codes.txt"
+EXP = ROOT / "data/experiments/exp_oi115_trailleg"
+STATES = ROOT / "data/experiments/states/exp_oi115_trailleg"
+CODES = ROOT / "data/experiments/exp_oi115_procyclic/configs/v6b_codes.txt"
 PANEL = ROOT / "data/processed/pit_attention/panel_moat_bank_v6b.csv"
 PROD_CAND = ROOT / "data/processed/a_share_daily_states_adopted.csv"
 PROD_HOLD = ROOT / "data/processed/a_share_daily_states_hold.csv"

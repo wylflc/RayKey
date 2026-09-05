@@ -24,7 +24,7 @@ from sb1_daily_buys import EXP
 def main():
     assert (EXP / "union_sets.json").exists(), "finish sensitivity job first"
     full, ex, _ = load(EXP / "sweep.txt")
-    old_full, old_ex, _ = load(ROOT / "data/processed/experiments/exp_swap_variants/sweep_newbase_sb1_rel.txt")
+    old_full, old_ex, _ = load(ROOT / "data/experiments/exp_swap_variants/sweep_newbase_sb1_rel.txt")
     for before, after in (("V4134", "BASE"), ("BASE", "SB1")):
         assert old_full[before] == full[after]
         assert old_ex[before] == ex[after]
@@ -84,8 +84,8 @@ def main():
             "run_id": stamp, "as_of": "2026-09-05", "decision_type": "strategy_experiment",
             "decision_result": "research_complete_no_production_change",
             "summary_reason": "SB1 与每日买入笔数复核完成；两表14起点、统一截止日与赢家并集证据见报告，生产参数未改。",
-            "input_files": "data/processed/experiments/exp_sb1_daily_buys/manifest.json",
-            "output_file": "docs/sb1_daily_buy_review.zh.md",
+            "input_files": "data/experiments/exp_sb1_daily_buys/manifest.json",
+            "output_file": "docs/reports/sb1_daily_buy_review.zh.md",
             "operator_or_script": "scripts/experimental/sb1_daily_buys_evidence.py", "workflow_version": WORKFLOW_VERSION,
         }])
     print(f"历史复现 56/56，成交核验 {len(counts)} 臂；归档主扫描 {len(entries)} 行；指标 {len(metrics)} 行。")

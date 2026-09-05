@@ -27,7 +27,7 @@ bias = {c: statistics.median(v) for c, v in series.items() if len(v) >= 250}
 # ---- 分组器 ----
 industry = {}
 names = {}
-with open(f"{ROOT}/data/interim/a_share_company_profiles.csv", encoding="utf-8-sig") as fh:
+with open(f"{ROOT}/data/archive/a_share_company_profiles.csv", encoding="utf-8-sig") as fh:
     for r in csv.DictReader(fh):
         c = (r.get("security_code") or "").zfill(6)
         if r.get("eastmoney_industry"):

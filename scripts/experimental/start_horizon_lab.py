@@ -16,7 +16,7 @@
 恰好只落在 ≥10 年的起点上——前沿反向传递的结论本来就是长路径集自己给出的，截断救不了预测力。
 
 用法：
-    python3 scripts/experimental/start_horizon_lab.py --exp data/processed/experiments/exp_window_step
+    python3 scripts/experimental/start_horizon_lab.py --exp data/experiments/exp_window_step
 """
 from __future__ import annotations
 

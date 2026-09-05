@@ -9,7 +9,7 @@
 # §12.174 追问：谷守卫放进买入线的谷年公司，走势闸门能不能把不复苏的那批挡掉（用户 2026-09-02 假设）。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_reaudit_minority
+EXP=data/experiments/exp_reaudit_minority
 python3 scripts/experimental/trough_gate_trend_check.py \
   --states data/processed/a_share_daily_states_adopted.csv --bands data/processed/roic_bands.csv \
   --panel data/processed/pit_attention/panel_moat_bank_v6b.csv --buy-line 1.0454 --horizon 3 \

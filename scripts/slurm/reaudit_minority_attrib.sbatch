@@ -11,7 +11,7 @@
 # 不是 `--trade-log` 的逐笔流水；故此处不给 `--no-artifacts`，并把产物落到各臂独立 out-dir。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_reaudit_minority
+EXP=data/experiments/exp_reaudit_minority
 rm -rf "$EXP/attrib"; mkdir -p "$EXP/attrib/base" "$EXP/attrib/ge"
 
 BASECMD=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE.replace('--no-artifacts ',''))")

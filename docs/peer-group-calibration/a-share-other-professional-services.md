@@ -61,6 +61,6 @@ The remaining companies are rejected for now because they are mainly project-bas
 
 ## 1.5 Sources
 
-This first-pass group review uses the local full-coverage scoring evidence and company-profile evidence already stored in `data/processed/a_share_company_triage_reviews.csv`, `data/processed/a_share_full_coverage_scores.csv`, and `data/interim/a_share_company_profiles.csv`. Each decision row also includes the available discovery source URLs, exchange disclosure landing page, and official company website when available.
+This first-pass group review uses the local full-coverage scoring evidence and company-profile evidence already stored in `data/processed/a_share_company_triage_reviews.csv`, `data/processed/a_share_full_coverage_scores.csv`, and `data/archive/a_share_company_profiles.csv`. Each decision row also includes the available discovery source URLs, exchange disclosure landing page, and official company website when available.
 
 Representative external checks for this group included recent public disclosures and official/company pages for major retained companies, including CNINFO annual-report PDFs for 华测检测、广电计量 and 中金辐照, public disclosure coverage for 中国汽研 and 西高院, and company pages for 胜科纳米 and 富乐德. Later deep-company reviews should replace discovery evidence with annual reports, prospectuses, segment margin disclosures, customer qualification evidence, authorization documents, standards participation records, and reputable institutional research.

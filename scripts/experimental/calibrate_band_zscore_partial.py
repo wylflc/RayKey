@@ -16,7 +16,7 @@ MIN_OBS, MIN_CODES, BURN = 500, 3, 5
 K_CLIP = (0.5, 2.0)          # σ 比值的夹断：小样本行业的 σ 可能极小，不夹断会把带炸掉
 
 ind={}
-for r in csv.DictReader(open(f"{ROOT}/data/interim/a_share_company_profiles.csv",encoding="utf-8-sig")):
+for r in csv.DictReader(open(f"{ROOT}/data/archive/a_share_company_profiles.csv",encoding="utf-8-sig")):
     c=(r.get("security_code") or "").zfill(6)
     if r.get("eastmoney_industry"): ind[c]=r["eastmoney_industry"].split("-")[0]
 

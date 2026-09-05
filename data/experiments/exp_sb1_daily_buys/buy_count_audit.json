@@ -1,0 +1,114 @@
+{
+  "BASE": {
+    "buys": 1908,
+    "buying_days": 1078,
+    "max_buys_per_day": 11,
+    "days_by_buy_count": {
+      "1": 512,
+      "2": 390,
+      "3": 127,
+      "4": 33,
+      "5": 9,
+      "6": 2,
+      "8": 2,
+      "9": 1,
+      "10": 1,
+      "11": 1
+    }
+  },
+  "BUY1": {
+    "buys": 1410,
+    "buying_days": 1410,
+    "max_buys_per_day": 1,
+    "days_by_buy_count": {
+      "1": 1410
+    }
+  },
+  "BUY2": {
+    "buys": 1802,
+    "buying_days": 1167,
+    "max_buys_per_day": 2,
+    "days_by_buy_count": {
+      "1": 532,
+      "2": 635
+    }
+  },
+  "BUY3": {
+    "buys": 1807,
+    "buying_days": 1062,
+    "max_buys_per_day": 3,
+    "days_by_buy_count": {
+      "1": 496,
+      "2": 387,
+      "3": 179
+    }
+  },
+  "BUY5": {
+    "buys": 1869,
+    "buying_days": 1052,
+    "max_buys_per_day": 5,
+    "days_by_buy_count": {
+      "1": 469,
+      "2": 414,
+      "3": 122,
+      "4": 29,
+      "5": 18
+    }
+  },
+  "SB1": {
+    "buys": 1824,
+    "buying_days": 1066,
+    "max_buys_per_day": 11,
+    "days_by_buy_count": {
+      "1": 521,
+      "2": 402,
+      "3": 106,
+      "4": 23,
+      "5": 8,
+      "6": 2,
+      "7": 1,
+      "9": 1,
+      "10": 1,
+      "11": 1
+    }
+  },
+  "SB1_BUY1": {
+    "buys": 1392,
+    "buying_days": 1392,
+    "max_buys_per_day": 1,
+    "days_by_buy_count": {
+      "1": 1392
+    }
+  },
+  "SB1_BUY2": {
+    "buys": 1717,
+    "buying_days": 1117,
+    "max_buys_per_day": 2,
+    "days_by_buy_count": {
+      "1": 517,
+      "2": 600
+    }
+  },
+  "SB1_BUY3": {
+    "buys": 1793,
+    "buying_days": 1075,
+    "max_buys_per_day": 3,
+    "days_by_buy_count": {
+      "1": 522,
+      "2": 388,
+      "3": 165
+    }
+  },
+  "SB1_BUY5": {
+    "buys": 1812,
+    "buying_days": 1061,
+    "max_buys_per_day": 5,
+    "days_by_buy_count": {
+      "1": 537,
+      "2": 358,
+      "3": 121,
+      "4": 29,
+      "5": 16
+    }
+  }
+}

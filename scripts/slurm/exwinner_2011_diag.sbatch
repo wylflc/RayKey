@@ -10,7 +10,7 @@
 # 落 periods（逐年收益）与 trades，用于核对全样本与去赢家逐年差异落在哪些年份。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_swap_variants
+EXP=data/experiments/exp_swap_variants
 OUT=$EXP/bt2011_exA
 mkdir -p "$OUT"
 BASE=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE)")

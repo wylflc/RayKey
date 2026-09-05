@@ -6,11 +6,11 @@
 #SBATCH -o logs/%x_%j.out
 #SBATCH -e logs/%x_%j.err
 
-# 备用策略清单的两份扫描（docs/Ashare_strategy_shortlist.md）：先由清单生成配置，再跑规则臂与估值／宇宙臂，各出对照表。
+# 备用策略清单的两份扫描（docs/reports/Ashare_strategy_shortlist.md）：先由清单生成配置，再跑规则臂与估值／宇宙臂，各出对照表。
 # 需重建的臂须已由 submit_strategy_shortlist.sh 建好（本作业以 afterok 依赖它们）。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP="${EXP:-data/processed/experiments/exp_strategy_shortlist}"
+EXP="${EXP:-data/experiments/exp_strategy_shortlist}"
 TAG="$(date +%Y%m%d)"
 
 python3 scripts/experimental/make_shortlist_configs.py --exp "$EXP"

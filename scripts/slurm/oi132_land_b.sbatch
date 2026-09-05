@@ -12,7 +12,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 D=${SIGNAL_DATE:-2026-09-02}
-EXP=data/processed/experiments/exp_oi132_consolidation
+EXP=data/experiments/exp_oi132_consolidation
 S=data/processed
 
 echo "=== [$(date +%T)] 4/ 池带 → 预告叠加 → B2 → 持仓侧 → 档案 → README（--signal-date $D）==="

@@ -1,0 +1,96 @@
+{
+  "BUY2": {
+    "clause2_m1": "可采纳",
+    "clause2_m2": "可采纳",
+    "clause2_flipped": false,
+    "clause4_strict_m1": true,
+    "clause4_strict_m2": true,
+    "clause4_strict_flipped": false,
+    "clause4_display_m1": true,
+    "clause4_display_m2": true,
+    "clause4_display_flipped": false,
+    "clause4_bad_strict_m1": [
+      [
+        "Calmar",
+        -0.004095
+      ]
+    ],
+    "clause4_bad_strict_m2": [
+      [
+        "Calmar",
+        -0.00408
+      ]
+    ],
+    "clause4_bad_display_m1": [],
+    "clause4_bad_display_m2": [],
+    "clause4_items_m2": {
+      "滚5中位": 0.011321,
+      "滚5P25": 0.004803,
+      "滚5最差": 0.001902,
+      "滚5回撤": 0.000269,
+      "滚5Calmar": 0.025512,
+      "滚5Sharpe": 0.018404,
+      "负窗%": -0.0,
+      "年化": 0.005604,
+      "最大回撤": 0.001831,
+      "Calmar": -0.00408,
+      "Sharpe": 0.007425,
+      "5年块中位": 0.016182,
+      "滚3中位": 0.004049,
+      "滚3回撤": 0.001355,
+      "逐年中位": 0.011727,
+      "逐年最差": -6.6e-05
+    }
+  },
+  "SB1_BUY2": {
+    "clause2_m1": "报用户裁定（复利读数两表反向）",
+    "clause2_m2": "报用户裁定（复利读数两表反向）",
+    "clause2_flipped": false,
+    "clause4_strict_m1": false,
+    "clause4_strict_m2": false,
+    "clause4_strict_flipped": false,
+    "clause4_display_m1": true,
+    "clause4_display_m2": true,
+    "clause4_display_flipped": false,
+    "clause4_bad_strict_m1": [
+      [
+        "Calmar",
+        -0.004502
+      ],
+      [
+        "Sharpe",
+        -0.002714
+      ]
+    ],
+    "clause4_bad_strict_m2": [
+      [
+        "滚5Sharpe",
+        -0.004492
+      ],
+      [
+        "Calmar",
+        -0.004484
+      ]
+    ],
+    "clause4_bad_display_m1": [],
+    "clause4_bad_display_m2": [],
+    "clause4_items_m2": {
+      "滚5中位": 0.006568,
+      "滚5P25": 0.004517,
+      "滚5最差": 0.007747,
+      "滚5回撤": -3e-05,
+      "滚5Calmar": 0.007736,
+      "滚5Sharpe": -0.004492,
+      "负窗%": -0.0,
+      "年化": -0.000397,
+      "最大回撤": 0.001744,
+      "Calmar": -0.004484,
+      "Sharpe": -0.001002,
+      "5年块中位": 0.013816,
+      "滚3中位": 0.001376,
+      "滚3回撤": -4.6e-05,
+      "逐年中位": 0.007287,
+      "逐年最差": -8.8e-05
+    }
+  }
+}

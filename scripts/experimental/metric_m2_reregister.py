@@ -33,9 +33,9 @@ import backtest_valuation_strategy as bt  # noqa: E402
 import clean_derived_artifacts as archive  # noqa: E402
 from dose_table import verdict  # noqa: E402
 
-EXP = ROOT / "data/processed/experiments/exp_metric_m2"
-TROUGH = ROOT / "data/processed/experiments/exp_trough_guard_review"
-SB1 = ROOT / "data/processed/experiments/exp_sb1_daily_buys"
+EXP = ROOT / "data/experiments/exp_metric_m2"
+TROUGH = ROOT / "data/experiments/exp_trough_guard_review"
+SB1 = ROOT / "data/experiments/exp_sb1_daily_buys"
 ARMS = (("BASE", ""), ("BUY2", "--max-daily-buys 2"), ("SB1_BUY2", "--swap-source-block 1 --max-daily-buys 2"))
 CANDIDATES = ("BUY2", "SB1_BUY2")
 LEDGER_PREFIX = "M2REG20260905_"

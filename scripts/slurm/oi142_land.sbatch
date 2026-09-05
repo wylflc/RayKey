@@ -10,7 +10,7 @@
 # ＋ 2011-11-01 单起点流水与 swap_flow_diag 读数（同日两档计数应为 0）。规则臂不改逐日状态，不重建生产链。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_swap_variants
+EXP=data/experiments/exp_swap_variants
 echo "=== [$(date +%T)] 新基准两遍 14 起点重扫 ==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/base_only_gso.txt" \
   --out "$EXP/sweep_newbase_gso.txt" --workers 28 \
@@ -21,9 +21,9 @@ python3 scripts/backtest_valuation_strategy.py $BASE --since 2011-11-01 --label-
   --trade-log "$EXP/trades_newbase_2011.csv" --candidate-log "$EXP/cands_newbase_2011.csv" > "$EXP/diag_newbase_2011.txt" 2>&1
 python3 - <<'PY'
 import csv, glob
-EXP = "data/processed/experiments/exp_swap_variants"
+EXP = "data/experiments/exp_swap_variants"
 codes = set()
-for f in glob.glob(f"{EXP}/trades_*_2011.csv") + glob.glob("data/processed/experiments/exp_buyline_swapdir/trades_*_2011.csv"):
+for f in glob.glob(f"{EXP}/trades_*_2011.csv") + glob.glob("data/experiments/exp_buyline_swapdir/trades_*_2011.csv"):
     for r in csv.DictReader(open(f, encoding="utf-8")):
         codes.add(r["security_code"])
 for src, dst in (("data/processed/a_share_daily_states_hold.csv", f"{EXP}/states_hold_sub.csv"),

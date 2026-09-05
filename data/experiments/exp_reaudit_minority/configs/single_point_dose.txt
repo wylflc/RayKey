@@ -1,0 +1,17 @@
+# §12.171 表 H：表 C／E 里的单点峰按 §12.1 第 5 款补剂量（轨道 B）。
+BASE|
+TR060|--trail-ratio 0.60
+TR063|--trail-ratio 0.63
+TR067|--trail-ratio 0.667
+TR070|--trail-ratio 0.70
+TR072|--trail-ratio 0.72
+ST005|--sell-tol 0.005
+ST015|--sell-tol 0.015
+ST020|--sell-tol 0.02
+ST025|--sell-tol 0.025
+ST030|--sell-tol 0.03
+AM030|--addon-max-gain 0.30
+AM040|--addon-max-gain 0.40
+AM060|--addon-max-gain 0.60
+AM075|--addon-max-gain 0.75
+AM100|--addon-max-gain 1.00

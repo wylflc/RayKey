@@ -68,46 +68,46 @@ data/processed/diag_bands.csv
 data/processed/metric_states/
 
 # 回测产物：历次扫描的读数已归并进入库的 `backtest/scan_summaries.csv`，此处只挡原件。
-data/processed/backtest/*_equity.csv
-data/processed/backtest/*_trades.csv
-data/processed/backtest/*_periods.csv
-data/processed/backtest/summary_*.csv
-data/processed/backtest/summary.csv
-data/processed/backtest/summary[A-Z]*.csv
-data/processed/backtest/*trade_log.csv
+data/backtest/*_equity.csv
+data/backtest/*_trades.csv
+data/backtest/*_periods.csv
+data/backtest/summary_*.csv
+data/backtest/summary.csv
+data/backtest/summary[A-Z]*.csv
+data/backtest/*trade_log.csv
 
 # ---------------------------------------------------------------- 实验 A/B（docs/Ashare_quant_exp1_*.md / exp2_*.md）
 # 逐日状态按实验股票库切出的子集（每份 0.3~0.6 GB，由 scripts/experimental/subset_daily_states.py 一条命令重建）
-data/processed/experiments/states/
+data/experiments/states/
 # 实验 B 行情缓存（numpy npz，约 0.7 GB，由 vp_signal_lab.py 自动重建）
 data/interim/exp_b_market_cache.npz
 # 实验 A 全市场合格股票库（7.6 MB，build_cap_rank_universe.py 一条命令重建；抽样子集与各带照常入库）
-data/processed/experiments/universes/cap_all.csv
+data/experiments/universes/cap_all.csv
 # 信号层三表（§12.1 第 9 款）的大件输入：候选排序日志、成交流水与逐条产物，
 # 由回测一条带 --candidate-log/--trade-log 的命令重建；只有小报告入库。
-data/processed/experiments/*/candidates*.csv
-data/processed/experiments/*/trades_ledger*.csv
-data/processed/experiments/**/*_trades.csv
-data/processed/experiments/**/*_equity.csv
-data/processed/experiments/**/*_periods.csv
-data/processed/experiments/*/cands_*.csv
-data/processed/experiments/*/trades_*.csv
-data/processed/experiments/*/states_*_sub.csv
+data/experiments/*/candidates*.csv
+data/experiments/*/trades_ledger*.csv
+data/experiments/**/*_trades.csv
+data/experiments/**/*_equity.csv
+data/experiments/**/*_periods.csv
+data/experiments/*/cands_*.csv
+data/experiments/*/trades_*.csv
+data/experiments/*/states_*_sub.csv
 
 # 海外三表原始 JSON（SEC companyfacts ≈4 MB/家、东财 HK F10 长表）：按需重取，不入库；提取后的 data/interim/overseas_roic_years.csv 入库
 data/raw/overseas_statements/
 data/processed/a_share_daily_states_*_panel.csv
 data/processed/a_share_daily_states*_fix.csv
 # §12.171 估值口径回退臂的两侧逐日状态与带文件（每臂约 6.4 GB；重建 scripts/slurm/reaudit_minority_val_arm.sbatch）
-data/processed/experiments/*/val/*/states_*.csv
-data/processed/experiments/*/val/*/roic_*.csv
-data/processed/experiments/*/val/*/gaps_*.csv
+data/experiments/*/val/*/states_*.csv
+data/experiments/*/val/*/roic_*.csv
+data/experiments/*/val/*/gaps_*.csv
 # 建带的逐票日志（每份约 1.9 万行，只留 align_buy_line.txt 作买入线重解证据）
-data/processed/experiments/*/val/*/build_*.log
-data/processed/experiments/*/val/*/bank_*.log
+data/experiments/*/val/*/build_*.log
+data/experiments/*/val/*/bank_*.log
 # §12.171 表 K 归因用的闭合周期／净值产物（重建 scripts/slurm/reaudit_minority_attrib.sbatch）
-data/processed/experiments/*/attrib/*/
+data/experiments/*/attrib/*/
 # §12.174 表 U／V 信号层长跑的候选日志、成交流水与运行日志（每臂数百 MB，由 scripts/slurm/oi136_137_signal.sbatch 重建；小报告入库）
-data/processed/experiments/*/sig/*/candidates.csv
-data/processed/experiments/*/sig/*/ledger.csv
-data/processed/experiments/*/sig/*/run.log
+data/experiments/*/sig/*/candidates.csv
+data/experiments/*/sig/*/ledger.csv
+data/experiments/*/sig/*/run.log

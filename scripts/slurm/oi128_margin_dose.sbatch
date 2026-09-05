@@ -12,7 +12,7 @@
 
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_oi128_minority
+EXP=data/experiments/exp_oi128_minority
 
 echo "=== [$(date +%T)] 换仓边际剂量扫描（13 臂 + 1 诊断臂）× 14 起点 × 两遍 ==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/margin_arms.txt" \

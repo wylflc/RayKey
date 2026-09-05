@@ -25,7 +25,7 @@ from typing import Any
 
 DEFAULT_RAW = Path("data/raw/a_share_securities.csv")
 DEFAULT_QUEUE = Path("data/interim/a_share_research_queue.csv")
-DEFAULT_PROFILES = Path("data/interim/a_share_company_profiles.csv")
+DEFAULT_PROFILES = Path("data/archive/a_share_company_profiles.csv")
 DEFAULT_FINANCIALS = Path("data/interim/a_share_financial_indicators.csv")
 
 COMPANY_SURVEY_ENDPOINT = "https://emweb.securities.eastmoney.com/PC_HSF10/CompanySurvey/PageAjax"

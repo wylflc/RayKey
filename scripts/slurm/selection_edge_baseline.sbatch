@@ -13,7 +13,7 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-OUT=data/processed/experiments/exp_selection_edge
+OUT=data/experiments/exp_selection_edge
 mkdir -p "$OUT"
 
 BASE=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE.replace('--no-artifacts',''))")

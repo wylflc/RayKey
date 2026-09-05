@@ -12,7 +12,7 @@
 
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_oi124_w0base
+EXP=data/experiments/exp_oi124_w0base
 
 for s in margin poscap credit; do
   echo "=== [$(date +%T)] $s ==="

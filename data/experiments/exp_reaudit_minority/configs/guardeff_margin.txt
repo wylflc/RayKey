@@ -1,0 +1,13 @@
+# §12.171 表 J：GUARDEFF 口径上的换仓边际重扫（§12.1「换估值口径须按 0.01 一档重定边际」）。
+# 对照臂 BASE = GUARDEFF 口径 × 在册边际 0.18（不是生产 BASE），Δ 只在该口径内部比较。
+BASE|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437
+M010|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437 --swap-margin 0.10
+M012|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437 --swap-margin 0.12
+M014|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437 --swap-margin 0.14
+M016|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437 --swap-margin 0.16
+M020|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437 --swap-margin 0.20
+M022|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437 --swap-margin 0.22
+M024|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437 --swap-margin 0.24
+M026|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437 --swap-margin 0.26
+M028|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437 --swap-margin 0.28
+M030|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF/states_hold.csv --width -0.0437 --swap-margin 0.30

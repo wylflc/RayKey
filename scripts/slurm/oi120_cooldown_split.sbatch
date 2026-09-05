@@ -12,7 +12,7 @@
 
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_oi120_cooldown
+EXP=data/experiments/exp_oi120_cooldown
 mkdir -p "$EXP/configs"
 
 cat > "$EXP/configs/split_arms.txt" <<CFG

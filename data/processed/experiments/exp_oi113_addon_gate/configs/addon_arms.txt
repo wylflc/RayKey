@@ -1,2 +1,0 @@
-BASE|
-ADDFULL|--addon-trend full

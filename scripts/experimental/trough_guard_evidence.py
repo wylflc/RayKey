@@ -68,7 +68,7 @@ def bands():
 def archive_results():
     assert (EXP / "paired_metrics.csv").exists(), "finish checks before archiving"
     full, ex, _ = load(EXP / "sweep.txt")
-    previous, previous_ex, _ = load(ROOT / "data/processed/experiments/exp_sb1_daily_buys/sweep.txt")
+    previous, previous_ex, _ = load(ROOT / "data/experiments/exp_sb1_daily_buys/sweep.txt")
     for group, old in ((full, previous), (ex, previous_ex)):
         assert group["BASE"] == old["BASE"]
         for k in range(1, 7):
@@ -108,8 +108,8 @@ def archive_results():
             "as_of": "2026-09-05", "decision_type": "strategy_experiment",
             "decision_result": "research_complete_no_production_change",
             "summary_reason": "定位历史GE_TROUGHOFF；新建带、27臂双表与截止日/赢家敏感性核验完成，生产未改；结论见报告。",
-            "input_files": "data/processed/experiments/exp_trough_guard_review/manifest.json",
-            "output_file": "docs/trough_guard_review.zh.md",
+            "input_files": "data/experiments/exp_trough_guard_review/manifest.json",
+            "output_file": "docs/reports/trough_guard_review.zh.md",
             "operator_or_script": "scripts/experimental/trough_guard_evidence.py", "workflow_version": WORKFLOW_VERSION,
         }])
     print(f"Archived {len(entries)} main summaries; BASE and ON_BUY1..6 reproduce 196 prior paths.")

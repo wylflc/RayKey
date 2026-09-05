@@ -11,7 +11,7 @@
 # panel_tier_forward.py 只依赖逐日状态，三条规则臂不改状态，与 BASE 逐位相同，不重跑。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_oi136_137
+EXP=data/experiments/exp_oi136_137
 S=data/processed; P=$S/pit_attention/panel_moat_bank_v6b.csv
 BASECMD=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE.replace('--no-artifacts ',''))")
 run() {  # run <臂名> <额外参数...>

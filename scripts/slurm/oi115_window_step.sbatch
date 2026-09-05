@@ -15,8 +15,8 @@
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
 
-EXP=data/processed/experiments/exp_window_step
-ST=data/processed/experiments/states/exp_oi115_trailleg
+EXP=data/experiments/exp_window_step
+ST=data/experiments/states/exp_oi115_trailleg
 mkdir -p "$EXP"
 
 BASEARGS=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE.replace('--no-artifacts',''))")

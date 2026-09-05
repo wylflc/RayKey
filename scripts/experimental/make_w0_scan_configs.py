@@ -6,7 +6,7 @@
   poscap  单票买入上限 `--position-cap` 0.20~1.00 一档 0.05
   credit  授信比例 `--credit-ratio` 0.0~1.20 一档 0.10（「仓位上限」的另一读法）
 
-用法：make_w0_scan_configs.py --out-dir data/processed/experiments/exp_oi124_w0base/configs
+用法：make_w0_scan_configs.py --out-dir data/experiments/exp_oi124_w0base/configs
 """
 import argparse
 from pathlib import Path

@@ -14,7 +14,7 @@
 
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_oi128_130_adopt
+EXP=data/experiments/exp_oi128_130_adopt
 S=data/processed
 mkdir -p "$EXP/configs"
 COMMON="--all --value-model roic --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 \

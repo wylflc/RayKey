@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 import sweep_backtest_configs as sweep
 
-EXP = ROOT / "data/processed/experiments/exp_sb1_daily_buys"
+EXP = ROOT / "data/experiments/exp_sb1_daily_buys"
 PANEL = ROOT / "data/processed/pit_attention/panel_moat_bank_v6b.csv"
 
 

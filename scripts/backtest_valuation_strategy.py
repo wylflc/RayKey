@@ -68,7 +68,7 @@ def load_delisted() -> dict[str, str]:
                 for r in csv.DictReader(handle) if (r.get("last_trade_date") or "")}
 RATES = ROOT / "data/reference/cost_of_equity_inputs.csv"
 BENCHMARK = ROOT / "data/raw/ohlcv/INDEX_000300.csv"
-OUT_DIR = ROOT / "data/processed/backtest"
+OUT_DIR = ROOT / "data/backtest"
 
 INITIAL_CAPITAL = 3_000_000.0
 MAX_POSITIONS = 10

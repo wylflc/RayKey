@@ -1,0 +1,3 @@
+# OI-120：§9.3.3 冷却计数器买卖分侧。BASE = 旧口径（买卖共用一个计数器）；SPLIT = 买入侧与卖出侧各自计数（引擎缺省）。
+BASE|--lot-cooldown-shared
+SPLIT|

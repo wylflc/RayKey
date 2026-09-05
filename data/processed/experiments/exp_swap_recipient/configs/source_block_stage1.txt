@@ -1,6 +1,0 @@
-# 第一阶段（2026-08-31）：只跑用户指定的两条主臂与叠加臂，先出「差多少」。
-# 相邻区间 SRC00/SRC05 已在前一次运行完成（同一 BASE，逐字节一致），出表时并入。
-BASE|
-SRC10|--swap-source-block 1.0
-MIN10|--min-buy-frac 0.10
-BOTH|--swap-source-block 1.0 --min-buy-frac 0.10

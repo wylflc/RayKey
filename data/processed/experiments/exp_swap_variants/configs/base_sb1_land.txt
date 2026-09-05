@@ -1,3 +1,0 @@
-# v4.135 落地后基准核对（SB1：BASE 带 --swap-source-block 1）；V4134 = 前一纪元基准（守卫关）
-BASE|
-V4134|--swap-source-block -1

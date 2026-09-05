@@ -12,7 +12,7 @@
 
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_oi124_w0base
+EXP=data/experiments/exp_oi124_w0base
 
 echo "=== [$(date +%T)] §6.7 第 7 步 换仓边际标度漂移守卫 ==="
 python3 scripts/check_swap_margin_scale_drift.py || echo "（守卫返回非零，读上文判断是否需重扫）"

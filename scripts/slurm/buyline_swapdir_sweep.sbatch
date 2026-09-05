@@ -10,7 +10,7 @@
 # 两表串行——BASE 臂的 summary 文件名相同，不可并行跑两份扫描。末尾另跑 2011-11-01 单起点 BASE／SPT015 的成交流水，供换仓资金去向诊断。
 set -euo pipefail
 cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
-EXP=data/processed/experiments/exp_buyline_swapdir
+EXP=data/experiments/exp_buyline_swapdir
 for a in buyline swapdir; do
   echo "=== [$(date +%T)] 表 $a（$(grep -c '|' "$EXP/configs/$a.txt") 臂 × 14 起点 × 两遍）==="
   python3 scripts/sweep_backtest_configs.py "$EXP/configs/$a.txt" \
