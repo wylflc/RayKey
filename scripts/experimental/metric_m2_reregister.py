@@ -190,15 +190,21 @@ def level(arms, label: str, key: str) -> float:
     return statistics.median(vals) if vals else float("nan")
 
 
-def clause4(arms_u, label: str):
+RATIO_ITEMS = {"滚5Calmar", "滚5Sharpe", "Calmar", "Sharpe"}      # 第 4 款里以比率为单位的四项
+DISPLAY_RATIO_BAND = 0.005       # 报表两位小数显示读法：|Δ| < 0.005 显示为 −0.00，§12.188 登记时即按此读为不劣
+
+
+def clause4(arms_u, label: str, ratio_band: float = sweep.NOISE_BAND):
     """§12.1 第 4 款「去赢家全面优秀」：标准指标集（不计换手、仓位、长跑）各项变好方向的配对差中位 ≥ −0.15pp，
-    或至多一项落在 [−1pp, −0.15pp)。比率项（Calmar／Sharpe）按比率单位用同一数值阈值。"""
+    或至多一项落在 [−1pp, −0.15pp)。百分率项阈值 0.0015；比率项（Calmar／Sharpe）的阈值由 `ratio_band` 给：
+    0.0015 为严格读法，0.005 为报表两位小数显示读法（第 4 款未写明比率项单位，两种读法都报）。"""
     items = []
     for name, key, _scale, _w, _p, good in sweep.STANDARD_SET:
         if name in ("换手", "仓位"):
             continue
         items.append((name, paired(arms_u, label, key) * good))
-    bad = [(n, d) for n, d in items if d < -sweep.NOISE_BAND]
+    band = lambda name: ratio_band if name in RATIO_ITEMS else sweep.NOISE_BAND
+    bad = [(n, d) for n, d in items if d < -band(n)]
     ok = not bad or (len(bad) == 1 and bad[0][1] >= -sweep.RULING_TOLERANCE)
     return ok, items, bad
 
@@ -275,16 +281,27 @@ def do_report() -> None:
     for cand in CANDIDATES:
         v1 = verdict(groups["全样本"]["m1"], groups["剔除集A"]["m1"], cand)
         v2 = verdict(groups["全样本"]["m2"], groups["剔除集A"]["m2"], cand)
-        ok1, items1, bad1 = clause4(groups[f"剔除集U({cand})"]["m1"], cand)
-        ok2, items2, bad2 = clause4(groups[f"剔除集U({cand})"]["m2"], cand)
+        u1, u2 = groups[f"剔除集U({cand})"]["m1"], groups[f"剔除集U({cand})"]["m2"]
+        ok1, _i1, bad1 = clause4(u1, cand)
+        ok2, items2, bad2 = clause4(u2, cand)
+        dk1, _d1, dbad1 = clause4(u1, cand, DISPLAY_RATIO_BAND)
+        dk2, _d2, dbad2 = clause4(u2, cand, DISPLAY_RATIO_BAND)
+        unit = lambda n, d: f"{n} {d:+.4f}" if n in RATIO_ITEMS else f"{n} {d*100:+.2f}pp"
         flips[cand] = dict(clause2_m1=v1, clause2_m2=v2, clause2_flipped=(v1.split("（")[0] != v2.split("（")[0]),
-                           clause4_m1=ok1, clause4_m2=ok2, clause4_flipped=(ok1 != ok2),
-                           clause4_bad_m1=[(n, round(d, 6)) for n, d in bad1], clause4_bad_m2=[(n, round(d, 6)) for n, d in bad2],
+                           clause4_strict_m1=ok1, clause4_strict_m2=ok2, clause4_strict_flipped=(ok1 != ok2),
+                           clause4_display_m1=dk1, clause4_display_m2=dk2, clause4_display_flipped=(dk1 != dk2),
+                           clause4_bad_strict_m1=[(n, round(d, 6)) for n, d in bad1],
+                           clause4_bad_strict_m2=[(n, round(d, 6)) for n, d in bad2],
+                           clause4_bad_display_m1=[(n, round(d, 6)) for n, d in dbad1],
+                           clause4_bad_display_m2=[(n, round(d, 6)) for n, d in dbad2],
                            clause4_items_m2={n: round(d, 6) for n, d in items2})
         say(f"- {cand}：第 2 款 m1「{v1}」→ m2「{v2}」{'（翻转）' if flips[cand]['clause2_flipped'] else '（不变）'}；"
-            f"第 4 款 U 全面性 m1 {'通过' if ok1 else '不通过'} → m2 {'通过' if ok2 else '不通过'}"
+            f"第 4 款 U 全面性（比率项按报表两位小数读法，|Δ| < 0.005 视为不劣）m1 {'通过' if dk1 else '不通过'} → m2 {'通过' if dk2 else '不通过'}"
+            f"{'（翻转）' if dk1 != dk2 else '（不变）'}"
+            + (f"，越带项 {', '.join(unit(n, d) for n, d in dbad2)}" if dbad2 else "")
+            + f"；比率项按 0.0015 严格读法 m1 {'通过' if ok1 else '不通过'} → m2 {'通过' if ok2 else '不通过'}"
             f"{'（翻转）' if ok1 != ok2 else '（不变）'}"
-            + (f"；m2 落在噪声带外的项：{', '.join(f'{n} {d*100:+.2f}' for n, d in bad2)}" if bad2 else ""))
+            + (f"，越带项 m1 {', '.join(unit(n, d) for n, d in bad1)}；m2 {', '.join(unit(n, d) for n, d in bad2)}" if bad1 or bad2 else ""))
 
     # 4) 在册读数（BASE，m2）
     say("\n## 4. BASE 在册读数（m2，各起点再取中位；长跑为单起点水平）")

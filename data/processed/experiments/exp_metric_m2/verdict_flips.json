@@ -3,21 +3,26 @@
     "clause2_m1": "可采纳",
     "clause2_m2": "可采纳",
     "clause2_flipped": false,
-    "clause4_m1": true,
-    "clause4_m2": true,
-    "clause4_flipped": false,
-    "clause4_bad_m1": [
+    "clause4_strict_m1": true,
+    "clause4_strict_m2": true,
+    "clause4_strict_flipped": false,
+    "clause4_display_m1": true,
+    "clause4_display_m2": true,
+    "clause4_display_flipped": false,
+    "clause4_bad_strict_m1": [
       [
         "Calmar",
         -0.004095
       ]
     ],
-    "clause4_bad_m2": [
+    "clause4_bad_strict_m2": [
       [
         "Calmar",
         -0.00408
       ]
     ],
+    "clause4_bad_display_m1": [],
+    "clause4_bad_display_m2": [],
     "clause4_items_m2": {
       "滚5中位": 0.011321,
       "滚5P25": 0.004803,
@@ -41,10 +46,13 @@
     "clause2_m1": "报用户裁定（复利读数两表反向）",
     "clause2_m2": "报用户裁定（复利读数两表反向）",
     "clause2_flipped": false,
-    "clause4_m1": false,
-    "clause4_m2": false,
-    "clause4_flipped": false,
-    "clause4_bad_m1": [
+    "clause4_strict_m1": false,
+    "clause4_strict_m2": false,
+    "clause4_strict_flipped": false,
+    "clause4_display_m1": true,
+    "clause4_display_m2": true,
+    "clause4_display_flipped": false,
+    "clause4_bad_strict_m1": [
       [
         "Calmar",
         -0.004502
@@ -54,7 +62,7 @@
         -0.002714
       ]
     ],
-    "clause4_bad_m2": [
+    "clause4_bad_strict_m2": [
       [
         "滚5Sharpe",
         -0.004492
@@ -64,6 +72,8 @@
         -0.004484
       ]
     ],
+    "clause4_bad_display_m1": [],
+    "clause4_bad_display_m2": [],
     "clause4_items_m2": {
       "滚5中位": 0.006568,
       "滚5P25": 0.004517,
