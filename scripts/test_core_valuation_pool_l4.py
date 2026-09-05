@@ -40,11 +40,24 @@ class L4DossierSectionTests(unittest.TestCase):
         text = "\n".join(lines)
 
         self.assertEqual(count, 1)
-        self.assertIn("[边界公司](../companies/000001_边界公司/README.md)", text)
+        self.assertIn("[边界公司](../data/companies/000001_边界公司/README.md)", text)
         self.assertIn("| L4 | boundary_pending | 10.00-12.00 | 11.00 |", text)
         self.assertNotIn("已入池公司", text)
         self.assertNotIn("批量档案", text)
         self.assertNotIn("| P/V |", text)
+
+    def test_dossier_link_is_relative_to_the_markdown_location(self):
+        dossiers = [{
+            "security_code": "000001", "security_name": "边界公司",
+            "dossier_dir": "data/companies/000001_边界公司", "notes": "用户点名建档",
+        }]
+        triage = [{"security_code": "000001", "attention_class": "boundary_pending"}]
+        lines, _ = pool.build_l4_dossier_section(
+            dossiers, triage, output_md=pool.ROOT / "data/processed/a_share_core_valuation_pool.md"
+        )
+        self.assertIn("[边界公司](../companies/000001_边界公司/README.md)", "\n".join(lines))
+        lines, _ = pool.build_l4_dossier_section(dossiers, triage, output_md=pool.ROOT / "docs/x.md")
+        self.assertIn("[边界公司](../data/companies/000001_边界公司/README.md)", "\n".join(lines))
 
     def test_unvaluable_named_dossier_keeps_structured_status(self):
         dossiers = [{

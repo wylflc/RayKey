@@ -43,11 +43,11 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # 在用脚本在上级 scripts/
 from fetch_a_share_universe import has_status_prefix
 from build_historical_valuation_bands import derive_roe, prior_periods, ttm
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 FIN = ROOT / "data/raw/financials"
 SEC = ROOT / "data/raw/a_share_securities.csv"
 TRIAGE = ROOT / "data/processed/a_share_attention_triage.csv"

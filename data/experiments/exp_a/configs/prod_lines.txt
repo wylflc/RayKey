@@ -1,13 +1,13 @@
 # 实验 A：无护城河筛选，指数类宇宙 × 现行 BASE 规则与三线（0.9434/2.5008/0.1451）。标签|相对 BASE 的改动
 BASE|
-HS300now|--universe-file data/processed/experiments/universes/hs300_now.csv --daily-states data/processed/experiments/states/states_hs300_now.csv
-ZZ500now|--universe-file data/processed/experiments/universes/zz500_now.csv --daily-states data/processed/experiments/states/states_zz500_now.csv
-ZZ1000now|--universe-file data/processed/experiments/universes/zz1000_now.csv --daily-states data/processed/experiments/states/states_zz1000_now.csv
-ALLs15a|--universe-file data/processed/experiments/universes/cap_all_s15.csv --daily-states data/processed/experiments/states/states_cap_all_s15.csv
-T300s50a|--universe-file data/processed/experiments/universes/cap_top300_s50.csv --daily-states data/processed/experiments/states/states_cap_top300_s50.csv
-M500s40a|--universe-file data/processed/experiments/universes/cap_301_800_s40.csv --daily-states data/processed/experiments/states/states_cap_301_800_s40.csv
-S1000s30a|--universe-file data/processed/experiments/universes/cap_801_1800_s30.csv --daily-states data/processed/experiments/states/states_cap_801_1800_s30.csv
-T300s50b|--universe-file data/processed/experiments/universes/cap_top300_s50_b.csv --daily-states data/processed/experiments/states/states_cap_top300_s50_b.csv
-ALLs15b|--universe-file data/processed/experiments/universes/cap_all_s15_b.csv --daily-states data/processed/experiments/states/states_cap_all_s15_b.csv
-M500s40b|--universe-file data/processed/experiments/universes/cap_301_800_s40_b.csv --daily-states data/processed/experiments/states/states_cap_301_800_s40_b.csv
-S1000s30b|--universe-file data/processed/experiments/universes/cap_801_1800_s30_b.csv --daily-states data/processed/experiments/states/states_cap_801_1800_s30_b.csv
+HS300now|--universe-file data/experiments/universes/hs300_now.csv --daily-states data/experiments/states/states_hs300_now.csv
+ZZ500now|--universe-file data/experiments/universes/zz500_now.csv --daily-states data/experiments/states/states_zz500_now.csv
+ZZ1000now|--universe-file data/experiments/universes/zz1000_now.csv --daily-states data/experiments/states/states_zz1000_now.csv
+ALLs15a|--universe-file data/experiments/universes/cap_all_s15.csv --daily-states data/experiments/states/states_cap_all_s15.csv
+T300s50a|--universe-file data/experiments/universes/cap_top300_s50.csv --daily-states data/experiments/states/states_cap_top300_s50.csv
+M500s40a|--universe-file data/experiments/universes/cap_301_800_s40.csv --daily-states data/experiments/states/states_cap_301_800_s40.csv
+S1000s30a|--universe-file data/experiments/universes/cap_801_1800_s30.csv --daily-states data/experiments/states/states_cap_801_1800_s30.csv
+T300s50b|--universe-file data/experiments/universes/cap_top300_s50_b.csv --daily-states data/experiments/states/states_cap_top300_s50_b.csv
+ALLs15b|--universe-file data/experiments/universes/cap_all_s15_b.csv --daily-states data/experiments/states/states_cap_all_s15_b.csv
+M500s40b|--universe-file data/experiments/universes/cap_301_800_s40_b.csv --daily-states data/experiments/states/states_cap_301_800_s40_b.csv
+S1000s30b|--universe-file data/experiments/universes/cap_801_1800_s30_b.csv --daily-states data/experiments/states/states_cap_801_1800_s30_b.csv

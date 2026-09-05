@@ -66,15 +66,11 @@ def main():
                                stdout=out, check=True)
     (EXP / "buy_count_audit.json").write_text(json.dumps(counts, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-    # 唯一前缀避免覆盖其它纪元的 BASE/同名实验；调用现有归并函数保留既有台账。
+    # 唯一前缀避免覆盖其它纪元的 BASE/同名实验；台账只走 write_ledger()（按计量版本分流、保留既有行、重建按臂索引）。
     entries = [SimpleNamespace(name="summary_SB1DB20260905_" + p.name.removeprefix("summary_"), path=str(p))
                for p in (EXP / "summaries").glob("summary_*.csv")]
     assert len(entries) == 420
-    rows, columns = archive.merge_summaries(entries)
-    with archive.MERGED.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=columns)
-        writer.writeheader()
-        writer.writerows(rows)
+    archive.write_ledger(entries)
     stamp = "sb1_daily_buys_20260905"
     with DEFAULT_DECISION_LOG.open(encoding="utf-8-sig") as fh:
         recorded = any(r.get("run_id") == stamp for r in csv.DictReader(fh))

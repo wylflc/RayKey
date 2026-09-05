@@ -29,11 +29,11 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))   # 在用脚本在上级 scripts/
 from backtest_valuation_strategy import (ResearchGate, load_actions, load_prices,  # noqa: E402
                                          load_research, load_universe)
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 UNIVERSE = ROOT / "data/archive/pit-judgment-2026-08/universe_panel_yearly.csv"
 
 

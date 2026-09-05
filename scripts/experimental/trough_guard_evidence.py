@@ -94,11 +94,7 @@ def archive_results():
     entries = [SimpleNamespace(name="summary_TROUGH20260905_" + p.name.removeprefix("summary_"), path=str(p))
                for p in (EXP / "summaries").glob("summary_*.csv")]
     assert len(entries) == 756
-    rows, columns = archive.merge_summaries(entries)
-    with archive.MERGED.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=columns)
-        writer.writeheader()
-        writer.writerows(rows)
+    archive.write_ledger(entries)   # 按计量版本分流写两本台账并重建按臂索引
     stamp = "trough_guard_review_20260905"
     with DEFAULT_DECISION_LOG.open(encoding="utf-8-sig") as fh:
         recorded = any(r.get("run_id") == stamp for r in csv.DictReader(fh))

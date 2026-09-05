@@ -1,13 +1,13 @@
 # §12.171 表 D：估值口径逐项回退臂（轨道 B）。买入线各臂重解到同一在册合格面，换仓边际沿用 0.18。
 BASE|
-CDSOFT|--daily-states data/processed/experiments/exp_reaudit_minority/val/CDSOFT//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/CDSOFT//states_hold.csv --width -0.0472
-CDSTRICT|--daily-states data/processed/experiments/exp_reaudit_minority/val/CDSTRICT//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/CDSTRICT//states_hold.csv --width -0.0441
-GUARDEFF|--daily-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GUARDEFF//states_hold.csv --width -0.0437
-NPMEDIAN|--daily-states data/processed/experiments/exp_reaudit_minority/val/NPMEDIAN//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/NPMEDIAN//states_hold.csv --width -0.0517
-NPONESIDED|--daily-states data/processed/experiments/exp_reaudit_minority/val/NPONESIDED//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/NPONESIDED//states_hold.csv --width -0.0041
-PEAKK14|--daily-states data/processed/experiments/exp_reaudit_minority/val/PEAKK14//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/PEAKK14//states_hold.csv --width -0.0462
-PEAKK18|--daily-states data/processed/experiments/exp_reaudit_minority/val/PEAKK18//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/PEAKK18//states_hold.csv --width -0.0424
-RAMP0|--daily-states data/processed/experiments/exp_reaudit_minority/val/RAMP0//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/RAMP0//states_hold.csv --width -0.0484
-THIN0|--daily-states data/processed/experiments/exp_reaudit_minority/val/THIN0//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/THIN0//states_hold.csv --width -0.0457
-TTMOFF|--daily-states data/processed/experiments/exp_reaudit_minority/val/TTMOFF//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/TTMOFF//states_hold.csv --width -0.0441
-TW100|--daily-states data/processed/experiments/exp_reaudit_minority/val/TW100//states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/TW100//states_hold.csv --width 0.0222
+CDSOFT|--daily-states data/experiments/exp_reaudit_minority/val/CDSOFT//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/CDSOFT//states_hold.csv --width -0.0472
+CDSTRICT|--daily-states data/experiments/exp_reaudit_minority/val/CDSTRICT//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/CDSTRICT//states_hold.csv --width -0.0441
+GUARDEFF|--daily-states data/experiments/exp_reaudit_minority/val/GUARDEFF//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/GUARDEFF//states_hold.csv --width -0.0437
+NPMEDIAN|--daily-states data/experiments/exp_reaudit_minority/val/NPMEDIAN//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/NPMEDIAN//states_hold.csv --width -0.0517
+NPONESIDED|--daily-states data/experiments/exp_reaudit_minority/val/NPONESIDED//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/NPONESIDED//states_hold.csv --width -0.0041
+PEAKK14|--daily-states data/experiments/exp_reaudit_minority/val/PEAKK14//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/PEAKK14//states_hold.csv --width -0.0462
+PEAKK18|--daily-states data/experiments/exp_reaudit_minority/val/PEAKK18//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/PEAKK18//states_hold.csv --width -0.0424
+RAMP0|--daily-states data/experiments/exp_reaudit_minority/val/RAMP0//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/RAMP0//states_hold.csv --width -0.0484
+THIN0|--daily-states data/experiments/exp_reaudit_minority/val/THIN0//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/THIN0//states_hold.csv --width -0.0457
+TTMOFF|--daily-states data/experiments/exp_reaudit_minority/val/TTMOFF//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/TTMOFF//states_hold.csv --width -0.0441
+TW100|--daily-states data/experiments/exp_reaudit_minority/val/TW100//states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/TW100//states_hold.csv --width 0.0222

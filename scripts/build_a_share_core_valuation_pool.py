@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -375,12 +376,14 @@ def _display_valuation_path(method: str) -> str:
 def build_l4_dossier_section(
     dossier_rows: list[dict[str, str]],
     triage_rows: list[dict[str, str]],
+    output_md: Path = DEFAULT_OUTPUT_MD,
 ) -> tuple[list[str], int]:
     """渲染用户点名建档但未入关注池的 L4 阅读归档区。
 
     筛选依据只认逐票档案 ``notes`` 中的「用户点名建档」来源和三类表当前状态；
     不从目录存在性猜测，避免把全市场批量建档误列为用户点名。L4 是本文档归档层级，
-    ``attention_class`` 原样展示，不触碰质量真值或买入资格。
+    ``attention_class`` 原样展示，不触碰质量真值或买入资格。档案链接按阅读版
+    ``output_md`` 所在目录算相对路径，阅读版搬家不改链接写法。
     """
     triage_by_code = {
         str(row.get("security_code", "")).zfill(6): row for row in triage_rows
@@ -411,7 +414,7 @@ def build_l4_dossier_section(
             fair_value = f"{(low + high) / 2:.2f}"
             method = _display_valuation_path(str(row.get("band_method") or "")) or "—"
         dossier_dir = Path(str(row.get("dossier_dir") or f"data/companies/{code}_{name}"))
-        dossier_link = f"../companies/{dossier_dir.name}/README.md"
+        dossier_link = Path(os.path.relpath(ROOT / dossier_dir / "README.md", output_md.parent)).as_posix()
         body.append(
             f"| {code} | [{name}]({dossier_link}) | L4 | {attention_class} | "
             f"{band} | {fair_value} | {method} | {row.get('reviewed_at') or '—'} |"
@@ -890,7 +893,7 @@ def main() -> None:
     rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of, args.valuation)
     dossier_rows = load_csv(args.dossiers) if args.dossiers.exists() else []
     triage_rows = load_csv(args.attention_triage) if args.attention_triage.exists() else []
-    l4_section, l4_count = build_l4_dossier_section(dossier_rows, triage_rows)
+    l4_section, l4_count = build_l4_dossier_section(dossier_rows, triage_rows, args.output_md)
     overseas_rows = load_overseas(args.overseas)
     registration_gaps = check_dossier_registration(dossier_rows, overseas_rows)
     # §6.8 复核触发① 的落地校验（OI-039）：财报已披露而带还建在披露前的证据上，当天就喊出来。

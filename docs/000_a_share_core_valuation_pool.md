@@ -236,16 +236,16 @@
 
 | 代码 | 名称/档案 | 归档层级 | 名单状态 | 合理价区间 | 合理估值 V | 估值方法 | 档案更新 |
 | --- | --- | --- | --- | ---: | ---: | --- | --- |
-| 000977 | [浪潮信息](../companies/000977_浪潮信息/README.md) | L4 | boundary_pending | 24.90-30.44 | 27.67 | 内在价值模型·ROIC 口径 | 2026-09-03 |
-| 002428 | [云南锗业](../companies/002428_云南锗业/README.md) | L4 | boundary_pending | — | — | 无法估值 | 2026-09-03 |
-| 300972 | [万辰集团](../companies/300972_万辰集团/README.md) | L4 | boundary_pending | 19.05-23.28 | 21.16 | 内在价值模型·ROIC 口径 | 2026-09-03 |
-| 600089 | [特变电工](../companies/600089_特变电工/README.md) | L4 | boundary_pending | 25.27-30.88 | 28.07 | 内在价值模型·ROIC 口径 | 2026-09-03 |
-| 601336 | [新华保险](../companies/601336_新华保险/README.md) | L4 | boundary_pending | 64.64-79.01 | 71.83 | 银行/保险·股利折现 | 2026-09-03 |
-| 601919 | [中远海控](../companies/601919_中远海控/README.md) | L4 | boundary_pending | 28.86-35.28 | 32.07 | 内在价值模型·ROIC 口径 | 2026-09-03 |
-| 603773 | [沃格光电](../companies/603773_沃格光电/README.md) | L4 | documented_not_attention | — | — | 无法估值 | 2026-09-03 |
-| 688146 | [中船特气](../companies/688146_中船特气/README.md) | L4 | boundary_pending | 11.83-14.46 | 13.14 | 内在价值模型·ROIC 口径 | 2026-09-03 |
-| 688578 | [艾力斯](../companies/688578_艾力斯/README.md) | L4 | boundary_pending | 35.26-43.09 | 39.17 | 内在价值模型·ROIC 口径 | 2026-09-03 |
-| 920438 | [戈碧迦](../companies/920438_戈碧迦/README.md) | L4 | boundary_pending | — | — | 无法估值 | 2026-09-03 |
+| 000977 | [浪潮信息](../data/companies/000977_浪潮信息/README.md) | L4 | boundary_pending | 24.90-30.44 | 27.67 | 内在价值模型·ROIC 口径 | 2026-09-03 |
+| 002428 | [云南锗业](../data/companies/002428_云南锗业/README.md) | L4 | boundary_pending | — | — | 无法估值 | 2026-09-03 |
+| 300972 | [万辰集团](../data/companies/300972_万辰集团/README.md) | L4 | boundary_pending | 19.05-23.28 | 21.16 | 内在价值模型·ROIC 口径 | 2026-09-03 |
+| 600089 | [特变电工](../data/companies/600089_特变电工/README.md) | L4 | boundary_pending | 25.27-30.88 | 28.07 | 内在价值模型·ROIC 口径 | 2026-09-03 |
+| 601336 | [新华保险](../data/companies/601336_新华保险/README.md) | L4 | boundary_pending | 64.64-79.01 | 71.83 | 银行/保险·股利折现 | 2026-09-03 |
+| 601919 | [中远海控](../data/companies/601919_中远海控/README.md) | L4 | boundary_pending | 28.86-35.28 | 32.07 | 内在价值模型·ROIC 口径 | 2026-09-03 |
+| 603773 | [沃格光电](../data/companies/603773_沃格光电/README.md) | L4 | documented_not_attention | — | — | 无法估值 | 2026-09-03 |
+| 688146 | [中船特气](../data/companies/688146_中船特气/README.md) | L4 | boundary_pending | 11.83-14.46 | 13.14 | 内在价值模型·ROIC 口径 | 2026-09-03 |
+| 688578 | [艾力斯](../data/companies/688578_艾力斯/README.md) | L4 | boundary_pending | 35.26-43.09 | 39.17 | 内在价值模型·ROIC 口径 | 2026-09-03 |
+| 920438 | [戈碧迦](../data/companies/920438_戈碧迦/README.md) | L4 | boundary_pending | — | — | 无法估值 | 2026-09-03 |
 
 ## 附：海外关注清单（非A股，观察口径）
 

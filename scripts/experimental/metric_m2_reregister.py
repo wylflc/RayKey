@@ -345,12 +345,7 @@ def do_report() -> None:
         entries += [SimpleNamespace(name=f"summary_{LEDGER_PREFIX}U{cand}_" + p.name.removeprefix("summary_"), path=str(p))
                     for p in (EXP / f"summaries_union_{cand}").glob("summary_*.csv")]
     before = sum(1 for _ in archive.MERGED.open(encoding="utf-8")) - 1 if archive.MERGED.exists() else 0
-    rows, columns = archive.merge_summaries(entries)
-    with archive.MERGED.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=columns)
-        writer.writeheader()
-        writer.writerows(rows)
-    archive.build_arms_index(apply=True)   # 台账变了就重建 scan_arms_index.csv（§12.1 第 12 款数臂）
+    rows = archive.write_ledger(entries).current   # 分流写两本台账并重建 scan_arms_index.csv（§12.1 第 12 款数臂）
     manifest["ledger"] = dict(archived=len(entries), rows_before=before, rows_after=len(rows))
     save_json("manifest.json", manifest)
     print("\n".join(lines))

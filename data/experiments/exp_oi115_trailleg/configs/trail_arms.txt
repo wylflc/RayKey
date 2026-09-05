@@ -16,9 +16,9 @@
 # BASE 行留空 = 读生产全市场状态文件与在册两线（0.9343／0.19），即 §12.1 的在册基准本身。
 # 下面的 @占位@ 由作业按对齐解填入。
 BASE|
-TW000|--daily-states data/processed/experiments/states/exp_oi115_trailleg/states_TW000_cand.csv --hold-states data/processed/experiments/states/exp_oi115_trailleg/states_TW000_hold.csv --width 0.0024
-TW025|--daily-states data/processed/experiments/states/exp_oi115_trailleg/states_TW025_cand.csv --hold-states data/processed/experiments/states/exp_oi115_trailleg/states_TW025_hold.csv --width 0.0130
-TW050|--daily-states data/processed/experiments/states/exp_oi115_trailleg/states_TW050_cand.csv --hold-states data/processed/experiments/states/exp_oi115_trailleg/states_TW050_hold.csv --width 0.0314
-TW075|--daily-states data/processed/experiments/states/exp_oi115_trailleg/states_TW075_cand.csv --hold-states data/processed/experiments/states/exp_oi115_trailleg/states_TW075_hold.csv --width 0.0501
-TW125|--daily-states data/processed/experiments/states/exp_oi115_trailleg/states_TW125_cand.csv --hold-states data/processed/experiments/states/exp_oi115_trailleg/states_TW125_hold.csv --width 0.0771
-TW000S|--daily-states data/processed/experiments/states/exp_oi115_trailleg/states_TW000_cand.csv --hold-states data/processed/experiments/states/exp_oi115_trailleg/states_TW000_hold.csv --width 0.0024 --swap-margin 0.2029
+TW000|--daily-states data/experiments/states/exp_oi115_trailleg/states_TW000_cand.csv --hold-states data/experiments/states/exp_oi115_trailleg/states_TW000_hold.csv --width 0.0024
+TW025|--daily-states data/experiments/states/exp_oi115_trailleg/states_TW025_cand.csv --hold-states data/experiments/states/exp_oi115_trailleg/states_TW025_hold.csv --width 0.0130
+TW050|--daily-states data/experiments/states/exp_oi115_trailleg/states_TW050_cand.csv --hold-states data/experiments/states/exp_oi115_trailleg/states_TW050_hold.csv --width 0.0314
+TW075|--daily-states data/experiments/states/exp_oi115_trailleg/states_TW075_cand.csv --hold-states data/experiments/states/exp_oi115_trailleg/states_TW075_hold.csv --width 0.0501
+TW125|--daily-states data/experiments/states/exp_oi115_trailleg/states_TW125_cand.csv --hold-states data/experiments/states/exp_oi115_trailleg/states_TW125_hold.csv --width 0.0771
+TW000S|--daily-states data/experiments/states/exp_oi115_trailleg/states_TW000_cand.csv --hold-states data/experiments/states/exp_oi115_trailleg/states_TW000_hold.csv --width 0.0024 --swap-margin 0.2029

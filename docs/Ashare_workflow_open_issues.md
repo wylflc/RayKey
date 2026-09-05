@@ -7,23 +7,7 @@
 
 登记项按发现日倒序；**每个待处理项一个三级标题**，在 outline 里即可数清余量（用户 2026-08-19 指令）。
 
-## 待处理（12 项）
-
-### OI-155｜缺陷：全市场排队脚本移入 archive 后导入路径与仓库根目录错误
-
-**来源（2026-09-05，目录精简审核）**：`scripts/archive/build_full_market_screen_queue.py:46` 仍从自身目录导入在用脚本，第 50 行 `parents[1]` 也错误地指向 `scripts/`。实际运行其归档测试报 `ModuleNotFoundError: No module named 'fetch_a_share_universe'`；补导入路径后仍需修复数据根目录。影响该退役流程复现。证据见[审核报告 OI-155](reports/repository_structure_audit_2026-09-05.zh.md)。尚未修复。
-
-### OI-154｜缺陷：核心池阅读版迁入 docs 后 10 个 L4 档案链接失效
-
-**来源（2026-09-05，目录精简审核）**：阅读版输出已改为 `docs/000_a_share_core_valuation_pool.md`，`scripts/build_a_share_core_valuation_pool.py:414` 仍生成 `../companies/` 链接，现有阅读版 10 个 L4 档案入口全部失效。需修生成器并刷新阅读版。证据见[审核报告 OI-154](reports/repository_structure_audit_2026-09-05.zh.md)。尚未修复。
-
-### OI-153｜缺陷：旧实验报告会把 m1 重新合并到现行 m2 台账
-
-**来源（2026-09-05，目录精简审核）**：`clean_derived_artifacts.merge_summaries()` 未按计量版本分流；`experimental/sb1_daily_buys_evidence.py` 与 `trough_guard_evidence.py` 仍直接覆写现行台账，且未重建按臂索引。用真实 SB1 摘要只读模拟，现行 140 行 m2 会混入 420 行 m1。需统一全部台账写入入口并同步索引。证据见[审核报告 OI-153](reports/repository_structure_audit_2026-09-05.zh.md)。尚未修复，真实台账未被审核修改。
-
-### OI-152｜缺陷：实验目录已迁移但 16 个可执行配置仍引用旧路径
-
-**来源（2026-09-05，目录精简审核）**：`data/experiments/` 下 16 个配置保留 304 处 `data/processed/experiments/` 路径，全部旧目标缺失；部分配置仍由现有 sbatch 入口读取。实际调用引擎加载实验 A 旧宇宙路径报 `FileNotFoundError`，同名新路径正常。需迁移可执行配置内的路径，并区分需重建的派生产物与历史日志。完整清单与复现证据见[审核报告 OI-152](reports/repository_structure_audit_2026-09-05.zh.md)。尚未修复。
+## 待处理（8 项）
 
 ### OI-151｜缺陷：§12.1 第 4 款「≥ −0.15pp」对比率项（Calmar／Sharpe 四项）没有定义单位
 

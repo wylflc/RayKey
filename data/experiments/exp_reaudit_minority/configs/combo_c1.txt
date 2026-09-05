@@ -1,10 +1,10 @@
 # §12.174 表 N（OI-140 C1）：三条候选的两两与三者组合臂（轨道 B）。
 # 含 GE_TROUGHOFF 的臂读其两侧逐日状态并用其对齐买入线 1.0757；换仓边际一律沿用在册 0.18（§12.171 表 D 同法）。
 BASE|
-GE_TROUGHOFF|--daily-states data/processed/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_hold.csv --width -0.0757
+GE_TROUGHOFF|--daily-states data/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_hold.csv --width -0.0757
 C088|--max-corr 0.88
 G110U|--gain-sell 1.10 --gain-sell-mode ungated
-TRO_C088|--daily-states data/processed/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_hold.csv --width -0.0757 --max-corr 0.88
-TRO_G110U|--daily-states data/processed/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_hold.csv --width -0.0757 --gain-sell 1.10 --gain-sell-mode ungated
+TRO_C088|--daily-states data/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_hold.csv --width -0.0757 --max-corr 0.88
+TRO_G110U|--daily-states data/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_hold.csv --width -0.0757 --gain-sell 1.10 --gain-sell-mode ungated
 C088_G110U|--max-corr 0.88 --gain-sell 1.10 --gain-sell-mode ungated
-TRO_C088_G110U|--daily-states data/processed/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_base.csv --hold-states data/processed/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_hold.csv --width -0.0757 --max-corr 0.88 --gain-sell 1.10 --gain-sell-mode ungated
+TRO_C088_G110U|--daily-states data/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_base.csv --hold-states data/experiments/exp_reaudit_minority/val/GE_TROUGHOFF/states_hold.csv --width -0.0757 --max-corr 0.88 --gain-sell 1.10 --gain-sell-mode ungated
