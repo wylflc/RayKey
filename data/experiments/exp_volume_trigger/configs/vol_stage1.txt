@@ -1,0 +1,35 @@
+# 成交量触发条件·第一阶段粗扫（2026-09-07，轨道 B）。量比 = 信号日成交量 ÷ 此前 20 日均量（除权折算同股本口径）；
+# VT_* 为 MA5÷MA20 形式，VW5_* 为 5 日窗口。BASE 为对照；各族按剂量列阵，读数按 §12.1 第 2 款判。
+BASE|
+# 新建仓（含换仓目标）放量确认：量比 ≥ R
+VE_MIN08|--vol-entry-min 0.8
+VE_MIN10|--vol-entry-min 1.0
+VE_MIN12|--vol-entry-min 1.2
+VE_MIN15|--vol-entry-min 1.5
+VE_MIN20|--vol-entry-min 2.0
+# 新建仓回避异常放量：量比 ≤ R
+VE_MAX15|--vol-entry-max 1.5
+VE_MAX20|--vol-entry-max 2.0
+VE_MAX30|--vol-entry-max 3.0
+# 加仓只在缩量日：量比 ≤ R；加仓只在放量日：量比 ≥ R
+VA_MAX08|--vol-addon-max 0.8
+VA_MAX10|--vol-addon-max 1.0
+VA_MAX12|--vol-addon-max 1.2
+VA_MIN10|--vol-addon-min 1.0
+VA_MIN12|--vol-addon-min 1.2
+# 换仓卖出源：跌破 MA20 须放量（≥ R）才算走坏；反向（≤ R，缩量跌破才换）作方向对照
+VS_MIN08|--vol-swap-min 0.8
+VS_MIN10|--vol-swap-min 1.0
+VS_MIN12|--vol-swap-min 1.2
+VS_MIN15|--vol-swap-min 1.5
+VS_MAX10|--vol-swap-max 1.0
+VS_MAX15|--vol-swap-max 1.5
+# 止损：成交日跌破须放量（≥ R）才清仓
+VX_MIN08|--vol-stop-min 0.8
+VX_MIN10|--vol-stop-min 1.0
+VX_MIN12|--vol-stop-min 1.2
+# 量能趋势形式（MA5÷MA20）与 5 日窗口
+VT_E10|--vol-form trend --vol-short 5 --vol-entry-min 1.0
+VT_E12|--vol-form trend --vol-short 5 --vol-entry-min 1.2
+VT_S10|--vol-form trend --vol-short 5 --vol-swap-min 1.0
+VW5_E10|--vol-window 5 --vol-entry-min 1.0

@@ -381,6 +381,48 @@ def load_opens(codes: set[str] | None = None) -> dict[str, dict[str, float]]:
     return _load_ohlcv_column("open", codes)
 
 
+def load_volumes(codes: set[str] | None = None) -> dict[str, dict[str, float]]:
+    """逐票成交量（手）。只在 `--vol-*` 成交量闸门开启时载入，BASE 不读。"""
+    return _load_ohlcv_column("volume", codes)
+
+
+def volume_ratio_series(series: dict[str, float], events: dict[str, tuple[float, float]],
+                        window: int, short: int = 0) -> dict[str, float]:
+    """逐日量比。`short == 0`：当日成交量 ÷ 此前 `window` 个交易日均量（不含当日）；
+    `short > 0`：MA(short) ÷ MA(window)（均含当日）。
+
+    成交量按除权因子折算到同一股本口径：`exright_affine` 的 scale 只含送转／配股比例，
+    成交量除以它即末日股本口径，10 送 10 当日成交量翻倍不会被读成放量。停牌日无行、不进窗口；
+    窗口不足时无值。比值与末日选取无关（分子分母同一口径）。
+    """
+    out: dict[str, float] = {}
+    if window <= 0 or short >= window:
+        return out
+    days = sorted(series)
+    scale, _shift = exright_affine(days, events)
+    adj = [series[d] / scale[i] for i, d in enumerate(days)]
+    if short:
+        total_long = total_short = 0.0
+        for i, v in enumerate(adj):
+            total_long += v
+            total_short += v
+            if i >= window:
+                total_long -= adj[i - window]
+            if i >= short:
+                total_short -= adj[i - short]
+            if i >= window - 1 and total_long > 0:
+                out[days[i]] = (total_short / short) / (total_long / window)
+        return out
+    prev_sum = 0.0                                   # 此前 window 日之和（不含当日）
+    for i, v in enumerate(adj):
+        if i >= window and prev_sum > 0:
+            out[days[i]] = v / (prev_sum / window)
+        prev_sum += v
+        if i >= window:
+            prev_sum -= adj[i - window]
+    return out
+
+
 def _load_ohlcv_column(column: str, codes: set[str] | None) -> dict[str, dict[str, float]]:
     """逐票行情的某一列。收盘与开盘只差列名，合成一处，避免两边各改一遍。
 
@@ -1317,6 +1359,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_mode: str = "legacy", swap_sell_set: str = "weak", swap_spare_frac: float = 0.5,
         swap_trigger_window: int = 0, swap_trigger_window_mode: str = "fixed",
         swap_held_trigger_max_tiers: float = 0.0, swap_gain_once: bool = False,
+        vols: dict[str, dict[str, float]] | None = None,
+        vol_entry_min: float = 0.0, vol_entry_max: float = 0.0,
+        vol_addon_min: float = 0.0, vol_addon_max: float = 0.0,
+        vol_swap_min: float = 0.0, vol_swap_max: float = 0.0, vol_stop_min: float = 0.0,
         candidate_log=None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`。
 
@@ -1505,8 +1551,19 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     #   `swap_weak_deep` G：收盘低于均线 ≥ G 视为走坏，免做连续日／斜率／穿越三项形态复核（冷却仍适用）。
     # 计数**对全池逐日累计**（与 `below_ma_run` 同理），不只对持仓算。
     chop_guard = ChopGuard(swap_chop, prices, mas, actions, swap_weak_ma) if swap_chop and swap_chop.mode != "off" else None
+    # 成交量闸门（用户 2026-09-07 实验：成交量加进建仓／加仓／换仓／止损的触发场景）。`vols[代码][信号日] = 量比`
+    # （`volume_ratio_series`：当日÷此前 N 日均量，或 MA_short÷MA_long，除权折算同股本口径）。七个阈值缺省 0 = 关、逐位不变。
+    # 量比缺失：新建仓／加仓视同不合格（与均线缺失同）；换仓卖出源不作来源；止损照常触发（不拿数据缺角造出永不止损的仓）。
+    def _vol(c: str, d: str) -> float | None:
+        return (vols or {}).get(c, {}).get(d)
+
+    def _vol_in(c: str, d: str, lo: float, hi: float) -> bool:
+        r = _vol(c, d)
+        return r is not None and not (lo and r < lo) and not (hi and r > hi)
+    vol_on_buy = bool(vol_entry_min or vol_entry_max or vol_addon_min or vol_addon_max)
     weak_extra_on = bool(swap_require_weak) and (swap_weak_days > 1 or swap_weak_slope > 0
-                                                 or swap_weak_max_cross > 0 or swap_source_cooldown > 0 or chop_guard is not None)
+                                                 or swap_weak_max_cross > 0 or swap_source_cooldown > 0 or chop_guard is not None
+                                                 or vol_swap_min > 0 or vol_swap_max > 0)
     weak_run: dict[str, int] = {}                      # 代码 → 连续「收盘 < 均线」的信号日数
     weak_hist: dict[str, collections.deque] = {}       # 代码 → 近 W 个信号日的「收盘 < 均线」布尔序列
     swap_cool: dict[str, int] = {}                     # 代码 → 冷却到的交易日序号（含）
@@ -1536,6 +1593,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
     def weak_extra_ok(c: str, sday: str, dno: int) -> tuple[bool, str]:
         """基础弱势成立之后的形态复核；返回 (是否仍算弱势, 被挡原因)。"""
+        if vol_swap_min or vol_swap_max:
+            # 成交量闸门：跌破均线须伴随放量（min）／缩量（max）才算走坏；与同日均线判据同取 `sday`。
+            _vr = _vol(c, sday)
+            if _vr is None:
+                return False, "量比缺失"
+            if vol_swap_min and _vr < vol_swap_min:
+                return False, f"量比{_vr:.2f}<{vol_swap_min:g}"
+            if vol_swap_max and _vr > vol_swap_max:
+                return False, f"量比{_vr:.2f}>{vol_swap_max:g}"
         ma_now = mas.get(c, {}).get(sday, {}).get(swap_weak_ma)
         deep = (swap_weak_deep > 0 and ma_now is not None and c in today
                 and today[c][0] <= ma_now * (1.0 - swap_weak_deep))
@@ -1945,6 +2011,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if sig_close and sig_level and sig_close < sig_level:
                     stop_trigger = "confirmed"
                     stats["止损·信号日跌破补触发"] += 1
+            # `vol_stop_min`（研究开关）：跌破须伴随放量——判据日量比 < 阈值时当日不止损（量比缺失照常触发）；
+            # 跌破计数不动。回测取判据日全日成交量，实盘 14:45-14:55 只见约九成（成文差异）。
+            if stop_trigger and vol_stop_min:
+                _vr = _vol(code, judge_day)
+                if _vr is not None and _vr < vol_stop_min:
+                    stats["止损·缩量跌破不触发"] += 1
+                    stop_trigger = ""
             if pct_stop_when_rich and not is_rich(code, ratio):
                 if stop_level and price < stop_level:
                     stats["止损·因仍便宜而不触发"] += 1   # 只数**真的被压住**的那些，不数每一天
@@ -2240,6 +2313,18 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     return True                      # 已持仓：只看均线排列，不看价格位置
                 return r[1] > ma[trend_ma[0]] * k
             eligible = [r for r in eligible if _trend_ok(r)]
+        if vol_on_buy and eligible:
+            # 成交量闸门（研究开关）：新建仓与加仓各自的量比区间，在走势闸门之后、与其同取 `buy_day` 判；
+            # `eligible` 同时供定投买入与换仓选目标，故换仓目标（必为未持仓）也过新建仓区间。不进 T+1 确认。
+            kept = []
+            for r in eligible:
+                held_now = r[0] in portfolio.lots
+                lo, hi = (vol_addon_min, vol_addon_max) if held_now else (vol_entry_min, vol_entry_max)
+                if (lo or hi) and not _vol_in(r[0], buy_day, lo, hi):
+                    stats["成交量·加仓挡下" if held_now else "成交量·新建仓挡下"] += 1
+                    continue
+                kept.append(r)
+            eligible = kept
         held_for_confirmation = set(portfolio.lots)
         buy_confirmation_cache: dict[str, bool] = {}
 
@@ -3611,6 +3696,16 @@ def write_periods(path: Path, curve) -> None:
             writer.writerow(["monthly", label, f"{value:.6f}"])
 
 
+def _vol_label(args) -> str:
+    """成交量闸门的标签段；全关时为空串，BASE 标签不变。"""
+    parts = [(args.vol_entry_min, "e"), (args.vol_entry_max, "E"), (args.vol_addon_min, "a"), (args.vol_addon_max, "A"),
+             (args.vol_swap_min, "s"), (args.vol_swap_max, "S"), (args.vol_stop_min, "x")]
+    if not any(v for v, _k in parts):
+        return ""
+    form = f"t{args.vol_short}" if args.vol_form == "trend" else "r"
+    return f"_vol{form}{args.vol_window}" + "".join(f"{k}{v:g}" for v, k in parts if v)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="OI-034 估值组/走势组回测")
     parser.add_argument("--strategy", choices=("valuation", "trend", "both"), default="both")
@@ -3736,7 +3831,7 @@ def main() -> int:
     wk.add_argument("--swap-weak-slope", type=int, default=0, metavar="K",
                     help="均线本身须低于 K 个交易日前才算弱势（走平／上行时的下穿不算）；0 = 关")
     wk.add_argument("--swap-weak-slope-min", type=float, default=0.0, metavar="F",
-                    help="配 --swap-weak-slope：均线须较 K 日前至少下行 F（比例，0.5% 填 0.005）；0 = 只要求严格低于")
+                    help="配 --swap-weak-slope：均线须较 K 日前至少下行 F（比例，0.5%% 填 0.005）；0 = 只要求严格低于")
     wk.add_argument("--swap-weak-deep", type=float, default=0.0, metavar="G",
                     help="收盘低于均线 ≥ G（比例）视为走坏，免做连续日／斜率／穿越复核（冷却仍适用）；0 = 关")
     wk.add_argument("--swap-weak-max-cross", type=int, default=0, metavar="M",
@@ -3971,6 +4066,20 @@ def main() -> int:
     parser.add_argument("--fill-missing", choices=("skip", "signal_close"), default="skip",
                         help="T+1 成交日无价（停牌／末日）：skip＝该笔跳过（§9.1 执行日停牌跳过，缺省）；"
                              "signal_close＝回落 T 日收盘成交（研究／复现口径）")
+    vg = parser.add_argument_group("成交量闸门（研究开关，缺省全关、逐位不变；量比按除权折算同股本口径，只在信号日判、不进 T+1 确认）")
+    vg.add_argument("--vol-window", type=int, default=20, metavar="N", help="量比的基准窗口：此前 N 个交易日均量（缺省 20）")
+    vg.add_argument("--vol-form", choices=("ratio", "trend"), default="ratio",
+                    help="ratio=当日成交量÷此前 N 日均量（不含当日）；trend=MA(--vol-short)÷MA(N)（均含当日）")
+    vg.add_argument("--vol-short", type=int, default=5, metavar="S", help="trend 形式的短窗口（缺省 5）")
+    vg.add_argument("--vol-entry-min", type=float, default=0.0, metavar="R", help="新建仓（含换仓目标）须 量比 ≥ R；0=关")
+    vg.add_argument("--vol-entry-max", type=float, default=0.0, metavar="R", help="新建仓（含换仓目标）须 量比 ≤ R；0=关")
+    vg.add_argument("--vol-addon-min", type=float, default=0.0, metavar="R", help="已有持仓加仓须 量比 ≥ R；0=关")
+    vg.add_argument("--vol-addon-max", type=float, default=0.0, metavar="R", help="已有持仓加仓须 量比 ≤ R；0=关")
+    vg.add_argument("--vol-swap-min", type=float, default=0.0, metavar="R",
+                    help="换仓卖出源的弱势（收盘<MA）须伴随 量比 ≥ R（只配 --swap-require-weak）；0=关")
+    vg.add_argument("--vol-swap-max", type=float, default=0.0, metavar="R", help="换仓卖出源的弱势须 量比 ≤ R；0=关")
+    vg.add_argument("--vol-stop-min", type=float, default=0.0, metavar="R",
+                    help="止损须伴随判据日 量比 ≥ R，否则当日不止损（量比缺失照常触发）；0=关")
     parser.add_argument("--market", choices=tuple(MARKETS), default="a",
                         help="数据落点与市场常量：a＝A 股（缺省）；us＝美股（OI-159：ohlcv_us、us_corporate_actions、DGS10、标普全收益基准、年交易日 252）")
     parser.add_argument("--withholding-rate", type=float, default=0.0, metavar="F",
@@ -4021,6 +4130,10 @@ def main() -> int:
                          "进股数、整手、可用现金、成本、费税与流水价；盯市价、信号价与止损／走势判据不变；"
                          "同日买卖先净额对冲、只对净额收；强平与退市清仓同样收；分红、送转、配股认购不收。0 = 关（逐位不变）")
     args = parser.parse_args()
+    if args.vol_form == "trend" and args.vol_short >= args.vol_window:
+        sys.exit("--vol-short 须小于 --vol-window")
+    if (args.vol_swap_min or args.vol_swap_max) and not args.swap_require_weak:
+        sys.exit("--vol-swap-min／--vol-swap-max 只定义于 --swap-require-weak（BASE 带它）")
     global WITHHOLDING
     apply_market(args.market)
     if args.withholding_rate < 0 or args.withholding_rate >= 1:
@@ -4207,6 +4320,20 @@ def main() -> int:
     if args.exright_stop == "frozen":
         print("⚠ --exright-stop frozen：除权日不折算止损锚（v4.31 前旧口径，送转日会误触发整仓清空），只用于复现旧读数",
               file=sys.stderr)
+    vols = None
+    if any((args.vol_entry_min, args.vol_entry_max, args.vol_addon_min, args.vol_addon_max,
+            args.vol_swap_min, args.vol_swap_max, args.vol_stop_min)):
+        raw_vol = load_volumes(set(prices))
+        vols = {code: volume_ratio_series(series, actions.get(code, {}), args.vol_window,
+                                          args.vol_short if args.vol_form == "trend" else 0)
+                for code, series in raw_vol.items()}
+        del raw_vol
+        _form = (f"MA{args.vol_short}÷MA{args.vol_window}" if args.vol_form == "trend"
+                 else f"当日÷此前{args.vol_window}日均量")
+        _rng = lambda lo, hi: f"[{lo:g}, {hi:g}]" if hi else f"≥{lo:g}"
+        print(f"  **成交量闸门**：量比＝{_form}（除权折算同股本口径）｜新建仓 {_rng(args.vol_entry_min, args.vol_entry_max)}"
+              f"｜加仓 {_rng(args.vol_addon_min, args.vol_addon_max)}｜换仓源 {_rng(args.vol_swap_min, args.vol_swap_max)}"
+              f"｜止损 ≥{args.vol_stop_min:g}｜{sum(len(v) for v in vols.values()):,} 个量比值")
     day_lists = {code: sorted(series) for code, series in prices.items()}
     day_pos = {code: {d: i for i, d in enumerate(ds)} for code, ds in day_lists.items()}
     corr = Correlations(daily_returns(prices, actions), args.corr_window) if args.max_corr else None
@@ -4306,6 +4433,7 @@ def main() -> int:
                      + (f"_hs{args.hold_strong}{len(args.hold_strong_ma)}" if args.hold_strong != "off" else "")
                      + (f"_{args.rank_mode[:1]}{args.quantile_window or 'all'}" if args.rank_mode != "pv" else "")
                      + ("_addma" if args.addon_trend == "ma-only" else "")
+                     + _vol_label(args)
                      + (f"_swk{args.swap_weak_ma}" if args.swap_require_weak else "")
                      + (f"_swkd{args.swap_weak_days}" if args.swap_weak_days > 1 else "")
                      + (f"_swks{args.swap_weak_slope}" if args.swap_weak_slope else "")
@@ -4462,6 +4590,10 @@ def main() -> int:
                          swap_trigger_window_mode=args.swap_trigger_window_mode,
                          swap_held_trigger_max_tiers=args.swap_held_trigger_max_tiers,
                          swap_gain_once=args.swap_gain_once,
+                         vols=vols, vol_entry_min=args.vol_entry_min, vol_entry_max=args.vol_entry_max,
+                         vol_addon_min=args.vol_addon_min, vol_addon_max=args.vol_addon_max,
+                         vol_swap_min=args.vol_swap_min, vol_swap_max=args.vol_swap_max,
+                         vol_stop_min=args.vol_stop_min,
                          candidate_log=cand_writer)
             if cand_handle is not None:
                 cand_handle.close()
