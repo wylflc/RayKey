@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.155 | 2026-09-06 | OI-157 按用户裁定不采纳结案；`--t1-judge gain` 留研究开关，§9.3.1、生产常量与 BASE 不改。依据 §12.201 |
 | v4.154 | 2026-09-06 | 剔除集运行的集合标签改为 `<集合>@<挑战臂>`（`ex_winner_symmetry.py`；`ex_winner_dose.py` 新增必填 `--challenger`，K 标签同式；`ex_winner_symmetry_report.py` 兼容旧文件），赢家名单可回读现行台账；扫描台账归并键加 `计量版本`（`clean_derived_artifacts.py`，测试 `test_scan_ledger.py`）；现行台账旧式集合标签行按新标签重跑替换。OI-158 结案。OI-157 §12.1 第 4 款三项补齐（作业 `scripts/slurm/oi157_t1gain_sweeps.sbatch`／`oi157_t1gain_signal.sbatch`，配置 `data/experiments/exp_t1_info/configs/t1gain_*.txt`），§9.3.1 与 BASE 不改、待用户裁定。依据 §12.201 |
 | v4.153 | 2026-09-06 | 研究开关 `--stop-basis both`（止损两时点任一跌破）与 `--t1-judge gain,swap,buy`（涨幅减持／换仓卖出源／合格集只按 T+1 收盘判），缺省不变；作业 `scripts/slurm/t1_info_sweep.sbatch`、`t1_info_exwinner_u.sbatch`，测试 `scripts/test_t1_judge.py`；止损 T 日判／两时点、其他操作零延迟、T+1 确认重跑九臂均不采纳，§9.3.1 止损行与 BASE 不改；T1_GAIN 按 §12.1 第 4 款登记 OI-157 待考察。依据 §12.200 |
 | v4.152 | 2026-09-06 | 执行时点研究开关 `--exec-price open_sell_close_buy`（缺省不变）、四臂对照作业 `scripts/slurm/exec_timing_sweep.sbatch` 与配对脚本 `scripts/experimental/exec_timing_pairwise.py`；T 日收盘／T+1 开盘／T+1 开盘卖收盘买三臂不采纳，§9.3.1 执行时点与 BASE 不改。依据 §12.199 |
