@@ -245,7 +245,8 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     if latest.parent_equity is None or latest.parent_equity <= 0:
         res["reason"] = "母公司权益非正，股数法无法折每股"; return res
     if latest.nopat is None or latest.nopat <= 0:
-        res["reason"] = f"最新报告口径 NOPAT={latest.nopat/1e9:.2f}b ≤ 0：息税前利润非正，按现金折现无意义（A 股同规，按 §6.5.2.4 判无法估值）"; return res
+        res["reason"] = (f"最新报告口径 NOPAT={latest.nopat/1e9:.2f}b ≤ 0：息税前利润非正，按现金折现无意义（A 股同规，按 §6.5.2.4 判无法估值）"
+                         if latest.nopat is not None else "最新报告口径 NOPAT 不可得（息税前利润或税率缺失）"); return res
     # ---- §6.5.2.3 锚（A 股生产口径 ratio_bps）：比率 = 各年 NOPAT ÷ 当年母公司权益，锚 = ratio0 × 当期 BPS。
     # 季报观察点的「当期」= 最新年报比率 × f，f = NOPAT TTM ÷ 最新年报 NOPAT；λ 与三年／五年／十年中位只取年报。
     ratios = [y.nopat / e_op(y) for y in history if y.nopat is not None and e_op(y)]
