@@ -279,6 +279,7 @@ def main() -> int:
             if i % 50 == 0:
                 print(f"  yahoo {i}/{len(tickers)}", flush=True)
         print(f"Yahoo 段：{n_y} 个代码至少一段覆盖 ok", flush=True)
+        write_outputs(members, series, seg_status)          # 先落一版，Tiingo 段跑完再覆盖
 
     if args.phase in ("tiingo", "all"):
         tg = Tiingo(tiingo_token())
@@ -310,7 +311,13 @@ def main() -> int:
             if i % 10 == 0:
                 print(f"  tiingo {i}/{len(todo)}", flush=True)
 
-    # ---- 逐 CIK 写价格文件：并入该 CIK 各段所用序列（段前留 400 天给均线热身），同日取先到者
+    write_outputs(members, series, seg_status)
+    return 0
+
+
+def write_outputs(members: list[dict], series: dict, seg_status: dict) -> None:
+    """逐 CIK 写价格文件（并入该 CIK 各段所用序列，段前留 400 天给均线热身，同日取先到者）、索引、事件表、退市名册与覆盖表。
+    Yahoo 段结束后先写一遍，Tiingo 段结束后再写一遍覆盖。"""
     by_cik: dict[str, list[dict]] = defaultdict(list)
     for r in members:
         by_cik[r["cik"]].append(r)
@@ -379,8 +386,7 @@ def main() -> int:
         if r["status"] != "ok":
             days_bad += d
     print(f"成员段覆盖 {dict(st)}；2012-05 起非 ok 成员·日占比 {days_bad / max(days_tot, 1):.1%}；价格文件 {len(index_rows)}；"
-          f"退市名册 {len(roster)}；事件 {sum(len(v) for v in actions.values())} 条 → {ACTIONS}")
-    return 0
+          f"退市名册 {len(roster)}；事件 {sum(len(v) for v in actions.values())} 条 → {ACTIONS}", flush=True)
 
 
 if __name__ == "__main__":

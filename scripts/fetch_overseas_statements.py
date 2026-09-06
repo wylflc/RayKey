@@ -603,6 +603,9 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
     total_eq, parent_eq, minority = inst("total_equity"), inst("parent_equity"), inst("minority_equity") or 0.0
     if total_eq is not None and parent_eq is not None and abs(total_eq - parent_eq) < 1e-6 and minority:
         total_eq = parent_eq + minority
+    if parent_eq is None and total_eq is not None:          # 同年报行：归母 = 合计 − 少数股东
+        parent_eq = total_eq - minority
+        tags["parent_equity"] = f"{tags.get('total_equity', 'total_equity')}-minority"
     lt_nc, lt_cur, lt_total = inst("lt_debt_noncurrent"), inst("lt_debt_current"), inst("lt_debt_total")
     debt = ((lt_nc or 0.0) + (lt_cur or 0.0)) if lt_nc is not None else (lt_total or 0.0)
     debt += inst("st_debt") or 0.0
@@ -662,6 +665,9 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
         total_eq, parent_eq, minority = v("total_equity"), v("parent_equity"), v("minority_equity") or 0.0
         if total_eq is not None and parent_eq is not None and abs(total_eq - parent_eq) < 1e-6 and minority:
             total_eq = parent_eq + minority
+        if parent_eq is None and total_eq is not None:      # 只报「含少数股东的权益合计」的公司：归母 = 合计 − 少数股东
+            parent_eq = total_eq - minority
+            tags["parent_equity"] = f"{tags.get('total_equity', 'total_equity')}-minority"
         notice = _annual_notice(tax, end)
         shares = v("shares") or v("shares_instant") or dei_shares(facts.get("dei"), notice)
         if shares and "shares" not in tags and "shares_instant" not in tags:

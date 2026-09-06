@@ -40,7 +40,7 @@
 * **时点**：每次 10-K／10-Q（20-F／40-F 同）`filed` 日 F 重算 V；`band_available_at = F`，逐日状态里带的生效日 = F 之前最后一个交易日（与 A 股 `--state-effective prev_trading_day` 同）。6-K 申报、不在 companyfacts 的公司判无法估值。
 * **归一化**：报告期末至当日的拆股按比例折 V；生效后的现金分红按 §11.4 `V − D`，到下一份报告接管为止。
 * **持仓侧**：第一期 = 候选侧（`--ttm-trust` 规则未移植，作成文差异登记）。若在跑数前移植 B2，在此登记时间并改为逐 (代码, 日期) 取两侧较高 V。
-* **无法估值**（负权益、NOPAT ≤ 0、结构断点后不足 3 年、股数不可得等）无 `P/V`、不进合格集；逐年报告各原因占比（描述项）。**股数标签缺口已修（2026-09-06，跑数前）**：`fetch_overseas_statements.py` 的股数概念加 `WeightedAverageNumberOfShareOutstandingBasicAndDiluted`，季报股数缺时退期末股数，再缺退申报封面 `dei:EntityCommonStockSharesOutstanding`（多类别按维度申报者 companyfacts 无该值，仍不可得）。修后 OI-150 样本 60 家 × 4 时点：ok 151／240（修前 145），股数不可得 6（修前 24），母公司权益非正 25、结构断点 16、NOPAT ≤ 0 4。
+* **无法估值**（负权益、NOPAT ≤ 0、结构断点后不足 3 年、股数不可得等）无 `P/V`、不进合格集；逐年报告各原因占比（描述项）。**股数标签缺口已修（2026-09-06，跑数前）**：`fetch_overseas_statements.py` 的股数概念加 `WeightedAverageNumberOfShareOutstandingBasicAndDiluted`，季报股数缺时退期末股数，再缺退申报封面 `dei:EntityCommonStockSharesOutstanding`（多类别按维度申报者 companyfacts 无该值，仍不可得）。修后 OI-150 样本 60 家 × 4 时点：ok 151／240（修前 145），股数不可得 6（修前 24），母公司权益非正 25、结构断点 16、NOPAT ≤ 0 4。**归母权益标签缺口同批修（2026-09-06，跑数前）**：只申报 `StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest` 而无 `StockholdersEquity` 的公司（强生等），归母权益 = 权益合计 − 少数股东（年报行与季报 TTM 行同式），此前被误判为「母公司权益非正」。
 * 产物：`data/processed/us_daily_states_adopted.csv`／`us_daily_states_hold.csv`，`security_code`、`date`、`close`、`intrinsic_value`、`valuation_ratio` 五列必填。
 
 ## 4. 交易口径
