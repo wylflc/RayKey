@@ -500,9 +500,9 @@ def load_universe(path: Path) -> list[tuple[str, set[str]]]:
 def parse_excluded_codes(text: str) -> set[str]:
     """Parse the research-only comma-separated security-code exclusion list."""
     codes = {part.strip() for part in (text or "").split(",") if part.strip()}
-    invalid = sorted(code for code in codes if len(code) != 6 or not code.isdigit())
+    invalid = sorted(code for code in codes if len(code) not in (6, 10) or not code.isdigit())
     if invalid:
-        raise ValueError(f"股票代码须为 6 位数字：{','.join(invalid)}")
+        raise ValueError(f"股票代码须为 6 位数字（A 股）或 10 位 CIK（美股）：{','.join(invalid)}")
     return codes
 
 
