@@ -1,0 +1,3 @@
+# OI-157（§12.1 第 4 款②）：剔除赢家只数 K=1／3／5／10 剂量曲线，只含 BASE 与候选臂（ex_winner_dose.py --challenger T1_GAIN）。
+BASE|
+T1_GAIN|--t1-judge gain

@@ -156,9 +156,10 @@ def merge_ledgers(files):
 
     列头历代不同（滚动三年、手续费等是后加的），故取并集，缺列留空。**先读回两本台账再并入
     本次的 summary**：`scan_summaries.csv` 是 §12.1 第 12 款「已试臂数」的累计台账，直接按本次
-    磁盘上剩余的 summary 覆写会把历次台账整表抹掉。同 `(扫描标签, 策略)` 后出现者胜；每行按
-    `is_current()` 分流：现行口径进 `scan_summaries.csv`，其余进 `data/archive/scan_summaries_m1.csv`，
-    已在现行台账里的旧口径行同样被搬走。
+    磁盘上剩余的 summary 覆写会把历次台账整表抹掉。同 `(扫描标签, 策略, 计量版本)` 后出现者胜——
+    计量版本入键，新口径重跑同名臂时旧口径行留在归档台账（§12.1 第 2 款「旧读数留台账」；OI-158 前
+    只按标签与策略去重，m2 重跑曾把归档里同名的 m1 行顶掉）；每行按 `is_current()` 分流：现行口径进
+    `scan_summaries.csv`，其余进 `data/archive/scan_summaries_m1.csv`，已在现行台账里的旧口径行同样被搬走。
     """
     upd = LedgerUpdate()
     old_current, upd.current_columns = _read_rows(MERGED) if MERGED.exists() else ([], [])
@@ -167,7 +168,7 @@ def merge_ledgers(files):
     keyed = {}
     for source, rows in (("archive", old_archive), ("current", old_current), ("new", new_rows)):
         for row in rows:
-            keyed[(row.get("扫描标签"), row.get("策略"))] = (source, row)
+            keyed[(row.get("扫描标签"), row.get("策略"), row.get("计量版本") or "m1")] = (source, row)
     for source, row in keyed.values():
         if is_current(row):
             upd.current.append(row)

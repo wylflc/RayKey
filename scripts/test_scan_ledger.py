@@ -85,6 +85,18 @@ class WriteLedgerTest(unittest.TestCase):
         self.assertFalse(upd.archive_changed)
         self.assertEqual(len(_read(archive.ARCHIVED_LEDGER)), 1)
 
+    def test_same_label_under_new_metric_version_keeps_archived_row(self) -> None:
+        """OI-158：同名标签在新计量口径下重跑，归档台账里的旧口径行不能被顶掉。"""
+        entries = [self._entry("summary_OLD20091101.csv", [{"策略": "OLD20091101", "计量版本": self.cur, "期末资产": "8"}])]
+        upd = archive.write_ledger(entries)
+        current, archived = _read(archive.MERGED), _read(archive.ARCHIVED_LEDGER)
+        self.assertEqual([r["扫描标签"] for r in current], ["BASE20091101", "OLD20091101"])
+        self.assertEqual([r["扫描标签"] for r in archived], ["OLD20091101"])
+        self.assertEqual(archived[0]["期末资产"], "2")
+        self.assertFalse(upd.archive_changed)
+        arms = {r["臂名"]: r for r in _read(archive.ARMS_INDEX)}
+        self.assertEqual(arms["OLD"]["台账"], "archive+current")
+
     def test_stale_rows_in_current_ledger_move_to_archive(self) -> None:
         _write(archive.MERGED, [
             {"扫描标签": "BASE20091101", "策略": "BASE20091101", "计量版本": self.cur, "期末资产": "1"},

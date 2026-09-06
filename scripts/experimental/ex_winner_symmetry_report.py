@@ -62,7 +62,8 @@ def main() -> None:
             d = statistics.median((arm[s][key] - base[s][key]) * scale * good for s in starts)
             if d < -0.15:
                 bad.append(f"{key} {d:+.2f}")
-        print(f"| {tag}（{len(sets[tag].split(','))} 只） | " + " | ".join(cells) + f" | {'、'.join(bad) or '无'} |")
+        # 集合标签形如 `A@SC`／`K5@T1_GAIN`（旧文件无 @ 后缀），表里只显示集合名
+        print(f"| {tag.split('@')[0]}（{len(sets[tag].split(','))} 只） | " + " | ".join(cells) + f" | {'、'.join(bad) or '无'} |")
 
 
 if __name__ == "__main__":

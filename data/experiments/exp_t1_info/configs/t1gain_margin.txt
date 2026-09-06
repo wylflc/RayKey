@@ -1,0 +1,14 @@
+# OI-157（§12.1 第 4 款①）：T1_GAIN（涨幅减持只按 T+1 收盘判）上换仓边际 0.10~0.20 按 0.01 一档重扫，
+# 不沿用 BASE 的 0.15；T1_GAIN_M15 = §12.200 的 T1_GAIN 本臂重跑，同文件内配对。BASE 为对照。
+BASE|
+T1_GAIN_M10|--t1-judge gain --swap-margin 0.10
+T1_GAIN_M11|--t1-judge gain --swap-margin 0.11
+T1_GAIN_M12|--t1-judge gain --swap-margin 0.12
+T1_GAIN_M13|--t1-judge gain --swap-margin 0.13
+T1_GAIN_M14|--t1-judge gain --swap-margin 0.14
+T1_GAIN_M15|--t1-judge gain --swap-margin 0.15
+T1_GAIN_M16|--t1-judge gain --swap-margin 0.16
+T1_GAIN_M17|--t1-judge gain --swap-margin 0.17
+T1_GAIN_M18|--t1-judge gain --swap-margin 0.18
+T1_GAIN_M19|--t1-judge gain --swap-margin 0.19
+T1_GAIN_M20|--t1-judge gain --swap-margin 0.20
