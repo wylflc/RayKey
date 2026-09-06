@@ -4,3 +4,4 @@ SLIP10|--slippage-bp 10
 SLIP20|--slippage-bp 20
 SLIP30|--slippage-bp 30
 WHT0|--withholding-rate 0
+ALIGNED|--width 0.3425 --swap-margin 0.0943

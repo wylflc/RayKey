@@ -92,6 +92,10 @@ scancel <id>
 | 银行股利折现覆盖（`rebuild_bank_bands.py`，第 3 步，每侧一次） | 0.06 GB | **2 分 45 秒** | `-n 16` |
 | 合成持仓侧逐日状态（`build_hold_daily_states.py`，归并两份 2.1 GB） | ≤ 0.1 GB | **2 分 32 秒** | `-n 16` |
 | 六步链其余各步 | ≤ 建带 | 分钟级 | `-n 16` |
+| 美股成分面板与 CIK 解析（`build_us_index_panel.py`） | 0.3 GB | 约 10 分 | `-n 16` |
+| 美股取数（`us_sp500_data.sbatch`：利率→companyfacts→价格；Tiingo 免费档 50 次/小时限流） | 3.4 GB | **3 小时 22 分**（Yahoo 段约 10 分） | `-n 16`，`-t 08:00:00` |
+| 美股逐日状态（`build_us_daily_states.py --workers 16`） | 0.9 GB | **2 分 10 秒** | `-n 16` |
+| 美股扫描（`sweep_backtest_configs.py --market us`，6 臂 × 9 起点 × 两遍，16 并发） | 23.7 GB | **3 分 48 秒** | `-n 32` |
 
 §6.7 第 2→3 步全链约 **23 分钟**；逐日状态文件每份 2.1 GB、持仓侧 2.2 GB。
 **纯 Python 单线程，rome 单核比原 Mac 慢约 3 倍**（建带 2.5 分 → 8 分），换更多核不会让单个进程变快，
