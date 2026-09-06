@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.158 | 2026-09-07 | 用户点名复核中国船舶／中金公司：两家维持 boundary_pending 并建池外档案（§6.1）；中国船舶三大报表并入面板；新增 `scripts/slurm/rebuild_chain_with_fetch.sbatch`（§6.7 第 1-3 步一体作业，`SIGNAL_DATE`／`SINCE`／`EXTRA_CODES` 环境变量） |
 | v4.157 | 2026-09-07 | 标普 100 历史成分面板脚本 `build_us_sp100_panel.py`（Wikipedia 修订历史 → 区间 → 标普 500 成员表取 CIK）、作业 `scripts/slurm/us_sp100_panel.sbatch`、配置 `configs_us_sp100.txt`；研究用，§9.3.1 与 BASE 不改。依据 §12.203 |
 | v4.156 | 2026-09-06 | 美股市场层（研究，不入生产）：引擎 `--market us`、`--withholding-rate`（固定预提），`--exclude-codes` 收 10 位 CIK；扫描器 `--market us`（`BASE_US`、9 个半年起点、锚 2012-05-01）；脚本 `build_us_index_panel.py`、`fetch_us_ohlcv_history.py`、`fetch_us_rates.py`、`fetch_us_companyfacts.py`、`build_us_daily_states.py`、`experimental/us_h1_readout.py`、`experimental/align_buy_line.py`；`fetch_overseas_statements.py` 股数与归母权益兜底；`panel_tier_forward.py` 加 `--ohlcv-dir`／`--actions`；作业 `scripts/slurm/us_sp500_*.sbatch`。§9.3.1 与 BASE 不改；OI-159 结案（不支持 H1）。依据 §12.202 |
 | v4.155 | 2026-09-06 | OI-157 按用户裁定不采纳结案；`--t1-judge gain` 留研究开关，§9.3.1、生产常量与 BASE 不改。依据 §12.201 |

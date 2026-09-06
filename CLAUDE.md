@@ -70,6 +70,7 @@ python3 scripts/<script>.py <args>
 
 ```bash
 sbatch scripts/slurm/<name>.sbatch                              # 提交
+sbatch --export=ALL,VAR=value scripts/slurm/<name>.sbatch       # 传环境变量只认 --export；`VAR=value sbatch …` 前缀写法不传入作业
 sbatch --test-only scripts/slurm/<name>.sbatch                  # 只校验＋预估计费，不真提交
 squeue -u $USER                                                 # 排队/运行
 sacct -j <id> --format=JobID,State,Elapsed,MaxRSS,AllocCPUS     # 结束后读实际耗时与峰值内存
@@ -91,6 +92,7 @@ scancel <id>
 | B2 建带（第 2b 步，与第 2 步串行） | 同上 | **7 分 29 秒** | `-n 16` |
 | 银行股利折现覆盖（`rebuild_bank_bands.py`，第 3 步，每侧一次） | 0.06 GB | **2 分 45 秒** | `-n 16` |
 | 合成持仓侧逐日状态（`build_hold_daily_states.py`，归并两份 2.1 GB） | ≤ 0.1 GB | **2 分 32 秒** | `-n 16` |
+| §6.7 第 1-3 步一体作业（`rebuild_chain_with_fetch.sbatch`：抓取→建带→2b→银行覆盖→持仓侧合成） | 2.6 GB | **36 分 23 秒**（第 1 步抓取 14 分） | `-n 16`，`-t 03:00:00` |
 | 六步链其余各步 | ≤ 建带 | 分钟级 | `-n 16` |
 | 美股成分面板与 CIK 解析（`build_us_index_panel.py`） | 0.3 GB | 约 10 分 | `-n 16` |
 | 美股取数（`us_sp500_data.sbatch`：利率→companyfacts→价格；Tiingo 免费档 50 次/小时限流） | 3.4 GB | **3 小时 22 分**（Yahoo 段约 10 分） | `-n 16`，`-t 08:00:00` |
