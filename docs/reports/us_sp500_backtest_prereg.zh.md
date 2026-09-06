@@ -72,7 +72,20 @@
 
 ## 6. 执行
 
-阶段与产物按计划文档 §5。作业 `scripts/slurm/us_sp500_data.sbatch`、`us_sp500_states.sbatch`、`us_sp500_sweep.sbatch`；取数只在计算节点跑。产物落 `data/experiments/exp_us_sp500_port/`（`raw/` 不入库）。结论写回测日志一节，并在 OI-159 处置。
+阶段与产物按计划文档 §5；取数只在计算节点跑；产物落 `data/experiments/exp_us_sp500_port/`（`raw/` 不入库）。结论写回测日志一节，并在 OI-159 处置。
+
+```bash
+sbatch scripts/slurm/us_sp500_panel.sbatch        # 成分面板与 CIK 解析 → panel_sp500_us.csv、us_sp500_members.csv、us_sp500_panel_audit.csv
+sbatch scripts/slurm/us_sp500_data.sbatch         # 利率（财政部缓存）→ companyfacts → 价格（Yahoo 段后先落盘，Tiingo 段约 4 小时）
+sbatch scripts/slurm/us_sp500_states.sbatch       # 逐次申报估值 → us_daily_states_adopted.csv（持仓侧同文件复制）
+sbatch scripts/slurm/us_sp500_align.sbatch        # 对齐臂两条线（写入 configs_us.txt 的 ALIGNED 行）
+sbatch scripts/slurm/us_sp500_a_nocredit.sbatch   # A 股无融资对照臂（14 起点）
+sbatch scripts/slurm/us_sp500_sweep.sbatch data/experiments/exp_us_sp500_port/configs_us.txt data/experiments/exp_us_sp500_port/scan_us.txt "--market us"
+python3 scripts/experimental/us_h1_readout.py --scan data/experiments/exp_us_sp500_port/scan_us.txt --arm BASE     # H1 读数
+python3 scripts/experimental/panel_tier_forward.py --states data/processed/us_daily_states_adopted.csv \
+  --panel data/processed/pit_attention/panel_sp500_us.csv --since 2012-05-01 \
+  --ohlcv-dir data/raw/ohlcv_us --actions data/raw/corporate_actions/us_corporate_actions.csv          # 辅助：P/V 分档前向回报
+```
 
 ## 7. 数据前提审计
 
