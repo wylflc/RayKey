@@ -91,7 +91,8 @@ GAAP = {
     "dep_amort": ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization",
                   "DepreciationAmortizationAndAccretionNet", "Depreciation"],
     "cfo": ["NetCashProvidedByUsedInOperatingActivities", "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"],
-    "shares": ["WeightedAverageNumberOfDilutedSharesOutstanding", "WeightedAverageNumberOfSharesOutstandingBasic"],
+    "shares": ["WeightedAverageNumberOfDilutedSharesOutstanding", "WeightedAverageNumberOfShareOutstandingBasicAndDiluted",
+               "WeightedAverageNumberOfSharesOutstandingBasic"],
     "shares_instant": ["CommonStockSharesOutstanding"],
     # OI-082：回购与分红现金流（回购用于权益回加，分红只作展示）
     "buybacks": ["PaymentsForRepurchaseOfCommonStock", "PaymentsForRepurchaseOfEquity"],
@@ -531,12 +532,35 @@ def _instant_value(tax: dict, concepts: list[str], end: str, filed: str) -> tupl
     return None, concept
 
 
-def _shares_value(tax: dict, concepts: list[str], end: str, filed: str) -> tuple[float | None, str]:
+def _shares_value(tax: dict, concepts: list[str], end: str, filed: str,
+                  instant_concepts: list[str] | None = None, dei: dict | None = None) -> tuple[float | None, str]:
+    """季报股数：本期加权稀释股数；缺则期末股数（资产负债表瞬时值）；再缺则 10-Q 封面 `dei:EntityCommonStockSharesOutstanding`。"""
     entries, concept = _sec_entries(tax, concepts)
     exact = [e for e in entries if e.get("form") == "10-Q" and e.get("end") == end
              and e.get("filed") == filed and 60 <= (_days(e) or 0) <= 300]
     hit = min(exact, key=lambda e: _days(e) or 9999, default=None)
-    return (float(hit["val"]) if hit else None), concept
+    if hit and float(hit["val"]) > 0:
+        return float(hit["val"]), concept
+    if instant_concepts:
+        value, concept2 = _instant_value(tax, instant_concepts, end, filed)
+        if value:
+            return value, concept2
+    value = dei_shares(dei, filed)
+    return (value, "dei:EntityCommonStockSharesOutstanding") if value else (None, concept)
+
+
+def dei_shares(dei: dict | None, filed: str) -> float | None:
+    """申报封面的流通普通股数（同一申报内多类别各一条，求和；多类别按维度申报的公司在 companyfacts 里没有该值）。"""
+    if not dei:
+        return None
+    seen: set[tuple[str, float]] = set()
+    total = 0.0
+    for e in ((dei.get("EntityCommonStockSharesOutstanding") or {}).get("units") or {}).get("shares", []):
+        if e.get("filed") == filed and str(e.get("form", "")).startswith(("10-K", "10-Q", "20-F", "40-F")):
+            key = (str(e.get("end") or ""), float(e.get("val") or 0))
+            if key not in seen and key[1] > 0:
+                seen.add(key); total += key[1]
+    return total or None
 
 
 def _ytd_dividends(current: float | None, annual_paid: float | None) -> float | None:
@@ -548,7 +572,7 @@ def _ytd_dividends(current: float | None, annual_paid: float | None) -> float | 
 
 
 def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: list[dict],
-                        evidence_date: str = "") -> dict | None:
+                        evidence_date: str = "", dei: dict | None = None) -> dict | None:
     """Build a latest TTM snapshot from a domestic issuer's latest 10-Q."""
     identity = _latest_10q_identity(tax, maps["revenue"])
     if not identity or not annuals:
@@ -583,7 +607,7 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
     debt = ((lt_nc or 0.0) + (lt_cur or 0.0)) if lt_nc is not None else (lt_total or 0.0)
     debt += inst("st_debt") or 0.0
     cash = (inst("cash") or 0.0) + (inst("cash_invest") or 0.0)
-    shares, share_tag = _shares_value(tax, maps["shares"], end, filed)
+    shares, share_tag = _shares_value(tax, maps["shares"], end, filed, maps.get("shares_instant"), dei)
     tags["shares"] = share_tag
     if revenue is None or (pretax is None and opinc is None) or parent_eq is None or shares is None:
         return None
@@ -638,8 +662,11 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
         total_eq, parent_eq, minority = v("total_equity"), v("parent_equity"), v("minority_equity") or 0.0
         if total_eq is not None and parent_eq is not None and abs(total_eq - parent_eq) < 1e-6 and minority:
             total_eq = parent_eq + minority
-        shares = v("shares") or v("shares_instant")
-        rows.append(_build_row("US", symbol, name, end, _annual_notice(tax, end), ccy or "USD", rev, opinc, pretax, taxv, intexp,
+        notice = _annual_notice(tax, end)
+        shares = v("shares") or v("shares_instant") or dei_shares(facts.get("dei"), notice)
+        if shares and "shares" not in tags and "shares_instant" not in tags:
+            tags["shares"] = "dei:EntityCommonStockSharesOutstanding"
+        rows.append(_build_row("US", symbol, name, end, notice, ccy or "USD", rev, opinc, pretax, taxv, intexp,
                                total_eq, parent_eq, minority, debt, cash, v("capex") or 0.0, v("dep_amort") or 0.0,
                                v("cfo"), shares, tags, src, TAX_DEFAULT["US"],
                                buybacks=abs(v("buybacks") or 0.0), dividends=abs(v("dividends_paid") or 0.0),

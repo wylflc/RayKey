@@ -26,7 +26,7 @@
 
 * **成分来源**：GitHub `fja05680/sp500` 的 `S&P 500 Historical Components & Changes (Updated).csv`（1996 起每日快照）。下载件存 `data/raw/us/sp500_history/`（不入库），记录下载日与 SHA-256。2011-01-01 起与维基 List of S&P 500 companies 的 Selected changes 逐条核对，差异登记在面板同目录的 `panel_sp500_us_audit.csv`。
 * **成员区间**：同一代码连续出现的快照日段为一个区间；`effective_from` = 首个快照日，`effective_to` = 消失前最后一个快照日。面板 `data/processed/pit_attention/panel_sp500_us.csv`，与 `panel_moat_bank_v6b.csv` 同列。面板自 2009-01-01 起（起点前热身），观测窗 2012-05-01 至数据末端。
-* **代码 → CIK**：① SEC `company_tickers.json` / `company_tickers_exchange.json`；② `submissions` 的 `tickers` 与 `formerNames`；③ OI-150 的申报文件封面代码反查（CIK 侧取全部 XBRL 申报人）；④ 手工映射 `data/reference/us_ticker_cik_overrides.csv`，每行注明依据。未解析记 `no_cik`。
+* **代码 → CIK**（`scripts/build_us_index_panel.py`）：候选来自 ① 维基现役表 CIK；② SEC `company_tickers.json`；③ OI-150 `universe_ciks.csv`；④ 相邻区间（同日一出一进）的后者 CIK（改名候选）；⑤ EDGAR 全文检索 `q="<代码>"` 10-K 命中前 5 个 CIK；⑥ 手工映射 `data/reference/us_ticker_cik_overrides.csv`。④⑤ 必须经申报文件核实（区间内 10-K／10-Q 的 XBRL 实例文件名或主文档名前缀等于该代码）。每个候选取 submissions 申报区间，按区间拼接覆盖；**控股公司重组换 CIK（Apache → APA、Avago → Broadcom）拆成两段两个 `security_code`，视同出入指数**，拆段数在报告中列出。覆盖不到的余段记 `no_cik`。（2026-09-06 登记：首版「相邻即改名」把指数调整的一出一进误配，改为申报文件核实。）
 * **金融剔除**：按 `submissions` 的 `sic` 剔除 6000–6799；SIC 缺失者保留并标注。金融剔除单独计数，不算样本损失。
 * **价格与公司行动**：两源合一，均为免费源。现役且代码未被复用者取 Yahoo `v8/finance/chart`（`events=div,splits`，收盘按拆股事件还原为未复权）；Yahoo 无数据（404）或代码已被新公司复用（Yahoo 首个交易日晚于入指数日 30 天以上）者取 Tiingo 免费档（token 只从环境变量 `TIINGO_TOKEN` 或 `~/.config/raykey/tiingo_token` 读取，不入库）。逐代码来源写入 `data/raw/ohlcv_us/price_index.csv`。未复权收盘 → `data/raw/ohlcv_us/<代码>.csv`（`date,open,close,high,low,volume` 六列，与 A 股同）；`divCash`／`splitFactor` → `data/raw/corporate_actions/us_corporate_actions.csv`（A 股事件表同列：现金红利 → `cash_per_share`，拆股 k:1 → `share_ratio = k − 1`，反向拆股为负比例）；退市名册 `data/raw/us_delisted_roster.csv`，末个交易日 = min(价格序列末日, 出指数日)。无价记 `no_price`。改名公司按 Tiingo 现行代码取全史，原代码的成员区间沿用。
 * **退市与出指数**：出指数走 §9.3.2「已移出名单」路径逐档清仓；价格序列在出指数前结束者按退市名册在末个交易日以末价清仓（并购对价含在末价内；破产者按末价，偏乐观，计数）。
@@ -40,7 +40,7 @@
 * **时点**：每次 10-K／10-Q（20-F／40-F 同）`filed` 日 F 重算 V；`band_available_at = F`，逐日状态里带的生效日 = F 之前最后一个交易日（与 A 股 `--state-effective prev_trading_day` 同）。6-K 申报、不在 companyfacts 的公司判无法估值。
 * **归一化**：报告期末至当日的拆股按比例折 V；生效后的现金分红按 §11.4 `V − D`，到下一份报告接管为止。
 * **持仓侧**：第一期 = 候选侧（`--ttm-trust` 规则未移植，作成文差异登记）。若在跑数前移植 B2，在此登记时间并改为逐 (代码, 日期) 取两侧较高 V。
-* **无法估值**（负权益、NOPAT ≤ 0、结构断点后不足 3 年、股数不可得等）无 `P/V`、不进合格集；逐年报告各原因占比（描述项）。股数标签缺口先修（P2），修后重估覆盖率并在此登记。
+* **无法估值**（负权益、NOPAT ≤ 0、结构断点后不足 3 年、股数不可得等）无 `P/V`、不进合格集；逐年报告各原因占比（描述项）。**股数标签缺口已修（2026-09-06，跑数前）**：`fetch_overseas_statements.py` 的股数概念加 `WeightedAverageNumberOfShareOutstandingBasicAndDiluted`，季报股数缺时退期末股数，再缺退申报封面 `dei:EntityCommonStockSharesOutstanding`（多类别按维度申报者 companyfacts 无该值，仍不可得）。修后 OI-150 样本 60 家 × 4 时点：ok 151／240（修前 145），股数不可得 6（修前 24），母公司权益非正 25、结构断点 16、NOPAT ≤ 0 4。
 * 产物：`data/processed/us_daily_states_adopted.csv`／`us_daily_states_hold.csv`，`security_code`、`date`、`close`、`intrinsic_value`、`valuation_ratio` 五列必填。
 
 ## 4. 交易口径

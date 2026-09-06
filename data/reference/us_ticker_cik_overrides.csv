@@ -1,0 +1,12 @@
+ticker,from,to,cik,price_ticker,basis
+WBA,2009-01-01,2014-09-15,0000104207,,"Walgreen Co（WBA 前身，历史代码 WAG）：EDGAR 全文检索 10-K 命中 58 次；申报实例文件名 wag-YYYYMMDD；公众持股 397 亿美元"
+AABA,2009-01-01,2017-06-18,0001011006,AABA,"Yahoo Inc（2017-06 改组为 Altaba，成分文件回填代码 AABA）：全文检索命中 80 次；实例文件名 yhoo-YYYYMMDD；公众持股 341 亿美元"
+WYND,2009-01-01,2018-05-30,0001361658,TNL,"Wyndham Worldwide（历史代码 WYN，现 Travel + Leisure TNL）：全文检索命中 91 次；实例文件名 wyn-YYYYMMDD；公众持股 102 亿美元"
+GAS,2011-12-13,2016-06-30,0001004155,GAS,"AGL Resources（2016-07 并入 Southern Co）：全文检索命中 52 次；公众持股 66 亿美元"
+POM,2009-01-01,2016-03-23,0001135971,POM,"Pepco Holdings（2016-03 并入 Exelon）：全文检索命中 30 次（子公司 Atlantic City Electric 无公众持股，排除）"
+DXC,2009-01-01,2015-11-30,0000023082,CSC,"Computer Sciences Corp（成分文件回填代码 DXC，历史代码 CSC）：全文检索命中 67 次；实例文件名 csc-YYYYMMDD；公众持股 83 亿美元"
+PLL,2009-01-01,2015-08-30,0000075829,PLL,"Pall Corp（2015-08 并入 Danaher）：全文检索命中 65 次；实例文件名 pll-YYYYMMDD；公众持股 88 亿美元"
+LO,2009-01-01,2015-06-11,0001424847,LO,"Lorillard（2015-06 并入 Reynolds）：全文检索命中 68 次；实例文件名 lo-YYYYMMDD；公众持股 220 亿美元"
+BMS,2009-01-01,2014-12-04,0000011199,BMS,"Bemis Co（2019 并入 Amcor）：全文检索命中 51 次；实例文件名 bms-YYYYMMDD；公众持股 40 亿美元"
+LIFE,2009-01-01,2014-01-23,0001073431,LIFE,"Life Technologies（2014-02 并入 Thermo Fisher）：全文检索命中 47 次；实例文件名 life-YYYYMMDD；公众持股 94 亿美元"
+BTUUQ,2009-01-01,2014-09-21,0001064728,BTU,"Peabody Energy（成分文件回填破产期代码 BTUUQ，历史代码 BTU）：全文检索命中 69 次；实例文件名 btu-YYYYMMDD；公众持股 239 亿美元"

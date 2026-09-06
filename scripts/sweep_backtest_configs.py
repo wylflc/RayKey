@@ -137,6 +137,20 @@ BASE = (
 # 数据到 2026-11 时 2016-11-01 满 10 年，依次补入并按 §12 重登在册读数。
 DEFAULT_STARTS = [f"{y}-{m}-01" for y in range(2009, 2017) for m in ("05", "11")][1:-1]
 
+# **美股基准 `BASE_US`（OI-159，预登记 docs/reports/us_sp500_backtest_prereg.zh.md §4）**：与 `BASE` 逐项同式，只改市场项——
+# 1 股为单位、无费税、现金账户（授信 0）、现金红利固定预提 15%、50 万美元、`--market us` 数据落点；两条线沿用 1.0454／0.15。
+BASE_US = (BASE
+           .replace("--lot-size 100 --lot-ratio-cooldown", "--lot-size 1 --no-lot-ratio-cooldown")
+           .replace("--fee-preset user", "--fee-preset none")
+           .replace("--capital 3000000 --credit-ratio 0.666", "--capital 500000 --credit-ratio 0")
+           .replace("--fill-missing skip --dividend-tax", "--fill-missing skip --no-dividend-tax --withholding-rate 0.15")
+           .replace("--daily-states data/processed/a_share_daily_states_adopted.csv", "--market us --daily-states data/processed/us_daily_states_adopted.csv")
+           .replace("--hold-states data/processed/a_share_daily_states_hold.csv", "--hold-states data/processed/us_daily_states_hold.csv")
+           .replace("--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv", "--universe-file data/processed/pit_attention/panel_sp500_us.csv"))
+assert BASE_US != BASE and "--market us" in BASE_US
+# 美股标准起点集：XBRL 三年史自 2012 年成立，路径 ≥ 10 年的半年档起点 2012-05-01 起（数据末端 2026-08 → 至 2016-05-01，9 个）
+DEFAULT_STARTS_US = [f"{y}-{m}-01" for y in range(2012, 2017) for m in ("05", "11")][:-1]
+
 # 计量版本 m1 的输出列。无 `#METRIC` 首行且行宽等于此列数的旧扫描文件按 m1 解析——只读不与现行 BASE 配对。
 FIELDS_M1 = ("年化", "最大回撤", "Sharpe", "Calmar", "平均仓位", "年均换手",
              "持仓数中位", "单票权重中位", "单票权重P90", "单票权重最大", "前三权重中位", "单票超60%天数占比",
@@ -223,6 +237,20 @@ STANDARD_SET = (
 DELTA_KEYS = ("滚动5年年化中位", "年化", "滚动5年年化P25", "滚动5年回撤中位")
 EX5_PREFIX = "EX5:"              # 去赢家第二遍的结果行标签前缀
 EX5_ANCHOR_START = "2011-11-01"  # 赢家取自 BASE 臂该起点（§12.132 起的定义）
+MARKET_CFG = {"a": dict(base=None, starts=None, anchor="2011-11-01", longrun=("2009-11-01", "2011-11-01")),
+              "us": dict(base=BASE_US, starts=DEFAULT_STARTS_US, anchor="2012-05-01", longrun=("2012-05-01",))}
+
+
+def set_market(market: str) -> None:
+    """按市场切换基准命令、起点集、赢家锚点与长跑锚点（模块级，run_one／report 运行时读取）。"""
+    global BASE, DEFAULT_STARTS, EX5_ANCHOR_START, LONGRUN_STARTS
+    cfg = MARKET_CFG[market]
+    if cfg["base"]:
+        BASE = cfg["base"]
+    if cfg["starts"]:
+        DEFAULT_STARTS = cfg["starts"]
+    EX5_ANCHOR_START = cfg["anchor"]
+    LONGRUN_STARTS = cfg["longrun"]
 EX5_FIELD = "前五赢家"           # 引擎 summary 里的赢家列（代码以 / 连接）
 # **长跑年化**（§12.1 第 2 款）：单起点的全期 CAGR。两个锚点都报——最长路径与标准长跑常常反号，
 # 只看一个会把「起点单点决定」读成效应（回测日志 §12.152：0.19 vs 0.20 在两锚上正好相反）。
@@ -339,12 +367,20 @@ def load_scan(path: Path):
     return groups, orders, failed, ex5_note, version, fields
 
 
+def scan_market(path: Path) -> str:
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("#MARKET|"):
+            return line.split("|", 1)[1].strip()
+    return "a"
+
+
 def report(path: Path, title: str) -> None:
     """对照表。Δ 相对 `BASE` 臂，按 §12.1 同时给中位与符号数——单看中位会把掷硬币读成效应。
 
     版面（§12.1 第 2 款）：首页 = 【决策读数】（全样本、去赢家 A 各一份）→【采纳判定】→【跨起点尾部】；
     附表 = 标准指标集、配对差、集中度（含长跑锚点与滚 10）。字段、台账与第 4 款资格计算不因版面而变。
     结果文件里 `EX5:` 前缀的行是去赢家第二遍，单独成表、Δ 对 `EX5:BASE` 配对。"""
+    set_market(scan_market(path))
     groups, orders, failed, ex5_note, version, fields = load_scan(path)
     if version != METRIC_VERSION:
         print(f"⚠ 本文件计量版本 {version}，现行引擎 {METRIC_VERSION}：读数只读，不得与现行 BASE 或其它版本的读数配对"
@@ -609,10 +645,13 @@ def main():
     ap.add_argument("--no-ex-top5", action="store_true",
                     help="不跑去赢家第二遍（§12.1 第 3 款要求每轮都跑；只在复现旧读数或纯补跑时给）")
     ap.add_argument("--title", default="扫描结果")
+    ap.add_argument("--market", choices=tuple(MARKET_CFG), default="a",
+                    help="a＝A 股 BASE（缺省）；us＝美股 BASE_US、起点集 2012-05 起 9 个、赢家锚点 2012-05-01（OI-159）。--report 从文件 #MARKET 行自取")
     ap.add_argument("--exclude-codes", default="",
                     help="固定剔除集（逗号分隔代码）：只跑一遍，全部臂统一剔除这些代码，行以 EX5: 前缀写出（与自动第二遍同格式）；"
                          "用于剔除集须按锚点固定的场合（OI-148 各滑点档按 0bp 锚点、剔除集 U 复现）")
     args = ap.parse_args()
+    set_market(args.market)
 
     if not args.report:
         if not args.config:
@@ -639,6 +678,7 @@ def main():
 
         with args.out.open("w", encoding="utf-8") as fh:
             fh.write(metric_header() + "\n")       # 计量版本与列名先落盘，--report 据此解析
+            fh.write(f"#MARKET|{args.market}\n")
             fh.flush()
             if args.exclude_codes:
                 fixed = ",".join(sorted({c.strip() for c in args.exclude_codes.split(",") if c.strip()}))

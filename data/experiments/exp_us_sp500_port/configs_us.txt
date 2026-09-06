@@ -1,0 +1,6 @@
+# OI-159 美股臂（sweep --market us，基准 BASE_US）：主臂沿用 1.0454／0.15；对齐臂的线由 align_buy_line.py 解出后填入
+BASE|
+SLIP10|--slippage-bp 10
+SLIP20|--slippage-bp 20
+SLIP30|--slippage-bp 30
+WHT0|--withholding-rate 0

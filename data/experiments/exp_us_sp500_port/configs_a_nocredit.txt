@@ -1,0 +1,3 @@
+# OI-159 A 股对照臂：BASE 只改授信为 0（现金账户），其余不变；与美股并列展示，不入册
+BASE|
+A_NOCREDIT|--credit-ratio 0

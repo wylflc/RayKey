@@ -70,7 +70,27 @@ def load_delisted() -> dict[str, str]:
                 for r in csv.DictReader(handle) if (r.get("last_trade_date") or "")}
 RATES = ROOT / "data/reference/cost_of_equity_inputs.csv"
 BENCHMARK = ROOT / "data/raw/ohlcv/INDEX_000300.csv"
+BENCHMARK_NAME = "沪深300"
+NAMES_PATH = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
+WITHHOLDING = 0.0                 # `--withholding-rate`：现金红利入账时按固定比例预提（美股口径，OI-159）；A 股为 0
 OUT_DIR = ROOT / "data/backtest"
+
+# `--market us`（OI-159）：同一引擎跑美股，只换数据落点与市场常量，规则代码不分叉。
+MARKETS = {
+    "a": {},
+    "us": {"OHLCV_DIR": "data/raw/ohlcv_us", "ACTIONS": "data/raw/corporate_actions/us_corporate_actions.csv",
+           "DELISTED_ROSTER": "data/raw/us_delisted_roster.csv", "RATES": "data/reference/cost_of_equity_inputs_us.csv",
+           "BENCHMARK": "data/raw/ohlcv_us/INDEX_SP500TR.csv", "BENCHMARK_NAME": "标普500全收益",
+           "NAMES_PATH": "data/processed/us_sp500_members.csv", "DAILY_STATES": "data/processed/us_daily_states_adopted.csv",
+           "TRADING_DAYS": 252},
+}
+
+
+def apply_market(market: str) -> None:
+    """按市场重定数据落点与常量（模块级，函数运行时读取）。"""
+    g = globals()
+    for key, value in MARKETS.get(market, {}).items():
+        g[key] = (ROOT / value) if isinstance(value, str) and "/" in value else value
 
 INITIAL_CAPITAL = 3_000_000.0
 MAX_POSITIONS = 10
@@ -411,11 +431,17 @@ def load_actions(include_rights: bool = True) -> dict[str, dict[str, tuple[float
 
 
 def load_names() -> dict[str, str]:
-    path = ROOT / "data/processed/a_share_watchlist_quality_tiers.csv"
+    path = NAMES_PATH
     if not path.exists():
         return {}
     with path.open(newline="", encoding="utf-8") as handle:
-        return {r["security_code"]: r["security_name"] for r in csv.DictReader(handle)}
+        out = {}
+        for r in csv.DictReader(handle):
+            if r.get("security_code"):
+                out[r["security_code"]] = r.get("security_name", "")
+            elif r.get("cik"):                       # 美股成员表：cik → "代码 名称"
+                out.setdefault(r["cik"], f"{r.get('ticker', '')} {r.get('name', '')}".strip())
+        return out
 
 
 def load_tiers() -> dict[str, str]:
@@ -904,6 +930,10 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
             continue
         cash_per_share, ratio, rr, rp = event
         cash = lot.shares * cash_per_share
+        if WITHHOLDING and cash > 0:               # 固定预提（美股口径）：入账即扣、不退
+            withheld = cash * WITHHOLDING
+            cash -= withheld
+            portfolio.dividend_tax_paid += withheld
         portfolio.cash += cash
         lot.dividends += cash
         lot.proceeds += cash
@@ -3941,6 +3971,10 @@ def main() -> int:
     parser.add_argument("--fill-missing", choices=("skip", "signal_close"), default="skip",
                         help="T+1 成交日无价（停牌／末日）：skip＝该笔跳过（§9.1 执行日停牌跳过，缺省）；"
                              "signal_close＝回落 T 日收盘成交（研究／复现口径）")
+    parser.add_argument("--market", choices=tuple(MARKETS), default="a",
+                        help="数据落点与市场常量：a＝A 股（缺省）；us＝美股（OI-159：ohlcv_us、us_corporate_actions、DGS10、标普全收益基准、年交易日 252）")
+    parser.add_argument("--withholding-rate", type=float, default=0.0, metavar="F",
+                        help="现金红利固定预提比例（美股口径，入账即扣不退；与 --dividend-tax 的持有期税率互斥使用）")
     parser.add_argument("--dividend-tax", action="store_true",
                         help="差别化股息税：卖出时按 FIFO 对所卖股份持有期内已收现金红利计税（≤1 个月 20%%、≤1 年 10%%、>1 年免）")
     parser.add_argument("--swap-repeat", choices=("skip", "whole"), default="skip",
@@ -3987,6 +4021,14 @@ def main() -> int:
                          "进股数、整手、可用现金、成本、费税与流水价；盯市价、信号价与止损／走势判据不变；"
                          "同日买卖先净额对冲、只对净额收；强平与退市清仓同样收；分红、送转、配股认购不收。0 = 关（逐位不变）")
     args = parser.parse_args()
+    global WITHHOLDING
+    apply_market(args.market)
+    if args.withholding_rate < 0 or args.withholding_rate >= 1:
+        sys.exit("--withholding-rate 须在 [0, 1)")
+    WITHHOLDING = args.withholding_rate
+    if args.market != "a":
+        print(f"市场 {args.market}：行情 {OHLCV_DIR.relative_to(ROOT)}，事件 {ACTIONS.relative_to(ROOT)}，rf {RATES.relative_to(ROOT)}，"
+              f"基准 {BENCHMARK_NAME}，年交易日 {TRADING_DAYS}，红利预提 {WITHHOLDING:.0%}")
 
     if args.stop_confirm_days < 1:
         sys.exit("--stop-confirm-days 须为 ≥1 的交易日数")
@@ -4182,7 +4224,7 @@ def main() -> int:
     covered = sorted(states)
     print(f"  逐日状态 {sum(len(v) for v in states.values()):,} 行｜"
           f"{covered[0]} ~ {covered[-1]}｜行情 {len(prices)} 只｜"
-          f"基准 {'沪深300 ' + str(len(benchmark)) + ' 日' if benchmark else '**缺**'}")
+          f"基准 {BENCHMARK_NAME + ' ' + str(len(benchmark)) + ' 日' if benchmark else '**缺**'}")
     if universe:
         sizes = [len(m) for _d, m in universe]
         print(f"  **时点股票库**：{len(universe)} 档｜{universe[0][0]} 起生效｜"
