@@ -380,7 +380,7 @@ def build_l4_dossier_section(
 ) -> tuple[list[str], int]:
     """渲染用户点名建档但未入关注池的 L4 阅读归档区。
 
-    筛选依据只认逐票档案 ``notes`` 中的「用户点名建档」来源和三类表当前状态；
+    筛选依据只认逐票档案 ``notes`` 中的「用户点名建档」或「关注池迁出」来源和三类表当前状态；
     不从目录存在性猜测，避免把全市场批量建档误列为用户点名。L4 是本文档归档层级，
     ``attention_class`` 原样展示，不触碰质量真值或买入资格。档案链接按阅读版
     ``output_md`` 所在目录算相对路径，阅读版搬家不改链接写法。
@@ -394,7 +394,8 @@ def build_l4_dossier_section(
         triage = triage_by_code.get(code)
         if not triage or triage.get("attention_class") == "worth_attention":
             continue
-        if "用户点名建档" not in str(row.get("notes", "")):
+        notes = str(row.get("notes", ""))
+        if "用户点名建档" not in notes and "关注池迁出" not in notes:
             continue
         selected.append((row, str(triage.get("attention_class") or "—")))
 
