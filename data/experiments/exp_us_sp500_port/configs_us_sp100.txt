@@ -1,0 +1,3 @@
+# OI-159 追加读数：股票池缩小为标普 100 历史成分（其余与 BASE_US 同）
+BASE|
+SP100|--universe-file data/processed/pit_attention/panel_sp100_us.csv

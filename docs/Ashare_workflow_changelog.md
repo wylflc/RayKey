@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.157 | 2026-09-07 | 标普 100 历史成分面板脚本 `build_us_sp100_panel.py`（Wikipedia 修订历史 → 区间 → 标普 500 成员表取 CIK）、作业 `scripts/slurm/us_sp100_panel.sbatch`、配置 `configs_us_sp100.txt`；研究用，§9.3.1 与 BASE 不改。依据 §12.203 |
 | v4.156 | 2026-09-06 | 美股市场层（研究，不入生产）：引擎 `--market us`、`--withholding-rate`（固定预提），`--exclude-codes` 收 10 位 CIK；扫描器 `--market us`（`BASE_US`、9 个半年起点、锚 2012-05-01）；脚本 `build_us_index_panel.py`、`fetch_us_ohlcv_history.py`、`fetch_us_rates.py`、`fetch_us_companyfacts.py`、`build_us_daily_states.py`、`experimental/us_h1_readout.py`、`experimental/align_buy_line.py`；`fetch_overseas_statements.py` 股数与归母权益兜底；`panel_tier_forward.py` 加 `--ohlcv-dir`／`--actions`；作业 `scripts/slurm/us_sp500_*.sbatch`。§9.3.1 与 BASE 不改；OI-159 结案（不支持 H1）。依据 §12.202 |
 | v4.155 | 2026-09-06 | OI-157 按用户裁定不采纳结案；`--t1-judge gain` 留研究开关，§9.3.1、生产常量与 BASE 不改。依据 §12.201 |
 | v4.154 | 2026-09-06 | 剔除集运行的集合标签改为 `<集合>@<挑战臂>`（`ex_winner_symmetry.py`；`ex_winner_dose.py` 新增必填 `--challenger`，K 标签同式；`ex_winner_symmetry_report.py` 兼容旧文件），赢家名单可回读现行台账；扫描台账归并键加 `计量版本`（`clean_derived_artifacts.py`，测试 `test_scan_ledger.py`）；现行台账旧式集合标签行按新标签重跑替换。OI-158 结案。OI-157 §12.1 第 4 款三项补齐（作业 `scripts/slurm/oi157_t1gain_sweeps.sbatch`／`oi157_t1gain_signal.sbatch`，配置 `data/experiments/exp_t1_info/configs/t1gain_*.txt`），§9.3.1 与 BASE 不改、待用户裁定。依据 §12.201 |
