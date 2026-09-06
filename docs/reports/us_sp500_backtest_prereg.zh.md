@@ -12,7 +12,7 @@
 | 负权益公司 | 按 A 股口径判无法估值，不另设口径 |
 | 两条线 | 主臂沿用 1.0454 / 0.15；对齐臂并列报、不作主读数 |
 | 初始资本 | 500,000 美元 |
-| 融资 | 授信 66.6%、强平 130%（与 A 股同）；利率 5.0%（IBKR Pro 2026 年 USD 首档 5.12%、10 万~100 万美元档约 4.6% 的折中；描述臂 3.5%） |
+| 融资 | **不用融资**：现金账户，`--credit-ratio 0`；A 股对照臂同样按无融资跑（用户 2026-09-06 补充裁定） |
 | 股息税 | 现金红利固定预提 15%（假设荷兰税务居民并已提交 W-8BEN；描述臂 0%） |
 | 起点集 | 2012-05-01 起半年档、路径 ≥ 10 年，共 9 个；长跑锚点 2012-05-01 |
 
@@ -28,7 +28,7 @@
 * **成员区间**：同一代码连续出现的快照日段为一个区间；`effective_from` = 首个快照日，`effective_to` = 消失前最后一个快照日。面板 `data/processed/pit_attention/panel_sp500_us.csv`，与 `panel_moat_bank_v6b.csv` 同列。面板自 2009-01-01 起（起点前热身），观测窗 2012-05-01 至数据末端。
 * **代码 → CIK**：① SEC `company_tickers.json` / `company_tickers_exchange.json`；② `submissions` 的 `tickers` 与 `formerNames`；③ OI-150 的申报文件封面代码反查（CIK 侧取全部 XBRL 申报人）；④ 手工映射 `data/reference/us_ticker_cik_overrides.csv`，每行注明依据。未解析记 `no_cik`。
 * **金融剔除**：按 `submissions` 的 `sic` 剔除 6000–6799；SIC 缺失者保留并标注。金融剔除单独计数，不算样本损失。
-* **价格与公司行动**：Tiingo 日线（token 只从环境变量 `TIINGO_TOKEN` 或 `~/.config/raykey/tiingo_token` 读取，不入库）。未复权收盘 → `data/raw/ohlcv_us/<代码>.csv`（`date,open,close,high,low,volume` 六列，与 A 股同）；`divCash`／`splitFactor` → `data/raw/corporate_actions/us_corporate_actions.csv`（A 股事件表同列：现金红利 → `cash_per_share`，拆股 k:1 → `share_ratio = k − 1`，反向拆股为负比例）；退市名册 `data/raw/us_delisted_roster.csv`，末个交易日 = min(价格序列末日, 出指数日)。无价记 `no_price`。改名公司按 Tiingo 现行代码取全史，原代码的成员区间沿用。
+* **价格与公司行动**：两源合一，均为免费源。现役且代码未被复用者取 Yahoo `v8/finance/chart`（`events=div,splits`，收盘按拆股事件还原为未复权）；Yahoo 无数据（404）或代码已被新公司复用（Yahoo 首个交易日晚于入指数日 30 天以上）者取 Tiingo 免费档（token 只从环境变量 `TIINGO_TOKEN` 或 `~/.config/raykey/tiingo_token` 读取，不入库）。逐代码来源写入 `data/raw/ohlcv_us/price_index.csv`。未复权收盘 → `data/raw/ohlcv_us/<代码>.csv`（`date,open,close,high,low,volume` 六列，与 A 股同）；`divCash`／`splitFactor` → `data/raw/corporate_actions/us_corporate_actions.csv`（A 股事件表同列：现金红利 → `cash_per_share`，拆股 k:1 → `share_ratio = k − 1`，反向拆股为负比例）；退市名册 `data/raw/us_delisted_roster.csv`，末个交易日 = min(价格序列末日, 出指数日)。无价记 `no_price`。改名公司按 Tiingo 现行代码取全史，原代码的成员区间沿用。
 * **退市与出指数**：出指数走 §9.3.2「已移出名单」路径逐档清仓；价格序列在出指数前结束者按退市名册在末个交易日以末价清仓（并购对价含在末价内；破产者按末价，偏乐观，计数）。
 * **分拆（spin-off）**：按分拆日子公司首日收盘 × 分配比例折算为现金红利记入事件表，逐笔计数。
 * **阈值**：按成员·日计，`no_cik + no_price` 总体 > 15% 或任一年 > 20% 即「不可判」。
@@ -52,7 +52,7 @@
 | 交易单位 | 1 股（`--lot-size 1`），无比例冷却 |
 | 费税 | 佣金 0、印花税 0、过户费 0；滑点 0／10／20／30bp 四档（§12.1 第 7 款） |
 | 股息税 | 现金红利按 15% 固定预提，卖出时不结算、不退（引擎新增固定预提模式） |
-| 融资 | 授信 = 净资产 × 66.6%、强平线 130%、年利率 5.0%；资金顺序按 §10.2 |
+| 融资 | 无（现金账户，`--credit-ratio 0`）；可用资金 = 现金；强平、担保比例、融资利息各项不适用 |
 | 初始资本 | 500,000 美元 |
 | 执行 | T 日收盘信号、T+1 收盘成交；T+1 无价跳过；同日买卖对冲；同日一档 |
 | 均线 | 前复权口径 MA20／MA60，引擎按事件表映射到末日口径（与 A 股同） |
@@ -64,9 +64,10 @@
 ## 5. 指标、起点集与臂
 
 * 计量口径 m2。标准起点集 = 2012-05-01、2012-11-01、…、2016-05-01 共 9 个；长跑锚点 2012-05-01（单起点，只报水平）。
-* 每臂报 §12.1 第 2 款标准指标集（全样本与去赢家各一份）、跨起点尾部、集中度表。剔除集 A = `BASE_US` 臂 2012-05-01 起点按相对贡献前五；不做 U。
+* 每臂报 §12.1 第 2 款标准指标集（全样本与去赢家各一份）、跨起点尾部、集中度表；无融资下最低担保比例、同跌缓冲、强平次数三项记不适用，平均仓位上限 100%。剔除集 A = `BASE_US` 臂 2012-05-01 起点按相对贡献前五；不做 U。
 * **H1 读数**：逐起点「滚动 5 年 CAGR 中位 − `^SP500TR` 同窗口 CAGR 中位」的配对差；报 9 个起点的配对差中位与正号起点数。
-* 臂（共 7 条 × 9 起点）：`BASE_US`；`ALIGNED_US`；`BASE_US` 滑点 10／20／30bp；`BASE_US` 利率 3.5%；`BASE_US` 预提 0%。后四条只描述。
+* 臂（美股 6 条 × 9 起点）：`BASE_US`；`ALIGNED_US`；`BASE_US` 滑点 10／20／30bp；`BASE_US` 预提 0%。后四条只描述。
+* **A 股对照臂**：`BASE` 改 `--credit-ratio 0`（其余不变）在 A 股标准起点集 14 个起点跑一遍，另取与美股同历（2012-05 ~ 2016-05）的 9 个起点并列；A 股无融资读数只作并列展示，不入册、不与在册 `BASE` 配对判定。
 * 辅助（不进判定）：`panel_tier_forward.py` 在美股候选侧状态上的 `P/V` 分档前向回报（OI-150 的分档表）；覆盖率表；与 A 股在册读数并列表。
 
 ## 6. 执行

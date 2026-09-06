@@ -11,7 +11,7 @@
 
 ### OI-159｜待办：美股标普 500 历史成分股组合回测（A 股估值与交易规则原样移植）
 
-**来源（2026-09-06，用户指令）**：把现行策略整体应用到美股，股票池不用 LLM 护城河筛选、改用历史时点的标普 500 成分股，估值与操作规则与 A 股保持一致，数据源改用美国数据商。评估与阶段计划 [us_sp500_strategy_port_plan.zh.md](reports/us_sp500_strategy_port_plan.zh.md)；预登记书 [us_sp500_backtest_prereg.zh.md](reports/us_sp500_backtest_prereg.zh.md)（用户裁定：标普 500 历史成分、第一期剔除金融股、负权益判无法估值、主臂 1.0454／0.15 加对齐臂、50 万美元、利率 5.0%、预提 15%、起点集 2012-05 起 9 个）。**当前处置**：P0 完成（预登记与裁定落档）；下一步 P1 数据层，需用户先在 tiingo.com 注册并把 token 放到 `TIINGO_TOKEN` 或 `~/.config/raykey/tiingo_token`（不入库）。OI-150 的分档表作本项副产物。
+**来源（2026-09-06，用户指令）**：把现行策略整体应用到美股，股票池不用 LLM 护城河筛选、改用历史时点的标普 500 成分股，估值与操作规则与 A 股保持一致，数据源改用美国数据商。评估与阶段计划 [us_sp500_strategy_port_plan.zh.md](reports/us_sp500_strategy_port_plan.zh.md)；预登记书 [us_sp500_backtest_prereg.zh.md](reports/us_sp500_backtest_prereg.zh.md)（用户裁定：标普 500 历史成分、第一期剔除金融股、负权益判无法估值、主臂 1.0454／0.15 加对齐臂、50 万美元、不用融资且 A 股对照臂同样无融资、预提 15%、起点集 2012-05 起 9 个）。**当前处置**：P0 完成（预登记与裁定落档）；下一步 P1 数据层，需用户先在 tiingo.com 注册并把 token 放到 `TIINGO_TOKEN` 或 `~/.config/raykey/tiingo_token`（不入库）。OI-150 的分档表作本项副产物。
 
 ### OI-150｜待办：海外市场估值信号的预登记前向检验（第三批次，可选）
 
