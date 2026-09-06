@@ -253,6 +253,14 @@ def main() -> int:
     seeded = seed_new_pool_rows(rows, tiers, cards)
     if seeded:
         print(f"  新入池补行 {len(seeded)} 只：" + "、".join(f"{c} {n}" for c, n in seeded))
+    # 出池删行：本表只承载分层表里 L1-L3 的 `worth_attention` 成员（§2 核心池的估值输入）。
+    # §5.5 迁出（worth_attention → boundary_pending 等）后分层表已无该行，估值行随之删除，
+    # 否则核心池会继续物化出池公司（2026-09-07 护城河审核迁出 37 家时暴露）。档案与带文件不动。
+    removed = [(r["security_code"].zfill(6), r.get("security_name", "")) for r in rows
+               if tiers.get(r["security_code"].zfill(6), "") not in ("L1", "L2", "L3")]
+    if removed:
+        rows = [r for r in rows if tiers.get(r["security_code"].zfill(6), "") in ("L1", "L2", "L3")]
+        print(f"  出池删行 {len(removed)} 只：" + "、".join(f"{c} {n}" for c, n in removed))
 
     quotes: dict[str, dict] = {}
     if args.quotes == "fetch":

@@ -12,20 +12,26 @@
    - `worth_from=0` → 该代码整体除名（v5 有也删）；
    - 区间行 → **替换**该代码在 v5 的全部区间；同一代码可多行（如盐湖 2004-2015 与 2021-）。
 3. **区间 → 生效窗**：进场证据年 Y → `effective_from = (Y+1)-04-30`（年报可得约定，与 v5 同构）；
-   出场年 E → `effective_to = (E+1)-04-30`；`worth_to=9999` → 开放（空串）。
+   出场年 E → `effective_to = (E+1)-04-30`；`worth_to=9999` → 开放（空串）；
+   `worth_to` 也可写具体日期 `YYYY-MM-DD`（季度外的名单迁移，出场日 = 迁移日）→ `effective_to` 取该日。
    每个区间一行（回测按区间覆盖读取，与 v5 的逐年多行语义等价）。
-4. **银行子册**：银行行判定不经 verdicts（§12.71.2）。v6b = v5 全部银行行原样（含 X3 退出/重入）；
+4. **银行子册**：银行行的进场判定不经 verdicts（§12.71.2）。v6b = v5 全部银行行原样（含 X3 退出/重入）；
    v6a = 仅规则 11 判例两家（招商银行 600036、宁波银行 002142）。
    银行识别 = 名含「银行/农商」或显式补充名单（张家港行）。
 
+   银行行的**出场**可经 verdicts：银行代码的区间行只取 `worth_to` 作截断——v5 中该行开始日 ≥ 出场日的行删除、
+   跨越出场日的行把 `effective_to` 截到出场日；`worth_from` 不改银行进场。
 用法::
 
     python3 scripts/build_moat_panel.py            # 产出 v6a + v6b 并打印对账
+    python3 scripts/build_moat_panel.py --today 2026-09-07   # 对账所用「今日」（缺省本机日期）
 """
 from __future__ import annotations
 
+import argparse
 import csv
 from collections import defaultdict
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,7 +39,7 @@ PIT = ROOT / "data/processed/pit_attention"
 V5 = PIT / "panel_moat_bank_v5.csv"
 VERDICTS = PIT / "verdicts_pit_moat_v6.csv"
 POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
-TODAY = "2026-08-16"
+TODAY = date.today().isoformat()   # 对账用「今日」，可由 --today 覆盖
 
 BANK_EXTRA = {"002839"}  # 张家港行：名字不含「银行」，显式补充
 RULE11_BANKS = {"600036", "002142"}
@@ -44,6 +50,10 @@ def is_bank(code: str, name: str) -> bool:
 
 
 def main() -> int:
+    global TODAY
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--today", default=TODAY, help="对账所用「今日」，缺省本机日期")
+    TODAY = ap.parse_args().today
     v5_rows: dict[str, list[dict]] = defaultdict(list)
     fields: list[str] = []
     with V5.open(encoding="utf-8-sig") as fh:
@@ -53,7 +63,7 @@ def main() -> int:
             v5_rows[r["security_code"].zfill(6)].append(r)
 
     drops: set[str] = set()
-    intervals: dict[str, list[tuple[int, int, str]]] = defaultdict(list)
+    intervals: dict[str, list[tuple[int, str, str]]] = defaultdict(list)
     names: dict[str, str] = {}
     with VERDICTS.open(encoding="utf-8") as fh:
         rd = csv.reader(fh)
@@ -65,18 +75,24 @@ def main() -> int:
             if wf == "0":
                 drops.add(code)
             else:
-                intervals[code].append((int(wf), int(wt), row[1]))
+                intervals[code].append((int(wf), wt, row[1]))
+
+    def exit_date(wt: str) -> str:
+        """`worth_to` → `effective_to`：年 E → (E+1)-04-30；9999 → 开放；YYYY-MM-DD → 原日期。"""
+        if "-" in wt:
+            return wt
+        return "" if int(wt) == 9999 else f"{int(wt) + 1}-04-30"
     overlap = drops & set(intervals)
     if overlap:
         raise SystemExit(f"判定冲突：既除名又给区间 {sorted(overlap)}")
 
-    def interval_rows(code: str, ivs: list[tuple[int, int, str]]) -> list[dict]:
+    def interval_rows(code: str, ivs: list[tuple[int, str, str]]) -> list[dict]:
         out = []
         for wf, wt, name in sorted(ivs):
             row = {k: "" for k in fields}
             row.update({
                 "effective_from": f"{wf + 1}-04-30",
-                "effective_to": "" if wt == 9999 else f"{wt + 1}-04-30",
+                "effective_to": exit_date(wt),
                 "screen_year": str(wf + 1),
                 "security_code": code,
                 "security_name": name,
@@ -98,6 +114,20 @@ def main() -> int:
     for code, ivs in intervals.items():
         if code not in final_nonbank and code not in banks:
             final_nonbank[code] = interval_rows(code, ivs)
+    for code, ivs in intervals.items():
+        if code not in banks:
+            continue
+        cut = min((exit_date(wt) for _wf, wt, _n in ivs if exit_date(wt)), default="")
+        if not cut:
+            continue
+        kept = []
+        for r in banks[code]:
+            if r["effective_from"] >= cut:
+                continue
+            if not r["effective_to"] or r["effective_to"] > cut:
+                r = {**r, "effective_to": cut}
+            kept.append(r)
+        banks[code] = kept
 
     def write(path: Path, bank_codes: set[str]) -> tuple[int, set[str]]:
         rows_out: list[dict] = []
