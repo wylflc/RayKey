@@ -1,1 +1,2 @@
 trade_date,security_code,security_name,rule,condition,close,ma20,ma60,model_pv,hold_pv,cost_basis,gain_pct,entry_stop_price,stop_line,current_shares,sell_shares,amount,swap_for,cooldown_skips,note
+2026-09-04,600938,中国海油,换仓,持仓侧 P/V 0.8752 且弱势｜卖出款去向：中材国际 0.5274（边际 +0.3478）｜触发闸门：中材国际 0.5274（差 0.3478 ≥ 0.1500）,33.41,33.4615,31.0405,0.8752,0.8752,34.1185,-0.0208,31.17,,12200.0,4100,136981.0,600970,0,
