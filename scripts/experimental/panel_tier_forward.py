@@ -62,7 +62,13 @@ def main() -> int:
                     help="剔除银行（股利折现口径，与 ROIC 口径不可比）")
     ap.add_argument("--per-code-out", type=Path,
                     help="逐票统计落盘（代码/分档/样本数/Spearman/公允 P/V/P/V 中位），供与打分列做相关")
+    ap.add_argument("--ohlcv-dir", type=Path, help="行情目录（缺省 A 股 data/raw/ohlcv；美股给 data/raw/ohlcv_us，OI-159）")
+    ap.add_argument("--actions", type=Path, help="除权事件表（缺省 A 股事件库；美股给 us_corporate_actions.csv）")
     a = ap.parse_args()
+    if a.ohlcv_dir:
+        bhv.OHLCV_DIR = a.ohlcv_dir
+    if a.actions:
+        bhv.ACTIONS = a.actions
 
     spans = load_spans(a.panel)
     tiers = {}

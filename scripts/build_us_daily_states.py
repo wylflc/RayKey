@@ -146,6 +146,18 @@ def worker(job: dict) -> tuple[list[dict], list[dict]]:
             rec["status"], rec["reason"] = "no_annual", "无 filed≤F 的年报行"
             bands.append(rec); band_list.append((eff, f, "", None)); continue
         current = fos.sec_current_extract(cik, cik, tax, maps, annuals, dei=dei)
+        # 股数量级守卫：个别申报把股数按千／百万计（CSC 2010-07 10-Q 报 156.53 股），按上次申报或封面股数纠正量级
+        latest_row = current if (current and current["period"] > annuals[-1]["period"]) else annuals[-1]
+        ref = prev_shares or fos.dei_shares(dei, f)
+        scale_note = ""
+        sh = latest_row.get("shares")
+        if sh and ref:
+            ratio_s = float(sh) / ref
+            for k in (1e3, 1e6, 1e9):
+                if 1 / 3 <= ratio_s * k <= 3:
+                    latest_row["shares"] = float(sh) * k; scale_note = f"shares x{k:g}"; break
+                if 1 / 3 <= ratio_s / k <= 3:
+                    latest_row["shares"] = float(sh) / k; scale_note = f"shares /{k:g}"; break
         years = [bor.year_from_row(r) for r in annuals]
         cur = bor.year_from_row(current) if current else None
         rf = rf_at(rf_dates, rf_vals, f)
@@ -166,9 +178,13 @@ def worker(job: dict) -> tuple[list[dict], list[dict]]:
             rec["status"], rec["reason"] = "rejected", str(res.get("reason", ""))[:80]
             bands.append(rec); band_list.append((eff, f, latest.period, None)); prev_shares = shares_now or prev_shares; continue
         value = float(res["value"])
+        close_f = prices[bisect.bisect_right(pdates, eff) - 1][1]
+        if not (0.02 <= close_f / value <= 50):        # 量级守卫：股数或币种错标会把 P/V 推到 1e-6 或 1e3 量级
+            rec["status"], rec["reason"] = "rejected", f"P/V {close_f / value:.4g} 超出 [0.02, 50] 量级守卫"
+            bands.append(rec); band_list.append((eff, f, latest.period, None)); prev_shares = shares_now or prev_shares; continue
         # 报告期末之后、E 之前的拆股：股数已追溯重述则不折
         factor = 1.0
-        notes = []
+        notes = [scale_note] if scale_note else []
         for d, cash, ratio in events:
             if latest.period < d <= eff and abs(ratio - 1.0) > 1e-6:
                 restated = bool(prev_shares and shares_now and abs((shares_now / prev_shares) / ratio - 1.0) <= 0.20)
