@@ -1,0 +1,293 @@
+{
+  "security_code": "300014",
+  "security_name": "亿纬锂能",
+  "as_of": "2026-09-07",
+  "reviewed_at_utc": "2026-09-07T14:13:44.158567+00:00",
+  "workflow_version": "a-share-selection-operation-v4.161",
+  "base_commit": "28bac2843ddf9522580cc71c2f880af6c0ffb907",
+  "attention_class": "boundary_pending",
+  "quality_tier": null,
+  "confidence": "medium",
+  "conclusion": "2026-09-07点名复核：维持boundary_pending，中等置信。认可消费电池利基、宝马验证及技术输出，撤回仅因宁德更强即排除的旧理由；主要增量业务的持久客户替换成本和费用后回报保护仍待验证。2026H1三类电池毛利同比下降、备货占用现金及海外ACT延期约束兑现判断，不将短期现金流或ROE设为独立否决门槛。",
+  "capital_replicability": "uncertain",
+  "special_advantage_check": "客户合作和技术输出是真实能力证据；本轮未核得排他供货、专属准入或已经兑现的持续独占授权收益，不以缺少法律垄断作为必然否决条件。",
+  "recheck_trigger": "大圆柱、商用车及储能客户跨项目复购/续约与同规格费用后利润、良率；战略库存对应订单及现金回收、应收账龄；锂原电池独立利润和投入资本；海外授权实际收款及ACT项目修订安排出现新证据时复核。",
+  "sources": [
+    {
+      "id": "E1",
+      "title": "亿纬锂能2026年半年度报告",
+      "url": "https://static.cninfo.com.cn/finalpage/2026-08-20/1225483571.PDF",
+      "pages": [
+        8,
+        18,
+        19,
+        20,
+        58,
+        142,
+        146
+      ],
+      "date": "2026-08-20"
+    },
+    {
+      "id": "E2",
+      "title": "亿纬锂能2025年年度报告",
+      "url": "https://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12033427",
+      "date": "2026-03-28"
+    },
+    {
+      "id": "E3",
+      "title": "宝马圆柱电池供应商公告",
+      "url": "https://www.press.bmwgroup.com/global/article/detail/T0403470EN/more-performance-co2-reduced-production-significantly-lower-costs-bmw-group-to-use-innovative-round?forceSitePreference=MOBILE",
+      "date": "2022-09-09"
+    },
+    {
+      "id": "E4",
+      "title": "康明斯Amplify合资公告",
+      "url": "https://investor.cummins.com/news/detail/656/accelera-by-cummins-daimler-truck-and-paccar-complete",
+      "date": "2024-06-04"
+    },
+    {
+      "id": "E5",
+      "title": "戴姆勒2026Q1报告",
+      "url": "https://www.daimlertruck.com/fileadmin/user_upload/documents/investors/reports/interim-reports/q1/2026/daimler-tuck-ir-interim-report-q1-2026.pdf",
+      "pages": [
+        11,
+        38
+      ],
+      "date": "2026-05-06"
+    },
+    {
+      "id": "E6",
+      "title": "宁德时代2026年半年度报告",
+      "url": "https://disc.static.szse.cn/disc/disk03/finalpage/2026-07-25/8e6750da-b178-4be9-a74a-4b1d8fc42c58.PDF",
+      "pages": [
+        7,
+        16
+      ],
+      "date": "2026-07-25"
+    },
+    {
+      "id": "E7",
+      "title": "亿纬锂能2026年半年度报告摘要",
+      "url": "https://disc.static.szse.cn/download/disc/disk03/finalpage/2026-08-20/d6701530-95fa-45fd-aa14-0a33ebaa6c51.PDF",
+      "pages": [
+        3,
+        4
+      ],
+      "date": "2026-08-20"
+    }
+  ],
+  "segments_2026h1": [
+    {
+      "name": "消费电池",
+      "revenue": 6410849335.86,
+      "cost": 4959523644.28,
+      "gross_margin_pct": 22.64,
+      "yoy_pp": -4.04,
+      "prior_comparable_margin_pct": 26.68
+    },
+    {
+      "name": "动力电池",
+      "revenue": 17278462852.7,
+      "cost": 14480903279.4,
+      "gross_margin_pct": 16.19,
+      "yoy_pp": -2.97,
+      "prior_comparable_margin_pct": 19.16
+    },
+    {
+      "name": "储能电池",
+      "revenue": 15094044951.77,
+      "cost": 13206070528.05,
+      "gross_margin_pct": 12.51,
+      "yoy_pp": -1.36,
+      "prior_comparable_margin_pct": 13.87
+    }
+  ],
+  "cashflow": {
+    "ocf_cny": -387920722.12,
+    "capex_cny": 5343036780.3,
+    "simple_ocf_minus_capex_yi": -57.3095750242,
+    "management_explanation": "战略库存储备，支付货款",
+    "boundary": "未区分维持性及增长性支出；单期负现金不是永久损失证据"
+  },
+  "investment_income": {
+    "total_cny": 1182812662.41,
+    "equity_method_cny": 605146116.11,
+    "disposal_cny": 446746005.15,
+    "ratio_to_pretax_pct": 31.91,
+    "boundary": "不得全部判为一次性；不得税前直接减归母"
+  },
+  "peer_2026h1": {
+    "CATL_power_system_gm_pct": 20.63,
+    "CATL_storage_system_gm_pct": 23.96,
+    "boundary": "产品与地区组合不同，不能当同规格电芯成本差"
+  },
+  "amplify": {
+    "EVE_ownership_pct": 10,
+    "Daimler_Q1_2026_impairment_EUR_million": 199,
+    "production_delayed": true,
+    "boundary": "戴姆勒自身会计记录，不按持股比例推算亿纬损失"
+  },
+  "roe_series": {
+    "300014": [
+      {
+        "year": 2016,
+        "roe_pct": 13.88,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2017,
+        "roe_pct": 18.83,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2018,
+        "roe_pct": 17.07,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2019,
+        "roe_pct": 25.49,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2020,
+        "roe_pct": 18.97,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2021,
+        "roe_pct": 18.11,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2022,
+        "roe_pct": 17.46,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2023,
+        "roe_pct": 12.48,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2024,
+        "roe_pct": 11.3,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2025,
+        "roe_pct": 10.5,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      }
+    ],
+    "300750": [
+      {
+        "year": 2016,
+        "roe_pct": 69.55,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2017,
+        "roe_pct": 18.99,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2018,
+        "roe_pct": 11.75,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2019,
+        "roe_pct": 12.78,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2020,
+        "roe_pct": 11.27,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2021,
+        "roe_pct": 21.52,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2022,
+        "roe_pct": 24.67,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2023,
+        "roe_pct": 24.04,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2024,
+        "roe_pct": 24.13,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      },
+      {
+        "year": 2025,
+        "roe_pct": 24.91,
+        "source": "eastmoney RPT_LICO_FN_CPD"
+      }
+    ]
+  },
+  "roe_median_2018_2025": {
+    "300014": 17.265,
+    "300750": 22.78
+  },
+  "prior_triage": {
+    "security_code": "300014",
+    "security_name": "亿纬锂能",
+    "attention_class": "boundary_pending",
+    "attention_reason": "2026H1 中报核对（2026-08-23）：营收 456.91 亿(+62.2%)、归母 33.01 亿(+105.7%)、ROE 7.2%（25H1 4.2%）、毛利 14.3%（25H1 17.3%）；与 07 月预告「预增」一致（预告 95~110%，实际 106%）——同业对照结论不变；维持 boundary_pending。前判（2025年报+26Q1+中报预告，2026-08-09）：动力与储能电池二线龙头，25年报 ROE10.5%、毛利16.2%；与宁德时代在技术代际、客户结构与成本上差距明显",
+    "capital_replicability_note": "防7 与已判同行一致：更强的宁德已判 worth，亿纬不应同档",
+    "garbage_reason": "",
+    "garbage_subtype": "",
+    "boundary_recheck_trigger": "",
+    "evidence_basis": "2026H1",
+    "reviewed_at_utc": "2026-08-23T00:00:00+00:00",
+    "workflow_version": "v4.50"
+  },
+  "previous_record_import_id": "quality_review:2026-09-07:300014:prior_triage_snapshot",
+  "decision_id": "quality_review:2026-09-07:300014:eve_reassessment",
+  "input_hashes": {
+    "data/processed/a_share_attention_triage.csv": "1f3c84dcd05959871ae556a7877b5b36059650f777b32e016752873c1baac719",
+    "data/processed/a_share_valuation_dossiers.csv": "7a05c0378477d3fee7021ea8e26e3faf4e0fb6da31e75b034749867da65dde57",
+    "data/processed/a_share_core_valuation_pool.csv": "e30dac668a3eae09b4d3ce8414bb4b4d770f9de26a71f935801316c7961a5599",
+    "data/processed/a_share_watchlist_quality_tiers.csv": "7b353ee046a6a131c42092a61f2e71adf9ef64250d48145088a472adf41cb0b5",
+    "data/processed/a_share_holdings.csv": "7a57b890a33b2fcaa7490f7420d5e60828e3d5fe936d2a395f6391f583fbc461",
+    "data/processed/daily_entry_plan.csv": "46d61df0dc6f6bb513a0f8ed34692fbd5094aa26f0efb8d1255eb0f407d6310f",
+    "data/processed/daily_sell_plan.csv": "ed698c137dcf26832b3613d6c57fad211c911df4d282089db87d150430fcb470"
+  },
+  "valuation": {
+    "action": "retain_existing_out_of_pool_band_without_rebuild",
+    "band_low": "40.96",
+    "band_high": "50.06",
+    "band_method": "内在价值模型·权益退路（§6.5.2.3：无三大报表时的权益 DCF）",
+    "band_derivation": "**池外档案带**（§6.1：只落档案、不落生产带文件、不进 §9.3；直接取自全市场模型带）｜与 §9.3.1.2 回测所用带**同一套口径**。报告期 2026-06-30、生效日 2026-08-20｜eps0 3.7780、roe0 17.46%（weightavg_ttm）｜g0 13.85% = ROE × 留存率｜r 10.00%｜g_T 3.00%、ROE_T 12.00%｜**内在价值 45.51 元**。带 = IV × [0.90, 1.10]，**中值恰为 IV**，故 `P/V` = 现价 ÷ V（`scripts/pv_ratio.py` 唯一实现）与回测的 `valuation_ratio` 逐位一致。",
+    "limitation": "equity fallback; not a newly audited ROIC estimate"
+  },
+  "checks": {
+    "消费电池_margin": true,
+    "消费电池_yoy": true,
+    "动力电池_margin": true,
+    "动力电池_yoy": true,
+    "储能电池_margin": true,
+    "储能电池_yoy": true,
+    "simple_fcf_yi": true
+  },
+  "pool_member_count": 181,
+  "production_membership_action": "unchanged",
+  "verification": {
+    "original_181_members_and_all_tiers_unchanged": true,
+    "holdings_and_execution_plans_unchanged": true,
+    "only_eve_triage_and_dossier_rows_changed": true,
+    "old_valuation_band_unchanged": true,
+    "current_report_prompts_replaced_forecast_prompts": true,
+    "out_of_pool_archive_registered": true,
+    "numeric_checks_passed": 7
+  }
+}

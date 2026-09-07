@@ -196,7 +196,7 @@
 
 ## L4｜已建档但未进入关注池
 
-共 48 家。L4 为本阅读版的档案归档层级；`名单状态` 保留结构化 `attention_class`。
+共 49 家。L4 为本阅读版的档案归档层级；`名单状态` 保留结构化 `attention_class`。
 
 - 仅维护逐票档案与合理价；不进入核心池 CSV、生产带、每日行情、`P/V`、每日扫描或 §9.3。
 - 合理价区间与中值 `V` 取逐票估值档案；无法估值显示 —。公司名称可直接打开档案。
@@ -216,6 +216,7 @@
 | 002683 | [广东宏大](../data/companies/002683_广东宏大/README.md) | L4 | boundary_pending | 16.40-20.04 | 18.22 | 内在价值模型·ROIC 口径 | 2026-09-08 |
 | 002837 | [英维克](../data/companies/002837_英维克/README.md) | L4 | boundary_pending | 5.66-6.92 | 6.29 | 内在价值模型·ROIC 口径 | 2026-09-08 |
 | 002906 | [华阳集团](../data/companies/002906_华阳集团/README.md) | L4 | boundary_pending | 17.41-21.27 | 19.34 | 内在价值模型·ROIC 口径 | 2026-09-08 |
+| 300014 | [亿纬锂能](../data/companies/300014_亿纬锂能/README.md) | L4 | boundary_pending | 40.96-50.06 | 45.51 | 内在价值模型·权益退路 | 2026-09-07 |
 | 300034 | [钢研高纳](../data/companies/300034_钢研高纳/README.md) | L4 | boundary_pending | 4.40-5.38 | 4.89 | 内在价值模型·ROIC 口径 | 2026-09-08 |
 | 300346 | [南大光电](../data/companies/300346_南大光电/README.md) | L4 | boundary_pending | 6.50-7.95 | 7.22 | 内在价值模型·ROIC 口径 | 2026-09-08 |
 | 300360 | [炬华科技](../data/companies/300360_炬华科技/README.md) | L4 | boundary_pending | 12.20-14.91 | 13.55 | 内在价值模型·ROIC 口径 | 2026-09-08 |

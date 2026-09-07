@@ -1,5 +1,7 @@
 # 1. A-Share EV Battery And New-Energy Platform Calibration
 
+**Current EVE review, 2026-09-07:** EVE remains `boundary_pending`, without a quality tier. The latest [company review](../reports/eve_energy_review_2026-09-07.zh.md) recognizes its consumer-battery niche, BMW qualification and technology partnerships, withdraws the blanket CATL-dominance rationale, and records the remaining evidence gaps in durable unit economics and capital recovery. The June forecast-based retention described below is historical; forecast growth and PEG do not determine current attention status. Current structured status lives in `a_share_attention_triage.csv`.
+
 ## 1.1 Purpose
 
 This note starts A-share **Peer-Group Calibration** for power batteries and new-energy vehicle core platforms. It compares companies whose moat may come from battery technology, manufacturing scale, customer validation, supply-chain control, storage deployment, or vehicle-platform integration.
