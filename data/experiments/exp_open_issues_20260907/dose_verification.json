@@ -1,0 +1,5409 @@
+{
+  "metric": "m2",
+  "paths": 616,
+  "starts": [
+    "2009-11-01",
+    "2010-05-01",
+    "2010-11-01",
+    "2011-05-01",
+    "2011-11-01",
+    "2012-05-01",
+    "2012-11-01",
+    "2013-05-01",
+    "2013-11-01",
+    "2014-05-01",
+    "2014-11-01",
+    "2015-05-01",
+    "2015-11-01",
+    "2016-05-01"
+  ],
+  "results": {
+    "VT_E12": {
+      "dose": {
+        "1": {
+          "main_pp": 0.28699999999999837,
+          "cagr_pp": -5.29885,
+          "standard": {
+            "滚5中位": {
+              "level": 49.7578,
+              "base_level": 50.63225,
+              "paired_delta": 0.28699999999999837,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 42.728100000000005,
+              "base_level": 40.20865,
+              "paired_delta": 2.428850000000002,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 12.032599999999999,
+              "base_level": 11.635950000000001,
+              "paired_delta": 4.002600000000001,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 49.0854,
+              "base_level": 52.278749999999995,
+              "paired_delta": -1.3690499999999994,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0539299999999998,
+              "base_level": 0.9983345000000001,
+              "paired_delta": 0.1010465000000001,
+              "positive_starts": 11,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.0383565,
+              "base_level": 1.036613,
+              "paired_delta": 0.012849000000000055,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 41.7135,
+              "base_level": 47.805,
+              "paired_delta": -5.29885,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 66.03175,
+              "base_level": 75.47755000000001,
+              "paired_delta": -5.1408000000000005,
+              "positive_starts": 13,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.5814945,
+              "base_level": 0.6608944999999999,
+              "paired_delta": -0.03878900000000002,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.9297555,
+              "base_level": 0.996866,
+              "paired_delta": -0.05686450000000004,
+              "positive_starts": 2,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 52.65614999999999,
+              "base_level": 67.8235,
+              "paired_delta": -14.445950000000002,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 46.35755,
+              "base_level": 48.5838,
+              "paired_delta": -1.5497999999999985,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.48725,
+              "base_level": 45.24335,
+              "paired_delta": 0.5291499999999977,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 38.0657,
+              "base_level": 39.25365,
+              "paired_delta": -0.6341000000000013,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -17.47705,
+              "base_level": -25.0255,
+              "paired_delta": 6.4170500000000015,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 4.18248,
+              "base_level": 7.979703000000001,
+              "paired_delta": -3.6035245,
+              "positive_starts": 14,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.76149999999998,
+              "base_level": 162.26635000000002,
+              "paired_delta": 0.47874999999999446,
+              "positive_starts": 4,
+              "unit": "pp"
+            }
+          }
+        },
+        "3": {
+          "main_pp": -0.9113499999999997,
+          "cagr_pp": -3.462049999999997,
+          "standard": {
+            "滚5中位": {
+              "level": 55.838750000000005,
+              "base_level": 56.347100000000005,
+              "paired_delta": -0.9113499999999997,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 48.3592,
+              "base_level": 47.2976,
+              "paired_delta": -1.4448000000000016,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 18.5696,
+              "base_level": 17.11055,
+              "paired_delta": 0.9642000000000026,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 52.62465,
+              "base_level": 53.43555,
+              "paired_delta": -0.6828000000000001,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.113636,
+              "base_level": 1.0563965,
+              "paired_delta": 0.007635500000000017,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.1645500000000002,
+              "base_level": 1.1996965,
+              "paired_delta": -0.03231899999999999,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 53.99860000000001,
+              "base_level": 54.305800000000005,
+              "paired_delta": -3.462049999999997,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 64.4018,
+              "base_level": 66.31344999999999,
+              "paired_delta": -3.312650000000006,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.794408,
+              "base_level": 0.7800865,
+              "paired_delta": -0.026590999999999976,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.136593,
+              "base_level": 1.1198515,
+              "paired_delta": -0.05088599999999999,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 67.36555,
+              "base_level": 73.5065,
+              "paired_delta": -8.343850000000003,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 52.40495000000001,
+              "base_level": 54.0408,
+              "paired_delta": -1.9793999999999978,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 44.748,
+              "base_level": 46.19265,
+              "paired_delta": -1.3366499999999975,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 37.93545,
+              "base_level": 45.28145,
+              "paired_delta": -5.486350000000001,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -9.0798,
+              "base_level": -12.8156,
+              "paired_delta": 4.0007,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.1504069999999995,
+              "base_level": 7.121622,
+              "paired_delta": -2.0550944999999996,
+              "positive_starts": 14,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 161.2635,
+              "base_level": 162.91595,
+              "paired_delta": -1.5290499999999985,
+              "positive_starts": 9,
+              "unit": "pp"
+            }
+          }
+        },
+        "5": {
+          "main_pp": 7.505650000000003,
+          "cagr_pp": 3.354349999999995,
+          "standard": {
+            "滚5中位": {
+              "level": 49.791050000000006,
+              "base_level": 43.95595,
+              "paired_delta": 7.505650000000003,
+              "positive_starts": 14,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 41.540299999999995,
+              "base_level": 35.646100000000004,
+              "paired_delta": 6.515899999999999,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 9.875,
+              "base_level": 8.0267,
+              "paired_delta": 5.800100000000001,
+              "positive_starts": 12,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 51.9884,
+              "base_level": 54.49805,
+              "paired_delta": -1.0149500000000007,
+              "positive_starts": 13,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.9780655,
+              "base_level": 0.807999,
+              "paired_delta": 0.1529315000000001,
+              "positive_starts": 14,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.1171855000000002,
+              "base_level": 1.0167605,
+              "paired_delta": 0.11288849999999995,
+              "positive_starts": 14,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 46.8377,
+              "base_level": 45.40145,
+              "paired_delta": 3.354349999999995,
+              "positive_starts": 13,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 63.7858,
+              "base_level": 65.82000000000001,
+              "paired_delta": -3.143700000000005,
+              "positive_starts": 11,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.7581825,
+              "base_level": 0.6747464999999999,
+              "paired_delta": 0.05575599999999997,
+              "positive_starts": 13,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.093599,
+              "base_level": 1.037096,
+              "paired_delta": 0.05969350000000001,
+              "positive_starts": 12,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 59.11679999999999,
+              "base_level": 60.11185,
+              "paired_delta": 1.0195499999999968,
+              "positive_starts": 11,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 46.3602,
+              "base_level": 43.2471,
+              "paired_delta": 3.901750000000001,
+              "positive_starts": 11,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 42.7855,
+              "base_level": 46.86865,
+              "paired_delta": -3.2771999999999997,
+              "positive_starts": 13,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 45.50775,
+              "base_level": 43.5991,
+              "paired_delta": 4.239750000000001,
+              "positive_starts": 12,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -17.4313,
+              "base_level": -22.021849999999997,
+              "paired_delta": 4.644000000000001,
+              "positive_starts": 12,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.1523275,
+              "base_level": 5.97339,
+              "paired_delta": -0.8726269999999996,
+              "positive_starts": 14,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 157.05515,
+              "base_level": 158.35485,
+              "paired_delta": -1.9413499999999861,
+              "positive_starts": 12,
+              "unit": "pp"
+            }
+          }
+        },
+        "10": {
+          "main_pp": 1.6375499999999987,
+          "cagr_pp": -0.5380499999999983,
+          "standard": {
+            "滚5中位": {
+              "level": 34.9467,
+              "base_level": 32.24795,
+              "paired_delta": 1.6375499999999987,
+              "positive_starts": 11,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 26.0046,
+              "base_level": 21.4247,
+              "paired_delta": 3.415749999999998,
+              "positive_starts": 12,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 5.9758000000000004,
+              "base_level": 3.8596000000000004,
+              "paired_delta": 1.92915,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 50.57325,
+              "base_level": 54.35345,
+              "paired_delta": -3.8848499999999953,
+              "positive_starts": 14,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.6527149999999999,
+              "base_level": 0.6215685,
+              "paired_delta": 0.06588299999999997,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.9125055,
+              "base_level": 0.8536115,
+              "paired_delta": 0.04133999999999999,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 33.944649999999996,
+              "base_level": 33.1881,
+              "paired_delta": -0.5380499999999983,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 63.533899999999996,
+              "base_level": 64.19465,
+              "paired_delta": -1.0299999999999976,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.521968,
+              "base_level": 0.540462,
+              "paired_delta": -0.006482499999999974,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.8737835,
+              "base_level": 0.86686,
+              "paired_delta": 0.0035974999999999757,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 38.838249999999995,
+              "base_level": 38.81529999999999,
+              "paired_delta": -1.313399999999998,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 34.498850000000004,
+              "base_level": 27.160600000000002,
+              "paired_delta": 6.291599999999999,
+              "positive_starts": 13,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 44.2487,
+              "base_level": 45.6539,
+              "paired_delta": -3.4486999999999988,
+              "positive_starts": 12,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 42.8593,
+              "base_level": 36.6804,
+              "paired_delta": 10.78635,
+              "positive_starts": 13,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -20.01105,
+              "base_level": -20.2054,
+              "paired_delta": 2.077599999999999,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 3.9091495,
+              "base_level": 5.633014,
+              "paired_delta": -1.7958005000000004,
+              "positive_starts": 14,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 151.33845,
+              "base_level": 150.8203,
+              "paired_delta": 1.7662999999999984,
+              "positive_starts": 5,
+              "unit": "pp"
+            }
+          }
+        }
+      },
+      "crossed_metrics": [
+        "main_pp",
+        "cagr_pp"
+      ],
+      "same_direction": false,
+      "old_a_exact": true,
+      "old_base_exact": true
+    },
+    "VS_MIN08": {
+      "dose": {
+        "1": {
+          "main_pp": -4.385150000000005,
+          "cagr_pp": -4.226049999999998,
+          "standard": {
+            "滚5中位": {
+              "level": 45.49875,
+              "base_level": 50.63225,
+              "paired_delta": -4.385150000000005,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 33.145849999999996,
+              "base_level": 40.20865,
+              "paired_delta": -4.600999999999999,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 7.8245499999999995,
+              "base_level": 11.635950000000001,
+              "paired_delta": -1.99455,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 45.175599999999996,
+              "base_level": 52.278749999999995,
+              "paired_delta": -3.196599999999999,
+              "positive_starts": 12,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.9671605,
+              "base_level": 0.9983345000000001,
+              "paired_delta": 0.016620499999999983,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.96542,
+              "base_level": 1.036613,
+              "paired_delta": -0.05198250000000004,
+              "positive_starts": 3,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 40.736850000000004,
+              "base_level": 47.805,
+              "paired_delta": -4.226049999999998,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 74.86250000000001,
+              "base_level": 75.47755000000001,
+              "paired_delta": -2.4236499999999994,
+              "positive_starts": 11,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.550012,
+              "base_level": 0.6608944999999999,
+              "paired_delta": -0.055324999999999985,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.904609,
+              "base_level": 0.996866,
+              "paired_delta": -0.06192199999999992,
+              "positive_starts": 2,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 56.2778,
+              "base_level": 67.8235,
+              "paired_delta": -9.629849999999996,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 43.0885,
+              "base_level": 48.5838,
+              "paired_delta": -4.220200000000002,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 43.94755,
+              "base_level": 45.24335,
+              "paired_delta": -0.40929999999999855,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 40.169399999999996,
+              "base_level": 39.25365,
+              "paired_delta": -0.24990000000000012,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -23.366550000000004,
+              "base_level": -25.0255,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 6.311005,
+              "base_level": 7.979703000000001,
+              "paired_delta": -1.6837074999999997,
+              "positive_starts": 14,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.93865,
+              "base_level": 162.26635000000002,
+              "paired_delta": 1.3361000000000067,
+              "positive_starts": 2,
+              "unit": "pp"
+            }
+          }
+        },
+        "3": {
+          "main_pp": -3.155749999999999,
+          "cagr_pp": -2.652399999999999,
+          "standard": {
+            "滚5中位": {
+              "level": 53.24184999999999,
+              "base_level": 56.347100000000005,
+              "paired_delta": -3.155749999999999,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 44.19555,
+              "base_level": 47.2976,
+              "paired_delta": -1.4923999999999993,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 14.38875,
+              "base_level": 17.11055,
+              "paired_delta": -1.9162999999999997,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 52.40645000000001,
+              "base_level": 53.43555,
+              "paired_delta": -0.2856499999999984,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.027843,
+              "base_level": 1.0563965,
+              "paired_delta": -0.047498499999999944,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.1313655,
+              "base_level": 1.1996965,
+              "paired_delta": -0.06709949999999987,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 51.338249999999995,
+              "base_level": 54.305800000000005,
+              "paired_delta": -2.652399999999999,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 68.46325,
+              "base_level": 66.31344999999999,
+              "paired_delta": 0.6630999999999998,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.710839,
+              "base_level": 0.7800865,
+              "paired_delta": -0.04829099999999997,
+              "positive_starts": 3,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.0814409999999999,
+              "base_level": 1.1198515,
+              "paired_delta": -0.053485000000000005,
+              "positive_starts": 3,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 68.93430000000001,
+              "base_level": 73.5065,
+              "paired_delta": -4.914700000000005,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 51.7603,
+              "base_level": 54.0408,
+              "paired_delta": -3.5983000000000045,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.34625,
+              "base_level": 46.19265,
+              "paired_delta": 0.014550000000002061,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 44.4372,
+              "base_level": 45.28145,
+              "paired_delta": -1.0032500000000026,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -16.37745,
+              "base_level": -12.8156,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 6.3913519999999995,
+              "base_level": 7.121622,
+              "paired_delta": -0.846212,
+              "positive_starts": 14,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.95935,
+              "base_level": 162.91595,
+              "paired_delta": 0.5071999999999965,
+              "positive_starts": 5,
+              "unit": "pp"
+            }
+          }
+        },
+        "5": {
+          "main_pp": 3.880700000000001,
+          "cagr_pp": 1.3560499999999949,
+          "standard": {
+            "滚5中位": {
+              "level": 47.771049999999995,
+              "base_level": 43.95595,
+              "paired_delta": 3.880700000000001,
+              "positive_starts": 12,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 38.0503,
+              "base_level": 35.646100000000004,
+              "paired_delta": 3.5361000000000002,
+              "positive_starts": 12,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 13.191600000000001,
+              "base_level": 8.0267,
+              "paired_delta": 3.311,
+              "positive_starts": 12,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.27955,
+              "base_level": 54.49805,
+              "paired_delta": -0.27984999999999816,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.8440885,
+              "base_level": 0.807999,
+              "paired_delta": 0.07127100000000003,
+              "positive_starts": 11,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.05318,
+              "base_level": 1.0167605,
+              "paired_delta": 0.04889599999999994,
+              "positive_starts": 12,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 47.26755,
+              "base_level": 45.40145,
+              "paired_delta": 1.3560499999999949,
+              "positive_starts": 11,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 64.05595,
+              "base_level": 65.82000000000001,
+              "paired_delta": -0.9806000000000037,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.726724,
+              "base_level": 0.6747464999999999,
+              "paired_delta": 0.01979450000000002,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.0550009999999999,
+              "base_level": 1.037096,
+              "paired_delta": 0.029874500000000026,
+              "positive_starts": 12,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 60.6904,
+              "base_level": 60.11185,
+              "paired_delta": 1.029299999999997,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 45.608399999999996,
+              "base_level": 43.2471,
+              "paired_delta": 2.189049999999998,
+              "positive_starts": 12,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.650400000000005,
+              "base_level": 46.86865,
+              "paired_delta": -0.3273000000000026,
+              "positive_starts": 11,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 42.3371,
+              "base_level": 43.5991,
+              "paired_delta": 2.03045,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -20.24135,
+              "base_level": -22.021849999999997,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.663987499999999,
+              "base_level": 5.97339,
+              "paired_delta": -0.41338750000000024,
+              "positive_starts": 12,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 157.90929999999997,
+              "base_level": 158.35485,
+              "paired_delta": -0.09779999999999234,
+              "positive_starts": 9,
+              "unit": "pp"
+            }
+          }
+        },
+        "10": {
+          "main_pp": 0.4671499999999995,
+          "cagr_pp": 0.4697000000000007,
+          "standard": {
+            "滚5中位": {
+              "level": 32.895149999999994,
+              "base_level": 32.24795,
+              "paired_delta": 0.4671499999999995,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 20.96145,
+              "base_level": 21.4247,
+              "paired_delta": 2.4433499999999997,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 7.0424,
+              "base_level": 3.8596000000000004,
+              "paired_delta": 2.59915,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.481,
+              "base_level": 54.35345,
+              "paired_delta": 0.28240000000000487,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.5953405,
+              "base_level": 0.6215685,
+              "paired_delta": 0.017373499999999986,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.861116,
+              "base_level": 0.8536115,
+              "paired_delta": 0.035612499999999936,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 31.371,
+              "base_level": 33.1881,
+              "paired_delta": 0.4697000000000007,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 64.49005,
+              "base_level": 64.19465,
+              "paired_delta": -0.1827499999999982,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.496656,
+              "base_level": 0.540462,
+              "paired_delta": 0.018060500000000035,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.8273855,
+              "base_level": 0.86686,
+              "paired_delta": -0.0011380000000000279,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 38.02465,
+              "base_level": 38.81529999999999,
+              "paired_delta": -1.045299999999999,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 28.4547,
+              "base_level": 27.160600000000002,
+              "paired_delta": 1.6447999999999992,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 48.644549999999995,
+              "base_level": 45.6539,
+              "paired_delta": -0.029000000000001247,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 35.66935,
+              "base_level": 36.6804,
+              "paired_delta": 5.640549999999999,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -22.185650000000003,
+              "base_level": -20.2054,
+              "paired_delta": -0.6916000000000005,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.3129805,
+              "base_level": 5.633014,
+              "paired_delta": -0.3974529999999996,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 149.88375,
+              "base_level": 150.8203,
+              "paired_delta": -1.4284000000000074,
+              "positive_starts": 10,
+              "unit": "pp"
+            }
+          }
+        }
+      },
+      "crossed_metrics": [
+        "main_pp",
+        "cagr_pp"
+      ],
+      "same_direction": false,
+      "old_a_exact": true,
+      "old_base_exact": true
+    },
+    "RC010": {
+      "dose": {
+        "1": {
+          "main_pp": -0.5198000000000008,
+          "cagr_pp": -0.4744999999999999,
+          "standard": {
+            "滚5中位": {
+              "level": 48.02895,
+              "base_level": 50.63225,
+              "paired_delta": -0.5198000000000008,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 39.27805,
+              "base_level": 40.20865,
+              "paired_delta": -0.027549999999999797,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 9.51065,
+              "base_level": 11.635950000000001,
+              "paired_delta": -0.024799999999999822,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 48.69025,
+              "base_level": 52.278749999999995,
+              "paired_delta": -0.07674999999999765,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0025385,
+              "base_level": 0.9983345000000001,
+              "paired_delta": 3.850000000005238e-05,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.9894365,
+              "base_level": 1.036613,
+              "paired_delta": -0.02013149999999997,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 43.9216,
+              "base_level": 47.805,
+              "paired_delta": -0.4744999999999999,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 73.66445,
+              "base_level": 75.47755000000001,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.611343,
+              "base_level": 0.6608944999999999,
+              "paired_delta": -0.006243000000000054,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.9417500000000001,
+              "base_level": 0.996866,
+              "paired_delta": -0.010383999999999949,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 66.0796,
+              "base_level": 67.8235,
+              "paired_delta": -0.870399999999999,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 45.88785,
+              "base_level": 48.5838,
+              "paired_delta": -0.3612000000000004,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.18855,
+              "base_level": 45.24335,
+              "paired_delta": 0.054749999999997856,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 38.783500000000004,
+              "base_level": 39.25365,
+              "paired_delta": -0.04200000000000037,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -23.774050000000003,
+              "base_level": -25.0255,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.473024,
+              "base_level": 7.979703000000001,
+              "paired_delta": -0.11049050000000005,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.63715000000002,
+              "base_level": 162.26635000000002,
+              "paired_delta": 0.3974499999999992,
+              "positive_starts": 3,
+              "unit": "pp"
+            }
+          }
+        },
+        "3": {
+          "main_pp": 0.1671500000000048,
+          "cagr_pp": 0.025600000000000622,
+          "standard": {
+            "滚5中位": {
+              "level": 56.06485,
+              "base_level": 56.347100000000005,
+              "paired_delta": 0.1671500000000048,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 48.69005,
+              "base_level": 47.2976,
+              "paired_delta": 0.013749999999998486,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 17.35575,
+              "base_level": 17.11055,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 53.33805,
+              "base_level": 53.43555,
+              "paired_delta": -0.0007000000000034756,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0608434999999998,
+              "base_level": 1.0563965,
+              "paired_delta": 0.00047050000000009584,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.239935,
+              "base_level": 1.1996965,
+              "paired_delta": 0.004684500000000091,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 54.932700000000004,
+              "base_level": 54.305800000000005,
+              "paired_delta": 0.025600000000000622,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 66.31344999999999,
+              "base_level": 66.31344999999999,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.767602,
+              "base_level": 0.7800865,
+              "paired_delta": 0.0011355000000000115,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.154822,
+              "base_level": 1.1198515,
+              "paired_delta": -0.0005840000000000289,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 73.80245,
+              "base_level": 73.5065,
+              "paired_delta": -0.03250000000000197,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 55.120349999999995,
+              "base_level": 54.0408,
+              "paired_delta": -0.0704499999999969,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.19265,
+              "base_level": 46.19265,
+              "paired_delta": 0.0,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 45.2597,
+              "base_level": 45.28145,
+              "paired_delta": -0.05384999999999973,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -12.823200000000002,
+              "base_level": -12.8156,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.133714,
+              "base_level": 7.121622,
+              "paired_delta": -0.03431799999999985,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.68375,
+              "base_level": 162.91595,
+              "paired_delta": -0.027100000000002122,
+              "positive_starts": 9,
+              "unit": "pp"
+            }
+          }
+        },
+        "5": {
+          "main_pp": 0.18019999999999703,
+          "cagr_pp": -0.34905000000000075,
+          "standard": {
+            "滚5中位": {
+              "level": 44.262299999999996,
+              "base_level": 43.95595,
+              "paired_delta": 0.18019999999999703,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 35.55715000000001,
+              "base_level": 35.646100000000004,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 7.9874,
+              "base_level": 8.0267,
+              "paired_delta": -0.0003000000000003,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.54835,
+              "base_level": 54.49805,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.8000179999999999,
+              "base_level": 0.807999,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.0070385,
+              "base_level": 1.0167605,
+              "paired_delta": -0.0009350000000000191,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 46.38975,
+              "base_level": 45.40145,
+              "paired_delta": -0.34905000000000075,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 65.22055,
+              "base_level": 65.82000000000001,
+              "paired_delta": 0.0,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.6867605,
+              "base_level": 0.6747464999999999,
+              "paired_delta": -0.0017780000000000018,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.039613,
+              "base_level": 1.037096,
+              "paired_delta": -0.0024520000000000097,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 59.16364999999999,
+              "base_level": 60.11185,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 43.460699999999996,
+              "base_level": 43.2471,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.86895,
+              "base_level": 46.86865,
+              "paired_delta": 0.0,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 43.586999999999996,
+              "base_level": 43.5991,
+              "paired_delta": 0.0006000000000006,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -22.028799999999997,
+              "base_level": -22.021849999999997,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 6.086834,
+              "base_level": 5.97339,
+              "paired_delta": 0.07669299999999968,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 157.83800000000002,
+              "base_level": 158.35485,
+              "paired_delta": -0.04054999999999476,
+              "positive_starts": 10,
+              "unit": "pp"
+            }
+          }
+        },
+        "10": {
+          "main_pp": -0.14190000000000036,
+          "cagr_pp": -0.07240000000000302,
+          "standard": {
+            "滚5中位": {
+              "level": 31.127700000000004,
+              "base_level": 32.24795,
+              "paired_delta": -0.14190000000000036,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 20.565050000000003,
+              "base_level": 21.4247,
+              "paired_delta": -0.09085000000000065,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 3.8531499999999994,
+              "base_level": 3.8596000000000004,
+              "paired_delta": -0.045500000000000054,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.22855,
+              "base_level": 54.35345,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.5745695,
+              "base_level": 0.6215685,
+              "paired_delta": -5.449999999995736e-05,
+              "positive_starts": 3,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.8358099999999999,
+              "base_level": 0.8536115,
+              "paired_delta": -0.006273499999999987,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 32.6256,
+              "base_level": 33.1881,
+              "paired_delta": -0.07240000000000302,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 64.19465,
+              "base_level": 64.19465,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.5195055,
+              "base_level": 0.540462,
+              "paired_delta": -0.0011019999999999919,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.8466815,
+              "base_level": 0.86686,
+              "paired_delta": -0.0012085000000000012,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 39.0331,
+              "base_level": 38.81529999999999,
+              "paired_delta": -0.2587000000000006,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 26.1331,
+              "base_level": 27.160600000000002,
+              "paired_delta": -0.0010499999999996623,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.65135,
+              "base_level": 45.6539,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 32.6532,
+              "base_level": 36.6804,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -21.222350000000002,
+              "base_level": -20.2054,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.7730565,
+              "base_level": 5.633014,
+              "paired_delta": 0.11965849999999989,
+              "positive_starts": 2,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 151.09605,
+              "base_level": 150.8203,
+              "paired_delta": -0.01260000000000705,
+              "positive_starts": 8,
+              "unit": "pp"
+            }
+          }
+        }
+      },
+      "crossed_metrics": [
+        "main_pp"
+      ],
+      "same_direction": false,
+      "old_a_exact": true,
+      "old_base_exact": true
+    },
+    "RC025": {
+      "dose": {
+        "1": {
+          "main_pp": -0.8763999999999994,
+          "cagr_pp": -0.5061499999999969,
+          "standard": {
+            "滚5中位": {
+              "level": 47.366,
+              "base_level": 50.63225,
+              "paired_delta": -0.8763999999999994,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 37.7621,
+              "base_level": 40.20865,
+              "paired_delta": 0.6060500000000024,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 9.138549999999999,
+              "base_level": 11.635950000000001,
+              "paired_delta": 0.010299999999999199,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 48.8439,
+              "base_level": 52.278749999999995,
+              "paired_delta": -0.2964500000000092,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0079305,
+              "base_level": 0.9983345000000001,
+              "paired_delta": 0.007774000000000059,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.9822900000000001,
+              "base_level": 1.036613,
+              "paired_delta": -0.006896499999999972,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 43.26185,
+              "base_level": 47.805,
+              "paired_delta": -0.5061499999999969,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 74.7021,
+              "base_level": 75.47755000000001,
+              "paired_delta": -0.04075000000000051,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.5943945,
+              "base_level": 0.6608944999999999,
+              "paired_delta": 0.0002015000000000211,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.9301315,
+              "base_level": 0.996866,
+              "paired_delta": -0.01231149999999992,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 63.609249999999996,
+              "base_level": 67.8235,
+              "paired_delta": -1.5164500000000025,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 44.598150000000004,
+              "base_level": 48.5838,
+              "paired_delta": -0.024300000000002098,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 44.339850000000006,
+              "base_level": 45.24335,
+              "paired_delta": -0.003949999999999787,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 36.887950000000004,
+              "base_level": 39.25365,
+              "paired_delta": -0.7310499999999998,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -24.711,
+              "base_level": -25.0255,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.8706405,
+              "base_level": 7.979703000000001,
+              "paired_delta": -0.19527550000000016,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.68015,
+              "base_level": 162.26635000000002,
+              "paired_delta": 0.21484999999999976,
+              "positive_starts": 3,
+              "unit": "pp"
+            }
+          }
+        },
+        "3": {
+          "main_pp": 0.9667000000000037,
+          "cagr_pp": -0.19329999999999903,
+          "standard": {
+            "滚5中位": {
+              "level": 56.4516,
+              "base_level": 56.347100000000005,
+              "paired_delta": 0.9667000000000037,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 46.52015,
+              "base_level": 47.2976,
+              "paired_delta": 0.3428500000000029,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 16.98225,
+              "base_level": 17.11055,
+              "paired_delta": 0.011699999999999211,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 53.58385000000001,
+              "base_level": 53.43555,
+              "paired_delta": 0.033400000000000096,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0718065,
+              "base_level": 1.0563965,
+              "paired_delta": 0.009834999999999983,
+              "positive_starts": 11,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.2240365,
+              "base_level": 1.1996965,
+              "paired_delta": 0.02109149999999993,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 53.92355,
+              "base_level": 54.305800000000005,
+              "paired_delta": -0.19329999999999903,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 66.59145,
+              "base_level": 66.31344999999999,
+              "paired_delta": 0.0068000000000012495,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.7614055,
+              "base_level": 0.7800865,
+              "paired_delta": -0.005624500000000032,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.1192920000000002,
+              "base_level": 1.1198515,
+              "paired_delta": -0.0028684999999999405,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 73.9194,
+              "base_level": 73.5065,
+              "paired_delta": 0.4630000000000023,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 53.998400000000004,
+              "base_level": 54.0408,
+              "paired_delta": 0.08765000000000023,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 43.6644,
+              "base_level": 46.19265,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 45.329049999999995,
+              "base_level": 45.28145,
+              "paired_delta": 0.5855499999999986,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -15.451899999999998,
+              "base_level": -12.8156,
+              "paired_delta": -0.0008499999999998092,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.130501000000001,
+              "base_level": 7.121622,
+              "paired_delta": 0.014600000000000168,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.11905,
+              "base_level": 162.91595,
+              "paired_delta": 0.012299999999987321,
+              "positive_starts": 7,
+              "unit": "pp"
+            }
+          }
+        },
+        "5": {
+          "main_pp": 1.5986499999999988,
+          "cagr_pp": 0.6022500000000014,
+          "standard": {
+            "滚5中位": {
+              "level": 44.7473,
+              "base_level": 43.95595,
+              "paired_delta": 1.5986499999999988,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 35.949,
+              "base_level": 35.646100000000004,
+              "paired_delta": 0.09895000000000043,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 8.0294,
+              "base_level": 8.0267,
+              "paired_delta": -0.04395000000000024,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.502849999999995,
+              "base_level": 54.49805,
+              "paired_delta": 0.00040000000000040004,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.8111470000000001,
+              "base_level": 0.807999,
+              "paired_delta": 0.026249999999999996,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.021591,
+              "base_level": 1.0167605,
+              "paired_delta": 0.01873549999999996,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 45.5212,
+              "base_level": 45.40145,
+              "paired_delta": 0.6022500000000014,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 65.4326,
+              "base_level": 65.82000000000001,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.6840120000000001,
+              "base_level": 0.6747464999999999,
+              "paired_delta": 0.004414000000000029,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.0140660000000001,
+              "base_level": 1.037096,
+              "paired_delta": 0.0030854999999999633,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 59.33500000000001,
+              "base_level": 60.11185,
+              "paired_delta": 2.7881000000000045,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 43.7945,
+              "base_level": 43.2471,
+              "paired_delta": 0.6849499999999981,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.8601,
+              "base_level": 46.86865,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 44.5015,
+              "base_level": 43.5991,
+              "paired_delta": 0.9563999999999989,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -22.06515,
+              "base_level": -22.021849999999997,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 6.0156335,
+              "base_level": 5.97339,
+              "paired_delta": 0.059319499999999525,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 158.58059999999998,
+              "base_level": 158.35485,
+              "paired_delta": 0.0400000000000067,
+              "positive_starts": 5,
+              "unit": "pp"
+            }
+          }
+        },
+        "10": {
+          "main_pp": -0.8747000000000005,
+          "cagr_pp": -1.106,
+          "standard": {
+            "滚5中位": {
+              "level": 32.381499999999996,
+              "base_level": 32.24795,
+              "paired_delta": -0.8747000000000005,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 21.74135,
+              "base_level": 21.4247,
+              "paired_delta": -0.46964999999999923,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 7.0857,
+              "base_level": 3.8596000000000004,
+              "paired_delta": -0.0501999999999999,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.23015,
+              "base_level": 54.35345,
+              "paired_delta": 0.020049999999999235,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.5805085,
+              "base_level": 0.6215685,
+              "paired_delta": -0.015801499999999996,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.8547370000000001,
+              "base_level": 0.8536115,
+              "paired_delta": -0.01544650000000003,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 31.42815,
+              "base_level": 33.1881,
+              "paired_delta": -1.106,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 65.4283,
+              "base_level": 64.19465,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.5017185,
+              "base_level": 0.540462,
+              "paired_delta": -0.021465000000000012,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.8541894999999999,
+              "base_level": 0.86686,
+              "paired_delta": -0.023848999999999954,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 37.6893,
+              "base_level": 38.81529999999999,
+              "paired_delta": -1.989650000000001,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 27.455000000000002,
+              "base_level": 27.160600000000002,
+              "paired_delta": -0.6807499999999994,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.73375,
+              "base_level": 45.6539,
+              "paired_delta": -0.00010000000000010001,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 31.982849999999996,
+              "base_level": 36.6804,
+              "paired_delta": -1.2379000000000002,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -20.7675,
+              "base_level": -20.2054,
+              "paired_delta": 0.0,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.6391515,
+              "base_level": 5.633014,
+              "paired_delta": -0.04133600000000026,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 150.58165,
+              "base_level": 150.8203,
+              "paired_delta": 0.2127499999999949,
+              "positive_starts": 6,
+              "unit": "pp"
+            }
+          }
+        }
+      },
+      "crossed_metrics": [
+        "main_pp",
+        "cagr_pp"
+      ],
+      "same_direction": false,
+      "old_a_exact": true,
+      "old_base_exact": true
+    },
+    "RC050": {
+      "dose": {
+        "1": {
+          "main_pp": 0.4421499999999995,
+          "cagr_pp": -0.8824499999999957,
+          "standard": {
+            "滚5中位": {
+              "level": 51.01035,
+              "base_level": 50.63225,
+              "paired_delta": 0.4421499999999995,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 36.0551,
+              "base_level": 40.20865,
+              "paired_delta": -1.0052500000000046,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 7.5574,
+              "base_level": 11.635950000000001,
+              "paired_delta": -0.3496000000000013,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 52.25685,
+              "base_level": 52.278749999999995,
+              "paired_delta": -0.26594999999999813,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.998274,
+              "base_level": 0.9983345000000001,
+              "paired_delta": -0.010826500000000017,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.0275095,
+              "base_level": 1.036613,
+              "paired_delta": 0.004470499999999988,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 42.882149999999996,
+              "base_level": 47.805,
+              "paired_delta": -0.8824499999999957,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 75.25515,
+              "base_level": 75.47755000000001,
+              "paired_delta": -0.02929999999999877,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.564476,
+              "base_level": 0.6608944999999999,
+              "paired_delta": -0.02569349999999998,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.9339584999999999,
+              "base_level": 0.996866,
+              "paired_delta": -0.014022999999999897,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 62.7287,
+              "base_level": 67.8235,
+              "paired_delta": -0.83395,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 46.93444999999999,
+              "base_level": 48.5838,
+              "paired_delta": 0.22405000000000064,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.92509999999999,
+              "base_level": 45.24335,
+              "paired_delta": 0.7121499999999975,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 37.79125,
+              "base_level": 39.25365,
+              "paired_delta": -1.351499999999997,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -23.09335,
+              "base_level": -25.0255,
+              "paired_delta": -0.005800000000000249,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.515335,
+              "base_level": 7.979703000000001,
+              "paired_delta": -0.3487445,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.03815,
+              "base_level": 162.26635000000002,
+              "paired_delta": 0.09765000000000468,
+              "positive_starts": 7,
+              "unit": "pp"
+            }
+          }
+        },
+        "3": {
+          "main_pp": 1.3541999999999998,
+          "cagr_pp": 1.2071500000000013,
+          "standard": {
+            "滚5中位": {
+              "level": 60.15925,
+              "base_level": 56.347100000000005,
+              "paired_delta": 1.3541999999999998,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 52.6501,
+              "base_level": 47.2976,
+              "paired_delta": -0.13380000000000336,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 18.81295,
+              "base_level": 17.11055,
+              "paired_delta": -0.061549999999999626,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 53.990050000000004,
+              "base_level": 53.43555,
+              "paired_delta": 0.6740999999999997,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0912815,
+              "base_level": 1.0563965,
+              "paired_delta": 0.01774300000000001,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.2449655,
+              "base_level": 1.1996965,
+              "paired_delta": 0.018710000000000115,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 57.48765,
+              "base_level": 54.305800000000005,
+              "paired_delta": 1.2071500000000013,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 66.56954999999999,
+              "base_level": 66.31344999999999,
+              "paired_delta": -0.0675500000000051,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.841056,
+              "base_level": 0.7800865,
+              "paired_delta": 0.013591499999999979,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.170007,
+              "base_level": 1.1198515,
+              "paired_delta": 0.01212650000000004,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 77.85245,
+              "base_level": 73.5065,
+              "paired_delta": 2.6273000000000044,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 57.712149999999994,
+              "base_level": 54.0408,
+              "paired_delta": 0.598199999999996,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 43.7956,
+              "base_level": 46.19265,
+              "paired_delta": -0.07904999999999718,
+              "positive_starts": 11,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 45.3799,
+              "base_level": 45.28145,
+              "paired_delta": 0.41960000000000053,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -15.451899999999998,
+              "base_level": -12.8156,
+              "paired_delta": 0.05430000000000018,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.2449375,
+              "base_level": 7.121622,
+              "paired_delta": 0.12453650000000005,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.24540000000002,
+              "base_level": 162.91595,
+              "paired_delta": -0.23045000000000426,
+              "positive_starts": 8,
+              "unit": "pp"
+            }
+          }
+        },
+        "5": {
+          "main_pp": 0.7161000000000001,
+          "cagr_pp": 0.2194499999999988,
+          "standard": {
+            "滚5中位": {
+              "level": 44.0852,
+              "base_level": 43.95595,
+              "paired_delta": 0.7161000000000001,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 36.52565,
+              "base_level": 35.646100000000004,
+              "paired_delta": 0.18960000000000088,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 10.5041,
+              "base_level": 8.0267,
+              "paired_delta": 0.18499999999999905,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.48865000000001,
+              "base_level": 54.49805,
+              "paired_delta": 0.0039499999999970115,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.829681,
+              "base_level": 0.807999,
+              "paired_delta": 0.011468500000000048,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.039133,
+              "base_level": 1.0167605,
+              "paired_delta": 0.010236000000000023,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 46.650000000000006,
+              "base_level": 45.40145,
+              "paired_delta": 0.2194499999999988,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 63.574149999999996,
+              "base_level": 65.82000000000001,
+              "paired_delta": -0.2072499999999977,
+              "positive_starts": 11,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.7096015,
+              "base_level": 0.6747464999999999,
+              "paired_delta": 0.015184499999999934,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.054582,
+              "base_level": 1.037096,
+              "paired_delta": 0.002986500000000114,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 59.914449999999995,
+              "base_level": 60.11185,
+              "paired_delta": 0.6215999999999999,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 43.5603,
+              "base_level": 43.2471,
+              "paired_delta": -0.0849500000000003,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.8786,
+              "base_level": 46.86865,
+              "paired_delta": 0.010100000000001774,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 42.8053,
+              "base_level": 43.5991,
+              "paired_delta": 0.0008499999999994623,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -21.981099999999998,
+              "base_level": -22.021849999999997,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 6.0733535,
+              "base_level": 5.97339,
+              "paired_delta": 0.07574649999999972,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 157.97595,
+              "base_level": 158.35485,
+              "paired_delta": 0.03700000000000925,
+              "positive_starts": 6,
+              "unit": "pp"
+            }
+          }
+        },
+        "10": {
+          "main_pp": 0.006799999999998474,
+          "cagr_pp": 0.08365000000000039,
+          "standard": {
+            "滚5中位": {
+              "level": 32.25575,
+              "base_level": 32.24795,
+              "paired_delta": 0.006799999999998474,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 21.24785,
+              "base_level": 21.4247,
+              "paired_delta": 0.1688000000000009,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 6.06665,
+              "base_level": 3.8596000000000004,
+              "paired_delta": -0.7012500000000007,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.32444999999999,
+              "base_level": 54.35345,
+              "paired_delta": 0.11675000000000435,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.5752845,
+              "base_level": 0.6215685,
+              "paired_delta": -0.008610499999999965,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.8324834999999999,
+              "base_level": 0.8536115,
+              "paired_delta": 0.0031249999999999334,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 30.850699999999996,
+              "base_level": 33.1881,
+              "paired_delta": 0.08365000000000039,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 65.33330000000001,
+              "base_level": 64.19465,
+              "paired_delta": 0.002799999999997249,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.516089,
+              "base_level": 0.540462,
+              "paired_delta": -0.012447500000000028,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.840762,
+              "base_level": 0.86686,
+              "paired_delta": -0.006612000000000007,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 39.56055,
+              "base_level": 38.81529999999999,
+              "paired_delta": 0.09870000000000156,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 26.4393,
+              "base_level": 27.160600000000002,
+              "paired_delta": -0.24055000000000326,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.0092,
+              "base_level": 45.6539,
+              "paired_delta": 0.0006000000000006,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 30.63395,
+              "base_level": 36.6804,
+              "paired_delta": -1.2378500000000014,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -18.4388,
+              "base_level": -20.2054,
+              "paired_delta": 0.0,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.8195630000000005,
+              "base_level": 5.633014,
+              "paired_delta": 0.1286229999999997,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 151.74215,
+              "base_level": 150.8203,
+              "paired_delta": 0.39675000000000127,
+              "positive_starts": 6,
+              "unit": "pp"
+            }
+          }
+        }
+      },
+      "crossed_metrics": [
+        "cagr_pp"
+      ],
+      "same_direction": false,
+      "old_a_exact": true,
+      "old_base_exact": true
+    },
+    "CNY40": {
+      "dose": {
+        "1": {
+          "main_pp": -0.025200000000002998,
+          "cagr_pp": 0.12729999999999964,
+          "standard": {
+            "滚5中位": {
+              "level": 49.10535,
+              "base_level": 50.63225,
+              "paired_delta": -0.025200000000002998,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 32.62135,
+              "base_level": 40.20865,
+              "paired_delta": 0.02380000000000021,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 4.32565,
+              "base_level": 11.635950000000001,
+              "paired_delta": -0.012249999999999761,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 48.8892,
+              "base_level": 52.278749999999995,
+              "paired_delta": -0.4059499999999966,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0128025,
+              "base_level": 0.9983345000000001,
+              "paired_delta": 0.022830500000000087,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.0214905,
+              "base_level": 1.036613,
+              "paired_delta": 0.009576500000000043,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 42.1099,
+              "base_level": 47.805,
+              "paired_delta": 0.12729999999999964,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 76.28904999999999,
+              "base_level": 75.47755000000001,
+              "paired_delta": 0.003950000000002563,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.5533175,
+              "base_level": 0.6608944999999999,
+              "paired_delta": 0.0014715000000000145,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.919232,
+              "base_level": 0.996866,
+              "paired_delta": -0.00016049999999989684,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 64.26989999999999,
+              "base_level": 67.8235,
+              "paired_delta": 0.002199999999996649,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 45.86515,
+              "base_level": 48.5838,
+              "paired_delta": 0.141150000000001,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.35585,
+              "base_level": 45.24335,
+              "paired_delta": -0.00020000000000020002,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 37.44840000000001,
+              "base_level": 39.25365,
+              "paired_delta": -1.4012000000000024,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -24.7654,
+              "base_level": -25.0255,
+              "paired_delta": -0.057000000000001494,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.9333685,
+              "base_level": 7.979703000000001,
+              "paired_delta": -0.2810170000000003,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.7192,
+              "base_level": 162.26635000000002,
+              "paired_delta": 0.16974999999999074,
+              "positive_starts": 3,
+              "unit": "pp"
+            }
+          }
+        },
+        "3": {
+          "main_pp": 1.2333499999999997,
+          "cagr_pp": 0.28315000000000423,
+          "standard": {
+            "滚5中位": {
+              "level": 56.9595,
+              "base_level": 56.347100000000005,
+              "paired_delta": 1.2333499999999997,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 47.231849999999994,
+              "base_level": 47.2976,
+              "paired_delta": 0.3218500000000013,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 17.0149,
+              "base_level": 17.11055,
+              "paired_delta": 0.015849999999999198,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 53.535900000000005,
+              "base_level": 53.43555,
+              "paired_delta": 0.0019500000000061135,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.086437,
+              "base_level": 1.0563965,
+              "paired_delta": 0.008021,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.226638,
+              "base_level": 1.1996965,
+              "paired_delta": 0.012830499999999967,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 54.913000000000004,
+              "base_level": 54.305800000000005,
+              "paired_delta": 0.28315000000000423,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 66.5927,
+              "base_level": 66.31344999999999,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.781919,
+              "base_level": 0.7800865,
+              "paired_delta": 0.006138499999999936,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.1359240000000002,
+              "base_level": 1.1198515,
+              "paired_delta": 0.0031965000000000465,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 73.56755,
+              "base_level": 73.5065,
+              "paired_delta": 0.24794999999999678,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 53.838800000000006,
+              "base_level": 54.0408,
+              "paired_delta": 0.21880000000000233,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 43.6644,
+              "base_level": 46.19265,
+              "paired_delta": 0.0,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 45.237300000000005,
+              "base_level": 45.28145,
+              "paired_delta": 0.584800000000002,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -15.451899999999998,
+              "base_level": -12.8156,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.3486465,
+              "base_level": 7.121622,
+              "paired_delta": 0.20347800000000005,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.50484999999998,
+              "base_level": 162.91595,
+              "paired_delta": -0.06619999999999404,
+              "positive_starts": 8,
+              "unit": "pp"
+            }
+          }
+        },
+        "5": {
+          "main_pp": 0.04865000000000008,
+          "cagr_pp": -0.025200000000000222,
+          "standard": {
+            "滚5中位": {
+              "level": 43.586650000000006,
+              "base_level": 43.95595,
+              "paired_delta": 0.04865000000000008,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 35.074600000000004,
+              "base_level": 35.646100000000004,
+              "paired_delta": -0.17725000000000102,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 7.9984,
+              "base_level": 8.0267,
+              "paired_delta": -0.03045000000000027,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.55055,
+              "base_level": 54.49805,
+              "paired_delta": 5.000000000143778e-05,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.795425,
+              "base_level": 0.807999,
+              "paired_delta": -0.002813999999999983,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.0193425,
+              "base_level": 1.0167605,
+              "paired_delta": 7.449999999997736e-05,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 44.03085,
+              "base_level": 45.40145,
+              "paired_delta": -0.025200000000000222,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 65.07775,
+              "base_level": 65.82000000000001,
+              "paired_delta": -0.007299999999998974,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.6733735000000001,
+              "base_level": 0.6747464999999999,
+              "paired_delta": 0.0012349999999999861,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.029617,
+              "base_level": 1.037096,
+              "paired_delta": -0.002187500000000009,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 59.4556,
+              "base_level": 60.11185,
+              "paired_delta": -0.13070000000000026,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 42.78565,
+              "base_level": 43.2471,
+              "paired_delta": 0.3434500000000007,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.794999999999995,
+              "base_level": 46.86865,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 40.77355,
+              "base_level": 43.5991,
+              "paired_delta": 0.0018499999999976868,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -22.06515,
+              "base_level": -22.021849999999997,
+              "paired_delta": 0.0,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 6.0158495,
+              "base_level": 5.97339,
+              "paired_delta": 0.026300999999999686,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 158.52499999999998,
+              "base_level": 158.35485,
+              "paired_delta": 0.007950000000001012,
+              "positive_starts": 6,
+              "unit": "pp"
+            }
+          }
+        },
+        "10": {
+          "main_pp": -0.8467000000000016,
+          "cagr_pp": -0.42564999999999964,
+          "standard": {
+            "滚5中位": {
+              "level": 30.995649999999998,
+              "base_level": 32.24795,
+              "paired_delta": -0.8467000000000016,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 21.51545,
+              "base_level": 21.4247,
+              "paired_delta": -0.9597500000000009,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 6.4879500000000005,
+              "base_level": 3.8596000000000004,
+              "paired_delta": -0.06089999999999984,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.22855,
+              "base_level": 54.35345,
+              "paired_delta": 0.016850000000001586,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.5586409999999999,
+              "base_level": 0.6215685,
+              "paired_delta": -0.017671999999999966,
+              "positive_starts": 2,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.8200275,
+              "base_level": 0.8536115,
+              "paired_delta": -0.019669000000000048,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 31.81425,
+              "base_level": 33.1881,
+              "paired_delta": -0.42564999999999964,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 65.4283,
+              "base_level": 64.19465,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.4765405,
+              "base_level": 0.540462,
+              "paired_delta": -0.014945499999999973,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.8083175,
+              "base_level": 0.86686,
+              "paired_delta": -0.01748700000000003,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 38.7509,
+              "base_level": 38.81529999999999,
+              "paired_delta": -1.0810499999999972,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 26.48725,
+              "base_level": 27.160600000000002,
+              "paired_delta": -0.9075500000000014,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.73375,
+              "base_level": 45.6539,
+              "paired_delta": 0.00024999999999886224,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 33.5878,
+              "base_level": 36.6804,
+              "paired_delta": -0.0019500000000005624,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -20.3936,
+              "base_level": -20.2054,
+              "paired_delta": 0.0,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.741585,
+              "base_level": 5.633014,
+              "paired_delta": 0.06287049999999983,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 150.6419,
+              "base_level": 150.8203,
+              "paired_delta": 0.022199999999994446,
+              "positive_starts": 6,
+              "unit": "pp"
+            }
+          }
+        }
+      },
+      "crossed_metrics": [
+        "main_pp",
+        "cagr_pp"
+      ],
+      "same_direction": false,
+      "old_a_exact": true,
+      "old_base_exact": true
+    },
+    "CNY50": {
+      "dose": {
+        "1": {
+          "main_pp": -0.03095000000000181,
+          "cagr_pp": -0.3778500000000018,
+          "standard": {
+            "滚5中位": {
+              "level": 50.00495,
+              "base_level": 50.63225,
+              "paired_delta": -0.03095000000000181,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 32.6324,
+              "base_level": 40.20865,
+              "paired_delta": -0.4242499999999996,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 4.327100000000001,
+              "base_level": 11.635950000000001,
+              "paired_delta": -0.17075000000000007,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 48.8876,
+              "base_level": 52.278749999999995,
+              "paired_delta": -0.6034999999999985,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.018688,
+              "base_level": 0.9983345000000001,
+              "paired_delta": 0.017645999999999995,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.026358,
+              "base_level": 1.036613,
+              "paired_delta": 0.007907500000000012,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 42.37765,
+              "base_level": 47.805,
+              "paired_delta": -0.3778500000000018,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 76.28515,
+              "base_level": 75.47755000000001,
+              "paired_delta": 0.003950000000002563,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.5567435000000001,
+              "base_level": 0.6608944999999999,
+              "paired_delta": -0.005538000000000015,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.9233665,
+              "base_level": 0.996866,
+              "paired_delta": -0.008094999999999963,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 66.23840000000001,
+              "base_level": 67.8235,
+              "paired_delta": -0.4642499999999994,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 46.525949999999995,
+              "base_level": 48.5838,
+              "paired_delta": 0.1181500000000002,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.97095,
+              "base_level": 45.24335,
+              "paired_delta": 0.007999999999999674,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 38.7748,
+              "base_level": 39.25365,
+              "paired_delta": -0.36720000000000086,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -24.7654,
+              "base_level": -25.0255,
+              "paired_delta": -0.10600000000000054,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.9786865,
+              "base_level": 7.979703000000001,
+              "paired_delta": -0.06803649999999939,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.7192,
+              "base_level": 162.26635000000002,
+              "paired_delta": 0.17534999999999634,
+              "positive_starts": 1,
+              "unit": "pp"
+            }
+          }
+        },
+        "3": {
+          "main_pp": 1.3027999999999984,
+          "cagr_pp": 0.5414499999999989,
+          "standard": {
+            "滚5中位": {
+              "level": 56.756150000000005,
+              "base_level": 56.347100000000005,
+              "paired_delta": 1.3027999999999984,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 47.231849999999994,
+              "base_level": 47.2976,
+              "paired_delta": -0.2208500000000002,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 16.96805,
+              "base_level": 17.11055,
+              "paired_delta": -0.024349999999999372,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 53.535900000000005,
+              "base_level": 53.43555,
+              "paired_delta": 0.0,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0944099999999999,
+              "base_level": 1.0563965,
+              "paired_delta": 0.008119000000000098,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.2405675,
+              "base_level": 1.1996965,
+              "paired_delta": 0.009054499999999854,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 54.871,
+              "base_level": 54.305800000000005,
+              "paired_delta": 0.5414499999999989,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 66.59145,
+              "base_level": 66.31344999999999,
+              "paired_delta": 0.0068000000000012495,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.781919,
+              "base_level": 0.7800865,
+              "paired_delta": 0.009502999999999984,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.139637,
+              "base_level": 1.1198515,
+              "paired_delta": 0.007199500000000136,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 74.84779999999999,
+              "base_level": 73.5065,
+              "paired_delta": 1.114599999999999,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 53.504250000000006,
+              "base_level": 54.0408,
+              "paired_delta": 0.10640000000000094,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 43.6644,
+              "base_level": 46.19265,
+              "paired_delta": 0.0,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 45.16865,
+              "base_level": 45.28145,
+              "paired_delta": -0.0064000000000008495,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -15.48735,
+              "base_level": -12.8156,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.3026775,
+              "base_level": 7.121622,
+              "paired_delta": 0.13440300000000027,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.4663,
+              "base_level": 162.91595,
+              "paired_delta": -0.06619999999999404,
+              "positive_starts": 9,
+              "unit": "pp"
+            }
+          }
+        },
+        "5": {
+          "main_pp": 0.6040999999999991,
+          "cagr_pp": 0.08690000000000087,
+          "standard": {
+            "滚5中位": {
+              "level": 43.586650000000006,
+              "base_level": 43.95595,
+              "paired_delta": 0.6040999999999991,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 35.09345,
+              "base_level": 35.646100000000004,
+              "paired_delta": -0.1619499999999996,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 10.2857,
+              "base_level": 8.0267,
+              "paired_delta": 0.0029500000000001747,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.53905,
+              "base_level": 54.49805,
+              "paired_delta": -0.0002500000000016378,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.795425,
+              "base_level": 0.807999,
+              "paired_delta": 0.005589999999999984,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.0193425,
+              "base_level": 1.0167605,
+              "paired_delta": 0.007211500000000037,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 45.51415,
+              "base_level": 45.40145,
+              "paired_delta": 0.08690000000000087,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 64.71525,
+              "base_level": 65.82000000000001,
+              "paired_delta": -0.036799999999997945,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.6976154999999999,
+              "base_level": 0.6747464999999999,
+              "paired_delta": 0.00252150000000001,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.04087,
+              "base_level": 1.037096,
+              "paired_delta": 5.650000000001487e-05,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 59.4487,
+              "base_level": 60.11185,
+              "paired_delta": 0.1660999999999968,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 42.89945,
+              "base_level": 43.2471,
+              "paired_delta": 0.39599999999999913,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.8601,
+              "base_level": 46.86865,
+              "paired_delta": 0.0019000000000046757,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 40.11855,
+              "base_level": 43.5991,
+              "paired_delta": 0.18639999999999768,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -21.981099999999998,
+              "base_level": -22.021849999999997,
+              "paired_delta": 0.0,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 6.253902,
+              "base_level": 5.97339,
+              "paired_delta": 0.2934169999999994,
+              "positive_starts": 2,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 158.5664,
+              "base_level": 158.35485,
+              "paired_delta": -0.01835000000000031,
+              "positive_starts": 7,
+              "unit": "pp"
+            }
+          }
+        },
+        "10": {
+          "main_pp": -0.27609999999999996,
+          "cagr_pp": -0.019800000000000373,
+          "standard": {
+            "滚5中位": {
+              "level": 30.44255,
+              "base_level": 32.24795,
+              "paired_delta": -0.27609999999999996,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 20.167800000000003,
+              "base_level": 21.4247,
+              "paired_delta": -0.3289500000000001,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 4.75475,
+              "base_level": 3.8596000000000004,
+              "paired_delta": -0.26009999999999983,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.271899999999995,
+              "base_level": 54.35345,
+              "paired_delta": 0.032850000000000934,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.5521195,
+              "base_level": 0.6215685,
+              "paired_delta": -0.017671999999999966,
+              "positive_starts": 2,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.81324,
+              "base_level": 0.8536115,
+              "paired_delta": -0.006466500000000042,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 31.744850000000003,
+              "base_level": 33.1881,
+              "paired_delta": -0.019800000000000373,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 65.4283,
+              "base_level": 64.19465,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.4765405,
+              "base_level": 0.540462,
+              "paired_delta": -0.015445999999999988,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.8153725000000001,
+              "base_level": 0.86686,
+              "paired_delta": -0.00875750000000003,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 38.095099999999995,
+              "base_level": 38.81529999999999,
+              "paired_delta": -0.47909999999999897,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 26.041199999999996,
+              "base_level": 27.160600000000002,
+              "paired_delta": -0.026550000000000185,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.73375,
+              "base_level": 45.6539,
+              "paired_delta": 0.0011499999999997623,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 28.10145,
+              "base_level": 36.6804,
+              "paired_delta": -0.27860000000000107,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -20.42715,
+              "base_level": -20.2054,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.6488265,
+              "base_level": 5.633014,
+              "paired_delta": 0.010326000000000057,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 150.6419,
+              "base_level": 150.8203,
+              "paired_delta": 0.10549999999999171,
+              "positive_starts": 5,
+              "unit": "pp"
+            }
+          }
+        }
+      },
+      "crossed_metrics": [
+        "main_pp",
+        "cagr_pp"
+      ],
+      "same_direction": false,
+      "old_a_exact": true,
+      "old_base_exact": true
+    },
+    "CNY60": {
+      "dose": {
+        "1": {
+          "main_pp": 0.11950000000000016,
+          "cagr_pp": -0.3671499999999994,
+          "standard": {
+            "滚5中位": {
+              "level": 48.43305,
+              "base_level": 50.63225,
+              "paired_delta": 0.11950000000000016,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 32.6324,
+              "base_level": 40.20865,
+              "paired_delta": -0.8212499999999998,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 4.144050000000001,
+              "base_level": 11.635950000000001,
+              "paired_delta": -0.25454999999999994,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 49.48085,
+              "base_level": 52.278749999999995,
+              "paired_delta": -0.7220499999999991,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0331635000000001,
+              "base_level": 0.9983345000000001,
+              "paired_delta": -0.0035914999999999697,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.005083,
+              "base_level": 1.036613,
+              "paired_delta": 0.006831499999999935,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 41.6163,
+              "base_level": 47.805,
+              "paired_delta": -0.3671499999999994,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 76.28515,
+              "base_level": 75.47755000000001,
+              "paired_delta": 0.03215000000000301,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.5470015,
+              "base_level": 0.6608944999999999,
+              "paired_delta": -0.012820999999999971,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.9120969999999999,
+              "base_level": 0.996866,
+              "paired_delta": -0.006975499999999968,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 61.85855,
+              "base_level": 67.8235,
+              "paired_delta": -0.28690000000000104,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 44.8258,
+              "base_level": 48.5838,
+              "paired_delta": -0.027000000000002022,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.26015,
+              "base_level": 45.24335,
+              "paired_delta": 0.007999999999999674,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 38.3837,
+              "base_level": 39.25365,
+              "paired_delta": -0.13495000000000035,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -24.7913,
+              "base_level": -25.0255,
+              "paired_delta": -0.22230000000000305,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.812843,
+              "base_level": 7.979703000000001,
+              "paired_delta": -0.38786850000000017,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.76469999999998,
+              "base_level": 162.26635000000002,
+              "paired_delta": 0.12694999999999235,
+              "positive_starts": 2,
+              "unit": "pp"
+            }
+          }
+        },
+        "3": {
+          "main_pp": 1.3027999999999984,
+          "cagr_pp": 0.46035000000000104,
+          "standard": {
+            "滚5中位": {
+              "level": 57.7812,
+              "base_level": 56.347100000000005,
+              "paired_delta": 1.3027999999999984,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 47.5022,
+              "base_level": 47.2976,
+              "paired_delta": -0.3232999999999986,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 16.96805,
+              "base_level": 17.11055,
+              "paired_delta": -0.10904999999999943,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 53.535900000000005,
+              "base_level": 53.43555,
+              "paired_delta": -0.0021500000000007624,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.105804,
+              "base_level": 1.0563965,
+              "paired_delta": 0.008119000000000098,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.2438745,
+              "base_level": 1.1996965,
+              "paired_delta": 0.009054499999999854,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 54.871,
+              "base_level": 54.305800000000005,
+              "paired_delta": 0.46035000000000104,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 66.49505,
+              "base_level": 66.31344999999999,
+              "paired_delta": 0.015450000000005737,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.7743225,
+              "base_level": 0.7800865,
+              "paired_delta": 0.004363000000000006,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.13011,
+              "base_level": 1.1198515,
+              "paired_delta": 0.007199500000000136,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 74.75195,
+              "base_level": 73.5065,
+              "paired_delta": 1.2296499999999988,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 54.0133,
+              "base_level": 54.0408,
+              "paired_delta": 0.12125000000000052,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 43.6644,
+              "base_level": 46.19265,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 45.3343,
+              "base_level": 45.28145,
+              "paired_delta": -0.0064000000000008495,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -15.48735,
+              "base_level": -12.8156,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.2308705,
+              "base_level": 7.121622,
+              "paired_delta": 0.13440300000000027,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.4663,
+              "base_level": 162.91595,
+              "paired_delta": -0.015350000000002861,
+              "positive_starts": 8,
+              "unit": "pp"
+            }
+          }
+        },
+        "5": {
+          "main_pp": 0.49435000000000173,
+          "cagr_pp": -0.11809999999999876,
+          "standard": {
+            "滚5中位": {
+              "level": 43.845299999999995,
+              "base_level": 43.95595,
+              "paired_delta": 0.49435000000000173,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 35.7172,
+              "base_level": 35.646100000000004,
+              "paired_delta": 0.07109999999999894,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 10.54055,
+              "base_level": 8.0267,
+              "paired_delta": 0.09614999999999901,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.44949999999999,
+              "base_level": 54.49805,
+              "paired_delta": -0.0002500000000016378,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.8079965,
+              "base_level": 0.807999,
+              "paired_delta": 0.010995000000000033,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.0218384999999999,
+              "base_level": 1.0167605,
+              "paired_delta": 0.0044700000000000295,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 45.51415,
+              "base_level": 45.40145,
+              "paired_delta": -0.11809999999999876,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 63.95230000000001,
+              "base_level": 65.82000000000001,
+              "paired_delta": -0.044199999999999795,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.6993375,
+              "base_level": 0.6747464999999999,
+              "paired_delta": -0.0015869999999999773,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.044232,
+              "base_level": 1.037096,
+              "paired_delta": -0.0007740000000000524,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 59.4055,
+              "base_level": 60.11185,
+              "paired_delta": -0.37549999999999806,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 43.01735,
+              "base_level": 43.2471,
+              "paired_delta": -0.05969999999999864,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.85755,
+              "base_level": 46.86865,
+              "paired_delta": -0.0015500000000001624,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 40.87415,
+              "base_level": 43.5991,
+              "paired_delta": 0.30799999999999994,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -21.981099999999998,
+              "base_level": -22.021849999999997,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 6.1264445,
+              "base_level": 5.97339,
+              "paired_delta": 0.12251900000000004,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 158.064,
+              "base_level": 158.35485,
+              "paired_delta": -0.0028999999999945736,
+              "positive_starts": 7,
+              "unit": "pp"
+            }
+          }
+        },
+        "10": {
+          "main_pp": 0.18869999999999998,
+          "cagr_pp": 0.1817000000000013,
+          "standard": {
+            "滚5中位": {
+              "level": 31.4229,
+              "base_level": 32.24795,
+              "paired_delta": 0.18869999999999998,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 20.780900000000003,
+              "base_level": 21.4247,
+              "paired_delta": -0.30419999999999753,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 5.261050000000001,
+              "base_level": 3.8596000000000004,
+              "paired_delta": -0.2632499999999999,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.271899999999995,
+              "base_level": 54.35345,
+              "paired_delta": 0.03429999999999822,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.554657,
+              "base_level": 0.6215685,
+              "paired_delta": -0.008761499999999978,
+              "positive_starts": 3,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.819963,
+              "base_level": 0.8536115,
+              "paired_delta": -0.008820500000000009,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 32.4744,
+              "base_level": 33.1881,
+              "paired_delta": 0.1817000000000013,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 65.4283,
+              "base_level": 64.19465,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.4970585,
+              "base_level": 0.540462,
+              "paired_delta": -0.015455999999999998,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.829225,
+              "base_level": 0.86686,
+              "paired_delta": -0.005363000000000062,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 38.86255,
+              "base_level": 38.81529999999999,
+              "paired_delta": -0.38525000000000087,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 26.4627,
+              "base_level": 27.160600000000002,
+              "paired_delta": -0.20489999999999953,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.73375,
+              "base_level": 45.6539,
+              "paired_delta": 0.006849999999999912,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 31.823800000000002,
+              "base_level": 36.6804,
+              "paired_delta": -0.29085000000000083,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -20.43165,
+              "base_level": -20.2054,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.657796,
+              "base_level": 5.633014,
+              "paired_delta": 0.08053700000000008,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 150.64690000000002,
+              "base_level": 150.8203,
+              "paired_delta": 0.1727499999999993,
+              "positive_starts": 5,
+              "unit": "pp"
+            }
+          }
+        }
+      },
+      "crossed_metrics": [
+        "cagr_pp"
+      ],
+      "same_direction": false,
+      "old_a_exact": true,
+      "old_base_exact": true
+    },
+    "FINAL50": {
+      "dose": {
+        "1": {
+          "main_pp": 0.8709999999999968,
+          "cagr_pp": 0.4388999999999976,
+          "standard": {
+            "滚5中位": {
+              "level": 52.2483,
+              "base_level": 50.63225,
+              "paired_delta": 0.8709999999999968,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 39.99835,
+              "base_level": 40.20865,
+              "paired_delta": 0.4075000000000009,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 12.0224,
+              "base_level": 11.635950000000001,
+              "paired_delta": 0.31125000000000114,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 52.130500000000005,
+              "base_level": 52.278749999999995,
+              "paired_delta": -0.44195000000000206,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.065954,
+              "base_level": 0.9983345000000001,
+              "paired_delta": 0.019960000000000033,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.0614075,
+              "base_level": 1.036613,
+              "paired_delta": 0.01466999999999996,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 47.172799999999995,
+              "base_level": 47.805,
+              "paired_delta": 0.4388999999999976,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 74.72245,
+              "base_level": 75.47755000000001,
+              "paired_delta": 0.0012500000000026379,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.6449585,
+              "base_level": 0.6608944999999999,
+              "paired_delta": 0.012208500000000067,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.990999,
+              "base_level": 0.996866,
+              "paired_delta": 0.01116000000000017,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 69.8114,
+              "base_level": 67.8235,
+              "paired_delta": 0.21015000000000894,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 47.736250000000005,
+              "base_level": 48.5838,
+              "paired_delta": 0.39720000000000033,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.020799999999994,
+              "base_level": 45.24335,
+              "paired_delta": 0.6637999999999977,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 37.865899999999996,
+              "base_level": 39.25365,
+              "paired_delta": 0.19065000000000054,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -23.9997,
+              "base_level": -25.0255,
+              "paired_delta": -0.03550000000000081,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.4918315,
+              "base_level": 7.979703000000001,
+              "paired_delta": -0.1383829999999997,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 162.93225,
+              "base_level": 162.26635000000002,
+              "paired_delta": 0.08580000000000254,
+              "positive_starts": 6,
+              "unit": "pp"
+            }
+          }
+        },
+        "3": {
+          "main_pp": 0.5531000000000008,
+          "cagr_pp": -0.7273500000000016,
+          "standard": {
+            "滚5中位": {
+              "level": 56.7141,
+              "base_level": 56.347100000000005,
+              "paired_delta": 0.5531000000000008,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 45.24805,
+              "base_level": 47.2976,
+              "paired_delta": -0.40890000000000093,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 17.031249999999996,
+              "base_level": 17.11055,
+              "paired_delta": -0.027099999999999347,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 53.3603,
+              "base_level": 53.43555,
+              "paired_delta": -0.009449999999999736,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0812915,
+              "base_level": 1.0563965,
+              "paired_delta": -0.00645049999999997,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.212429,
+              "base_level": 1.1996965,
+              "paired_delta": 0.011712500000000015,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 53.04685,
+              "base_level": 54.305800000000005,
+              "paired_delta": -0.7273500000000016,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 66.47054999999999,
+              "base_level": 66.31344999999999,
+              "paired_delta": 0.008850000000004687,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.775033,
+              "base_level": 0.7800865,
+              "paired_delta": -0.009464500000000042,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.0969365,
+              "base_level": 1.1198515,
+              "paired_delta": -0.0074825000000000585,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 72.69479999999999,
+              "base_level": 73.5065,
+              "paired_delta": -1.139450000000003,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 53.04835,
+              "base_level": 54.0408,
+              "paired_delta": -0.1483000000000012,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 44.471450000000004,
+              "base_level": 46.19265,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 46.2555,
+              "base_level": 45.28145,
+              "paired_delta": 0.8749499999999993,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -15.49435,
+              "base_level": -12.8156,
+              "paired_delta": -0.0005499999999998562,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.1572705,
+              "base_level": 7.121622,
+              "paired_delta": 0.061237999999999904,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.8606,
+              "base_level": 162.91595,
+              "paired_delta": -0.21454999999999114,
+              "positive_starts": 9,
+              "unit": "pp"
+            }
+          }
+        },
+        "5": {
+          "main_pp": 0.44245000000000256,
+          "cagr_pp": -0.04550000000000387,
+          "standard": {
+            "滚5中位": {
+              "level": 45.031549999999996,
+              "base_level": 43.95595,
+              "paired_delta": 0.44245000000000256,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 35.6725,
+              "base_level": 35.646100000000004,
+              "paired_delta": 0.14615000000000045,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 10.28905,
+              "base_level": 8.0267,
+              "paired_delta": 0.0029000000000001247,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.54259999999999,
+              "base_level": 54.49805,
+              "paired_delta": -0.00034999999999896225,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.831928,
+              "base_level": 0.807999,
+              "paired_delta": 0.0031094999999999873,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.037256,
+              "base_level": 1.0167605,
+              "paired_delta": 0.0038924999999999654,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 46.67165,
+              "base_level": 45.40145,
+              "paired_delta": -0.04550000000000387,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 64.86605,
+              "base_level": 65.82000000000001,
+              "paired_delta": -0.010300000000001974,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.6921175,
+              "base_level": 0.6747464999999999,
+              "paired_delta": -0.0009914999999999785,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.0425195,
+              "base_level": 1.037096,
+              "paired_delta": -0.0003110000000000057,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 59.907599999999995,
+              "base_level": 60.11185,
+              "paired_delta": 1.1923999999999935,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 43.371500000000005,
+              "base_level": 43.2471,
+              "paired_delta": 0.03654999999999908,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.85505,
+              "base_level": 46.86865,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 44.4497,
+              "base_level": 43.5991,
+              "paired_delta": 0.00040000000000040004,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -22.0806,
+              "base_level": -22.021849999999997,
+              "paired_delta": 0.0,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.985996999999999,
+              "base_level": 5.97339,
+              "paired_delta": -0.006737999999999911,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 158.60745,
+              "base_level": 158.35485,
+              "paired_delta": -0.0001999999999946489,
+              "positive_starts": 7,
+              "unit": "pp"
+            }
+          }
+        },
+        "10": {
+          "main_pp": -0.5122499999999988,
+          "cagr_pp": -0.7075999999999999,
+          "standard": {
+            "滚5中位": {
+              "level": 32.381150000000005,
+              "base_level": 32.24795,
+              "paired_delta": -0.5122499999999988,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 21.99745,
+              "base_level": 21.4247,
+              "paired_delta": -0.2412499999999998,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 5.35285,
+              "base_level": 3.8596000000000004,
+              "paired_delta": -0.43825000000000036,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.27284999999999,
+              "base_level": 54.35345,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.5607615,
+              "base_level": 0.6215685,
+              "paired_delta": -0.024110500000000035,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.85043,
+              "base_level": 0.8536115,
+              "paired_delta": -0.005482000000000042,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 31.615950000000005,
+              "base_level": 33.1881,
+              "paired_delta": -0.7075999999999999,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 65.4366,
+              "base_level": 64.19465,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.48274,
+              "base_level": 0.540462,
+              "paired_delta": -0.014995499999999995,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.800593,
+              "base_level": 0.86686,
+              "paired_delta": -0.015879500000000046,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 38.3583,
+              "base_level": 38.81529999999999,
+              "paired_delta": -0.7316500000000004,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 26.94915,
+              "base_level": 27.160600000000002,
+              "paired_delta": -1.2900500000000008,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.73275,
+              "base_level": 45.6539,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 31.60095,
+              "base_level": 36.6804,
+              "paired_delta": -1.042049999999997,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -18.7899,
+              "base_level": -20.2054,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.6051850000000005,
+              "base_level": 5.633014,
+              "paired_delta": 0.07590999999999992,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 150.80814999999998,
+              "base_level": 150.8203,
+              "paired_delta": 0.2150999999999903,
+              "positive_starts": 4,
+              "unit": "pp"
+            }
+          }
+        }
+      },
+      "crossed_metrics": [
+        "main_pp",
+        "cagr_pp"
+      ],
+      "same_direction": false,
+      "old_a_exact": true,
+      "old_base_exact": true
+    },
+    "FINAL60": {
+      "dose": {
+        "1": {
+          "main_pp": 0.05960000000000132,
+          "cagr_pp": 0.0010499999999968868,
+          "standard": {
+            "滚5中位": {
+              "level": 52.2483,
+              "base_level": 50.63225,
+              "paired_delta": 0.05960000000000132,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 39.99835,
+              "base_level": 40.20865,
+              "paired_delta": -0.16269999999999896,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 12.0224,
+              "base_level": 11.635950000000001,
+              "paired_delta": -0.1257499999999998,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 52.543800000000005,
+              "base_level": 52.278749999999995,
+              "paired_delta": -0.3296000000000021,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.036036,
+              "base_level": 0.9983345000000001,
+              "paired_delta": 0.0041340000000000265,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.0614075,
+              "base_level": 1.036613,
+              "paired_delta": 0.005551000000000084,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 1,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 47.172799999999995,
+              "base_level": 47.805,
+              "paired_delta": 0.0010499999999968868,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 75.46820000000001,
+              "base_level": 75.47755000000001,
+              "paired_delta": 0.016899999999997473,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.6449585,
+              "base_level": 0.6608944999999999,
+              "paired_delta": -0.0011690000000000311,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.990999,
+              "base_level": 0.996866,
+              "paired_delta": -0.008752500000000052,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 67.2679,
+              "base_level": 67.8235,
+              "paired_delta": -0.34709999999999464,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 47.736250000000005,
+              "base_level": 48.5838,
+              "paired_delta": 0.2711500000000061,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.28295,
+              "base_level": 45.24335,
+              "paired_delta": 0.6767499999999982,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 37.61525,
+              "base_level": 39.25365,
+              "paired_delta": -0.5827499999999985,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -23.9997,
+              "base_level": -25.0255,
+              "paired_delta": -0.1379000000000019,
+              "positive_starts": 2,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.880265,
+              "base_level": 7.979703000000001,
+              "paired_delta": -0.04471049999999899,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 162.93225,
+              "base_level": 162.26635000000002,
+              "paired_delta": 0.03810000000000757,
+              "positive_starts": 7,
+              "unit": "pp"
+            }
+          }
+        },
+        "3": {
+          "main_pp": 0.3540500000000002,
+          "cagr_pp": -0.9102999999999972,
+          "standard": {
+            "滚5中位": {
+              "level": 56.7141,
+              "base_level": 56.347100000000005,
+              "paired_delta": 0.3540500000000002,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 46.1889,
+              "base_level": 47.2976,
+              "paired_delta": -0.25529999999999997,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 17.031249999999996,
+              "base_level": 17.11055,
+              "paired_delta": -0.006799999999998474,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 53.35749999999999,
+              "base_level": 53.43555,
+              "paired_delta": -0.012250000000002537,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 1.0812915,
+              "base_level": 1.0563965,
+              "paired_delta": -0.0018794999999999784,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.212429,
+              "base_level": 1.1996965,
+              "paired_delta": 0.010916000000000037,
+              "positive_starts": 8,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 53.04685,
+              "base_level": 54.305800000000005,
+              "paired_delta": -0.9102999999999972,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 66.37385,
+              "base_level": 66.31344999999999,
+              "paired_delta": 0.008850000000004687,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.775033,
+              "base_level": 0.7800865,
+              "paired_delta": -0.01699250000000002,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.0985235,
+              "base_level": 1.1198515,
+              "paired_delta": -0.021637000000000017,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 72.91155,
+              "base_level": 73.5065,
+              "paired_delta": -1.139450000000003,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 53.04835,
+              "base_level": 54.0408,
+              "paired_delta": -0.1483000000000012,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 43.66480000000001,
+              "base_level": 46.19265,
+              "paired_delta": 0.0,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 46.15195,
+              "base_level": 45.28145,
+              "paired_delta": 0.8749499999999993,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -15.590100000000001,
+              "base_level": -12.8156,
+              "paired_delta": -0.0004000000000000531,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 7.270999,
+              "base_level": 7.121622,
+              "paired_delta": 0.061045500000000086,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 163.78345,
+              "base_level": 162.91595,
+              "paired_delta": -0.12489999999999446,
+              "positive_starts": 8,
+              "unit": "pp"
+            }
+          }
+        },
+        "5": {
+          "main_pp": 1.5215499999999993,
+          "cagr_pp": 0.6826000000000026,
+          "standard": {
+            "滚5中位": {
+              "level": 45.9696,
+              "base_level": 43.95595,
+              "paired_delta": 1.5215499999999993,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 35.931000000000004,
+              "base_level": 35.646100000000004,
+              "paired_delta": 0.28105000000000213,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 10.31705,
+              "base_level": 8.0267,
+              "paired_delta": 0.0029000000000001247,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.50835000000001,
+              "base_level": 54.49805,
+              "paired_delta": -0.0002500000000016378,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.8275170000000001,
+              "base_level": 0.807999,
+              "paired_delta": 0.025629999999999986,
+              "positive_starts": 9,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 1.0375584999999998,
+              "base_level": 1.0167605,
+              "paired_delta": 0.014251499999999973,
+              "positive_starts": 10,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 46.957300000000004,
+              "base_level": 45.40145,
+              "paired_delta": 0.6826000000000026,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 64.89345,
+              "base_level": 65.82000000000001,
+              "paired_delta": -0.017700000000003824,
+              "positive_starts": 9,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.709803,
+              "base_level": 0.6747464999999999,
+              "paired_delta": 0.006644499999999998,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 1.0412210000000002,
+              "base_level": 1.037096,
+              "paired_delta": 0.004674999999999985,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 60.293299999999995,
+              "base_level": 60.11185,
+              "paired_delta": 2.2805500000000034,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 44.327600000000004,
+              "base_level": 43.2471,
+              "paired_delta": 0.7504499999999997,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 46.8525,
+              "base_level": 46.86865,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 44.4497,
+              "base_level": 43.5991,
+              "paired_delta": 1.143050000000001,
+              "positive_starts": 10,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -22.0806,
+              "base_level": -22.021849999999997,
+              "paired_delta": 0.0,
+              "positive_starts": 3,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 6.034136,
+              "base_level": 5.97339,
+              "paired_delta": -0.013819500000000318,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 158.0657,
+              "base_level": 158.35485,
+              "paired_delta": -0.05339999999999234,
+              "positive_starts": 8,
+              "unit": "pp"
+            }
+          }
+        },
+        "10": {
+          "main_pp": -0.023399999999998422,
+          "cagr_pp": -0.6695000000000007,
+          "standard": {
+            "滚5中位": {
+              "level": 32.381150000000005,
+              "base_level": 32.24795,
+              "paired_delta": -0.023399999999998422,
+              "positive_starts": 7,
+              "unit": "pp"
+            },
+            "滚5P25": {
+              "level": 22.15775,
+              "base_level": 21.4247,
+              "paired_delta": 0.36235000000000017,
+              "positive_starts": 8,
+              "unit": "pp"
+            },
+            "滚5最差": {
+              "level": 6.34905,
+              "base_level": 3.8596000000000004,
+              "paired_delta": -0.8020000000000005,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "滚5回撤": {
+              "level": 54.27284999999999,
+              "base_level": 54.35345,
+              "paired_delta": 0.0009499999999995623,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚5Calmar": {
+              "level": 0.5482905,
+              "base_level": 0.6215685,
+              "paired_delta": -0.012133499999999964,
+              "positive_starts": 5,
+              "unit": "ratio"
+            },
+            "滚5Sharpe": {
+              "level": 0.8243564999999999,
+              "base_level": 0.8536115,
+              "paired_delta": -0.003230500000000025,
+              "positive_starts": 7,
+              "unit": "ratio"
+            },
+            "负窗%": {
+              "level": 0.0,
+              "base_level": 0.0,
+              "paired_delta": 0.0,
+              "positive_starts": 0,
+              "unit": "pp"
+            },
+            "年化": {
+              "level": 31.618299999999998,
+              "base_level": 33.1881,
+              "paired_delta": -0.6695000000000007,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "最大回撤": {
+              "level": 65.4366,
+              "base_level": 64.19465,
+              "paired_delta": 0.0,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "Calmar": {
+              "level": 0.48678,
+              "base_level": 0.540462,
+              "paired_delta": -0.012867500000000004,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "Sharpe": {
+              "level": 0.804583,
+              "base_level": 0.86686,
+              "paired_delta": -0.01603500000000002,
+              "positive_starts": 6,
+              "unit": "ratio"
+            },
+            "5年块中位": {
+              "level": 38.303,
+              "base_level": 38.81529999999999,
+              "paired_delta": -0.5877000000000021,
+              "positive_starts": 6,
+              "unit": "pp"
+            },
+            "滚3中位": {
+              "level": 26.972600000000003,
+              "base_level": 27.160600000000002,
+              "paired_delta": -1.1739500000000014,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "滚3回撤": {
+              "level": 45.73275,
+              "base_level": 45.6539,
+              "paired_delta": 0.0037000000000009248,
+              "positive_starts": 5,
+              "unit": "pp"
+            },
+            "逐年中位": {
+              "level": 31.1359,
+              "base_level": 36.6804,
+              "paired_delta": -1.8443500000000002,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "逐年最差": {
+              "level": -18.7899,
+              "base_level": -20.2054,
+              "paired_delta": 0.0,
+              "positive_starts": 4,
+              "unit": "pp"
+            },
+            "换手": {
+              "level": 5.643867,
+              "base_level": 5.633014,
+              "paired_delta": 0.06082749999999981,
+              "positive_starts": 4,
+              "unit": "ratio"
+            },
+            "仓位": {
+              "level": 150.7411,
+              "base_level": 150.8203,
+              "paired_delta": 0.3762999999999961,
+              "positive_starts": 4,
+              "unit": "pp"
+            }
+          }
+        }
+      },
+      "crossed_metrics": [
+        "cagr_pp"
+      ],
+      "same_direction": false,
+      "old_a_exact": true,
+      "old_base_exact": true
+    }
+  },
+  "next_margin_candidates": []
+}

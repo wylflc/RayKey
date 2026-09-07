@@ -1,0 +1,29 @@
+{
+  "base": "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 --corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 --swap --swap-partial --sell-trend-ma 20 --lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close --fee-preset user --no-artifacts --capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 --maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay --gain-sell 1.10 --gain-sell-mode ungated --swap-gain-once --swap-source-block -1 --width -0.0454 --swap-margin 0.15 --stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma60_stop --stop-basis exec --residual-clear lot --position-cap 0.6 --net-same-day --fill-missing skip --dividend-tax --swap-repeat skip --addon-trend ma-only --swap-require-weak --daily-states data/processed/a_share_daily_states_adopted.csv --hold-states data/processed/a_share_daily_states_hold.csv --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv",
+  "starts": [
+    "2009-11-01",
+    "2010-05-01",
+    "2010-11-01",
+    "2011-05-01",
+    "2011-11-01",
+    "2012-05-01",
+    "2012-11-01",
+    "2013-05-01",
+    "2013-11-01",
+    "2014-05-01",
+    "2014-11-01",
+    "2015-05-01",
+    "2015-11-01",
+    "2016-05-01"
+  ],
+  "metric_version": "m2",
+  "files": {
+    "scripts/backtest_valuation_strategy.py": "0d4f71148f355fe65e3012c81b58e15aab9b507578352828779d1fb1f740436a",
+    "data/processed/pit_attention/panel_moat_bank_v6b.csv": "b046b2f0e52e3a275a4220f5bde25047ca8de15a6810c3b765fb62f646f11f7b",
+    "data/processed/a_share_daily_states_adopted.csv": "c1b7c3ccf4d0cf64edc6dafbabd887f43a9cb60873b170761ce677b76927c42b",
+    "data/processed/a_share_daily_states_hold.csv": "b578066f5157bcfcd5605b09341a740c4a8914f452ed00fc7b6ccdb9255cf174",
+    "data/raw/corporate_actions/a_share_corporate_actions.csv": "1a64084371098597cee5b42143ee0fcbe58337179ab1e51ca3cfab8d263fa054",
+    "data/reference/cost_of_equity_inputs.csv": "f05fda80c3a778b5b759a9459b99c6dfbb3e307efcd7c910f3aefda58e74ebbd",
+    "data/experiments/exp_open_issues_20260907/configs/candidates.txt": "f0b062198256ca6690269bd396a6494c3513ae540a963c576bd97ab94c27bf8c"
+  }
+}

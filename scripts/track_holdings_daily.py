@@ -252,8 +252,9 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         if financial:
             low = to_float(band_row.get("fair_price_low"))
             high = to_float(band_row.get("fair_price_high"))
-        pv = trading_pv(close, band_row)
-        cand_pv = trading_pv(close, cand_row)
+        has_display_band = low is not None and high is not None
+        pv = trading_pv(close, band_row) if financial or has_display_band else None
+        cand_pv = trading_pv(close, cand_row) if financial or has_display_band else None
         if not financial and pv is None and close and low is not None and high is not None:
             mid = (low + high) / 2
             pv = close / mid if mid > 0 else None
@@ -267,7 +268,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         if close is None:
             notes.append("**未取到当日行情**（停牌或接口失败）：`P/V` 未算出，该票当日不进 §9.3 判定")
         if pool_row is None:
-            notes.append("不在核心估值合格池内，无带——按 §9.3.2 第四步逐日清仓")
+            notes.append("不在核心估值合格池内——按 §9.3.2 第四步逐日清仓")
         elif low is None or high is None:
             notes.append("池内无合理价区间（无法估值）：无 `P/V`，当日不进机械判定")
         # §9.3.1 涨幅减持行：唯一判定在扫描器 `holding_trim_signal`（只看涨幅，不看走势）。

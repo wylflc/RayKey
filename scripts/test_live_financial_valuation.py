@@ -47,7 +47,7 @@ class LiveFinancialValuationTests(unittest.TestCase):
             self.assertEqual(row["model_pv"], "")
             self.assertEqual(tracked["pv"], "")
             self.assertEqual(tracked["action"], "数据缺失")
-            self.assertEqual(displayed["fair_value"], "—")
+            self.assertEqual(displayed["fair_value"], "—（数据缺失）")
             self.assertIsNone(trade["candidate"]["pv"])
 
     def test_bank_and_insurance_ignore_stale_band(self):
@@ -70,6 +70,15 @@ class LiveFinancialValuationTests(unittest.TestCase):
                 self.assertEqual(scan._default_rf("2026-09-07"), 0.02)
                 self.assertEqual(scan._default_rf("2026-09-01"), 0.03)
                 self.assertIsNone(scan._default_rf("2026-08-01"))
+
+    def test_missing_rate_does_not_use_static_bank_value(self):
+        with patch.object(scan, "_default_rf", return_value=None), \
+                patch.object(scan, "bank_dividend_intrinsic") as dividend:
+            band, source = scan.resolve_live_band("600036", "招商银行", "2026-09-07",
+                                                  {"600036": {"intrinsic_value": "100"}})
+            self.assertEqual(band, {})
+            self.assertIn("数据缺失", source)
+            dividend.assert_not_called()
 
     def test_exright_day_is_applied_once_by_shared_resolver(self):
         from divspread_dividend import Distribution

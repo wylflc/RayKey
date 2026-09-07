@@ -1,0 +1,11 @@
+BASE|
+VT_E12|--vol-form trend --vol-short 5 --vol-entry-min 1.2
+VS_MIN08|--vol-swap-min 0.8
+RC010|--residual-clear-tranches 0.1
+RC025|--residual-clear-tranches 0.25
+RC050|--residual-clear-tranches 0.5
+CNY40|--residual-clear-cny 40000
+CNY50|--residual-clear-cny 50000
+CNY60|--residual-clear-cny 60000
+FINAL50|--residual-clear-cny 50000 --residual-clear-final
+FINAL60|--residual-clear-cny 60000 --residual-clear-final

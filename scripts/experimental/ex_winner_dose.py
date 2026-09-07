@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "scripts/experimental"))
 from delta_attribution import load_contrib  # noqa: E402
-from sweep_backtest_configs import DEFAULT_STARTS, run_one  # noqa: E402
+from sweep_backtest_configs import DEFAULT_STARTS, metric_header, run_one  # noqa: E402
 
 
 def main() -> None:
@@ -44,6 +44,7 @@ def main() -> None:
                                        for c, v in ranked[:12]), file=sys.stderr)
 
     with args.out.open("w", encoding="utf-8") as fh:
+        fh.write(metric_header() + "\n")
         for k in (int(x) for x in args.ks.split(",")):
             codes = [c for c, _ in ranked[:k]]
             tag = f"K{k}@{args.challenger}"

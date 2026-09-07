@@ -331,7 +331,7 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     # 2026-08-23 用户指令：阅读版改列**合理估值 V**（= 区间中值 = 模型内在价值）与 **P/V**（§3 定义：ROIC 路径为
     # (现价+每股净负债)÷每股企业价值、其余 现价÷V，与 §9.3 同一口径、三位小数），合理价区间／空间两列移出阅读版（仍在 CSV）。
     mid = (low + high) / 2 if (low is not None and high is not None and not unvaluable) else None
-    fair_value = f"{mid:.2f}" if mid else "—"
+    fair_value = f"{mid:.2f}" if mid else ("—（数据缺失）" if financial else "—")
     # v4.62（OI-091）：P/V 按 `pv_ratio.trading_pv`（ROIC 路径 (现价+净负债)÷EV），生产带行缺失时退回 现价÷V
     pv_val = None
     if mid and ref_price:
