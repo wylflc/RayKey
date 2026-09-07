@@ -1,0 +1,23 @@
+{
+  "as_of": "2026-09-07",
+  "scope": "关注池移出裁定的第二次意见；只作研究建议，不变更生产名单或历史面板",
+  "previous_audit_rows": 214,
+  "actual_removed": 37,
+  "current_pool": 177,
+  "removed_outcomes": {
+    "暂维持移出，原理由需修正": 13,
+    "认可维持移出": 18,
+    "建议恢复关注": 6
+  },
+  "retained_focus_count": 14,
+  "new_sources_count": 32,
+  "removed_with_targeted_external_check": 20,
+  "retained_with_targeted_external_check": 3,
+  "external_scope_warning": "Targeted claim checks, not a full fresh diligence of every company. S29 is an auxiliary lead and does not establish current drug approval status.",
+  "source_snapshot_sha256": {
+    "data/interim/moat_audit_2026-09-07/moat_audit_merged.csv": "07bf69baa603d507a690788401bf480db86215db4b508f9aeb78b920c1c9737b",
+    "data/processed/a_share_attention_triage.csv": "0c3fd30c9b939c0742fa12bc15807712fbf08b08386287ea69c9d1057bbf0733",
+    "data/processed/a_share_core_valuation_pool.csv": "6827a910854bacd8ea99025bc3b232668e4e958d1ac5bc5e46b7e8ae5b25a99c"
+  },
+  "validation": "214 unique = 37 removed + 177 retained; 37 prior migration IDs linked; source references resolved; no production mutation"
+}
