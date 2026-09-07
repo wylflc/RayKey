@@ -558,8 +558,9 @@ def main() -> int:
     # ---- v4.20 除权归一化（OI-052/OI-039）：本文件写出的带值恒为现价口径 ----
     exright_hits: list[tuple[str, float, float]] = []
     for band in rows:
+        # 公告可得截止与价格基准分开；次日除息不能提前扣入信号日现价。
         res = exright_normalize(band, actions.get((band.get("security_code") or "").strip(), []),
-                                args.as_of)
+                                args.signal_date)
         if res is not None:
             exright_hits.append((band.get("security_name") or "", res[0], res[1]))
 

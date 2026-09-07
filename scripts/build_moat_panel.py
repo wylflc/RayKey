@@ -13,7 +13,7 @@
    - 区间行 → **替换**该代码在 v5 的全部区间；同一代码可多行（如盐湖 2004-2015 与 2021-）。
 3. **区间 → 生效窗**：进场证据年 Y → `effective_from = (Y+1)-04-30`（年报可得约定，与 v5 同构）；
    出场年 E → `effective_to = (E+1)-04-30`；`worth_to=9999` → 开放（空串）；
-   `worth_to` 也可写具体日期 `YYYY-MM-DD`（季度外的名单迁移，出场日 = 迁移日）→ `effective_to` 取该日。
+   `worth_from`、`worth_to` 也可写具体日期 `YYYY-MM-DD`，用于季度外的名单迁移，直接作为生效窗边界。
    每个区间一行（回测按区间覆盖读取，与 v5 的逐年多行语义等价）。
 4. **银行子册**：银行行的进场判定不经 verdicts（§12.71.2）。v6b = v5 全部银行行原样（含 X3 退出/重入）；
    v6a = 仅规则 11 判例两家（招商银行 600036、宁波银行 002142）。
@@ -49,6 +49,13 @@ def is_bank(code: str, name: str) -> bool:
     return "银行" in name or "农商" in name or code in BANK_EXTRA
 
 
+def entry_date(worth_from: str) -> str:
+    """保留历史证据年的年报约定，同时支持按实际裁定日进入。"""
+    if "-" in worth_from:
+        return date.fromisoformat(worth_from).isoformat()
+    return f"{int(worth_from) + 1}-04-30"
+
+
 def main() -> int:
     global TODAY
     ap = argparse.ArgumentParser()
@@ -63,7 +70,7 @@ def main() -> int:
             v5_rows[r["security_code"].zfill(6)].append(r)
 
     drops: set[str] = set()
-    intervals: dict[str, list[tuple[int, str, str]]] = defaultdict(list)
+    intervals: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
     names: dict[str, str] = {}
     with VERDICTS.open(encoding="utf-8") as fh:
         rd = csv.reader(fh)
@@ -75,7 +82,7 @@ def main() -> int:
             if wf == "0":
                 drops.add(code)
             else:
-                intervals[code].append((int(wf), wt, row[1]))
+                intervals[code].append((entry_date(wf), wt, row[1]))
 
     def exit_date(wt: str) -> str:
         """`worth_to` → `effective_to`：年 E → (E+1)-04-30；9999 → 开放；YYYY-MM-DD → 原日期。"""
@@ -86,14 +93,14 @@ def main() -> int:
     if overlap:
         raise SystemExit(f"判定冲突：既除名又给区间 {sorted(overlap)}")
 
-    def interval_rows(code: str, ivs: list[tuple[int, str, str]]) -> list[dict]:
+    def interval_rows(code: str, ivs: list[tuple[str, str, str]]) -> list[dict]:
         out = []
         for wf, wt, name in sorted(ivs):
             row = {k: "" for k in fields}
             row.update({
-                "effective_from": f"{wf + 1}-04-30",
+                "effective_from": wf,
                 "effective_to": exit_date(wt),
-                "screen_year": str(wf + 1),
+                "screen_year": wf[:4],
                 "security_code": code,
                 "security_name": name,
             })
