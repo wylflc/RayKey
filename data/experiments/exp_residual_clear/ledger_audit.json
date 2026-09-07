@@ -1,0 +1,3428 @@
+{
+  "BASE": {
+    "counts": {
+      "buy_orders": 1908,
+      "sell_orders": 505,
+      "sell_code_days": 505,
+      "sell_code_days_closed": 264,
+      "remaining_below_1.5_tranches": 70,
+      "remaining_below_0.1_tranches": 8,
+      "remaining_below_0.5_tranches": 28,
+      "remaining_100_shares": 3
+    },
+    "days_checked": 3603,
+    "holding_count_mismatches": 0,
+    "end_date": "2026-08-28",
+    "events": [
+      {
+        "date": "2012-05-21",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 42000.0,
+        "remaining_tranches": 4.3566176176775775,
+        "reason": "换仓·减一档：让位给600660"
+      },
+      {
+        "date": "2012-05-25",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 16100.0,
+        "remaining_tranches": 0.9979568137313747,
+        "reason": "跌破建仓日MA60止损（同日对冲 16100 股）"
+      },
+      {
+        "date": "2012-05-25",
+        "code": "600897",
+        "name": "",
+        "remaining_shares": 20300.0,
+        "remaining_tranches": 1.9900668252854763,
+        "reason": "换仓·减一档：让位给600660"
+      },
+      {
+        "date": "2012-10-24",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 15300.0,
+        "remaining_tranches": 1.8654040550262652,
+        "reason": "换仓·减一档：让位给600188"
+      },
+      {
+        "date": "2013-03-25",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 65800.0,
+        "remaining_tranches": 7.889705077934351,
+        "reason": "换仓·减一档：让位给002001"
+      },
+      {
+        "date": "2013-05-15",
+        "code": "600066",
+        "name": "宇通客车",
+        "remaining_shares": 640.0,
+        "remaining_tranches": 0.09005992598184792,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2013-08-22",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 129000.0,
+        "remaining_tranches": 7.7524674231817885,
+        "reason": "换仓·减一档：让位给000933"
+      },
+      {
+        "date": "2013-08-30",
+        "code": "600066",
+        "name": "宇通客车",
+        "remaining_shares": 33340.0,
+        "remaining_tranches": 4.869074844587099,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2013-09-02",
+        "code": "600066",
+        "name": "宇通客车",
+        "remaining_shares": 26740.0,
+        "remaining_tranches": 4.021337695795864,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2013-09-23",
+        "code": "600066",
+        "name": "宇通客车",
+        "remaining_shares": 20140.0,
+        "remaining_tranches": 3.041573809715614,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2013-09-30",
+        "code": "600066",
+        "name": "宇通客车",
+        "remaining_shares": 13040.0,
+        "remaining_tranches": 1.8310955885722906,
+        "reason": "换仓·减一档：让位给600188"
+      },
+      {
+        "date": "2013-10-08",
+        "code": "600066",
+        "name": "宇通客车",
+        "remaining_shares": 6040.0,
+        "remaining_tranches": 0.8582388381172242,
+        "reason": "换仓·减一档：让位给600188"
+      },
+      {
+        "date": "2013-10-23",
+        "code": "002024",
+        "name": "",
+        "remaining_shares": 3200.0,
+        "remaining_tranches": 0.27352858324597923,
+        "reason": "换仓·减一档：让位给601088"
+      },
+      {
+        "date": "2014-03-06",
+        "code": "600897",
+        "name": "",
+        "remaining_shares": 6300.0,
+        "remaining_tranches": 0.7654528969367881,
+        "reason": "换仓·减一档：让位给000858"
+      },
+      {
+        "date": "2014-04-16",
+        "code": "002304",
+        "name": "",
+        "remaining_shares": 6200.0,
+        "remaining_tranches": 2.3874965461756923,
+        "reason": "换仓·减一档：让位给601088"
+      },
+      {
+        "date": "2014-05-13",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 77800.0,
+        "remaining_tranches": 16.96332581530679,
+        "reason": "换仓·减一档：让位给601088"
+      },
+      {
+        "date": "2014-05-14",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 73300.0,
+        "remaining_tranches": 16.101431784532494,
+        "reason": "换仓·减一档：让位给002128"
+      },
+      {
+        "date": "2014-05-19",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 68800.0,
+        "remaining_tranches": 15.259540632467257,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2014-05-21",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 64300.0,
+        "remaining_tranches": 14.179334715487206,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2014-05-22",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 59900.0,
+        "remaining_tranches": 13.345380024618237,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2014-05-23",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 55500.0,
+        "remaining_tranches": 12.34422326010492,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2014-05-26",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 51000.0,
+        "remaining_tranches": 11.236373234687312,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2014-06-04",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 169300.0,
+        "remaining_tranches": 10.205945834653262,
+        "reason": "换仓·减一档：让位给000333"
+      },
+      {
+        "date": "2014-06-05",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 152600.0,
+        "remaining_tranches": 9.084267428071628,
+        "reason": "换仓·减一档：让位给000333"
+      },
+      {
+        "date": "2014-06-16",
+        "code": "002304",
+        "name": "",
+        "remaining_shares": 6700.0,
+        "remaining_tranches": 2.6497522398963294,
+        "reason": "换仓·减一档：让位给002128"
+      },
+      {
+        "date": "2014-07-18",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 46700.0,
+        "remaining_tranches": 9.745258408355433,
+        "reason": "换仓·减一档：让位给600585"
+      },
+      {
+        "date": "2014-08-13",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 41100.0,
+        "remaining_tranches": 7.264802423337872,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-08-14",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 35600.0,
+        "remaining_tranches": 6.368117127058585,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-08-15",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 30100.0,
+        "remaining_tranches": 5.419379350255653,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-08-18",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 24600.0,
+        "remaining_tranches": 4.4458270444893175,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-08-19",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 19000.0,
+        "remaining_tranches": 3.3909334291334026,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-08-21",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 13500.0,
+        "remaining_tranches": 2.426233887779363,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-09-15",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 7700.0,
+        "remaining_tranches": 1.3201145203094655,
+        "reason": "换仓·减一档：让位给600585"
+      },
+      {
+        "date": "2014-09-17",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 153300.0,
+        "remaining_tranches": 9.524493502858443,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-09-18",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 137100.0,
+        "remaining_tranches": 8.426841845830099,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-09-19",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 120900.0,
+        "remaining_tranches": 7.4454716966169725,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-09-25",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 104800.0,
+        "remaining_tranches": 6.487714691170695,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-12-04",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 1200.0,
+        "remaining_tranches": 0.18369191373249621,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-19",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 87400.0,
+        "remaining_tranches": 5.011997419613563,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-20",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 70200.0,
+        "remaining_tranches": 4.061833656844463,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-23",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 52600.0,
+        "remaining_tranches": 2.9868164999061353,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-24",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 35900.0,
+        "remaining_tranches": 2.144544430089131,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-25",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 20200.0,
+        "remaining_tranches": 1.278548862018547,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-26",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 3800.0,
+        "remaining_tranches": 0.2307428662118688,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-26",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 519300.0,
+        "remaining_tranches": 11.545635616119972,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-03-27",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 474400.0,
+        "remaining_tranches": 10.54495433770555,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-03-30",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 428500.0,
+        "remaining_tranches": 9.331648401207373,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-03-31",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 383300.0,
+        "remaining_tranches": 8.464613305254305,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-01",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 338000.0,
+        "remaining_tranches": 7.4524138919912595,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-02",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 293200.0,
+        "remaining_tranches": 6.542310407957385,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-03",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 249000.0,
+        "remaining_tranches": 5.630192156796073,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-07",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 205100.0,
+        "remaining_tranches": 4.665995610320094,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-08",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 161300.0,
+        "remaining_tranches": 3.6783379322085534,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-09",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 117500.0,
+        "remaining_tranches": 2.6776467433886704,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-10",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 72800.0,
+        "remaining_tranches": 1.627210231656663,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-13",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 27700.0,
+        "remaining_tranches": 0.6141992132168792,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-06-18",
+        "code": "002304",
+        "name": "",
+        "remaining_shares": 9860.0,
+        "remaining_tranches": 1.8014754333614154,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-07-03",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 20200.0,
+        "remaining_tranches": 1.9741221017539805,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-11-19",
+        "code": "002304",
+        "name": "",
+        "remaining_shares": 7160.0,
+        "remaining_tranches": 2.573144938111362,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2015-11-19",
+        "code": "600519",
+        "name": "贵州茅台",
+        "remaining_shares": 1400.0,
+        "remaining_tranches": 1.6649400899866929,
+        "reason": "换仓·减一档：让位给000651"
+      },
+      {
+        "date": "2015-11-20",
+        "code": "002304",
+        "name": "",
+        "remaining_shares": 4460.0,
+        "remaining_tranches": 1.6041309270757738,
+        "reason": "换仓·减一档：让位给600188"
+      },
+      {
+        "date": "2015-11-20",
+        "code": "600519",
+        "name": "贵州茅台",
+        "remaining_shares": 600.0,
+        "remaining_tranches": 0.7130686742069987,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2015-11-23",
+        "code": "002304",
+        "name": "",
+        "remaining_shares": 1760.0,
+        "remaining_tranches": 0.6517321560642526,
+        "reason": "换仓·减一档：让位给600188"
+      },
+      {
+        "date": "2015-11-25",
+        "code": "601288",
+        "name": "农业银行",
+        "remaining_shares": 100.0,
+        "remaining_tranches": 0.0018359410574022373,
+        "reason": "换仓：让位给空间更大的600188（同日对冲 100 股）"
+      },
+      {
+        "date": "2015-12-29",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 9200.0,
+        "remaining_tranches": 0.850881190130618,
+        "reason": "换仓·减一档：让位给600309"
+      },
+      {
+        "date": "2016-03-30",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 78800.0,
+        "remaining_tranches": 4.713118603681849,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2016-03-31",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 62300.0,
+        "remaining_tranches": 3.765625603784992,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2016-05-03",
+        "code": "601288",
+        "name": "农业银行",
+        "remaining_shares": 100.0,
+        "remaining_tranches": 0.0022599146070393906,
+        "reason": "换仓：让位给空间更大的601225（同日对冲 100 股）"
+      },
+      {
+        "date": "2016-07-28",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 81100.0,
+        "remaining_tranches": 4.540010964579712,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2016-08-01",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 63300.0,
+        "remaining_tranches": 3.5444567484344884,
+        "reason": "换仓·减一档：让位给600585"
+      },
+      {
+        "date": "2017-07-21",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 120800.0,
+        "remaining_tranches": 2.707296086865645,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2018-01-10",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 27200.0,
+        "remaining_tranches": 3.2845583110459406,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2018-01-11",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 19300.0,
+        "remaining_tranches": 2.418638545096801,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2018-01-12",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 11700.0,
+        "remaining_tranches": 1.5275166561648519,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2018-01-15",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 4600.0,
+        "remaining_tranches": 0.6400097484523557,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2018-01-17",
+        "code": "002714",
+        "name": "牧原股份",
+        "remaining_shares": 8600.0,
+        "remaining_tranches": 1.2974008889748168,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2018-01-18",
+        "code": "002714",
+        "name": "牧原股份",
+        "remaining_shares": 1900.0,
+        "remaining_tranches": 0.28089234484691533,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2018-03-26",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 211400.0,
+        "remaining_tranches": 13.70547789704147,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-03-27",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 195500.0,
+        "remaining_tranches": 12.291114406242384,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-03-28",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 179900.0,
+        "remaining_tranches": 11.46129293142532,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-03-29",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 163800.0,
+        "remaining_tranches": 10.134337848401296,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-03-30",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 147500.0,
+        "remaining_tranches": 9.040625039102366,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-02",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 131000.0,
+        "remaining_tranches": 7.924847249174511,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-03",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 114000.0,
+        "remaining_tranches": 6.6897749349982885,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-04",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 97000.0,
+        "remaining_tranches": 5.702198601536609,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-09",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 80000.0,
+        "remaining_tranches": 4.703022130671552,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-10",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 63200.0,
+        "remaining_tranches": 3.7407874876128013,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-11",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 46500.0,
+        "remaining_tranches": 2.769971308346273,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-12",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 29900.0,
+        "remaining_tranches": 1.7958637500087622,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-13",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 12800.0,
+        "remaining_tranches": 0.7473070019703248,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-10-22",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 71800.0,
+        "remaining_tranches": 1.7529689173437095,
+        "reason": "换仓·减一档：让位给002152"
+      },
+      {
+        "date": "2018-11-05",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 32600.0,
+        "remaining_tranches": 0.8292573508856014,
+        "reason": "换仓·减一档：让位给002152"
+      },
+      {
+        "date": "2018-11-29",
+        "code": "002152",
+        "name": "",
+        "remaining_shares": 37300.0,
+        "remaining_tranches": 0.715202866397149,
+        "reason": "跌破建仓日MA60止损（同日对冲 37300 股）"
+      },
+      {
+        "date": "2019-09-27",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 615300.0,
+        "remaining_tranches": 13.54509150992159,
+        "reason": "换仓·减一档：让位给002466"
+      },
+      {
+        "date": "2019-12-31",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 562900.0,
+        "remaining_tranches": 10.73596999650375,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-01-02",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 510200.0,
+        "remaining_tranches": 9.681124144410505,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-01-03",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 458400.0,
+        "remaining_tranches": 8.843554828991499,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-01-06",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 404100.0,
+        "remaining_tranches": 7.441510219677781,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-03-03",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 136500.0,
+        "remaining_tranches": 9.7180318518434,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-05-29",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 130900.0,
+        "remaining_tranches": 11.278282724335426,
+        "reason": "换仓·减一档：让位给601088"
+      },
+      {
+        "date": "2020-06-01",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 119200.0,
+        "remaining_tranches": 10.16721169172627,
+        "reason": "换仓·减一档：让位给601088"
+      },
+      {
+        "date": "2020-06-04",
+        "code": "603156",
+        "name": "养元饮品",
+        "remaining_shares": 30060.0,
+        "remaining_tranches": 0.9729031942450993,
+        "reason": "换仓·减一档：让位给600016"
+      },
+      {
+        "date": "2020-07-07",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 344100.0,
+        "remaining_tranches": 5.720440296227992,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-07",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 103300.0,
+        "remaining_tranches": 6.488804953264361,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-08",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 86800.0,
+        "remaining_tranches": 5.245019839684357,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-09",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 278300.0,
+        "remaining_tranches": 4.229920001931945,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-09",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 69400.0,
+        "remaining_tranches": 3.9775649757364997,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-10",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 212300.0,
+        "remaining_tranches": 3.212289125042951,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-10",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 51700.0,
+        "remaining_tranches": 2.9178111028826708,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-14",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 146800.0,
+        "remaining_tranches": 2.2397650414288943,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-14",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 33600.0,
+        "remaining_tranches": 1.8491793121333924,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-15",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 86300.0,
+        "remaining_tranches": 1.4251237329601618,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-15",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 16500.0,
+        "remaining_tranches": 0.9628100690514734,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-16",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 27400.0,
+        "remaining_tranches": 0.46486519458618025,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-21",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 800.0,
+        "remaining_tranches": 0.05085159677742073,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-07-23",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 9300.0,
+        "remaining_tranches": 0.6538185832326039,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-11-19",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 10700.0,
+        "remaining_tranches": 0.27839258004072553,
+        "reason": "跌破建仓日MA60止损（同日对冲 10700 股）"
+      },
+      {
+        "date": "2021-01-11",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 53400.0,
+        "remaining_tranches": 3.2974794933065477,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-01-12",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 50500.0,
+        "remaining_tranches": 3.342161771243708,
+        "reason": "涨幅≥110%·减一档（同日对冲 12200 股）"
+      },
+      {
+        "date": "2021-01-13",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 35600.0,
+        "remaining_tranches": 2.3847076379508447,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-01-14",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 19900.0,
+        "remaining_tranches": 1.2613086532696092,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-01-15",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 5200.0,
+        "remaining_tranches": 0.3518383268106635,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-09-02",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 36500.0,
+        "remaining_tranches": 0.5553933163330149,
+        "reason": "换仓·减一档：让位给600585"
+      },
+      {
+        "date": "2021-09-23",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1094100.0,
+        "remaining_tranches": 11.088651700044824,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-09-24",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 999900.0,
+        "remaining_tranches": 10.612626486491903,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-10-19",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 594700.0,
+        "remaining_tranches": 6.017988188673593,
+        "reason": "换仓·减一档：让位给600897"
+      },
+      {
+        "date": "2021-10-20",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 498500.0,
+        "remaining_tranches": 5.177747732592272,
+        "reason": "换仓·减一档：让位给600897"
+      },
+      {
+        "date": "2021-12-24",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 1465600.0,
+        "remaining_tranches": 4.54446511218918,
+        "reason": "换仓·减一档：让位给600585（同日对冲 700 股）"
+      },
+      {
+        "date": "2022-02-08",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 976800.0,
+        "remaining_tranches": 9.931682845018852,
+        "reason": "换仓·减一档：让位给600585"
+      },
+      {
+        "date": "2022-04-15",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 863900.0,
+        "remaining_tranches": 7.650288905424289,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-04-21",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 622200.0,
+        "remaining_tranches": 10.412697103519243,
+        "reason": "换仓·减一档：让位给601288"
+      },
+      {
+        "date": "2022-04-22",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 562400.0,
+        "remaining_tranches": 9.407310655211784,
+        "reason": "换仓·减一档：让位给601988"
+      },
+      {
+        "date": "2022-04-22",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 391400.0,
+        "remaining_tranches": 3.653871803309082,
+        "reason": "换仓·减一档：让位给601288"
+      },
+      {
+        "date": "2022-04-25",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 505000.0,
+        "remaining_tranches": 8.794212206358047,
+        "reason": "换仓·减一档：让位给601288"
+      },
+      {
+        "date": "2022-04-25",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 287800.0,
+        "remaining_tranches": 2.7765888805698107,
+        "reason": "换仓·减一档：让位给601398"
+      },
+      {
+        "date": "2022-04-27",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 447500.0,
+        "remaining_tranches": 7.773620308774254,
+        "reason": "换仓·减一档：让位给601288"
+      },
+      {
+        "date": "2022-05-26",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 391700.0,
+        "remaining_tranches": 7.012353695747391,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-05-27",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 336800.0,
+        "remaining_tranches": 6.130992882834229,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-05-30",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 282200.0,
+        "remaining_tranches": 5.167338453523893,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-05-31",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 227800.0,
+        "remaining_tranches": 4.187195543796873,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-06-01",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 172800.0,
+        "remaining_tranches": 3.1415788245987475,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-06-02",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 117900.0,
+        "remaining_tranches": 2.1443633385778766,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-06-06",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 62900.0,
+        "remaining_tranches": 1.1434111846673696,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-06-07",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 7700.0,
+        "remaining_tranches": 0.1394574941710567,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-07-28",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 289700.0,
+        "remaining_tranches": 3.056263204354898,
+        "reason": "换仓·减一档：让位给601288"
+      },
+      {
+        "date": "2022-08-02",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 197500.0,
+        "remaining_tranches": 2.1402559076358467,
+        "reason": "换仓·减一档：让位给601288"
+      },
+      {
+        "date": "2022-09-19",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 205800.0,
+        "remaining_tranches": 2.4942356892548534,
+        "reason": "换仓·减一档：让位给601998"
+      },
+      {
+        "date": "2022-09-20",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 123500.0,
+        "remaining_tranches": 1.4992753494543074,
+        "reason": "换仓·减一档：让位给601998"
+      },
+      {
+        "date": "2022-09-21",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 40900.0,
+        "remaining_tranches": 0.49512776043254164,
+        "reason": "换仓·减一档：让位给601998"
+      },
+      {
+        "date": "2022-09-26",
+        "code": "600938",
+        "name": "中国海油",
+        "remaining_shares": 117800.0,
+        "remaining_tranches": 0.9998037749688586,
+        "reason": "跌破建仓日MA60止损（同日对冲 117800 股）"
+      },
+      {
+        "date": "2023-08-08",
+        "code": "601169",
+        "name": "",
+        "remaining_shares": 1115100.0,
+        "remaining_tranches": 2.0570958314154635,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2023-08-09",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 4497300.0,
+        "remaining_tranches": 10.242958726655903,
+        "reason": "换仓·减一档：让位给000933"
+      },
+      {
+        "date": "2023-08-10",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 4054000.0,
+        "remaining_tranches": 9.144088138777228,
+        "reason": "换仓·减一档：让位给000933"
+      },
+      {
+        "date": "2023-08-11",
+        "code": "000792",
+        "name": "盐湖股份",
+        "remaining_shares": 126100.0,
+        "remaining_tranches": 0.9994148806425485,
+        "reason": "跌破建仓日MA60止损（同日对冲 126100 股）"
+      },
+      {
+        "date": "2024-01-19",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 3552300.0,
+        "remaining_tranches": 5.372636395790892,
+        "reason": "换仓·减一档：让位给601166"
+      },
+      {
+        "date": "2024-01-22",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 2913100.0,
+        "remaining_tranches": 4.55689964852389,
+        "reason": "换仓·减一档：让位给601166"
+      },
+      {
+        "date": "2024-01-23",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 2264200.0,
+        "remaining_tranches": 3.4891284193978573,
+        "reason": "换仓·减一档：让位给601166"
+      },
+      {
+        "date": "2024-03-13",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 1512800.0,
+        "remaining_tranches": 2.013197962322047,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2024-03-14",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 755700.0,
+        "remaining_tranches": 0.9980887678258158,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2024-03-18",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 7900.0,
+        "remaining_tranches": 0.01056336060620444,
+        "reason": "换仓·减一档：让位给000001"
+      },
+      {
+        "date": "2024-04-23",
+        "code": "600938",
+        "name": "中国海油",
+        "remaining_shares": 58600.0,
+        "remaining_tranches": 0.416832513120023,
+        "reason": "换仓·减一档：让位给000001"
+      },
+      {
+        "date": "2024-05-29",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 2248100.0,
+        "remaining_tranches": 10.658763728738704,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-05-30",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 2038700.0,
+        "remaining_tranches": 9.73293101307139,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-05-31",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1831400.0,
+        "remaining_tranches": 8.832178562344223,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-06-03",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1626100.0,
+        "remaining_tranches": 7.918515169822514,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-06-04",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1418900.0,
+        "remaining_tranches": 6.84579967993399,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-06-05",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1211900.0,
+        "remaining_tranches": 5.8541185495287,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-06-07",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1002300.0,
+        "remaining_tranches": 4.780469294521652,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-06-11",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 795200.0,
+        "remaining_tranches": 3.83950679739144,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-06-13",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 589400.0,
+        "remaining_tranches": 2.8639023795050655,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-07-02",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 390100.0,
+        "remaining_tranches": 1.956939340783568,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-08-23",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 3664000.0,
+        "remaining_tranches": 8.036447687228788,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-08-26",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 3206500.0,
+        "remaining_tranches": 7.008928493976222,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-08-28",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 2761500.0,
+        "remaining_tranches": 6.205800156657614,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-10-28",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 2167500.0,
+        "remaining_tranches": 3.6486333648060927,
+        "reason": "换仓·减一档：让位给000661"
+      },
+      {
+        "date": "2024-10-29",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 126700.0,
+        "remaining_tranches": 1.403590051825431,
+        "reason": "换仓·减一档：让位给002236"
+      },
+      {
+        "date": "2024-10-30",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 35800.0,
+        "remaining_tranches": 0.39323524197913484,
+        "reason": "换仓·减一档：让位给002466"
+      },
+      {
+        "date": "2024-10-30",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 1590300.0,
+        "remaining_tranches": 2.7511099101318943,
+        "reason": "换仓·减一档：让位给002236"
+      },
+      {
+        "date": "2024-11-05",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 953300.0,
+        "remaining_tranches": 1.4965510333316474,
+        "reason": "换仓·减一档：让位给000661"
+      },
+      {
+        "date": "2024-11-06",
+        "code": "300059",
+        "name": "东方财富",
+        "remaining_shares": 387200.0,
+        "remaining_tranches": 2.191015542882691,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-11-07",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 284500.0,
+        "remaining_tranches": 0.4253981871906091,
+        "reason": "换仓·减一档：让位给002236"
+      },
+      {
+        "date": "2024-11-08",
+        "code": "300059",
+        "name": "东方财富",
+        "remaining_shares": 219300.0,
+        "remaining_tranches": 1.3059425731970242,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-11-11",
+        "code": "300059",
+        "name": "东方财富",
+        "remaining_shares": 54900.0,
+        "remaining_tranches": 0.33396285429220024,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2024-11-11",
+        "code": "601166",
+        "name": "",
+        "remaining_shares": 526700.0,
+        "remaining_tranches": 2.0518837327531214,
+        "reason": "换仓·减一档：让位给002236"
+      },
+      {
+        "date": "2024-11-20",
+        "code": "601166",
+        "name": "",
+        "remaining_shares": 282900.0,
+        "remaining_tranches": 1.1602582501439977,
+        "reason": "换仓·减一档：让位给002236"
+      },
+      {
+        "date": "2025-03-18",
+        "code": "601229",
+        "name": "",
+        "remaining_shares": 1360100.0,
+        "remaining_tranches": 2.8206077866397155,
+        "reason": "换仓·减一档：让位给600970"
+      },
+      {
+        "date": "2025-03-19",
+        "code": "601229",
+        "name": "",
+        "remaining_shares": 882700.0,
+        "remaining_tranches": 1.849034646776677,
+        "reason": "换仓·减一档：让位给600970"
+      },
+      {
+        "date": "2025-03-24",
+        "code": "601229",
+        "name": "",
+        "remaining_shares": 403800.0,
+        "remaining_tranches": 0.8432339929902035,
+        "reason": "换仓·减一档：让位给000661"
+      },
+      {
+        "date": "2025-04-16",
+        "code": "601169",
+        "name": "",
+        "remaining_shares": 1802400.0,
+        "remaining_tranches": 3.0062920846670296,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2025-04-17",
+        "code": "601169",
+        "name": "",
+        "remaining_shares": 1207000.0,
+        "remaining_tranches": 2.0271068953696103,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2025-04-18",
+        "code": "601169",
+        "name": "",
+        "remaining_shares": 602800.0,
+        "remaining_tranches": 0.9976601359632066,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2025-06-10",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 24800.0,
+        "remaining_tranches": 0.2658201765275035,
+        "reason": "换仓·减一档：让位给002466"
+      },
+      {
+        "date": "2025-06-30",
+        "code": "601998",
+        "name": "",
+        "remaining_shares": 16000.0,
+        "remaining_tranches": 0.031923426729758175,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2025-07-14",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 309100.0,
+        "remaining_tranches": 0.5464312721823464,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2025-07-22",
+        "code": "601166",
+        "name": "",
+        "remaining_shares": 738200.0,
+        "remaining_tranches": 3.483482445311094,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2025-07-23",
+        "code": "601166",
+        "name": "",
+        "remaining_shares": 528800.0,
+        "remaining_tranches": 2.5251124375626524,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2025-07-24",
+        "code": "601166",
+        "name": "",
+        "remaining_shares": 311300.0,
+        "remaining_tranches": 1.4313169360706846,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2025-07-25",
+        "code": "601187",
+        "name": "",
+        "remaining_shares": 1315700.0,
+        "remaining_tranches": 1.8576650263118162,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2025-07-25",
+        "code": "601166",
+        "name": "",
+        "remaining_shares": 93600.0,
+        "remaining_tranches": 0.43006333563442023,
+        "reason": "换仓·减一档：让位给600970"
+      },
+      {
+        "date": "2025-07-28",
+        "code": "601187",
+        "name": "",
+        "remaining_shares": 633100.0,
+        "remaining_tranches": 0.9276493749250322,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2025-08-04",
+        "code": "000001",
+        "name": "",
+        "remaining_shares": 474200.0,
+        "remaining_tranches": 1.2372629740918777,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2025-08-06",
+        "code": "000001",
+        "name": "",
+        "remaining_shares": 84500.0,
+        "remaining_tranches": 0.21687996894626224,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2025-11-26",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 302500.0,
+        "remaining_tranches": 2.272375498641976,
+        "reason": "换仓·减一档：让位给600970"
+      },
+      {
+        "date": "2025-11-27",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 167900.0,
+        "remaining_tranches": 1.2455519172786476,
+        "reason": "换仓·减一档：让位给600970"
+      },
+      {
+        "date": "2025-12-05",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 917000.0,
+        "remaining_tranches": 3.215251010152082,
+        "reason": "换仓·减一档：让位给000651"
+      },
+      {
+        "date": "2025-12-09",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 19000.0,
+        "remaining_tranches": 0.1275950990675793,
+        "reason": "换仓·减一档：让位给000651"
+      },
+      {
+        "date": "2025-12-17",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 625200.0,
+        "remaining_tranches": 2.1424248509127994,
+        "reason": "换仓·减一档：让位给000651"
+      },
+      {
+        "date": "2025-12-30",
+        "code": "601818",
+        "name": "",
+        "remaining_shares": 100.0,
+        "remaining_tranches": 3.906471996079736e-05,
+        "reason": "跌破建仓日MA60止损（同日对冲 100 股）"
+      },
+      {
+        "date": "2025-12-30",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 305400.0,
+        "remaining_tranches": 0.9551129266481625,
+        "reason": "换仓·减一档：让位给601818"
+      },
+      {
+        "date": "2026-01-07",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 220900.0,
+        "remaining_tranches": 0.871195930990728,
+        "reason": "跌破建仓日MA60止损（同日对冲 220900 股）"
+      },
+      {
+        "date": "2026-01-23",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 1328000.0,
+        "remaining_tranches": 8.673197612391379,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-01-26",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 1171100.0,
+        "remaining_tranches": 7.462151116778097,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-01-27",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 1025000.0,
+        "remaining_tranches": 7.01296829616767,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-01-28",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 864600.0,
+        "remaining_tranches": 5.38905168442703,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-01-29",
+        "code": "002532",
+        "name": "天山铝业",
+        "remaining_shares": 653300.0,
+        "remaining_tranches": 0.8613642795898955,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-01-29",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 703600.0,
+        "remaining_tranches": 4.369617543313246,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-01-30",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 547500.0,
+        "remaining_tranches": 3.506800635704432,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-02-02",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 409500.0,
+        "remaining_tranches": 2.9669228405863852,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-02-03",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 286000.0,
+        "remaining_tranches": 2.3156887180513763,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-02-04",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 160100.0,
+        "remaining_tranches": 1.2716271955735825,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-02-05",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 28900.0,
+        "remaining_tranches": 0.22012161863019317,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-03-23",
+        "code": "002001",
+        "name": "新和成",
+        "remaining_shares": 693900.0,
+        "remaining_tranches": 1.7744466808377628,
+        "reason": "换仓·减一档：让位给601229"
+      },
+      {
+        "date": "2026-03-24",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 5695900.0,
+        "remaining_tranches": 12.04271075480521,
+        "reason": "换仓·减一档：让位给601939"
+      },
+      {
+        "date": "2026-03-25",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 5224100.0,
+        "remaining_tranches": 11.071500159216633,
+        "reason": "换仓·减一档：让位给601229"
+      },
+      {
+        "date": "2026-03-26",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 4748900.0,
+        "remaining_tranches": 9.992614825758391,
+        "reason": "换仓·减一档：让位给601998"
+      },
+      {
+        "date": "2026-03-27",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 4283500.0,
+        "remaining_tranches": 9.203080639208185,
+        "reason": "换仓·减一档：让位给601229"
+      },
+      {
+        "date": "2026-03-30",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 3812900.0,
+        "remaining_tranches": 8.101797147535601,
+        "reason": "换仓·减一档：让位给002966"
+      },
+      {
+        "date": "2026-03-31",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 3339700.0,
+        "remaining_tranches": 7.055626230885888,
+        "reason": "换仓·减一档：让位给600036"
+      },
+      {
+        "date": "2026-04-01",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 2870600.0,
+        "remaining_tranches": 6.119536745263019,
+        "reason": "换仓·减一档：让位给601009"
+      },
+      {
+        "date": "2026-04-02",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 2400800.0,
+        "remaining_tranches": 5.109420339090414,
+        "reason": "换仓·减一档：让位给601009"
+      },
+      {
+        "date": "2026-04-03",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 1926300.0,
+        "remaining_tranches": 4.059462768779012,
+        "reason": "换仓·减一档：让位给601009"
+      },
+      {
+        "date": "2026-04-08",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 1461700.0,
+        "remaining_tranches": 3.1460181070984317,
+        "reason": "换仓·减一档：让位给601398"
+      },
+      {
+        "date": "2026-04-20",
+        "code": "002648",
+        "name": "卫星化学",
+        "remaining_shares": 2355900.0,
+        "remaining_tranches": 4.154593418056396,
+        "reason": "换仓·减一档：让位给600036"
+      },
+      {
+        "date": "2026-04-21",
+        "code": "002001",
+        "name": "新和成",
+        "remaining_shares": 266100.0,
+        "remaining_tranches": 0.6219721193640333,
+        "reason": "换仓·减一档：让位给000001"
+      },
+      {
+        "date": "2026-04-27",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 1002000.0,
+        "remaining_tranches": 2.1793887517728003,
+        "reason": "换仓·减一档：让位给601009"
+      },
+      {
+        "date": "2026-04-28",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 535800.0,
+        "remaining_tranches": 1.149135848395874,
+        "reason": "换仓·减一档：让位给601009"
+      },
+      {
+        "date": "2026-04-29",
+        "code": "600036",
+        "name": "招商银行",
+        "remaining_shares": 41300.0,
+        "remaining_tranches": 0.10843447162229936,
+        "reason": "跌破建仓日MA60止损（同日对冲 41300 股）"
+      },
+      {
+        "date": "2026-04-29",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 92100.0,
+        "remaining_tranches": 0.2075810385481432,
+        "reason": "换仓·减一档：让位给600036"
+      },
+      {
+        "date": "2026-06-03",
+        "code": "601665",
+        "name": "",
+        "remaining_shares": 5347400.0,
+        "remaining_tranches": 2.4681029219632302,
+        "reason": "换仓·减一档：让位给000651"
+      },
+      {
+        "date": "2026-06-18",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 42800.0,
+        "remaining_tranches": 0.020102605963461445,
+        "reason": "换仓·减一档：让位给601166"
+      },
+      {
+        "date": "2026-08-06",
+        "code": "601665",
+        "name": "",
+        "remaining_shares": 3275900.0,
+        "remaining_tranches": 1.5105035899827177,
+        "reason": "换仓·减一档：让位给000001"
+      }
+    ]
+  },
+  "RC150": {
+    "counts": {
+      "buy_orders": 1791,
+      "sell_orders": 444,
+      "sell_code_days": 444,
+      "sell_code_days_closed": 261,
+      "remaining_below_1.5_tranches": 8,
+      "remaining_100_shares": 2,
+      "remaining_below_0.1_tranches": 2,
+      "remaining_below_0.5_tranches": 3
+    },
+    "days_checked": 3603,
+    "holding_count_mismatches": 0,
+    "end_date": "2026-08-28",
+    "events": [
+      {
+        "date": "2012-05-21",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 42000.0,
+        "remaining_tranches": 4.3566176176775775,
+        "reason": "换仓·减一档：让位给600660"
+      },
+      {
+        "date": "2012-05-25",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 16100.0,
+        "remaining_tranches": 0.9979568137313747,
+        "reason": "跌破建仓日MA60止损（同日对冲 16100 股）"
+      },
+      {
+        "date": "2012-05-25",
+        "code": "600897",
+        "name": "",
+        "remaining_shares": 20300.0,
+        "remaining_tranches": 1.9900668252854763,
+        "reason": "换仓·减一档：让位给600660"
+      },
+      {
+        "date": "2012-10-24",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 15300.0,
+        "remaining_tranches": 1.8654040550262652,
+        "reason": "换仓·减一档：让位给600188"
+      },
+      {
+        "date": "2013-03-25",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 65800.0,
+        "remaining_tranches": 7.889705077934351,
+        "reason": "换仓·减一档：让位给002001"
+      },
+      {
+        "date": "2013-08-22",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 142700.0,
+        "remaining_tranches": 8.599235708486463,
+        "reason": "换仓·减一档：让位给000933"
+      },
+      {
+        "date": "2013-08-30",
+        "code": "600066",
+        "name": "宇通客车",
+        "remaining_shares": 26600.0,
+        "remaining_tranches": 3.883045632388995,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2013-09-02",
+        "code": "600066",
+        "name": "宇通客车",
+        "remaining_shares": 20000.0,
+        "remaining_tranches": 3.0095609769242078,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2013-09-23",
+        "code": "600066",
+        "name": "宇通客车",
+        "remaining_shares": 13400.0,
+        "remaining_tranches": 2.0233383648683416,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-04-16",
+        "code": "002304",
+        "name": "",
+        "remaining_shares": 6000.0,
+        "remaining_tranches": 2.29326875228875,
+        "reason": "换仓·减一档：让位给601088"
+      },
+      {
+        "date": "2014-05-13",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 77700.0,
+        "remaining_tranches": 16.80442202145291,
+        "reason": "换仓·减一档：让位给601088"
+      },
+      {
+        "date": "2014-05-14",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 73200.0,
+        "remaining_tranches": 15.946325479100116,
+        "reason": "换仓·减一档：让位给002128"
+      },
+      {
+        "date": "2014-05-19",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 68700.0,
+        "remaining_tranches": 15.093970394683113,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2014-05-21",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 64200.0,
+        "remaining_tranches": 14.023778870392515,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2014-05-22",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 59700.0,
+        "remaining_tranches": 13.175958632984214,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2014-05-23",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 55200.0,
+        "remaining_tranches": 12.162501094390851,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2014-05-26",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 50700.0,
+        "remaining_tranches": 11.062636348391782,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2014-06-04",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 180500.0,
+        "remaining_tranches": 10.788696260390367,
+        "reason": "换仓·减一档：让位给000333"
+      },
+      {
+        "date": "2014-06-05",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 163600.0,
+        "remaining_tranches": 9.6570930700377,
+        "reason": "换仓·减一档：让位给000333"
+      },
+      {
+        "date": "2014-06-16",
+        "code": "002304",
+        "name": "",
+        "remaining_shares": 6600.0,
+        "remaining_tranches": 2.5873401113352403,
+        "reason": "换仓·减一档：让位给002128"
+      },
+      {
+        "date": "2014-06-17",
+        "code": "600188",
+        "name": "",
+        "remaining_shares": 100.0,
+        "remaining_tranches": 0.004830662789196467,
+        "reason": "换仓：让位给空间更大的002128（同日对冲 100 股）"
+      },
+      {
+        "date": "2014-07-18",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 47100.0,
+        "remaining_tranches": 9.745259432519521,
+        "reason": "换仓·减一档：让位给600585"
+      },
+      {
+        "date": "2014-08-13",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 41400.0,
+        "remaining_tranches": 7.223272958151699,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-08-15",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 35800.0,
+        "remaining_tranches": 6.363690777622193,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-08-18",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 30200.0,
+        "remaining_tranches": 5.389113172533338,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-08-19",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 24600.0,
+        "remaining_tranches": 4.340084188821568,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2014-09-15",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 18800.0,
+        "remaining_tranches": 3.196541845333085,
+        "reason": "换仓·减一档：让位给600585"
+      },
+      {
+        "date": "2014-12-04",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 12400.0,
+        "remaining_tranches": 1.9182948813950729,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-19",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 162500.0,
+        "remaining_tranches": 9.061631526192688,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-20",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 144800.0,
+        "remaining_tranches": 8.146373924099281,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-23",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 126800.0,
+        "remaining_tranches": 7.0143286057319445,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-24",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 109500.0,
+        "remaining_tranches": 6.311349443706068,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-25",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 93000.0,
+        "remaining_tranches": 5.61382839254127,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-26",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 75900.0,
+        "remaining_tranches": 4.4288795122287405,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-26",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 507900.0,
+        "remaining_tranches": 10.851384202686578,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-03-27",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 59000.0,
+        "remaining_tranches": 3.484371823303559,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-27",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 460700.0,
+        "remaining_tranches": 9.75840687406181,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-03-30",
+        "code": "600660",
+        "name": "福耀玻璃",
+        "remaining_shares": 41400.0,
+        "remaining_tranches": 2.3455665149198897,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-03-30",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 412800.0,
+        "remaining_tranches": 8.609454754803679,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-03-31",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 365700.0,
+        "remaining_tranches": 7.755630977630067,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-01",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 318500.0,
+        "remaining_tranches": 6.7348788686285985,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-02",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 272000.0,
+        "remaining_tranches": 5.845144202157526,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-03",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 226100.0,
+        "remaining_tranches": 4.923140712896813,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-07",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 180600.0,
+        "remaining_tranches": 3.9659860393136745,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-08",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 135100.0,
+        "remaining_tranches": 2.967737760741515,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-04-09",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 89600.0,
+        "remaining_tranches": 1.9651615795274469,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2015-06-18",
+        "code": "002304",
+        "name": "",
+        "remaining_shares": 9140.0,
+        "remaining_tranches": 1.5872420008919408,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-07-03",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 45700.0,
+        "remaining_tranches": 4.248413136270889,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2015-11-19",
+        "code": "002304",
+        "name": "",
+        "remaining_shares": 6340.0,
+        "remaining_tranches": 2.23614044841712,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2016-03-29",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 83400.0,
+        "remaining_tranches": 4.821926636073705,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2016-03-30",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 66000.0,
+        "remaining_tranches": 3.7925325395695957,
+        "reason": "换仓·减一档：让位给600031"
+      },
+      {
+        "date": "2016-03-31",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 48800.0,
+        "remaining_tranches": 2.835001894854558,
+        "reason": "换仓·减一档：让位给000338"
+      },
+      {
+        "date": "2016-04-01",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 31700.0,
+        "remaining_tranches": 1.8505908250087526,
+        "reason": "换仓·减一档：让位给600585"
+      },
+      {
+        "date": "2016-06-28",
+        "code": "601009",
+        "name": "",
+        "remaining_shares": 49580.0,
+        "remaining_tranches": 3.4127438692764156,
+        "reason": "换仓·减一档：让位给601225"
+      },
+      {
+        "date": "2016-09-07",
+        "code": "601009",
+        "name": "",
+        "remaining_shares": 34780.0,
+        "remaining_tranches": 2.335200862683321,
+        "reason": "换仓·减一档：让位给002128"
+      },
+      {
+        "date": "2017-07-21",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 195500.0,
+        "remaining_tranches": 4.027317645537815,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2017-11-22",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 30800.0,
+        "remaining_tranches": 3.4698867385349463,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2017-11-23",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 22000.0,
+        "remaining_tranches": 2.4975975045070733,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2018-01-05",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 13300.0,
+        "remaining_tranches": 1.5199459937556676,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2018-03-26",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 223100.0,
+        "remaining_tranches": 13.495164694076141,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-03-27",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 206100.0,
+        "remaining_tranches": 12.088190403311168,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-03-28",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 189300.0,
+        "remaining_tranches": 11.25670974304377,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-03-29",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 172000.0,
+        "remaining_tranches": 9.926113265258985,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-03-30",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 154500.0,
+        "remaining_tranches": 8.828739159492574,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-02",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 136700.0,
+        "remaining_tranches": 7.656470643473093,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-03",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 118300.0,
+        "remaining_tranches": 6.419607548360778,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-04",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 99900.0,
+        "remaining_tranches": 5.42704461956575,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-09",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 81500.0,
+        "remaining_tranches": 4.423334631938152,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-10",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 63300.0,
+        "remaining_tranches": 3.4686217613584747,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-11",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 45200.0,
+        "remaining_tranches": 2.490191987648254,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-04-12",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 27200.0,
+        "remaining_tranches": 1.509516201857931,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2018-06-27",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 104800.0,
+        "remaining_tranches": 2.2786711358693217,
+        "reason": "换仓·减一档：让位给002128"
+      },
+      {
+        "date": "2018-11-09",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 63300.0,
+        "remaining_tranches": 1.522504367353686,
+        "reason": "换仓·减一档：让位给000651"
+      },
+      {
+        "date": "2018-11-29",
+        "code": "002152",
+        "name": "",
+        "remaining_shares": 55600.0,
+        "remaining_tranches": 0.9987312523633557,
+        "reason": "跌破建仓日MA60止损（同日对冲 55600 股）"
+      },
+      {
+        "date": "2019-09-27",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 659900.0,
+        "remaining_tranches": 13.52104455790049,
+        "reason": "换仓·减一档：让位给002466"
+      },
+      {
+        "date": "2019-12-17",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 608400.0,
+        "remaining_tranches": 11.799758760487562,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2019-12-18",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 557100.0,
+        "remaining_tranches": 10.848293645865821,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2019-12-19",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 506000.0,
+        "remaining_tranches": 9.833667482749695,
+        "reason": "涨幅≥110%·减一档（同日对冲 300 股）"
+      },
+      {
+        "date": "2019-12-20",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 454500.0,
+        "remaining_tranches": 8.821770856865284,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2019-12-23",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 402800.0,
+        "remaining_tranches": 7.778153091409698,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2019-12-24",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 351500.0,
+        "remaining_tranches": 6.841589564082917,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2019-12-25",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 300100.0,
+        "remaining_tranches": 5.837428983938157,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2019-12-26",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 246300.0,
+        "remaining_tranches": 4.575309977883284,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2019-12-27",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 191600.0,
+        "remaining_tranches": 3.499316349529073,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2019-12-30",
+        "code": "000338",
+        "name": "潍柴动力",
+        "remaining_shares": 136200.0,
+        "remaining_tranches": 2.4574663355024033,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-05-29",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 182400.0,
+        "remaining_tranches": 16.10986075655805,
+        "reason": "换仓·减一档：让位给601088"
+      },
+      {
+        "date": "2020-06-01",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 171000.0,
+        "remaining_tranches": 14.99959342418071,
+        "reason": "换仓·减一档：让位给601088"
+      },
+      {
+        "date": "2020-06-04",
+        "code": "603156",
+        "name": "养元饮品",
+        "remaining_shares": 81660.0,
+        "remaining_tranches": 2.7512999549112407,
+        "reason": "换仓·减一档：让位给600016"
+      },
+      {
+        "date": "2020-06-05",
+        "code": "603156",
+        "name": "养元饮品",
+        "remaining_shares": 51660.0,
+        "remaining_tranches": 1.7198125051795419,
+        "reason": "换仓·减一档：让位给601169"
+      },
+      {
+        "date": "2020-07-21",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 155000.0,
+        "remaining_tranches": 9.651068005567508,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-08-05",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 139100.0,
+        "remaining_tranches": 8.70719221167058,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-08-13",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 92500.0,
+        "remaining_tranches": 6.565519599714459,
+        "reason": "换仓·减一档：让位给600897"
+      },
+      {
+        "date": "2020-08-14",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 78800.0,
+        "remaining_tranches": 5.7501231163020865,
+        "reason": "换仓·减一档：让位给600897"
+      },
+      {
+        "date": "2020-11-11",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 68500.0,
+        "remaining_tranches": 6.621989755666879,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-11-13",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 58400.0,
+        "remaining_tranches": 5.759113228498174,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-11-17",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 47800.0,
+        "remaining_tranches": 4.505714168937688,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-11-18",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 37200.0,
+        "remaining_tranches": 3.502553886949798,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-11-19",
+        "code": "600309",
+        "name": "万华化学",
+        "remaining_shares": 26800.0,
+        "remaining_tranches": 2.5600606439030753,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2020-11-19",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 44200.0,
+        "remaining_tranches": 0.9983409463512628,
+        "reason": "跌破建仓日MA60止损（同日对冲 44200 股）"
+      },
+      {
+        "date": "2021-01-11",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 78900.0,
+        "remaining_tranches": 4.080674644807685,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-01-12",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 60800.0,
+        "remaining_tranches": 3.356397303465776,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-01-13",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 43100.0,
+        "remaining_tranches": 2.4236124047560583,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-09-23",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1162300.0,
+        "remaining_tranches": 11.343240174039579,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-09-24",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1064700.0,
+        "remaining_tranches": 10.899690563963036,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-10-19",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 360800.0,
+        "remaining_tranches": 3.6073700317321884,
+        "reason": "换仓·减一档：让位给600897"
+      },
+      {
+        "date": "2021-10-20",
+        "code": "601225",
+        "name": "陕西煤业",
+        "remaining_shares": 262100.0,
+        "remaining_tranches": 2.655676685118427,
+        "reason": "换仓·减一档：让位给600897"
+      },
+      {
+        "date": "2021-12-16",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 973900.0,
+        "remaining_tranches": 10.722697850328187,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-12-17",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 885000.0,
+        "remaining_tranches": 9.953646465806827,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-12-20",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 794200.0,
+        "remaining_tranches": 8.74457508856559,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2021-12-24",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 701200.0,
+        "remaining_tranches": 7.534245347806762,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-02-11",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 596800.0,
+        "remaining_tranches": 5.711731296537198,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-03-04",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 495700.0,
+        "remaining_tranches": 4.8995103507711955,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-03-29",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 431100.0,
+        "remaining_tranches": 4.2463925894016885,
+        "reason": "涨幅≥110%·减一档（同日对冲 36900 股）"
+      },
+      {
+        "date": "2022-03-30",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 329300.0,
+        "remaining_tranches": 3.2332091575212076,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-03-31",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 268800.0,
+        "remaining_tranches": 2.5669199994248126,
+        "reason": "涨幅≥110%·减一档（同日对冲 44200 股）"
+      },
+      {
+        "date": "2022-04-01",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 163300.0,
+        "remaining_tranches": 1.5468107662865511,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-04-21",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 585700.0,
+        "remaining_tranches": 9.86930672886363,
+        "reason": "换仓·减一档：让位给601398"
+      },
+      {
+        "date": "2022-04-22",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 525600.0,
+        "remaining_tranches": 8.735860273904501,
+        "reason": "换仓·减一档：让位给601398"
+      },
+      {
+        "date": "2022-04-25",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 466400.0,
+        "remaining_tranches": 7.86646302085743,
+        "reason": "换仓·减一档：让位给601398"
+      },
+      {
+        "date": "2022-04-27",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 405600.0,
+        "remaining_tranches": 6.661901074860328,
+        "reason": "换仓·减一档：让位给601398"
+      },
+      {
+        "date": "2022-05-05",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 447100.0,
+        "remaining_tranches": 9.988031198912006,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2022-05-06",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 402500.0,
+        "remaining_tranches": 9.01318689958495,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2022-05-09",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 358100.0,
+        "remaining_tranches": 8.06473034739895,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2022-05-10",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 314000.0,
+        "remaining_tranches": 7.111313704011468,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2022-05-11",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 269300.0,
+        "remaining_tranches": 6.020540166564699,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2022-05-12",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 224800.0,
+        "remaining_tranches": 5.051142922255203,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2022-05-13",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 179000.0,
+        "remaining_tranches": 3.9042596859762635,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2022-05-16",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 133000.0,
+        "remaining_tranches": 2.8864142729677664,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2022-05-17",
+        "code": "600585",
+        "name": "",
+        "remaining_shares": 86700.0,
+        "remaining_tranches": 1.8718940154988104,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2022-06-09",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 353100.0,
+        "remaining_tranches": 6.715135225159224,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-06-10",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 299900.0,
+        "remaining_tranches": 5.628379958129114,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-06-13",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 246300.0,
+        "remaining_tranches": 4.594326088223857,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2022-06-28",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 190700.0,
+        "remaining_tranches": 3.4254144378314066,
+        "reason": "换仓·减一档：让位给601077"
+      },
+      {
+        "date": "2022-06-29",
+        "code": "601088",
+        "name": "中国神华",
+        "remaining_shares": 135000.0,
+        "remaining_tranches": 2.42013590262436,
+        "reason": "换仓·减一档：让位给601077"
+      },
+      {
+        "date": "2022-08-30",
+        "code": "002833",
+        "name": "",
+        "remaining_shares": 63800.0,
+        "remaining_tranches": 0.5547198179146676,
+        "reason": "跌破建仓日MA60止损（同日对冲 63800 股）"
+      },
+      {
+        "date": "2022-08-31",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 59100.0,
+        "remaining_tranches": 0.4688886990840794,
+        "reason": "跌破建仓日MA60止损（同日对冲 59100 股）"
+      },
+      {
+        "date": "2023-08-08",
+        "code": "601169",
+        "name": "",
+        "remaining_shares": 1691900.0,
+        "remaining_tranches": 3.0770606437182324,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2023-08-11",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 4234700.0,
+        "remaining_tranches": 9.546126960643322,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2024-01-19",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 6501800.0,
+        "remaining_tranches": 9.652251697695572,
+        "reason": "换仓·减一档：让位给601166"
+      },
+      {
+        "date": "2024-01-22",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 5843500.0,
+        "remaining_tranches": 8.876815457774567,
+        "reason": "换仓·减一档：让位给601166"
+      },
+      {
+        "date": "2024-01-23",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 5179100.0,
+        "remaining_tranches": 7.7947987663541465,
+        "reason": "换仓·减一档：让位给601166"
+      },
+      {
+        "date": "2024-01-24",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 4511700.0,
+        "remaining_tranches": 6.760223560312505,
+        "reason": "换仓·减一档：让位给601166"
+      },
+      {
+        "date": "2024-03-13",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 3755100.0,
+        "remaining_tranches": 4.963010800968969,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2024-03-14",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 2994000.0,
+        "remaining_tranches": 3.933439274122383,
+        "reason": "换仓·减一档：让位给000792"
+      },
+      {
+        "date": "2024-03-18",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 2242400.0,
+        "remaining_tranches": 2.9835704674020733,
+        "reason": "换仓·减一档：让位给000001"
+      },
+      {
+        "date": "2024-03-19",
+        "code": "601988",
+        "name": "",
+        "remaining_shares": 1488500.0,
+        "remaining_tranches": 1.9743241290642022,
+        "reason": "换仓·减一档：让位给000001"
+      },
+      {
+        "date": "2024-05-27",
+        "code": "600176",
+        "name": "中国巨石",
+        "remaining_shares": 879400.0,
+        "remaining_tranches": 2.252579469148486,
+        "reason": "换仓·减一档：让位给601229"
+      },
+      {
+        "date": "2024-10-28",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 3652600.0,
+        "remaining_tranches": 6.273132224103939,
+        "reason": "换仓·减一档：让位给002466"
+      },
+      {
+        "date": "2024-10-30",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 3081500.0,
+        "remaining_tranches": 5.395263197929579,
+        "reason": "换仓·减一档：让位给002236"
+      },
+      {
+        "date": "2024-11-05",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 2452600.0,
+        "remaining_tranches": 3.8993981242033198,
+        "reason": "换仓·减一档：让位给000661"
+      },
+      {
+        "date": "2024-11-06",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 1815400.0,
+        "remaining_tranches": 2.8491112792413653,
+        "reason": "换仓·减一档：让位给002236"
+      },
+      {
+        "date": "2024-11-07",
+        "code": "601328",
+        "name": "",
+        "remaining_shares": 1154800.0,
+        "remaining_tranches": 1.748011432216592,
+        "reason": "换仓·减一档：让位给002236"
+      },
+      {
+        "date": "2024-11-08",
+        "code": "300059",
+        "name": "东方财富",
+        "remaining_shares": 270900.0,
+        "remaining_tranches": 1.6473712448652935,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2025-04-16",
+        "code": "601169",
+        "name": "",
+        "remaining_shares": 1663500.0,
+        "remaining_tranches": 2.9681434475477886,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2025-04-17",
+        "code": "601169",
+        "name": "",
+        "remaining_shares": 1106300.0,
+        "remaining_tranches": 1.9860763245051727,
+        "reason": "移出股票库·减一档"
+      },
+      {
+        "date": "2025-06-16",
+        "code": "601187",
+        "name": "",
+        "remaining_shares": 1421100.0,
+        "remaining_tranches": 2.39948374630499,
+        "reason": "换仓·减一档：让位给002532"
+      },
+      {
+        "date": "2025-07-18",
+        "code": "601818",
+        "name": "",
+        "remaining_shares": 100.0,
+        "remaining_tranches": 0.00010314201545672331,
+        "reason": "换仓：让位给空间更大的000792（同日对冲 100 股）"
+      },
+      {
+        "date": "2025-11-07",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 2146800.0,
+        "remaining_tranches": 7.38340398378261,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2025-11-10",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1860900.0,
+        "remaining_tranches": 6.508939016707247,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2025-11-11",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1573500.0,
+        "remaining_tranches": 5.473427305891991,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2025-11-12",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1290500.0,
+        "remaining_tranches": 4.559487361375854,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2025-11-13",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 1009400.0,
+        "remaining_tranches": 3.5908078233757568,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2025-11-14",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 741800.0,
+        "remaining_tranches": 2.772033669191799,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2025-11-17",
+        "code": "002128",
+        "name": "电投能源",
+        "remaining_shares": 470500.0,
+        "remaining_tranches": 1.733739055121757,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2025-12-09",
+        "code": "002466",
+        "name": "天齐锂业",
+        "remaining_shares": 328500.0,
+        "remaining_tranches": 2.383697314626475,
+        "reason": "换仓·减一档：让位给000651"
+      },
+      {
+        "date": "2026-01-07",
+        "code": "000651",
+        "name": "格力电器",
+        "remaining_shares": 155400.0,
+        "remaining_tranches": 0.7116690600939142,
+        "reason": "跌破建仓日MA60止损（同日对冲 155400 股）"
+      },
+      {
+        "date": "2026-01-23",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 483800.0,
+        "remaining_tranches": 4.0170417331397354,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-01-26",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 360100.0,
+        "remaining_tranches": 2.9110106914288494,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-01-27",
+        "code": "688516",
+        "name": "奥特维",
+        "remaining_shares": 247800.0,
+        "remaining_tranches": 2.205774014242399,
+        "reason": "涨幅≥110%·减一档"
+      },
+      {
+        "date": "2026-03-24",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 4181300.0,
+        "remaining_tranches": 11.899255318504213,
+        "reason": "换仓·减一档：让位给601939"
+      },
+      {
+        "date": "2026-03-25",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 3831200.0,
+        "remaining_tranches": 10.942930425982766,
+        "reason": "换仓·减一档：让位给601229"
+      },
+      {
+        "date": "2026-03-27",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 3486000.0,
+        "remaining_tranches": 10.095976788651637,
+        "reason": "换仓·减一档：让位给002966"
+      },
+      {
+        "date": "2026-03-30",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 3137700.0,
+        "remaining_tranches": 9.006908135503823,
+        "reason": "换仓·减一档：让位给002966"
+      },
+      {
+        "date": "2026-03-31",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 2786400.0,
+        "remaining_tranches": 7.92876572685161,
+        "reason": "换仓·减一档：让位给600036"
+      },
+      {
+        "date": "2026-04-01",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 2437400.0,
+        "remaining_tranches": 6.983405430433876,
+        "reason": "换仓·减一档：让位给601009"
+      },
+      {
+        "date": "2026-04-02",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 2087600.0,
+        "remaining_tranches": 5.967458315648275,
+        "reason": "换仓·减一档：让位给601009"
+      },
+      {
+        "date": "2026-04-03",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 1736100.0,
+        "remaining_tranches": 4.937999496293488,
+        "reason": "换仓·减一档：让位给601009"
+      },
+      {
+        "date": "2026-04-08",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 1391000.0,
+        "remaining_tranches": 4.029747553615204,
+        "reason": "换仓·减一档：让位给601398"
+      },
+      {
+        "date": "2026-04-20",
+        "code": "002648",
+        "name": "卫星化学",
+        "remaining_shares": 1524200.0,
+        "remaining_tranches": 3.599258805458577,
+        "reason": "换仓·减一档：让位给600036"
+      },
+      {
+        "date": "2026-04-21",
+        "code": "002648",
+        "name": "卫星化学",
+        "remaining_shares": 1105500.0,
+        "remaining_tranches": 2.6398963720616937,
+        "reason": "换仓·减一档：让位给600036"
+      },
+      {
+        "date": "2026-04-24",
+        "code": "002648",
+        "name": "卫星化学",
+        "remaining_shares": 706400.0,
+        "remaining_tranches": 1.7696717270086535,
+        "reason": "换仓·减一档：让位给601229"
+      },
+      {
+        "date": "2026-04-27",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 1049500.0,
+        "remaining_tranches": 3.0731101172611646,
+        "reason": "换仓·减一档：让位给601009"
+      },
+      {
+        "date": "2026-04-28",
+        "code": "000933",
+        "name": "神火股份",
+        "remaining_shares": 704600.0,
+        "remaining_tranches": 2.0426011599922256,
+        "reason": "换仓·减一档：让位给601009"
+      }
+    ]
+  }
+}

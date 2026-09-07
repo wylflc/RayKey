@@ -998,6 +998,12 @@ R70,archive,m1,,23,23,0,trend_x5_w0.0566_x1c_sma20_swap_corr0.7_tranche_slmin_sk
 R80,archive,m1,,23,23,0,trend_x5_w0.0566_x1c_sma20_swap_corr0.7_tranche_slmin_skipma60_sl2.5008_addma_swk20_sp_lot100_lrc
 RAMP0,archive,m1,,14,28,14,trend_x5_w-0.0484_x1c_dtax_sma20_swap_corr0.7_tranche_slmin_gs1.25_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2
 RATCHET,archive,m1,,23,23,0,trend_x2_w0.0507_x1c_sma20_swap_corr0.75_tranche_sl2.5548_addma_swk20_sp_lot100_lrc
+RC010,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_rc0.1_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+RC025,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_rc0.25_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+RC050,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_rc0.5_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+RC100,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_rc1_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+RC150,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_rc1.5_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+RC200,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_rc2_addma_swk20_cap0.6_sp_gso_lot100_lrc2
 RDS,archive,m1,,23,23,0,trend_x5_w0.0566_x1c_sma20_swap_corr0.7_tranche_slmin_skipma60_sl2.5008_addma_swk20_sp_lot100_lrc
 REBUILTCHECK,archive,m1,TROUGH20260905,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
 RECIP,archive,m1,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr0.7_tranche_slmin_gs1.25_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2

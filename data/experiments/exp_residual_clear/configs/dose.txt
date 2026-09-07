@@ -1,0 +1,7 @@
+BASE|
+RC010|--residual-clear-tranches 0.1
+RC025|--residual-clear-tranches 0.25
+RC050|--residual-clear-tranches 0.5
+RC100|--residual-clear-tranches 1
+RC150|--residual-clear-tranches 1.5
+RC200|--residual-clear-tranches 2

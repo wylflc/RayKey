@@ -1306,7 +1306,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         sell_trend_ma: tuple[int, ...] = (), sell_full: bool = False, stop_min_days: int = 0,
         stop_confirm_days: int = 1, stop_deep_pct: float = 0.0,
         stop_line: str = "entry", entry_below_ma60: str = "ma20_stop",
-        stop_basis: str = "exec", residual_clear: str = "lot",
+        stop_basis: str = "exec", residual_clear: str = "lot", residual_clear_tranches: float = 0.0,
         stop_partial: bool = False, stop_tranche: float = 1.0,
         liquidate_ma: int = 0, liquidate_days: int = 3,
         opens: dict[str, dict[str, float]] | None = None,
@@ -1380,6 +1380,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     实测现行规则下这条链路虽然存在（64 次减持里 10 次由 V 下修触发），但**太慢**
     ——徐工机械那一笔从建仓到被判贵走了 9 年半。
     """
+    if not math.isfinite(residual_clear_tranches) or residual_clear_tranches < 0:
+        raise ValueError("residual_clear_tranches must be finite and nonnegative")
     global DIVIDEND_TAX_ON
     DIVIDEND_TAX_ON = dividend_tax
     portfolio = Portfolio(cash=capital)
@@ -1522,7 +1524,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     # `residual_clear`（OI-092③）：减档后余仓清空阈值。`lot`（现行，§9.3.2 第 4 步）＝不足一手
     # 才清空；`tranche`（研究口径，§12.126 A/B 主读数 −0.44 不采纳）＝传一档股数给 `sell_shares`、
     # 不足一档即清空。`budget` 在日循环内每日重算，lambda 晚绑定读的正是当日值。
-    res_floor = (lambda p: budget / p) if residual_clear == "tranche" else (lambda p: 0.0)
+    residual_multiple = residual_clear_tranches or (1.0 if residual_clear == "tranche" else 0.0)
+    res_floor = (lambda p: budget / p * residual_multiple) if residual_multiple else (lambda p: 0.0)
+    # Numeric research threshold also covers the high-price one-lot fallback.
+    # Keep the historical `--residual-clear tranche` fallback unchanged for replay.
+    def high_price_sell(held: float, price: float) -> float:
+        return sell_shares(lot_size, held, price, lot_size,
+                           res_floor(price) if residual_clear_tranches else 0.0)
     below_ma_run: dict[str, int] = {}      # 连续跌破 `liquidate_ma` 的天数，逐日累计
     # ---- 大盘围栏（用户 2026-08-20）：指数序列只在开关打开时参与；关时本段不产生任何分支。
     mkt_on = bool(mkt) and bool(mkt_crash_days or mkt_trend_ma)
@@ -1905,7 +1913,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if (not shares and lot_ratio_cooldown and lot_size
                         and lot.shares >= lot_size
                         and lot_ratio_ready(lot_counters_sell, code, sp * lot_size, sell_budget)):
-                    shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
+                    shares = high_price_sell(lot.shares, sp)
                     stats["高价股·按手减持"] += 1
                 if shares > 0:
                     if shares >= lot.shares * 0.999:
@@ -2047,7 +2055,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     if (not shares and lot_ratio_cooldown and lot_size
                             and lot.shares >= lot_size
                             and lot_ratio_ready(lot_counters_sell, code, sp * lot_size, sell_budget)):
-                        shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
+                        shares = high_price_sell(lot.shares, sp)
                         stats["高价股·按手减持"] += 1
                     if shares > 0:
                         if shares >= lot.shares * 0.999:
@@ -2192,7 +2200,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         and lot.shares >= lot_size
                         and (not ladder_sale or ladder_pending >= lot_size)
                         and lot_ratio_ready(lot_counters_sell, code, sp * lot_size, sell_budget)):
-                    shares = lot_size if lot.shares - lot_size >= lot_size else lot.shares
+                    shares = high_price_sell(lot.shares, sp)
                     stats["高价股·按手减持"] += 1
                 if shares <= 0:
                     continue
@@ -2438,7 +2446,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     if (not shares and lot_ratio_cooldown and lot_size
                             and lot_w.shares >= lot_size
                             and lot_ratio_ready(lot_counters_sell, worst, sp * lot_size, sell_budget)):
-                        shares = lot_size if lot_w.shares - lot_size >= lot_size else lot_w.shares
+                        shares = high_price_sell(lot_w.shares, sp)
                     if not shares:
                         continue                     # 一手都减不动 → 本日不升级
                     cluster_reduced.add(worst)
@@ -2553,7 +2561,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 shares = sell_shares(sell_budget / sp, lot_s.shares, sp, lot_size, res_floor(sp))
                 if (not shares and lot_ratio_cooldown and lot_size and lot_s.shares >= lot_size
                         and lot_ratio_ready(lot_counters_sell, c, sp * lot_size, sell_budget)):
-                    shares = lot_size if lot_s.shares - lot_size >= lot_size else lot_s.shares
+                    shares = high_price_sell(lot_s.shares, sp)
                     stats["高价股·按手换仓"] += 1
                 if shares <= 0:
                     continue
@@ -2768,8 +2776,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         and lot_worst.shares >= lot_size
                         and (not ladder_swap or want >= lot_size)
                         and lot_ratio_ready(lot_counters_sell, worst, sp * lot_size, sell_budget)):
-                    shares = (lot_size if lot_worst.shares - lot_size >= lot_size
-                              else lot_worst.shares)
+                    shares = high_price_sell(lot_worst.shares, sp)
                     stats["高价股·按手换仓"] += 1
                 if ladder_swap and partial and shares <= 0:
                     continue                         # 阶梯待减不足一手：本日不让位（非阶梯路径逐位保留原行为）
@@ -4060,6 +4067,9 @@ def main() -> int:
     parser.add_argument("--residual-clear", choices=("lot", "tranche"), default="lot",
                         help="减档后余仓清空阈值（OI-092③）：lot=不足一手才清（现行，§9.3.2 第 4 步）；"
                              "tranche=不足一档即清空（研究口径，§12.126 不采纳）")
+    parser.add_argument("--residual-clear-tranches", type=float, default=0.0, metavar="N",
+                        help="研究：已触发减档后，余仓市值不足 N 个当日买入档位即一并清空；"
+                             "包含高价股按手卖出，严格小于；0 保留 --residual-clear 口径")
     parser.add_argument("--ma-basis", choices=("adjusted", "raw"), default="adjusted",
                         help="均线与创新低判据的价格口径（OI-054）：adjusted=前复权、折回当日口径（缺省，与实盘"
                              "扫描器同基）；raw=不复权直接平均（v4.31 前旧口径，除权后 20/60 个交易日内均线错位）")
@@ -4420,7 +4430,8 @@ def main() -> int:
                      + ("_stopsig" if args.stop_basis == "signal" else "")
                      + ("_stopboth" if args.stop_basis == "both" else "")
                      + (f"_t1j{'-'.join(sorted(t1_judge))}" if t1_judge else "")
-                     + ("_rct" if args.residual_clear == "tranche" else "")
+                     + (f"_rc{args.residual_clear_tranches:g}" if args.residual_clear_tranches else
+                        ("_rct" if args.residual_clear == "tranche" else ""))
                      + ("_rawma" if args.ma_basis == "raw" else "")
                      + ("_frzstop" if args.exright_stop == "frozen" else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
@@ -4526,6 +4537,7 @@ def main() -> int:
                          entry_below_ma60=args.entry_below_ma60, exright_stop=args.exright_stop,
                          fill_missing=args.fill_missing, dividend_tax=args.dividend_tax, swap_repeat=args.swap_repeat,
                          stop_basis=args.stop_basis, residual_clear=args.residual_clear,
+                         residual_clear_tranches=args.residual_clear_tranches,
                          stop_partial=args.stop_partial, stop_tranche=args.stop_tranche,
                          trend_ma=tuple(args.trend_ma), trend_tol=trend_tol,
                          exec_delay=args.exec_delay, exec_price=args.exec_price, opens=opens,

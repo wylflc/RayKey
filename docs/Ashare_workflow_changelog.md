@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.160 | 2026-09-07 | 余仓清空剂量研究开关 `--residual-clear-tranches`（默认关闭），新增边界测试、两套 SLURM 作业与成交复核；§9.3.2、生产扫描器及 BASE 不改；0.1／0.25／0.5 档登记 OI-163 待考察。依据 §12.205 |
 | v4.159 | 2026-09-07 | §5.4 银行口径「最优者」改「最优梯队」（十年 ROE 中位与稳定性同处第一梯队者均保留）；关注池护城河逐家审核后 37 家 `worth_attention → boundary_pending`（三类表、分层表、`verdicts_pit_moat_v6.csv` 出场日、核心池重建），`build_moat_panel.py` 支持 `worth_to` 取具体日期与银行行截断；报告 `docs/reports/moat_audit_2026-09-07.zh.md` |
 | v4.158 | 2026-09-07 | 用户点名复核中国船舶／中金公司：两家维持 boundary_pending 并建池外档案（§6.1）；中国船舶三大报表并入面板；新增 `scripts/slurm/rebuild_chain_with_fetch.sbatch`（§6.7 第 1-3 步一体作业，`SIGNAL_DATE`／`SINCE`／`EXTRA_CODES` 环境变量） |
 | v4.157 | 2026-09-07 | 标普 100 历史成分面板脚本 `build_us_sp100_panel.py`（Wikipedia 修订历史 → 区间 → 标普 500 成员表取 CIK）、作业 `scripts/slurm/us_sp100_panel.sbatch`、配置 `configs_us_sp100.txt`；研究用，§9.3.1 与 BASE 不改。依据 §12.203 |
