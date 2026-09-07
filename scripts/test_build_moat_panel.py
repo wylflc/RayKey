@@ -16,6 +16,18 @@ class MoatPanelDatesTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             panel.entry_date("2026-02-30")
 
+    def test_missing_current_pool_member_returns_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            v5, verdicts, pool_file = root / "base.csv", root / "verdicts.csv", root / "pool.csv"
+            v5.write_text("effective_from,effective_to,screen_year,security_code,security_name\n")
+            verdicts.write_text("security_code,security_name,worth_from,worth_to,rule,reason\n")
+            pool_file.write_text("security_code,security_name,market_type\n600007,中国国贸,A_SHARE\n")
+            with patch.multiple(panel, PIT=root, V5=v5, VERDICTS=verdicts, POOL=pool_file), \
+                    patch("sys.argv", ["build_moat_panel.py", "--today", "2026-09-07"]), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(panel.main(), 1)
+
     def test_restoration_and_new_member_only_take_effect_on_resolution_date(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

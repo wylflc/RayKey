@@ -410,9 +410,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--funds", type=float, default=None,
                         help="当日**可用资金 = 现金 + 未用授信**（OI-062）。买入计划以此为预算；"
                              "不给则退回「可用资金＝净资产」的旧估算并显著告警。满仓/带融资账户必须给。")
-    parser.add_argument("--rf", type=float, default=_default_rf(),
+    parser.add_argument("--rf", type=float, default=None,
                         help="十年国债收益率，银行股利折现用（§6.5.1 第 4 条）；"
-                             "缺省取 data/reference/cost_of_equity_inputs.csv 最新一行，与 rebuild_bank_bands 同源")
+                             "缺省取 data/reference/cost_of_equity_inputs.csv 不晚于信号日的最新一行")
     parser.add_argument("--plan-out", type=Path, default=DEFAULT_PLAN_OUT)
     parser.add_argument("--sell-out", type=Path, default=DEFAULT_SELL_PLAN_OUT,
                         help="§9.3.2 第 4 步卖出清单落点（止损复核／涨幅减持／出名单／换仓）")
@@ -482,14 +482,17 @@ SEC93_SWAP_SOURCE_BLOCK = -1.0  # 换仓接收方守卫研究开关（与回测 
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
-def _default_rf() -> float:
-    """十年国债收益率缺省：data/reference/cost_of_equity_inputs.csv 最新一行；读不到退最后手抄值。"""
+def _default_rf(as_of: str = "") -> float | None:
+    """取信号日可得的最新国债利率；缺失时不使用手抄兜底值。"""
     try:
         with (ROOT / "data/reference/cost_of_equity_inputs.csv").open(encoding="utf-8") as fh:
-            rows = [r for r in csv.reader(fh) if r and r[0][:2] == "20"]
-        return float(rows[-1][1])
-    except (OSError, ValueError, IndexError):
-        return 0.017114
+            rows = [r for r in csv.DictReader(fh)
+                    if r.get("observed_on") and (not as_of or r["observed_on"] <= as_of)]
+        latest = max(rows, key=lambda r: r["observed_on"])
+        rate = float(latest["risk_free_rate"])
+        return rate if math.isfinite(rate) and rate + BANK_RISK_PREMIUM > 0 else None
+    except (OSError, ValueError, KeyError):
+        return None
 
 
 BANK_RISK_PREMIUM = 0.02       # §12.31 股利折现的风险溢价
@@ -600,37 +603,36 @@ def corr_252(a: str, b: str) -> float | None:
     return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / (sx * sy)
 
 
-def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
-                    as_of: str, rf: float, prefix: str = "model") -> None:
-    """给每行挂上 §9.3 用的 `{prefix}_intrinsic_value` / `{prefix}_pv` / `{prefix}_band_source`。
+def resolve_live_band(code: str, name: str, as_of: str, bands: dict[str, dict],
+                      rf: float | None = None) -> tuple[dict, str]:
+    """扫描、跟踪、阅读版与成交回写共用的当日估值入口。"""
+    code = code.zfill(6)
+    if is_bank(name, code):
+        rate = _default_rf(as_of) if rf is None else rf
+        value = bank_dividend_intrinsic(code, as_of, rate) if rate is not None else None
+        if value is None or not math.isfinite(value) or value <= 0:
+            return {}, "数据缺失：国债利率或完整财年分红不可得"
+        return {"intrinsic_value": value, "roic_path": "bank_divspread",
+                "fair_price_low": value * 0.90, "fair_price_high": value * 1.10}, "股利折现"
+    band = bands.get(code, {})
+    return band, f"模型带·{band.get('report_date', '')}" if band else ""
 
-    `prefix="model"` 为候选侧（买入线、候选排序），`prefix="hold"` 为持仓侧（v4.92 SPA：换仓来源）。
-    **与 §8 的 `fair_price_low/high`（逐票档案带）并存、互不覆盖**：档案带只作展示，
-    模型带只供 §9.3 用。"""
+
+def attach_model_pv(rows: list[dict[str, object]], bands: dict[str, dict],
+                    as_of: str, rf: float | None, prefix: str = "model") -> None:
+    """挂接候选侧或持仓侧 V、P/V 与来源；金融股展示区间同源。"""
     for row in rows:
         code = str(row.get("security_code", "")).zfill(6)
         name = str(row.get("security_name", ""))
-        intrinsic, source = None, ""
-        if is_bank(name, code):
-            intrinsic = bank_dividend_intrinsic(code, as_of, rf)
-            if intrinsic:
-                source = "股利折现"
-        if intrinsic is None and code in bands:
-            intrinsic = to_float(bands[code].get("intrinsic_value"))
-            if intrinsic:
-                source = f"模型带·{bands[code].get('report_date', '')}"
-        close = to_float(row.get("close"))
+        band, source = resolve_live_band(code, name, as_of, bands, rf)
+        intrinsic = to_float(band.get("intrinsic_value"))
+        pv_value = trading_pv(to_float(row.get("close")), band)
         row[f"{prefix}_intrinsic_value"] = round(intrinsic, 4) if intrinsic else ""
         row[f"{prefix}_band_source"] = source
-        # v4.62（OI-091）：P/V 走 `pv_ratio.trading_pv`——ROIC 路径为 (现价+每股净负债)÷每股企业价值，其余 现价÷V
-        if close and intrinsic and intrinsic > 0:
-            if source.startswith("模型带") and code in bands:
-                pv_value = trading_pv(close, bands[code])
-            else:
-                pv_value = close / intrinsic
-            row[f"{prefix}_pv"] = round(pv_value, 4) if pv_value is not None else ""
-        else:
-            row[f"{prefix}_pv"] = ""
+        row[f"{prefix}_pv"] = round(pv_value, 4) if pv_value is not None else ""
+        if prefix == "model" and is_bank(name, code):
+            row["fair_price_low"] = round(intrinsic * 0.90, 4) if intrinsic else ""
+            row["fair_price_high"] = round(intrinsic * 1.10, 4) if intrinsic else ""
 
 
 def load_holdings() -> dict[str, float]:
@@ -1310,6 +1312,8 @@ FIELDNAMES = [
 def main() -> int:
     args = parse_args()
     evidence_date = evidence_iso_for_signal(args.as_of)
+    if args.rf is None:
+        args.rf = _default_rf(args.as_of)
     print(f"时点：信号日 {args.as_of} → 证据日 {evidence_date}")
     symbols = {item.strip().zfill(6) for item in args.symbols.split(",") if item.strip()} or None
     input_rows = load_csv(args.input)
@@ -1334,7 +1338,7 @@ def main() -> int:
         attach_model_pv(rows, bands, args.as_of, args.rf)
         priced = sum(1 for r in rows if isinstance(r.get("model_pv"), float))
         print(f"§9.3 模型带：{len(bands)} 只有带，{priced}/{len(rows)} 只算出 P/V"
-              f"（银行与保险走股利折现 rf={args.rf:.4%}+{BANK_RISK_PREMIUM:.0%}）")
+              f"（银行与保险走股利折现 rf={format(args.rf, '.4%') if args.rf is not None else '缺失'}+{BANK_RISK_PREMIUM:.0%}）")
         if priced < len(rows):
             missing = [str(r.get("security_name", "")) for r in rows
                        if not isinstance(r.get("model_pv"), float)][:8]

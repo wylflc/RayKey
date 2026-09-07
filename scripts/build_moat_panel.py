@@ -24,22 +24,23 @@
 用法::
 
     python3 scripts/build_moat_panel.py            # 产出 v6a + v6b 并打印对账
-    python3 scripts/build_moat_panel.py --today 2026-09-07   # 对账所用「今日」（缺省本机日期）
+    python3 scripts/build_moat_panel.py --today 2026-09-07   # 对账所用「今日」（缺省北京日期）
 """
 from __future__ import annotations
 
 import argparse
 import csv
 from collections import defaultdict
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 PIT = ROOT / "data/processed/pit_attention"
 V5 = PIT / "panel_moat_bank_v5.csv"
 VERDICTS = PIT / "verdicts_pit_moat_v6.csv"
 POOL = ROOT / "data/processed/a_share_core_valuation_pool.csv"
-TODAY = date.today().isoformat()   # 对账用「今日」，可由 --today 覆盖
+TODAY = datetime.now(ZoneInfo("Asia/Shanghai")).date().isoformat()   # 对账用「今日」，可由 --today 覆盖
 
 BANK_EXTRA = {"002839"}  # 张家港行：名字不含「银行」，显式补充
 RULE11_BANKS = {"600036", "002142"}
@@ -59,7 +60,7 @@ def entry_date(worth_from: str) -> str:
 def main() -> int:
     global TODAY
     ap = argparse.ArgumentParser()
-    ap.add_argument("--today", default=TODAY, help="对账所用「今日」，缺省本机日期")
+    ap.add_argument("--today", default=TODAY, help="对账所用「今日」，缺省北京日期")
     TODAY = ap.parse_args().today
     v5_rows: dict[str, list[dict]] = defaultdict(list)
     fields: list[str] = []
@@ -172,7 +173,7 @@ def main() -> int:
         print("  池内缺席（应为空，否则 Q1 有漏判）：" + "、".join(pool[c] for c in miss))
     if extra_flag:
         print("  多出的非银（应全部=实盘池候选旗标）：" + "、".join(all_names.get(c, c) for c in extra_flag))
-    return 0
+    return 1 if miss else 0
 
 
 if __name__ == "__main__":

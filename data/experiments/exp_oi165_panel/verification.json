@@ -1,0 +1,117 @@
+{
+  "checks": {
+    "v6a_other_codes_exact": true,
+    "v6a_605117_prior_history_exact": true,
+    "v6a_605117_one_new_open_interval": true,
+    "v6a_601717_prior_history_exact": true,
+    "v6a_601717_one_new_open_interval": true,
+    "v6a_601318_prior_history_exact": true,
+    "v6a_601318_one_new_open_interval": true,
+    "v6a_600007_prior_history_exact": true,
+    "v6a_600007_one_new_open_interval": true,
+    "v6a_001232_prior_history_exact": true,
+    "v6a_001232_one_new_open_interval": true,
+    "v6a_600803_prior_history_exact": true,
+    "v6a_600803_one_new_open_interval": true,
+    "v6a_603338_prior_history_exact": true,
+    "v6a_603338_one_new_open_interval": true,
+    "v6a_603596_prior_history_exact": true,
+    "v6a_603596_one_new_open_interval": true,
+    "v6a_603855_prior_history_exact": true,
+    "v6a_603855_one_new_open_interval": true,
+    "v6b_other_codes_exact": true,
+    "v6b_605117_prior_history_exact": true,
+    "v6b_605117_one_new_open_interval": true,
+    "v6b_601717_prior_history_exact": true,
+    "v6b_601717_one_new_open_interval": true,
+    "v6b_601318_prior_history_exact": true,
+    "v6b_601318_one_new_open_interval": true,
+    "v6b_600007_prior_history_exact": true,
+    "v6b_600007_one_new_open_interval": true,
+    "v6b_001232_prior_history_exact": true,
+    "v6b_001232_one_new_open_interval": true,
+    "v6b_600803_prior_history_exact": true,
+    "v6b_600803_one_new_open_interval": true,
+    "v6b_603338_prior_history_exact": true,
+    "v6b_603338_one_new_open_interval": true,
+    "v6b_603596_prior_history_exact": true,
+    "v6b_603596_one_new_open_interval": true,
+    "v6b_603855_prior_history_exact": true,
+    "v6b_603855_one_new_open_interval": true,
+    "current_pool_complete": true,
+    "no_failed_paths": true,
+    "metric_m2": true,
+    "full_14_paired_starts": true,
+    "full_all_reported_fields_exact": true,
+    "EX5:_14_paired_starts": true,
+    "EX5:_all_reported_fields_exact": true
+  },
+  "counts": {
+    "current_pool": 181,
+    "current_panel": 232,
+    "missing": []
+  },
+  "paths": 56,
+  "fields_per_path": 44,
+  "comparison": "Each of 28 full/A paired paths is identical on every reported numeric field",
+  "exclusion": "剔除 BASE 2011-11-01 起点前五赢家 601088/002128/000933/000651/000338",
+  "slurm_job_id": "26454938",
+  "elapsed": "00:02:59",
+  "entries": [
+    {
+      "code": "001232",
+      "name": "嘉立创",
+      "effective_from": "2026-08-30",
+      "decision_id": "attention_triage:2026-08-30:001232:upgrade"
+    },
+    {
+      "code": "600007",
+      "name": "中国国贸",
+      "effective_from": "2026-08-23",
+      "decision_id": "quality_screen:2026-08-23:600007:named"
+    },
+    {
+      "code": "600803",
+      "name": "新奥股份",
+      "effective_from": "2026-08-30",
+      "decision_id": "attention_triage:2026-08-30:600803:upgrade"
+    },
+    {
+      "code": "601318",
+      "name": "中国平安",
+      "effective_from": "2026-08-23",
+      "decision_id": "quality_screen:2026-08-23:601318:insurer"
+    },
+    {
+      "code": "601717",
+      "name": "中创智领",
+      "effective_from": "2026-08-23",
+      "decision_id": "quality_screen:2026-08-23:601717:named"
+    },
+    {
+      "code": "603338",
+      "name": "浙江鼎力",
+      "effective_from": "2026-08-30",
+      "decision_id": "attention_triage:2026-08-30:603338:upgrade"
+    },
+    {
+      "code": "603596",
+      "name": "伯特利",
+      "effective_from": "2026-08-30",
+      "decision_id": "attention_triage:2026-08-30:603596:upgrade"
+    },
+    {
+      "code": "603855",
+      "name": "华荣股份",
+      "effective_from": "2026-08-30",
+      "decision_id": "attention_triage:2026-08-30:603855:upgrade"
+    },
+    {
+      "code": "605117",
+      "name": "德业股份",
+      "effective_from": "2026-08-23",
+      "decision_id": "quality_screen:2026-08-23:605117:named"
+    }
+  ],
+  "source_commit": "8fe9f243a59e13d97b2e4cca676c5a2a736b4a18"
+}

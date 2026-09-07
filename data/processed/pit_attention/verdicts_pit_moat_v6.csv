@@ -151,7 +151,6 @@ security_code,security_name,worth_from,worth_to,rule,reason
 601877,正泰电器,0,0,防3,低压电器与德力西施耐德竞争充分,招标定价
 601888,中国中免,2017,2024,锚12,免税牌照份额九成+日上并购兑现(2017);2024出境游与电商结构性分流,渠道价值破,退出(锚点判例12)
 603267,鸿远电子,0,0,判7,军用MLCC二线,更强同行已退出
-603338,浙江鼎力,0,0,判例11,高空作业平台国产第一但复制已实际发生(徐工临工星邦进入+价格战)
 603392,万泰生物,2021,2024,规则12,国产二价HPV独家品种放量(2021);2024九价扩龄+价格战,独占性破,退出
 603486,科沃斯,0,0,判例11,扫地机复制已实际发生(云鲸追觅切入),负判例成文
 603606,东方电缆,2020,9999,§5.4.1-4,海缆工厂码头一体化+敷设船+认证三寡头(§12.35.2三问判定),维持在册(实盘池候选,§5用户裁定)
@@ -201,3 +200,12 @@ security_code,security_name,worth_from,worth_to,rule,reason
 920394,民士达,2026-09-07,9999,用户最终裁定2026-09-07,芳纶纸分散、成形和整饰工艺及电气绝缘、航空蜂窝客户应用；泰和的优先供应及纤维外售安排承诺加强原料优势归属。
 002409,雅克科技,2026-09-07,9999,用户最终裁定2026-09-07,半导体前驱体的配方及晶圆厂验证，与LNG材料多年认证和多船厂工程交付共同形成实质业务；2025LNG收入23.70亿元、占27.53%。
 920599,同力股份,2026-09-07,9999,用户最终裁定2026-09-07,非公路宽体车重载工况积累、矿区经销及备件服务网络和长期盈利记录；用户采纳保留意见，竞争替代和全寿命成本仍列重点复核。
+001232,嘉立创,2026-08-30,9999,§5.5,原入池记录补接；attention_triage:2026-08-30:001232:upgrade；证据 data/experiments/exp_oi165_panel/entry_evidence.json
+600007,中国国贸,2026-08-23,9999,§5.5,原入池记录补接；quality_screen:2026-08-23:600007:named；证据 data/experiments/exp_oi165_panel/entry_evidence.json
+600803,新奥股份,2026-08-30,9999,§5.5,原入池记录补接；attention_triage:2026-08-30:600803:upgrade；证据 data/experiments/exp_oi165_panel/entry_evidence.json
+601318,中国平安,2026-08-23,9999,§5.5,原入池记录补接；quality_screen:2026-08-23:601318:insurer；证据 data/experiments/exp_oi165_panel/entry_evidence.json
+601717,中创智领,2026-08-23,9999,§5.5,原入池记录补接；quality_screen:2026-08-23:601717:named；证据 data/experiments/exp_oi165_panel/entry_evidence.json
+603338,浙江鼎力,2026-08-30,9999,§5.5,原入池记录补接；attention_triage:2026-08-30:603338:upgrade；证据 data/experiments/exp_oi165_panel/entry_evidence.json
+603596,伯特利,2026-08-30,9999,§5.5,原入池记录补接；attention_triage:2026-08-30:603596:upgrade；证据 data/experiments/exp_oi165_panel/entry_evidence.json
+603855,华荣股份,2026-08-30,9999,§5.5,原入池记录补接；attention_triage:2026-08-30:603855:upgrade；证据 data/experiments/exp_oi165_panel/entry_evidence.json
+605117,德业股份,2026-08-23,9999,§5.5,原入池记录补接；quality_screen:2026-08-23:605117:named；证据 data/experiments/exp_oi165_panel/entry_evidence.json

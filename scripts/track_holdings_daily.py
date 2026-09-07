@@ -48,7 +48,7 @@ from a_share_quotes import fetch_spot_quotes
 from a_share_signal_dates import evidence_iso_for_signal
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
 from screen_daily_volume_price_signals import (DEFAULT_HOLD_BANDS, DEFAULT_MODEL_BANDS, SEC93_GAIN_SELL,
-                                               fetch_daily_rows, holding_trim_signal)
+                                               fetch_daily_rows, holding_trim_signal, is_bank, resolve_live_band)
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
 from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
 
@@ -245,24 +245,23 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         low = to_float(pool_row.get("fair_price_low")) if pool_row else None
         high = to_float(pool_row.get("fair_price_high")) if pool_row else None
 
+        name = str(h.get("security_name", ""))
+        financial = is_bank(name, code)
+        band_row, band_source = resolve_live_band(code, name, as_of.isoformat(), MODEL_BANDS or {})
+        cand_row, _ = resolve_live_band(code, name, as_of.isoformat(), CAND_BANDS or {})
+        if financial:
+            low = to_float(band_row.get("fair_price_low"))
+            high = to_float(band_row.get("fair_price_high"))
+        pv = trading_pv(close, band_row)
+        cand_pv = trading_pv(close, cand_row)
+        if not financial and pv is None and close and low is not None and high is not None:
+            mid = (low + high) / 2
+            pv = close / mid if mid > 0 else None
         upside = band_upside(close, low, high) if close is not None else ""
 
-        # §9.3 唯一判据（v2.56）：V 取带中值；带缺失则 pv 留空，该票当日不进任何机械判定。
-        # v4.62（OI-091）：有生产带行时按 `pv_ratio.trading_pv`（ROIC 路径为 (现价+净负债)÷EV），否则退回 现价÷中值。
-        pv = None
-        cand_pv = None
-        if close is not None and low is not None and high is not None:
-            mid = (low + high) / 2
-            band_row = MODEL_BANDS.get(str(code).zfill(6)) if MODEL_BANDS else None
-            if band_row is not None:
-                pv = trading_pv(close, band_row)
-            cand_row = CAND_BANDS.get(str(code).zfill(6)) if CAND_BANDS else None
-            if cand_row is not None:
-                cand_pv = trading_pv(close, cand_row)
-            if pv is None and mid > 0:
-                pv = close / mid
-
         notes: list[str] = []
+        if financial:
+            notes.append(band_source)
         if pv is not None and cand_pv is not None and abs(pv - cand_pv) > 5e-5:
             notes.append(f"持仓侧 `P/V` {pv:.2f}（候选侧 {cand_pv:.2f}；换仓来源按持仓侧判）")
         if close is None:
@@ -325,7 +324,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         # `持有` 是唯一读起来像「已检查、没事」的取值，而没有现价恰恰意味着 `P/V` 没算过。
         # 一只涨幅已达标、本该减持的停牌股若显示为持有，就在卖出规则上
         # 制造了静默失效——这正是 §13 第 3 条要拦的形态。
-        action = "数据缺失" if close is None else "持有"
+        action = "数据缺失" if close is None or (financial and pv is None) else "持有"
 
         rows.append(
             {

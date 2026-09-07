@@ -39,6 +39,7 @@ from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
 # OI-095：不在 import 时读生产带；main() 按信号日推导的证据日载入（available_at ≤ 证据日），
 # 历史日期补跑不得用当日之后才可得的带。
 MODEL_BANDS: dict[str, dict] = {}
+VALUATION_AS_OF = ""
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -288,6 +289,20 @@ def load_disclosures(path: Path) -> dict[str, dict[str, str]]:
 
 def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     """阅读版单元格：现价/空间/PE/PB 按行情快照刷新。"""
+    from screen_daily_volume_price_signals import is_bank, resolve_live_band
+    code = str(row.get("security_code", "")).zfill(6)
+    financial = (row.get("market_type") in (None, "", "A_SHARE")
+                 and is_bank(str(row.get("security_name", "")), code))
+    row = dict(row)
+    live_band = None
+    if financial:
+        as_of = VALUATION_AS_OF or row.get("pool_as_of") or row.get("valuation_price_as_of")
+        if as_of:
+            live_band, _ = resolve_live_band(code, str(row.get("security_name", "")), as_of, MODEL_BANDS)
+        else:
+            live_band = {}
+        row["fair_price_low"] = str(live_band.get("fair_price_low", ""))
+        row["fair_price_high"] = str(live_band.get("fair_price_high", ""))
     low = _to_float(row.get("fair_price_low"))
     high = _to_float(row.get("fair_price_high"))
     val_price = _to_float(row.get("valuation_price"))
@@ -320,7 +335,7 @@ def display_cells(row: dict[str, str], quote: dict | None) -> dict[str, object]:
     # v4.62（OI-091）：P/V 按 `pv_ratio.trading_pv`（ROIC 路径 (现价+净负债)÷EV），生产带行缺失时退回 现价÷V
     pv_val = None
     if mid and ref_price:
-        band_row = MODEL_BANDS.get(str(row.get("security_code", "")).zfill(6))
+        band_row = live_band if financial else MODEL_BANDS.get(code)
         pv_val = trading_pv(ref_price, band_row) if band_row else None
         if pv_val is None:
             pv_val = ref_price / mid
@@ -886,9 +901,10 @@ def check_dossier_registration(
 
 
 def main() -> None:
-    global MODEL_BANDS
+    global MODEL_BANDS, VALUATION_AS_OF
     args = parse_args()
     args.as_of = args.signal_date
+    VALUATION_AS_OF = args.as_of
     args.evidence_date = evidence_iso_for_signal(args.signal_date)
     MODEL_BANDS = load_model_bands(as_of=args.evidence_date)
     rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of, args.valuation)

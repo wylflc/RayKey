@@ -1,0 +1,209 @@
+{
+  "as_of": "2026-09-07",
+  "applied": true,
+  "price_source": "existing dated scan/tracking CSV; no network refresh",
+  "checks": [
+    {
+      "security_code": "600036",
+      "price": 41.07,
+      "previous": {
+        "as_of": "2026-09-07",
+        "security_code": "600036",
+        "security_name": "招商银行",
+        "current_shares": "14700",
+        "cost_basis": "40.4879",
+        "entry_stop_price": "37.93",
+        "stop_hit": "否",
+        "stop_line": "37.93",
+        "close": "41.07",
+        "ma20": "39.5885",
+        "ma60": "38.2502",
+        "quality_tier": "L2",
+        "quality_score": "69.9",
+        "fair_price_low": "47.95",
+        "fair_price_high": "58.6",
+        "upside": "+30%",
+        "pv": "0.77",
+        "action": "持有",
+        "note": "",
+        "scanned_at_utc": "2026-09-07T16:05:54+00:00"
+      },
+      "tracking": {
+        "as_of": "2026-09-07",
+        "security_code": "600036",
+        "security_name": "招商银行",
+        "current_shares": "14700",
+        "cost_basis": "40.4879",
+        "entry_stop_price": "37.93",
+        "stop_hit": "否",
+        "stop_line": "37.93",
+        "close": "41.07",
+        "ma20": "39.5885",
+        "ma60": "38.2502",
+        "quality_tier": "L2",
+        "quality_score": "69.9",
+        "fair_price_low": "48.3963",
+        "fair_price_high": "59.151",
+        "upside": "+31%",
+        "pv": "0.76",
+        "action": "持有",
+        "note": "股利折现",
+        "scanned_at_utc": "2026-09-07T19:19:50+00:00"
+      },
+      "reading": {
+        "price": "41.07",
+        "band": "48.396289240299964-59.151020182588844",
+        "upside": "+31%",
+        "fair_value": "53.77",
+        "fair_value_num": 53.77365471144441,
+        "pv": "0.764",
+        "pe": "6.83",
+        "pb": "0.9",
+        "spot_pe": null
+      },
+      "trade": {
+        "as_of": "2026-09-07",
+        "security_code": "600036",
+        "security_name": "招商银行",
+        "price": 41.07,
+        "candidate": {
+          "intrinsic_value": 53.7736547114444,
+          "pv": 0.7637569032714315,
+          "source": "股利折现"
+        },
+        "hold": {
+          "intrinsic_value": 53.7736547114444,
+          "pv": 0.7637569032714315,
+          "source": "股利折现"
+        }
+      },
+      "scan_matches": true
+    },
+    {
+      "security_code": "601318",
+      "price": 56.36,
+      "previous": {
+        "as_of": "2026-09-07",
+        "security_code": "601318",
+        "security_name": "中国平安",
+        "current_shares": "4900",
+        "cost_basis": "55.8706",
+        "entry_stop_price": "52.15",
+        "stop_hit": "否",
+        "stop_line": "52.15",
+        "close": "56.36",
+        "ma20": "54.5225",
+        "ma60": "52.5962",
+        "quality_tier": "L2",
+        "quality_score": "64",
+        "fair_price_low": "63.85",
+        "fair_price_high": "78.04",
+        "upside": "+26%",
+        "pv": "0.79",
+        "action": "持有",
+        "note": "",
+        "scanned_at_utc": "2026-09-07T16:05:54+00:00"
+      },
+      "tracking": {
+        "as_of": "2026-09-07",
+        "security_code": "601318",
+        "security_name": "中国平安",
+        "current_shares": "4900",
+        "cost_basis": "55.8706",
+        "entry_stop_price": "52.15",
+        "stop_hit": "否",
+        "stop_line": "52.15",
+        "close": "56.36",
+        "ma20": "54.5225",
+        "ma60": "52.5962",
+        "quality_tier": "L2",
+        "quality_score": "64",
+        "fair_price_low": "64.4504",
+        "fair_price_high": "78.7728",
+        "upside": "+27%",
+        "pv": "0.79",
+        "action": "持有",
+        "note": "股利折现",
+        "scanned_at_utc": "2026-09-07T19:19:50+00:00"
+      },
+      "reading": {
+        "price": "56.36",
+        "band": "64.45043201825888-78.77275024453864",
+        "upside": "+27%",
+        "fair_value": "71.61",
+        "fair_value_num": 71.61159113139877,
+        "pv": "0.787",
+        "pe": "6.41",
+        "pb": "0.99",
+        "spot_pe": null
+      },
+      "trade": {
+        "as_of": "2026-09-07",
+        "security_code": "601318",
+        "security_name": "中国平安",
+        "price": 56.36,
+        "candidate": {
+          "intrinsic_value": 71.61159113139875,
+          "pv": 0.7870234288829877,
+          "source": "股利折现"
+        },
+        "hold": {
+          "intrinsic_value": 71.61159113139875,
+          "pv": 0.7870234288829877,
+          "source": "股利折现"
+        }
+      },
+      "scan_matches": true
+    }
+  ],
+  "reading_updates": [
+    {
+      "security_code": "600036",
+      "before": "| 600036 | 招商银行 | L2 | 69.9 | 银行/保险·股利折现 | 41.07 | 53.28 | 0.771 | 2026-08-29 | 中报 |",
+      "fair_value": "53.77",
+      "pv": "0.764"
+    },
+    {
+      "security_code": "002142",
+      "before": "| 002142 | 宁波银行 | L2 | 67.5 | 银行/保险·股利折现 | 34.13 | 31.41 | 1.087 | 2026-08-20 | 中报 |",
+      "fair_value": "31.71",
+      "pv": "1.076"
+    },
+    {
+      "security_code": "601318",
+      "before": "| 601318 | 中国平安 | L2 | 64 | 银行/保险·股利折现 | 56.36 | 70.95 | 0.794 | 2026-08-21 | 中报 |",
+      "fair_value": "71.61",
+      "pv": "0.787"
+    },
+    {
+      "security_code": "601838",
+      "before": "| 601838 | 成都银行 | L2 | 62 | 银行/保险·股利折现 | 19.40 | 23.88 | 0.813 | 2026-08-27 | 中报 |",
+      "fair_value": "24.10",
+      "pv": "0.805"
+    },
+    {
+      "security_code": "601288",
+      "before": "| 601288 | 农业银行 | L3 | 56 | 银行/保险·股利折现 | 6.81 | 6.59 | 1.034 | 2026-08-29 | 中报 |",
+      "fair_value": "6.65",
+      "pv": "1.024"
+    },
+    {
+      "security_code": "601939",
+      "before": "| 601939 | 建设银行 | L3 | 56 | 银行/保险·股利折现 | 10.71 | 10.27 | 1.044 | 2026-08-29 | 中报 |",
+      "fair_value": "10.36",
+      "pv": "1.034"
+    },
+    {
+      "security_code": "601398",
+      "before": "| 601398 | 工商银行 | L3 | 55 | 银行/保险·股利折现 | 7.97 | 8.19 | 0.974 | 2026-08-29 | 中报 |",
+      "fair_value": "8.26",
+      "pv": "0.965"
+    }
+  ],
+  "protected_files_unchanged": {
+    "data/processed/a_share_holdings.csv": "7a57b890a33b2fcaa7490f7420d5e60828e3d5fe936d2a395f6391f583fbc461",
+    "data/processed/portfolio_account_snapshot.csv": "072b5dc3b4a24daf4d05d669829ba40bdffc4216466e74fd251996b1ad143bd0",
+    "data/processed/daily_entry_plan.csv": "46d61df0dc6f6bb513a0f8ed34692fbd5094aa26f0efb8d1255eb0f407d6310f",
+    "data/processed/daily_sell_plan.csv": "733c3f77e1dd048912e0e80811297019b88042e6cce6694008b00140041e7f32"
+  }
+}

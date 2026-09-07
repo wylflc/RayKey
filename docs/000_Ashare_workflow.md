@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.161
+# A股选股-估值-量价操作流程 v4.162
 
 > 本文件只保留当前生效的操作指引。第 1 行是唯一版本真值，供 `scripts/workflow_decision_log.py` 写入决策日志。
 >
@@ -723,7 +723,7 @@ security_code, security_name, current_shares, cost_basis, entry_stop_price
 python3 scripts/track_holdings_daily.py --as-of YYYY-MM-DD
 ```
 
-逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示合理价、空间、`P/V`、MA20、MA60、生效止损线与是否命中、涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，涨幅减持命中判定与扫描器同一实现（`holding_trim_signal`）；`P/V` 读持仓侧带，与候选侧不同时并列显示；生产带的证据截止与扫描器同由信号日自动推导。
+逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示合理价、空间、`P/V`、MA20、MA60、生效止损线与是否命中、涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，涨幅减持命中判定与扫描器同一实现（`holding_trim_signal`）；`P/V` 读持仓侧带，与候选侧不同时并列显示；生产带的证据截止与扫描器同由信号日自动推导。银行与保险的扫描、跟踪、阅读版及成交估值统一调用 `screen_daily_volume_price_signals.resolve_live_band`，国债利率取 `observed_on ≤ 信号日` 的最新行，股利锚与除权处理调用 `bank_dividend_intrinsic`；区间显示为同一 V × [0.90, 1.10]。缺失利率或完整财年分红时，合理价与 `P/V` 留空并注明数据缺失。
 
 ### 11.4 除权除息
 
@@ -751,7 +751,7 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 
 1. 更新持仓股数与成本；清仓删除该行。
 2. 由零股建仓时按 §9.3.5 写入止损价；加仓不改。
-3. 决策日志追加 `execution_record`，记录方向、股数、成交价、当日 `P/V` 和对应规则。
+3. 运行 `python3 scripts/resolve_trade_valuation.py --as-of YYYY-MM-DD --code <代码> --price <成交价>`，取输出的合理价、候选侧与持仓侧 `P/V`、估值来源；决策日志追加 `execution_record`，记录方向、股数、成交价、当日 `P/V` 和对应规则。
 4. 次日自动纳入跟踪。
 
 ## 12. 改参数与回测验证
