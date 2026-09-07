@@ -1,0 +1,18 @@
+{
+  "security_code": "600489",
+  "source_urls": {},
+  "manual_evidence": [
+    {
+      "recorded_at_utc": "2026-09-07T07:30:43+00:00",
+      "type": "company_filing_review",
+      "period": "2026H1",
+      "title": "中金黄金2026中报及已披露经营信息复核",
+      "source_url": "https://zjgold.chinagoldgroup.com/zjgold/content_file/xxgk/dqgg/2026/8/92efe5ed49b146bb84156111b68b1106.pdf",
+      "evidence_available_at": "2026-08-28",
+      "summary": "2026H1营业收入429.82亿元（+22.57%）；归母净利润43.57亿元（+61.67%）；扣非43.16亿元（+45.97%）；矿产金9.14吨（+0.07%）、矿山铜3.84万吨（+0.74%）；经营现金流16.41亿元；存货较年初增长43.90%；纱岭选厂完成带水试车、仍处基建期",
+      "use": "国内矿权和纱岭资源具有不可复制性，2026H1归母43.57亿元（+61.67%），但矿产金9.14吨仅增0.07%；纱岭仍处基建期，低成本优势缺同口径验证。维持boundary_pending，三家中优先在纱岭投产与成本披露时复核。不能用含冶炼的集团毛利率否定矿山成本。",
+      "research_file": "data/companies/600489_中金黄金/fundamentals.md"
+    }
+  ],
+  "manual_reviewed_at_utc": "2026-09-07T07:30:43+00:00"
+}

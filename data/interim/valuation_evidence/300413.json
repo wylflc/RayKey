@@ -1993,5 +1993,19 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at_utc": "2026-09-07T07:30:43+00:00",
+   "type": "company_filing_review",
+   "period": "2026H1",
+   "title": "芒果超媒2026中报及已披露经营信息复核",
+   "source_url": "https://disc.static.szse.cn/disc/disk03/finalpage/2026-08-22/f3f33daf-3eee-49cb-b24e-e1d97ed191e3.PDF",
+   "evidence_available_at": "2026-08-22",
+   "summary": "2026H1营业收入61.94亿元（+3.86%）；归母净利润2.02亿元（-73.58%）；扣非净利润1.81亿元（-70.32%）；经营现金流-3.42亿元；核心视频收入44.62亿元（-8.61%）、毛利率23.54%；内容电商收入11.00亿元（+146.35%）、毛利率6.16%；会员收入19.33亿元、广告收入16.84亿元",
+   "use": "湖南广电内容组织、综艺IP和牌照具有差异化，不能仅以低ROE认定可复制；但2026H1核心视频收入下降8.61%、毛利率下降3.95个百分点，集团收入增长主要来自毛利率6.16%的内容电商，尚未验证内容优势转化为持久定价权及可分配现金。维持boundary_pending。",
+   "research_file": "data/companies/300413_芒果超媒/fundamentals.md"
+  }
+ ],
+ "manual_reviewed_at_utc": "2026-09-07T07:30:43+00:00"
 }

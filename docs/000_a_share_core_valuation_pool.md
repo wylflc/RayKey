@@ -192,7 +192,7 @@
 
 ## L4｜已建档但未进入关注池
 
-共 49 家。L4 为本阅读版的档案归档层级；`名单状态` 保留结构化 `attention_class`。
+共 52 家。L4 为本阅读版的档案归档层级；`名单状态` 保留结构化 `attention_class`。
 
 - 仅维护逐票档案与合理价；不进入核心池 CSV、生产带、每日行情、`P/V`、每日扫描或 §9.3。
 - 合理价区间与中值 `V` 取逐票估值档案；无法估值显示 —。公司名称可直接打开档案。
@@ -216,14 +216,17 @@
 | 300034 | [钢研高纳](../data/companies/300034_钢研高纳/README.md) | L4 | boundary_pending | 4.40-5.38 | 4.89 | 内在价值模型·ROIC 口径 | 2026-09-07 |
 | 300346 | [南大光电](../data/companies/300346_南大光电/README.md) | L4 | boundary_pending | 6.50-7.95 | 7.22 | 内在价值模型·ROIC 口径 | 2026-09-07 |
 | 300360 | [炬华科技](../data/companies/300360_炬华科技/README.md) | L4 | boundary_pending | 12.20-14.91 | 13.55 | 内在价值模型·ROIC 口径 | 2026-09-07 |
+| 300413 | [芒果超媒](../data/companies/300413_芒果超媒/README.md) | L4 | boundary_pending | 12.22-14.93 | 13.57 | 内在价值模型·权益退路 | 2026-09-07 |
 | 300435 | [中泰股份](../data/companies/300435_中泰股份/README.md) | L4 | boundary_pending | 14.33-17.51 | 15.92 | 内在价值模型·ROIC 口径 | 2026-09-07 |
 | 300476 | [胜宏科技](../data/companies/300476_胜宏科技/README.md) | L4 | boundary_pending | 43.35-52.98 | 48.16 | 内在价值模型·ROIC 口径 | 2026-09-07 |
 | 300573 | [兴齐眼药](../data/companies/300573_兴齐眼药/README.md) | L4 | boundary_pending | 14.91-18.22 | 16.56 | 内在价值模型·ROIC 口径 | 2026-09-07 |
 | 300972 | [万辰集团](../data/companies/300972_万辰集团/README.md) | L4 | boundary_pending | 19.05-23.28 | 21.16 | 内在价值模型·ROIC 口径 | 2026-09-07 |
 | 301498 | [乖宝宠物](../data/companies/301498_乖宝宠物/README.md) | L4 | boundary_pending | 17.51-21.40 | 19.45 | 内在价值模型·ROIC 口径 | 2026-09-07 |
 | 600089 | [特变电工](../data/companies/600089_特变电工/README.md) | L4 | boundary_pending | 25.27-30.88 | 28.07 | 内在价值模型·ROIC 口径 | 2026-09-07 |
+| 600104 | [上汽集团](../data/companies/600104_上汽集团/README.md) | L4 | boundary_pending | — | — | 无法估值 | 2026-09-07 |
 | 600150 | [中国船舶](../data/companies/600150_中国船舶/README.md) | L4 | boundary_pending | 20.10-24.56 | 22.33 | 内在价值模型·ROIC 口径 | 2026-09-07 |
 | 600233 | [圆通速递](../data/companies/600233_圆通速递/README.md) | L4 | boundary_pending | 16.55-20.22 | 18.38 | 内在价值模型·ROIC 口径 | 2026-09-07 |
+| 600489 | [中金黄金](../data/companies/600489_中金黄金/README.md) | L4 | boundary_pending | 17.65-21.58 | 19.61 | 内在价值模型·权益退路 | 2026-09-07 |
 | 600919 | [江苏银行](../data/companies/600919_江苏银行/README.md) | L4 | boundary_pending | 13.58-16.60 | 15.09 | 银行/保险·股利折现 | 2026-09-07 |
 | 600988 | [赤峰黄金](../data/companies/600988_赤峰黄金/README.md) | L4 | boundary_pending | 12.23-14.94 | 13.59 | 内在价值模型·ROIC 口径 | 2026-09-07 |
 | 601336 | [新华保险](../data/companies/601336_新华保险/README.md) | L4 | boundary_pending | 64.91-79.33 | 72.12 | 银行/保险·股利折现 | 2026-09-07 |

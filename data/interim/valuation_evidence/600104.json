@@ -1846,5 +1846,19 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at_utc": "2026-09-07T07:30:43+00:00",
+   "type": "company_filing_review",
+   "period": "2026H1",
+   "title": "上汽集团2026中报及已披露经营信息复核",
+   "source_url": "https://www.saicmotor.com/chinese/images/tzzgx/ggb/dqgg/2026ndqgg/2026/8/28/D3CB5225FECA497395E80F8A8104DE90.pdf",
+   "evidence_available_at": "2026-09-01",
+   "summary": "2026H1营业总收入2986.52亿元（-0.31%）；归母净利润51.52亿元（-14.38%）；扣非净利润45.69亿元（-15.86%）；经营现金流543.03亿元（含金融业务资产配置变化）；半年度ROE1.72%；公司调整后核心归母78.7亿元（+72%）；2026年1—8月新能源销量116.3万辆（+30.2%）、海外销量101.6万辆（+52.9%）",
+   "use": "整车体系、海外渠道与合资关系具有存量壁垒，自主智电销量增长构成修复线索；但2026H1归母下降14.38%、扣非下降15.86%，与公司调整后核心利润增长72%须分开。销量增长向持续定价权和股东回报的转化未验证，维持boundary_pending。",
+   "research_file": "data/companies/600104_上汽集团/fundamentals.md"
+  }
+ ],
+ "manual_reviewed_at_utc": "2026-09-07T07:30:43+00:00"
 }
