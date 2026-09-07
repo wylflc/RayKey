@@ -1,0 +1,346 @@
+{
+  "as_of": "2026-09-07",
+  "response_commit": "bcfa5445c62e39f5949a656951f701bb1e671fb5",
+  "prior_review_commit": "96a4c287",
+  "scope": "Fable response; six disputed names refreshed, 31 prior conclusions carried forward; no new full review of current 177",
+  "production_action": "none_research_recommendation_only",
+  "counts": {
+    "removed_reviewed": 37,
+    "restore_recommended": 3,
+    "remain_excluded": 34,
+    "current_watchlist": 177,
+    "watchlist_if_adopted": 180
+  },
+  "sources": [
+    {
+      "source_id": "F01",
+      "title": "中控2025年报",
+      "url": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12123899&stockid=688777",
+      "locator": "PDF第46页，主营业务分产品；行名控制系统"
+    },
+    {
+      "source_id": "F02",
+      "title": "中控2026中报",
+      "url": "https://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12571859&stockid=688777",
+      "locator": "第二节主要会计数据和财务指标"
+    },
+    {
+      "source_id": "F03",
+      "title": "民士达2026中报",
+      "url": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12510654&stockid=920394",
+      "locator": "经营情况回顾：按产品分类分析"
+    },
+    {
+      "source_id": "F04",
+      "title": "同力2026中报",
+      "url": "https://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12538519&stockid=920599",
+      "locator": "主要会计数据：偿债能力、营运情况；现金流量分析与合并现金流量表"
+    },
+    {
+      "source_id": "F05",
+      "title": "珀莱雅2026中报",
+      "url": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12523832&stockid=603605",
+      "locator": "主要会计数据、非经常性损益、品牌收入表"
+    },
+    {
+      "source_id": "F06",
+      "title": "鱼跃2026中报",
+      "url": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12517600&stockid=002223",
+      "locator": "主要会计数据"
+    },
+    {
+      "source_id": "F07",
+      "title": "雅克2025年报",
+      "url": "https://disc.static.szse.cn/disc/disk03/finalpage/2026-04-28/ca7939f4-757b-4c6d-a09f-41e7c3ac02c9.PDF",
+      "locator": "印刷第28-30、41页：客户交付、收入构成、公司发展"
+    },
+    {
+      "source_id": "F08",
+      "title": "中控2025年报摘要",
+      "url": "https://static.cninfo.com.cn/finalpage/2026-04-21/1225131232.PDF",
+      "locator": "第17页：行业地位及项目"
+    },
+    {
+      "source_id": "F09",
+      "title": "中控官方DCS资料",
+      "url": "https://global.supcon.com/control-systems/dcs",
+      "locator": "Openness and Interoperability、Integrated Engineering Tools"
+    },
+    {
+      "source_id": "F10",
+      "title": "民士达2025年报",
+      "url": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12004528&stockid=920394",
+      "locator": "PDF第11-13页：生产、销售模式及客户应用"
+    },
+    {
+      "source_id": "F11",
+      "title": "民士达招股材料",
+      "url": "https://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=8835461&stockid=833394",
+      "locator": "2023-02-16版本；释义中列明直接客户、终端用户及国内竞争者"
+    },
+    {
+      "source_id": "F12",
+      "title": "雅克2016年部分认证公告",
+      "url": "https://finance.sina.com.cn/stock/t/2016-12-22/doc-ifxyxute2768872.shtml",
+      "locator": "证书16-0793，增强型聚氨酯泡沫；部分认证，不是完整板材认证"
+    },
+    {
+      "source_id": "F13",
+      "title": "雅克2021年报",
+      "url": "https://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=8110930",
+      "locator": "130/170/210密度泡沫材料及绝热模块、GTT及船级社认证"
+    },
+    {
+      "source_id": "F14",
+      "title": "临工重机2026港交所申请版本",
+      "url": "https://www1.hkexnews.hk/app/sehk/2026/108556/documents/sehk26052001552_c.pdf",
+      "locator": "2026-05-20申请版本，印刷第7、9页（PDF第16、18页）；不是最终招股章程"
+    }
+  ],
+  "fact_checks": [
+    {
+      "id": "C01",
+      "sources": [
+        "F01"
+      ],
+      "claim": "中控控制系统毛利率下降2.04pp",
+      "finding": "错误：增加2.04pp，且行名不是DCS",
+      "values": {
+        "revenue_10k_cny": 118002.84,
+        "cost_10k_cny": 57320.38,
+        "reported_gm_pct": 51.42,
+        "revenue_yoy_pct": -21.0,
+        "cost_yoy_pct": -24.19,
+        "gm_change_pp": 2.04
+      }
+    },
+    {
+      "id": "C02",
+      "sources": [
+        "F02"
+      ],
+      "claim": "中控2026H1扣非转负",
+      "finding": "错误：同比降幅为负，利润金额为正",
+      "values": {
+        "adjusted_parent_profit_cny": 102596612.75,
+        "prior_adjusted_parent_profit_cny": 288729507.41,
+        "yoy_pct": -64.47,
+        "operating_cashflow_cny": -715344787.12
+      }
+    },
+    {
+      "id": "C03",
+      "sources": [
+        "F03"
+      ],
+      "claim": "民士达芳纶纸毛利同比不可核实",
+      "finding": "原表明确增加0.40pp，收入成本反算一致",
+      "values": {
+        "revenue_cny": 214215604.19,
+        "cost_cny": 123585145.17,
+        "reported_gm_pct": 42.31,
+        "revenue_yoy_pct": -5.5,
+        "cost_yoy_pct": -6.15,
+        "gm_change_pp": 0.4
+      }
+    },
+    {
+      "id": "C04",
+      "sources": [
+        "F04"
+      ],
+      "claim": "同力现金流5.12亿元未找到原文支持",
+      "finding": "多个表重复列示；采购结算时点、承兑汇票亦影响现金流",
+      "values": {
+        "operating_cashflow_cny": 512295081.29,
+        "prior_operating_cashflow_cny": -631660484.73
+      }
+    },
+    {
+      "id": "C05",
+      "sources": [
+        "F04"
+      ],
+      "claim": "同力负债率49.97%到54.17%",
+      "finding": "数值属母公司；应收与收入使用合并口径时需标明",
+      "values": {
+        "parent_debt_asset_pct": [
+          49.97,
+          54.17
+        ],
+        "consolidated_debt_asset_pct": [
+          53.46,
+          56.89
+        ],
+        "consolidated_assets_cny": 8558079274.09,
+        "consolidated_liabilities_cny": 4869069216.92,
+        "receivables_net_cny": [
+          1930471884.96,
+          2350303482.51
+        ]
+      }
+    },
+    {
+      "id": "C06",
+      "sources": [
+        "F05"
+      ],
+      "claim": "归母与扣非差额即4.45亿元重估收益",
+      "finding": "差额5.037亿元；4.454亿元仅是其中一项非经常损益",
+      "values": {
+        "parent_profit_cny": 1167896499.41,
+        "adjusted_parent_profit_cny": 664234371.34,
+        "nonrecurring_net_cny": 503662128.07,
+        "step_acquisition_gain_cny": 445360152.15,
+        "main_brand_yoy_pct": -7.19,
+        "adjusted_profit_yoy_pct": -13.8
+      }
+    },
+    {
+      "id": "C07",
+      "sources": [
+        "F06"
+      ],
+      "claim": "鱼跃归母与扣非下降，上次恢复表遗漏主要负面信息",
+      "finding": "属实，接受批评",
+      "values": {
+        "parent_profit_yoy_pct": -29.92,
+        "adjusted_profit_yoy_pct": -16.69
+      }
+    },
+    {
+      "id": "C08",
+      "sources": [
+        "F07"
+      ],
+      "claim": "雅克LNG业务规模不大，不足以改变移出结论",
+      "finding": "公司级业务有实质体量；体量不单独证明护城河",
+      "values": {
+        "lng_revenue_cny": 2370438684.52,
+        "company_revenue_cny": 8611469139.8,
+        "lng_revenue_pct": 27.53
+      }
+    },
+    {
+      "id": "C09",
+      "sources": [
+        "F14"
+      ],
+      "claim": "建议补查已公开的临工招股材料，验证同力与直接同业回报",
+      "finding": "建议有用；本轮补查近三年矿山设备分部与集团指标，尚未解决十年同产品口径缺口",
+      "values": {
+        "years": [
+          2023,
+          2024,
+          2025
+        ],
+        "mining_equipment_gm_pct": [
+          16.7,
+          17.4,
+          22.1
+        ],
+        "group_roe_pct": [
+          18.4,
+          15.7,
+          13.9
+        ]
+      }
+    }
+  ],
+  "analyst_judgments": [
+    {
+      "security_code": "688777",
+      "security_name": "中控技术",
+      "outcome": "建议恢复关注",
+      "confidence": "medium",
+      "reason": "控制平台的工艺适配、可靠性交付及跨行业长期客户积累支持资本复制测试；纠正毛利增幅反号与扣非转负误读。毛利上升本身不证明售价不降。",
+      "next_evidence": "核心项目续用、更新及回款，核心控制与S2B分拆；经营收缩与费用补助影响",
+      "sources": [
+        "F01",
+        "F02",
+        "F08",
+        "F09"
+      ],
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:688777:ef0809"
+    },
+    {
+      "security_code": "920394",
+      "security_name": "民士达",
+      "outcome": "建议恢复关注",
+      "confidence": "medium",
+      "reason": "高端纸基材料工艺与跨年份、多行业客户应用构成持续载体；撤销双寡头及泛化产能份额说法，不以UL证书独自证明独占。",
+      "next_evidence": "高端与低端同规格验证及替换、关联原料定价、费用后利润与现金转化",
+      "sources": [
+        "F03",
+        "F10",
+        "F11"
+      ],
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:920394:c1666e"
+    },
+    {
+      "security_code": "002409",
+      "security_name": "雅克科技",
+      "outcome": "建议恢复关注",
+      "confidence": "medium",
+      "reason": "电子材料客户验证及LNG材料多年认证迭代、多个船厂实际交付共同支持；LNG占公司收入27.53%，不能视为不重要的附带业务。",
+      "next_evidence": "新供应商实际替代、分部归属利润与经营资本、分销及商誉风险",
+      "sources": [
+        "F07",
+        "F12",
+        "F13"
+      ],
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:002409:3a8051"
+    },
+    {
+      "security_code": "920599",
+      "security_name": "同力股份",
+      "outcome": "暂维持移出，撤回恢复建议",
+      "confidence": "medium",
+      "reason": "服务网络和盈利记录是正面证据，但同业差异化成本或客户锁定仍未充分确定；现金流可核实且受结算时点影响。临工矿山设备及集团ROE口径不可直接当纯宽体车对照。",
+      "next_evidence": "同规格矿车及服务合同总成本、复购替换、备件收益与回款；同业全口径序列",
+      "sources": [
+        "F04",
+        "F14"
+      ],
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:920599:a01be8"
+    },
+    {
+      "security_code": "603605",
+      "security_name": "珀莱雅",
+      "outcome": "维持移出，撤回恢复建议",
+      "confidence": "medium",
+      "reason": "品类高毛利不等于品牌拉力；主品牌、扣非与回款变化使费用后持久溢价仍存疑，前次恢复论证不足。非经常净差额5.037亿元不等于单项重估4.454亿元。",
+      "next_evidence": "同价格带复购、自然流量、获客费用后利润，不仅是收入转正",
+      "sources": [
+        "F05"
+      ],
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:603605:9809de"
+    },
+    {
+      "security_code": "002223",
+      "security_name": "鱼跃医疗",
+      "outcome": "维持移出，撤回恢复建议",
+      "confidence": "medium",
+      "reason": "接受此前恢复表负面信息呈现不足；产品组合与现金流不能代替同品类持久溢价或渠道锁定证据。利润下降不单独构成护城河证伪。",
+      "next_evidence": "同规格售价、终端份额、复购及推广投入回报，不仅是ROE回升",
+      "sources": [
+        "F06"
+      ],
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:002223:aaeebc"
+    }
+  ],
+  "production_input_sha256": {
+    "data/processed/a_share_attention_triage.csv": "0c3fd30c9b939c0742fa12bc15807712fbf08b08386287ea69c9d1057bbf0733",
+    "data/processed/a_share_watchlist_quality_tiers.csv": "b651abd500f5781c252b890747fdc78f2367182f3344e58c7e915121e4aa7354",
+    "data/processed/a_share_pool_model_bands_adopted.csv": "a23d0f561f805cedf347b03b78ba9df54ba92fa9ef8fdfc1985ad456b7d0eab2",
+    "data/processed/a_share_pool_model_bands_hold.csv": "0a6bb9e566c4ee36b302086f1b45b8fe2087f0160781605aafa1f60937939cdd",
+    "data/processed/a_share_holdings.csv": "7a57b890a33b2fcaa7490f7420d5e60828e3d5fe936d2a395f6391f583fbc461",
+    "data/processed/pit_attention/panel_moat_bank_v6b.csv": "74b4d98dfcef266aa15155cb211d2c68b2fb1231da23a6204235bb62b0e0f3cc"
+  },
+  "download_checks": {
+    "supcon_2025_pdf_sha256": "d53bf4d7ed31f4e81b3f383222864127f513eb4de7eb9c47d5ebfdfdc70c39f0",
+    "msd_2025_pdf_sha256": "5070f5a43c418257fe5c8b5d00246aade1c0359c043661ffb5358118d5a6df27",
+    "lgmg_2026_pdf_sha256": "ddd3123c87a054782f189b57783fccdd59da2e09f48c68d14f062592b6d9798d",
+    "lgmg_note": "Downloaded PDF has unusable local text mapping; cited values verified with web PDF text, not local pypdf extraction. No screenshot verification claimed."
+  }
+}

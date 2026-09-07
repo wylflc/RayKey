@@ -1,0 +1,51 @@
+{
+  "arithmetic_checks": [
+    {
+      "check": "C01_gross_margin_reconstruction",
+      "gm_pct": 51.42457588308892,
+      "prior_gm_pct_implied_by_rounded_yoy": 49.38057637203567,
+      "change_pp": 2.0439995110532507,
+      "status": "pass",
+      "note": "Prior margin reconstructed using rounded revenue/cost growth, not independently audited prior-year exact amounts"
+    },
+    {
+      "check": "C03_gross_margin_reconstruction",
+      "gm_pct": 42.30805657818218,
+      "prior_gm_pct_implied_by_rounded_yoy": 41.9084853131403,
+      "change_pp": 0.3995712650418852,
+      "status": "pass",
+      "note": "Prior margin reconstructed using rounded revenue/cost growth, not independently audited prior-year exact amounts"
+    },
+    {
+      "check": "supcon_adjusted_profit_sign_and_yoy",
+      "status": "pass"
+    },
+    {
+      "check": "tongli_consolidated_debt_asset_ratio",
+      "status": "pass"
+    },
+    {
+      "check": "proya_nonrecurring_reconciliation",
+      "status": "pass"
+    },
+    {
+      "check": "yake_lng_materiality",
+      "status": "pass"
+    }
+  ],
+  "unique_removed_count": 37,
+  "targeted_disputed_count": 6,
+  "prior_review_carried_forward": 31,
+  "restoration_recommendations": 3,
+  "remain_excluded": 34,
+  "current_watchlist": 177,
+  "all_migration_ids_resolved": true,
+  "source_ids_resolved": true,
+  "production_input_hashes_unchanged": true,
+  "local_report_targets_exist": true,
+  "limits": [
+    "Arithmetic checks do not decide moat or migration.",
+    "Not a new full due diligence of 177 retained names.",
+    "This is a recommendation; formal attention classes and trading state are unchanged."
+  ]
+}
