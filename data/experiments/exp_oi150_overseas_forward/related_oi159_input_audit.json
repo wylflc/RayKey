@@ -1,0 +1,100 @@
+{
+  "monthly_observations": 55314,
+  "monthly_before_filed": 1071,
+  "examples": [
+    {
+      "security_code": "0000008868",
+      "date": "2012-07-31",
+      "band_available_at": "2012-08-01",
+      "valuation_ratio": "0.3989"
+    },
+    {
+      "security_code": "0000008868",
+      "date": "2012-10-31",
+      "band_available_at": "2012-11-01",
+      "valuation_ratio": "0.3896"
+    },
+    {
+      "security_code": "0000008868",
+      "date": "2013-07-31",
+      "band_available_at": "2013-08-01",
+      "valuation_ratio": "0.4741"
+    },
+    {
+      "security_code": "0000008868",
+      "date": "2014-04-30",
+      "band_available_at": "2014-05-01",
+      "valuation_ratio": "0.5474"
+    },
+    {
+      "security_code": "0000007332",
+      "date": "2014-04-30",
+      "band_available_at": "2014-05-01",
+      "valuation_ratio": "0.8845"
+    }
+  ],
+  "truncated_company_series": 154,
+  "truncated_examples": [
+    {
+      "cik": "0000003673",
+      "production_end": "2011-04-28",
+      "source_end": "2011-11-30",
+      "source": "tiingo:AYE"
+    },
+    {
+      "cik": "0000006201",
+      "production_end": "2024-11-21",
+      "source_end": "2026-09-04",
+      "source": "yahoo:AAL"
+    },
+    {
+      "cik": "0000006769",
+      "production_end": "2021-04-29",
+      "source_end": "2026-09-04",
+      "source": "yahoo:APA"
+    },
+    {
+      "cik": "0000007332",
+      "production_end": "2017-06-02",
+      "source_end": "2024-10-01",
+      "source": "tiingo:SWN"
+    },
+    {
+      "cik": "0000008868",
+      "production_end": "2015-05-21",
+      "source_end": "2020-01-03",
+      "source": "tiingo:AVP"
+    },
+    {
+      "cik": "0000011199",
+      "production_end": "2015-02-02",
+      "source_end": "2019-06-10",
+      "source": "yahoo:BMS"
+    },
+    {
+      "cik": "0000012208",
+      "production_end": "2024-11-21",
+      "source_end": "2026-09-04",
+      "source": "yahoo:BIO"
+    },
+    {
+      "cik": "0000012659",
+      "production_end": "2020-11-19",
+      "source_end": "2026-09-04",
+      "source": "yahoo:HRB"
+    },
+    {
+      "cik": "0000016732",
+      "production_end": "2026-08-20",
+      "source_end": "2026-09-04",
+      "source": "yahoo:CPB"
+    },
+    {
+      "cik": "0000018926",
+      "production_end": "2023-05-18",
+      "source_end": "2026-09-04",
+      "source": "yahoo:LUMN"
+    }
+  ],
+  "states_sha256": "86a434b046b93709ac9adb3e7dc482d679e19e43cf7f5cf3b66d493314ae2995"
+}

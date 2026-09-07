@@ -9,6 +9,8 @@
 
 ## 待处理（1 项）
 
-### OI-150｜待办：海外市场估值信号的预登记前向检验（第三批次，可选）
+### OI-166｜缺陷：美股补充分档表的时点与行情窗口需要修复
 
-**来源（2026-09-05，[指标审核与最终方案](reports/backtest_metric_review_plan.zh.md)第三批次）**：先预登记固定 `P/V` 分档对未来收益的检验，再考虑完整组合回测。前提：历史时点股票池、退市与公司行动、原始财报可得时间、本地税费与执行规则齐备；当前海外关注清单与当前估值不构成无偏历史样本。港美股与 A 股共享宏观风险，不当作独立抽样；据结果改规则后该市场同样转为研究样本。无前置项。**当前处置（2026-09-06）**：用户裁定暂时搁置。已完成：预登记书与数据前提审计 [overseas_pv_forward_prereg.zh.md](reports/overseas_pv_forward_prereg.zh.md)（美股为正式样本，港股无历史池不作正式样本）；管线 `scripts/experimental/overseas_pv_forward.py` 五步写完并冒烟通过；股票池 653 家与 companyfacts 已缓存，价格取到 141 只（原始缓存 2.1 GB 在 `data/experiments/exp_oi150_overseas_forward/raw/`，不入库）。首跑在取价步因腾讯接口限流（约 250 次请求／33 分钟）未完成，取价器已改为失败退避重试、按已有文件续取（翻页取数与旧结果逐根一致）。重启即提交 `scripts/slurm/oi150_overseas_forward.sbatch`，各步自动续跑。 **2026-09-06 补记**：相关的 `P/V` 分档前向表已由 OI-159（美股标普 500 历史成分、含退市）产出——3 年／5 年 Spearman +0.02／+0.04、各档年化 9%~12% 平坦（回测日志 §12.202，`data/experiments/exp_us_sp500_port/tier_forward_us.txt`）；OI-159 的取价器与缓存可优先复用；其股票池、观测期及分界与原预登记不同，现存表缺原年组判据和剔除率，不能据此认定原检验完成。原样本保留；若改用标普500面板，另记补充检验。核对见 [逐项审核](reports/open_issues_review_2026-09-07.zh.md)。
+**来源（2026-09-08，完成 OI-150 时核实）**：`panel_tier_forward.py` 直接读取 `us_daily_states_adopted.csv` 的提前生效记录，55,314 条月末观测中有 1,071 条 `band_available_at > date`；例如 CIK 0000008868 的 2012-07-31 记录使用 2012-08-01 财报。同时 `fetch_us_ohlcv_history.write_outputs` 按指数成员段前400天/后60天裁剪价格，154份个股序列比原始源提前结束，分档前向回报因此可能丢失退出指数后的窗口。AAL 文件末日2024-11-21，原始源延续到2026-09-04。
+
+**影响与待办**：现存 `exp_us_sp500_port/tier_forward_us.txt` 不能作为严格时点与完整窗口检验。修复分档输入的公开可得日和价格窗口，保留原样本/分档重算并报告变化；另审计组合回测是否受影响后再决定其重算范围，不把分档缺陷直接等同于组合收益结论翻转。OI-150 已使用独立时点重算和完整源价格，原预登记完成后因数据前提失败判「不可判」。证据：`data/experiments/exp_oi150_overseas_forward/related_oi159_input_audit.json`；复核入口 `scripts/experimental/oi150_verify.py`。

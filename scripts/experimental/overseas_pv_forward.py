@@ -447,7 +447,8 @@ def shares_series(facts: dict) -> list[tuple[str, float]]:
     return sorted(pts.items())
 
 
-def inferred_splits(prices: list[tuple[str, float]], shares: list[tuple[str, float]], known: list[tuple[str, float]]) -> list[tuple[str, float]]:
+def inferred_splits(prices: list[tuple[str, float]], shares: list[tuple[str, float]], known: list[tuple[str, float]],
+                    ratios: tuple[int, ...] | None = None) -> list[tuple[str, float]]:
     """无 SEC 拆股事实时，相邻两日收盘比落在拆股比 ±3% 且随后一期股数同倍变化（±10%）者记为拆股。"""
     out = []
     known_days = [date.fromisoformat(d) for d, _ in known]
@@ -459,7 +460,7 @@ def inferred_splits(prices: list[tuple[str, float]], shares: list[tuple[str, flo
             continue
         r = c0 / c1
         cand = None
-        for k in SPLIT_RATIOS:
+        for k in SPLIT_RATIOS if ratios is None else ratios:
             if abs(r / k - 1) <= 0.03:
                 cand = float(k)
             elif abs(r * k - 1) <= 0.03:
@@ -589,6 +590,10 @@ def value_worker(job: dict) -> list[dict]:
 
 
 def cmd_value(args) -> int:
+    if not args.only:
+        from oi150_complete import value
+        value(args.workers)
+        return 0
     uni = read_csv(EXP / "universe.csv")
     ciks = read_csv(EXP / "universe_ciks.csv")
     info = {r["cik"]: r for r in ciks}
@@ -678,6 +683,10 @@ def year_group(t: str) -> int:
 
 
 def cmd_report(args) -> int:
+    if not args.only:
+        from oi150_complete import report
+        report()
+        return 0
     pv_rows = read_csv(EXP / ("pv_monthly.csv" if not args.only else "pv_monthly_smoke.csv"))
     ciks = {r["cik"]: r for r in read_csv(EXP / "universe_ciks.csv")}
     lines: list[str] = []

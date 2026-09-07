@@ -1,0 +1,21 @@
+{
+  "checks": {
+    "original_universe_byte_identical": true,
+    "complete_original_observations_and_no_future_facts": true,
+    "valuation_arithmetic_and_finite_returns": true,
+    "independent_tied_rank_bins_and_year_groups": true,
+    "original_price_gate_and_final_verdict": true,
+    "all_input_source_and_output_hashes": true,
+    "all_original_company_years_audited": true
+  },
+  "all_passed": true,
+  "preregistration_sha256": "48205a9183ef7a1826bfbc17b6378ae8e54cbc7230b1a1d7676bbfb3584f2e45",
+  "source_commit": "1e348a08",
+  "original_companies": 653,
+  "original_company_months": 52800,
+  "result_sha256": "6133e5d9f6f130ffdab07d070955e8a8fc0dde59ac6620e8948eb626859d1bc3",
+  "related_study": {
+    "monthly_before_filed": 1071,
+    "truncated_company_series": 154
+  }
+}
