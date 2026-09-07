@@ -1,0 +1,205 @@
+{
+  "signal_date": "2026-09-07",
+  "evidence_cutoff_date": "2026-09-08",
+  "reviewed_at_utc": "2026-09-07T16:09:45.885177+00:00",
+  "announcement_snapshot": "data/interim/daily_announcements_2026-09-07_nightly.json",
+  "reviews": [
+    {
+      "recorded_at": "2026-09-08",
+      "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+      "signal_date": "2026-09-07",
+      "evidence_type": "8月销售简报",
+      "period": "2026-08",
+      "title": "8月销售简报",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829100155_1.pdf",
+      "source_sha256": "3015eb99fd0e34f43256a17c41367e1132722cc40a1699ccb629cac3e5224ac5",
+      "summary": "8月商品猪销量703.0万头（同比+0.42%），均价10.30元/公斤（同比-23.76%，较7月10.64下降3.20%），收入92.54亿元（同比-21.90%），屠宰281.8万头。",
+      "use": "月度量价已更新；公告未披露同期完全成本或新利润、资本输入，不以售价单项推断全年亏损或护城河丧失。继续核对完全成本、与温氏差距及三季报，现行模型输入不变；持仓继续按机械规则跟踪。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0,
+        "intrinsic_value": "39.2927",
+        "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+        "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+      },
+      "security_code": "002714",
+      "security_name": "牧原股份"
+    },
+    {
+      "recorded_at": "2026-09-08",
+      "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+      "signal_date": "2026-09-07",
+      "evidence_type": "8月运营数据",
+      "period": "2026-08",
+      "title": "8月运营数据",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829096780_1.pdf",
+      "source_sha256": "b80e7841e8dffed062bee02e31b0d8343e0be8054fbc912edb8f09d96dad500f",
+      "summary": "8月煤炭产量1502万吨（同比+5.00%）、自产煤销量1349万吨（+4.58%），1—8月累计产量和自产煤销量分别+4.02%、+3.51%；8月总发电量47.88亿千瓦时（-8.61%）、售电量44.94亿千瓦时（-8.65%）。",
+      "use": "煤炭产量下降触发未命中，电力业务单月回落继续跟踪；本公告没有实现煤价及新利润、资本数据，未改变生产模型输入。价格弱势与持仓侧P/V仍触发换仓，经营量增长不替代交易条件。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0,
+        "intrinsic_value": "21.5317",
+        "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+        "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+      },
+      "security_code": "601225",
+      "security_name": "陕西煤业"
+    },
+    {
+      "recorded_at": "2026-09-08",
+      "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+      "signal_date": "2026-09-07",
+      "evidence_type": "8月投资者沟通",
+      "period": "2026-08",
+      "title": "8月投资者沟通",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829101434_1.pdf",
+      "source_sha256": "8a44c4081a1316f78404c34b8f7c092648781ef91028bfc25030e3e5cd20bba7",
+      "summary": "公司说明半年归母9.34亿元、同比-34.3%，剔除汇兑及非经常性损益后同比约-2.7%；汇兑损益同比影响约3.22亿元、非经常性损益同比影响约1.96亿元。装备境外、外行业收入占比各45%，新行业项目存在主动让利。",
+      "use": "此为已披露半年业绩的解释及业务进展，未给新报告期利润或独立新增订单金额。管理层调整后利润及竞争地位表述只作解释，不代替模型已采纳财务口径；保留现行带，跟踪汇率、境外毛利、让利持续性及诉讼回款。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0,
+        "intrinsic_value": "14.7905",
+        "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+        "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+      },
+      "security_code": "600970",
+      "security_name": "中材国际"
+    },
+    {
+      "recorded_at": "2026-09-08",
+      "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+      "signal_date": "2026-09-07",
+      "evidence_type": "铝业套保方案调整",
+      "period": "2026-09-07",
+      "title": "铝业套保方案调整",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829105791_1.pdf",
+      "source_sha256": "6c22947790587b952409ca4cd8be1cbdb851ca0c19b826150fd68a854fb01727",
+      "summary": "霍煤鸿骏与白音华铝电拟定最大保证金分别26.34亿元、9.50亿元，合计35.84亿元，可滚动使用；用于电解铝销售卖出套保、氧化铝采购买入套保，自有周转资金，关联方受托操作不收费。方案仍待股东会审议，适用的新委托协议尚未签订。",
+      "use": "额度不是已投入资金或费用，不据上限直接扣减权益价值；登记股东会审批、实际保证金占用、敞口与套保损益为后续核对点。未发现已实现损失或新增财务数据改变模型输入，复核完成、现行带保留。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0,
+        "intrinsic_value": "27.7337",
+        "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+        "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+      },
+      "security_code": "002128",
+      "security_name": "电投能源"
+    },
+    {
+      "recorded_at": "2026-09-08",
+      "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+      "signal_date": "2026-09-07",
+      "evidence_type": "高管离任",
+      "period": "2026-09-07",
+      "title": "高管离任",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829103079_1.pdf",
+      "source_sha256": "9907f443fd2b535bc87868618863e52caba6df987ba83945d7af8b38920e99db",
+      "summary": "行长助理王兴海因工作原因辞任，9月7日生效，不再在公司及控股子公司任职；公告称与董事会无不同意见、已完成交接。",
+      "use": "本公告无监管处罚、审计异常或控制权变更证据，不据单次正常人事变动认定治理灾难。股利及折现模型输入不变；后续若有监管或经营影响披露再复核。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0,
+        "intrinsic_value": "53.7737",
+        "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+        "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+      },
+      "security_code": "600036",
+      "security_name": "招商银行"
+    },
+    {
+      "recorded_at": "2026-09-08",
+      "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+      "signal_date": "2026-09-07",
+      "evidence_type": "职工董事选举",
+      "period": "2026-09-07",
+      "title": "职工董事选举",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829102560_1.pdf",
+      "source_sha256": "7054a1eb4557999bc6ae6f18cd94a9e1766364810c62d07c65563c521802de93",
+      "summary": "9月7日职工代表大会选举庄严为第十三届董事会职工董事，任职仍须金融监管总局核准。",
+      "use": "董事补位尚待资格核准，未改变股本、每股分红或本轮模型参数；现行带与9月10日每股0.98元除息安排保留。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0,
+        "intrinsic_value": "71.6116",
+        "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+        "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+      },
+      "security_code": "601318",
+      "security_name": "中国平安"
+    },
+    {
+      "recorded_at": "2026-09-08",
+      "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+      "signal_date": "2026-09-07",
+      "evidence_type": "股权激励程序进展",
+      "period": "2026-09-07",
+      "title": "股权激励程序进展",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829103648_1.pdf",
+      "source_sha256": "ba30665f0c0ce6ed3cebfead8499df099b38c2dbe7eabb72c2c378aeca479a48",
+      "summary": "董事会决定9月23日召开股东会审议6月22日董事会已通过的限制性股票激励草案等议案；8月14—23日拟激励对象公示无异议，薪酬委员会完成资格核查。",
+      "use": "核对董事会决议、名单公示核查及股东会通知，属于既有方案审批程序，未确认新的授予或登记股数。不能把计划授予当成已发生股本变化；后续核对审批、授予登记和股份支付费用，当前模型输入不变。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0,
+        "intrinsic_value": "27.4442",
+        "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+        "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+      },
+      "supporting_sources": [
+        "https://pdf.dfcfw.com/pdf/H2_AN202609071829103635_1.pdf",
+        "https://pdf.dfcfw.com/pdf/H2_AN202609071829103639_1.pdf"
+      ],
+      "security_code": "000933",
+      "security_name": "神火股份"
+    },
+    {
+      "recorded_at": "2026-09-08",
+      "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+      "signal_date": "2026-09-07",
+      "evidence_type": "投资者接待日预告",
+      "period": "2026-09-07",
+      "title": "投资者接待日预告",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829102250_1.pdf",
+      "source_sha256": "9b2ef1912ecbcf8b85084e150ebe2b2951b2029ca3f4f32949e1a0d49762651f",
+      "summary": "公司拟于9月14日14:00—16:00参加山东辖区北交所上市公司投资者网上集体接待活动。",
+      "use": "仅会议预告，没有新经营数据或已达成客户认证；将原料关联定价和同规格客户替代列为后续取证点，当前名单与带保留。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0,
+        "intrinsic_value": "12.141",
+        "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+        "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+      },
+      "security_code": "920394",
+      "security_name": "民士达"
+    }
+  ],
+  "coverage_note": "公开全市场公告4281条下载后在本地筛选28家公司，命中47条，检索窗09-04至09-08、取数截止北京时间09-08 00:04。覆盖全部9只持仓、15只合格集及新增恢复和此前点名公司。新增实质事项核读10份原文；工农行定增及牧原H股回购沿用同日已完成复核，亿纬锂能09-04公告沿用同日单票复核。产业与竞品仅补查乙烯链价格、江苏电动自行车登记政策，煤价和银行资本补充沿用同日已核证据；未对全部公司高频指标及竞品做全量巡检。",
+  "carry_forward_reviews": [
+    "data/interim/daily_event_review_2026-09-07.json",
+    "data/interim/eve_review_2026-09-07/review.json"
+  ],
+  "industry_checks": [
+    {
+      "security_code": "002648",
+      "source_url": "https://stock.finance.sina.com.cn/stock/go.php/vReport_Show/kind/lastest/rptid/842147803757/index.phtml",
+      "summary": "华安证券09-07周报引用9月4日乙烷1384元/吨、周涨3.68%，乙烯周涨6.61%。二手行业参考，不是卫星实现售价或吨利润，未据此改写公司模型参数。"
+    },
+    {
+      "security_code": "603529",
+      "source_url": "https://www.suzhou.gov.cn/szsrmzf/mszx/202609/43a72431979144d9a6339791ecf9cdb2.shtml",
+      "summary": "苏州市政府09-07解释江苏省9月1日实施的电动自行车登记便利化流程，线上预查验与电子行驶证；未披露爱玛销量、利润或竞争替代结果，不把流程政策直接换算盈利。"
+    }
+  ]
+}

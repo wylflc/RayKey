@@ -2077,5 +2077,27 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-08",
+   "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+   "signal_date": "2026-09-07",
+   "evidence_type": "职工董事选举",
+   "period": "2026-09-07",
+   "title": "职工董事选举",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829102560_1.pdf",
+   "source_sha256": "7054a1eb4557999bc6ae6f18cd94a9e1766364810c62d07c65563c521802de93",
+   "summary": "9月7日职工代表大会选举庄严为第十三届董事会职工董事，任职仍须金融监管总局核准。",
+   "use": "董事补位尚待资格核准，未改变股本、每股分红或本轮模型参数；现行带与9月10日每股0.98元除息安排保留。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-07",
+    "event_model_delta_pct": 0.0,
+    "intrinsic_value": "71.6116",
+    "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+    "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+   }
+  }
+ ]
 }

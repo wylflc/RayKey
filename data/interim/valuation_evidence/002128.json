@@ -1754,6 +1754,26 @@
     "signal_date": "2026-09-07",
     "event_model_delta_pct": 0.0
    }
+  },
+  {
+   "recorded_at": "2026-09-08",
+   "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+   "signal_date": "2026-09-07",
+   "evidence_type": "铝业套保方案调整",
+   "period": "2026-09-07",
+   "title": "铝业套保方案调整",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829105791_1.pdf",
+   "source_sha256": "6c22947790587b952409ca4cd8be1cbdb851ca0c19b826150fd68a854fb01727",
+   "summary": "霍煤鸿骏与白音华铝电拟定最大保证金分别26.34亿元、9.50亿元，合计35.84亿元，可滚动使用；用于电解铝销售卖出套保、氧化铝采购买入套保，自有周转资金，关联方受托操作不收费。方案仍待股东会审议，适用的新委托协议尚未签订。",
+   "use": "额度不是已投入资金或费用，不据上限直接扣减权益价值；登记股东会审批、实际保证金占用、敞口与套保损益为后续核对点。未发现已实现损失或新增财务数据改变模型输入，复核完成、现行带保留。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-07",
+    "event_model_delta_pct": 0.0,
+    "intrinsic_value": "27.7337",
+    "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+    "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+   }
   }
  ]
 }

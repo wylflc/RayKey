@@ -2009,6 +2009,26 @@
     "signal_date": "2026-09-07",
     "event_model_delta_pct": 0.0
    }
+  },
+  {
+   "recorded_at": "2026-09-08",
+   "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+   "signal_date": "2026-09-07",
+   "evidence_type": "8月运营数据",
+   "period": "2026-08",
+   "title": "8月运营数据",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829096780_1.pdf",
+   "source_sha256": "b80e7841e8dffed062bee02e31b0d8343e0be8054fbc912edb8f09d96dad500f",
+   "summary": "8月煤炭产量1502万吨（同比+5.00%）、自产煤销量1349万吨（+4.58%），1—8月累计产量和自产煤销量分别+4.02%、+3.51%；8月总发电量47.88亿千瓦时（-8.61%）、售电量44.94亿千瓦时（-8.65%）。",
+   "use": "煤炭产量下降触发未命中，电力业务单月回落继续跟踪；本公告没有实现煤价及新利润、资本数据，未改变生产模型输入。价格弱势与持仓侧P/V仍触发换仓，经营量增长不替代交易条件。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-07",
+    "event_model_delta_pct": 0.0,
+    "intrinsic_value": "21.5317",
+    "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+    "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+   }
   }
  ]
 }

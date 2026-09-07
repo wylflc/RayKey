@@ -2138,6 +2138,26 @@
     "signal_date": "2026-09-07",
     "event_model_delta_pct": 0.0
    }
+  },
+  {
+   "recorded_at": "2026-09-08",
+   "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+   "signal_date": "2026-09-07",
+   "evidence_type": "8月销售简报",
+   "period": "2026-08",
+   "title": "8月销售简报",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829100155_1.pdf",
+   "source_sha256": "3015eb99fd0e34f43256a17c41367e1132722cc40a1699ccb629cac3e5224ac5",
+   "summary": "8月商品猪销量703.0万头（同比+0.42%），均价10.30元/公斤（同比-23.76%，较7月10.64下降3.20%），收入92.54亿元（同比-21.90%），屠宰281.8万头。",
+   "use": "月度量价已更新；公告未披露同期完全成本或新利润、资本输入，不以售价单项推断全年亏损或护城河丧失。继续核对完全成本、与温氏差距及三季报，现行模型输入不变；持仓继续按机械规则跟踪。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-07",
+    "event_model_delta_pct": 0.0,
+    "intrinsic_value": "39.2927",
+    "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+    "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+   }
   }
  ]
 }

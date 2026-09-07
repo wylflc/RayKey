@@ -1891,5 +1891,31 @@
     "RATING": "增持"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-08",
+   "retrieved_at_utc": "2026-09-07T16:09:45.885177+00:00",
+   "signal_date": "2026-09-07",
+   "evidence_type": "股权激励程序进展",
+   "period": "2026-09-07",
+   "title": "股权激励程序进展",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609071829103648_1.pdf",
+   "source_sha256": "ba30665f0c0ce6ed3cebfead8499df099b38c2dbe7eabb72c2c378aeca479a48",
+   "summary": "董事会决定9月23日召开股东会审议6月22日董事会已通过的限制性股票激励草案等议案；8月14—23日拟激励对象公示无异议，薪酬委员会完成资格核查。",
+   "use": "核对董事会决议、名单公示核查及股东会通知，属于既有方案审批程序，未确认新的授予或登记股数。不能把计划授予当成已发生股本变化；后续核对审批、授予登记和股份支付费用，当前模型输入不变。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-07",
+    "event_model_delta_pct": 0.0,
+    "intrinsic_value": "27.4442",
+    "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+    "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+   },
+   "supporting_sources": [
+    "https://pdf.dfcfw.com/pdf/H2_AN202609071829103635_1.pdf",
+    "https://pdf.dfcfw.com/pdf/H2_AN202609071829103639_1.pdf"
+   ]
+  }
+ ]
 }
