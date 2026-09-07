@@ -1,0 +1,271 @@
+{
+  "as_of": "2026-09-07",
+  "response_commit": "89476257b38c2a9b821be3528165cfdf926a05c9",
+  "reviewed_section": "docs/reports/moat_final_review_2026-09-07.zh.md §5",
+  "reviewed_section_sha256": "b61e294b66fadcad74c018e0160a3cf39bbbb877540f94d9c2a23da68e17a6b8",
+  "prior_evidence_file": "data/interim/moat_reaudit_2026-09-07/final_review.json",
+  "scope": "Three disputed recommendations and new claims in section 5; settled recommendations carried forward; not a fresh full audit of 177 retained names",
+  "production_action": "none_research_recommendation_only",
+  "counts": {
+    "removed_reviewed": 37,
+    "restore_recommended": 3,
+    "remain_excluded": 34,
+    "current_watchlist": 177,
+    "watchlist_if_adopted": 180
+  },
+  "sources": [
+    {
+      "source_id": "R501",
+      "title": "泰和新材2025年报",
+      "url": "https://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12085128",
+      "locator": "承诺事项及履行情况；关联交易补充承诺及2023-01-30补充承诺"
+    },
+    {
+      "source_id": "R502",
+      "title": "民士达2025年报",
+      "url": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12004528&stockid=920394",
+      "locator": "风险因素、主要供应商及关联交易"
+    },
+    {
+      "source_id": "R503",
+      "title": "雅克科技2025年报",
+      "url": "https://disc.static.szse.cn/disc/disk03/finalpage/2026-04-28/ca7939f4-757b-4c6d-a09f-41e7c3ac02c9.PDF",
+      "locator": "印刷第29至31页：营业收入构成、主营业务、成本构成"
+    },
+    {
+      "source_id": "R504",
+      "title": "临工重机2026-05-20港交所申请版本",
+      "url": "https://www1.hkexnews.hk/app/sehk/2026/108556/documents/sehk26052001552_c.pdf",
+      "locator": "印刷第5、7、9及220至223页：分部收入、成本、毛利及集团比率；非最终招股章程"
+    },
+    {
+      "source_id": "R505",
+      "title": "同力股份2025年报",
+      "url": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12080715&stockid=920599",
+      "locator": "经营情况分析：按产品分类分析"
+    }
+  ],
+  "accepted_points": [
+    "中控恢复、珀莱雅和鱼跃不恢复",
+    "此前事实纠错及行名、非经常性损益口径澄清",
+    "数值为复核信号；不机械迁移，也不排除其他实质新证据触发复核"
+  ],
+  "fact_checks": [
+    {
+      "id": "R5C01",
+      "sources": [
+        "R501"
+      ],
+      "claim": "民士达一体化优势只归属控股股东",
+      "finding": "遗漏上市公司享有的原料供应和外售安排权利；归属推论不充分",
+      "issuer_disclosures": [
+        "泰和承诺优先稳定供应并按既有定价机制交易",
+        "制纸级芳纶纤维未经民士达书面同意不向其他主体销售",
+        "经民士达同意外售的剩余产量委托民士达决定价格、数量、对象",
+        "年报披露承诺仍在履行"
+      ],
+      "analyst_inference": "结合此前工艺及客户证据，支持民士达享有部分稀缺原料优势；并非全部留在母公司",
+      "limits": [
+        "不是上游资产当前所有权的证明",
+        "不是实际定价永远有利或未来履约的保证"
+      ]
+    },
+    {
+      "id": "R5C02",
+      "sources": [
+        "R502"
+      ],
+      "claim": "竞争风险及关联采购占营业成本约84%证明优势无法归属于民士达",
+      "finding": "竞争情景与供应依赖属实；风险提示并非替换已经发生，采购/当期营业成本也不是利润归属或同口径供应份额"
+    },
+    {
+      "id": "R5C03",
+      "sources": [
+        "R503"
+      ],
+      "claim": "化学材料毛利下降5.55个百分点等于LNG毛利下降近6点",
+      "finding": "单位误读且混用行业与产品口径；原始金额复算约下降1.75个百分点",
+      "values": {
+        "years": [
+          2024,
+          2025
+        ],
+        "revenue_cny": [
+          1908744858.5,
+          2658122479.6
+        ],
+        "cost_cny": [
+          1307145262.66,
+          1866734398.49
+        ],
+        "reported_2025_gm_pct": 29.77,
+        "reported_gm_yoy_pct": -5.55,
+        "calculated_gm_pct": [
+          31.518072892820836,
+          29.772446047297628
+        ],
+        "calculated_change_pp": -1.7456268455232085,
+        "calculated_relative_change_pct": -5.538494854870479,
+        "relative_change_unreconciled_difference_pp": 0.0115051451295205,
+        "formula": "gm_pct=100*(1-cost/revenue); change_pp=gm_2025-gm_2024; relative_change_pct=100*(gm_2025/gm_2024-1)"
+      },
+      "limits": [
+        "原表同比列与金额复算的相对变动有小差异，原因未确认",
+        "化学材料还含阻燃剂，不能推导LNG独立毛利率",
+        "半导体化学材料原表9.40%不能直接改写成9.40个百分点",
+        "本次来源未证明2025为造船景气顶点"
+      ]
+    },
+    {
+      "id": "R5C04",
+      "sources": [
+        "R504"
+      ],
+      "claim": "临工矿山收入41.2/59.2/46.8亿元，2025收入下降21%",
+      "finding": "该序列是成本；收入49.48/71.73/60.02亿元，下降16.31%；放弃低毛利订单是未核实假说",
+      "values": {
+        "years": [
+          2023,
+          2024,
+          2025
+        ],
+        "revenue_thousand_cny": [
+          4948075,
+          7172551,
+          6002369
+        ],
+        "cost_thousand_cny": [
+          4122875,
+          5924073,
+          4677443
+        ],
+        "reported_mining_gm_pct": [
+          16.7,
+          17.4,
+          22.1
+        ],
+        "group_roe_pct": [
+          18.4,
+          15.7,
+          13.9
+        ],
+        "calculated_revenue_100m_cny": [
+          49.48075,
+          71.72551,
+          60.02369
+        ],
+        "calculated_2025_revenue_yoy_pct": -16.3147254024405,
+        "calculated_2025_cost_yoy_pct": -21.043461145735375,
+        "calculated_mining_gm_pct": [
+          16.677192645624817,
+          17.40633144330378,
+          22.07338469194413
+        ]
+      }
+    },
+    {
+      "id": "R5C05",
+      "sources": [
+        "R504",
+        "R505"
+      ],
+      "claim": "同力综合毛利与临工矿山毛利比较的口径差异不影响领先方向",
+      "finding": "同力整车毛利22.04%已略低于临工矿山22.1%；不能用不一致口径认定领先方向不变",
+      "values": {
+        "year": 2025,
+        "vehicle_revenue_cny": 5897006868.97,
+        "vehicle_cost_cny": 4597080357.47,
+        "reported_vehicle_gm_pct": 22.04,
+        "reported_group_gm_pct": 22.99,
+        "calculated_vehicle_gm_pct": 22.04383580321404
+      },
+      "limits": [
+        "临工矿山设备含矿用挖掘机等，不是严格同规格车辆比较",
+        "也不据此断言临工成本更优",
+        "集团ROE不等于宽体车分部ROE，受到业务、杠杆、周转影响"
+      ]
+    },
+    {
+      "id": "R5C06",
+      "sources": [],
+      "claim": "无人矿卡子市场份额较低可推出全口径份额更低",
+      "finding": "分母不同，推论不成立；不对12.8%本身重新作真伪裁定"
+    }
+  ],
+  "analyst_judgments": [
+    {
+      "security_code": "688777",
+      "security_name": "中控技术",
+      "outcome": "建议恢复关注",
+      "confidence": "medium",
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:688777:ef0809"
+    },
+    {
+      "security_code": "920394",
+      "security_name": "民士达",
+      "outcome": "建议恢复关注",
+      "confidence": "medium",
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:920394:c1666e"
+    },
+    {
+      "security_code": "002409",
+      "security_name": "雅克科技",
+      "outcome": "建议恢复关注",
+      "confidence": "medium",
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:002409:3a8051"
+    },
+    {
+      "security_code": "920599",
+      "security_name": "同力股份",
+      "outcome": "暂维持移出，撤回恢复建议",
+      "confidence": "medium",
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:920599:a01be8"
+    },
+    {
+      "security_code": "603605",
+      "security_name": "珀莱雅",
+      "outcome": "维持移出，撤回恢复建议",
+      "confidence": "medium",
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:603605:9809de"
+    },
+    {
+      "security_code": "002223",
+      "security_name": "鱼跃医疗",
+      "outcome": "维持移出，撤回恢复建议",
+      "confidence": "medium",
+      "related_migration_decision_id": "attention_class_migration:2026-09-07:002223:aaeebc"
+    }
+  ],
+  "judgment_updates": {
+    "920394": "新增供应承诺正面证据，仍建议恢复；关联依赖继续核验",
+    "002409": "纠正毛利变动后仍建议恢复；实际回报和替代风险未消除",
+    "920599": "同业比较有参考价值但不足以消除复制测试疑问，仍暂不恢复"
+  },
+  "production_input_sha256": {
+    "data/processed/a_share_attention_triage.csv": "0c3fd30c9b939c0742fa12bc15807712fbf08b08386287ea69c9d1057bbf0733",
+    "data/processed/a_share_watchlist_quality_tiers.csv": "b651abd500f5781c252b890747fdc78f2367182f3344e58c7e915121e4aa7354",
+    "data/processed/a_share_pool_model_bands_adopted.csv": "a23d0f561f805cedf347b03b78ba9df54ba92fa9ef8fdfc1985ad456b7d0eab2",
+    "data/processed/a_share_pool_model_bands_hold.csv": "0a6bb9e566c4ee36b302086f1b45b8fe2087f0160781605aafa1f60937939cdd",
+    "data/processed/a_share_holdings.csv": "7a57b890a33b2fcaa7490f7420d5e60828e3d5fe936d2a395f6391f583fbc461",
+    "data/processed/pit_attention/panel_moat_bank_v6b.csv": "74b4d98dfcef266aa15155cb211d2c68b2fb1231da23a6204235bb62b0e0f3cc"
+  },
+  "verification": {
+    "arithmetic_checks_passed": true,
+    "historical_section5_unchanged": true,
+    "production_input_hashes_unchanged": true,
+    "removed_row_count": 37,
+    "limits": [
+      "计算校验不决定护城河成立",
+      "临工采用浏览工具PDF文本；未声称完成截图视觉核验",
+      "原37家表结论沿用；本次不重做全池尽调"
+    ],
+    "unique_removed_count": 37,
+    "recommend_restore_count": 3,
+    "remain_excluded_count": 34,
+    "current_worth_attention_count": 177,
+    "source_ids_resolved": true,
+    "local_report_targets_exist": true,
+    "research_log_append_only": true,
+    "research_log_supersedes_research_only": true
+  }
+}
