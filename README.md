@@ -6,13 +6,13 @@ A 股上市公司研究与数据分析仓库（附带港/美/韩观察清单）�
 
 - **`docs/000_Ashare_workflow.md`** — A 股流水线的执行规范（唯一真值）。§0 任务路由表把每类请求映射到章节与脚本；本 README 不复写任何参数或命令链。
 - **`docs/000_personal-investment-system-v1.zh.md`** — 个人投资规则手册（账户级规则、策略分类、研究纪律）。买卖机制只认工作流 §9.3。
-- 用户常读的另两份 `000_` 文件同在 `docs/`：`000_a_share_core_valuation_pool.md`（核心池阅读版）与 `000_daily_scan_log.md`（每日扫描日志，旧月份归 `data/archive/`）。
+- 用户常读的另三份 `000_` 文件同在 `docs/`：`000_a_share_core_valuation_pool.md`（核心池阅读版）、`000_daily_scan_log.md`（每日扫描日志，旧月份归 `data/archive/`）与 `000_Ashare_workflow_open_issues.md`（待处理缺陷与待办）。
 
 配套文档：
 
 - `docs/Ashare_quality_rubric.md` — §5.7 分层的打分细则与判例（在用细则）。
 - `docs/Ashare_workflow_changelog.md` — 逐版规则变化；`docs/Ashare_backtest_log.md` — 全部回测实验与历代读数（工作流 §12 只留现行口径）。
-- `docs/Ashare_workflow_open_issues.md` — 已确认未修的缺陷与待办；已结案索引在 `docs/Ashare_workflow_open_issues_closed.md`。
+- `docs/000_Ashare_workflow_open_issues.md` — 已确认未修的缺陷与待办；已结案索引在 `docs/Ashare_workflow_open_issues_closed.md`。
 - `docs/reports/` — 单次实验／评审的阅读报告（回测日志各节指向它们）。
 - `docs/reports/Ashare_quant_exp1_index_universe.md`／`exp2_volume_price.md` — 两个研究性实验（无选股宇宙、纯量价），追加式记录。
 - `docs/adr/` — 架构决策；`CONTEXT.md` — 稳定领域词汇；`CLAUDE.md` — 代理工作规则（`AGENTS.md` 是指针）。

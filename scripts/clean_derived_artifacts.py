@@ -109,7 +109,7 @@ CLOSED_VAL_GLOBS = ("states_*.csv", "roic_*.csv", "gaps_*.csv")
 def collect_closed_experiments():
     """只选仍已结案、未被开放事项引用的目录中的可重建普通文件。"""
     closed = (ROOT / "docs/Ashare_workflow_open_issues_closed.md").read_text(encoding="utf-8")
-    opened = (ROOT / "docs/Ashare_workflow_open_issues.md").read_text(encoding="utf-8")
+    opened = (ROOT / "docs/000_Ashare_workflow_open_issues.md").read_text(encoding="utf-8")
     closed_ids = set()
     for line in closed.splitlines():
         if line.startswith("| OI-"):

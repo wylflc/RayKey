@@ -23,7 +23,7 @@ class ClosedCleanupTest(unittest.TestCase):
         self.git("init", "-q")
         self.write(".gitignore", "data/experiments/\n")
         self.write("docs/Ashare_workflow_open_issues_closed.md", "| OI-141 | 已结案 |\n")
-        self.write("docs/Ashare_workflow_open_issues.md", "## 待处理\n")
+        self.write("docs/000_Ashare_workflow_open_issues.md", "## 待处理\n")
         self.addCleanup(patch.stopall)
         patch.object(cleanup, "ROOT", self.root).start()
         patch.object(cleanup, "CLOSED_EXPERIMENTS", {"exp_oi141": (141,)}).start()
@@ -67,9 +67,9 @@ class ClosedCleanupTest(unittest.TestCase):
         self.write("data/experiments/exp_oi141/val/A/states_base.csv")
         for opened in ("### OI-141｜重开\n", "复用 exp_oi141 的状态文件\n"):
             with self.subTest(opened=opened):
-                self.write("docs/Ashare_workflow_open_issues.md", opened)
+                self.write("docs/000_Ashare_workflow_open_issues.md", opened)
                 self.assertEqual(self.collected(), set())
-        self.write("docs/Ashare_workflow_open_issues.md", "")
+        self.write("docs/000_Ashare_workflow_open_issues.md", "")
         self.write("docs/Ashare_workflow_open_issues_closed.md", "")
         self.assertEqual(self.collected(), set())
 

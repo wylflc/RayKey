@@ -1,7 +1,7 @@
 # A 股工作流已结案索引
 
 每项一行：编号、主题、处置、结案版本或日志节。处置经过查 `Ashare_workflow_changelog.md` 对应版本行或 `Ashare_backtest_log.md`（旧纪元在 `docs/archive/`）。
-新结案项从 `Ashare_workflow_open_issues.md` 移入本表顶部；本文件不在任务开始时加载。
+新结案项从 `000_Ashare_workflow_open_issues.md` 移入本表顶部；本文件不在任务开始时加载。
 
 | 编号 | 主题 | 处置 | 结案 | 详见 |
 | --- | --- | --- | --- | --- |
