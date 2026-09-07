@@ -10,11 +10,13 @@
   `计量版本` 等于现行引擎版本的行进 `scan_summaries.csv`，其余（含无该列的旧文件）进 `data/archive/scan_summaries_m1.csv`，
   随后按臂聚合重建 `scan_arms_index.csv`（§12.1 第 12 款数臂用）。实验脚本归档摘要**只走 `write_ledger()`**，不得自行写台账。
 - `index`：只重建 `scan_arms_index.csv`。
+- `closed`：单独清理已审核结案实验的 Git 忽略中间件；保留报告、配置、摘要与原始缓存。
+  此区块不随缺省 `all` 执行；运行前确认没有相关作业，重跑实验需重新建带。
 - `bands`：`data/processed/` 下一次性估值带变体（`vd_*`／`vb_*`／`hd_*`／`hb_*`／`hist_daily_*`／
   `a_share_daily_g*`、退役的 `a_share_historical_valuation_*`、`dcf_*`／`roiccond*`／`roicmed_*` 实验臂、
   `diag_*` 诊断集）删除，并清空实验缓存目录 `metric_states/`、`experiments/states/` 与 `exp_b_market_cache.npz`。
 
-**保留清单是硬编码的白名单**（`KEEP`），凡在其中者任何模式都不碰——
+**生产目录的保留清单是硬编码的白名单**（`KEEP`），凡在其中者任何模式都不碰——
 它们是生产口径的落点与脚本缺省值，删了会让 §9.3.1.2 与日常扫描直接失效。
 
 缺省只报告，`--apply` 才动手。重建命令见 `docs/000_Ashare_workflow.md` §6.7 与 §9.3.1.2。
@@ -24,12 +26,15 @@
     python3 scripts/clean_derived_artifacts.py --apply              # 两个区块都清
     python3 scripts/clean_derived_artifacts.py backtest --apply     # 只清回测产物
     python3 scripts/clean_derived_artifacts.py bands --apply        # 只清估值带变体
+    python3 scripts/clean_derived_artifacts.py closed --apply       # 只清已结案实验中间件
     python3 scripts/clean_derived_artifacts.py index                # 只重建按臂索引
 """
 import argparse
 import csv
+import fnmatch
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -72,6 +77,85 @@ EXPERIMENT_DIRS = (
 EXPERIMENT_FILES = (
     ROOT / "data/interim/exp_b_market_cache.npz",   # scripts/experimental/vp_signal_lab.py 自动重建
 )
+
+# 已核对结案索引与实验报告的目录；不是对所有 exp_* 的通配删除。
+# 备用清单只清已结束的上一轮产物（回测日志 12.196），清单和重建入口继续保留。
+CLOSED_EXPERIMENTS = {
+    "exp_strategy_shortlist": (135, 138, 139, 141),
+    "exp_oi141": (141,),
+    "exp_sb1_daily_buys": (145,),
+    "exp_whipsaw_joint": (156,),
+    "exp_t1_info": (157,),
+    "exp_oi136_137": (136, 137),
+    "exp_reaudit_minority": (128, 129, 130, 135, 136, 137, 138, 140),
+    "exp_corr_filter": (136,),
+    "exp_window_step": (122, 123),
+    "exp_swap_variants": (142,),
+    "exp_buyline_swapdir": (139, 142),
+    "exp_oi148_slippage": (148,),
+    "exp_metric_m2": (146, 147),
+    "exp_oi114_adopt": (114,),
+    "exp_oi114_adopt_m19": (114,),
+    "exp_oi114_swap_margin": (114,),
+}
+CLOSED_BULK_GLOBS = (
+    "*_equity.csv", "*_trades.csv", "*_periods.csv",
+    "candidates*.csv", "cands_*.csv", "trades_*.csv", "ledger*.csv",
+    "states_*_sub.csv", "build_*.log", "bank_*.log", "run*.log",
+)
+CLOSED_VAL_GLOBS = ("states_*.csv", "roic_*.csv", "gaps_*.csv")
+
+
+def collect_closed_experiments():
+    """只选仍已结案、未被开放事项引用的目录中的可重建普通文件。"""
+    closed = (ROOT / "docs/Ashare_workflow_open_issues_closed.md").read_text(encoding="utf-8")
+    opened = (ROOT / "docs/Ashare_workflow_open_issues.md").read_text(encoding="utf-8")
+    closed_ids = set()
+    for line in closed.splitlines():
+        if line.startswith("| OI-"):
+            closed_ids.update(int(n) for n in re.findall(r"OI-(\d+)", line.split("|")[1]))
+    open_ids = {int(n) for n in re.findall(r"^### OI-(\d+)", opened, re.M)}
+    names = [name for name, ids in CLOSED_EXPERIMENTS.items()
+             if set(ids) <= closed_ids and not set(ids) & open_ids and name not in opened]
+    groups = {name: [] for name in names}
+    if not names:
+        return groups
+    ignored = subprocess.check_output(
+        ["git", "ls-files", "--others", "--ignored", "--exclude-standard", "-z", "--",
+         *[f"data/experiments/{name}/" for name in names]], cwd=ROOT)
+    for value in os.fsdecode(ignored).split("\0"):
+        if not value:
+            continue
+        rel = Path(value)
+        path = ROOT / rel
+        if "raw" in rel.parts or path.is_symlink() or not path.is_file():
+            continue
+        if any((ROOT / parent).is_symlink() for parent in rel.parents):
+            continue
+        patterns = CLOSED_BULK_GLOBS
+        if len(rel.parts) == 6 and rel.parts[3] == "val":
+            patterns += CLOSED_VAL_GLOBS
+        if any(fnmatch.fnmatchcase(path.name, pattern) for pattern in patterns):
+            groups[rel.parts[2]].append(path)
+    return groups
+
+
+def clean_closed_experiments(apply=False):
+    total = 0
+    removed = 0
+    for name, paths in collect_closed_experiments().items():
+        size = sum(path.stat().st_size for path in paths)
+        if not paths:
+            continue
+        print(f"  {name}: {len(paths)} 个，{size / 2**30:.3f} GiB")
+        if apply:
+            for path in paths:
+                path.unlink()
+                removed += 1
+        total += size
+    print(f"合计{'已释放' if apply else '可释放'} {total / 2**30:.3f} GiB"
+          + (f"，已删 {removed} 个文件" if apply else "（未加 --apply）"))
+    return total
 
 
 def human(n: int) -> str:
@@ -268,10 +352,13 @@ def remove(entries, apply: bool) -> int:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("block", nargs="?", choices=("backtest", "bands", "index", "all"), default="all")
+    ap.add_argument("block", nargs="?", choices=("backtest", "bands", "closed", "index", "all"), default="all")
     ap.add_argument("--apply", action="store_true", help="真的写与删；缺省只报告")
     ap.add_argument("--keep-summaries", action="store_true", help="不归并也不删 summary*.csv")
     args = ap.parse_args()
+    if args.block == "closed":
+        clean_closed_experiments(apply=args.apply)
+        return
     size = lambda es: sum(e.stat().st_size for e in es)
     freed = 0
 

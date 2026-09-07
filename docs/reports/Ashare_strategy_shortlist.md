@@ -72,6 +72,6 @@ cat data/experiments/exp_strategy_shortlist/report_rules_<日期>.txt
 cat data/experiments/exp_strategy_shortlist/report_val_<日期>.txt
 ```
 
-建带作业的公共开关从 §6.7 第 2 步命令现读、divspread 从第 3 步现读、在册买入线与换仓边际从 `sweep_backtest_configs.BASE` 现读，不在脚本里抄写；已建过的臂（`val/<臂>/align_buy_line.txt` 存在）自动跳过，要重建就删该文件。§12.171 已建的臂可软链复用：`ln -s ../../exp_reaudit_minority/val/GE_TROUGHOFF data/experiments/exp_strategy_shortlist/val/GE_TROUGHOFF`（口径未变时才可复用）。
+建带作业的公共开关从 §6.7 第 2 步命令现读、divspread 从第 3 步现读、在册买入线与换仓边际从 `sweep_backtest_configs.BASE` 现读，不在脚本里抄写；仅在 `val/<臂>/align_buy_line.txt` 与该臂需要的三份 `states_*.csv` 均存在且非空时跳过建带；只换宇宙的臂只检查买入线文件。中间文件清理后，下次提交自动补建；口径变化需强制重建时删该臂的 `align_buy_line.txt`。§12.171 已建的臂可软链复用：`ln -s ../../exp_reaudit_minority/val/GE_TROUGHOFF data/experiments/exp_strategy_shortlist/val/GE_TROUGHOFF`（口径未变时才可复用）。
 
 跑完后：通过双门槛的臂按 §12.1 第 4 款补剔除集 U、边际重扫、剔除只数剂量曲线与第 10~12 款，再报用户裁定；多条同时通过时先出组合臂（OI-140 的教训：三条候选 Δ 归因高度重叠）。

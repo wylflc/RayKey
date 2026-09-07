@@ -15,6 +15,7 @@
   <exp>/configs/shortlist_rules.txt   只动规则／参数的臂（不需要重建）
   <exp>/configs/shortlist_val.txt     需要两侧逐日状态或换宇宙的臂；`--width` 从 <exp>/val/<臂>/align_buy_line.txt 读
   --list-builds                        只打印要先建的臂（label\tbuild_extra\tdivspread\tuniverse），供 submit 脚本用
+  --list-builds --missing-only         只打印状态文件或买入线证据缺失的臂
 """
 import argparse
 import csv
@@ -37,11 +38,20 @@ def width_from_align(path: Path) -> str:
     return m.group(1)
 
 
+def build_ready(exp: Path, row: dict) -> bool:
+    directory = exp / "val" / row["label"]
+    outputs = [directory / "align_buy_line.txt"]
+    if row["build_extra"] != "-" or row["divspread"] != "-":
+        outputs += [directory / f"states_{side}.csv" for side in ("base", "b2", "hold")]
+    return all(path.is_file() and path.stat().st_size > 0 for path in outputs)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--exp", type=Path, default=ROOT / "data/experiments/exp_strategy_shortlist")
     ap.add_argument("--tsv", type=Path, default=None, help="缺省 <exp>/configs/shortlist_arms.tsv")
     ap.add_argument("--list-builds", action="store_true")
+    ap.add_argument("--missing-only", action="store_true", help="配合 --list-builds，只列缺失构建产物的臂")
     args = ap.parse_args()
     args.exp = (ROOT / args.exp).resolve()          # 允许相对仓库根的 --exp（sbatch 里常这样给）
     tsv = (ROOT / args.tsv).resolve() if args.tsv else args.exp / "configs/shortlist_arms.tsv"
@@ -53,7 +63,7 @@ def main() -> None:
 
     if args.list_builds:
         for r in arms:
-            if needs_build(r):
+            if needs_build(r) and (not args.missing_only or not build_ready(args.exp, r)):
                 print("\t".join([r["label"], r["build_extra"], r["divspread"], r["universe"]]))
         return
 
@@ -73,7 +83,7 @@ def main() -> None:
         if base_row is None:
             sys.exit(f"{r['label']} 的 states_from={src} 不在清单里")
         align = args.exp / "val" / base_arm / "align_buy_line.txt"
-        if not align.exists():
+        if not build_ready(args.exp, base_row):
             missing.append(base_arm)
             continue
         width = width_from_align(align)

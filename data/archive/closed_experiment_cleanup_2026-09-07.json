@@ -1,0 +1,185 @@
+{
+  "cleaned_at": "2026-09-07T14:53:21.579575+00:00",
+  "base_commit": "fd01d29cf642a1248603533090e2703b7c6d422b",
+  "command": "python3 scripts/clean_derived_artifacts.py closed --apply",
+  "deleted_file_count": 757,
+  "deleted_apparent_bytes": 65938283842,
+  "deleted_allocated_bytes": 65944014848,
+  "repo_allocated_bytes_before": 85251626496,
+  "repo_allocated_bytes_after": 19307611648,
+  "experiments": {
+    "exp_strategy_shortlist": {
+      "issues": [
+        "OI-135",
+        "OI-138",
+        "OI-139",
+        "OI-141"
+      ],
+      "files": 60,
+      "bytes": 39885192718,
+      "allocated_bytes": 39885483008
+    },
+    "exp_oi141": {
+      "issues": [
+        "OI-141"
+      ],
+      "files": 20,
+      "bytes": 25667573606,
+      "allocated_bytes": 25667686400
+    },
+    "exp_sb1_daily_buys": {
+      "issues": [
+        "OI-145"
+      ],
+      "files": 52,
+      "bytes": 290477700,
+      "allocated_bytes": 290947072
+    },
+    "exp_whipsaw_joint": {
+      "issues": [
+        "OI-156"
+      ],
+      "files": 82,
+      "bytes": 17444409,
+      "allocated_bytes": 18300928
+    },
+    "exp_t1_info": {
+      "issues": [
+        "OI-157"
+      ],
+      "files": 12,
+      "bytes": 3022129,
+      "allocated_bytes": 3130368
+    },
+    "exp_oi136_137": {
+      "issues": [
+        "OI-136",
+        "OI-137"
+      ],
+      "files": 24,
+      "bytes": 5999386,
+      "allocated_bytes": 6178816
+    },
+    "exp_reaudit_minority": {
+      "issues": [
+        "OI-128",
+        "OI-129",
+        "OI-130",
+        "OI-135",
+        "OI-136",
+        "OI-137",
+        "OI-138",
+        "OI-140"
+      ],
+      "files": 24,
+      "bytes": 2435122,
+      "allocated_bytes": 2637824
+    },
+    "exp_corr_filter": {
+      "issues": [
+        "OI-136"
+      ],
+      "files": 5,
+      "bytes": 1549260,
+      "allocated_bytes": 1589248
+    },
+    "exp_window_step": {
+      "issues": [
+        "OI-122",
+        "OI-123"
+      ],
+      "files": 414,
+      "bytes": 31931044,
+      "allocated_bytes": 34800640
+    },
+    "exp_swap_variants": {
+      "issues": [
+        "OI-142"
+      ],
+      "files": 32,
+      "bytes": 24341449,
+      "allocated_bytes": 24657920
+    },
+    "exp_buyline_swapdir": {
+      "issues": [
+        "OI-139",
+        "OI-142"
+      ],
+      "files": 4,
+      "bytes": 2379627,
+      "allocated_bytes": 2424832
+    },
+    "exp_oi148_slippage": {
+      "issues": [
+        "OI-148"
+      ],
+      "files": 10,
+      "bytes": 1029367,
+      "allocated_bytes": 1115136
+    },
+    "exp_metric_m2": {
+      "issues": [
+        "OI-146",
+        "OI-147"
+      ],
+      "files": 3,
+      "bytes": 309654,
+      "allocated_bytes": 344064
+    },
+    "exp_oi114_adopt": {
+      "issues": [
+        "OI-114"
+      ],
+      "files": 5,
+      "bytes": 1536192,
+      "allocated_bytes": 1572864
+    },
+    "exp_oi114_adopt_m19": {
+      "issues": [
+        "OI-114"
+      ],
+      "files": 5,
+      "bytes": 1534161,
+      "allocated_bytes": 1572864
+    },
+    "exp_oi114_swap_margin": {
+      "issues": [
+        "OI-114"
+      ],
+      "files": 5,
+      "bytes": 1528018,
+      "allocated_bytes": 1572864
+    }
+  },
+  "preserved": [
+    "tracked reports, configs and align_buy_line.txt",
+    "all summary CSVs",
+    "data/raw",
+    "data/processed",
+    "open-issue experiment files",
+    "overseas raw caches"
+  ],
+  "validation": {
+    "unchanged_data_file_metadata_count": 26292,
+    "unchanged_tracked_experiment_sha256_count": 1175,
+    "remaining_cleanup_candidates": 0,
+    "missing_builds": {
+      "exp_strategy_shortlist": [
+        "DIVS03",
+        "GE_TROUGHOFF",
+        "GUARDEFF",
+        "MINBOOK",
+        "NPMEDIAN",
+        "TW100"
+      ],
+      "exp_oi141": [
+        "DIVS01",
+        "DIVS015",
+        "DIVS025",
+        "DIVS03"
+      ]
+    },
+    "unit_tests_passed": 9
+  },
+  "rebuild_note": "仅重跑相应已结案实验时重新生成缓存；日常扫描与 BASE 回测输入保留。新数据或口径下重建不承诺逐字节复现旧实验。"
+}

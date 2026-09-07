@@ -36,6 +36,8 @@ A 股上市公司研究与数据分析仓库（附带港/美/韩观察清单）�
 
 ## 常用入口
 
+已结案实验的派生 CSV 与构建日志用 `python3 scripts/clean_derived_artifacts.py closed` 预览，确认无相关运行作业后加 `--apply` 清理。该模式只处理脚本明确登记、仍已结案且未被开放事项引用的实验；保留报告、配置、摘要、生产输入及海外原始缓存。备用清单与 OI-141 的状态文件清理后，下次提交自动重建。
+
 ```bash
 python3 scripts/fetch_a_share_universe.py --output data/raw/a_share_securities.csv   # 名单刷新（§5.3）
 python3 scripts/build_quarterly_quality_review_queue.py --as-of YYYY-MM-DD           # 季度审查队列
