@@ -1783,5 +1783,26 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-07",
+   "retrieved_at_utc": "2026-09-07T08:20:07.572971+00:00",
+   "evidence_type": "资本补充预案",
+   "period": "2026-09-07",
+   "title": "2026-09-07 盘后事件复核：资本补充预案",
+   "source_url": "https://paper.cnstock.com/html/2026-09/07/content_2265833.htm",
+   "summary": "09-07 公告拟定增不超过 1,000 亿元，财政部拟认购 700 亿元，其余为中国烟草及相关公司；用于核心一级资本。定价在发行期首日按前 20 日均价规则确定，新增股数不超过发行前总股本 10%；尚待股东会、金融监管总局、上交所和证监会程序，控制权不变。",
+   "use": "预案尚未实施，不能把拟募集金额当作已到账资产，也不能预先改写已知 FY2025 DPS。保留 L3 与现行战术理由；最终定价、登记股数及下一次每股分红为下一复核节点。 按扫描器同源函数复算（R_f=1.6804%，最近可得 09-04，含除权归一化）V=8.2622；本事件前后同值。事件复核结束，不留 review_pending；不把日常参数与旧物化带差异误记为本事件调带。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-07",
+    "event_model_delta_pct": 0.0,
+    "rf": 0.016804,
+    "rf_observed_date": "2026-09-04",
+    "intrinsic_value_before_event": 8.262248788175198,
+    "intrinsic_value_after_event": 8.262248788175198
+   }
+  }
+ ]
 }

@@ -1,0 +1,916 @@
+{
+  "signal_date": "2026-09-07",
+  "query_start": "2026-09-04",
+  "query_end": "2026-09-07",
+  "retrieved_at_utc": "2026-09-07T08:15:55.920076+00:00",
+  "requested_codes": [
+    "002714",
+    "002648",
+    "601225",
+    "000651",
+    "603529",
+    "600036",
+    "002128",
+    "601318",
+    "600970",
+    "002532",
+    "601838",
+    "002379",
+    "600938",
+    "600989",
+    "601398",
+    "600690",
+    "000933",
+    "300413",
+    "600489",
+    "600104",
+    "920599",
+    "600919",
+    "601288",
+    "601939"
+  ],
+  "source_urls": [
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=1&ann_type=A&stock_list=002714%2C002648%2C601225%2C000651%2C603529%2C600036%2C002128%2C601318%2C600970%2C002532%2C601838%2C002379%2C600938%2C600989%2C601398%2C600690%2C000933%2C300413%2C600489%2C600104%2C920599%2C600919%2C601288%2C601939&begin_time=2026-09-04&end_time=2026-09-07"
+  ],
+  "total_hits": 30,
+  "announcements": [
+    {
+      "art_code": "AN202609061829079136",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006012002003",
+          "column_name": "募集资金使用情况报告"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:355",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行关于无需编制前次募集资金使用情况报告的公告",
+      "title_ch": "农业银行:农业银行关于无需编制前次募集资金使用情况报告的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079144",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:232",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行向特定对象发行A股股票方案的论证分析报告",
+      "title_ch": "农业银行:农业银行向特定对象发行A股股票方案的论证分析报告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079153",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002005",
+          "column_name": "权益变动报告书"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:355",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:工商银行关于股东权益变动的提示性公告",
+      "title_ch": "工商银行:工商银行关于股东权益变动的提示性公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079156",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:474",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:中国工商银行股份有限公司向特定对象发行A股股票摊薄即期回报、填补措施及相关主体承诺事项",
+      "title_ch": "工商银行:中国工商银行股份有限公司向特定对象发行A股股票摊薄即期回报、填补措施及相关主体承诺事项",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079149",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:569",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:中国工商银行股份有限公司向特定对象发行A股股票募集资金使用可行性报告",
+      "title_ch": "工商银行:中国工商银行股份有限公司向特定对象发行A股股票募集资金使用可行性报告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079160",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006005",
+          "column_name": "签订协议"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:408",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:工商银行关于引入战略投资者并签署《附条件生效的战略合作协议》的公告",
+      "title_ch": "工商银行:工商银行关于引入战略投资者并签署《附条件生效的战略合作协议》的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079148",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006005",
+          "column_name": "签订协议"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:225",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行关于签署《附条件生效的股份认购协议》的公告",
+      "title_ch": "农业银行:农业银行关于签署《附条件生效的股份认购协议》的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079140",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006005",
+          "column_name": "签订协议"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:372",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行关于引入战略投资者并签署《附条件生效的战略合作协议》的公告",
+      "title_ch": "农业银行:农业银行关于引入战略投资者并签署《附条件生效的战略合作协议》的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079157",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:693",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:中国工商银行股份有限公司未来三年(2026年-2028年)股东回报规划",
+      "title_ch": "工商银行:中国工商银行股份有限公司未来三年(2026年-2028年)股东回报规划",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079162",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:392",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:工商银行关于提请股东会同意中华人民共和国财政部免于发出要约的公告",
+      "title_ch": "工商银行:工商银行关于提请股东会同意中华人民共和国财政部免于发出要约的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079147",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006002",
+          "column_name": "获得补贴（资助）"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:212",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:工商银行关于本次向特定对象发行A股股票不存在向参与认购的投资者提供财务资助或补偿的公告",
+      "title_ch": "工商银行:工商银行关于本次向特定对象发行A股股票不存在向参与认购的投资者提供财务资助或补偿的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079152",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:392",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:中国工商银行股份有限公司向特定对象发行A股股票方案的论证分析报告",
+      "title_ch": "工商银行:中国工商银行股份有限公司向特定对象发行A股股票方案的论证分析报告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079145",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:194",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行未来三年(2026-2028年)股东回报规划",
+      "title_ch": "农业银行:农业银行未来三年(2026-2028年)股东回报规划",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079146",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:351",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行向特定对象发行A股股票募集资金使用可行性分析报告",
+      "title_ch": "农业银行:农业银行向特定对象发行A股股票募集资金使用可行性分析报告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079137",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006002",
+          "column_name": "获得补贴（资助）"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:219",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行向特定对象发行A股股票不存在向参与认购的投资者提供财务资助或补偿的公告",
+      "title_ch": "农业银行:农业银行向特定对象发行A股股票不存在向参与认购的投资者提供财务资助或补偿的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079155",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-06 15:32:12:414",
+      "eiTime": "2026-09-06 15:31:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行关于提请股东会同意中华人民共和国财政部免于发出要约事宜的公告",
+      "title_ch": "农业银行:农业银行关于提请股东会同意中华人民共和国财政部免于发出要约事宜的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079138",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002001002001001",
+          "column_name": "增发预案"
+        },
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-06 15:31:42:216",
+      "eiTime": "2026-09-06 15:31:18:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行董事会决议公告",
+      "title_ch": "农业银行:农业银行董事会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079133",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002001002001001",
+          "column_name": "增发预案"
+        },
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-06 15:31:42:185",
+      "eiTime": "2026-09-06 15:31:18:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:工商银行董事会决议公告",
+      "title_ch": "工商银行:工商银行董事会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079135",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003003001",
+          "column_name": "管理办法/制度"
+        }
+      ],
+      "display_time": "2026-09-06 15:31:33:197",
+      "eiTime": "2026-09-06 15:31:02:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行募集资金存储及使用管理办法(2026年修订)",
+      "title_ch": "农业银行:农业银行募集资金存储及使用管理办法(2026年修订)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079131",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002001002001001",
+          "column_name": "增发预案"
+        }
+      ],
+      "display_time": "2026-09-06 15:31:33:202",
+      "eiTime": "2026-09-06 15:31:02:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:中国工商银行股份有限公司向特定对象发行A股股票预案",
+      "title_ch": "工商银行:中国工商银行股份有限公司向特定对象发行A股股票预案",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079139",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006012002003",
+          "column_name": "募集资金使用情况报告"
+        }
+      ],
+      "display_time": "2026-09-06 15:31:33:214",
+      "eiTime": "2026-09-06 15:31:02:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:工商银行关于无需编制前次募集资金使用情况报告的公告",
+      "title_ch": "工商银行:工商银行关于无需编制前次募集资金使用情况报告的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079141",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002001002001001",
+          "column_name": "增发预案"
+        }
+      ],
+      "display_time": "2026-09-06 15:31:33:336",
+      "eiTime": "2026-09-06 15:31:02:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行向特定对象发行A股股票预案",
+      "title_ch": "农业银行:农业银行向特定对象发行A股股票预案",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079132",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003003001",
+          "column_name": "管理办法/制度"
+        }
+      ],
+      "display_time": "2026-09-06 15:31:33:398",
+      "eiTime": "2026-09-06 15:31:02:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:中国工商银行股份有限公司募集资金存储及使用管理办法(2026年版)",
+      "title_ch": "工商银行:中国工商银行股份有限公司募集资金存储及使用管理办法(2026年版)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079130",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "46829381256485",
+          "market_code": "1",
+          "short_name": "工商银行",
+          "stock_code": "601398"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006005",
+          "column_name": "签订协议"
+        }
+      ],
+      "display_time": "2026-09-06 15:31:33:192",
+      "eiTime": "2026-09-06 15:31:02:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "工商银行:工商银行关于签署《附条件生效的股份认购协议》的公告",
+      "title_ch": "工商银行:工商银行关于签署《附条件生效的股份认购协议》的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079159",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-06 15:31:33:228",
+      "eiTime": "2026-09-06 15:31:02:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行向特定对象发行A股股票摊薄即期回报、填补措施及相关主体承诺事项",
+      "title_ch": "农业银行:农业银行向特定对象发行A股股票摊薄即期回报、填补措施及相关主体承诺事项",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609061829079158",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002005",
+          "column_name": "权益变动报告书"
+        }
+      ],
+      "display_time": "2026-09-06 15:31:33:253",
+      "eiTime": "2026-09-06 15:31:02:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-07 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-07 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行关于股东权益变动的提示性公告",
+      "title_ch": "农业银行:农业银行关于股东权益变动的提示性公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609041829024652",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "21239173693290",
+          "market_code": "0",
+          "short_name": "牧原股份",
+          "stock_code": "002714"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-04 19:11:18:542",
+      "eiTime": "2026-09-04 19:10:50:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-05 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-05 12:00:00",
+      "source_type": "331",
+      "title": "牧原股份:H股公告(翌日披露报表)",
+      "title_ch": "牧原股份:H股公告(翌日披露报表)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609041829023589",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11601376473019",
+          "market_code": "1",
+          "short_name": "农业银行",
+          "stock_code": "601288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-04 18:43:33:442",
+      "eiTime": "2026-09-04 18:43:01:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-05 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-05 12:00:00",
+      "source_type": "31",
+      "title": "农业银行:农业银行H股公告",
+      "title_ch": "农业银行:农业银行H股公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609031828968082",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "21239173693290",
+          "market_code": "0",
+          "short_name": "牧原股份",
+          "stock_code": "002714"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-03 19:14:54:670",
+      "eiTime": "2026-09-03 19:14:18:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-04 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-04 12:00:00",
+      "source_type": "331",
+      "title": "牧原股份:H股公告(翌日披露报表)",
+      "title_ch": "牧原股份:H股公告(翌日披露报表)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609031828962962",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "20441444423098",
+          "market_code": "0",
+          "short_name": "宏桥控股",
+          "stock_code": "002379"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006012002003",
+          "column_name": "募集资金使用情况报告"
+        }
+      ],
+      "display_time": "2026-09-03 17:11:04:315",
+      "eiTime": "2026-09-03 17:12:37:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-04 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-04 12:00:00",
+      "source_type": "331",
+      "title": "宏桥控股:关于注销募集资金专户的公告",
+      "title_ch": "宏桥控股:关于注销募集资金专户的公告",
+      "title_en": ""
+    }
+  ]
+}

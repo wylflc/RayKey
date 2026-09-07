@@ -1993,5 +1993,22 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-07",
+   "retrieved_at_utc": "2026-09-07T08:20:07.572971+00:00",
+   "evidence_type": "煤价周度跟踪",
+   "period": "2026-09-07",
+   "title": "2026-09-07 盘后事件复核：煤价周度跟踪",
+   "source_url": "https://stock.finance.sina.com.cn/stock/go.php/vReport_Show/kind/search/rptid/842088696497/index.phtml",
+   "summary": "广发证券 09-07 周报载 CCI5500 周末报 947 元/吨、周升 67 元；9 月 5500 大卡年度长协价 704 元/吨、月升 3 元。此处为券商引用 Wind/汾渭的二手行业证据，非公司实现售价。",
+   "use": "现货走强与长协小幅上行，未命中档案煤价继续下行条件。模型按已披露归一化利润与资本效率计算；尚无本公司实现售价、产量及利润的新财报输入，不据一周现货涨幅外推长期盈利。当前生产 V 21.5317 维持；本日弱势换仓仍按扫描器执行。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-07",
+    "event_model_delta_pct": 0.0
+   }
+  }
+ ]
 }

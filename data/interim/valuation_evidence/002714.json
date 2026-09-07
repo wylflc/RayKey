@@ -2122,5 +2122,22 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-07",
+   "retrieved_at_utc": "2026-09-07T08:20:07.572971+00:00",
+   "evidence_type": "H股回购报表",
+   "period": "2026-09-07",
+   "title": "2026-09-07 盘后事件复核：H股回购报表",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609041829024652_1.pdf",
+   "summary": "09-05 A股披露的 H股翌日表对应 09-04 交易：购回 H股 44,800 股并持为库存股，支出 1,656,398 港元；H股发行总数 310,223,100 不变，库存股增至 1,026,300。",
+   "use": "小额 H股回购不是 A股除权事件，不调整个人持仓股数/成本/止损锚；未带来本轮 ROIC 模型输入变化，V 39.2927 维持。公告查询窗内尚未见 8 月销售简报，不能写成已经核验了 8 月经营指标。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-07",
+    "event_model_delta_pct": 0.0
+   }
+  }
+ ]
 }

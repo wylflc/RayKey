@@ -1,0 +1,100 @@
+{
+  "signal_date": "2026-09-07",
+  "reviewed_at_utc": "2026-09-07T08:20:07.572971+00:00",
+  "reviews": [
+    {
+      "recorded_at": "2026-09-07",
+      "retrieved_at_utc": "2026-09-07T08:20:07.572971+00:00",
+      "evidence_type": "资本补充预案",
+      "period": "2026-09-07",
+      "title": "2026-09-07 盘后事件复核：资本补充预案",
+      "source_url": "https://paper.cnstock.com/html/2026-09/07/content_2265833.htm",
+      "summary": "09-07 公告拟定增不超过 1,000 亿元，财政部拟认购 700 亿元，其余为中国烟草及相关公司；用于核心一级资本。定价在发行期首日按前 20 日均价规则确定，新增股数不超过发行前总股本 10%；尚待股东会、金融监管总局、上交所和证监会程序，控制权不变。",
+      "use": "预案尚未实施，不能把拟募集金额当作已到账资产，也不能预先改写已知 FY2025 DPS。保留 L3 与现行战术理由；最终定价、登记股数及下一次每股分红为下一复核节点。 按扫描器同源函数复算（R_f=1.6804%，最近可得 09-04，含除权归一化）V=8.2622；本事件前后同值。事件复核结束，不留 review_pending；不把日常参数与旧物化带差异误记为本事件调带。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0,
+        "rf": 0.016804,
+        "rf_observed_date": "2026-09-04",
+        "intrinsic_value_before_event": 8.262248788175198,
+        "intrinsic_value_after_event": 8.262248788175198
+      },
+      "security_code": "601398",
+      "security_name": "工商银行"
+    },
+    {
+      "recorded_at": "2026-09-07",
+      "retrieved_at_utc": "2026-09-07T08:20:07.572971+00:00",
+      "evidence_type": "资本补充预案",
+      "period": "2026-09-07",
+      "title": "2026-09-07 盘后事件复核：资本补充预案",
+      "source_url": "https://finance.sina.com.cn/roll/2026-09-07/doc-iniqxpwq6031646.shtml",
+      "summary": "09-07 公告拟定增不超过 1,600 亿元，财政部拟认购 1,300 亿元，中国烟草及相关公司合计拟认购 300 亿元；用于核心一级资本。尚待审批注册和发行，发行价格与最终股数未定。",
+      "use": "预案尚未实施，资本到账、发行后盈利与每股分红都不能预先记入生产模型。保留 L3 与现行战术理由；最终定价、股数登记及下一次每股分红为下一复核节点。 按扫描器同源函数复算（R_f=1.6804%，最近可得 09-04，含除权归一化）V=6.6492；本事件前后同值。事件复核结束，不留 review_pending；不把日常参数与旧物化带差异误记为本事件调带。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0,
+        "rf": 0.016804,
+        "rf_observed_date": "2026-09-04",
+        "intrinsic_value_before_event": 6.649154439734811,
+        "intrinsic_value_after_event": 6.649154439734811
+      },
+      "security_code": "601288",
+      "security_name": "农业银行"
+    },
+    {
+      "recorded_at": "2026-09-07",
+      "retrieved_at_utc": "2026-09-07T08:20:07.572971+00:00",
+      "evidence_type": "煤价周度跟踪",
+      "period": "2026-09-07",
+      "title": "2026-09-07 盘后事件复核：煤价周度跟踪",
+      "source_url": "https://stock.finance.sina.com.cn/stock/go.php/vReport_Show/kind/search/rptid/842088696497/index.phtml",
+      "summary": "广发证券 09-07 周报载 CCI5500 周末报 947 元/吨、周升 67 元；9 月 5500 大卡年度长协价 704 元/吨、月升 3 元。此处为券商引用 Wind/汾渭的二手行业证据，非公司实现售价。",
+      "use": "现货走强与长协小幅上行，未命中档案煤价继续下行条件。模型按已披露归一化利润与资本效率计算；尚无本公司实现售价、产量及利润的新财报输入，不据一周现货涨幅外推长期盈利。当前生产 V 21.5317 维持；本日弱势换仓仍按扫描器执行。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0
+      },
+      "security_code": "601225",
+      "security_name": "陕西煤业"
+    },
+    {
+      "recorded_at": "2026-09-07",
+      "retrieved_at_utc": "2026-09-07T08:20:07.572971+00:00",
+      "evidence_type": "煤价周度跟踪",
+      "period": "2026-09-07",
+      "title": "2026-09-07 盘后事件复核：煤价周度跟踪",
+      "source_url": "https://stock.finance.sina.com.cn/stock/go.php/vReport_Show/kind/search/rptid/842088696497/index.phtml",
+      "summary": "广发证券 09-07 周报：9 月 5500 大卡年度长协价 704 元/吨，月升 3 元；陕蒙现货走强。煤种和区域口径与公司褐煤实现售价不同，不能直接替代。",
+      "use": "未取得公司新实现售价，未命中档案长协下调条件；模型输入不变，V 27.7337 维持。铝价、电价及完整同业巡检未在本次核验，不将煤价单项复核写成全行业覆盖。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0
+      },
+      "security_code": "002128",
+      "security_name": "电投能源"
+    },
+    {
+      "recorded_at": "2026-09-07",
+      "retrieved_at_utc": "2026-09-07T08:20:07.572971+00:00",
+      "evidence_type": "H股回购报表",
+      "period": "2026-09-07",
+      "title": "2026-09-07 盘后事件复核：H股回购报表",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609041829024652_1.pdf",
+      "summary": "09-05 A股披露的 H股翌日表对应 09-04 交易：购回 H股 44,800 股并持为库存股，支出 1,656,398 港元；H股发行总数 310,223,100 不变，库存股增至 1,026,300。",
+      "use": "小额 H股回购不是 A股除权事件，不调整个人持仓股数/成本/止损锚；未带来本轮 ROIC 模型输入变化，V 39.2927 维持。公告查询窗内尚未见 8 月销售简报，不能写成已经核验了 8 月经营指标。",
+      "model_check": {
+        "review_status": "completed_no_model_input_change",
+        "signal_date": "2026-09-07",
+        "event_model_delta_pct": 0.0
+      },
+      "security_code": "002714",
+      "security_name": "牧原股份"
+    }
+  ],
+  "coverage_note": "公告查询 24 只，覆盖全部 9 只持仓、当日 14 只合格集与用户点名 3 只，并含刚清仓/昨日候选；时间窗 09-04 至 09-07，非当晚尚未发布公告的预判。产业与竞品仅补查煤价、银行资本补充，未做全行业与每家公司高频指标全量巡检。"
+}

@@ -1738,5 +1738,22 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-07",
+   "retrieved_at_utc": "2026-09-07T08:20:07.572971+00:00",
+   "evidence_type": "煤价周度跟踪",
+   "period": "2026-09-07",
+   "title": "2026-09-07 盘后事件复核：煤价周度跟踪",
+   "source_url": "https://stock.finance.sina.com.cn/stock/go.php/vReport_Show/kind/search/rptid/842088696497/index.phtml",
+   "summary": "广发证券 09-07 周报：9 月 5500 大卡年度长协价 704 元/吨，月升 3 元；陕蒙现货走强。煤种和区域口径与公司褐煤实现售价不同，不能直接替代。",
+   "use": "未取得公司新实现售价，未命中档案长协下调条件；模型输入不变，V 27.7337 维持。铝价、电价及完整同业巡检未在本次核验，不将煤价单项复核写成全行业覆盖。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-07",
+    "event_model_delta_pct": 0.0
+   }
+  }
+ ]
 }
