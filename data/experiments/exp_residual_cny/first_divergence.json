@@ -1,0 +1,21 @@
+{
+  "date": "2013-05-15",
+  "BASE": [
+    {
+      "security_code": "600066",
+      "action": "卖出",
+      "shares": "7100",
+      "price": "18.710",
+      "reason": "涨幅≥110%·减一档"
+    }
+  ],
+  "CNY50": [
+    {
+      "security_code": "600066",
+      "action": "卖出",
+      "shares": "7740",
+      "price": "18.710",
+      "reason": "涨幅≥110%清空"
+    }
+  ]
+}

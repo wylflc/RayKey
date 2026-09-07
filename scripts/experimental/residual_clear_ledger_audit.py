@@ -57,6 +57,7 @@ def audit(folder, actions):
             ratio = left * float(row['price']) / (float(point['net_equity']) * .05)
             event = {'date': day, 'code': code, 'name': row['security_name'],
                      'remaining_shares': round(left, 4), 'remaining_tranches': ratio,
+                     'sell_price': float(row['price']),
                      'reason': row['reason']}
             if abs(left - 100) < 1:
                 counts['remaining_100_shares'] += 1

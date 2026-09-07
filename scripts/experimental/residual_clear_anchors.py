@@ -14,16 +14,19 @@ EXP = ROOT / 'data/experiments/exp_residual_clear'
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--exp', type=Path, default=EXP)
+    ap.add_argument('--config', default='dose.txt')
     ap.add_argument('--labels', default='BASE,RC150')
     args = ap.parse_args()
-    manifest = json.loads((EXP / 'input_manifest.json').read_text())
+    exp = args.exp.resolve()
+    manifest = json.loads((exp / 'input_manifest.json').read_text())
     base = shlex.split(manifest['base'])
     base.remove('--no-artifacts')
-    arms = dict(line.split('|', 1) for line in (EXP / 'configs/dose.txt').read_text().splitlines()
+    arms = dict(line.split('|', 1) for line in (exp / 'configs' / args.config).read_text().splitlines()
                 if line and not line.startswith('#'))
 
     def run(label):
-        out = EXP / 'sig' / label
+        out = exp / 'sig' / label
         out.mkdir(parents=True, exist_ok=True)
         command = [sys.executable, str(ROOT / 'scripts/backtest_valuation_strategy.py'), *base,
                    *shlex.split(arms[label]), '--since', '2011-11-01', '--out-dir', str(out),

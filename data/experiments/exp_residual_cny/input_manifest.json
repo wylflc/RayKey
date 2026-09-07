@@ -1,0 +1,63 @@
+{
+  "created_at_utc": "2026-09-07T09:36:57.653266+00:00",
+  "base": "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 --corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 --swap --swap-partial --sell-trend-ma 20 --lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close --fee-preset user --no-artifacts --capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 --maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay --gain-sell 1.10 --gain-sell-mode ungated --swap-gain-once --swap-source-block -1 --width -0.0454 --swap-margin 0.15 --stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma60_stop --stop-basis exec --residual-clear lot --position-cap 0.6 --net-same-day --fill-missing skip --dividend-tax --swap-repeat skip --addon-trend ma-only --swap-require-weak --daily-states data/processed/a_share_daily_states_adopted.csv --hold-states data/processed/a_share_daily_states_hold.csv --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv",
+  "starts": [
+    "2009-11-01",
+    "2010-05-01",
+    "2010-11-01",
+    "2011-05-01",
+    "2011-11-01",
+    "2012-05-01",
+    "2012-11-01",
+    "2013-05-01",
+    "2013-11-01",
+    "2014-05-01",
+    "2014-11-01",
+    "2015-05-01",
+    "2015-11-01",
+    "2016-05-01"
+  ],
+  "metric_version": "m2",
+  "files": [
+    {
+      "path": "scripts/backtest_valuation_strategy.py",
+      "sha256": "906e83c24b0b5acb5a7890f5426a19e1af0608018abe7e85f20c03ae961fa850",
+      "bytes": 321505
+    },
+    {
+      "path": "scripts/sweep_backtest_configs.py",
+      "sha256": "e7b537c488236e3bcd2527e2e13da900ca6b4a4ecb3f1bb6a4a6e638db35c983",
+      "bytes": 51251
+    },
+    {
+      "path": "data/processed/a_share_daily_states_adopted.csv",
+      "sha256": "c1b7c3ccf4d0cf64edc6dafbabd887f43a9cb60873b170761ce677b76927c42b",
+      "bytes": 2113172110
+    },
+    {
+      "path": "data/processed/a_share_daily_states_hold.csv",
+      "sha256": "b578066f5157bcfcd5605b09341a740c4a8914f452ed00fc7b6ccdb9255cf174",
+      "bytes": 2190651206
+    },
+    {
+      "path": "data/processed/pit_attention/panel_moat_bank_v6b.csv",
+      "sha256": "74b4d98dfcef266aa15155cb211d2c68b2fb1231da23a6204235bb62b0e0f3cc",
+      "bytes": 514707
+    },
+    {
+      "path": "data/raw/corporate_actions/a_share_corporate_actions.csv",
+      "sha256": "1a64084371098597cee5b42143ee0fcbe58337179ab1e51ca3cfab8d263fa054",
+      "bytes": 5824746
+    },
+    {
+      "path": "data/reference/cost_of_equity_inputs.csv",
+      "sha256": "f05fda80c3a778b5b759a9459b99c6dfbb3e307efcd7c910f3aefda58e74ebbd",
+      "bytes": 81264
+    },
+    {
+      "path": "data/experiments/exp_residual_cny/configs/dose.txt",
+      "sha256": "1ce5dbb4a70c28ccd9630acc466fdf463bdd9e18c44fd14803e853d225d5a0e6",
+      "bytes": 105
+    }
+  ]
+}

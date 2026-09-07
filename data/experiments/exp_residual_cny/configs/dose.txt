@@ -1,0 +1,4 @@
+BASE|
+CNY40|--residual-clear-cny 40000
+CNY50|--residual-clear-cny 50000
+CNY60|--residual-clear-cny 60000
