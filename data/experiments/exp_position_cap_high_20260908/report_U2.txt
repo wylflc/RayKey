@@ -1,0 +1,1 @@
+U=A；复用 report_full_A.txt 中相同臂的 A 表。

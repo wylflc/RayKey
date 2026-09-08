@@ -1,0 +1,20 @@
+{
+  "submitted_beijing": "2026-09-08T19:50:40.806673+08:00",
+  "job_id": "26470379",
+  "account": "tes21035",
+  "partition": "rome",
+  "cpus": 64,
+  "mem_per_cpu_mib": 1792,
+  "workers": 56,
+  "time_limit": "00:45:00",
+  "prior_jobs": [
+    "26468423",
+    "26468555"
+  ],
+  "prior_peak_rss_kib": 76306855,
+  "preregister": "preregister.md",
+  "script": "scripts/slurm/position_cap_high_20260908.sbatch",
+  "resume_job_id": "26470631",
+  "resume_export": "CAPHIGH_RESUME=1",
+  "resume_reason": "Diagnostic-only floating point roundoff; reuse 168 completed full/A paths"
+}

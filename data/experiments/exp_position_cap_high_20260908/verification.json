@@ -1,0 +1,74 @@
+{
+  "completed_beijing": "2026-09-08T20:00:56.170325+08:00",
+  "inputs_unchanged": true,
+  "baseline_checks": [
+    "full:BASE:all_report_fields_identical",
+    "full:PC60SSEP08:all_report_fields_identical",
+    "A:BASE:all_report_fields_identical",
+    "A:PC60SSEP08:all_report_fields_identical"
+  ],
+  "diagnostic_roundoff": [
+    {
+      "group": "full",
+      "arm": "BASE",
+      "start": "2014-05-01",
+      "field": "前五赢家占正贡献",
+      "previous": "0.5875402463801184",
+      "current": "0.5875402463801185"
+    }
+  ],
+  "paths_full_A": 168,
+  "paths_U": 56,
+  "summary_rows": 280,
+  "union_groups": {
+    "U1": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "600585",
+        "601088"
+      ],
+      "candidates": [
+        "PC70SSEP08",
+        "PC80SSEP08"
+      ],
+      "labels": [
+        "BASE",
+        "PC60SSEP08",
+        "PC70SSEP08",
+        "PC80SSEP08"
+      ],
+      "reuses_A": false
+    },
+    "U2": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "candidates": [
+        "PC90SSEP08",
+        "PC100SSEP08"
+      ],
+      "labels": [
+        "BASE",
+        "PC60SSEP08",
+        "PC90SSEP08",
+        "PC100SSEP08"
+      ],
+      "reuses_A": true
+    }
+  },
+  "ordinary_A_summary_cache_restored": true,
+  "strict_wrapper": "data/experiments/exp_position_cap_25_20260908/strict_cap_engine.py",
+  "union_config_hashes": {
+    "data/experiments/exp_position_cap_high_20260908/configs_U1.txt": {
+      "sha256": "14a1f18889db710fe5409e4e932889fe74af3fcb3076dac91892dc7b2b0452e9",
+      "bytes": 147
+    }
+  }
+}

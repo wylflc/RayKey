@@ -1,0 +1,16 @@
+{
+  "initial_job_id": "26470379",
+  "initial_state": "FAILED",
+  "completed_full_A_paths": 168,
+  "failure": "Exact string equality of one diagnostic floating point field",
+  "difference": {
+    "group": "full",
+    "arm": "BASE",
+    "start": "2014-05-01",
+    "field": "前五赢家占正贡献",
+    "previous": "0.5875402463801184",
+    "current": "0.5875402463801185"
+  },
+  "report_fields_unchanged": true,
+  "resolution": "Allow absolute tolerance 1e-14 only for this diagnostic field; every other field remains exact. Resume from saved full/A summaries with source input hashes rechecked."
+}

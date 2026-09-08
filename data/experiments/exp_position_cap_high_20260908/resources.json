@@ -1,0 +1,24 @@
+{
+  "jobs": [
+    {
+      "job_id": "26470379",
+      "state": "FAILED",
+      "elapsed": "00:05:52",
+      "cpus": 64,
+      "peak_rss_kib": 59925717,
+      "complete_paths": 168,
+      "reason": "Post-run diagnostic field exact-string check failed at 1e-16 roundoff; numeric standard report fields identical"
+    },
+    {
+      "job_id": "26470631",
+      "state": "COMPLETED",
+      "elapsed": "00:01:51",
+      "cpus": 64,
+      "peak_rss_kib": 77437722,
+      "new_paths": 56,
+      "reused_paths": 168
+    }
+  ],
+  "total_executed_paths": 224,
+  "total_preserved_rows": 280
+}

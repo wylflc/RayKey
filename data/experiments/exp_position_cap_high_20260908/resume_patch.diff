@@ -1,0 +1,47 @@
+--- run_initial.py
++++ run.py
+@@ -50,0 +51 @@
++    parser.add_argument("--resume-full-a", action="store_true")
+@@ -62,0 +64,5 @@
++    if args.resume_full_a:
++        initial = json.loads((EXP / "manifest_initial.json").read_text())
++        # Only this orchestration file changed; strategy and registered design did not.
++        assert {key:value for key,value in inputs.items() if key != str((EXP / 'run.py').relative_to(ROOT))} == {
++            key:value for key,value in initial["inputs"].items() if key != str((EXP / 'run.py').relative_to(ROOT))}
+@@ -69,0 +76 @@
++        "resumed_full_A": args.resume_full_a,
+@@ -75 +82,3 @@
+-    full_paths = scan("configs.txt", "full_A", args.workers)
++    full_paths = (len([line for line in (EXP / "sweep_full_A.txt").read_text().splitlines()
++                       if line and not line.startswith("#")]) if args.resume_full_a
++                  else scan("configs.txt", "full_A", args.workers))
+@@ -77,3 +86,14 @@
+-    groups = {"full": common.snapshot(LABELS, "full", False),
+-              "A": common.snapshot(LABELS, "A", True)}
+-    baseline_checks = []
++    if args.resume_full_a:
++        groups = {}
++        for group in ("full", "A"):
++            groups[group] = {}
++            for label in LABELS:
++                groups[group][label] = []
++                for start in sw.DEFAULT_STARTS:
++                    path = EXP / "summaries" / group / f"summary_{sw.summary_tag(label,start,'fixed' if group=='A' else '')}.csv"
++                    with path.open() as handle:
++                        groups[group][label].append(next(csv.DictReader(handle)))
++    else:
++        groups = {"full": common.snapshot(LABELS, "full", False),
++                  "A": common.snapshot(LABELS, "A", True)}
++    baseline_checks, diagnostic_roundoff = [], []
+@@ -83,2 +103,7 @@
+-                assert row == previous_rows[("strict_" + group, label, start.replace("-", ""))], (group, label, start)
+-            baseline_checks.append(f"{group}:{label}:all_fields_identical")
++                old = previous_rows[("strict_" + group, label, start.replace("-", ""))]
++                for key in set(row) | set(old):
++                    if row.get(key) == old.get(key):
++                        continue
++                    assert key == "前五赢家占正贡献" and abs(float(row[key])-float(old[key])) <= 1e-14, (group,label,start,key)
++                    diagnostic_roundoff.append({"group":group,"arm":label,"start":start,"field":key,"previous":old[key],"current":row[key]})
++            baseline_checks.append(f"{group}:{label}:all_report_fields_identical")
+@@ -126,0 +152 @@
++        "diagnostic_roundoff": diagnostic_roundoff,

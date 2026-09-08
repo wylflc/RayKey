@@ -1,0 +1,9 @@
+{
+  "summary_rows": 280,
+  "unique_group_arm_start": true,
+  "all_starts_complete": true,
+  "metric": "m2",
+  "all_report_fields_finite": true,
+  "comparisons": 1000,
+  "paired_rows": 560
+}

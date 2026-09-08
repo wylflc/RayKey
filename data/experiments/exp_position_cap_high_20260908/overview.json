@@ -1,0 +1,548 @@
+{
+  "PC70SSEP08": {
+    "U_group": "U1",
+    "U_codes": [
+      "000338",
+      "000651",
+      "000933",
+      "002128",
+      "600585",
+      "601088"
+    ],
+    "workflow_U_excellent": false,
+    "U_qualification_metrics": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -0.0068373826264002124,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -0.013930788030206198,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -0.010715016933829813,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -0.01484387759034872,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.03302682441887028,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.03434353070948726,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "滚动5年为负的窗口占比",
+        "oriented_delta": -0.0,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -0.011903149047216344,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.0021708409929483974,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.021678177216006372,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.017446914140406278,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -0.016944575372340676,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -0.00959380358350237,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -0.02216343986811825,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -0.0030205650215524016,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -0.022840744973656013,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "平均仓位",
+        "oriented_delta": -0.01912646137121987,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      }
+    ],
+    "full": {
+      "cagr_median": 0.3760120555057891,
+      "delta_vs_current": -0.03165721409996414,
+      "delta_vs_strict60": -0.04652838414558048,
+      "positive_vs_current": 1,
+      "delta_roll5": -0.09177945755624883
+    },
+    "A": {
+      "cagr_median": 0.4827330526434793,
+      "delta_vs_current": 0.026809980123228216,
+      "delta_vs_strict60": 0.028993456408404894,
+      "positive_vs_current": 13,
+      "delta_roll5": 0.04648823191599439
+    },
+    "U1": {
+      "cagr_median": 0.47063827210653253,
+      "delta_vs_current": -0.011903149047216344,
+      "delta_vs_strict60": -0.020893288800555965,
+      "positive_vs_current": 4,
+      "delta_roll5": -0.0068373826264002124
+    }
+  },
+  "PC80SSEP08": {
+    "U_group": "U1",
+    "U_codes": [
+      "000338",
+      "000651",
+      "000933",
+      "002128",
+      "600585",
+      "601088"
+    ],
+    "workflow_U_excellent": false,
+    "U_qualification_metrics": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -0.03610485322574086,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -0.043855346775268256,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -0.03066504918711932,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -0.014460819411586612,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.08018981583700907,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.09031942695477768,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "滚动5年为负的窗口占比",
+        "oriented_delta": -0.0,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -0.04120834539766349,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.007869795930675327,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.06606028092410038,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.08188525071307368,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -0.03136642992168298,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -0.05145924767405852,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -0.036880776211248134,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -0.04153380918632932,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -0.03877779304924389,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "平均仓位",
+        "oriented_delta": -0.02889868498095005,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      }
+    ],
+    "full": {
+      "cagr_median": 0.33330122163522047,
+      "delta_vs_current": -0.09985257879025544,
+      "delta_vs_strict60": -0.1047222483081125,
+      "positive_vs_current": 0,
+      "delta_roll5": -0.14943748707285776
+    },
+    "A": {
+      "cagr_median": 0.451298673883478,
+      "delta_vs_current": 0.027791193935715053,
+      "delta_vs_strict60": 0.03143956982722418,
+      "positive_vs_current": 9,
+      "delta_roll5": 0.04356817854261507
+    },
+    "U1": {
+      "cagr_median": 0.44073809153692267,
+      "delta_vs_current": -0.04120834539766349,
+      "delta_vs_strict60": -0.04561562898439952,
+      "positive_vs_current": 3,
+      "delta_roll5": -0.03610485322574086
+    }
+  },
+  "PC90SSEP08": {
+    "U_group": "U2",
+    "U_codes": [
+      "000338",
+      "000651",
+      "000933",
+      "002128",
+      "601088"
+    ],
+    "workflow_U_excellent": false,
+    "U_qualification_metrics": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": 0.0902828176050049,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": 0.03624657311637347,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": 0.01989383315334109,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -0.0409853295448076,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": 0.06829013079123492,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": 0.02989968259113729,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "滚动5年为负的窗口占比",
+        "oriented_delta": -0.0,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": 0.02374863024569729,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.01229589267282355,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": 0.010394028099953656,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": 0.0019292743731815776,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": 0.05664920295378095,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": 0.051621543984259555,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -0.05109078480522711,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": 0.033053476744339005,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -0.016183912908835696,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "平均仓位",
+        "oriented_delta": -0.02437062249082489,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      }
+    ],
+    "full": {
+      "cagr_median": 0.3081664341652486,
+      "delta_vs_current": -0.1254386661306539,
+      "delta_vs_strict60": -0.13600556444992618,
+      "positive_vs_current": 0,
+      "delta_roll5": -0.15509831483241976
+    },
+    "A": {
+      "cagr_median": 0.43409678451018846,
+      "delta_vs_current": 0.02374863024569729,
+      "delta_vs_strict60": 0.023790375804303765,
+      "positive_vs_current": 8,
+      "delta_roll5": 0.0902828176050049
+    },
+    "U2": {
+      "cagr_median": 0.43409678451018846,
+      "delta_vs_current": 0.02374863024569729,
+      "delta_vs_strict60": 0.023790375804303765,
+      "positive_vs_current": 8,
+      "delta_roll5": 0.0902828176050049
+    }
+  },
+  "PC100SSEP08": {
+    "U_group": "U2",
+    "U_codes": [
+      "000338",
+      "000651",
+      "000933",
+      "002128",
+      "601088"
+    ],
+    "workflow_U_excellent": false,
+    "U_qualification_metrics": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": 0.05899107370798651,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": 0.028362396791823508,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": 0.003156864666399306,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -0.046554683395278074,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": 0.06656606327759157,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": 0.002544247809014355,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "滚动5年为负的窗口占比",
+        "oriented_delta": -0.0,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": 0.019262760785654476,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.01681129686519489,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": 0.005115558164990375,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.021036049019518055,
+        "noise": 0.005,
+        "tolerance": 0.033
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": 0.00041365712078561545,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": 0.037916269669203584,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -0.05328268121908014,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": 0.10438299929290323,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -0.04237653564756494,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      },
+      {
+        "metric": "平均仓位",
+        "oriented_delta": -0.032387565699758314,
+        "noise": 0.0015,
+        "tolerance": 0.01
+      }
+    ],
+    "full": {
+      "cagr_median": 0.25623341110768916,
+      "delta_vs_current": -0.14750348772233246,
+      "delta_vs_strict60": -0.15005370854968003,
+      "positive_vs_current": 0,
+      "delta_roll5": -0.2166944009867705
+    },
+    "A": {
+      "cagr_median": 0.43265946976230873,
+      "delta_vs_current": 0.019262760785654476,
+      "delta_vs_strict60": 0.017925700907477027,
+      "positive_vs_current": 8,
+      "delta_roll5": 0.058991073707986515
+    },
+    "U2": {
+      "cagr_median": 0.43265946976230873,
+      "delta_vs_current": 0.019262760785654476,
+      "delta_vs_strict60": 0.017925700907477027,
+      "positive_vs_current": 8,
+      "delta_roll5": 0.058991073707986515
+    }
+  }
+}
