@@ -1,5 +1,7 @@
 # 1. A-Share Compound Fertilizer Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group compares compound-fertilizer brands, phosphate-resource integrated producers, agricultural-service distributors, controlled-release fertilizer niches, and mixed fertilizer/chemical companies.

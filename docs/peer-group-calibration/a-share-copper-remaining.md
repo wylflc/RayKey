@@ -1,5 +1,7 @@
 # 1. A-Share Copper Remaining Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This pass completes remaining copper-group companies after prior strategic-resource calibration already decided 紫金矿业, 江西铜业 and 云南铜业. The review separates scarce-resource platforms and high-performance copper materials from smelting scale and commodity copper processing.

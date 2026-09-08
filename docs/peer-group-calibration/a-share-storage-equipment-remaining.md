@@ -1,5 +1,7 @@
 # 1. A-Share Storage Equipment Remaining Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This note records the company-by-company review for the remaining unreviewed companies in `电气设备-电源设备-储能设备`.

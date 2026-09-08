@@ -1,5 +1,7 @@
 # 1. A-Share Passenger Vehicles Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group compares independent passenger-vehicle platforms, legacy state auto groups, new-energy transition stories, and weak legacy manufacturers. The review applies the earlier BYD/CATL principle: retain differentiated platforms, reject companies broadly beaten by stronger peers without a distinct moat.

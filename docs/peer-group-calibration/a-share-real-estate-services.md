@@ -1,5 +1,7 @@
 # 1. A-Share Real Estate Services Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group contains property management, real-estate brokerage, local commercial assets, service outsourcing, and distressed real-estate-service companies. The industry is labor-intensive, parent/project dependent, and exposed to real-estate structural headwinds, so the group can reasonably have no watchlist companies.

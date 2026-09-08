@@ -1,5 +1,7 @@
 # 1. A-Share Livestock Breeding Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group covers hog, poultry, breeding stock, live-animal supply, and mixed agricultural companies. Livestock is cyclical and biologically risky, but top operators can build hard-to-copy systems in genetics, feed, disease control, scale, slaughtering, farmer networks, and cost discipline.

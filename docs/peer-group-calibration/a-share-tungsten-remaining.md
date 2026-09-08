@@ -1,5 +1,7 @@
 # 1. A-Share Tungsten Remaining Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This pass completes the still-undecided tungsten companies after 厦门钨业 and 中钨高新 were already retained in the strategic-resource calibration. The review asks whether each company adds a differentiated tungsten-resource or hard-alloy thesis beyond those stronger retained platforms.

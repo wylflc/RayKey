@@ -1,5 +1,7 @@
 # 1. A-Share Oilfield Services Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group covers offshore oil engineering, drilling and well services, oilfield equipment, petroleum engineering EPC, module construction, exploration technology, and ST or small regional oil-service cases.

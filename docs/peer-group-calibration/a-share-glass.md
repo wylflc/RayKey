@@ -1,5 +1,7 @@
 # 1. A-Share Glass Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews float glass, PV glass, glass equipment, building/deep-processing glass, and pharmaceutical glass packaging. The industry is cyclical, but selected high-end process and customer-qualified niches can still deserve observation.

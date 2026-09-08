@@ -1,36 +1,9 @@
 #!/usr/bin/env python3
-"""补建质量分层的六个研究字段，并打印填充率自检（结 OI-024）。
+"""补建质量分层研究字段，保留已有值，并打印填充率。
 
-登记的缺陷
-----------
-旧版分层表定义了 `q1_reason`／`q2_moat_type`／`q2_erosion_paths`／
-`q3_reason`／`q4_reason`／`tactical_thesis`，但 `a_share_watchlist_quality_tiers.csv`
-的 261 行中**这六列根本不存在**，属 §13 第 2 条「成文未落地」。
-
-**后果不对称**，两处最要紧：
-
-* `q2_erosion_paths` 缺列 = 工作流 §5.7 的 L1 侵蚀路径判据没有结构化载体。该节要求否决必须
-  逐条写明四判据，而判据写在自由文本里就无法被任何校验检查——宁德时代的误否决
-  （v1.40 前判 L2）正是这么产生的。
-* `tactical_thesis` 只保留为研究字段，不产生估值或交易资格；交易统一按工作流 §9.3。
-
-本脚本做什么、不做什么
-----------------------
-**做**：①把六列建出来；②把 `q2_erosion_paths` 从 `moat_summary` 的「前瞻侵蚀：」段
-**转录**过来（实测 260/261 行有该段），命中 `erosion_path` 旗标的行同时带上旗标里的
-概率标注；③打印六列各自的非空行数（凡新增列，跑完必须核对非空
-行数——四次静默失效的共同签名就是「某列整体为空而无人察觉」）。
-
-**不做**：不给任何一列打分、不改任何档位。②是**转录**（同一句话换个位置存），不是
-判断；`q2_moat_type` 与 `tactical_thesis` 这类需要判断的内容由模型逐票回填，
-工作流 §5.7 禁止关键词脚本自动决定层级。
-
-幂等：已非空的单元格一律不覆盖，可反复运行。
-
-用法::
-
-    python3 scripts/backfill_quality_tier_columns.py            # 写回并打印填充率
-    python3 scripts/backfill_quality_tier_columns.py --check    # 只打印填充率
+只从已有文字转录侵蚀路径，不自动打分或改变名单、档位。
+L3 战术理由由研究者逐票填写，供工作流程的买入闸门读取。
+用 --check 只检查不写回。
 """
 from __future__ import annotations
 
@@ -110,7 +83,7 @@ def report_fill_rates(rows: list[dict[str, str]]) -> None:
     l1_filled = sum(1 for row in l1 if (row.get("q2_erosion_paths") or "").strip())
     l3_filled = sum(1 for row in l3 if (row.get("tactical_thesis") or "").strip())
     print(f"  → §5.7 L1 侵蚀路径载体：L1 {l1_filled}/{len(l1)} 行有 q2_erosion_paths")
-    print(f"  → L3 研究备注（不影响交易）：L3 {l3_filled}/{len(l3)} 行有 tactical_thesis")
+    print(f"  → L3 战术理由（买入闸门读取）：L3 {l3_filled}/{len(l3)} 行有 tactical_thesis")
 
 
 def main() -> int:

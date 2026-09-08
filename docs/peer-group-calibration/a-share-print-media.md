@@ -1,5 +1,7 @@
 # 1. A-Share Print Media Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group covers provincial publishing groups, textbook distribution, trade publishing, scientific publishing, digital reading, newspapers, and distressed media companies. Publishing licenses and regional textbook channels can be stable but usually do not create strong growth; retention should be limited to the strongest education, content, or science/academic platforms.

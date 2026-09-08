@@ -1,5 +1,7 @@
 # 1. A-Share Ground Equipment Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group includes armored vehicles, nuclear/chemical emergency equipment, radar, optoelectronics, navigation, military communications, munitions and mixed civilian/defense equipment. Military qualification and program continuity can make normal financial comparisons misleading, but not every component supplier deserves retention.

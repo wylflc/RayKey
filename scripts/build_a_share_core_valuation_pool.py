@@ -1,24 +1,9 @@
 #!/usr/bin/env python3
-"""Build the A-share core valuation pool.
+"""物化 A 股关注池并生成阅读版；交易资格读取工作流程。
 
-Materializes ALL worth_attention L1-L3 names into one pool CSV/MD for the
-daily scan. Reviews (§7: reports/预告/events) change the BAND; price changes
-`P/V`. Buy eligibility is §9.3 + §10.1.
-
-This script does not create new valuation opinions: the band and the reasons
-come from the valuation table.
-
-Daily refresh: ``--md-only --quotes fetch`` re-renders only the reading MD
-(现价/合理估值/`P/V`/PE/PB) and logs one `pool_price_refresh` summary row.
-
-The same MD carries the 海外关注清单 appendix (§6.8): non-A-share names the user
-tracks, rendered from `overseas_watchlist_valuation.csv` but kept out of the
-pool CSV, out of the daily volume/price scan and out of buy eligibility.
-
-It also carries an L4 dossier archive for user-named A-share companies that
-were profiled but did not enter ``worth_attention``. This is a reading-only
-lookup section: it preserves the structured attention class and never enters
-the pool CSV, production bands, quote refresh, P/V calculation or daily scan.
+--md-only 刷新阅读版并登记行情刷新日志，--quotes 控制行情来源。
+阅读版同时展示池外档案与海外观察清单；两者均不进入 A 股候选池或执行清单。
+名单状态与质量档分别读取结构化真值，不按档案所在位置推断质量。
 """
 
 from __future__ import annotations
@@ -53,7 +38,7 @@ DEFAULT_FORECASTS = ROOT / "data/interim/a_share_earnings_forecasts.csv"
 DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_OVERSEAS = ROOT / "data/processed/overseas_watchlist_valuation.csv"
 
-# 分层档位集合：池只物化 L1-L3（worth_attention 的分层全集）；阅读版另有 L4 档案归档区，
+# 分层档位集合：池只物化 L1-L3（worth_attention 的分层全集）；阅读版另有池外档案区，
 # 但不进入池。
 POOL_TIERS = {"L1", "L2", "L3"}
 CORE_LAYER_TIERS = {"L1", "L2"}
@@ -388,18 +373,13 @@ def _display_valuation_path(method: str) -> str:
     return method.split("（", 1)[0].split("：", 1)[0]
 
 
-def build_l4_dossier_section(
+def build_off_pool_dossier_section(
     dossier_rows: list[dict[str, str]],
     triage_rows: list[dict[str, str]],
     output_md: Path = DEFAULT_OUTPUT_MD,
+    tiers: dict[str, dict[str, str]] | None = None,
 ) -> tuple[list[str], int]:
-    """渲染用户点名建档但未入关注池的 L4 阅读归档区。
-
-    筛选依据只认逐票档案 ``notes`` 中的「用户点名建档」或「关注池迁出」来源和三类表当前状态；
-    不从目录存在性猜测，避免把全市场批量建档误列为用户点名。L4 是本文档归档层级，
-    ``attention_class`` 原样展示，不触碰质量真值或买入资格。档案链接按阅读版
-    ``output_md`` 所在目录算相对路径，阅读版搬家不改链接写法。
-    """
+    """渲染点名或迁出的池外档案，名单状态与质量档分别读取结构化真值。"""
     triage_by_code = {
         str(row.get("security_code", "")).zfill(6): row for row in triage_rows
     }
@@ -431,21 +411,23 @@ def build_l4_dossier_section(
             method = _display_valuation_path(str(row.get("band_method") or "")) or "—"
         dossier_dir = Path(str(row.get("dossier_dir") or f"data/companies/{code}_{name}"))
         dossier_link = Path(os.path.relpath(ROOT / dossier_dir / "README.md", output_md.parent)).as_posix()
+        tier = (tiers or {}).get(code, {}).get("quality_tier", "")
+        tier = tier if attention_class == "documented_not_attention" and tier == "L4" else "—"
         body.append(
-            f"| {code} | [{name}]({dossier_link}) | L4 | {attention_class} | "
+            f"| {code} | [{name}]({dossier_link}) | {tier} | {attention_class} | "
             f"{band} | {fair_value} | {method} | {row.get('reviewed_at') or '—'} |"
         )
 
     lines = [
         "",
-        "## L4｜已建档但未进入关注池",
+        "## 池外档案｜已建档但未进入关注池",
         "",
-        f"共 {len(selected)} 家。L4 为本阅读版的档案归档层级；`名单状态` 保留结构化 `attention_class`。",
+        f"共 {len(selected)} 家。名单状态与质量档分别读取三类表和分层表；待判断公司不显示质量档。",
         "",
         "- 仅维护逐票档案与合理价；不进入核心池 CSV、生产带、每日行情、`P/V`、每日扫描或 §9.3。",
         "- 合理价区间与中值 `V` 取逐票估值档案；无法估值显示 —。公司名称可直接打开档案。",
         "",
-        "| 代码 | 名称/档案 | 归档层级 | 名单状态 | 合理价区间 | 合理估值 V | 估值方法 | 档案更新 |",
+        "| 代码 | 名称/档案 | 质量档 | 名单状态 | 合理价区间 | 合理估值 V | 估值方法 | 估值更新 |",
         "| --- | --- | --- | --- | ---: | ---: | --- | --- |",
         *body,
     ]
@@ -461,7 +443,7 @@ def build_overseas_section(
         return []
     quotes = quotes or {}
     body: list[str] = []
-    # 与 A 股主表一致按质量档 L1→L4 排序（A 股池无 L4 行，海外清单有）。
+    # 无质量档的观察公司排在已定档公司之后。
     tier_rank = {tier: index for index, tier in enumerate(("L1", "L2", "L3", "L4"))}
     # v1.39：档内按**参考分**降序（§5.7 参考分只作档内排序展示）。
     rows = sorted(
@@ -487,13 +469,10 @@ def build_overseas_section(
         method = str(row.get("band_method") or row.get("valuation_method") or "")
         path_cell = _display_valuation_path(method)
         body.append(
-            # 参考分（§5.7.4）与 A 股主表同列位：质量档之后。海外清单 2026-08-03 起
-            # 逐票打分，此前该列不存在（附表只有质量档、无档内序位）。市场 / 代码 两列
-            # 于 2026-08-06 按用户指令删除（§6.8 第 4 条）；两者仍在 CSV 里，只是不进
-            # 阅读版。`market`/`code` 仍用于行情键。
+            # 市场与代码保留在 CSV 中，用于匹配行情。
             "| {name} | {tier} | {score} | ".format(
                 name=row["security_name"],
-                tier=row.get("quality_tier", "—"),
+                tier=row.get("quality_tier") or row.get("attention_class") or "—",
                 score=row.get("quality_score") or "—",
             )
             + f"{path_cell} | "
@@ -542,7 +521,7 @@ def write_markdown(
     forecasts: dict[str, dict[str, str]] | None = None,
     disclosures: dict[str, dict[str, str]] | None = None,
     extra_sections: list[str] | None = None,
-    l4_count: int = 0,
+    off_pool_count: int = 0,
     overseas_count: int = 0,
 ) -> dict[str, object]:
     """渲染单一列表阅读版 MD（v1.05）；返回 {'forecast': 有预告代码,
@@ -621,8 +600,8 @@ def write_markdown(
         "- 现价取每日行情快照，缺失时沿用估值时点值；合理价带随证据复核更新。",
         "- 估值时间为本次估值所依据证据的公开可得日；估值事件为对应报告或重大事件。",
         *(
-            ["- L4 归档区仅供查找已建档但未入关注池的公司，不取每日行情、不进入扫描。"]
-            if l4_count
+            ["- 池外档案区仅供查找已建档但未入关注池的公司，不取每日行情、不进入扫描。"]
+            if off_pool_count
             else []
         ),
         *(
@@ -878,7 +857,7 @@ def check_dossier_registration(
 ) -> list[str]:
     """§6.8 建档不变量：`data/companies/<代码>_<名称>/` 每个目录都必须登记在 A 股档案表或海外关注清单。
 
-    阅读版两张附表（L4 归档区、海外关注清单）都从登记表渲染，只建目录不登记的公司在阅读版里不可见；
+    阅读版两张附表（池外档案区、海外关注清单）都从登记表渲染，只建目录不登记的公司在阅读版里不可见；
     本检查在 `--md-only` 每日跑批时把这种目录报出来并写 `gaps_file`，主流程据此非零退出。
     """
     registered = {str(r.get("security_code", "")).strip() for r in dossier_rows}
@@ -907,10 +886,14 @@ def main() -> None:
     VALUATION_AS_OF = args.as_of
     args.evidence_date = evidence_iso_for_signal(args.signal_date)
     MODEL_BANDS = load_model_bands(as_of=args.evidence_date)
-    rows = build_pool(load_csv(args.valuation), load_csv(args.tiers), args.as_of, args.valuation)
+    tier_rows = load_csv(args.tiers)
+    rows = build_pool(load_csv(args.valuation), tier_rows, args.as_of, args.valuation)
     dossier_rows = load_csv(args.dossiers) if args.dossiers.exists() else []
     triage_rows = load_csv(args.attention_triage) if args.attention_triage.exists() else []
-    l4_section, l4_count = build_l4_dossier_section(dossier_rows, triage_rows, args.output_md)
+    off_pool_section, off_pool_count = build_off_pool_dossier_section(
+        dossier_rows, triage_rows, args.output_md,
+        tiers={r["security_code"]: r for r in tier_rows},
+    )
     overseas_rows = load_overseas(args.overseas)
     registration_gaps = check_dossier_registration(dossier_rows, overseas_rows)
     # §6.8 复核触发① 的落地校验（OI-039）：财报已披露而带还建在披露前的证据上，当天就喊出来。
@@ -979,11 +962,11 @@ def main() -> None:
     overseas_section = build_overseas_section(overseas_rows, overseas_quotes)
     flags = write_markdown(
         args.output_md, rows, args.as_of, quotes, forecasts, disclosures,
-        [*l4_section, *overseas_section], l4_count, len(overseas_rows),
+        [*off_pool_section, *overseas_section], off_pool_count, len(overseas_rows),
     )
     summary = (
         f"{forecast_summary(flags, forecast_retrieved, args.as_of, disclosure_retrieved)}; "
-        f"L4 档案区 {l4_count} 家"
+        f"池外档案区 {off_pool_count} 家"
         + (
             f"; 海外附表 {len(overseas_rows)} 家（{len(overseas_quotes)} 只取到行情）"
             if overseas_rows

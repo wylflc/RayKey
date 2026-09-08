@@ -1,18 +1,9 @@
 #!/usr/bin/env python3
-"""Build the cross-round A-share company analysis index.
+"""汇总当前名单、质量与估值输入、历史筛选记录和跨轮次决策日志。
 
-One row per A-share security, merging every analysis round this repository has
-produced so the history of a company can be read in one place:
-
-1. round1_*: the current ADR-0006 round-1 three-class triage
-   (`data/processed/a_share_attention_triage.csv`).
-2. prior_*: the closed 2026-06 two-layer review round — peer-group screening
-   decision (archived final watchlist), authoritative deep-review quality tier,
-   and L1/L2 valuation.
-3. decision_log_*: per-security rollup of the workflow decision log.
-
-This script creates no new conclusions and writes nothing to the decision log.
-It only materializes existing reviewed results into one reference view.
+输出是查询索引，不产生结论；源文件参数可通过 --help 查看。
+CSV 的 round1_* 取 --triage；prior_final_decision/watch_selection_route/decision_reason
+取归档筛选，其余 prior_* 取 --prior-tiers/--prior-valuation/--prior-pool 的输入快照。
 """
 
 from __future__ import annotations
@@ -20,6 +11,7 @@ from __future__ import annotations
 import argparse
 import csv
 from datetime import datetime, timezone
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -88,7 +80,7 @@ def build_index(
     prior_tiers: list[dict[str, str]],
     prior_valuation: list[dict[str, str]],
     prior_pool: list[dict[str, str]],
-    log_rows: list[dict[str, str]],
+    log_rows: Iterable[dict[str, str]],
 ) -> list[dict[str, str]]:
     universe_by_code = by_code(universe)
     triage_by_code = by_code(triage)
@@ -185,20 +177,22 @@ def write_markdown(path: Path, rows: list[dict[str, str]], generated_at: str) ->
         f"生成时间：{generated_at}",
         "",
         "本文件由 `scripts/build_a_share_company_analysis_index.py` 生成，是既有结论的合并视图，不产生新结论。",
-        "每家公司一行，汇总：round1 三类初筛（进行中）、2026-06 两层复核轮（同业校准决策 + 权威深度复核 L1-L5 分层 + L1/L2 估值）、决策日志条数。",
+        "每家公司一行：名单、质量与估值为输入快照，历史筛选结论及决策日志用于追溯。当前执行读取工作流程列明的结构化真值。",
+        "CSV 中 `round1_*` 取三类表；`prior_final_decision/watch_selection_route/decision_reason` 取归档筛选，其余 `prior_*` 取质量、估值和核心池输入。字段前缀不表示证据已重新核验。",
         "完整数据见同名 CSV；逐股完整理由以各轮结果文件为准。",
         "",
         "## 覆盖情况",
         "",
-        "| round1 分类 | 家数 |",
+        "| 名单分类 | 家数 |",
         "| --- | ---: |",
         f"| worth_attention | {counts.get('worth_attention', 0)} |",
         f"| boundary_pending | {counts.get('boundary_pending', 0)} |",
         f"| garbage | {counts.get('garbage', 0)} |",
-        f"| 尚未重扫 | {len(rows) - len(triaged)} |",
+        f"| documented_not_attention | {counts.get('documented_not_attention', 0)} |",
+        f"| 未登记 | {len(rows) - len(triaged)} |",
         f"| 合计 | {len(rows)} |",
         "",
-        "## round1 值得关注公司（按行业）",
+        "## 值得关注公司（按行业）",
         "",
     ]
     lines += markdown_table(
@@ -207,14 +201,14 @@ def write_markdown(path: Path, rows: list[dict[str, str]], generated_at: str) ->
             ("代码", "security_code"),
             ("名称", "security_name"),
             ("行业", "industry"),
-            ("上轮档位", "prior_quality_tier"),
-            ("上轮策略", "prior_strategy_tag"),
-            ("round1 理由", "round1_attention_reason"),
+            ("输入质量档", "prior_quality_tier"),
+            ("输入策略", "prior_strategy_tag"),
+            ("名单理由", "round1_attention_reason"),
         ],
     )
     lines += [
         "",
-        "## round1 垃圾公司（永久排除）",
+        "## garbage 档案（复核按工作流程）",
         "",
     ]
     lines += markdown_table(
@@ -231,13 +225,12 @@ def write_markdown(path: Path, rows: list[dict[str, str]], generated_at: str) ->
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
-def load_decision_logs(current: Path) -> list[dict[str, str]]:
-    """现行决策日志 ＋ `data/archive/decision_log_*.csv` 的旧纪元行（§2 归档口径），按时间顺序拼接。"""
-    rows: list[dict[str, str]] = []
-    for archived in sorted((ROOT / "data/archive").glob("decision_log_*.csv")):
-        rows.extend(load_csv(archived))
-    rows.extend(load_csv(current))
-    return rows
+def load_decision_logs(current: Path) -> Iterator[dict[str, str]]:
+    """逐文件流式读取历史与当前日志，避免把所有纪元同时装入内存。"""
+    for path in [*sorted((ROOT / "data/archive").glob("decision_log_*.csv")), current]:
+        if path.exists():
+            with path.open(newline="", encoding="utf-8-sig") as handle:
+                yield from csv.DictReader(handle)
 
 
 def parse_args() -> argparse.Namespace:

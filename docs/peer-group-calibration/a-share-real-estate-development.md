@@ -1,5 +1,7 @@
 # 1. A-Share Real Estate Development Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group is mostly property developers, commercial property owners, industrial park operators, and distressed real-estate companies. The review treats ordinary real-estate development as structurally low quality for this watchlist, but still checks for misclassified companies whose real business has moved into technology or strategic materials.

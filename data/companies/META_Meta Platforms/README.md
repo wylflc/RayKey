@@ -1,3 +1,25 @@
+# Meta Platforms（META）研究档案
+
+> 海外观察清单；不进入 A 股执行清单。当前值读取清单，研究原文按其证据日期复核。
+
+| 项 | 当前值 |
+| --- | --- |
+| 名单状态 | worth_attention |
+| 质量档 | L1 |
+| 参考分 | 82.00 |
+| 合理价区间 | 519.16 ~ 634.52 USD |
+| 估值证据日 | 2026-07-29 |
+| 估值事件 | 二季报（2026Q2） |
+
+## 当前估值
+
+ROIC·增长
+
+ROIC·增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-06-30 TTM，SEC companyfacts 10-Q TTM）：NOPAT/经营账面财年序列 0.221／0.118／0.165／0.213／0.173 → ratio0 **0.185**（blend(λ=0.5,w=0.00,v=0.00)）× 经营账面 BPS_op 153.34（稀释股数 2,566m）= 每股 NOPAT 锚 **28.392**；股本口径：十年窗 |X_y|≥5% 年份 FY2018 -11.8b／FY2021 -41.2b／FY2022 -19.5b／FY2023 -13.0b／FY2024 -26.9b／FY2025 -23.9b；年报已计累计外生权益 -136.3b（最新年报经营账面 E_op 353.6b，母公司权益 217.2b）；年报后 x +1.58/股（ttm_x；其后归母净利 42.62b、已付股息 2.70b）；BPS_op = 当期 BPS 101.80 − x − X_cum/股 -53.12 = 153.34；周期守卫 NOPAT/经营账面：当期 0.197（最新年报 0.173 × f 1.14）vs 十年中位 0.191 = 1.03×，坡道 w=0.00／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.173 + λ×(当期 − 三年中位) = 0.185，五年中位 0.173，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 3.3b；ROIC0 38.3%；WACC 7.08%（r 8.80% = rf 4.79% + β0.9×ERP 4.46%；rd 2.17%；t 22%；账面权重）；增长 g0=11.0%（来源 capital：资本腿 11.0%=min(增量ROIC 18.4%,40%)×再投资率 60%，增速腿 0.0%=CAGR 25.6%×(1−w 0.00)×d 0.97），ROIC_T=min(WACC+档位超额, ROIC0)=13.1%，g_T=3.0%，fade 10 年，终值占比 84%；净负债/股 -0.792（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 576.840 USD/普通股** → **576.84 USD**；带 = V×[0.90,1.10]。标签：buybacks=PaymentsForRepurchaseOfCommonStock;capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue;cash_invest=MarketableSecuritiesCurrent;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=DepreciationDepletionAndAmortization;dividends_paid=PaymentsOfDividends;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpenseDebt;lt_debt_current=;lt_deb
+
+<details>
+<summary>历史研究原文（非现行估值、评级或交易依据）</summary>
+
 # Meta Platforms（META）估值档案
 
 > 海外关注清单（§6.8）。**一律不可买、不构成买入候选**——本档只回答「质量几档、该用什么模型、现价贵不贵」，不进 §8 扫描、不走 §10 闸门。
@@ -28,8 +50,4 @@ Q1 88：广告平台近零边际成本、现金转化历史上极优（当前被
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
 
-## ROIC 口径估值（§6.5.2.3 同口径）
-
-证据 2026-07-29（二季报（2026Q2））。方法：ROIC·增长（§6.5.2.3 同口径）；带 519.16~634.52 USD。
-
-ROIC·增长（§6.5.2.3 同口径，财年 2021~2025＋截至 2026-06-30 TTM，SEC companyfacts 10-Q TTM）：NOPAT/经营账面财年序列 0.221／0.118／0.165／0.213／0.173 → ratio0 **0.185**（blend(λ=0.5,w=0.00,v=0.00)）× 经营账面 BPS_op 153.34（稀释股数 2,566m）= 每股 NOPAT 锚 **28.392**；股本口径：十年窗 |X_y|≥5% 年份 FY2018 -11.8b／FY2021 -41.2b／FY2022 -19.5b／FY2023 -13.0b／FY2024 -26.9b／FY2025 -23.9b；年报已计累计外生权益 -136.3b（最新年报经营账面 E_op 353.6b，母公司权益 217.2b）；年报后 x +1.58/股（ttm_x；其后归母净利 42.62b、已付股息 2.70b）；BPS_op = 当期 BPS 101.80 − x − X_cum/股 -53.12 = 153.34；周期守卫 NOPAT/经营账面：当期 0.197（最新年报 0.173 × f 1.14）vs 十年中位 0.191 = 1.03×，坡道 w=0.00／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.173 + λ×(当期 − 三年中位) = 0.185，五年中位 0.173，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 3.3b；ROIC0 38.3%；WACC 7.08%（r 8.80% = rf 4.79% + β0.9×ERP 4.46%；rd 2.17%；t 22%；账面权重）；增长 g0=11.0%（来源 capital：资本腿 11.0%=min(增量ROIC 18.4%,40%)×再投资率 60%，增速腿 0.0%=CAGR 25.6%×(1−w 0.00)×d 0.97），ROIC_T=min(WACC+档位超额, ROIC0)=13.1%，g_T=3.0%，fade 10 年，终值占比 84%；净负债/股 -0.792（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 576.840 USD/普通股** → **576.84 USD**；带 = V×[0.90,1.10]。标签：buybacks=PaymentsForRepurchaseOfCommonStock;capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue;cash_invest=MarketableSecuritiesCurrent;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=DepreciationDepletionAndAmortization;dividends_paid=PaymentsOfDividends;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpenseDebt;lt_debt_current=;lt_deb
+</details>

@@ -1,5 +1,7 @@
 # 1. A-Share Coal Mining Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews coal mining and coal-integrated energy companies. Coal is a commodity-cycle industry with long-term decarbonization headwinds, so retention requires unusually strong resource cost, vertical integration, scarce coking-coal exposure, or global/resource-platform differentiation.

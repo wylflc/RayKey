@@ -1,5 +1,7 @@
 # 1. A-Share Fluorochemicals Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews fluorite resources, refrigerants, fluorochemical chains, and lithium/electronic fluorine materials. Retention depends on scarce fluorite resources, regulatory quota, integrated chains, or high-end material/process know-how rather than commodity chemical spreads alone.

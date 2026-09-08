@@ -1,5 +1,7 @@
 # 1. A-Share Phosphate Fertilizer Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews phosphate fertilizer companies after the broader phosphorus-chemical group. Fertilizer is commodity-cycle exposed, so retention requires phosphate-resource ownership, integrated chemical chain, or material/new-energy optionality beyond fertilizer volume.

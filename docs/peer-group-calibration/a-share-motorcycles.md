@@ -1,5 +1,7 @@
 # 1. A-Share Motorcycles Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews motorcycle manufacturers and recreational/off-road motorcycle names. The industry has brand and engineering elements, but many products remain capital-replicable; retention requires proven high-displacement brand, product iteration, distribution, and export capability.

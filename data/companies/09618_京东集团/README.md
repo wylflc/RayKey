@@ -1,3 +1,25 @@
+# 京东集团（09618）研究档案
+
+> 海外观察清单；不进入 A 股执行清单。当前值读取清单，研究原文按其证据日期复核。
+
+| 项 | 当前值 |
+| --- | --- |
+| 名单状态 | worth_attention |
+| 质量档 | L3 |
+| 参考分 | 58.20 |
+| 合理价区间 | 43.92 ~ 53.68 HKD |
+| 估值证据日 | 2026-08-13 |
+| 估值事件 | 二季报（2026Q2） |
+
+## 当前估值
+
+ROIC·增长
+
+ROIC·增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-06-30 TTM，eastmoney HK F10 TTM）：NOPAT/经营账面财年序列 -0.006／0.062／0.229／0.121 → ratio0 **0.113**（blend(λ=0.5,w=0.00,v=0.00)）× 经营账面 BPS_op 76.45（稀释股数 2,818m）= 每股 NOPAT 锚 **8.608**；股本口径：十年窗 |X_y|≥5% 年份 FY2018 +7.5b／FY2019 +9.1b／FY2020 +56.3b／FY2021 +27.5b／FY2025 -21.0b；年报已计累计外生权益 +12.3b（最新年报经营账面 E_op 212.7b，母公司权益 225.0b）；年报后 x -3.08/股（ttm_x|equity_gap；其后归母净利 12.23b、已付股息 9.47b）；BPS_op = 当期 BPS 77.75 − x − X_cum/股 +4.38 = 76.45；周期守卫 NOPAT/经营账面：当期 0.104（最新年报 0.121 × f 0.86）vs 十年中位 0.091 = 1.14×，坡道 w=0.00／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.121 + λ×(当期 − 三年中位) = 0.113，五年中位 0.091，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 0.0b；ROIC0 6.4%；WACC 9.19%（r 11.30% = rf 4.79% + β1.3×ERP 5.01%；rd 4.11%；t 15%；账面权重）；增长 g0=0.0%（来源 trailing：资本腿 —=min(增量ROIC 44.5%,40%)×再投资率 -10%，增速腿 0.0%=CAGR 93.7%×(1−w 0.00)×d 0.47），ROIC_T=min(WACC+档位超额, ROIC0)=6.4%，g_T=3.0%，fade 10 年，终值占比 47%；净负债/股 37.528（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 41.828 CNY/普通股**；报表币 CNY → 交易币 HKD 汇率 1.1668 → **48.80 HKD**；带 = V×[0.90,1.10]。标签：cash=balance:现金及等价物;cfo=cashflow:经营业务现金净额;dividends_paid_ytd=eastmoney:RPT_HKF10_INFO_DIVIDEND;income_tax=income:税项;interest_expense=income:融资成本;lease_c=balance:融资租赁负债(流动);lease_nc=balance:融资租赁负债(非流动);lt_loan=balance:长期贷款;minority_equity=balance:少数股东权益;net_income=income:股东应占溢利;notes_c=balance:应付票据;notes_nc=balance:应付票据(非流动);operating_income=income:经营溢利;parent_equity=balance:股东权益;pretax=income:除税前溢
+
+<details>
+<summary>历史研究原文（非现行估值、评级或交易依据）</summary>
+
 # 京东集团（09618）估值档案
 
 > 海外关注清单（§6.8）。**一律不可买、不构成买入候选**——本档只回答「质量几档、该用什么模型、现价贵不贵」，不进 §8 扫描、不走 §10 闸门。
@@ -28,8 +50,4 @@ Q1 62：自营模式重资产、履约成本刚性，但供应链与时效构成
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
 
-## ROIC 口径估值（§6.5.2.3 同口径）
-
-证据 2026-08-13（二季报（2026Q2））。方法：ROIC·增长（§6.5.2.3 同口径）；带 43.92~53.68 HKD。
-
-ROIC·增长（§6.5.2.3 同口径，财年 2021~2025＋截至 2026-06-30 TTM，eastmoney HK F10 TTM）：NOPAT/经营账面财年序列 -0.006／0.062／0.229／0.121 → ratio0 **0.113**（blend(λ=0.5,w=0.00,v=0.00)）× 经营账面 BPS_op 76.45（稀释股数 2,818m）= 每股 NOPAT 锚 **8.608**；股本口径：十年窗 |X_y|≥5% 年份 FY2018 +7.5b／FY2019 +9.1b／FY2020 +56.3b／FY2021 +27.5b／FY2025 -21.0b；年报已计累计外生权益 +12.3b（最新年报经营账面 E_op 212.7b，母公司权益 225.0b）；年报后 x -3.08/股（ttm_x|equity_gap；其后归母净利 12.23b、已付股息 9.47b）；BPS_op = 当期 BPS 77.75 − x − X_cum/股 +4.38 = 76.45；周期守卫 NOPAT/经营账面：当期 0.104（最新年报 0.121 × f 0.86）vs 十年中位 0.091 = 1.14×，坡道 w=0.00／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.121 + λ×(当期 − 三年中位) = 0.113，五年中位 0.091，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 0.0b；ROIC0 6.4%；WACC 9.19%（r 11.30% = rf 4.79% + β1.3×ERP 5.01%；rd 4.11%；t 15%；账面权重）；增长 g0=0.0%（来源 trailing：资本腿 —=min(增量ROIC 44.5%,40%)×再投资率 -10%，增速腿 0.0%=CAGR 93.7%×(1−w 0.00)×d 0.47），ROIC_T=min(WACC+档位超额, ROIC0)=6.4%，g_T=3.0%，fade 10 年，终值占比 47%；净负债/股 37.528（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 41.828 CNY/普通股**；报表币 CNY → 交易币 HKD 汇率 1.1668 → **48.80 HKD**；带 = V×[0.90,1.10]。标签：cash=balance:现金及等价物;cfo=cashflow:经营业务现金净额;dividends_paid_ytd=eastmoney:RPT_HKF10_INFO_DIVIDEND;income_tax=income:税项;interest_expense=income:融资成本;lease_c=balance:融资租赁负债(流动);lease_nc=balance:融资租赁负债(非流动);lt_loan=balance:长期贷款;minority_equity=balance:少数股东权益;net_income=income:股东应占溢利;notes_c=balance:应付票据;notes_nc=balance:应付票据(非流动);operating_income=income:经营溢利;parent_equity=balance:股东权益;pretax=income:除税前溢
+</details>

@@ -1,5 +1,7 @@
 # 1. A-Share Other Metal New Materials Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group contains metal-fiber, powder-metallurgy, magnesium/lightweighting, superconducting, titanium, superalloy, copper-alloy, master-alloy, and metal-composite companies. The review corrects baseline under-scoring where strategic material qualification, process know-how, or national-security relevance matters more than current-cycle profit.

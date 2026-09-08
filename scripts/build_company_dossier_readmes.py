@@ -1,20 +1,8 @@
 #!/usr/bin/env python3
-"""从 a_share_valuation_dossiers.csv 渲染每家公司的 README.md（§6.5.2 主分析文档）。
+"""从档案、分层与生产带渲染公司 README。
 
-CSV 是机器可读的唯一真值来源；README 是人读正文，章节顺序固定、不得逐票自由发挥
-（§6.5.2「格式统一」）。本脚本把这一条从约定变成可复算的渲染，避免逐份手写产生漂移。
-
-第八节「现价隐含了什么」（v4.30，OI-078）
---------------------------------------
-首段由本脚本按**生产带与池内现价**机械生成：`现价 ÷ 生产带中值 = P/V`、带、带所走的
-§6.5.1 路径及其增长/折现假设、V 与现价各自对应的归一化盈利倍数。数据与带同源（档案带列 +
-`a_share_pool_model_bands_adopted.csv` + 核心池现价），随 §6.7 第 4 步每次重渲染自动更新。
-`implied_growth_years` 列只承载**手写的可证伪命题与方法分歧**，不得再写带中枢、隐含年数反解
-或任何带值——判例 OI-076① 格力：手写中枢 51 元 vs 生产带 85.29；2026-08-21 清理前 121/280 份
-仍含建档时的「本档中枢」。
-
-用法：python3 scripts/build_company_dossier_readmes.py [--check]
-  --check 只比对不写盘，有差异时以退出码 1 结束。
+当前估值与研究记录分别显示；模型更新不改变研究证据日期。
+--check 只比对不写盘，有漂移时非零退出。
 """
 from __future__ import annotations
 
@@ -25,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from pv_ratio import pv_formula_note, trading_pv  # noqa: E402  v4.62 OI-091
+from pv_ratio import trading_pv  # noqa: E402  v4.62 OI-091
 from apply_model_bands_to_dossiers import latest_model_bands  # noqa: E402
 
 DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
@@ -39,35 +27,26 @@ MIN_AVAILABLE = "2025-01-01"
 
 HEADER = """# {name}（{code}）估值档案
 
-> §6.5.2 逐票估值档案**主分析文档**。**目的：确定本公司的合理估值区间，用于判定股价低估/高估程度。**
-> 带的机器可读副本在 `data/processed/a_share_valuation_dossiers.csv`（建带引擎只读该 CSV），两者须一致。
-> {bespoke_line}
-> **更新义务（§7.4）**：定期报告／业绩预告快报／研报／高频经营数据／产业政策／技术发布任一变化 →
-> 先更新本档、再重算带、并把 `reviewed_at` 改为当日。
+> 当前带由工作流程的模型链生成，本页从结构化档案渲染。
+> 估值更新不代表研究指标、判断或触发条件已重新核验；研究更新按证据日期记录。
 
 | 项 | 值 |
 | --- | --- |
 | 质量分层 | {tier_line} |
-| 行业分类标签 | {tag}（**仅作分类，不再决定估值方法**） |
+| 质量证据日 | {quality_evidence_date} |
+| 研究策略标签 | {tag} |
 | 合理价区间 | **{band_low} ~ {band_high}** |
 | 估值方法 | {band_method} |
-| 盈利锚 | {anchor_line} |
-| 本档更新日 | **{reviewed_at}**｜定案：{decided_by} |
+| 估值更新日 | **{reviewed_at}** |
 """
 
 FOOTER = """
-## 附：证据来源
+## 附：证据与记录
 
-**结构化证据**：`data/interim/valuation_evidence/<代码>.json`（东财接口：40 期财报、逐份研报一致预期
-`ycmx`、业绩预告/快报、历史估值分位；含 `retrieved_at_utc` 与 `source_urls`，可复算）。
-**人工取证**：接口不提供的输入（储量、在手订单、管线阶段、分红预案、高频经营数据）由复核者检索后
-写入同一 JSON 的 `manual_evidence`（逐条含录入日/类型/期间/标题/来源URL/摘要/用途），每轮抓取结转不清空。
-研报逐份跟踪见 `research_ledger.md`（研究台账，若已建立）。
-**v2.07 起不再设 `sources/` 原件目录**——东财无原件下载接口，该机制成文后执行 0 次（§6.5.2）。
+- 结构化档案：`data/processed/a_share_valuation_dossiers.csv`，按证券代码检索；`notes` 保留历史带变更与建档来源。
+- 财务与研报证据：`data/interim/valuation_evidence/<代码>.json`，核对来源与抓取时间；人工证据写入其 `manual_evidence`。
+- 名单、质量及复核时间：工作流程列明的三类表与分层表；旧结论按决策日志追溯。
 """
-
-BESPOKE_ON = "`bespoke = true`——带只由本档给出（§6.5.1 生产模型带）。"
-BESPOKE_OFF = "`bespoke = false`——本档只补充跟踪指标与复核触发，带仍由通用模型给出。"
 
 PATH_LABEL = {
     "growth": "内在价值模型 ROIC 口径（growth 路径）",
@@ -77,7 +56,7 @@ PATH_LABEL = {
 }
 EARNINGS_LABEL = {"growth": "归一化每股 NOPAT", "zero_growth": "归一化每股 NOPAT",
                   "equity_fallback": "归一化 EPS"}
-HANDWRITTEN_LABEL = "**手写：可证伪命题与方法分歧**（不作为带；带与 `P/V` 以上段为准）："
+HANDWRITTEN_LABEL = "研究备注原文（须按证据日期复核，不作为现行估值或交易依据）"
 PV_RULE = ("`P/V` 高于 1 的部分是市场比模型多付的增长/回报预期，低于 1 则相反；分歧不改带"
            "（§6.5.2.2 档案不得覆盖模型参数），只能由新证据经 §7.4 复核触发重算。")
 
@@ -176,28 +155,17 @@ def implied_lead(row: dict, meta: dict, band: dict | None) -> tuple[str, bool]:
         text += "无带、无 `P/V`，不进 §9.3 判定；模型重新可算后自动回归模型带（§6.5.2.4）。"
         return text, False
     mid = (low + high) / 2
-    manual = (row.get("band_derivation") or "").strip() == "manual_override"
-    band_name = "人工覆盖带" if manual else "生产带"
+    band_name = "模型带" if band is not None else "档案模型带"
     if price:
-        # v4.62（OI-091）：P/V 按 `pv_ratio.trading_pv`；ROIC 路径写明 (现价+净负债)÷EV，其余 现价÷V
         pv = trading_pv(price, band) if band is not None else None
         if pv is None:
             pv = price / mid
-        formula = pv_formula_note(band) if band is not None else "现价÷V"
-        if formula.startswith("(现价"):
-            nd = _num(band.get("net_debt_ps")) or 0.0
-            ev = _num(band.get("ev_ps")) or (mid + nd)
-            text = (f"现价 {price:g}（{as_of}）对 {band_name}中值 V {mid:.2f}：`P/V` = (现价 + 每股净负债 {nd:.2f}) ÷ 每股企业价值 {ev:.2f} = **{pv:.3f}**"
-                    f"（现价÷V = {price / mid:.3f}；带 {low:.2f}~{high:.2f}）。")
-        else:
-            text = (f"现价 {price:g}（{as_of}）÷ {band_name}中值 V {mid:.2f} = **{pv:.3f}**"
-                    f"（带 {low:.2f}~{high:.2f}）。")
+        text = (f"现价 {price:g}（{as_of}）÷ {band_name}中值 V {mid:.2f} = **{pv:.3f}**"
+                f"（带 {low:.2f}~{high:.2f}）。")
     else:
         pv = None
         text = (f"{band_name} {low:.2f}~{high:.2f}（中值 V {mid:.2f}）；本档当前不在核心池估值表内，"
                 "无现价口径与 `P/V`，不进 §9.3 判定。")
-    if manual:
-        return text + "带为 §6.5.2.4 人工覆盖（推导与失效条件见第二节）。", False
     skipped = False
     if band is not None:
         iv = _num(band.get("intrinsic_value"))
@@ -215,6 +183,9 @@ def render(row: dict, pool: dict, bands: dict, tiers: dict | None = None) -> tup
     meta = pool.get(code, {})
     tmeta = (tiers or {}).get(code, {})
     tier = tmeta.get("quality_tier") or meta.get("quality_tier", "")
+    tri_class = TRIAGE_CLASS.get(code, "")
+    if tri_class in ("boundary_pending", "garbage"):
+        tier = ""
     score = tmeta.get("quality_score") or meta.get("quality_score", "")
     if tier and score:
         tier_line = f"{tier}（参考分 {score}）"
@@ -224,31 +195,24 @@ def render(row: dict, pool: dict, bands: dict, tiers: dict | None = None) -> tup
         # 池外且无分层行（boundary_pending 点名档案）：按三类表写明类别，不评分是 §5.7 硬规则 1
         tri_class = (TRIAGE_CLASS or {}).get(code, "")
         tier_line = f"{tri_class}（不评分）" if tri_class else "—"
-    anchor = (row.get("anchor_earnings_yi") or "").strip()
-    anchor_line = f"{anchor} 亿元" if anchor else "—（非盈利口径）"
-
     parts = [HEADER.format(
         name=row["security_name"],
         code=code,
-        bespoke_line=BESPOKE_ON if str(row.get("bespoke", "")).strip().lower() == "true" else BESPOKE_OFF,
         tier_line=tier_line,
+        quality_evidence_date=tmeta.get("evidence_available_at") or "未记录",
         tag=meta.get("strategy_tag") or tmeta.get("primary_strategy_tag") or "—",
         band_low=row["band_low"],
         band_high=row["band_high"],
         band_method=row["band_method"],
-        anchor_line=anchor_line,
         reviewed_at=row["reviewed_at"],
-        decided_by=row["decided_by"],
     )]
 
-    notes = (row.get("notes") or "").strip()
-    if notes:
-        parts.append(f"\n## 一、为什么脱离通用模型\n\n{notes}\n")
-    parts.append(f"\n## 二、带的推导（须可复算）\n\n{row['band_derivation'].strip()}\n")
-
-    override = (row.get("runrate_override_reason") or "").strip()
-    if override:
-        parts.append(f"\n## 三、运行率核对\n\n{override}\n")
+    derivation = row['band_derivation'].strip()
+    derivation = derivation.replace("与 §9.3.1.2 回测所用带**同一套口径**。", "")
+    derivation = derivation.replace("故 `P/V` = 现价 ÷ V（`scripts/pv_ratio.py` 唯一实现）与回测的 `valuation_ratio` 逐位一致。",
+                                    "池内 `P/V` 按现价 ÷ V 计算；交易资格按工作流程判定。")
+    parts.append(f"\n## 二、模型推导\n\n{derivation}\n")
+    parts.append("\n> 以下为留存研究记录；本次估值更新未重新核验这些指标与复核时点。\n")
 
     sections = [
         ("四、下一个业绩核对点", row.get("next_earnings_check"), "；;"),
@@ -266,7 +230,7 @@ def render(row: dict, pool: dict, bands: dict, tiers: dict | None = None) -> tup
     parts.append(f"\n## 八、现价隐含了什么\n\n{lead}\n")
     implied = (row.get("implied_growth_years") or "").strip()
     if implied:
-        parts.append(f"\n{HANDWRITTEN_LABEL}{implied}\n")
+        parts.append(f"\n<details>\n<summary>{HANDWRITTEN_LABEL}</summary>\n\n{implied}\n\n</details>\n")
 
     parts.append(FOOTER)
     return "".join(parts), skipped

@@ -1,5 +1,7 @@
 # 1. A-Share Healthcare Care Services Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group contains a mixed healthcare-care-service/conglomerate case. Healthcare services can have regulatory and trust barriers, but a mixed holding company only passes when the healthcare asset is material, focused, and independently defensible.

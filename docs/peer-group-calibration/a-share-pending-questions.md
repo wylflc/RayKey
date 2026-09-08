@@ -1,5 +1,7 @@
 # 1. A-Share Pending Peer-Group Questions
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 This document records companies or industries that could not be finalized during the first peer-group pass without a dedicated rule. These entries should be handled after the first pass has attempted all remaining A-share groups.
 
 ## 1.1 Defense Electronics And Defense Computing

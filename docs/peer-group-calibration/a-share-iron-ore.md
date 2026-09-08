@@ -1,5 +1,7 @@
 # 1. A-Share Iron-Ore Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews A-share companies classified under iron ore. The group is mostly commodity-resource exposure, so the review applies the strategic-resource rule: do not retain a company merely because it owns mines or benefits from commodity prices.

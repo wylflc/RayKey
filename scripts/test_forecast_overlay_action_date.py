@@ -31,7 +31,7 @@ class CorporateActionDateTest(unittest.TestCase):
                         w.writerow(base)
                     argv = ["apply_forecast_band_overlay.py", "--signal-date", day,
                             "--bands", str(bands), "--corporate-actions", str(actions)]
-                    for option in ["forecasts", "disclosures", "overrides", "pool"]:
+                    for option in ["forecasts", "disclosures", "pool"]:
                         argv.extend([f"--{option}", str(root / "missing.csv")])
                     with patch("sys.argv", argv), patch.object(overlay, "load_financials", return_value={}), \
                             contextlib.redirect_stdout(io.StringIO()):

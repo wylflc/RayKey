@@ -1,5 +1,7 @@
 # 1. A-Share Auto Sales Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group contains automobile distribution, import/export, dealership, trading, and mixed local-service companies. The industry is normally asset- and working-capital-heavy, manufacturer-dependent, and low in durable company-level barriers.

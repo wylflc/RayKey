@@ -1,5 +1,7 @@
 # 1. A-Share Scenic Spots Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews scenic-area operators and tourism-content companies. Natural scenic resources can be impossible to replicate, but growth is limited, pricing is regulated or politically sensitive, and operations are seasonal/cyclical; retention is limited to the strongest scarce-resource case.

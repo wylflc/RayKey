@@ -1,5 +1,7 @@
 # 1. A-Share Other Railway Equipment Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group contains rail vehicle interiors/doors/accessories and rail signaling/industrial rail control systems. The review separates passenger-vehicle component qualification from safety-critical signaling and control systems.

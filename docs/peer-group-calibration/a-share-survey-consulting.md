@@ -1,5 +1,7 @@
 # 1. A-Share Survey And Consulting Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews transport design institutes, testing/certification companies, survey firms, standards bodies, and consulting companies. Consulting is often project-based and labor-intensive; retention requires qualification-heavy labs, technical testing, or a transport-engineering platform with durable customer references.

@@ -1,5 +1,7 @@
 # 1. A-Share Space Equipment Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group covers satellite platforms, aerospace electronics, aero-engine platforms and parts, UAV systems, metamaterials, aerospace materials, time-frequency equipment, BeiDou/inertial-navigation suppliers, radar/microwave suppliers, and weaker ST or project-based defense electronics cases.

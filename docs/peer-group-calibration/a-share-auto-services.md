@@ -1,5 +1,7 @@
 # 1. A-Share Auto Services Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews auto testing, proving grounds, auto engineering design, taxi/driving-school services, and related service names. Most auto services are project or local-service businesses; retention requires accredited testing, scarce proving-ground assets, or safety/quality validation barriers.

@@ -1,5 +1,7 @@
 # 1. A-Share Huangjiu Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews Chinese rice-wine companies. Huangjiu has cultural and regional brand assets, but the category has a smaller addressable market and weaker young-consumer growth outlook than high-end baijiu, so the watchlist should retain at most the strongest representative category leader.

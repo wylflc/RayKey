@@ -1,5 +1,7 @@
 # 1. A-Share Tires Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews passenger, truck, off-road, and specialty tire manufacturers. Tires are manufacturing-cycle exposed, but global plant networks, OEM/customer qualification, brand/channel, compound/formulation know-how, and overseas tariff positioning can create medium barriers.

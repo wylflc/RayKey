@@ -1,5 +1,7 @@
 # 1. A-Share Plastic Products Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This broad group covers special engineering plastics, functional films, PI films, modified plastics, synthetic leather, PMMA/optical materials, PV and electronic functional films, biolab plastic consumables, magnetic-plastic appliance components, protective polymer components, packaging, household plastics, recycled plastics, molds, and ST or transition cases.

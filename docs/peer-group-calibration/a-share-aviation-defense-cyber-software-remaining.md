@@ -1,5 +1,7 @@
 # 1. A-Share Aviation Traffic And Defense-Cyber Software Remaining Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This pass resolves the two remaining pending companies in other software services: civil aviation traffic-control/command systems and defense or special-industry cybersecurity. These are not ordinary IT-service businesses because certification, safety requirements, and special customers create barriers that normal software metrics understate.

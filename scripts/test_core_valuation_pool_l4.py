@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Targeted regression tests for the reading-only L4 dossier archive."""
+"""Targeted regression tests for the off-pool archive without inferred quality tiers."""
 
 import unittest
 
 import build_a_share_core_valuation_pool as pool
 
 
-class L4DossierSectionTests(unittest.TestCase):
+class OffPoolDossierSectionTests(unittest.TestCase):
     def test_only_user_named_off_pool_dossiers_are_rendered(self):
         dossiers = [
             {
@@ -36,12 +36,12 @@ class L4DossierSectionTests(unittest.TestCase):
             {"security_code": "000003", "attention_class": "boundary_pending"},
         ]
 
-        lines, count = pool.build_l4_dossier_section(dossiers, triage)
+        lines, count = pool.build_off_pool_dossier_section(dossiers, triage)
         text = "\n".join(lines)
 
         self.assertEqual(count, 1)
         self.assertIn("[边界公司](../data/companies/000001_边界公司/README.md)", text)
-        self.assertIn("| L4 | boundary_pending | 10.00-12.00 | 11.00 |", text)
+        self.assertIn("| — | boundary_pending | 10.00-12.00 | 11.00 |", text)
         self.assertNotIn("已入池公司", text)
         self.assertNotIn("批量档案", text)
         self.assertNotIn("| P/V |", text)
@@ -52,11 +52,11 @@ class L4DossierSectionTests(unittest.TestCase):
             "dossier_dir": "data/companies/000001_边界公司", "notes": "用户点名建档",
         }]
         triage = [{"security_code": "000001", "attention_class": "boundary_pending"}]
-        lines, _ = pool.build_l4_dossier_section(
+        lines, _ = pool.build_off_pool_dossier_section(
             dossiers, triage, output_md=pool.ROOT / "data/processed/a_share_core_valuation_pool.md"
         )
         self.assertIn("[边界公司](../companies/000001_边界公司/README.md)", "\n".join(lines))
-        lines, _ = pool.build_l4_dossier_section(dossiers, triage, output_md=pool.ROOT / "docs/x.md")
+        lines, _ = pool.build_off_pool_dossier_section(dossiers, triage, output_md=pool.ROOT / "docs/x.md")
         self.assertIn("[边界公司](../data/companies/000001_边界公司/README.md)", "\n".join(lines))
 
     def test_unvaluable_named_dossier_keeps_structured_status(self):
@@ -73,7 +73,9 @@ class L4DossierSectionTests(unittest.TestCase):
             "attention_class": "documented_not_attention",
         }]
 
-        lines, count = pool.build_l4_dossier_section(dossiers, triage)
+        lines, count = pool.build_off_pool_dossier_section(
+            dossiers, triage, tiers={"600001": {"quality_tier": "L4"}}
+        )
         text = "\n".join(lines)
 
         self.assertEqual(count, 1)

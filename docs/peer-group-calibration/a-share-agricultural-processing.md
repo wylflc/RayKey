@@ -1,5 +1,7 @@
 # 1. A-Share Agricultural Processing Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group contains plant extraction, edible fungi, konjac processing, food additives, sugar, edible oil, grain/oil processing, fruit/vegetable distribution, and distressed agricultural processors. Most agricultural processing has weak pricing power; retention requires global niche share, biological/extraction process capability, or brand/category control.

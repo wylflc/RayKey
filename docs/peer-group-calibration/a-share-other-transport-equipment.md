@@ -1,5 +1,7 @@
 # 1. A-Share Other Transport Equipment Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This mixed group contains container and energy equipment, personal mobility, powersports, two-wheelers, rail signaling, bicycle brands, rail components, and niche electric vehicles. The review ignores the generic industry label and judges the real business moat of each company.

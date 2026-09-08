@@ -1,5 +1,7 @@
 # 1. A-Share White Appliances Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews white-appliance brands, HVAC platforms, compressor/component makers, cold-chain appliances, and weak household-appliance followers. The category is mature, but the top platforms have global manufacturing, brand, channel, service, R&D and component ecosystems that are not easy to beat with capital alone.

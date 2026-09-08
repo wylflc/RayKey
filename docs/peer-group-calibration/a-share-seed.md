@@ -1,5 +1,7 @@
 # 1. A-Share Seed Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews seed companies and crop germplasm platforms. Seeds are strategically important, but many listed companies are regional or weak; retention requires germplasm, breeding pipeline, variety approval, channel, and crop-category leadership.

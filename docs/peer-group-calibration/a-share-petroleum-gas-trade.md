@@ -1,5 +1,7 @@
 # 1. A-Share Petroleum And Gas Trade Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews oil-products, LNG, gas-trading, and regional fuel-distribution names. The default is low-barrier rejection unless a listed company owns scarce upstream resources, irreplaceable terminals/pipelines, or a regulated network with long-lived economics.

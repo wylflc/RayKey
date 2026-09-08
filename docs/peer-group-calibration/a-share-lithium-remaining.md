@@ -1,5 +1,7 @@
 # 1. A-Share Remaining Lithium Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group completes the only unreviewed lithium-name left after the lithium-resource calibration pass retained 盐湖股份, 天齐锂业, 赣锋锂业, 中矿资源, 藏格矿业, and 融捷股份, while rejecting weaker duplicate lithium-resource and lithium-mica cases.

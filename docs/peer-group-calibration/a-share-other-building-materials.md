@@ -1,5 +1,7 @@
 # 1. A-Share Other Building Materials Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews gypsum board, waterproofing, building hardware, pipes, panels, testing, curtain wall, and miscellaneous construction materials. Property exposure creates long-term headwinds, so retention is limited to leaders with clear product systems, channel/specification power, or category dominance.

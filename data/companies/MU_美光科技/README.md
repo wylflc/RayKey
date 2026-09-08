@@ -1,3 +1,25 @@
+# 美光科技（MU）研究档案
+
+> 海外观察清单；不进入 A 股执行清单。当前值读取清单，研究原文按其证据日期复核。
+
+| 项 | 当前值 |
+| --- | --- |
+| 名单状态 | worth_attention |
+| 质量档 | L2 |
+| 参考分 | 59.40 |
+| 合理价区间 | 179.82 ~ 219.78 USD |
+| 估值证据日 | 2026-06-24 |
+| 估值事件 | 三季报（FY2026Q3） |
+
+## 当前估值
+
+ROIC·增长
+
+ROIC·增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-05-28 TTM，SEC companyfacts 10-Q TTM）：NOPAT/经营账面财年序列 0.131／0.171／-0.090／0.024／0.160 → ratio0 **0.131**（cyclical_median）× 经营账面 BPS_op 89.88（稀释股数 1,145m）= 每股 NOPAT 锚 **11.753**；股本口径：十年窗 |X_y|≥5% 年份 FY2017 +1.4b／FY2019 -2.7b；年报已计累计外生权益 -1.9b（最新年报经营账面 E_op 56.1b，母公司权益 54.2b）；年报后 x -0.24/股（ttm_x；其后归母净利 47.27b、已付股息 0.44b）；BPS_op = 当期 BPS 87.97 − x − X_cum/股 -1.67 = 89.88；周期守卫 NOPAT/经营账面：当期 0.903（最新年报 0.160 × f 5.66）vs 十年中位 0.145 = 6.22×，坡道 w=1.00／谷 v=0.00；信任度 λ=1.0，非周期锚 = 三年中位 0.024 + λ×(当期 − 三年中位) = 0.903，五年中位 0.131，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 0.7b；ROIC0 14.3%；WACC 8.94%（r 9.25% = rf 4.79% + β1.0×ERP 4.46%；rd 4.17%；t 15%；账面权重）；增长 g0=17.6%（来源 capital：资本腿 17.6%=min(增量ROIC 20.1%,40%)×再投资率 88%，增速腿 —），ROIC_T=min(WACC+档位超额, ROIC0)=11.9%，g_T=3.0%，fade 10 年，终值占比 82%；净负债/股 -16.152（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 199.798 USD/普通股** → **199.80 USD**；带 = V×[0.90,1.10]。标签：buybacks=PaymentsForRepurchaseOfCommonStock;capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue;cash_invest=AvailableForSaleSecuritiesDebtSecuritiesCurrent;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=DepreciationDepletionAndAmortization;dividends_paid=PaymentsOfDividendsCommonStock;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpe
+
+<details>
+<summary>历史研究原文（非现行估值、评级或交易依据）</summary>
+
 # 美光科技（MU）估值档案
 
 > 海外关注清单（§6.8）。**一律不可买、不构成买入候选**——本档只回答「质量几档、该用什么模型、现价贵不贵」，不进 §8 扫描、不走 §10 闸门。
@@ -28,8 +50,4 @@ DRAM/NAND 合约价月度方向；三寡头合计资本开支指引；HBM 产能
 ---
 定档人：模型推导（用户可覆盖）｜复核日：2026-08-03
 
-## ROIC 口径估值（§6.5.2.3 同口径）
-
-证据 2026-06-24（三季报（FY2026Q3））。方法：ROIC·增长（§6.5.2.3 同口径）；带 179.82~219.78 USD。
-
-ROIC·增长（§6.5.2.3 同口径，财年 2021~2025＋截至 2026-05-28 TTM，SEC companyfacts 10-Q TTM）：NOPAT/经营账面财年序列 0.131／0.171／-0.090／0.024／0.160 → ratio0 **0.131**（cyclical_median）× 经营账面 BPS_op 89.88（稀释股数 1,145m）= 每股 NOPAT 锚 **11.753**；股本口径：十年窗 |X_y|≥5% 年份 FY2017 +1.4b／FY2019 -2.7b；年报已计累计外生权益 -1.9b（最新年报经营账面 E_op 56.1b，母公司权益 54.2b）；年报后 x -0.24/股（ttm_x；其后归母净利 47.27b、已付股息 0.44b）；BPS_op = 当期 BPS 87.97 − x − X_cum/股 -1.67 = 89.88；周期守卫 NOPAT/经营账面：当期 0.903（最新年报 0.160 × f 5.66）vs 十年中位 0.145 = 6.22×，坡道 w=1.00／谷 v=0.00；信任度 λ=1.0，非周期锚 = 三年中位 0.024 + λ×(当期 − 三年中位) = 0.903，五年中位 0.131，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 0.7b；ROIC0 14.3%；WACC 8.94%（r 9.25% = rf 4.79% + β1.0×ERP 4.46%；rd 4.17%；t 15%；账面权重）；增长 g0=17.6%（来源 capital：资本腿 17.6%=min(增量ROIC 20.1%,40%)×再投资率 88%，增速腿 —），ROIC_T=min(WACC+档位超额, ROIC0)=11.9%，g_T=3.0%，fade 10 年，终值占比 82%；净负债/股 -16.152（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 199.798 USD/普通股** → **199.80 USD**；带 = V×[0.90,1.10]。标签：buybacks=PaymentsForRepurchaseOfCommonStock;capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue;cash_invest=AvailableForSaleSecuritiesDebtSecuritiesCurrent;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=DepreciationDepletionAndAmortization;dividends_paid=PaymentsOfDividendsCommonStock;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpe
+</details>

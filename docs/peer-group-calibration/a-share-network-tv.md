@@ -1,5 +1,7 @@
 # 1. A-Share Network TV Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews IPTV, internet TV, and provincial broadcast-network service companies. Licenses and local operator relationships can be hard for capital to copy, but growth is constrained by telecom/operator economics, content competition, and regional limits.

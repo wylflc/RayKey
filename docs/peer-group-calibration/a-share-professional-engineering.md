@@ -1,5 +1,7 @@
 # 1. A-Share Professional Engineering Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group covers cement engineering, nuclear construction, chemical EPC, electronic cleanroom engineering, metallurgical engineering, transport design, mining development services, industrial modules, local contractors, and design/project-service companies.

@@ -1,5 +1,7 @@
 # 1. A-Share Cloud, IDC, And CDN Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This note records the company-by-company review for `互联网-互联网技术-云服务(含IDC、CDN)`.

@@ -1,5 +1,7 @@
 # 1. A-Share Infrared Thermal Imaging And Special Optoelectronic Sensing Peer-Group Calibration
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This note carves the first workable subgroup out of the broad residual `电子设备-电子设备制造-电子设备制造` queue item.

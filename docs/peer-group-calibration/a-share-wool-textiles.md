@@ -1,5 +1,7 @@
 # 1. A-Share Wool Textiles Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews wool textiles, apparel-adjacent textile processing, and one cross-industry new-material case. Ordinary wool textiles are low-growth and manufacturing-capacity driven; retention requires a material hard-material or technical-fiber angle, not only garment fabric execution.

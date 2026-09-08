@@ -1,5 +1,7 @@
 # 1. A-Share Small Appliances Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group includes cleaning appliances, kitchen appliances, cookware, kitchen electricals, small-appliance ODMs, personal-care appliances, massage devices, and smart home/kitchen products. The category often has low product barriers and short cycles, so retention requires a durable brand, channel, product engineering, or motor/core-component capability.

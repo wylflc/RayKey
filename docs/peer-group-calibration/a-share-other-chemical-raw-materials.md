@@ -1,5 +1,7 @@
 # 1. A-Share Other Chemical Raw Materials Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This broad chemical raw-material group mixes coal-to-olefins, electronic gases, wet electronic chemicals, photoresist, microsphere chromatography materials, nuclear-technology materials, C2/C3/C4 petrochemicals, industrial gases, amines, silanes, catalysts, pigments, polystyrene, titanium dioxide, and ST chemical cases. The review separates process/platform and customer-qualified materials from ordinary commodity capacity.

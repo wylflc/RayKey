@@ -1,35 +1,8 @@
 #!/usr/bin/env python3
-"""海外关注清单（§6.8）按 A 股现行 ROIC 口径（§6.5.2.3）重算合理估值，写回 `overseas_watchlist_valuation.csv`。
+"""按工作流程 §6.8 重算海外观察清单并渲染公司档案。
 
-与 `build_historical_valuation_bands.py --value-model roic`（§6.7 第 2 步生产参数）逐项同式：
-  history = 最近 5 个财年（至少 3 年）；ROIC0 = 归一化 ROIC；增量 ROIC（端点）；再投资率；
-  rd = 历史利息/有息负债（夹 2%~12%，缺省 4.5%）；税率 = 最新报告口径观测；WACC 账面权重；
-  **锚**：比率 = 各年 NOPAT ÷ 当年经营账面 E_op（§6.5.2.3 股本口径第 2 条：年报间外生权益 X_y = ΔE − (归母综合收益 − 已付股息)，
-  综合收益缺失用归母净利，|X_y| ≥ 5% 上年母公司权益才计；E_op = E − 未花的募资（先进先出，按超额现金判） − 累计注销，十年窗首年
-  X_cum = 0；某年 E − X_cum < 20% E 判结构断点，比率窗与守卫窗自该年重起），季报观察点的「当期」= 最新年报比率 × f
-  （f = NOPAT TTM ÷ 最新年报 NOPAT），增长态信任度 λ = 近两次年度变动中上行次数 ÷ 2，非周期锚 = 三年中位 + λ×(当期 − 三年中位)；
-  周期守卫坡道（OI-088／OI-090）：s = 当期比率 ÷ 十年中位，w = clip((s − 1.3)/0.6, 0, 1)，谷 v 同式取 1/s，
-  ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；λ 与三年／五年／十年中位只取年报；
-  每股 NOPAT 锚 = ratio0 × 经营账面 BPS_op（§6.5.2.3 股本口径第 1 条）：BPS_op = 当期 BPS − x − X_cum/股，
-  x = 当期 BPS − (最新年报母公司权益 + 其后归母净利 − 其后已付股息) ÷ 当期稀释股数（年报行 x = 0；x 封顶 95% BPS）；
-  g0 = max(min(增量ROIC,40%)×再投资率, NOPAT 3 年 CAGR × W × (1−w) × d) 夹 [0,25%]，W = `TRAIL_WEIGHT` = 0（与 §6.7 第 2 步
-  `--roic-trail-weight 0` 同），d = min(1, 最新年报/上年) × min(1, TTM/最新年报)；ROIC_T = min(WACC + 档位终值超额, ROIC0)；
-  g_T = min(3%, 无风险利率)；fade 10 年；每股价值 = intrinsic_value(NOPAT/股) − 净负债/股；带 = V × [0.90, 1.10]。
-差别（成文于此，不藏在代码里）：
-  * r = rf + β×ERP 中 rf 取美债 10Y（美元 ADR 与联系汇率港股同用），ERP 按**经营地**取 Damodaran 国家 ERP
-    （`data/reference/overseas_valuation_inputs.csv`），β 按质量档与 A 股同表（L1 0.9／L2 1.0／L3、L4 1.3）；
-  * 报表货币 ≠ 交易货币时按同文件汇率折算，ADR 按每 ADR 普通股数折算；
-  * 金融企业（伯克希尔）ROIC 不适用，沿用档案带并标明；韩股无三表源、SpaceX 无申报 → 无法估值；
-  * 季报观察点有完整三表与申报稀释股数：x 直接按上式算，不走 A 股的股数估计与 −25% BPS 下界（|x| 超过 25% BPS 记
-    `x_large_negative` 留痕）；净负债与少数股东取季报资产负债表（A 股按年报净负债 × BPS_op/E_op 再加 x 近似），x 的现金
-    已在其中、不再另进股权桥；年报间已付股息取现金流量表；`overseas_statement_overrides.csv` 维护行未填净利时该年 X_y = 0
-    （`earn_gap`）、季报 x = 0（`np_gap`）；分红公司的季报现金流量表缺已付股息（东财 HK F10 部分中报只给摘要）时 x = 0
-    （`div_gap`）；季报当期的 f 取 NOPAT TTM ÷ 年报 NOPAT（A 股用归母净利 TTM 因子）；
-  * ROIC 路径被拒（NOPAT 非正、终值 ROIC 距 g_T 不足、净负债超过企业价值等）→ 无法估值，原因写入 `band_derivation_text`，
-    旧档案带只作参考文本保留（与 A 股「没算完的带一律判无法估值」同规）。
-用法：
-  python3 scripts/build_overseas_roic_bands.py --check                 # 只算不写
-  python3 scripts/build_overseas_roic_bands.py --as-of YYYY-MM-DD [--quotes fetch|skip]
+从本地三表、报告证据和参考输入计算；折现率、汇率与股本处理遵守海外口径。
+--check 只算不写；正式执行使用 --as-of YYYY-MM-DD，行情获取由 --quotes 控制。
 """
 from __future__ import annotations
 
@@ -51,8 +24,8 @@ YEARS_CSV = ROOT / "data/interim/overseas_roic_years.csv"
 INPUTS_CSV = ROOT / "data/reference/overseas_valuation_inputs.csv"
 REPORT_EVIDENCE = ROOT / "data/reference/overseas_report_evidence.csv"
 BAND_LOW_COEF, BAND_HIGH_COEF = 0.90, 1.10
-BETA_BY_TIER = {"L1": 0.9, "L2": 1.0, "L3": 1.3, "L4": 1.3}
-TERMINAL_EXCESS_BY_TIER = {"L1": 0.06, "L2": 0.03, "L3": 0.0, "L4": 0.0}
+BETA_BY_TIER = {"L1": 0.9, "L2": 1.0, "L3": 1.3, "L4": 1.3, "boundary_pending": 1.3}
+TERMINAL_EXCESS_BY_TIER = {"L1": 0.06, "L2": 0.03, "L3": 0.0, "L4": 0.0, "boundary_pending": 0.0}
 ROE_YEARS, MIN_YEARS, IROE_CAP, G0_CAP, G0_FLOOR = 5, 3, 0.40, 0.25, 0.0
 N_FADE, N1, MIN_TERMINAL_SPREAD, PEAK_K, PEAK_RAMP, TRAIL_WEIGHT = 10, 0, 0.02, 1.6, 0.3, 0.0
 # §6.5.2.3 股本口径（与 build_historical_valuation_bands 同值）：|X_y| ≥ 5% 上年母公司权益才计；经营账面 < 20% 账面判结构断点；x 封顶 95% BPS
@@ -74,8 +47,8 @@ COMPANY_CFG = {
     "00316": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
     "00267": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
 }
-FINANCIAL_KEEP = {"BRK.B": "金融资本型（保险浮存金＋控股）：ROIC 口径的投入资本/NOPAT 对金融企业不可定义，与 A 股「金融企业退回权益口径」同规；沿用档案 §6.5.2 J 隐含 PB 带，不按 ROIC 重算",
-                  "00267": "金融资本型（银行并表、归母利润约八成来自中信银行）：ROIC 口径的投入资本/NOPAT 对金融企业不可定义，与 A 股「金融企业退回权益口径」同规；东财 HK F10 三表自 2014 年起为银行格式（营业额与股东权益字段为空），ROIC 路径被拒。沿用档案 §6.5.2 J 隐含 PB 带，不按 ROIC 重算"}
+FINANCIAL_KEEP = {"BRK.B": "金融资本型（保险浮存金＋控股）：按工作流程海外金融企业口径读取经核验的档案隐含 PB 带，不按 ROIC 重算",
+                  "00267": "金融资本型（银行并表）：按工作流程海外金融企业口径读取经核验的档案隐含 PB 带，不按 ROIC 重算"}
 NO_SOURCE = {"005930": "韩股无免密钥三表取数源（东财 HK F10／SEC 均不覆盖），ROIC 口径不可算",
              "000660": "韩股无免密钥三表取数源（东财 HK F10／SEC 均不覆盖），ROIC 口径不可算",
              "SPCX": "无 SEC 申报（无 CIK），三表不可得"}
@@ -89,7 +62,8 @@ def _f(v):
 
 
 def load_inputs() -> dict[str, float]:
-    return {r["key"]: float(r["value"]) for r in csv.DictReader(INPUTS_CSV.open(encoding="utf-8"))}
+    with INPUTS_CSV.open(encoding="utf-8") as handle:
+        return {r["key"]: float(r["value"]) for r in csv.DictReader(handle)}
 
 
 def year_from_row(r: dict) -> roic_inputs.RoicYear:
@@ -117,16 +91,17 @@ def load_years() -> dict[str, list[roic_inputs.RoicYear]]:
     meta: dict[str, dict] = {}
     current: dict[str, roic_inputs.RoicYear] = {}
     current_meta: dict[str, dict] = {}
-    for r in csv.DictReader(YEARS_CSV.open(encoding="utf-8")):
-        y = year_from_row(r)
-        row_meta = {"ccy": r["report_currency"], "source": r["source"], "tags": r["tags_used"],
-                    "report_label": r.get("report_label", ""), "evidence_url": r.get("evidence_url", "")}
-        if r.get("period_type") == "ttm":
-            current[r["security_code"]] = y
-            current_meta[r["security_code"]] = row_meta
-        else:
-            out.setdefault(r["security_code"], []).append(y)
-            meta[r["security_code"]] = row_meta
+    with YEARS_CSV.open(encoding="utf-8") as handle:
+        for r in csv.DictReader(handle):
+            y = year_from_row(r)
+            row_meta = {"ccy": r["report_currency"], "source": r["source"], "tags": r["tags_used"],
+                        "report_label": r.get("report_label", ""), "evidence_url": r.get("evidence_url", "")}
+            if r.get("period_type") == "ttm":
+                current[r["security_code"]] = y
+                current_meta[r["security_code"]] = row_meta
+            else:
+                out.setdefault(r["security_code"], []).append(y)
+                meta[r["security_code"]] = row_meta
     for code in out:
         out[code].sort(key=lambda y: y.period)
     load_years.meta = meta  # type: ignore[attr-defined]
@@ -379,7 +354,7 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
 
 def derivation_text(code: str, r: dict, meta: dict, cfg: dict, fx: float, value_trade: float | None, ccy_report: str) -> str:
     if r["status"] != "ok":
-        base = f"ROIC 口径（§6.5.2.3，与 A 股生产参数同式）不可算：{r['reason']}"
+        base = f"ROIC 口径（工作流程海外估值口径）不可算：{r['reason']}"
         if r.get("wacc"):
             base += f"；已算到 WACC {r['wacc']:.2%}（r={r['r']:.2%}=rf {r['rf']:.2%}+β{r['beta']}×ERP {r['erp']:.2%}，rd {r['rd']:.2%}，t {r['tax']:.0%}）"
         return base
@@ -405,12 +380,39 @@ def derivation_text(code: str, r: dict, meta: dict, cfg: dict, fx: float, value_
     x_txt = (f"股本口径：{years_txt}；年报已计累计外生权益 {r['applied']/1e9:+.1f}b（最新年报经营账面 E_op {r['e_op_ref']/1e9:.1f}b，母公司权益 {r['equity_ref']/1e9:.1f}b）；"
              f"年报后 x {r['x_ps']:+.2f}/股（{r['x_mode']}{('|' + r['x_note']) if r.get('x_note') else ''}{x_detail}）；"
              f"BPS_op = 当期 BPS {r['bps']:.2f} − x − X_cum/股 {r['x_cum_ps']:+.2f} = {r['bps_op']:.2f}")
-    return (f"ROIC·{'增长' if r['path']=='growth' else '零增长'}（§6.5.2.3 同口径，{period_text}，{meta.get('source','')}）："
+    return (f"ROIC·{'增长' if r['path']=='growth' else '零增长'}（工作流程海外估值口径，{period_text}，{meta.get('source','')}）："
             f"NOPAT/经营账面财年序列 {ratio_txt} → ratio0 **{r['ratio0']:.3f}**（{r['mode']}）× 经营账面 BPS_op {r['bps_op']:.2f}（稀释股数 {r['shares']/1e6:,.0f}m）= 每股 NOPAT 锚 **{r['nopat_ps']:.3f}**；{x_txt}；{guard_txt}；{anchor_txt}；"
             f"最新观察点回购 {r['buyback_latest']/1e9:.1f}b；"
             f"ROIC0 {r['roic0']:.1%}；WACC {r['wacc']:.2%}（r {r['r']:.2%} = rf {r['rf']:.2%} + β{r['beta']}×ERP {r['erp']:.2%}；rd {r['rd']:.2%}；t {r['tax']:.0%}；账面权重）；{g_line}；"
             f"净负债/股 {r['net_debt_ps']:.3f}（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = {r['value']:.3f} {ccy_report}/普通股**{fx_line}"
             + (f" → **{value_trade:,.2f} {cfg['ccy']}**" if value_trade else "") + f"；带 = V×[0.90,1.10]。标签：{meta.get('tags','')[:400]}")
+
+
+def render_readme(row: dict, previous: str) -> str:
+    """显示当前清单值，将人工原文与已取代的估值放入历史研究记录。"""
+    archive_open = "<details>\n<summary>历史研究原文（非现行估值、评级或交易依据）</summary>"
+    if archive_open in previous:
+        history = previous.split(archive_open, 1)[1].split("</details>", 1)[0].strip()
+    else:
+        history = previous.split("## ROIC 口径估值", 1)[0].strip()
+    unscored = row.get("attention_class") in ("boundary_pending", "garbage")
+    tier = "—（不评分）" if unscored else row.get("quality_tier") or "—"
+    score = "—" if unscored else row.get("quality_score") or "—"
+    derivation = row.get("band_derivation_text") or row.get("fair_price_basis") or "—"
+    derivation = derivation.replace("§6.5.2.3 同口径", "工作流程海外估值口径").replace("§6.5.2.3，与 A 股生产参数同式", "工作流程海外估值口径")
+    if row["security_code"] in FINANCIAL_KEEP:
+        derivation = FINANCIAL_KEEP[row["security_code"]]
+    return (f"# {row['security_name']}（{row['security_code']}）研究档案\n\n"
+            f"> 海外观察清单；不进入 A 股执行清单。当前值读取清单，研究原文按其证据日期复核。\n\n"
+            f"| 项 | 当前值 |\n| --- | --- |\n"
+            f"| 名单状态 | {row.get('attention_class') or '未登记'} |\n"
+            f"| 质量档 | {tier} |\n| 参考分 | {score} |\n"
+            f"| 合理价区间 | {row.get('fair_price_low') or '—'} ~ {row.get('fair_price_high') or '—'} {row.get('currency','')} |\n"
+            f"| 估值证据日 | {row.get('valuation_reviewed_at') or '—'} |\n"
+            f"| 估值事件 | {row.get('valuation_evidence_event') or '—'} |\n\n"
+            f"## 当前估值\n\n{(row.get('band_method') or '—').split('（', 1)[0]}\n\n"
+            f"{derivation}\n\n"
+            f"{archive_open}\n\n{history}\n\n</details>\n")
 
 
 def main() -> int:
@@ -436,7 +438,7 @@ def main() -> int:
     changed = 0
     evidence_changed = 0
     for row in rows:
-        code, name, tier = row["security_code"], row["security_name"], str(row.get("quality_tier", "L2"))
+        code, name, tier = row["security_code"], row["security_name"], str(row.get("quality_tier") or row.get("attention_class") or "L2")
         report = evidence.get(code) or {}
         evidence_date = report.get("evidence_date") or row.get("evidence_available_at") or ""
         evidence_event = report.get("report_event") or row.get("valuation_evidence_event") or ""
@@ -463,7 +465,7 @@ def main() -> int:
             if r["status"] == "ok":
                 v_trade = r["value"] * fx * cfg["adr"]
                 lo, hi = BAND_LOW_COEF * v_trade, BAND_HIGH_COEF * v_trade
-                method = f"ROIC·{'增长' if r['path']=='growth' else '零增长'}（§6.5.2.3 同口径）"
+                method = f"ROIC·{'增长' if r['path']=='growth' else '零增长'}"
                 status = "ok"
             else:
                 v_trade, lo, hi, method, status = None, None, None, "无法估值", "rejected"
@@ -526,16 +528,9 @@ def main() -> int:
             continue
         readme = d / "README.md"
         body = readme.read_text(encoding="utf-8") if readme.exists() else f"# {row['security_name']}\n"
-        marker = "## ROIC 口径估值（§6.5.2.3 同口径）"
-        section = (f"{marker}\n\n证据 {row.get('valuation_reviewed_at') or '—'}（{row.get('valuation_evidence_event') or '—'}）。方法：{row['band_method']}；"
-                   f"带 {row.get('fair_price_low') or '—'}~{row.get('fair_price_high') or '—'} {row.get('currency','')}。\n\n{row['band_derivation_text']}\n")
-        if marker in body:
-            head = body.split(marker)[0]
-            body = head + section
-        else:
-            body = body.rstrip("\n") + "\n\n" + section
+        body = render_readme(row, body)
         readme.write_text(body, encoding="utf-8")
-    print(f"\n写回 {WATCHLIST.name}：{changed} 行带/方法变化，{evidence_changed} 行证据日期/事件变化；README 已刷新 ROIC 节")
+    print(f"\n写回 {WATCHLIST.name}：{changed} 行带/方法变化，{evidence_changed} 行证据日期/事件变化；README 已刷新当前估值节")
     return 0
 
 

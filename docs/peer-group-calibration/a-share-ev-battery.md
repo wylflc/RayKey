@@ -1,5 +1,7 @@
 # 1. A-Share EV Battery And New-Energy Platform Calibration
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 **Current EVE review, 2026-09-07:** EVE remains `boundary_pending`, without a quality tier. The latest [company review](../reports/eve_energy_review_2026-09-07.zh.md) recognizes its consumer-battery niche, BMW qualification and technology partnerships, withdraws the blanket CATL-dominance rationale, and records the remaining evidence gaps in durable unit economics and capital recovery. The June forecast-based retention described below is historical; forecast growth and PEG do not determine current attention status. Current structured status lives in `a_share_attention_triage.csv`.
 
 ## 1.1 Purpose

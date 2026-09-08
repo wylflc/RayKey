@@ -1,5 +1,7 @@
 # 1. A-Share Logistics Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group contains integrated express networks, freight forwarding, chemical logistics, petrochemical storage, manufacturing logistics, commodity supply-chain trading, regional transport, warehousing equipment, and ST logistics cases. The review separates network density, safety qualification, infrastructure, and customer workflow moats from low-margin transport and trading capacity.

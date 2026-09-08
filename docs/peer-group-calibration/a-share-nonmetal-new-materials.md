@@ -1,5 +1,7 @@
 # 1. A-Share Nonmetal New Materials Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group mixes high-purity quartz, electronic powders, stealth materials, battery ceramic materials, carbon-carbon composites, mica insulation, glass fiber, graphite electrodes, industrial silicon, synthetic diamonds, and weak commodity materials. The review separates customer-qualified strategic materials from commodity cycles and overcapacity.

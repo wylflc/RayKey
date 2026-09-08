@@ -1,5 +1,7 @@
 # 1. A-Share Freshwater Fisheries Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews freshwater aquaculture and seafood processing/trading. The default is low-barrier rejection because breeding, processing, cold-chain, and retail execution are generally replicable unless genetics, scarce water rights, or brand/channel economics are unusually strong.

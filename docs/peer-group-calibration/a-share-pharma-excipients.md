@@ -1,5 +1,7 @@
 # 1. A-Share Pharmaceutical Excipients Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews a pharmaceutical excipient and medical polymer specialist. Excipients can be high-barrier when material chemistry, regulatory filing support, customer validation, and drug-delivery know-how are central to the business.

@@ -1,5 +1,7 @@
 # 1. A-Share Other Professional Services Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This note records the company-by-company review for `休闲、生活及专业服务-专业服务-其他专业服务`.

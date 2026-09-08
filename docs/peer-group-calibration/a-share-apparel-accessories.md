@@ -1,5 +1,7 @@
 # 1. A-Share Apparel Accessories Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group mixes footwear OEM, garment accessories, leather, shoes, bags, and weak apparel brands. Retention requires global customer qualification, hard manufacturing systems, brand/channel durability, or a differentiated niche that stronger peers do not already cover.

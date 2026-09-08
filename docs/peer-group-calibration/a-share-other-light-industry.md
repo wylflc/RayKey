@@ -1,5 +1,7 @@
 # 1. A-Share Other Light Industry Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This mixed light-industry group contains artificial turf, optical lenses, molded fiber, hygiene products, wigs, disposable tableware, sanitary ware, windows, oral care, glassware, and decorative materials. Most are consumer or manufacturing niches with modest barriers; retention requires global niche leadership, brand/standard power, or technical product differentiation.

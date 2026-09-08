@@ -1,5 +1,7 @@
 # 1. A-Share Water Conservancy Construction Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group includes large hydropower/water conservancy engineering and smaller local or distressed water construction companies. Engineering contracting is usually low-margin, but global hydropower, pumped-storage, renewable-energy and water-engineering capability can be hard to rebuild with capital alone.

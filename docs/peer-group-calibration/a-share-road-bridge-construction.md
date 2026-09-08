@@ -1,5 +1,7 @@
 # 1. A-Share Road And Bridge Construction Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group covers road, bridge, tunnel, port, municipal and highway construction companies. Most construction businesses are low-margin and working-capital heavy, but a few global engineering platforms and tunnel specialists have hard project experience and technical systems.

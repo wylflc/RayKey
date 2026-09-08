@@ -1,56 +1,8 @@
 #!/usr/bin/env python3
-"""把业绩预告／快报叠加到生产模型带上（§6.3 第 5 条的执行点）。
+"""按工作流程叠加已公告的预告或快报，并归一化除权事件。
 
-为什么需要这一步
-----------------
-`build_historical_valuation_bands.py` 只读**已披露财报**（`data/raw/financials/`）。
-业绩预告与快报公告日虽然早于正式报告，却进不到带——这是 OI-064 登记的缺陷：
-§6.3 第 5 条写着「预告与快报……进入锚；快报优先，区间取中值」，但生产链七个脚本
-无一读取预告文件，条文从未落地。判例：牧原股份 2026-07-11 预告 H1 首亏 −62 亿，
-而生产带到 2026-08-18 仍机械锚在一季报。
-
-预告从哪条通道进模型
---------------------
-ROIC 模型的结构是：
-
-    nopat_ps = ratio0 × bps          # ratio0 = 归一化 NOPAT/净资产（稳健锚）
-    ev_ps    = DCF(nopat_ps, roic0, g0, wacc, roe_terminal)
-    IV       = (ev_ps − fin_nd) − max(少数股东账面, m×(ev_ps − fin_nd)) + x     （§6.5.1 第 3 条股权桥）
-
-预告给的是**归母净利润**，它通过留存收益改变**净资产**，因此落在 `bps` 这条通道上，
-**不动 `ratio0`**。这有三个好处：
-
-1. **与正式报告落地时模型要做的事完全一致**——正式报告同样先改 `bps`。故预告带与
-   后来的正式带是同一套算法、同一条通道，输入从预告中值换成实际值而已，会自然收敛。
-2. **不重蹈已被回测否决的 `--roe-source ttm`**（§12.14.3：五起点年化全负）。归一化锚
-   保持稳健，单个谷底半年不会把周期股的带打穿。
-3. **纯机械、可推导**，不需要人工判断。
-
-净金融负债与账面少数股东 **不调整**（盈利份额扣减随 EV 同比例）：预告给不出资产负债表（有息负债／超额现金／少数股东权益），
-硬估会把一个不可验证的假设混进带里。这一项等正式报告。**该省略使亏损公司的带偏高、
-盈利公司的带偏低，方向已知，见输出的 `overlay_note`。**
-
-生产与回测的已知背离（重要）
-----------------------------
-§6.5.2.1 原本要求「生产 `P/V` 与回测 `valuation_ratio` 逐位一致」。本脚本**有意打破**
-这条：回测宇宙没有历史预告面板（`fetch_a_share_earnings_forecasts.py` 只取当前报告期），
-无法在历史上复现预告。用户 2026-08-18 裁定：实盘能更快反映最新信息，没有理由不做。
-
-**隔离方式**：本脚本只改**生产**带 `a_share_pool_model_bands_adopted.csv`；
-回测输入 `roic_bands.csv` / `roic_daily_raw.csv` / `a_share_daily_states_adopted.csv`
-一律不碰。故回测基准不受影响，两侧的差异只存在于「今日生产带」这一层。
-
-数值口径
---------
-`intrinsic_value` 对首个参数（盈利输入）**一次齐次**——已数值验证 216 组参数零违反——
-故新值 = 旧值 × `scale`，与「按新输入重算 DCF」逐位等价。这样做还避开了带文件四位小数
-的舍入：直接用存值重算会引入最大约 0.08% 的误差，而按比例缩放让未叠加的行与叠加前
-逐位一致。净负债不参与缩放（它不随利润等比变动）。
-
-用法
-----
-在 §6.7 建带链的第 4 步（`build_pool_model_bands.py`）之后、
-`apply_model_bands_to_dossiers.py` 之前运行。幂等：同一份预告不会被叠加两次。
+叠加通过经营 BPS 调整盈利分子，保持归一化比率；净金融负债与账面少数股东不变，
+盈利份额扣减随 EV 重算。仅写生产带，同一份证据不重复叠加。
 """
 from __future__ import annotations
 
@@ -76,32 +28,26 @@ OVERLAY_COLS = ["forecast_overlay", "forecast_notice_date", "forecast_report_dat
 
 
 def exright_normalize(band: dict, code_actions: list[dict], as_of: str) -> tuple[float, float] | None:
-    """把带值按公告日之后的除权事件折算到现价口径（v4.20，用户裁定「带跟随真实股价调整」）。
+    """按现金分红、送转和配股事件折算带值。
 
-    公式与交易所除权参考价一致：`v → (v − 现金红利) ÷ (1 + 送转比)`，事件按除权日顺序复合。
-    三类行三种窗口（避免与叠加的 `dps` 双重扣减）：
-      普通行           现金与送转都从带的**公告日**起算；
-      预告/快报叠加行  送转从**叠加前带的公告日**起算（叠加不改股本口径），
-                       现金从**预告报告期末**起算——(基线期, 预告期] 的分红已进叠加的 ΔBPS；
-      人工覆盖行       两者都从覆盖 `reviewed_at` 起算（覆盖值按当时现价口径给出）。
-    银行（股利折现）不折：其 V 由最近已知完整财年分红算出，天然现价口径。
-    只调 `intrinsic_value`/`band_low`/`band_high`；`bps` 等基本面列保持报告口径。
+    现金从公告日起算；叠加行从预告报告期末起算。
+    送转从 BPS 股本基准日起算，无该字段时退公告日；银行股利折现不折。
     """
     path = (band.get("roic_path") or "").strip()
     overlay = (band.get("forecast_overlay") or "").strip()
+    if overlay == "manual_override":
+        raise ValueError("生产带含人工覆盖值，请按工作流程重建模型带")
     if path == "bank_divspread" or overlay == "bank_no_change" or band.get("exright_note"):
         return None
-    if overlay == "manual_override":
-        split_since = cash_since = (band.get("available_at") or "")[:10]
-    elif overlay in ("forecast", "express"):
+    if overlay in ("forecast", "express"):
         split_since = ((band.get("pre_overlay_notice_date") or "")[:10]
                        or (band.get("forecast_notice_date") or "")[:10])
         cash_since = (band.get("forecast_report_date") or "")[:10]
     else:
         split_since = cash_since = (band.get("notice_date") or "")[:10]
     # v4.59（OI-087，§6.5.1 第 5 条）：送转窗口自带所用 BPS 的**股本基准日**起算（多为报告期末——送转落在期末与
-    # 公告日之间时东财 BPS 多未反映），叠加不改股本口径，故叠加行同样取该列；现金窗口不变。人工覆盖行仍按覆盖日。
-    if overlay != "manual_override" and (band.get("bps_basis_date") or "").strip():
+    # 公告日之间时东财 BPS 多未反映），叠加不改股本口径，故叠加行同样取该列；现金窗口不变。
+    if (band.get("bps_basis_date") or "").strip():
         split_since = band["bps_basis_date"].strip()[:10]
     if not split_since or not cash_since:
         return None
@@ -241,7 +187,7 @@ def dividends_between(actions: list[dict], start: str, end: str) -> float:
 
 def pick_evidence(code: str, forecasts: dict, express: dict, band_period: str,
                   as_of: str) -> dict | None:
-    """选证据：§6.3 第 5 条「快报优先」。只取报告期晚于当前带、且公告日不晚于 as_of 的。"""
+    """选证据：工作流程 §6.4「快报优先」。只取报告期晚于当前带、且公告日不晚于 as_of 的。"""
     cand = []
     ex = express.get(code)
     if ex and (ex.get("report_date") or "")[:10] > band_period and (ex.get("notice_date") or "")[:10] <= as_of:
@@ -313,7 +259,7 @@ def recompute(band: dict, scale: float) -> tuple[float | None, float, str] | Non
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="把业绩预告／快报叠加到生产模型带（§6.3 第 5 条）")
+    ap = argparse.ArgumentParser(description="把业绩预告／快报叠加到生产模型带（工作流程 §6.4）")
     ap.add_argument("--signal-date", required=True, help="信号日；证据截止自动取下一工作日")
     ap.add_argument("--bands", type=Path, default=ROOT / "data/processed/a_share_pool_model_bands_adopted.csv")
     ap.add_argument("--forecasts", type=Path, default=ROOT / "data/interim/a_share_earnings_forecasts.csv")
@@ -321,9 +267,6 @@ def main() -> int:
     ap.add_argument("--financials-dir", type=Path, default=ROOT / "data/raw/financials")
     ap.add_argument("--corporate-actions", type=Path,
                     default=ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv")
-    ap.add_argument("--overrides", type=Path,
-                    default=ROOT / "data/processed/manual_band_overrides.csv",
-                    help="§6.5.2.4 人工覆盖表；列内的行直接落带，且不再叠加预告")
     ap.add_argument("--pool", type=Path, default=ROOT / "data/processed/a_share_core_valuation_pool.csv",
                     help="只用于按 总市值÷现价 交叉校验股本；缺失则跳过校验")
     ap.add_argument("--out", type=Path, default=None, help="缺省原地覆盖 --bands")
@@ -335,6 +278,10 @@ def main() -> int:
         rows, header = list(reader), list(reader.fieldnames or [])
     if not rows:
         print("生产带文件为空，未做任何叠加", file=sys.stderr)
+        return 1
+
+    if any(row.get("forecast_overlay") == "manual_override" for row in rows):
+        print("生产带含人工覆盖值，请按工作流程重建模型带", file=sys.stderr)
         return 1
 
     forecasts: dict[str, dict] = {}
@@ -361,15 +308,6 @@ def main() -> int:
             for row in csv.DictReader(handle):
                 actions.setdefault((row.get("security_code") or "").strip(), []).append(row)
 
-    # §6.5.2.4 人工覆盖必须**同时落到生产带文件**，否则只改了展示层：
-    # 扫描器的 `P/V` 读的是本文件，档案/池改了而这里没改，两层就会给出相反结论。
-    # 判例：宏桥控股 2026-08-18 人工覆盖到 27.15-33.18（低估 +57%），
-    # 而生产带仍是 0.1993，扫描器算出 `P/V` 96.3 并把它排除在合格集之外。
-    overrides: dict[str, dict] = {}
-    if args.overrides.exists():
-        with args.overrides.open(encoding="utf-8-sig", newline="") as handle:
-            overrides = {(r.get("security_code") or "").strip(): r for r in csv.DictReader(handle)}
-
     financials = load_financials(args.financials_dir)
 
     # 总股本交叉校验源：`total_market_cap_bn` 的单位是**十亿元**（宁德时代 1850.569 → 1.85 万亿），
@@ -385,7 +323,6 @@ def main() -> int:
     out_header = header + [c for c in OVERLAY_COLS if c not in header]
     applied, skipped, unchanged = [], [], 0
     bank_cleared: list[tuple[str, str, str]] = []
-    override_applied: list[tuple[str, str, float, float]] = []
 
     for band in rows:
         for col in OVERLAY_COLS:
@@ -396,27 +333,6 @@ def main() -> int:
         if (band.get("status") or "").strip() not in ("", "ok"):
             unchanged += 1
             continue
-
-        ovr = overrides.get(code)
-        if ovr:
-            lo, hi = num(ovr.get("band_low")), num(ovr.get("band_high"))
-            if lo and hi and lo > 0:
-                mid = (lo + hi) / 2
-                band.update({
-                    "pre_overlay_iv": band.get("intrinsic_value", ""),
-                    "pre_overlay_report_date": band_period,
-                    "forecast_overlay": "manual_override",
-                    "forecast_notice_date": ovr.get("reviewed_at", ""),
-                    "forecast_source": f"§6.5.2.4 人工覆盖（{ovr.get('reason_code')}）",
-                    "bps_scale": "", "forecast_profit_yi": "",
-                    "overlay_note": (f"人工覆盖，**不叠加预告**：{ovr.get('note')}"
-                                     f"｜失效条件：{ovr.get('expires_when')}"),
-                    "intrinsic_value": f"{mid:.4f}",
-                    "band_low": f"{lo:.4f}", "band_high": f"{hi:.4f}",
-                    "available_at": ovr.get("reviewed_at", ""),
-                })
-                override_applied.append((name, ovr.get("reviewed_at", ""), lo, hi))
-                continue
 
         ev = pick_evidence(code, forecasts, express, band_period, args.as_of)
         if ev is None:
@@ -443,7 +359,7 @@ def main() -> int:
                 "pre_overlay_report_date": band_period,
                 "bps_scale": "1.000000",
                 "overlay_note": (
-                    f"§6.3 第 5 条：{ev['label']}（{ev['notice_date']}）归母 {ev['profit']/1e8:.2f} 亿，"
+                    f"工作流程 §6.4：{ev['label']}（{ev['notice_date']}）归母 {ev['profit']/1e8:.2f} 亿，"
                     f"**带值不变**——本行走股利折现（分子为最近已知完整财年每股分红），利润类证据不进分子。"
                     f"按 §7.4 只推进证据日期以解除估值侧冻结；分红变动由 `rebuild_bank_bands.py` 每次重建自动吸收。"
                     f"质量侧复核（§7.2）不受本条影响。"),
@@ -530,7 +446,7 @@ def main() -> int:
             "forecast_source": ev["label"],
             "bps_scale": f"{scale:.6f}",
             "overlay_note": (
-                f"§6.3 第 5 条叠加：{ev['label']}（{ev['notice_date']}）归母 {ev['profit']/1e8:.2f} 亿，"
+                f"工作流程 §6.4叠加：{ev['label']}（{ev['notice_date']}）归母 {ev['profit']/1e8:.2f} 亿，"
                 f"基线 {band_period} 累计 {base_profit/1e8:.2f} 亿 → 区间利润 {delta_profit/1e8:.2f} 亿；"
                 f"股本 {shares/1e8:.2f} 亿股（源 {shares_src}）、期间每股分红 {dps:.4f} 元 → "
                 f"每股净资产 {bps:.4f} → {new_bps:.4f}（×{scale:.4f}）；"
@@ -574,11 +490,11 @@ def main() -> int:
     if exright_hits:
         exright_hits.sort(key=lambda h: h[2] / h[1] if h[1] else 1)
         big = [h for h in exright_hits if h[1] and abs(h[2] / h[1] - 1) >= 0.05]
-        print(f"  除权归一化（v4.20，带跟随交易所除权调整）：{len(exright_hits)} 只折算到现价口径，"
+        print(f"  除权归一化：{len(exright_hits)} 只折算到现价口径，"
               f"其中变动 ≥5% 的 {len(big)} 只：" + "、".join(
                   f"{n} {o:.2f}→{v:.2f}({v / o - 1:+.0%})" for n, o, v in big[:15])
               + ("…" if len(big) > 15 else ""))
-    print(f"  已叠加 {len(applied)} 只｜人工覆盖 {len(override_applied)} 只｜"
+    print(f"  已叠加 {len(applied)} 只｜"
           f"银行只推证据日 {len(bank_cleared)} 只｜跳过 {len(skipped)} 只｜无证据或已叠加 {unchanged} 只")
     if applied:
         applied.sort(key=lambda a: (a[2] / a[1] - 1) if a[1] else 0)
@@ -586,8 +502,6 @@ def main() -> int:
         for name, old, new, label, notice, dprofit in applied:
             chg = f"{new / old - 1:+.1%}" if old else "—"
             print(f"  {name:<10}{old or 0:>10.2f}{new:>10.2f}{chg:>9}  {dprofit:>12.2f}  {label} {notice}")
-    for name, when, lo, hi in override_applied:
-        print(f"  · §6.5.2.4 人工覆盖落生产带：{name} → {lo:.2f}-{hi:.2f}（{when}）")
     for name, label, notice in bank_cleared:
         print(f"  · 银行只推进证据日、带值不变：{name}（{label} {notice}）")
     for name, why in skipped:

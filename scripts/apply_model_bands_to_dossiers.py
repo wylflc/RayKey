@@ -1,50 +1,8 @@
 #!/usr/bin/env python3
-"""把内在价值模型的带写入逐票档案（§6.5.2.3，v2.72 起为唯一带来源）。
+"""把生产模型带写入逐票档案；池外档案从全市场模型带取数。
 
-为什么要有这一步
-----------------
-2026-08-10 查出**回测用的带与实盘出单的带不是同一套**（§12.9.1）：回测读
-`intrinsic_value.py` 的机械模型（`g0 = ROE×留存率`、10 年 fade、隐含 PE 中位 15.0），
-而实盘出单用 273 份手工档案（169 份走 `一致预期 × PEG`，隐含 PE 20~45x）。
-两者中位相差 **1.24 倍**——即实盘等效运行在买入线约 1.12 上，超出 §12.6 扫过的
-0.70~1.00 全区间，且落在「越松越差」的一侧。
-
-用户 2026-08-10 裁定：**按回测口径落实，因为那是经过验证的模型。**
-
-口径对齐（关键）
-----------------
-模型输出 `band = IV × [0.90, 1.10]`，**中值恰为 `IV`**；回测的
-`valuation_ratio = 收盘 / IV`。故把该带写入档案后，生产口径的
-`P/V = 收盘 ÷ 区间中值` 与回测**逐位一致**，不引入任何换算误差。
-
-保留逐票档案的哪一部分
-----------------------
-**只覆盖带相关的六列**（`band_low`/`band_high`/`band_method`/`band_derivation`/
-`anchor_earnings_yi`/`reviewed_at`）。`key_metrics`、`hf_indicators`、
-`next_earnings_check`、`review_triggers`、`dossier_dir`、`notes` 原样保留——
-那是逐票研究的结论，与用哪个模型算带无关，且 §7.4 的复核触发仍要用它。
-原带写入 `notes` 留痕，可追溯。
-
-模型给不出新带时的统一口径（v4.22，OI-068，用户 2026-08-19 裁定）
-------------------------------------------------------------------
-**不再保留手工带**。模型判不可估（亏损、护栏拒绝、零增长价值 ≤ 0）或最新 ok 带早于
-`--min-available` 的，一律**清空带并判「无法估值」**——可见、无 `P/V`、不进 §9.3 判定，
-模型重新可算后自动回归模型带。唯一例外是 §6.5.2.4 的主体不可比（宏桥型资产注入），
-走 `manual_band_overrides.csv` 覆盖表；旧 §6.5.5.2「不得判无法估值、须转逐票推导」
-的条款就此废止（它正是 11 只票挂着 2021-2024 年手工带混进档案层的来源）。
-
-用法
-----
-照 §6.7 建带链跑即可，**两个参数都用缺省**：
-
-    python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD
-    python3 scripts/apply_model_bands_to_dossiers.py --signal-date YYYY-MM-DD
-
-随后跑 §6.7 后半段（建带卡 → apply → 校验 → 池物化）。
-
-**不要再往 `data/interim/pool_model_bands.csv` 写带**：那是 v2.72 时代的中间物化文件，
-已于 2026-08-17 删除；生产带的唯一落点是 `data/processed/a_share_pool_model_bands_adopted.csv`
-（§2 固定产物表）。重建那个旧路径会让两个消费者读到不同的带。
+只更新估值字段；研究指标和备注保留。不可估时清空带，主体不可比按
+工作流程登记重置事件后重建。用 --dry-run 预览，--signal-date 指定信号日。
 """
 from __future__ import annotations
 
@@ -55,22 +13,28 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
-from build_historical_valuation_bands import load_actions, split_factor  # noqa: E402
+from build_historical_valuation_bands import load_actions  # noqa: E402
+from apply_forecast_band_overlay import exright_normalize  # noqa: E402
 from a_share_signal_dates import evidence_iso_for_signal  # noqa: E402
 from divspread_names import is_divspread_financial  # noqa: E402  v4.56 银行＋保险股利折现
 from screen_daily_volume_price_signals import bank_dividend_intrinsic  # noqa: E402
 
 
-def latest_rf() -> float | None:
-    """十年国债最新值（data/reference/cost_of_equity_inputs.csv 最后一行 risk_free_rate），与 rebuild_bank_bands 同源。"""
+def csv_rows(path: Path):
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        yield from csv.DictReader(handle)
+
+
+def latest_rf(as_of: str) -> float | None:
+    """十年国债截至信号日的最新观测，无可用观测时返回 None。"""
     path = ROOT / "data/reference/cost_of_equity_inputs.csv"
     if not path.exists():
         return None
     best = None
-    for r in csv.DictReader(path.open(encoding="utf-8")):
+    for r in csv_rows(path):
         try:
             key = r.get("observed_on") or ""
-            if best is None or key > best[0]:
+            if key and key <= as_of and (best is None or key > best[0]):
                 best = (key, float(r["risk_free_rate"]))
         except (TypeError, ValueError):
             continue
@@ -81,26 +45,18 @@ DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 
 def latest_model_bands(path: Path, min_available: str, codes: set[str] | None = None,
                        as_of: str | None = None) -> tuple[dict, dict]:
-    """每只取最新且可用的一条。返回 (可用带, 被时点门槛挡下的)。
-
-    **排序键必须是 `(available_at, report_date)` 两项**：A 股年报与一季报绝大多数在同一天
-    披露（4/29-4/30），两条的 `available_at` 因此相等；只比 `available_at` 时严格 `>` 不成立，
-    先读到的那条（文件按报告期升序，即**年报**）会留下来，一季报被丢掉。
-    2026-08-10 v2.72 首次落地即踩此坑——168 只可比标的中 **59 只用了上一期报告的带**，
-    且方向一致偏低（格力电器 108.54 而非 113.07、五粮液 107.30 而非 114.51），
-    与回测面板逐票对不上。回测面板本身取值正确，故这**只是生产侧的选择错**，不是口径分歧。
-    """
+    """按 (available_at, report_date) 取最新可用带，返回可用与过旧两组。"""
     best: dict[str, dict] = {}
     import roic_inputs
     reset = roic_inputs.load_entity_reset()
     post_seen: set[str] = set()
     if reset:
-        for row in csv.DictReader(path.open(newline="", encoding="utf-8-sig")):
+        for row in csv_rows(path):
             c = row.get("security_code") or ""
             if c in reset and (row.get("report_date") or "") >= reset[c]["reset"] \
                     and (not as_of or (row.get("available_at") or "")[:10] <= as_of):
                 post_seen.add(c)
-    for row in csv.DictReader(path.open(newline="", encoding="utf-8-sig")):
+    for row in csv_rows(path):
         if codes is not None and row.get("security_code") not in codes:
             continue                                  # v4.54：全市场带文件只看池外档案代码
         if as_of and (row.get("available_at") or "")[:10] > as_of:
@@ -119,46 +75,35 @@ def latest_model_bands(path: Path, min_available: str, codes: set[str] | None = 
         key = (row.get("available_at", ""), row.get("report_date", ""))
         if code not in best or key > (best[code]["available_at"], best[code]["report_date"]):
             best[code] = row
+    if any(r.get("forecast_overlay") == "manual_override" for r in best.values()):
+        raise ValueError("模型带含人工覆盖值，请按工作流程重建模型带")
     stale = {c: r for c, r in best.items() if r["available_at"][:10] < min_available}
     return {c: r for c, r in best.items() if c not in stale}, stale
 
 
-OVERRIDE_PATH = ROOT / "data/processed/manual_band_overrides.csv"
-
-
-def load_overrides() -> dict[str, dict]:
-    if not OVERRIDE_PATH.exists():
-        return {}
-    with OVERRIDE_PATH.open(encoding="utf-8-sig", newline="") as fh:
-        return {(r.get("security_code") or "").strip(): r for r in csv.DictReader(fh)}
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description="把内在价值模型的带写入逐票档案")
-    # v4.01：缺省改指 §6.7 第①步的采纳产物。旧缺省 data/interim/pool_model_bands.csv 是
-    # v2.72 DCF 时代的一次性物化，2026-08-17 曾以缺省身份把 8-10 的陈旧带写回档案（当日发现即修）。
     ap.add_argument("--bands", type=Path,
                     default=ROOT / "data/processed/a_share_pool_model_bands_adopted.csv")
     ap.add_argument("--archive-bands", type=Path, default=ROOT / "data/processed/roic_bands.csv",
-                    help="池外档案（L4／boundary 点名档案，§6.1 只落档案）的带来源：生产带文件只含池成员（v4.54，OI-083），"
-                         "不在其中的档案行直接从全市场模型带取最新 ok 带；给空串关闭")
+                    help="池外档案的模型带来源；只落档案，仅在文件存在时读取")
     ap.add_argument("--dossiers", type=Path, default=DOSSIERS)
     ap.add_argument("--signal-date", required=True, help="信号日；证据日自动取下一工作日")
     ap.add_argument("--min-available", default="2025-01-01",
-                    help="模型带的 available_at 早于此即视为时点过旧，判无法估值（v4.22 统一口径）")
+                    help="模型带的 available_at 早于此即视为时点过旧，判无法估值")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     args.as_of = evidence_iso_for_signal(args.signal_date)
 
-    usable, stale = latest_model_bands(args.bands, args.min_available)
-    rows = list(csv.DictReader(args.dossiers.open(newline="", encoding="utf-8-sig")))
+    usable, stale = latest_model_bands(args.bands, args.min_available, as_of=args.as_of)
+    rows = list(csv_rows(args.dossiers))
     header = list(rows[0].keys())
     # v4.54（OI-083）：生产带文件只含池成员；池外档案行（documented_not_attention／boundary 点名档案）
     # 直接从全市场模型带取最新 ok 带——只落档案，不写生产带文件，不进 §9.3。
     archive_codes = {r["security_code"] for r in rows} - set(usable) - set(stale)
     near_zero_div: set[str] = set()   # 银行/保险无已知完整财年分红 → 无法估值
     archive_used: list[str] = []
-    if archive_codes and str(args.archive_bands) and args.archive_bands.exists():
+    if archive_codes and str(args.archive_bands) and args.archive_bands.is_file():
         a_usable, a_stale = latest_model_bands(args.archive_bands, args.min_available,
                                                codes=archive_codes, as_of=args.as_of)
         for c in archive_codes:
@@ -166,13 +111,12 @@ def main() -> int:
                 usable[c] = a_usable[c]; archive_used.append(c)
             elif c in a_stale:
                 stale[c] = a_stale[c]
-        # v4.56（OI-085）：池外档案里的银行/保险同样走股利折现（V = 最近已知完整财年每股现金分红 ÷（十年国债＋2%），
-        # 分子口径 divspread_dividend），与池内 build_pool_model_bands 的改写同式；rf 取 cost_of_equity_inputs 最新一行。
+        # 池外银行/保险按信号日的股利与利率计算，与池内同源。
         names = {r["security_code"]: r.get("security_name", "") for r in rows}
-        rf = latest_rf()
+        rf = latest_rf(args.signal_date)
         for c in list(archive_used):
             if is_divspread_financial(c, names.get(c, "")):
-                v = bank_dividend_intrinsic(c, args.as_of, rf) if rf is not None else None
+                v = bank_dividend_intrinsic(c, args.signal_date, rf) if rf is not None else None
                 if v:
                     b = dict(usable[c]); b["intrinsic_value"] = f"{v:.4f}"; b["roic_path"] = "bank_divspread"
                     b["exright_note"] = "股利折现口径（分子为最近已知完整财年分红，不折）"; b["forecast_overlay"] = ""
@@ -183,10 +127,8 @@ def main() -> int:
               f"过旧 {sum(1 for c in archive_codes if c in a_stale)} 只、无带 {len(archive_codes) - len(archive_used) - sum(1 for c in archive_codes if c in a_stale)} 只")
     actions = load_actions()
 
-    OVERRIDES = load_overrides()
-    applied, kept_unvaluable, kept_stale, split_adj = [], [], [], []
+    applied, kept_unvaluable, kept_stale, action_adj = [], [], [], []
     near_zero: set[str] = set()
-    overridden: list[str] = []
     for row in rows:
         code = row["security_code"]
         band = usable.get(code)
@@ -201,21 +143,11 @@ def main() -> int:
             except (TypeError, ValueError):
                 band = None
         if band is None:
-            ovr0 = OVERRIDES.get(code)
-            if ovr0:
-                row["band_low"], row["band_high"] = ovr0["band_low"], ovr0["band_high"]
-                row["band_derivation"] = "manual_override"
-                row["bespoke"] = "true"
-                row["reviewed_at"] = ovr0.get("reviewed_at") or row.get("reviewed_at", "")
-                row["band_method"] = (f"§6.5.2.4 人工覆盖（{ovr0.get('reason_code')}）：{ovr0.get('note')}"
-                                      f"｜失效条件：{ovr0.get('expires_when')}")
-                overridden.append(row.get("security_name") or code)
-                continue
             # v4.22（OI-068 统一口径）：模型给不出新带 → 清空带、判无法估值（下游建带卡→
             # 估值表自动落「无法估值」），不再保留手工带。原带写入 notes 留痕。
             was = f"{row.get('band_low','')}~{row.get('band_high','')}"
             if row.get("band_low") or row.get("band_high"):
-                note = f"**{args.as_of} 清除手工带（OI-068 统一口径 v4.22）**：原带 {was} 撤销，判无法估值。"
+                note = f"**{args.as_of} 模型不可估，清空带**：原带 {was} 撤销，判无法估值。"
                 row["notes"] = note + ("｜" + row["notes"] if row.get("notes") else "")
             row["band_low"] = row["band_high"] = ""
             row["bespoke"] = "true"
@@ -231,32 +163,12 @@ def main() -> int:
             (kept_stale if code in stale else kept_unvaluable).append(row["security_name"])
             continue
 
-        # §6.5.2.4 人工覆盖：模型算得出带、但该带**建立在不可比或已知错误的输入上**时，
-        # 仅靠 `bespoke` 保不住手工带——本脚本对有模型带的行是无条件改写的。
-        # 判例：宏桥控股 2024 年资产注入 + FY2024/25 的 bps 偏大 10 倍，模型带 0.0974 对现价 19.2。
-        # 覆盖表是唯一的例外落点，逐行须写明理由与失效条件。
-        ovr = OVERRIDES.get(code)
-        if ovr:
-            row["band_low"], row["band_high"] = ovr["band_low"], ovr["band_high"]
-            row["band_derivation"] = "manual_override"
-            row["bespoke"] = "true"
-            row["reviewed_at"] = ovr.get("reviewed_at") or row.get("reviewed_at", "")
-            row["band_method"] = (f"§6.5.2.4 人工覆盖（{ovr.get('reason_code')}）：{ovr.get('note')}"
-                                  f"｜失效条件：{ovr.get('expires_when')}")
-            overridden.append(row.get("security_name") or code)
-            continue
-        # v4.20 起带文件在 `apply_forecast_band_overlay.py` 末段已做**除权归一化**（现金＋送转，
-        # `exright_note` 非空即已折算到现价口径，OI-052/OI-039）——此处不得再除一次。
-        # 仅当带文件未归一化（绕过 §6.7 链单跑本脚本）时退回旧口径：只折送转、锚在公告日
-        # （判例：兴齐眼药 2026-05-22 十送四点五，带 25.80 应为 17.80，`P/V` 1.66 实为 2.41）。
-        if (band.get("exright_note") or "").strip():
-            factor = 1.0
-        else:
-            factor = split_factor(actions.get(code, []),
-                                  (band.get("bps_basis_date") or "").strip() or band["notice_date"], args.as_of)
-        iv = float(band["intrinsic_value"]) / factor
-        if factor != 1.0:
-            split_adj.append(f"{row['security_name']}÷{factor:g}（带文件未归一化，退旧口径）")
+        # 已归一化的生产带保持幂等；池外原始模型带按相同事件规则调整到信号日。
+        band = dict(band)
+        adjusted = exright_normalize(band, actions.get(code, []), args.signal_date)
+        iv = float(band["intrinsic_value"])
+        if adjusted:
+            action_adj.append(row["security_name"])
         old_low, old_high = row["band_low"], row["band_high"]
         old_mid = (float(old_low) + float(old_high)) / 2 if old_low and old_high else None
 
@@ -278,13 +190,12 @@ def main() -> int:
                 f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}"
                 f"（{band.get('forecast_source') or overlay}）｜"
                 f"**本行与回测 `valuation_ratio` 不同口径**，回测无历史预告面板，"
-                f"差异见 §6.5.2.1｜叠加前 IV {band.get('pre_overlay_iv') or '—'}"
+                f"叠加前 IV {band.get('pre_overlay_iv') or '—'}"
                 f"（报告期 {band.get('pre_overlay_report_date') or '—'}）｜")
         else:
-            common_head = (archive_tag + f"与 §9.3.1.2 回测所用带**同一套口径**。"
-                           f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜")
+            common_head = (archive_tag + f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜")
         common_tail = (f"**内在价值 {iv:.2f} 元**。带 = IV × [0.90, 1.10]，**中值恰为 IV**，"
-                       f"故 `P/V` = 现价 ÷ V（`scripts/pv_ratio.py` 唯一实现）与回测的 `valuation_ratio` 逐位一致。")
+                       f"池内 `P/V` 按现价 ÷ V 计算（`scripts/pv_ratio.py`）。")
         def _f(key, fmt="{:.2%}"):
             try:
                 return fmt.format(float(band.get(key) or 0))
@@ -319,26 +230,26 @@ def main() -> int:
                 + f"g_T {_f('g_terminal')}、ROE_T {_f('roe_terminal')}｜" + common_tail)
         row["anchor_earnings_yi"] = ""      # 本模型按每股折现，不用亿元口径的利润锚
         row["reviewed_at"] = args.as_of
-        row["decided_by"] = "内在价值模型（§6.5.2.3 唯一带来源；v4.00 起 ROIC 口径）"
+        row["decided_by"] = "内在价值模型（§6.5.1 模型带）"
         # v4.29：只在带值真的变了才留痕。此前每跑一次就追加一条「原带 X → X（1.00x）」，
         # 272/280 份档案的 notes 被同一句话灌满（判例 2026-08-21：格力/牧原各 20+ 条零信息行），
         # README 第一节随之不可读——留痕的对象是变化，不是跑批次数。
         if (old_low, old_high) != (row["band_low"], row["band_high"]):
-            note = (f"**{args.as_of} 换用 v4.00 ROIC 口径带**：原带 "
+            note = (f"**{args.as_of} 模型带更新**：原带 "
                     f"{old_low}~{old_high}" + (f"（中值 {old_mid:.2f}，为新带的 {old_mid / iv:.2f}x）"
                                                if old_mid else "") +
-                    f" → {row['band_low']}~{row['band_high']}。依据 §12.66~§12.69。")
+                    f" → {row['band_low']}~{row['band_high']}。")
             row["notes"] = note + ("｜" + row["notes"] if row["notes"] else "")
         applied.append(row["security_name"])
 
     print(f"档案 {len(rows)} 份｜**改用模型带 {len(applied)} 份**")
-    if split_adj:
-        print(f"  送转折算 {len(split_adj)} 只：{'、'.join(split_adj)}")
+    if action_adj:
+        print(f"  公司行动归一化 {len(action_adj)} 只：{'、'.join(action_adj)}")
     if kept_unvaluable:
-        print(f"  判无法估值·模型不可估 {len(kept_unvaluable)} 只（手工带已清除，v4.22 统一口径）："
+        print(f"  判无法估值·模型不可估 {len(kept_unvaluable)} 只（已清空带）："
               f"{'、'.join(kept_unvaluable)}")
     if kept_stale:
-        print(f"  判无法估值·模型带早于 {args.min_available} {len(kept_stale)} 只（手工带已清除）："
+        print(f"  判无法估值·模型带早于 {args.min_available} {len(kept_stale)} 只（已清空带）："
               f"{'、'.join(kept_stale)}")
     only_model = set(usable) - {r['security_code'] for r in rows}
     if only_model:
@@ -351,8 +262,6 @@ def main() -> int:
         writer = csv.DictWriter(fh, fieldnames=header)
         writer.writeheader()
         writer.writerows(rows)
-    if overridden:
-        print(f"  §6.5.2.4 人工覆盖 {len(overridden)} 只（见 data/processed/manual_band_overrides.csv）：{'、'.join(overridden)}")
     print(f"  写入 {args.dossiers}")
     return 0
 

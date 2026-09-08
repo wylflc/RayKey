@@ -104,8 +104,9 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual("年化", sweep.PRIMARY_KEY)
         # v4.117（§12.158/§12.160，用户 2026-09-02 裁定）：标准起点集 = 路径 ≥10 年的半年档起点，
         # 现 14 个；数据末端推进使新档满 10 年时补入并重登在册读数
-        self.assertIn("标准起点集 = 路径长度 ≥ 10 年的全部半年档起点（现 14 个：2009-11-01 ~ 2016-05-01", workflow)
-        self.assertIn("符号数是 14 个起点层", workflow)
+        self.assertIn("标准起点集 = 路径长度 ≥ 10 年的全部半年档起点", workflow)
+        self.assertIn("sweep_backtest_configs.DEFAULT_STARTS", workflow)
+        self.assertIn("符号数是标准起点集层", workflow)
         self.assertEqual(len(sweep.DEFAULT_STARTS), 14)
         self.assertEqual(sweep.DEFAULT_STARTS[0], "2009-11-01")
         self.assertEqual(sweep.DEFAULT_STARTS[-1], "2016-05-01")

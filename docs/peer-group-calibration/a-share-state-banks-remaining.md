@@ -1,5 +1,7 @@
 # 1. A-Share Remaining State Banks Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group completes the remaining unreviewed state-owned banks after the accepted bank standard had already retained 招商银行, 宁波银行, 邮储银行, and 常熟银行 while excluding other banks from the quality watchlist.

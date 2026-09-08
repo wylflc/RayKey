@@ -1,5 +1,7 @@
 # 1. A-Share Soda Ash Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews soda ash and related salt-chemical companies. Soda ash is commodity-cycle exposed, so retention requires a structural cost advantage such as natural alkali/trona resources, not merely current profitability or commodity recovery.

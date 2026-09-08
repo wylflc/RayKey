@@ -1,5 +1,7 @@
 # 1. A-Share Planting Agriculture Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group contains state-backed farmland operators, grain production platforms, natural-rubber assets, and weaker regional crop companies. The review looks for scarce land, food-security relevance, scale farming systems, seed/breeding/service integration, and strategic crop exposure.

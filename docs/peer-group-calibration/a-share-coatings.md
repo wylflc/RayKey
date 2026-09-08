@@ -1,5 +1,7 @@
 # 1. A-Share Coatings And Pigments Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews architectural coatings, industrial coatings, pigments, pearlescent materials, and coating resins. Ordinary coating capacity is easy to copy; retention requires strong consumer/engineering brand channels or specialty pigment/material process advantages.

@@ -1,5 +1,7 @@
 # 1. A-Share Other-Fibers Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group is labelled as other fibers but mixes commodity synthetic fibers with carbon fiber, UHMWPE, glass-fiber composites, and upstream high-performance fiber materials. It therefore requires cross-industry review rather than a blanket chemical-cycle rejection.

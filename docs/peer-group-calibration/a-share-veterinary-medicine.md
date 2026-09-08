@@ -1,5 +1,7 @@
 # 1. A-Share Veterinary Medicine Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews animal vaccines, veterinary biologics, and veterinary drugs. Animal health has regulatory approvals, strain banks, R&D, production quality, and channel barriers; retention can include multiple differentiated vaccine/drug platforms if their product focus differs.

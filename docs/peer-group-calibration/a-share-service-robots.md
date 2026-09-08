@@ -1,5 +1,7 @@
 # 1. A-Share Service Robots Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews consumer service robot platforms. The category has hardware competition and consumer-cycle volatility, but leading companies can build moats through navigation algorithms, product iteration, supply chain, brand, app/ecosystem, and overseas channel.

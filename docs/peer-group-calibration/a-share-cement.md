@@ -1,5 +1,7 @@
 # 1. A-Share Cement Peer-Group Review
 
+> 历史行业校准记录：仅供追溯研究线索。当前名单、质量档及筛选规则读取工作流程与结构化真值；引用本页事实前须核对原始证据。
+
 ## 1.1 Purpose
 
 This group reviews cement, aggregate, concrete, and related building-material platforms. Cement has severe property-cycle and overcapacity headwinds, so retention is limited to exceptional cost, regional discipline, aggregate/international optionality, or dominant platform quality.
