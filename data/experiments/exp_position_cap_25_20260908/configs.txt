@@ -1,0 +1,4 @@
+BASE|
+PC20SEP08|--position-cap 0.20
+PC25SEP08|--position-cap 0.25
+PC30SEP08|--position-cap 0.30

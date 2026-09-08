@@ -1,0 +1,5 @@
+BASE|
+PC60SSEP08|--position-cap 0.60 --cap-lot-guard
+PC20SSEP08|--position-cap 0.20 --cap-lot-guard
+PC25SSEP08|--position-cap 0.25 --cap-lot-guard
+PC30SSEP08|--position-cap 0.30 --cap-lot-guard

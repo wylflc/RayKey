@@ -1,0 +1,14 @@
+{
+  "26468423": {
+    "state": "COMPLETED",
+    "elapsed": "00:04:45",
+    "maxrss_kib": 76306855,
+    "cpus": 64
+  },
+  "26468555": {
+    "state": "COMPLETED",
+    "elapsed": "00:07:09",
+    "maxrss_kib": 74203874,
+    "cpus": 64
+  }
+}

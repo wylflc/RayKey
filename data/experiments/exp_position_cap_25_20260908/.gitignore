@@ -1,0 +1,3 @@
+# Exact rows are consolidated into summary_rows.csv; these are reproducible shards.
+summaries/
+strict_guard_events/

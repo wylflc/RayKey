@@ -1,0 +1,14 @@
+{
+  "job_id": "26468423",
+  "account": "tes21035",
+  "partition": "rome",
+  "cpus": 64,
+  "workers": 56,
+  "memory_mib_per_cpu": 1792,
+  "time_limit": "00:40:00",
+  "prior_measurement_job": "26454938",
+  "prior_elapsed": "00:02:59",
+  "prior_batch_maxrss": "12057281K",
+  "strict_job_id": "26468555",
+  "strict_dependency": "afterok:26468423"
+}
