@@ -1,0 +1,83 @@
+{
+  "as_of": "2026-09-08",
+  "reported_available_margin_cny": "-862.06",
+  "unreported_cash_assumed_cny": "0.00",
+  "trades": [
+    {
+      "security_code": "601225",
+      "security_name": "陕西煤业",
+      "side": "sell",
+      "shares": 5500,
+      "price": "25.706",
+      "amount": "141383.00",
+      "before": {
+        "security_code": "601225",
+        "security_name": "陕西煤业",
+        "current_shares": "15500",
+        "cost_basis": "26.707",
+        "entry_stop_price": "24.12"
+      },
+      "after": {
+        "security_code": "601225",
+        "security_name": "陕西煤业",
+        "current_shares": "10000",
+        "cost_basis": "26.707",
+        "entry_stop_price": "24.12"
+      },
+      "valuation": {
+        "as_of": "2026-09-08",
+        "security_code": "601225",
+        "security_name": "陕西煤业",
+        "price": 25.706,
+        "candidate": {
+          "intrinsic_value": "21.5317",
+          "pv": 1.1938676463075373,
+          "source": "模型带·2026-06-30"
+        },
+        "hold": {
+          "intrinsic_value": "21.5317",
+          "pv": 1.1938676463075373,
+          "source": "模型带·2026-06-30"
+        }
+      }
+    },
+    {
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "side": "buy",
+      "shares": 17200,
+      "price": "7.87",
+      "amount": "135364.00",
+      "before": {
+        "security_code": "600970",
+        "security_name": "中材国际",
+        "current_shares": "17800",
+        "cost_basis": "7.77",
+        "entry_stop_price": "7.70383333"
+      },
+      "after": {
+        "security_code": "600970",
+        "security_name": "中材国际",
+        "current_shares": "35000",
+        "cost_basis": "7.8191",
+        "entry_stop_price": "7.70383333"
+      },
+      "valuation": {
+        "as_of": "2026-09-08",
+        "security_code": "600970",
+        "security_name": "中材国际",
+        "price": 7.87,
+        "candidate": {
+          "intrinsic_value": "14.7905",
+          "pv": 0.5320983063452892,
+          "source": "模型带·2026-06-30"
+        },
+        "hold": {
+          "intrinsic_value": "14.7905",
+          "pv": 0.5320983063452892,
+          "source": "模型带·2026-06-30"
+        }
+      }
+    }
+  ]
+}

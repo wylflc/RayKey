@@ -1,0 +1,74 @@
+{
+  "signal_date": "2026-09-08",
+  "execution_date": "2026-09-09",
+  "checked_at_utc": "2026-09-08T07:30:40.168894+00:00",
+  "workflow_version": "a-share-selection-operation-v4.165",
+  "jobs": {
+    "evidence": {
+      "id": 26462721,
+      "state": "COMPLETED",
+      "elapsed": "00:01:42",
+      "max_rss_kb": 38331
+    },
+    "scan": {
+      "id": 26462745,
+      "state": "COMPLETED",
+      "elapsed": "00:02:03",
+      "max_rss_kb": 59427
+    }
+  },
+  "checks": {
+    "pool_equals_candidates_equals_worth_attention": 181,
+    "valid_pv": 178,
+    "below_buy_line": 31,
+    "eligible": 17,
+    "holdings": 9,
+    "market_data_errors": 0,
+    "stops_hit": 0,
+    "review_queue": 0,
+    "cooldown_active": 0,
+    "sells": 1,
+    "buys": 1,
+    "account_reconciled": true,
+    "holdings_market_value_cny": "4570927.00",
+    "reported_available_margin_cny": "-862.06",
+    "tranche_cny": "135488.80",
+    "sell_amount_cny": "133692.00",
+    "buy_amount_cny": "132216.00",
+    "remaining_before_fees_cny": "613.94",
+    "new_execution_records": 2,
+    "existing_accounts_and_decisions_unchanged": true,
+    "scan_tracking_prices_pv_stops_consistent": true,
+    "announcement_coverage_companies": 19,
+    "announcement_coverage_rows": 26,
+    "strategy_return_check": "passed",
+    "strategy_parameter_sync": "4 tests passed",
+    "dossier_render_check": "306/306 passed",
+    "whitespace_check": "passed with CRLF CSV line endings recognized"
+  },
+  "limitations": [
+    "公告截止北京时间15:18，随后晚间公告不在本次覆盖；产业与竞品仅部分巡检。",
+    "京东方A、中芯国际带陈旧；嘉立创行情历史不足。",
+    "参考金额未扣费税，执行日按实际成交价与券商可用资金整手调整。",
+    "现金与外部出入金未回报，按0处理。"
+  ],
+  "file_sha256": {
+    "data/processed/a_share_holdings.csv": "352c1237320f5acd8870d803ee1a596bf90bbddc0611850893ccc4236e627bc5",
+    "data/processed/portfolio_account_snapshot.csv": "95e033b547796a31a7c6f0014bb71b80892c85aef7800942b06687f239a8c5de",
+    "data/processed/a_share_pool_model_bands_adopted.csv": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+    "data/processed/a_share_pool_model_bands_hold.csv": "9d3ad58c6f66f0e52f7ecf2bd3ef84f0ab9d76663ac5558286017cd67bd0f1cf",
+    "data/processed/daily_buy_candidates.csv": "483025e78a178f417a2f250de7f2d8a243d951357394969285e56202682af149",
+    "data/processed/daily_sell_plan.csv": "bdabfd982ceb0de23e9c7daa717c961bdf5b3be6af8e028302695871e551f56a",
+    "data/processed/daily_entry_plan.csv": "b02d1a4034770d35a7ff6206de39e79d4a646e44c856a0591ebd384c3523fe40",
+    "data/processed/daily_cooldown_state.csv": "970cfca0dff56db8dcdb328b3d4a214103869c56297e35c1a00acb37348fbfe7",
+    "data/processed/daily_holdings_tracking.csv": "3ee3a2f4230183f983f399d61fb49780159b718c6b742510612ea76be63c113b",
+    "data/processed/a_share_workflow_decision_log.csv": "88eff2008302efde032b94043d1266e183f4b330da1ad4d6ced98e2084b5e65c",
+    "data/interim/a_share_report_disclosures.csv": "12fae4f52f278a1b054a8d80812634c4b205c6cb7208a2294d8452ca7215225a",
+    "data/interim/a_share_earnings_forecasts.csv": "85966600c58f3a7c55c7b79848f712de54fec57ff5ac52af659e6b7992c5f0a8",
+    "data/interim/a_share_report_update_queue.csv": "4c8c026574bc8aa0c78c15cdf16a20c066d4392e8bb8217649d8c9f47b96d25e",
+    "data/interim/daily_event_review_2026-09-08.json": "b285df964e6e7ca46a899e889ccba86b4b2e953d79a041d4933ee7d653891d9b",
+    "data/interim/daily_announcements_2026-09-08.json": "c4dce2b5845453c05e406a208b787e1e1b71051cf862ede00abdb00a9e413aa2",
+    "data/interim/daily_execution_2026-09-08.json": "36c5ce5f0710a9f6f5d0957590dbdbbe7d413d54a6b1e022d82d030a73d9b60b",
+    "docs/000_daily_scan_log.md": "396038281d4db708b86dcb458ed173655dc4d21e002e4a98fcfc50e09e813b95"
+  }
+}

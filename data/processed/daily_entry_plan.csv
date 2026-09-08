@@ -1,2 +1,2 @@
 trade_date,security_code,security_name,quality_tier,close,model_intrinsic_value,model_pv,model_band_source,lots,shares,amount,cooldown_skips
-2026-09-07,600970,中材国际,L2,7.75,14.7905,0.524,模型带·2026-06-30,172,17200,133300.0,0
+2026-09-08,600970,中材国际,L2,7.87,14.7905,0.5321,模型带·2026-06-30,168,16800,132216.0,0
