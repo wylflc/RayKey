@@ -1585,5 +1585,54 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-09",
+   "retrieved_at_utc": "2026-09-09T07:25:00+00:00",
+   "signal_date": "2026-09-09",
+   "evidence_type": "公司公告复核",
+   "security_code": "002379",
+   "security_name": "宏桥控股",
+   "title": "向特定对象发行方案获股东会通过",
+   "period": "2026-09-09",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609081829136982_1.pdf",
+   "source_sha256": "6733e15bb3df7ccaaae042390ff271cee107707a97553058bf1c501de331fbbc",
+   "summary": "9月8日第二次临时股东会通过定增方案、募集资金用途、摊薄回报和授权等全部特别决议，无否决或变更既有决议；律师意见确认表决程序及结果有效。",
+   "use": "本次为融资程序推进，尚不是发行完成或新增股本到账；未披露本轮新实现利润，不将待发行数量先计入当前每股估值。跟踪审核注册、发行价、实际发行股数、募集净额及资金用途执行，发生后复核股权桥与每股口径。",
+   "supporting_sources": [
+    {
+     "url": "https://pdf.dfcfw.com/pdf/H2_AN202609081829136994_1.pdf",
+     "sha256": "25b0683855f4874345cd8e3d55d173faac52be11cf04ddf0e301a6b7c9361026"
+    }
+   ],
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-09",
+    "intrinsic_value": "23.0183",
+    "rebuild_performed": false,
+    "basis": "原文复核未产生可替换当前生产参数的输入；保留现行带，未执行无输入变化的历史建带链"
+   }
+  },
+  {
+   "recorded_at": "2026-09-09",
+   "retrieved_at_utc": "2026-09-09T07:25:00+00:00",
+   "signal_date": "2026-09-09",
+   "security_code": "002379",
+   "security_name": "宏桥控股",
+   "evidence_type": "官方行业价格指标",
+   "title": "国家统计局8月CPI/PPI解读",
+   "period": "2026-08",
+   "source_url": "https://www.stats.gov.cn/sj/sjjd/202609/t20260909_1965261.html",
+   "summary": "8月有色金属冶炼和压延加工业价格环比+0.8%、同比+20.8%。",
+   "use": "同步关注铝及氧化铝价差和拟融资项目兑现；宏观价格指数未形成新的公司模型参数。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-09",
+    "intrinsic_value": "23.0183",
+    "rebuild_performed": false,
+    "basis": "全国行业价格不直接替代本公司实现价格、成本及完整财务输入"
+   }
+  }
+ ]
 }

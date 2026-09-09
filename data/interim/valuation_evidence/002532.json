@@ -1942,5 +1942,27 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-09",
+   "retrieved_at_utc": "2026-09-09T07:25:00+00:00",
+   "signal_date": "2026-09-09",
+   "security_code": "002532",
+   "security_name": "天山铝业",
+   "evidence_type": "官方行业价格指标",
+   "title": "国家统计局8月CPI/PPI解读",
+   "period": "2026-08",
+   "source_url": "https://www.stats.gov.cn/sj/sjjd/202609/t20260909_1965261.html",
+   "summary": "8月有色金属冶炼和压延加工业价格环比+0.8%、同比+20.8%。",
+   "use": "行业出厂价无法替代公司铝价、氧化铝和电力成本差；维持模型，继续跟踪铝价与单位盈利。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-09",
+    "intrinsic_value": "16.3509",
+    "rebuild_performed": false,
+    "basis": "全国行业价格不直接替代本公司实现价格、成本及完整财务输入"
+   }
+  }
+ ]
 }

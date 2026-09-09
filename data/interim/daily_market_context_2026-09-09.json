@@ -1,0 +1,37 @@
+{
+  "signal_date": "2026-09-09",
+  "source_url": "https://qt.gtimg.cn/q=sh000001,sz399001,sz399006,sh000300",
+  "quote_time_beijing": "2026-09-09 15:18",
+  "indices": [
+    {
+      "code": "000001",
+      "name": "上证指数",
+      "close": 3951.51,
+      "change_pct": 0.28,
+      "amount_cny": 873734897106
+    },
+    {
+      "code": "399001",
+      "name": "深证成指",
+      "close": 13723.32,
+      "change_pct": 0.15,
+      "amount_cny": 981871743157
+    },
+    {
+      "code": "399006",
+      "name": "创业板指",
+      "close": 3354.97,
+      "change_pct": -0.14,
+      "amount_cny": 433306577267
+    },
+    {
+      "code": "000300",
+      "name": "沪深300",
+      "close": 4572.6,
+      "change_pct": 0.3,
+      "amount_cny": 440048388790
+    }
+  ],
+  "shenzhen_shanghai_combined_amount_cny": 1855606640263,
+  "coverage_note": "沪深成交额取两个交易所行情汇总，不包含北交所；未取全市场涨跌家数，不能以181只关注池代替全市场宽度。"
+}

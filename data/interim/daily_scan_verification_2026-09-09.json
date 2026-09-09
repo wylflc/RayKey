@@ -1,0 +1,80 @@
+{
+  "signal_date": "2026-09-09",
+  "execution_date": "2026-09-10",
+  "checked_at_utc": "2026-09-09T07:31:56.454841+00:00",
+  "workflow_version": "a-share-selection-operation-v4.166",
+  "jobs": {
+    "evidence": {
+      "id": 26486859,
+      "state": "COMPLETED",
+      "elapsed": "00:01:36",
+      "max_rss_kb": 39989
+    },
+    "scan": {
+      "id": 26486892,
+      "state": "COMPLETED",
+      "elapsed": "00:01:51",
+      "max_rss_kb": 59923
+    }
+  },
+  "checks": {
+    "pool_equals_candidates_equals_worth_attention": 181,
+    "valid_pv": 178,
+    "below_buy_line": 28,
+    "eligible": 16,
+    "holdings": 9,
+    "market_data_errors": 0,
+    "stops_hit": 0,
+    "weak_holdings": 0,
+    "review_queue": 0,
+    "cooldown_active": 0,
+    "sells": 0,
+    "buys": 0,
+    "account_reconciled": true,
+    "holdings_market_value_cny": "4663403.00",
+    "reported_available_margin_cny": "-3874.55",
+    "tranche_cny": "138173.74",
+    "new_execution_records": 3,
+    "existing_accounts_and_decisions_unchanged": true,
+    "untraded_holdings_unchanged": true,
+    "production_model_bands_unchanged": true,
+    "scan_tracking_prices_pv_stops_consistent": true,
+    "execution_logic_replay": "passed without network; correlation values not independently replayed because raw live series are not persisted",
+    "announcement_coverage_companies": 19,
+    "announcement_coverage_rows": 14,
+    "new_announcements_reviewed": 6,
+    "evidence_company_updates": 9,
+    "strategy_return_check": "passed",
+    "strategy_parameter_sync": "4 tests passed",
+    "documentation_audit": "passed",
+    "existing_accounts_and_decisions_byte_prefix_unchanged": true,
+    "dossier_render_check": "306/306 passed",
+    "whitespace_check": "passed with CRLF CSV line endings recognized"
+  },
+  "limitations": [
+    "公告截止北京时间15:19，随后晚间新增公告不在本轮覆盖；产业与竞品仅部分巡检，未获取全市场涨跌家数。",
+    "京东方A和中芯国际带陈旧，嘉立创行情历史不足。",
+    "现金及外部现金流未回报按0处理；次日红利到账未计入今日可用资金。",
+    "历史价格缓存未刷新；本轮未做回测；252日相关性取线上扫描日志，未用独立第二数据源重算。"
+  ],
+  "file_sha256": {
+    "data/processed/a_share_holdings.csv": "e27ea0ece750b44eff8624cd088d43056a019a9f6fa88b1dcba394f246990f75",
+    "data/processed/portfolio_account_snapshot.csv": "5c70f186074025edeba9b251e948f4b0f5d3e33a79e947a56dfd8f72542d7672",
+    "data/processed/a_share_pool_model_bands_adopted.csv": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
+    "data/processed/a_share_pool_model_bands_hold.csv": "9d3ad58c6f66f0e52f7ecf2bd3ef84f0ab9d76663ac5558286017cd67bd0f1cf",
+    "data/processed/daily_buy_candidates.csv": "5b602aa8d6ca7ca994a4fe8436a6661f1a03f6a86dc491d2573ea6adaab76cf5",
+    "data/processed/daily_sell_plan.csv": "c3bad7d5e1a357f4a5820e01ee254cf773e1b824e8c8bc7936bc72162f780b26",
+    "data/processed/daily_entry_plan.csv": "781480d744899ee718c4a41eeea8ea21d7b9898d4066767f49b310f987407520",
+    "data/processed/daily_cooldown_state.csv": "970cfca0dff56db8dcdb328b3d4a214103869c56297e35c1a00acb37348fbfe7",
+    "data/processed/daily_holdings_tracking.csv": "7bf38b609e94fb2e46f04a353546a7de87746d02d318dd68d3887828d506d7b7",
+    "data/processed/a_share_workflow_decision_log.csv": "08b8c3419589dd0e5959884ac7461a35314bbead214236d5afe877c6d1d6ee7d",
+    "data/interim/a_share_report_disclosures.csv": "6747fabe5efe85b8c4ef9018fbe6316dc98ddefe7258da743a98683e9284a600",
+    "data/interim/a_share_earnings_forecasts.csv": "5bd148e8400bb6a61f5484833b6ebbc2d0cfb1d179ea07b5c9361c3c12b452aa",
+    "data/interim/a_share_report_update_queue.csv": "4c8c026574bc8aa0c78c15cdf16a20c066d4392e8bb8217649d8c9f47b96d25e",
+    "data/interim/daily_event_review_2026-09-09.json": "22fcb29dea25d7447f6483ea508cd5846be1f99c980933ac6db6f584a0cba7e9",
+    "data/interim/daily_announcements_2026-09-09.json": "def7de1aea06dd59e1b9a1e63beb2cac798840a2fdb6060fc97c090802aaa066",
+    "data/interim/daily_execution_2026-09-09.json": "63b4454cc1953162a3c944363d2578943f78aea7cd00efa2c53a8a702544a971",
+    "data/interim/daily_market_context_2026-09-09.json": "ca32c83436a630921fe65dba3a431924aed0ac12fbc2c6d0d27a10d6afac48a8",
+    "docs/000_daily_scan_log.md": "83af005489dad56e6d3ed3517c539c7d4864b512bf921cef91acdf178d89774c"
+  }
+}

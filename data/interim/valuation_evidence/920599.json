@@ -1,0 +1,26 @@
+{
+ "security_code": "920599",
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-09",
+   "retrieved_at_utc": "2026-09-09T07:25:00+00:00",
+   "signal_date": "2026-09-09",
+   "evidence_type": "公司公告复核",
+   "security_code": "920599",
+   "security_name": "同力股份",
+   "title": "9月4日投资者调研记录",
+   "period": "2026-09-08",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609081829134480_1.pdf",
+   "source_sha256": "7c76e6f5bc0e67aeb0faf023ef5b0129fd19d241188024e655f2cddeb84538c2",
+   "summary": "公司称上半年新能源产品收入占比约65%，海外新能源产品占比约40%；国内煤炭下游销量占比由2025年约78%降至约70%，有色占比升至15%—18%。披露海外经销商20余家、2026年招聘海外服务经理100余名，并称与力拓、小松和沃尔沃等存在业务合作；无人驾驶软件由合作方提供，自研线控底盘。",
+   "use": "经营结构及合作进展更新为管理层披露，海外市场容量与未来翻倍目标仍是公司判断，未获客户侧独立确认；不将未经量化的订单金额、远期目标或份额预测直接改成模型盈利。跟踪海外交付、回款、服务费用与新能源毛利兑现，当前生产带及名单维持。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-09",
+    "intrinsic_value": "23.5545",
+    "rebuild_performed": false,
+    "basis": "原文复核未产生可替换当前生产参数的输入；保留现行带，未执行无输入变化的历史建带链"
+   }
+  }
+ ]
+}

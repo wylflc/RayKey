@@ -2007,7 +2007,7 @@
    "model_check": {
     "review_status": "completed_no_model_input_change",
     "signal_date": "2026-09-07",
-    "event_model_delta_pct": 0.0
+    "event_model_delta_pct": 0
    }
   },
   {
@@ -2024,7 +2024,7 @@
    "model_check": {
     "review_status": "completed_no_model_input_change",
     "signal_date": "2026-09-07",
-    "event_model_delta_pct": 0.0,
+    "event_model_delta_pct": 0,
     "intrinsic_value": "21.5317",
     "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
     "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
@@ -2046,9 +2046,29 @@
     "review_status": "completed_no_model_input_change",
     "signal_date": "2026-09-08",
     "intrinsic_value": "21.5317",
-    "event_model_delta_pct": 0.0,
+    "event_model_delta_pct": 0,
     "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
     "basis": "产业/同行证据无可量化的本公司新模型输入，未重跑无输入变化的历史建带链"
+   }
+  },
+  {
+   "recorded_at": "2026-09-09",
+   "retrieved_at_utc": "2026-09-09T07:25:00+00:00",
+   "signal_date": "2026-09-09",
+   "security_code": "601225",
+   "security_name": "陕西煤业",
+   "evidence_type": "官方行业价格指标",
+   "title": "国家统计局8月CPI/PPI解读",
+   "period": "2026-08",
+   "source_url": "https://www.stats.gov.cn/sj/sjjd/202609/t20260909_1965261.html",
+   "summary": "煤炭开采和洗选业8月价格环比+2.8%、同比+26.6%；统计局归因用电用煤需求季节性增加。",
+   "use": "行业价格指数不等于公司长协或实现煤价；继续跟踪煤种区域价差、长协及成本，不将单月行业涨幅外推长期利润。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-09",
+    "intrinsic_value": "21.5317",
+    "rebuild_performed": false,
+    "basis": "全国行业价格不直接替代本公司实现价格、成本及完整财务输入"
    }
   }
  ]

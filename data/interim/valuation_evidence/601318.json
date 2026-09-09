@@ -877,7 +877,7 @@
   "pe_ttm_max": 12.42901919,
   "pb_pct_rank": 30.4,
   "pb_min": 0.76022704,
-  "pb_median": 1.0,
+  "pb_median": 1,
   "pb_max": 1.52410509
  },
  "performance_predicts": [
@@ -2093,10 +2093,29 @@
    "model_check": {
     "review_status": "completed_no_model_input_change",
     "signal_date": "2026-09-07",
-    "event_model_delta_pct": 0.0,
+    "event_model_delta_pct": 0,
     "intrinsic_value": "71.6116",
     "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
     "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
+   }
+  },
+  {
+   "recorded_at": "2026-09-09",
+   "retrieved_at_utc": "2026-09-09T07:25:00+00:00",
+   "signal_date": "2026-09-09",
+   "security_code": "601318",
+   "security_name": "中国平安",
+   "evidence_type": "除息前复核",
+   "title": "9月10日半年度权益分派",
+   "period": "2026-06-30",
+   "source_url": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12580396&stockid=601318",
+   "summary": "实施公告确认A股9月9日登记、9月10日除息及派发，每股0.98元，无差异化分派；在手4900股对应税前现金4802元。",
+   "use": "9月9日尚未除息，今日不提前调整持仓或计入可用资金；9月10日按流程成本55.8706→54.8906、止损锚52.15→51.17，生效线另取与当日MA60较低值。实际可用资金以券商为准，避免红利与保证金重复计入。",
+   "model_check": {
+    "review_status": "previously_known_event_reconfirmed",
+    "signal_date": "2026-09-09",
+    "intrinsic_value": "71.6116",
+    "rebuild_performed": false
    }
   }
  ]

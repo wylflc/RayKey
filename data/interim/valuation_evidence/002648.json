@@ -2122,5 +2122,27 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-09",
+   "retrieved_at_utc": "2026-09-09T07:25:00+00:00",
+   "signal_date": "2026-09-09",
+   "security_code": "002648",
+   "security_name": "卫星化学",
+   "evidence_type": "官方行业价格指标",
+   "title": "国家统计局8月CPI/PPI解读",
+   "period": "2026-08",
+   "source_url": "https://www.stats.gov.cn/sj/sjjd/202609/t20260909_1965261.html",
+   "summary": "有机化学原料制造8月价格环比+0.9%；化学原料和化学制品制造业同比+9.1%；石油开采环比+10.4%。",
+   "use": "产品与原料同时涨价，单项PPI无法判断乙烷/丙烷路线利润价差；保留现行输入，继续核对乙烷、丙烷及产品实现价格。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "signal_date": "2026-09-09",
+    "intrinsic_value": "30.4947",
+    "rebuild_performed": false,
+    "basis": "全国行业价格不直接替代本公司实现价格、成本及完整财务输入"
+   }
+  }
+ ]
 }
