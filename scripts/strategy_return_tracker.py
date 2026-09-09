@@ -11,7 +11,8 @@
 用法：
     python3 scripts/strategy_return_tracker.py --check                 # 只核对，不一致退出码 1
     python3 scripts/strategy_return_tracker.py --write                 # 重算并写回
-    python3 scripts/strategy_return_tracker.py --write --epoch E2 --from 2026-10-01
+    python3 scripts/strategy_return_tracker.py --write --epoch E9 --from 2026-10-01   # 临时覆盖纪元表
+纪元表 `EPOCHS`（标签, 生效日）是 §10.3 纪元的唯一落点：`--write` 按行日期自动标段，换纪元只改表；`--epoch/--from` 为一次性覆盖。
 """
 from __future__ import annotations
 
@@ -23,6 +24,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT = ROOT / "data/processed/portfolio_account_snapshot.csv"
 DEFAULT_EPOCH = "E1"
+EPOCHS = (("E1", "2026-08-28"),   # 策略基准日
+          ("E2", "2026-09-10"))   # v4.176 股债总仓位上限（用户 2026-09-10 裁定生效日＝当日）
 NEW_COLUMNS = ("net_assets_before_flow_cny", "strategy_nav_basis", "strategy_unit_nav", "strategy_epoch")
 STRATEGY_COLUMNS = ("strategy_return_pct", "account_peak_net_assets_cny", "drawdown_from_peak_pct",
                     "strategy_nav_basis", "strategy_unit_nav", "strategy_epoch")
@@ -35,8 +38,9 @@ def _num(text: str | None) -> float | None:
     return float(text)
 
 
-def compute(rows: list[dict], epoch_from: tuple[str, str] | None = None) -> list[dict]:
-    """返回 {as_of: 策略列取值} 的列表（与 rows 同序，基准日前的行为 None）。rows 须按 as_of 升序。"""
+def compute(rows: list[dict], epoch_from: tuple[str, str] | None = None, epochs=EPOCHS) -> list[dict]:
+    """返回 {as_of: 策略列取值} 的列表（与 rows 同序，基准日前的行为 None）。rows 须按 as_of 升序。
+    纪元优先级：`epoch_from` 覆盖 > 纪元表 `epochs`（生效日 ≤ as_of 的最后一段）> 行内已登记标签 > 沿用上一行。"""
     out: list[dict | None] = []
     base_value, prev_n, nav, peak, epoch = None, None, 1.0, 1.0, DEFAULT_EPOCH
     for row in rows:
@@ -70,8 +74,11 @@ def compute(rows: list[dict], epoch_from: tuple[str, str] | None = None) -> list
             nav *= 1 + r
             peak = max(peak, nav)
             prev_n = n
+        table = [label for label, start in epochs if row["as_of"] >= start]
         if epoch_from and row["as_of"] >= epoch_from[1]:
             epoch = epoch_from[0]
+        elif table:
+            epoch = table[-1]
         elif (row.get("strategy_epoch") or "").strip():
             epoch = row["strategy_epoch"].strip()
         out.append({"strategy_unit_nav": f"{nav:.6f}",

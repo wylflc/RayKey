@@ -696,7 +696,7 @@ python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 | `strategy_return_pct` | (`strategy_unit_nav` − 1) × 100，保留两位 |
 | `account_peak_net_assets_cny` | 基准日起 `strategy_unit_nav` 最高值 × 基准净资产 |
 | `drawdown_from_peak_pct` | (`strategy_unit_nav` ÷ 基准日起最高单位净值 − 1) × 100，保留两位 |
-| `strategy_epoch` | 策略纪元标签；影响估值、选股或下单的实质规则变动自生效日起换新标签（`--epoch <标签> --from <日期>`），单位净值、峰值与回撤连续不重置；文档、展示与指标算法修订不换纪元。现行 `E1` |
+| `strategy_epoch` | 策略纪元标签；影响估值、选股或下单的实质规则变动自生效日起换新标签：纪元表落在 `strategy_return_tracker.EPOCHS`（标签、生效日），`--write` 按行日期自动标段，`--epoch <标签> --from <日期>` 只作一次性覆盖；单位净值、峰值与回撤连续不重置；文档、展示与指标算法修订不换纪元。现行 `E2`（自 2026-09-10 起） |
 
 基准日前各行的策略列只存历史数据，不参与计算。快照日期不连续时按相邻两行链乘。当日报告账户段列出策略收益率、策略期回撤与纪元。
 
