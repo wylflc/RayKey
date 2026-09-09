@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """单旋钮剂量扫描的平台读法（§12.1 第 2 款双门槛 ＋ 第 5 款宽平台优先）。
 
-对每条臂给主读数（滚 5 中位）与复利读数（全期 CAGR）的配对差中位与正号数，
+对每条臂给主读数（m3：同起点同窗口滚 5 CAGR 配对差，§12.222）与复利读数（全期 CAGR）的配对差中位与正号数，
 标出双门槛通过的臂，再找**相邻档连续通过**的最长区间——第 5 款要平台不要单点峰。
 ±0.15pp 内按噪声处理：与 BASE 同在噪声带内的档不算「更好」，只算「不更差」。
 
@@ -11,23 +11,18 @@ import argparse, statistics as st, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from sweep_backtest_configs import FIELDS, DEFAULT_STARTS, STANDARD_SET  # noqa: E402
+from sweep_backtest_configs import DEFAULT_STARTS, METRIC_VERSION, STANDARD_SET, WIN5_KEY, load_scan, start_delta  # noqa: E402
 
 NOISE = 0.0015          # §12.1 第 5 款：±0.15pp
-GATES = (("滚5中位", "滚动5年年化中位"), ("年化", "年化"))
+GATES = (("滚5同窗", WIN5_KEY), ("年化", "年化"))
 
 
 def load(path: Path):
-    groups = {"": {}, "EX5:": {}}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if not line.strip() or line.startswith("#"):
-            continue
-        p = line.split("|")
-        if len(p) != 2 + len(FIELDS):
-            continue
-        g = "EX5:" if p[0].startswith("EX5:") else ""
-        groups[g].setdefault(p[0][len(g):], {})[p[1]] = dict(zip(FIELDS, map(float, p[2:])))
-    return groups
+    """解析走 `load_scan`（含 m3 的 `#WIN5` 同窗序列行）；版本不同只告警，读数只读不配对。"""
+    groups, _orders, _failed, _note, version, _fields = load_scan(path)
+    if version != METRIC_VERSION:
+        print(f"⚠ {path}：计量版本 {version}，读数只读不配对", file=sys.stderr)
+    return {"": dict(groups[""]), "EX5:": dict(groups["EX5:"])}
 
 
 def main() -> None:
@@ -51,19 +46,20 @@ def main() -> None:
             common = [s for s in starts if s in arm]
             cell = {}
             for nm, k in GATES:
-                d = [(arm[s][k] - base[s][k]) * 100 for s in common]
-                cell[nm] = (st.median(d), sum(1 for v in d if v > 0), len(d))
+                d = [start_delta(arm[s], base[s], k) * 100 for s in common]
+                cell[nm] = ((float("nan") if any(v != v for v in d) else st.median(d)),
+                            sum(1 for v in d if v > 0), len(d))
             lv = {nm: st.median([arm[s][k] for s in common]) * (100 if sc == 100 else 1)
                   for nm, k, sc, *_ in STANDARD_SET}
             rows.append((val, label, cell, lv, len(common)))
         rows.sort()
 
         print(f"\n{'='*104}\n【{gname}】{args.label} 剂量扫描（对照＝BASE @ {args.current}）\n{'='*104}")
-        print(f"{args.label:<10}{'臂':<8}{'Δ滚5中位':>10}{'符号':>7}{'Δ年化':>9}{'符号':>7}"
+        print(f"{args.label:<10}{'臂':<8}{'Δ滚5同窗':>10}{'符号':>7}{'Δ年化':>9}{'符号':>7}"
               f"{'滚5中位':>9}{'滚5P25':>8}{'滚5回撤':>8}{'年化':>8}{'最大回撤':>9}{'Calmar':>8}{'Sharpe':>8}{'换手':>7}  双门槛")
         ok = {}
         for val, label, cell, lv, n in rows:
-            d5, n5, _ = cell["滚5中位"]
+            d5, n5, _ = cell["滚5同窗"]
             dcg, ncg, _ = cell["年化"]
             passed = label == "BASE" or (d5 >= -NOISE * 100 and dcg >= -NOISE * 100)
             ok[val] = passed

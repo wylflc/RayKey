@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """把 `ex_winner_symmetry.py`／`ex_winner_dose.py` 的读数文件汇总成 §12.1 第 4 款的表（剔除集 A／B／U 或 K1／K3／K5／K10 各一行）。
 
-每个剔除集下，候选臂对同集 `BASE` 的逐起点配对差：主读数（滚 5 中位）、复利读数（全期 CAGR）、坏情形（滚 5 P25）、
+每个剔除集下，候选臂对同集 `BASE` 的逐起点配对差：主读数（m3：同起点同窗口滚 5 CAGR 配对差）、复利读数（全期 CAGR）、坏情形（滚 5 P25）、
 滚 5 回撤中位；报中位（pp）与变好的起点数（回撤以「更浅」计）。另按第 4 款列出标准指标集里配对差中位 < −0.15pp 的项。
 
 用法：ex_winner_symmetry_report.py <sweep_u_文件> --challenger GE_TROUGHOFF
@@ -13,9 +13,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from sweep_backtest_configs import load_scan  # noqa: E402
+from sweep_backtest_configs import WIN5_KEY, load_scan, start_delta  # noqa: E402
 
-DECISION = (("Δ主(滚5中位)", "滚动5年年化中位", 100, +1), ("Δ复利(年化)", "年化", 100, +1),
+DECISION = (("Δ主(滚5同窗)", WIN5_KEY, 100, +1), ("Δ复利(年化)", "年化", 100, +1),
             ("Δ滚5P25", "滚动5年年化P25", 100, +1), ("Δ滚5回撤", "滚动5年回撤中位", 100, -1))
 # 第 4 款「不劣」判定的标准指标集（换手、仓位、长跑锚点不计入）
 CLAUSE4 = (("滚动5年年化中位", 100, +1), ("滚动5年年化P25", 100, +1), ("滚动5年年化最差", 100, +1),
@@ -54,7 +54,9 @@ def main() -> None:
         starts = sorted(base)
         cells = []
         for name, key, scale, good in DECISION:
-            d = [(arm[s][key] - base[s][key]) * scale for s in starts]
+            d = [start_delta(arm[s], base[s], key) * scale for s in starts]
+            if any(x != x for x in d):
+                raise ValueError(f"{tag}: {name} 缺同窗序列（m2 文件不能按 m3 判）")
             better = sum(1 for x in d if x * good > 0)
             cells.append(f"{statistics.median(d):+.2f}（{better}/{len(d)}{' 更浅' if good < 0 else ''}）")
         bad = []

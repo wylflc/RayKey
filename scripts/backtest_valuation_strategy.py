@@ -97,9 +97,11 @@ def apply_market(market: str) -> None:
 INITIAL_CAPITAL = 3_000_000.0
 MAX_POSITIONS = 10
 TRADING_DAYS = 244
-# 计量口径版本（工作流 §12.1 第 2 款）：m2 = 全期 CAGR 按日历年数、Sharpe 按逐期超额简单收益、rf 按时点对齐。
-# 改口径就升版本号；summary 与扫描输出行都带它，`sweep_backtest_configs.py --report` 拒绝跨版本配对。
-METRIC_VERSION = "m2"
+# 计量口径版本（工作流 §12.1 第 2 款）：m2 = 全期 CAGR 按日历年数、Sharpe 按逐期超额简单收益、rf 按时点对齐；
+# m3（v4.173，§12.222）= 水平读数与交易路径同 m2，主读数改为**同起点同窗口**的滚 5 CAGR 配对差（先相减、起点内中位、
+# 再跨起点中位），summary 为此多出 `滚动5年窗口年化` 序列列。改口径就升版本号；summary 与扫描输出行都带它，
+# `sweep_backtest_configs.py --report` 拒绝跨版本配对。
+METRIC_VERSION = "m3"
 DAYS_PER_YEAR = 365.25
 
 # ------------------------------------------------------------------ 交易成本
@@ -3722,7 +3724,8 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
     # 2026-08-23 改月末锚定并补 P25／最差／滚动 Sharpe，§12.1 第 2 款）。
     # **不再用「某年至今的总收益」判优劣**——那条读数被起点单点决定，
     # 一次崩盘落在窗口内外就能翻转结论（§12.1 多起点纪律的动机就是它）。
-    # 主读数 = 滚 5 年 CAGR 中位；坏情形 = 滚 5 年 CAGR P25（140 个月末窗里 P10 只有 14 个观测，
+    # 主读数（m3）= 同起点同窗口滚 5 年 CAGR 的配对差（序列见 `滚动5年窗口年化`，配对在扫描器里做）；滚 5 中位
+    # 的配对差是 m2 主读数、自 m3 起只描述；坏情形 = 滚 5 年 CAGR P25（140 个月末窗里 P10 只有 14 个观测，
     # P25 更稳）；最差值只有描述意义（它就是历史上最差那一段 5 年，各臂几乎同一事件）；
     # 滚 5 回撤中位作闸门、负窗口占比作否决项（现行授信下几乎恒为 0，没有排序区分力）。
     def _stats(windows):
@@ -3788,6 +3791,9 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "滚动5年Sharpe中位": s5["Sharpe中位"],
             "滚动5年为负的窗口占比": s5["为负的窗口占比"],
             "滚动5年窗口数": s5["窗口数"],
+            # m3 主读数的原料：每个月末锚定窗口的年化，按窗口末月配对（`YYYY-MM=年化;…`，10 位有效数字）。
+            # 同一起点、同一数据下各臂的窗口末月集合相同，扫描器按末月同窗口相减后再取中位。
+            "滚动5年窗口年化": ";".join(f"{w['end'][:7]}={w['cagr']:.10g}" for w in w5),
             "滚动5年年化最差窗口末日": worst5_end,
             "互不重叠5年块中位": statistics.median(blocks) if blocks else float("nan"),
             "互不重叠5年块数": len(blocks),

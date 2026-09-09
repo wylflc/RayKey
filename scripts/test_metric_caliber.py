@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""计量口径 m2（工作流 §12.1 第 2 款）：日历年化 CAGR、逐期超额收益 Sharpe、rf 时点对齐、强平缓冲、扫描文件版本头。"""
+"""计量口径 m2／m3（工作流 §12.1 第 2 款）：日历年化 CAGR、逐期超额收益 Sharpe、rf 时点对齐、强平缓冲、扫描文件版本头、
+m3 的同窗口配对主读数（`滚动5年窗口年化` 序列、`#WIN5` 行、`start_delta`）。"""
 import math
 import statistics
 import tempfile
@@ -42,6 +43,24 @@ class CalendarCagrTest(unittest.TestCase):
         self.assertEqual(summary["最低担保比例日"], "")
         self.assertEqual(summary["rf覆盖率"], 0.0)                   # 没给 rf 文件：覆盖率 0
         self.assertAlmostEqual(summary["Calmar"], summary["年化"] / summary["最大回撤"])
+        self.assertEqual(summary["滚动5年窗口年化"], "")                 # 不足 5 年：序列列存在但为空
+
+    def test_summary_window_series_matches_rolling_stats(self):
+        # 2015-01 ～ 2021-12 每月一个净值日（末行 2021-12-31 是周五，月末判定成立）：84 个月末、24 个滚 5 窗
+        days, values = [], []
+        for i in range(84):
+            y, m = 2015 + i // 12, i % 12 + 1
+            days.append(f"{y:04d}-{m:02d}-{28 if i < 83 else 31}")
+            values.append(100.0 * (1.01 ** i) * (1.1 if m in (3, 9) else 1.0))
+        result = {"equity": curve_from(values, days), "closed": [], "buys": 0, "sells": 0, "turnover": 0.0,
+                  "margin_events": [], "min_margin_ratio": float("inf")}
+        summary = bt.summarize("t", result, 100.0, {}, [])
+        series = sweep.parse_window_series(summary["滚动5年窗口年化"])
+        self.assertEqual(len(series), summary["滚动5年窗口数"])
+        self.assertEqual(len(series), 24)
+        self.assertEqual(sorted(series)[0], "2020-01")
+        self.assertAlmostEqual(statistics.median(series.values()), summary["滚动5年年化中位"], places=9)
+        self.assertAlmostEqual(min(series.values()), summary["滚动5年年化最差"], places=9)
 
 
 class SharpeTest(unittest.TestCase):
@@ -141,7 +160,9 @@ class ScanFileVersionTest(unittest.TestCase):
 
     def test_header_declares_version_and_fields(self):
         path = self.write([sweep.metric_header(), self.row("BASE", "2011-11-01", sweep.FIELDS),
+                           "#WIN5|BASE|2011-11-01|2016-11=0.05;2016-12=0.1;2017-01=0.2",
                            "#EX5|2011-11-01|000001", self.row("EX5:BASE", "2011-11-01", sweep.FIELDS),
+                           "#WIN5|EX5:BASE|2011-11-01|",
                            "X|2011-11-01|ERR"])
         groups, orders, failed, note, version, fields = sweep.load_scan(path)
         self.assertEqual(version, sweep.METRIC_VERSION)
@@ -150,6 +171,28 @@ class ScanFileVersionTest(unittest.TestCase):
         self.assertIn("2011-11-01", groups[sweep.EX5_PREFIX]["BASE"])
         self.assertEqual(failed[""]["X"], 1)
         self.assertIn("000001", note)
+        # m3：`#WIN5` 行挂到对应结果行；空序列 → {}
+        self.assertEqual(groups[""]["BASE"]["2011-11-01"][sweep.WIN5_KEY], {"2016-11": 0.05, "2016-12": 0.1, "2017-01": 0.2})
+        self.assertEqual(groups[sweep.EX5_PREFIX]["BASE"]["2011-11-01"][sweep.WIN5_KEY], {})
+
+    def test_same_window_paired_delta_differs_from_difference_of_medians(self):
+        # §12.221 的反例：三个同窗口 BASE 5/10/20%、候选 9/9/21%——中位之差 −1pp，同窗差中位 +1pp
+        base = {"滚动5年年化中位": 0.10, sweep.WIN5_KEY: {"a": 0.05, "b": 0.10, "c": 0.20}}
+        cand = {"滚动5年年化中位": 0.09, sweep.WIN5_KEY: {"a": 0.09, "b": 0.09, "c": 0.21}}
+        self.assertAlmostEqual(sweep.start_delta(cand, base, "滚动5年年化中位"), -0.01)
+        self.assertAlmostEqual(sweep.start_delta(cand, base, sweep.WIN5_KEY), +0.01)
+        # 缺序列或无共同窗口 → NaN（缺表），不得退回中位之差
+        self.assertTrue(math.isnan(sweep.start_delta({sweep.WIN5_KEY: {}}, base, sweep.WIN5_KEY)))
+        self.assertTrue(math.isnan(sweep.start_delta({sweep.WIN5_KEY: {"z": 0.1}}, base, sweep.WIN5_KEY)))
+        self.assertTrue(math.isnan(sweep.start_delta({}, base, sweep.WIN5_KEY)))
+        # 跨起点：主读数键走同窗差，任一起点缺序列整项缺表
+        arms = {"BASE": {"s1": base, "s2": dict(base)}, "X": {"s1": cand, "s2": dict(cand)}}
+        self.assertAlmostEqual(sweep._paired_median(arms, "X", sweep.WIN5_KEY), +0.01)
+        self.assertAlmostEqual(sweep._paired_median(arms, "X", "滚动5年年化中位"), -0.01)
+        arms["X"]["s2"] = {"滚动5年年化中位": 0.09}
+        self.assertTrue(math.isnan(sweep._paired_median(arms, "X", sweep.WIN5_KEY)))
+        self.assertEqual(sweep.VERDICT_KEYS[0], ("主读数", sweep.WIN5_KEY))
+        self.assertEqual(sweep.parse_window_series(""), {})
 
     def test_headerless_files_are_inferred_by_width(self):
         legacy = self.write([self.row("BASE", "2011-11-01", sweep.FIELDS_M1)])
@@ -177,9 +220,12 @@ class ScanFileVersionTest(unittest.TestCase):
 
 
 class WorkflowTextTest(unittest.TestCase):
-    def test_clause_2_states_the_m2_caliber(self):
+    def test_clause_2_states_the_current_caliber(self):
         text = (Path(__file__).resolve().parents[1] / "docs/000_Ashare_workflow.md").read_text(encoding="utf-8")
         self.assertIn(f"现行 {bt.METRIC_VERSION}）", text)
+        self.assertEqual(bt.METRIC_VERSION, "m3")
+        self.assertIn("主读数 = 同起点同窗口的滚动 5 年 CAGR 先相减", text)
+        self.assertIn("`滚动5年窗口年化`", text)
         self.assertIn("全期 CAGR = (期末净资产 ÷ 初始资本)^(365.25 ÷ 首个与末次净值日的日历天数) − 1", text)
         self.assertIn("逐日超额简单收益均值 ÷ 样本标准差 × √244", text)
         self.assertIn("股票同跌缓冲 = (S + C − kD) ÷ S", text)

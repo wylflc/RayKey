@@ -170,6 +170,32 @@ FIELDS = FIELDS_M1 + ("强平次数", "最低担保比例", "最低股票同跌�
 DATE_FIELDS = frozenset({"最低担保比例日", "最低股票同跌缓冲日", "滚动5年年化最差窗口末日",
                          "最大回撤起日", "最大回撤止日", "末次净值日"})
 METRIC_HEADER = "#METRIC|"        # 扫描文件首行：`#METRIC|<计量版本>|<列名,…>`，--report 据此解析、拒绝跨版本配对
+# m3（v4.173，§12.222）主读数的原料：引擎 summary 的 `滚动5年窗口年化` 序列列（`YYYY-MM=年化;…`），扫描文件在每条
+# 数字行之后落一行 `#WIN5|标签|起点|序列`；数字行格式与行宽不变，旧解析器把它当注释跳过。
+WIN5_KEY = "滚动5年窗口年化"
+WIN5_HEADER = "#WIN5|"
+
+
+def parse_window_series(text: str) -> dict[str, float]:
+    """`YYYY-MM=年化;…` → {末月: 年化}；空串 → {}（路径不足 5 年时没有窗口）。"""
+    out: dict[str, float] = {}
+    for item in text.split(";"):
+        if "=" in item:
+            month, value = item.split("=", 1)
+            out[month] = float(value)
+    return out
+
+
+def start_delta(arm_row: dict, base_row: dict, key: str) -> float:
+    """一个起点上某读数的配对差。`WIN5_KEY`（m3 主读数）= 同窗口先相减再取起点内中位，任一方缺序列或无共同窗口
+    → NaN（缺表，不能判）；其余键 = 两臂该起点读数之差。"""
+    if key != WIN5_KEY:
+        return arm_row[key] - base_row[key]
+    arm_w, base_w = arm_row.get(WIN5_KEY), base_row.get(WIN5_KEY)
+    if not arm_w or not base_w:
+        return float("nan")
+    common = [m for m in arm_w if m in base_w]
+    return statistics.median(arm_w[m] - base_w[m] for m in common) if common else float("nan")
 
 
 def metric_header() -> str:
@@ -213,6 +239,9 @@ def _date_str(value: float) -> str:
 # 不按预测力赛马定；Δ 读数与符号数是已过历史的描述与采纳门槛，不作未来 Δ 的点预测引用。
 # 水平引用同理：滚动重叠中位被重叠×共享终点抬高约 25pp（§12.156 实测 65.46 vs 互不重叠 40.72），
 # 未来年化的水平引用一律走全期口径（年化／互不重叠5年块中位／长跑锚点），滚动水平只描述窗口分布。
+# 用户 2026-09-10（v4.173，§12.222）：**主读数改为同起点同窗口的滚 5 CAGR 配对差**（同窗口先相减、起点内中位、
+# 再跨起点中位；`start_delta(…, WIN5_KEY)`），计量版本 m3。「起点内两臂滚 5 中位之差」是分布中心的移动、不是同窗典型
+# 增益（§12.221：EBDS03 两者反号 −0.78 vs +1.52），降为标准指标集里的描述项。阈值、双表与其余四项读数不变。
 # **标准指标集**（§12.1 第 2 款）：每轮扫描在全样本与去赢家两个口径上各出一份，
 # 每项报水平值、逐起点配对差中位与「变好的起点数」。`good` = +1 越大越好 / −1 越小越好。
 # 长跑锚点是单起点，只报水平与差、不报符号数、不进第 4 款的「不劣」判定，故不在本表里。
@@ -237,7 +266,7 @@ STANDARD_SET = (
     ("仓位",      "平均仓位",            100, 6, 0, -1),
 )
 
-DELTA_KEYS = ("滚动5年年化中位", "年化", "滚动5年年化P25", "滚动5年回撤中位")
+DELTA_KEYS = (WIN5_KEY, "年化", "滚动5年年化P25", "滚动5年回撤中位")
 EX5_PREFIX = "EX5:"              # 去赢家第二遍的结果行标签前缀
 EX5_ANCHOR_START = "2011-11-01"  # 赢家取自 BASE 臂该起点（§12.132 起的定义）
 MARKET_CFG = {"a": dict(base=None, starts=None, anchor="2011-11-01", longrun=("2009-11-01", "2011-11-01")),
@@ -264,7 +293,7 @@ DRAWDOWN_GATE = 0.03      # 滚 5 年回撤中位配对 Δ 超过 +3pp（更深�
 NOISE_BAND = 0.0015       # §12.1 第 2 款：配对差中位 ≥ −0.15pp 视为不劣
 RULING_TOLERANCE = 0.01   # 一表落在 [−1pp, −0.15pp) 且另一表同项 ≥ CLEAR_GAIN → 报用户裁定
 CLEAR_GAIN = 0.01
-VERDICT_KEYS = (("主读数", "滚动5年年化中位"), ("复利读数", "年化"))
+VERDICT_KEYS = (("主读数", WIN5_KEY), ("复利读数", "年化"))   # m3：主读数 = 同窗口配对差（§12.222）
 
 
 def summary_tag(label: str, since: str, exclude: str = "") -> str:
@@ -297,9 +326,11 @@ def run_one(job):
     if not rows:
         return f"{out_label}|{since}|EMPTY"
     row = rows[-1]
-    if row.get("计量版本", "") != METRIC_VERSION:
-        return f"{out_label}|{since}|ERR"       # 引擎与扫描器计量版本不一致，宁可缺行也不混版本
-    return "|".join([out_label, since] + [f"{_field_value(row, k):.6f}" for k in FIELDS])
+    if row.get("计量版本", "") != METRIC_VERSION or WIN5_KEY not in row:
+        return f"{out_label}|{since}|ERR"       # 引擎与扫描器计量版本不一致（或无同窗序列列），宁可缺行也不混版本
+    line = "|".join([out_label, since] + [f"{_field_value(row, k):.6f}" for k in FIELDS])
+    # m3：数字行后紧跟同一路径的窗口序列行，--report 据此做同窗口配对；序列可为空（路径不足 5 年）
+    return line + "\n" + f"{WIN5_HEADER}{out_label}|{since}|{row[WIN5_KEY]}"
 
 
 def read_top5_winners(starts: list[str]) -> tuple[str, str]:
@@ -367,6 +398,15 @@ def load_scan(path: Path):
         if label not in orders[grp]:
             orders[grp].append(label)
         groups[grp][label][since] = dict(zip(fields, map(float, parts[2:])))
+    # m3 的同窗序列行挂到对应结果行上（`WIN5_KEY` → {末月: 年化}）；m2 文件没有这种行，主读数读作缺表
+    for line in lines:
+        if not line.startswith(WIN5_HEADER):
+            continue
+        _tag, tagged, since, series = line.split("|", 3)
+        grp = EX5_PREFIX if tagged.startswith(EX5_PREFIX) else ""
+        row = groups[grp].get(tagged[len(grp):], {}).get(since)
+        if row is not None:
+            row[WIN5_KEY] = parse_window_series(series)
     return groups, orders, failed, ex5_note, version, fields
 
 
@@ -412,17 +452,18 @@ def report(path: Path, title: str) -> None:
 
 
 def _paired_median(arms, label: str, key: str) -> float:
-    """某臂对 BASE 的逐起点配对差中位；臂或 BASE 缺失时 NaN。"""
+    """某臂对 BASE 的逐起点配对差中位；臂或 BASE 缺失、或任一起点缺同窗序列（m3 主读数）时 NaN。"""
     base, arm = arms.get("BASE"), arms.get(label)
     if not base or not arm:
         return float("nan")
     common = [s for s in arm if s in base]
-    return statistics.median(arm[s][key] - base[s][key] for s in common) if common else float("nan")
+    vals = [start_delta(arm[s], base[s], key) for s in common]
+    return float("nan") if not vals or any(v != v for v in vals) else statistics.median(vals)
 
 
 def _print_verdicts(arms_all, arms_ex, order: list[str]) -> None:
     """§12.1 第 2 款采纳判定（OI-118／OI-119）：主读数与复利读数两表各取，闸门与否决取全样本表。"""
-    print("【采纳判定】§12.1 第 2 款：主读数／复利读数在全样本表与去赢家表（剔除集 A）各取；"
+    print("【采纳判定】§12.1 第 2 款：主读数（m3：同起点同窗口滚 5 CAGR 配对差）／复利读数在全样本表与去赢家表（剔除集 A）各取；"
           f"均 ≥ −{NOISE_BAND*100:.2f}pp → 可采纳；一表某项在 [−{RULING_TOLERANCE*100:.0f}pp, −{NOISE_BAND*100:.2f}pp) "
           f"且另一表同项 ≥ +{CLEAR_GAIN*100:.0f}pp → 报用户裁定；其余不采纳。闸门／否决取全样本表；正号数只报不判")
     if not arms_ex:
@@ -506,7 +547,7 @@ def _prepare_group(arms, order: list[str], failed, title: str) -> dict | None:
             continue
         # 各读数各算各的 Δ 与符号数。**符号数不是「哪条口径」的性质，是起点敏感性的性质**
         # ——中位为正而符号 12/23 说明效应由少数起点扛着，与用哪条读数无关（§12.1 第①层）。
-        dz = {k: [arm[s][k] - base[s][k] for s in common] for k in DELTA_KEYS + AUX_DELTA_KEYS}
+        dz = {k: [start_delta(arm[s], base[s], k) for s in common] for k in DELTA_KEYS + AUX_DELTA_KEYS}
         # `arm`/`common` 是循环变量，闭包会晚绑定到最后一轮——必须用默认参数当场固定，
         # 否则每一行打印出来的都是最后一条臂的读数（Δ 列因为是即时算的，反而看不出错）。
         med = lambda k, _a=arm, _c=common: _med(_a[s][k] for s in _c)
@@ -520,23 +561,27 @@ def _print_decision(grp: dict) -> None:
     """首页第一段：五项决策读数的 Δ 与符号数，附滚 5 水平、换手、仓位与闸门标记。"""
     rows, starts = grp["rows"], grp["starts"]
     print(f"{grp['title']}（{len(starts)} 个起点，对照＝BASE；Δ 按年化（复利读数）排序；月末锚定滚动窗口）")
-    print("【决策读数】Δ 为逐起点配对差中位（pp），符号 = 该读数为正的起点数（只报不判）；回撤 Δ 正 = 更深，"
+    print("【决策读数】Δ 为逐起点配对差中位（pp），符号 = 该读数为正的起点数（只报不判）；Δ滚5同窗 = 主读数（m3：同起点"
+          "同窗口先相减、起点内中位、再跨起点中位；滚 5 中位的配对差见附表）；回撤 Δ 正 = 更深，"
           f"「更浅」= 回撤变浅的起点数；负窗↑ = 负收益窗口占比变大的起点数；闸门：回撤 Δ > +{DRAWDOWN_GATE*100:.0f}pp 或 负窗↑ 过半")
-    print(f"{'配置':<14}{'Δ滚5中位':>9}{'符号':>7}{'Δ年化':>8}{'符号':>7}{'Δ滚5P25':>9}{'符号':>7}{'Δ滚5回撤':>9}{'更浅':>7}{'负窗↑':>7}"
+    print(f"{'配置':<14}{'Δ滚5同窗':>9}{'符号':>7}{'Δ年化':>8}{'符号':>7}{'Δ滚5P25':>9}{'符号':>7}{'Δ滚5回撤':>9}{'更浅':>7}{'负窗↑':>7}"
           f"{'滚5中位':>8}{'滚5P25':>8}{'滚5最差':>8}{'滚5回撤':>8}{'滚5Calmar':>10}{'滚5Sharpe':>10}{'负窗%':>6}{'换手':>6}{'仓位':>5}  闸门")
     for _sort, label, dz, n, med, neg_up in rows:
-        d5, dcg, d25, dd = (dz["滚动5年年化中位"], dz["年化"],
+        d5, dcg, d25, dd = (dz[WIN5_KEY], dz["年化"],
                             dz["滚动5年年化P25"], dz["滚动5年回撤中位"])
+        m5 = float("nan") if any(v != v for v in d5) else statistics.median(d5)
         flags = []
         if label != "BASE":
             if statistics.median(dd) > DRAWDOWN_GATE:
                 flags.append("回撤变深")
             if neg_up > n / 2:
                 flags.append("负窗转正")
-            if statistics.median(d5) < -NOISE_BAND or statistics.median(dcg) < -NOISE_BAND:
+            if m5 != m5:
+                flags.append("主读数缺同窗序列")
+            elif m5 < -NOISE_BAND or statistics.median(dcg) < -NOISE_BAND:
                 flags.append("主/复利 < −0.15pp")
-        print(f"{label:<14}"
-              f"{statistics.median(d5) * 100:>+9.2f}{f'{sum(1 for v in d5 if v > 0)}/{n}':>7}"
+        c5 = f"{'—':>9}{'—':>7}" if m5 != m5 else f"{m5 * 100:>+9.2f}{f'{sum(1 for v in d5 if v > 0)}/{n}':>7}"
+        print(f"{label:<14}{c5}"
               f"{statistics.median(dcg) * 100:>+8.2f}{f'{sum(1 for v in dcg if v > 0)}/{n}':>7}"
               f"{statistics.median(d25) * 100:>+9.2f}{f'{sum(1 for v in d25 if v > 0)}/{n}':>7}"
               f"{statistics.median(dd) * 100:>+9.2f}{f'{sum(1 for v in dd if v < 0)}/{n}':>7}{f'{neg_up}/{n}':>7}"
@@ -608,7 +653,7 @@ def _print_appendix(grp: dict) -> None:
 
     print("【标准指标集·配对差】Δ 为逐起点配对差中位，符号 = **该读数变好**的起点数"
           "（回撤／负窗／换手／仓位越小越好，其 Δ 为负即变好）；第 4 款「不劣」= 变好方向的 Δ 中位 ≥ −0.15pp，"
-          "换手与长跑锚点为参考项、不进该判定；符号数只报不判")
+          "换手与长跑锚点为参考项、不进该判定；符号数只报不判。滚5中位 的配对差是 m2 主读数，m3 起只描述")
     challengers = [label for _s, label, _d, _n, _m, _ng in rows if label != "BASE"]
     if challengers:
         print(f"{'指标':<12}" + "".join(f"{c:>16}" for c in challengers))

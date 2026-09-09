@@ -1,7 +1,8 @@
 """剂量／边际档位裁定表：配对差 Δ 与各档水平中位并列（§12.176 末段的登记方式）。
 
 读 `sweep_backtest_configs.py` 的 --out 扫描文件，对每条臂打印：
-  Δ主(全)／Δ复利(全)／Δ主(去)／Δ复利(去)／ΔP25(全)／Δ滚5回撤(全)  ——逐起点配对差中位（pp）
+  Δ主(全)／Δ复利(全)／Δ主(去)／Δ复利(去)／ΔP25(全)／Δ滚5回撤(全)  ——逐起点配对差中位（pp）；
+  主读数自 m3 起为同起点同窗口滚 5 CAGR 配对差（`sbc.WIN5_KEY`，§12.222），滚5中位 列仍报水平
   滚5中位／年化／滚5P25／滚5回撤／换手（全样本水平中位）＋ 去赢家的滚5中位／年化
   第 2 款判定（与 sweep 的【采纳判定】同一规则）
 用法：python3 scripts/experimental/dose_table.py <扫描文件> [--sort 年化|滚5|label] [--pattern REGEX]
@@ -33,8 +34,10 @@ def paired(arms, label, key):
     if not base or not arm:
         return float("nan"), 0, 0
     common = [s for s in arm if s in base]
-    d = [arm[s][key] - base[s][key] for s in common]
-    return (statistics.median(d) if d else float("nan")), sum(1 for v in d if v > 0), len(d)
+    d = [sbc.start_delta(arm[s], base[s], key) for s in common]
+    if not d or any(v != v for v in d):
+        return float("nan"), 0, len(d)
+    return statistics.median(d), sum(1 for v in d if v > 0), len(d)
 
 
 def level(arms, label, key):
@@ -81,9 +84,9 @@ def main() -> None:
     labels = [l for l in order if not args.pattern or re.search(args.pattern, l)]
     rows = []
     for l in labels:
-        d5, s5, n = paired(arms_all, l, "滚动5年年化中位")
+        d5, s5, n = paired(arms_all, l, sbc.WIN5_KEY)
         dc, sc, _ = paired(arms_all, l, "年化")
-        d5e, _, _ = paired(arms_ex, l, "滚动5年年化中位")
+        d5e, _, _ = paired(arms_ex, l, sbc.WIN5_KEY)
         dce, _, _ = paired(arms_ex, l, "年化")
         d25, _, _ = paired(arms_all, l, "滚动5年年化P25")
         ddd, _, _ = paired(arms_all, l, "滚动5年回撤中位")

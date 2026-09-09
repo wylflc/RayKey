@@ -1,0 +1,49 @@
+== 1. EBDS03: per-start dispersion and leave-one-start-out (LOO) ranges ==
+full    M: median  -0.78  sd  5.78  LOO range [ -0.78,  -0.78]  sign>0 6/14
+full    P: median  +1.52  sd  4.94  LOO range [ +1.26,  +1.78]  sign>0 9/14
+full CAGR: median  +2.53  sd  4.74  LOO range [ +2.34,  +2.72]  sign>0 11/14
+full M/P sign disagreements at |M| = [0.78, 2.1, 1.52]; min |M| among agreements = 0.78
+   A    M: median  -0.14  sd  5.02  LOO range [ -1.02,  +0.74]  sign>0 7/14
+   A    P: median  +0.02  sd  4.48  LOO range [ -0.38,  +0.41]  sign>0 7/14
+   A CAGR: median  +1.70  sd  3.14  LOO range [ +1.64,  +1.76]  sign>0 10/14
+   A M/P sign disagreements at |M| = [1.02, 1.57]; min |M| among agreements = 0.74
+
+== 2. EBDS03 full sample: share of 5y windows overlapping intervention periods (2015-05..07, 2018-02) ==
+full: windows 1428, touching 2015 top 426, touching 2018 top 707, either 848 (59%), neither 580
+   delta median: touching +3.37pp (win 70%); not touching -1.86pp (win 35%); n=848/580
+   by window-end year: n, median delta, win%
+     2014: n=  2  med  -1.62  win   0%
+     2015: n= 22  med  +2.11  win  64%
+     2016: n= 46  med  +4.22  win 100%
+     2017: n= 70  med  +5.01  win  94%
+     2018: n= 94  med  +8.49  win  85%
+     2019: n=118  med  +9.42  win  83%
+     2020: n=142  med  +4.34  win  66%
+     2021: n=164  med  +0.06  win  51%
+     2022: n=168  med  +0.52  win  60%
+     2023: n=168  med  -2.38  win  33%
+     2024: n=168  med  -1.71  win  37%
+     2025: n=168  med  -1.76  win  36%
+     2026: n= 98  med  -0.13  win  42%
+
+== 3. Family-wide M vs P (pp), all candidate arms with daily diagnostics, vs audit BASE curves ==
+arm       round       M_full  P_full     M_A     P_A CAGR_full  CAGR_A  M-rule  P-rule
+EBDC30    high_base   -16.37  -11.66  -14.90  -14.06     -8.54  -10.59  reject  reject
+EBDQ20    high_base   -10.11   -7.36  -12.13   -8.69     -5.09   -7.99  reject  reject
+EBDQ30    high_base   -11.11   -9.95  -11.17   -8.33     -5.82   -9.63  reject  reject
+EBDQ40    high_base   -22.77  -18.70  -10.75   -9.32    -13.67  -10.83  reject  reject
+EBDS02    high_base    +0.00   +0.00   +0.00   +0.00     +0.00   +0.00  adopt   adopt
+EBDS03    high_base    -0.78   +1.52   -0.14   +0.02     +2.53   +1.70  reject  adopt
+EBDS04    high_base   -14.89  -12.67   -8.12   -6.75     -7.55   -4.25  reject  reject
+EBCR30    round1      -19.08  -13.82  -13.20  -10.26    -11.76  -10.41  reject  reject
+EBFIX100  round1      -24.55  -23.92  -20.95  -20.81    -21.21  -18.10  reject  reject
+EBFIX160  round1      -14.38  -12.33   -8.37   -7.41    -10.60   -8.15  reject  reject
+EBQ20     round1      -19.93  -19.24  -19.95  -17.94    -13.59  -15.96  reject  reject
+EBQ30     round1      -24.86  -24.77  -18.55  -17.83    -16.90  -17.28  reject  reject
+EBQ40     round1      -24.26  -23.46  -16.34  -15.20    -17.77  -15.13  reject  reject
+EBR10     round1      -41.64  -35.72  -39.28  -31.35    -29.64  -31.31  reject  reject
+EBR20     round1      -40.55  -35.88  -38.69  -32.90    -29.98  -31.97  reject  reject
+EBR30     round1      -38.13  -33.42  -36.67  -32.20    -29.28  -32.22  reject  reject
+EBS02     round1      -14.38  -12.33   -8.37   -7.41    -10.60   -8.15  reject  reject
+EBS03     round1      -14.06  -13.44   -7.34   -6.88     -8.14   -6.83  reject  reject
+EBS04     round1      -21.54  -19.80  -17.67  -17.66    -13.94  -13.81  reject  reject

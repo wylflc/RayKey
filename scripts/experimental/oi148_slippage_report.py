@@ -47,7 +47,8 @@ def paired(arms, label, ref, key):
     if not a or not b:
         return NAN
     common = [s for s in a if s in b]
-    return statistics.median(a[s][key] - b[s][key] for s in common) if common else NAN
+    d = [sweep.start_delta(a[s], b[s], key) for s in common]
+    return NAN if not d or any(v != v for v in d) else statistics.median(d)
 
 
 def positives(arms, label, ref, key, good):
@@ -55,7 +56,7 @@ def positives(arms, label, ref, key, good):
     if not a or not b:
         return "—"
     common = [s for s in a if s in b]
-    return f"{sum(1 for s in common if (a[s][key] - b[s][key]) * good > 0)}/{len(common)}"
+    return f"{sum(1 for s in common if sweep.start_delta(a[s], b[s], key) * good > 0)}/{len(common)}"
 
 
 def fmt(x, scale=100.0, prec=2):
@@ -231,7 +232,7 @@ def main():
         b, c = base_label(t), cand_label(t)
         v, reasons, vals = verdict(arms_all, arms_a, c, b)
         verdicts[t] = v
-        say(f"| {t}bp | {sfmt(vals['主读数'][0])} | {sfmt(vals['主读数'][1])} | {sfmt(paired(arms_u, c, b, '滚动5年年化中位'))} | "
+        say(f"| {t}bp | {sfmt(vals['主读数'][0])} | {sfmt(vals['主读数'][1])} | {sfmt(paired(arms_u, c, b, sweep.WIN5_KEY))} | "
             f"{sfmt(vals['复利读数'][0])} | {sfmt(vals['复利读数'][1])} | {sfmt(paired(arms_u, c, b, '年化'))} | "
             f"{sfmt(paired(arms_all, c, b, '滚动5年年化P25'))} | {sfmt(paired(arms_all, c, b, '滚动5年回撤中位'))} | "
             f"{v}{('（' + '；'.join(reasons) + '）') if reasons else ''} |")
