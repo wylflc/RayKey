@@ -1,0 +1,3 @@
+group,current_delta_pp,difference_of_level_medians_pp,matched_window_median_then_start_median_pp,start_equal_weight_mean_pp,calendar_equal_weight_mean_pp,median_within_start_win_fraction,current_positive_starts,matched_median_positive_starts,cagr_positive_starts,total_paired_windows,distinct_calendar_windows,calendar_multiplicity_min,calendar_multiplicity_max
+full,-0.7805938328164896,1.4803193221488153,1.5224976227498965,1.7875015592403345,2.717914665754271,0.623007623007623,6,9,11,1428,141,1,14
+A,-0.14002457806353563,0.597055524160528,0.016265214831923114,0.3578982985947903,1.3060368968092086,0.48119658119658115,7,7,10,1428,141,1,14

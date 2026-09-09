@@ -1,0 +1,30 @@
+{
+  "created_beijing": "2026-09-09T23:42:06.698753+08:00",
+  "source_manifest": "data/experiments/exp_equity_bond_20260909/high_base/manifest.json",
+  "base": "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 --corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 --swap --swap-partial --sell-trend-ma 20 --lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close --fee-preset user --no-artifacts --capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 --maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay --gain-sell 1.10 --gain-sell-mode ungated --swap-gain-once --swap-source-block -1 --width -0.0454 --swap-margin 0.15 --stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma60_stop --stop-basis exec --residual-clear lot --position-cap 0.6 --net-same-day --fill-missing skip --dividend-tax --swap-repeat skip --addon-trend ma-only --swap-require-weak --daily-states data/processed/a_share_daily_states_adopted.csv --hold-states data/processed/a_share_daily_states_hold.csv --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv",
+  "starts": [
+    "2009-11-01",
+    "2010-05-01",
+    "2010-11-01",
+    "2011-05-01",
+    "2011-11-01",
+    "2012-05-01",
+    "2012-11-01",
+    "2013-05-01",
+    "2013-11-01",
+    "2014-05-01",
+    "2014-11-01",
+    "2015-05-01",
+    "2015-11-01",
+    "2016-05-01"
+  ],
+  "metric": "m2",
+  "audit_inputs": {
+    "data/experiments/exp_rolling_metric_audit_20260909/audit.py": "ba3390c7cbb29b0ff785b457a180072783ff319febba8d9784e79ce0525054fb",
+    "data/experiments/exp_rolling_metric_audit_20260909/preregister.md": "3bc0ac2fbd09edafb680356180d6d39a507af45a6d5714812186f6917b72478e",
+    "data/experiments/exp_equity_bond_20260909/high_base/manifest.json": "8541a5ce4515bf3ea152a123e5224b8bac5901a40a4c5b258bff032e64b6e25c",
+    "data/experiments/exp_equity_bond_20260909/high_base/summary_rows.csv": "9cbd5dae8f82c18fcfff8314ec8545c9af2f93c45c89fba020a3c9cc7e4811d2",
+    "data/experiments/exp_equity_bond_20260909/high_base/configs.txt": "46f3113f7c95169764a50a7c5b6c7a2fec87a3d31f144f35c88f17e999341e69"
+  },
+  "purpose": "aggregation diagnosis only; no strategy or gate change"
+}

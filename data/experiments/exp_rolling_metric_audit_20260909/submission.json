@@ -1,0 +1,30 @@
+{
+  "job_id": "26507801",
+  "cpus": 16,
+  "prior_job": "26503739",
+  "prior_max_rss_kib": 58146081,
+  "prior_workers": 48,
+  "time_limit_minutes": 15,
+  "jobs": [
+    {
+      "job_id": "26507801",
+      "state": "FAILED",
+      "elapsed_seconds": 59,
+      "batch_max_rss_kib": 22573983,
+      "baseline_paths_completed": 27,
+      "failure": "Exact string comparison of winner contribution share differed by approximately 1e-16."
+    },
+    {
+      "job_id": "26507946",
+      "state": "FAILED",
+      "elapsed_seconds": 32,
+      "baseline_paths_completed": 1,
+      "failure": "All baseline replays completed; subsequent analysis rejected missing initial cash NAV in candidate diagnostics."
+    }
+  ],
+  "baseline_replay_complete": true,
+  "analysis_completed_locally": true,
+  "analysis_completed_beijing": "2026-09-09T23:41:04.615366+08:00",
+  "remaining_baseline_summary_roundoff": {},
+  "analysis_fix": "Restore the known opening cash NAV on the T+1 warmup date; do not fill subsequent gaps."
+}

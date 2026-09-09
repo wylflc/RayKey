@@ -1,0 +1,8 @@
+{
+  "job_id": "26507946",
+  "baseline_paths": 28,
+  "all_summary_fields_match_except_label": true,
+  "numeric_roundoff_tolerance": 1e-14,
+  "frozen_inputs_verified": 571,
+  "completed_beijing": "2026-09-09T23:35:43.946427+08:00"
+}
