@@ -133,14 +133,21 @@ def _stamp_rate(day: str, side: str) -> float:
     return rate if (side == "sell" or both) else 0.0
 
 
-def trade_fee(amount: float, day: str, side: str) -> float:
-    """一笔成交的全部费用：佣金（有最低额）＋过户费＋印花税。金额为零则不收费。"""
+def quote_fee(amount: float, day: str, side: str) -> float:
+    """只算费、不记账：佣金（有最低额）＋过户费＋印花税。金额为零则不收费。守卫与对冲的试算都走这里，
+    不在 `FEES["paid"]` 上加减（加减会累积浮点漂移，使同一路径两次运行的费用末位不同）。"""
     if amount <= 0 or not FEES["commission"] and not FEES["min_fee"] \
             and not FEES["transfer"] and FEES["stamp_mode"] == "flat" and not FEES["stamp"]:
         return 0.0
     fee = max(amount * FEES["commission"], FEES["min_fee"])
     fee += amount * FEES["transfer"]
     fee += amount * _stamp_rate(day, side)
+    return fee
+
+
+def trade_fee(amount: float, day: str, side: str) -> float:
+    """一笔成交的全部费用并计入 `FEES["paid"]`。"""
+    fee = quote_fee(amount, day, side)
     FEES["paid"] += fee
     return fee
 
@@ -910,6 +917,36 @@ def draw_credit(portfolio: Portfolio, need: float, limit: float) -> float:
     return min(need, portfolio.cash)
 
 
+def affordable_amount(power: float, day: str) -> float:
+    """OI-170：买入金额加买入费税不得超过「现金 + 剩余授信」。费用随金额单调（佣金有最低额），从 power 起
+    迭代三次即收敛到不超过 power 的一侧；此前买入额按可用资金截断后再另扣费用，会留下未融资的负现金。"""
+    if power <= 0:
+        return 0.0
+    amount = power
+    for _ in range(3):
+        amount = power - _fee_quiet(amount, day, "buy")
+        if amount <= 0:
+            return 0.0
+    while amount > 0 and amount + _fee_quiet(amount, day, "buy") > power + 1e-9:
+        amount -= amount + _fee_quiet(amount, day, "buy") - power
+    return max(0.0, amount)
+
+
+def affordable_shares(portfolio: Portfolio, wanted: float, price: float, day: str,
+                      lot_size: int, limit: float) -> float:
+    """OI-170 最终守卫：最终委托 `股数 × 成交价 + 买入费税` ≤ 现金 + 剩余授信。整手时按手向下缩量（对冲后的
+    净额可以不是整手，缩量步长仍取一手）；无整手按金额缩。缩到 0 即不成交。"""
+    power = buying_power(portfolio, limit)
+    if wanted <= 0 or price <= 0 or power <= 0:
+        return 0.0
+    if not lot_size:
+        return min(wanted, affordable_amount(power, day) / price)
+    shares = wanted
+    while shares > 0 and shares * price + _fee_quiet(shares * price, day, "buy") > power + 1e-9:
+        shares -= lot_size
+    return max(0.0, shares)
+
+
 def repay_over_limit(portfolio: Portfolio, limit: float) -> float:
     """§10.2：「负债超过授信额度时不可新增买入，卖出款先偿还超额负债」——用手头现金先把负债压回当日额度内。
     只用现金、不强制卖券（强制平仓仍只在 130% 线）；现金不够时余下超额留待后续卖出款（换仓卖出同样先还）。"""
@@ -1205,10 +1242,8 @@ def close_lot(portfolio: Portfolio, code: str, day: str, price: float, reason: s
 
 
 def _fee_quiet(amount: float, day: str, side: str) -> float:
-    """算费但不计入 `FEES["paid"]`（对冲时用来求「少付了多少」）。"""
-    fee = trade_fee(amount, day, side)
-    FEES["paid"] -= fee
-    return fee
+    """算费但不计入 `FEES["paid"]`（对冲时用来求「少付了多少」）。同 `quote_fee`，保留旧名供调用方使用。"""
+    return quote_fee(amount, day, side)
 
 
 def register_sale(reg: dict | None, code: str, lot: Lot, shares: float, price: float,
@@ -1247,7 +1282,7 @@ def _restore_dividends(portfolio: Portfolio, lot: Lot, consumed: list, shares: f
 
 
 def net_off_sale(reg: dict, portfolio: Portfolio, code: str, buy_shares: float,
-                 day: str, ledger: list | None) -> tuple[float, float]:
+                 day: str, ledger: list | None, limit: float = 0.0) -> tuple[float, float]:
     """§9.3.2：同一信号日同一只股票的买入与卖出直接对冲，只执行净额，双边费税都不付。
     返回 (被对冲股数, turnover 调整量)。卖出与买入同日同价（`--exec-price close`），故对冲是精确的；
     `--exec-price open_sell_close_buy` 下卖出价是开盘、买入价是收盘，被对冲部分仍按登记的卖出价原样退回
@@ -1262,6 +1297,13 @@ def net_off_sale(reg: dict, portfolio: Portfolio, code: str, buy_shares: float,
             continue
         n = min(buy_shares - netted, sale["left"])
         lot, price = sale["lot"], sale["price"]
+        # OI-170：退回卖出款前先在授信内融回（卖出款可能已用于偿还超额负债，§10.2）；融不回的部分不对冲、
+        # 该部分卖出照旧成立，现金不得为负。
+        draw_credit(portfolio, n * price, limit)
+        if price > 0 and portfolio.cash + 1e-9 < n * price:
+            n = math.floor(portfolio.cash / price)
+            if n <= 0:
+                continue
         before, after = sale["left"], sale["left"] - n
         # 少付的卖出费（佣金/过户/印花按成交额算，最低佣金也一并回退）
         fee_delta = _fee_quiet(before * price, day, "sell") - _fee_quiet(after * price, day, "sell")
@@ -1630,6 +1672,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     min_ratio, min_ratio_day = float("inf"), ""
     min_buf_total, min_buf_total_day = float("inf"), ""     # 强平缓冲（§12.1 第 2 款），与担保比例同一时点
     min_buf_stock, min_buf_stock_day = float("inf"), ""
+    min_cash, min_cash_day, negative_cash_days = float("inf"), "", 0   # OI-170：负现金清查（日末现金）
     credit_limit = 0.0
     eb_records = []
     prev_trading = {n: d for d, n in zip(days, days[1:])}
@@ -3258,7 +3301,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if _held.avg_cost > 0 and close >= _held.avg_cost * (1.0 + addon_max_gain):
                     stats[f"加仓·涨幅≥{addon_max_gain:.0%}·跳过"] += 1
                     continue
-            avail = funds_available()
+            avail = affordable_amount(funds_available(), day)   # OI-170：可用资金先留出买入费税
             if eb_active_cap is not None:
                 current_marks = eb_marks()
                 current_stock = portfolio.gross(current_marks) - portfolio.cash
@@ -3310,7 +3353,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         prior = last_buy.get(code)
                         ready = (min_lot_cooldown
                                  and (prior is None or _days_between(prior, day) >= min_lot_cooldown))
-                    if ready and funds_available() >= bp * lot_size:
+                    if ready and affordable_amount(funds_available(), day) >= bp * lot_size:
                         lots_n = 1
                         stats["高价股·按手建仓"] += 1
                     else:
@@ -3326,7 +3369,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 want = cut_shares.pop(code)
                 if lot_size:
                     want = int(want // lot_size) * lot_size
-                afford = (min(want, funds_available() / bp)
+                afford = (min(want, affordable_amount(funds_available(), day) / bp)
                           if bp > 0 else 0.0)
                 if lot_size:
                     afford = int(afford // lot_size) * lot_size
@@ -3350,7 +3393,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     # Repayment may have consumed sale proceeds. Refinance before reversing a sale;
                     # the final order guard above already verified cash + credit, fees and exposure.
                     draw_credit(portfolio, shares * bp + _fee_quiet(shares * bp, day, "buy"), credit_limit)
-                netted, turn_adj = net_off_sale(net_reg, portfolio, code, shares, day, ledger)
+                netted, turn_adj = net_off_sale(net_reg, portfolio, code, shares, day, ledger, credit_limit)
                 if netted > 0:
                     stats["同日买卖对冲"] += 1
                     turnover += turn_adj
@@ -3361,6 +3404,15 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if max_daily_buys and daily_buys >= max_daily_buys:
                 stats["每日买入上限·跳过净买入"] += 1
                 continue
+            # OI-170：最终委托含买入费税须落在现金 + 剩余授信之内（整手取整、按手建仓、割肉买回与对冲后的净额都可能
+            # 绕过上面的截断）；不足则按手缩量，缩到 0 即跳过，现金不得为负。
+            fundable = affordable_shares(portfolio, shares, bp, day, lot_size, credit_limit)
+            if fundable < shares - 1e-9:
+                stats["资金含费不足·缩量" if fundable > 0 else "资金含费不足·跳过"] += 1
+                shares = fundable
+                amount = shares * bp
+                if shares <= 0:
+                    continue
             # 整手取整、按手建仓与割肉买回都可能绕过上面的截断，这里按最终金额兜底。
             if swap_recipient_margin and ratio > swap_floor_pv:
                 if amount > swap_unguarded - spent_unguarded + 1e-6:
@@ -3435,13 +3487,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # （组合年化波动被抬到 70%+，54 个交易日单日振幅 >20%）。
         for code in portfolio.lots:
             if code not in marks:
-                price = today[code][0] if code in today else prices.get(code, {}).get(day)
+                # OI-169：当日新建仓按**成交日收盘**盯市（与成交价同源）；成交日无报价才沿信号日收盘／最后可得价格
+                # （`--fill-missing signal_close` 成交的那笔，成交价本身就是信号日收盘）。此前先取信号日收盘，
+                # T+1 跳空日会把新仓首日净值记在信号日价上（合成路径 10→20 元记 97,500 而非 100,000）。
+                price = prices.get(code, {}).get(day) or (today[code][0] if code in today else None)
                 if price:
                     last_price[code] = price
                 if code in last_price:
                     marks[code] = last_price[code]
         # `--margin-ratchet`（纯研究开关，§12.70）：日终剩余现金先还融资，不留到下一笔买入。
         repay_debt(portfolio, margin_ratchet)
+        if portfolio.cash < min_cash:
+            min_cash, min_cash_day = portfolio.cash, day
+        if portfolio.cash < -1e-6:
+            negative_cash_days += 1
         # **无单票上限的实际后果必须可量**（§9.3.1 单票机械上限由 `--position-cap` 给出，不给即无上限）：逐日记下最大单股权重
         # 与前三大合计，写进净值曲线。不记的话「集中度」只能靠事后从流水重建，而流水按构造
         # 缺部分减持（本次一并补上），重建值会系统性偏高。
@@ -3510,6 +3569,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             "min_margin_day": min_ratio_day,
             "min_stock_buffer": min_buf_stock, "min_stock_buffer_day": min_buf_stock_day,
             "min_total_buffer": min_buf_total, "min_total_buffer_day": min_buf_total_day,
+            "min_cash": min_cash, "min_cash_day": min_cash_day, "negative_cash_days": negative_cash_days,
             "interest_paid": portfolio.interest_paid,
             "dividend_tax_paid": portfolio.dividend_tax_paid, "rights_paid": portfolio.rights_paid,
             "final_debt": portfolio.debt, "stats": dict(stats), "equity_bond_records": eb_records}
@@ -3821,6 +3881,10 @@ def summarize(name: str, result: dict, capital: float, benchmark: dict[str, floa
             "最低股票同跌缓冲日": result.get("min_stock_buffer_day", ""),
             "最低总资产冲击缓冲": _finite(result.get("min_total_buffer")),
             "最低总资产冲击缓冲日": result.get("min_total_buffer_day", ""),
+            # 负现金清查（OI-170）：日末现金全路径最小值及其日期、日末现金 < 0 的天数；现行 BASE 应为 ≥ 0／0
+            "最低现金": _finite(result.get("min_cash")),
+            "最低现金日": result.get("min_cash_day", ""),
+            "负现金日数": result.get("negative_cash_days", 0),
             "平均仓位": exposure, "周期数": len(closed),
             "持仓数中位": statistics.median(position_counts) if position_counts else float("nan"),
             "持仓数P25": _quantile(position_counts, 0.25),

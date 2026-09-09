@@ -166,9 +166,10 @@ FIELDS_M1 = ("年化", "最大回撤", "Sharpe", "Calmar", "平均仓位", "年�
 # 日期列按 YYYYMMDD 写成数字，行格式仍是纯数字、行宽 = 2 + len(FIELDS)。
 FIELDS = FIELDS_M1 + ("强平次数", "最低担保比例", "最低股票同跌缓冲", "最低总资产冲击缓冲", "rf覆盖率",
                       "年化_交易日口径", "最低担保比例日", "最低股票同跌缓冲日", "滚动5年年化最差窗口末日",
-                      "最大回撤起日", "最大回撤止日", "末次净值日")
+                      "最大回撤起日", "最大回撤止日", "末次净值日",
+                      "最低现金", "负现金日数", "最低现金日")     # OI-170 负现金清查（m3 首批起）
 DATE_FIELDS = frozenset({"最低担保比例日", "最低股票同跌缓冲日", "滚动5年年化最差窗口末日",
-                         "最大回撤起日", "最大回撤止日", "末次净值日"})
+                         "最大回撤起日", "最大回撤止日", "末次净值日", "最低现金日"})
 METRIC_HEADER = "#METRIC|"        # 扫描文件首行：`#METRIC|<计量版本>|<列名,…>`，--report 据此解析、拒绝跨版本配对
 # m3（v4.173，§12.222）主读数的原料：引擎 summary 的 `滚动5年窗口年化` 序列列（`YYYY-MM=年化;…`），扫描文件在每条
 # 数字行之后落一行 `#WIN5|标签|起点|序列`；数字行格式与行宽不变，旧解析器把它当注释跳过。
@@ -606,13 +607,17 @@ def _print_tail(grp: dict, fields) -> None:
         return pick(items) if items else (float("nan"), "")
 
     print(f"{'配置':<14}{'最差滚5':>8}{'起点/窗末':>22}{'最深MDD':>8}{'起点/区间':>34}"
-          f"{'最低担保':>9}{'起点/日':>22}{'最低股票缓冲':>13}{'起点/日':>22}{'强平次/起点':>12}{'5年亏损起点':>12}{'rf覆盖min':>10}{'数据末端':>12}")
+          f"{'最低担保':>9}{'起点/日':>22}{'最低股票缓冲':>13}{'起点/日':>22}{'最低现金':>10}{'起点/日':>22}{'负现金日':>9}"
+          f"{'强平次/起点':>12}{'5年亏损起点':>12}{'rf覆盖min':>10}{'数据末端':>12}")
+    has_cash = "最低现金" in fields
     for _sort, label, _dz, _n, _med, _neg in rows:
         arm = arms[label]
         w5, w5_s = extreme(arm, "滚动5年年化最差", better_high=False)
         mdd, mdd_s = extreme(arm, "最大回撤", better_high=True)
         mr, mr_s = extreme(arm, "最低担保比例", better_high=False)
         mb, mb_s = extreme(arm, "最低股票同跌缓冲", better_high=False)
+        mc, mc_s = extreme(arm, "最低现金", better_high=False) if has_cash else (float("nan"), "")
+        neg_days = sum(int(v["负现金日数"]) for v in arm.values()) if has_cash else 0
         liq_total = sum(int(v["强平次数"]) for v in arm.values())
         liq_starts = sum(1 for v in arm.values() if v["强平次数"] > 0)
         neg_starts = sum(1 for v in arm.values() if v["滚动5年为负的窗口占比"] > 0)
@@ -623,6 +628,8 @@ def _print_tail(grp: dict, fields) -> None:
               f"{(mdd_s[:7] + '/' + _date_str(arm[mdd_s]['最大回撤起日']) + '~' + _date_str(arm[mdd_s]['最大回撤止日'])) if mdd_s else '—':>34}"
               f"{_fmt(mr, 100, 9, 1)}{(mr_s[:7] + '/' + _date_str(arm[mr_s]['最低担保比例日'])) if mr_s else '—':>22}"
               f"{_fmt(mb, 100, 13, 1)}{(mb_s[:7] + '/' + _date_str(arm[mb_s]['最低股票同跌缓冲日'])) if mb_s else '—':>22}"
+              f"{_fmt(mc, 1, 10, 0)}{(mc_s[:7] + '/' + _date_str(arm[mc_s]['最低现金日'])) if mc_s else '—':>22}"
+              f"{(neg_days if has_cash else '—'):>9}"
               f"{f'{liq_total}/{liq_starts}':>12}{f'{neg_starts}/{len(arm)}':>12}{_fmt(rf_min, 100, 10, 1)}{_date_str(data_end):>12}")
 
 
