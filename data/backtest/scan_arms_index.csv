@@ -951,6 +951,12 @@ OFFM20,archive,m1,TROUGH20260905,14,28,14,trend_x5_w-0.0757_x1c_dtax_sma20_swap_
 OI114ABS,archive,m1,,0,1,0,trend_x5_w0.0657_x1c_dtax_sma20_swap_corr0.7_tranche_slmin_gs1.25_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc_OI114ABS
 OI114REL,archive,m1,,0,1,0,trend_x5_w0.0657_x1c_dtax_sma20_swap_corr0.7_tranche_slmin_gs1.25_ma60stop_addma_swk20_cap0.6_sp_relm_lot100_lrc_OI114REL
 OI165,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+OI168LM12,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+OI168LM13,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+OI168LM14,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+OI168LM16,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+OI168LM17,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+OI168LM18,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
 OLDEX,archive,m1,,23,23,0,trend_x1_w-0.5884_x1c_sma20_swap_corr0.85_tranche_sl1.1044_sp_lot100_lrc
 OLDnocap,archive,m1,,23,23,0,trend_x1_w0_x1c_sma20_swap_corr0.85_tranche_sl2.5_sp_lot100_lrc
 ON3,archive,m1,,23,23,0,trend_x1_w-0.3198_x1c_sma20_swap_corr0.85_tranche_sl0.9338_sp_lot100_lrc

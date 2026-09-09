@@ -1,0 +1,29 @@
+{
+  "nonfinancial_codes": 300,
+  "universe_codes_with_2018_2019": 252,
+  "notes2018_and_financing2019": 143,
+  "financing_first_year": {
+    "2018": 13,
+    "2019": 159,
+    "2020": 17,
+    "2021": 8,
+    "2022": 11,
+    "2023": 9,
+    "2024": 6,
+    "2025": 8
+  },
+  "delta_rec_minus_pay_2018_2019": {
+    "legacy": {
+      "median_yi": -1.62,
+      "negative_codes": 164
+    },
+    "reported": {
+      "median_yi": -0.76,
+      "negative_codes": 162
+    },
+    "operating": {
+      "median_yi": 0.09,
+      "negative_codes": 119
+    }
+  }
+}
