@@ -1,0 +1,37 @@
+{
+  "BASE": {
+    "available_anchors": 26,
+    "common_anchors": 25,
+    "common_pairs": 156,
+    "common_auc": 0.9423076923076923,
+    "common_spearman": -0.6738461538461539
+  },
+  "WCREP": {
+    "available_anchors": 26,
+    "common_anchors": 25,
+    "common_pairs": 156,
+    "common_auc": 0.9487179487179487,
+    "common_spearman": -0.6792307692307692
+  },
+  "MC050": {
+    "available_anchors": 25,
+    "common_anchors": 25,
+    "common_pairs": 156,
+    "common_auc": 0.9487179487179487,
+    "common_spearman": -0.6792307692307692
+  },
+  "MC100": {
+    "available_anchors": 25,
+    "common_anchors": 25,
+    "common_pairs": 156,
+    "common_auc": 0.9487179487179487,
+    "common_spearman": -0.6853846153846154
+  },
+  "MC150": {
+    "available_anchors": 25,
+    "common_anchors": 25,
+    "common_pairs": 156,
+    "common_auc": 0.9423076923076923,
+    "common_spearman": -0.6761538461538461
+  }
+}

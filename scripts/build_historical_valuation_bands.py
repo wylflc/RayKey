@@ -1324,6 +1324,15 @@ class Band:
     roic0: float | None = None                # 正常化 ROIC（近 N 年中位）
     incremental_roic: float | None = None     # ΔNOPAT/ΔIC
     reinvestment_rate: float | None = None    # (capex − D&A + ΔWC)/NOPAT
+    maintenance_ratio: float = 0.0
+    maintenance_raw_ratio: float | None = None
+    maintenance_status: str = "off"
+    maintenance_intervals: int = 0
+    maintenance_positive_intervals: int = 0
+    maintenance_net_reinvestment: float | None = None
+    maintenance_growth_allowance: float | None = None
+    maintenance_nopat_total: float | None = None
+    cash_blocked: bool = False
     wacc: float | None = None
     cost_of_debt: float | None = None
     tax_rate: float | None = None
@@ -1405,7 +1414,7 @@ def quality_score(history_years: int, return_cv: float | None, terminal_share: f
 
 def sensitivity_values(eps0: float, roe0: float, g0: float, r: float, roe_t: float,
                        g_terminal: float, n: int, n1: int, g0_cap: float, spread: float,
-                       less: float = 0.0) -> tuple[float | None, float | None]:
+                       less: float = 0.0, maintenance_ratio: float = 0.0) -> tuple[float | None, float | None]:
     """Bear/Bull 敏感度值（OI-074 ②）：同一引擎、五个参数同向扰动；任一护栏拒绝即该侧为 None。
     `less` 是要从企业价值里扣除的每股净负债（ROIC 口径），权益口径为 0。"""
     out = []
@@ -1426,7 +1435,8 @@ def sensitivity_values(eps0: float, roe0: float, g0: float, r: float, roe_t: flo
         n_adj = max(3, n + (-3 if sign < 0 else 3))
         try:
             res = intrinsic_value(eps0, roe0, g_adj, r_adj, roe_terminal=t_adj,
-                                  g_terminal=gt_adj, n=n_adj, n1=n1)
+                                  g_terminal=gt_adj, n=n_adj, n1=n1,
+                                  maintenance_ratio=maintenance_ratio)
             value = res.intrinsic_value - less
             out.append(value if value > 0 else None)
         except ValuationError:
@@ -1434,7 +1444,7 @@ def sensitivity_values(eps0: float, roe0: float, g0: float, r: float, roe_t: flo
     return out[0], out[1]
 
 
-def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions: list[dict],
+def _build_band(code: str, name: str, tier: str, series: dict[str, dict], actions: list[dict],
                period: str, args) -> Band:
     row = series[period]
     notice = row["notice_date"]
@@ -1588,7 +1598,7 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     # 这是「All Money Is Equal」框架 §2~§4 的**本来面目**：估的是企业整体产生的自由现金
     # （FCFF），折现率用 WACC，终值用 `EV/NOPAT = (1−g_T/ROIC_T)/(WACC−g_T)`，
     # 最后减净负债回到股权。§12.65 第一版只能拿经营现金流当 Owner Earnings（没扣资本开支），
-    # 本版有了三大报表，`维持性资本开支`／`ΔWC`／`有息负债`／`超额现金` 全部实算。
+    # 三表提供总资本开支、ΔWC、有息负债与超额现金；维持性开支仍需代理估计。
     #
     # **引擎仍不用改**：把 `eps0→每股NOPAT`、`roe0→ROIC`、`r→WACC`、`roe_terminal→ROIC_T`
     # 喂进 `intrinsic_value`，它算出的 `payout×NOPAT` 恰是 `NOPAT×(1−再投资率)` ＝ FCFF，
@@ -1686,7 +1696,25 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
                          "allpairs_guarded": lambda h: roic_inputs.incremental_roic_allpairs_guarded(
                              h, base_years=args.roe_years),
                          "regression": roic_inputs.incremental_roic_regression}[iroic_mode](iroic_hist)
+            if getattr(args, "wc_aggregation", "legacy") == "reported":
+                from dataclasses import replace
+                history = [replace(y, working_capital=y.working_capital_reported) for y in history]
             rr = roic_inputs.reinvestment_rate(history)
+            maintenance_weight = getattr(args, "maintenance_weight", 0.0)
+            if maintenance_weight:
+                estimate = roic_inputs.maintenance_cash_ratio(history)
+                band.maintenance_raw_ratio = estimate.ratio
+                band.maintenance_status = estimate.status
+                band.maintenance_intervals = estimate.intervals
+                band.maintenance_positive_intervals = estimate.positive_intervals
+                band.maintenance_net_reinvestment = estimate.net_reinvestment
+                band.maintenance_growth_allowance = estimate.growth_allowance
+                band.maintenance_nopat_total = estimate.nopat_total
+                band.maintenance_ratio = maintenance_weight * (estimate.ratio or 0.0)
+                ROIC_STATS[f"现金占用·{estimate.status}"] += 1
+                if band.maintenance_ratio >= 1:
+                    band.status, band.reason = "rejected", "维持性现金代理占用全部利润"
+                    return band
             # OI-071 ②：债务成本口径（研究开关，缺省 historical＝生产）
             rd = None
             if getattr(args, "rd_mode", "historical") == "spread":
@@ -1982,6 +2010,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             # 零增长锚（框架 §1）：EV = NOPAT/WACC。OI-073 ④（研究开关 `--roic-zero-anchor fcff`）：
             # 分子改 NOPAT×(1−窗口净再投资率)，净再投资率夹 [0, 0.5]（D&A 超过资本开支时不抬分子、资本最密集时最多砍半）。
             zero_numerator = nopat_ps
+            if band.maintenance_ratio:
+                zero_numerator *= 1 - band.maintenance_ratio
             if getattr(args, "roic_zero_anchor", "nopat") == "fcff" and rr is not None and rr > 0:
                 zero_numerator = nopat_ps * (1.0 - min(rr, 0.5))
                 ROIC_STATS["零增长锚·FCFF 分子"] += 1
@@ -2079,7 +2109,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             band.roe_terminal = roic_t
             try:
                 res = intrinsic_value(nopat_ps, roic0, g0, w, roe_terminal=roic_t,
-                                      g_terminal=g_terminal, n=n_years, n1=n1_years)
+                                      g_terminal=g_terminal, n=n_years, n1=n1_years,
+                                      maintenance_ratio=band.maintenance_ratio)
             except ValuationError as exc:
                 band.status, band.reason = "rejected", str(exc)
                 return band
@@ -2108,7 +2139,8 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
             # OI-074：敏感度带与质量分（输出列，不进判定）
             band.v_bear, band.v_bull = sensitivity_values(
                 nopat_ps, roic0, g0, w, roic_t, g_terminal, n_years, n1_years,
-                args.g0_cap, args.min_terminal_spread, less=net_debt_ps)
+                args.g0_cap, args.min_terminal_spread, less=net_debt_ps,
+                maintenance_ratio=band.maintenance_ratio)
             ordered_hist = sorted(history, key=lambda x: x.period)
             yearly = [roic_inputs.roic_of(y, prev) for prev, y in zip([None] + ordered_hist[:-1], ordered_hist)]
             legs = sum(1 for g in (g_capital, g_trail if growth_mode == "hybrid" else None) if g is not None)
@@ -2308,12 +2340,27 @@ def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions
     return band
 
 
+def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions: list[dict],
+               period: str, args) -> Band:
+    band = _build_band(code, name, tier, series, actions, period, args)
+    # Only a newly introduced cash rejection invalidates old research bands.
+    # A default-off call follows the exact original code path once.
+    if band.status != "ok" and band.maintenance_ratio > 0:
+        import copy
+        original_args = copy.copy(args)
+        original_args.maintenance_weight = 0.0
+        original = _build_band(code, name, tier, series, actions, period, original_args)
+        band.cash_blocked = original.status == "ok"
+    return band
+
+
 def applicable_bands(bands: list[Band]) -> list[Band]:
     """坑 1：公告日不单调，故某天适用的带 = 所有 `available_at ≤ 当日` 中**报告期最新**的。
 
     按 available_at 排序后单调扫描，丢弃「已被更新报告期覆盖」的带；返回可直接二分的序列。
     """
-    ordered = sorted([b for b in bands if b.status == "ok"], key=lambda b: (b.available_at, b.report_date))
+    ordered = sorted([b for b in bands if b.status == "ok" or b.cash_blocked],
+                     key=lambda b: (b.available_at, b.report_date))
     kept: list[Band] = []
     best = ""
     for band in ordered:
@@ -2404,6 +2451,8 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
         if index < 0:
             continue
         band = usable[index]
+        if band.cash_blocked:
+            continue
         if reset_cut and date >= reset_cut and band.report_date < reset_date:
             continue
         # 坑 4：带按**公告时**的股本口径，价格是不复权的 → 按公告后的除权事件折算带。
@@ -2531,7 +2580,10 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "v_bear", "v_bull", "valuation_quality_score", "valuation_quality_notes",
                # v4.59 股本口径（§6.5.1，OI-086/OI-087）
                "bps_operating", "external_equity_ps", "external_equity_cum_ps", "shares_est",
-               "bps_basis_date", "equity_anchor_mode", "peak_weight", "growth_trust", "trough_weight", "ttm_factor", "growth_damp"]
+               "bps_basis_date", "equity_anchor_mode", "peak_weight", "growth_trust", "trough_weight", "ttm_factor", "growth_damp",
+               "maintenance_ratio", "maintenance_raw_ratio", "maintenance_status", "maintenance_intervals",
+               "maintenance_positive_intervals", "maintenance_net_reinvestment", "maintenance_growth_allowance",
+               "maintenance_nopat_total", "cash_blocked"]
 
 
 def band_row(band: Band, tier: str) -> dict:
@@ -2557,6 +2609,15 @@ def band_row(band: Band, tier: str) -> dict:
         "nopat_ps": fmt(band.nopat_ps), "roic0": fmt(band.roic0, 4),
         "incremental_roic": fmt(band.incremental_roic, 4),
         "reinvestment_rate": fmt(band.reinvestment_rate, 4),
+        "maintenance_ratio": fmt(band.maintenance_ratio, 6),
+        "maintenance_raw_ratio": fmt(band.maintenance_raw_ratio, 6),
+        "maintenance_status": band.maintenance_status,
+        "maintenance_intervals": str(band.maintenance_intervals),
+        "maintenance_positive_intervals": str(band.maintenance_positive_intervals),
+        "maintenance_net_reinvestment": fmt(band.maintenance_net_reinvestment),
+        "maintenance_growth_allowance": fmt(band.maintenance_growth_allowance),
+        "maintenance_nopat_total": fmt(band.maintenance_nopat_total),
+        "cash_blocked": "Y" if band.cash_blocked else "",
         "wacc": fmt(band.wacc, 4), "cost_of_debt": fmt(band.cost_of_debt, 4),
         "tax_rate": fmt(band.tax_rate, 4), "net_debt_ps": fmt(band.net_debt_ps),
         "fin_net_debt_ps": fmt(band.fin_net_debt_ps), "minority_book_ps": fmt(band.minority_book_ps),
@@ -2899,8 +2960,18 @@ def main() -> int:
                         help="公告日封顶（OI-042 建带侧）：statutory=逐季财务与三大报表的公告日在装载时改为"
                              " min(记录公告日, 法定截止日)（缺省）；off=按东财记录日原样（只用于复现旧产物）")
     parser.add_argument("--out-bands", type=Path)
+    parser.add_argument("--maintenance-weight", type=float, default=0.0,
+                        help="§6.5.4 维持性现金占用代理强度（研究开关，0=关闭）")
+    parser.add_argument("--wc-aggregation", choices=("legacy", "reported"), default="legacy",
+                        help="研究对照：reported 对应收/应付采用合计或明细，避免重复；legacy复现现行")
     parser.add_argument("--out-daily", type=Path)
     args = parser.parse_args()
+    if not math.isfinite(args.maintenance_weight) or args.maintenance_weight < 0:
+        parser.error("--maintenance-weight 必须是非负有限数")
+    if args.maintenance_weight and (args.value_model != "roic" or args.roic_zero_anchor != "nopat"):
+        parser.error("现金占用研究只适用 roic，不能叠加旧 fcff 零增长开关")
+    if args.maintenance_weight and args.wc_aggregation != "reported":
+        parser.error("现金占用研究须用 --wc-aggregation reported，避免营运资金重复计数")
     global PV_BASIS
     PV_BASIS = getattr(args, "pv_basis", "ev")
     global STATE_EFFECTIVE

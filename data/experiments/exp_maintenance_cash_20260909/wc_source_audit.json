@@ -1,0 +1,17 @@
+{
+  "source": "data/raw/financials_statements/balance.csv",
+  "unit": "raw statement rows, not distinct companies",
+  "equality_tolerance_yuan": "0.01",
+  "groups": {
+    "receivables": {
+      "aggregate_and_both_parts": 4410,
+      "equal_within_cent": 4365,
+      "different_total": 45
+    },
+    "payables": {
+      "aggregate_and_both_parts": 3599,
+      "equal_within_cent": 3594,
+      "different_total": 5
+    }
+  }
+}

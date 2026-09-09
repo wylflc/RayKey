@@ -1,0 +1,32 @@
+{
+  "BASE": {
+    "observations": 508265,
+    "buy_line": 1.0454,
+    "old_line_share": 0.17770847884469715,
+    "aligned_share": 0.17770847884469715
+  },
+  "WCREP": {
+    "observations": 508265,
+    "buy_line": 1.0457,
+    "old_line_share": 0.17763961712885995,
+    "aligned_share": 0.17776553569496228
+  },
+  "MC050": {
+    "observations": 505030,
+    "buy_line": 1.0639,
+    "old_line_share": 0.17113240797576382,
+    "aligned_share": 0.17773003583945507
+  },
+  "MC100": {
+    "observations": 499900,
+    "buy_line": 1.0684,
+    "old_line_share": 0.1697879575915183,
+    "aligned_share": 0.17772154430886178
+  },
+  "MC150": {
+    "observations": 495414,
+    "buy_line": 1.0691,
+    "old_line_share": 0.1695369933025712,
+    "aligned_share": 0.1777119742276157
+  }
+}

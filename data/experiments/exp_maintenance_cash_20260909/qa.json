@@ -1,0 +1,43 @@
+{
+  "tests": {
+    "maintenance_special": {
+      "count": 17,
+      "result": "passed"
+    },
+    "intrinsic_selftest_and_doctest": "passed",
+    "equity_anchor": {
+      "count": 14,
+      "result": "passed"
+    },
+    "restatement_versions": {
+      "count": 7,
+      "result": "passed"
+    },
+    "documentation_audit_errors": 0
+  },
+  "jobs": [
+    {
+      "id": "26488774",
+      "state": "COMPLETED",
+      "elapsed": "00:16:42",
+      "cpus": 16,
+      "peak_rss_KiB": 431321
+    },
+    {
+      "id": "26488775",
+      "state": "COMPLETED",
+      "elapsed": "00:03:40",
+      "cpus": 64,
+      "workers": 48,
+      "peak_rss_KiB": 68894142
+    }
+  ],
+  "whitespace_check": "CSV ledgers keep their existing CRLF format; use git -c core.whitespace=cr-at-eol diff --check.",
+  "ledger_existing_row_difference": {
+    "tag": "BASE20140501",
+    "field": "前五赢家占正贡献",
+    "before": "0.5875402463801185",
+    "after": "0.5875402463801184",
+    "note": "Floating-point tail outside the 44 decision/report fields; those fields and winner identities reproduced exactly."
+  }
+}

@@ -1,0 +1,304 @@
+[
+  {
+    "arm": "WCREPSEP09",
+    "track": "A",
+    "verdict": "初步通过",
+    "reasons": [],
+    "U": {
+      "group": "U1",
+      "excellent": false,
+      "inferior": [
+        {
+          "metric": "逐年最差",
+          "oriented_delta": -2.7012596232088955,
+          "beyond_one_pp": true
+        }
+      ]
+    }
+  },
+  {
+    "arm": "MC050M14SEP09",
+    "track": "B",
+    "verdict": "不采纳",
+    "reasons": [
+      "滚动5年年化中位双表条件未过",
+      "年化双表条件未过",
+      "回撤闸门"
+    ],
+    "U": {
+      "group": "U2",
+      "excellent": false,
+      "inferior": [
+        {
+          "metric": "滚动5年年化P25",
+          "oriented_delta": -0.4730413264328659,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "滚动3年回撤中位",
+          "oriented_delta": -0.5832008902325769,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "逐年收益中位",
+          "oriented_delta": -0.3151369176021157,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "逐年最差",
+          "oriented_delta": -2.397780912312747,
+          "beyond_one_pp": true
+        }
+      ]
+    }
+  },
+  {
+    "arm": "MC050M15SEP09",
+    "track": "B",
+    "verdict": "不采纳",
+    "reasons": [
+      "年化双表条件未过"
+    ],
+    "U": {
+      "group": "U2",
+      "excellent": false,
+      "inferior": [
+        {
+          "metric": "滚动3年回撤中位",
+          "oriented_delta": -0.5655722518436268,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "逐年最差",
+          "oriented_delta": -2.417005066097211,
+          "beyond_one_pp": true
+        }
+      ]
+    }
+  },
+  {
+    "arm": "MC050M16SEP09",
+    "track": "B",
+    "verdict": "不采纳",
+    "reasons": [
+      "滚动5年年化中位双表条件未过",
+      "年化双表条件未过"
+    ],
+    "U": {
+      "group": "U2",
+      "excellent": false,
+      "inferior": [
+        {
+          "metric": "滚动3年回撤中位",
+          "oriented_delta": -1.1132917885162463,
+          "beyond_one_pp": true
+        },
+        {
+          "metric": "逐年最差",
+          "oriented_delta": -2.9022167834742096,
+          "beyond_one_pp": true
+        }
+      ]
+    }
+  },
+  {
+    "arm": "MC100M14SEP09",
+    "track": "B",
+    "verdict": "不采纳",
+    "reasons": [
+      "滚动5年年化中位双表条件未过",
+      "年化双表条件未过"
+    ],
+    "U": {
+      "group": "U1",
+      "excellent": false,
+      "inferior": [
+        {
+          "metric": "滚动5年年化最差",
+          "oriented_delta": -0.2934908716310414,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "滚动5年回撤中位",
+          "oriented_delta": -0.25102850251024766,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "滚动3年回撤中位",
+          "oriented_delta": -0.923157831880056,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "逐年收益中位",
+          "oriented_delta": -0.675493093488988,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "逐年最差",
+          "oriented_delta": -0.30884104509407706,
+          "beyond_one_pp": false
+        }
+      ]
+    }
+  },
+  {
+    "arm": "MC100M15SEP09",
+    "track": "B",
+    "verdict": "不采纳",
+    "reasons": [
+      "滚动5年年化中位双表条件未过",
+      "年化双表条件未过"
+    ],
+    "U": {
+      "group": "U2",
+      "excellent": false,
+      "inferior": [
+        {
+          "metric": "滚动5年年化最差",
+          "oriented_delta": -0.19875976119225758,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "滚动5年回撤中位",
+          "oriented_delta": -0.25873229867365843,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "滚动3年回撤中位",
+          "oriented_delta": -1.0050867366578675,
+          "beyond_one_pp": true
+        },
+        {
+          "metric": "逐年收益中位",
+          "oriented_delta": -1.7369996243282948,
+          "beyond_one_pp": true
+        },
+        {
+          "metric": "逐年最差",
+          "oriented_delta": -1.0037413599899514,
+          "beyond_one_pp": true
+        }
+      ]
+    }
+  },
+  {
+    "arm": "MC100M16SEP09",
+    "track": "B",
+    "verdict": "不采纳",
+    "reasons": [
+      "滚动5年年化中位双表条件未过",
+      "年化双表条件未过"
+    ],
+    "U": {
+      "group": "U2",
+      "excellent": false,
+      "inferior": [
+        {
+          "metric": "滚动5年回撤中位",
+          "oriented_delta": -0.29307470873496944,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "滚动3年回撤中位",
+          "oriented_delta": -1.4907122521641614,
+          "beyond_one_pp": true
+        },
+        {
+          "metric": "逐年最差",
+          "oriented_delta": -0.656721550462841,
+          "beyond_one_pp": false
+        }
+      ]
+    }
+  },
+  {
+    "arm": "MC150M14SEP09",
+    "track": "B",
+    "verdict": "不采纳",
+    "reasons": [
+      "滚动5年年化中位双表条件未过",
+      "年化双表条件未过"
+    ],
+    "U": {
+      "group": "U1",
+      "excellent": false,
+      "inferior": [
+        {
+          "metric": "滚动5年回撤中位",
+          "oriented_delta": -0.514062511317781,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "滚动3年回撤中位",
+          "oriented_delta": -0.8338335315694556,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "逐年最差",
+          "oriented_delta": -0.3071716130859825,
+          "beyond_one_pp": false
+        }
+      ]
+    }
+  },
+  {
+    "arm": "MC150M15SEP09",
+    "track": "B",
+    "verdict": "不采纳",
+    "reasons": [
+      "滚动5年年化中位双表条件未过",
+      "年化双表条件未过"
+    ],
+    "U": {
+      "group": "U3",
+      "excellent": false,
+      "inferior": [
+        {
+          "metric": "滚动5年回撤中位",
+          "oriented_delta": -2.5148163050732366,
+          "beyond_one_pp": true
+        },
+        {
+          "metric": "滚动3年回撤中位",
+          "oriented_delta": -6.0411825582968754,
+          "beyond_one_pp": true
+        },
+        {
+          "metric": "逐年最差",
+          "oriented_delta": -3.1181555043986506,
+          "beyond_one_pp": true
+        }
+      ]
+    }
+  },
+  {
+    "arm": "MC150M16SEP09",
+    "track": "B",
+    "verdict": "不采纳",
+    "reasons": [
+      "滚动5年年化中位双表条件未过",
+      "年化双表条件未过"
+    ],
+    "U": {
+      "group": "U1",
+      "excellent": false,
+      "inferior": [
+        {
+          "metric": "滚动5年回撤中位",
+          "oriented_delta": -0.42834845510356656,
+          "beyond_one_pp": false
+        },
+        {
+          "metric": "滚动3年回撤中位",
+          "oriented_delta": -1.7622784507208888,
+          "beyond_one_pp": true
+        },
+        {
+          "metric": "逐年最差",
+          "oriented_delta": -1.2109122727198107,
+          "beyond_one_pp": true
+        }
+      ]
+    }
+  }
+]

@@ -157,6 +157,7 @@ def intrinsic_value(
     g_for_peg: float | None = None,
     max_retention: float | None = 1.0,
     min_retention: float | None = 0.0,
+    maintenance_ratio: float = 0.0,
 ) -> ValuationResult:
     """每股内在价值 P0*（原式第 6 节主公式 + 本模块的留存率修正）。
 
@@ -168,6 +169,10 @@ def intrinsic_value(
     >>> round(res.implied_pe, 4)          # PE_TTM = (1+g)(1−g/ROE)/(r−g)
     15.75
     """
+    if not math.isfinite(maintenance_ratio) or not 0 <= maintenance_ratio < 1:
+        raise ValuationError("maintenance_ratio 必须在 [0, 1) 内")
+    if maintenance_ratio and not consistent:
+        raise ValuationError("维持性现金约束需要 consistent=True")
     if eps0 <= 0:
         raise ValuationError(f"EPS0={eps0:g} ≤ 0：本模型按盈利折现，亏损公司按 §6.5.2.4 判无法估值")
     if roe0 <= 0:
@@ -180,6 +185,18 @@ def intrinsic_value(
     if roe_terminal <= g_terminal:
         raise ValuationError(
             f"ROE_T={roe_terminal:.2%} ≤ g_T={g_terminal:.2%}：终值留存率 ≥100%，永续增长无法内生维持")
+    if maintenance_ratio and 1 - g_terminal / roe_terminal - maintenance_ratio <= 0:
+        raise ValuationError("维持性现金占用后终值可分配现金非正")
+
+    def required(g: float, current: float, following: float) -> float:
+        original = _required_retention(g, current, following, consistent)
+        # The original fade already funds falling returns. Use a floor on that
+        # nongrowth requirement, rather than subtracting the same burden twice.
+        return max(original, g / following + maintenance_ratio) if maintenance_ratio else original
+
+    def supportable(b: float, current: float, following: float) -> float:
+        original = _supportable_growth(b, current, following, consistent)
+        return min(original, following * (b - maintenance_ratio)) if maintenance_ratio else original
 
     # `n1`（用户 2026-08-10）：**高速期年数**——前 n1 年 ROE 与 g 维持起始值不衰减，
     # 其后再按 n 年 fade 到终值。缺省 0，即原行为（g 自第 1 年起即衰减）。
@@ -212,14 +229,14 @@ def intrinsic_value(
         """
         if max_retention is not None and b > max_retention:
             return (max_retention,
-                    _supportable_growth(max_retention, roe_now, roe_next, consistent), True)
+                    supportable(max_retention, roe_now, roe_next), True)
         if min_retention is not None and b < min_retention:
             return (min_retention,
-                    _supportable_growth(min_retention, roe_now, roe_next, consistent), True)
+                    supportable(min_retention, roe_now, roe_next), True)
         return b, g_target, False
 
     # 年 0 的留存出自估值日前已实现的 E_0，不进现金流，但仍约束 g_1 的内生可行性（修正四）
-    b0 = _required_retention(g_path[0], roe0, roe_path[0], consistent)
+    b0 = required(g_path[0], roe0, roe_path[0])
     _b0, g_incoming, hit = _clamped(b0, roe0, roe_path[0], g_path[0])
     clamped_years += hit
 
@@ -233,7 +250,7 @@ def intrinsic_value(
             g_target, roe_next = g_path[index], roe_path[index]
         else:
             g_target, roe_next = g_terminal, roe_terminal
-        b_t = _required_retention(g_target, roe_t, roe_next, consistent)
+        b_t = required(g_target, roe_t, roe_next)
         b_t, g_incoming, hit = _clamped(b_t, roe_t, roe_next, g_target)
         clamped_years += hit
         payout = 1 - b_t
@@ -246,6 +263,8 @@ def intrinsic_value(
 
     # 终值：第 N 年后进入稳态（ROE_T、g_T 恒定），此时 b = g_T/ROE_T 正确无需修正
     payout_terminal = 1 - g_terminal / roe_terminal
+    if maintenance_ratio:
+        payout_terminal -= maintenance_ratio
     terminal_value = eps_path[-1] * (1 + g_terminal) * payout_terminal / (r - g_terminal)
     # **显式期是 n1 + n 年**，终值须按同一年数折现——只改路径不改这里会把终值高估 (1+r)^n1 倍
     terminal_pv = terminal_value / (1 + r) ** (n1 + n)

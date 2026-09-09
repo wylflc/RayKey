@@ -1,0 +1,89 @@
+{
+  "completed_beijing": "2026-09-09T17:09:46.259857+08:00",
+  "inputs_unchanged": true,
+  "executed_paths": 420,
+  "summary_rows": 490,
+  "baseline_checks": [
+    "full:2009-11-01:all_report_fields_identical",
+    "full:2010-05-01:all_report_fields_identical",
+    "full:2010-11-01:all_report_fields_identical",
+    "full:2011-05-01:all_report_fields_identical",
+    "full:2011-11-01:all_report_fields_identical",
+    "full:2012-05-01:all_report_fields_identical",
+    "full:2012-11-01:all_report_fields_identical",
+    "full:2013-05-01:all_report_fields_identical",
+    "full:2013-11-01:all_report_fields_identical",
+    "full:2014-05-01:all_report_fields_identical",
+    "full:2014-11-01:all_report_fields_identical",
+    "full:2015-05-01:all_report_fields_identical",
+    "full:2015-11-01:all_report_fields_identical",
+    "full:2016-05-01:all_report_fields_identical",
+    "A:2009-11-01:all_report_fields_identical",
+    "A:2010-05-01:all_report_fields_identical",
+    "A:2010-11-01:all_report_fields_identical",
+    "A:2011-05-01:all_report_fields_identical",
+    "A:2011-11-01:all_report_fields_identical",
+    "A:2012-05-01:all_report_fields_identical",
+    "A:2012-11-01:all_report_fields_identical",
+    "A:2013-05-01:all_report_fields_identical",
+    "A:2013-11-01:all_report_fields_identical",
+    "A:2014-05-01:all_report_fields_identical",
+    "A:2014-11-01:all_report_fields_identical",
+    "A:2015-05-01:all_report_fields_identical",
+    "A:2015-11-01:all_report_fields_identical",
+    "A:2016-05-01:all_report_fields_identical"
+  ],
+  "union_groups": {
+    "U1": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "candidates": [
+        "WCREPSEP09",
+        "MC100M14SEP09",
+        "MC150M14SEP09",
+        "MC150M16SEP09"
+      ],
+      "reused_A": true
+    },
+    "U2": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088",
+        "688516"
+      ],
+      "candidates": [
+        "MC050M14SEP09",
+        "MC050M15SEP09",
+        "MC050M16SEP09",
+        "MC100M15SEP09",
+        "MC100M16SEP09"
+      ],
+      "reused_A": false
+    },
+    "U3": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "600660",
+        "601088"
+      ],
+      "candidates": [
+        "MC150M15SEP09"
+      ],
+      "reused_A": false
+    }
+  },
+  "candidate_models": 3,
+  "candidate_combinations": 10,
+  "metric": "m2"
+}

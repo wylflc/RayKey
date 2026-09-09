@@ -1,0 +1,118 @@
+{
+  "overview": {
+    "WCREP": {
+      "counts": {
+        "cash_unchanged": 179,
+        "base_latest_ok": 179,
+        "unchanged": 74,
+        "status:off": 181,
+        "reduced": 60,
+        "increased": 45
+      },
+      "median_reduction_affected": -0.03624663076655188,
+      "median_cash_reduction_affected": null,
+      "all_history_proxy_status": {
+        "off": 20067
+      },
+      "all_history_cash_blocked": 0
+    },
+    "MC050": {
+      "counts": {
+        "cash_unchanged": 153,
+        "base_latest_ok": 179,
+        "unchanged": 63,
+        "status:not_persistent": 138,
+        "reduced": 75,
+        "cash_reduced": 25,
+        "status:persistent": 26,
+        "increased": 40,
+        "status:insufficient_years": 3,
+        "status:off": 7,
+        "status:nonpositive_base": 2,
+        "status:missing_inputs": 5,
+        "cash_rejected": 1,
+        "new_rejected": 1
+      },
+      "median_reduction_affected": -0.04529559668695071,
+      "median_cash_reduction_affected": -0.13934618451292147,
+      "all_history_proxy_status": {
+        "off": 4084,
+        "missing_cash_inputs": 795,
+        "not_persistent": 10911,
+        "persistent": 2220,
+        "nonpositive_base": 889,
+        "missing_inputs": 356,
+        "insufficient_years": 778,
+        "nonconsecutive_years": 34
+      },
+      "all_history_cash_blocked": 236
+    },
+    "MC100": {
+      "counts": {
+        "cash_unchanged": 153,
+        "base_latest_ok": 179,
+        "unchanged": 63,
+        "status:not_persistent": 138,
+        "reduced": 73,
+        "cash_reduced": 22,
+        "status:persistent": 26,
+        "increased": 39,
+        "status:insufficient_years": 3,
+        "status:off": 7,
+        "cash_rejected": 4,
+        "new_rejected": 4,
+        "status:nonpositive_base": 2,
+        "status:missing_inputs": 5
+      },
+      "median_reduction_affected": -0.047686573753254136,
+      "median_cash_reduction_affected": -0.29120437844339003,
+      "all_history_proxy_status": {
+        "off": 4084,
+        "missing_cash_inputs": 795,
+        "not_persistent": 10911,
+        "persistent": 2220,
+        "nonpositive_base": 889,
+        "missing_inputs": 356,
+        "insufficient_years": 778,
+        "nonconsecutive_years": 34
+      },
+      "all_history_cash_blocked": 586
+    },
+    "MC150": {
+      "counts": {
+        "cash_unchanged": 153,
+        "base_latest_ok": 179,
+        "unchanged": 63,
+        "status:not_persistent": 138,
+        "reduced": 70,
+        "cash_reduced": 19,
+        "status:persistent": 26,
+        "increased": 39,
+        "status:insufficient_years": 3,
+        "status:off": 7,
+        "cash_rejected": 7,
+        "new_rejected": 7,
+        "status:nonpositive_base": 2,
+        "status:missing_inputs": 5
+      },
+      "median_reduction_affected": -0.048645503386958555,
+      "median_cash_reduction_affected": -0.45024020583328306,
+      "all_history_proxy_status": {
+        "off": 4084,
+        "missing_cash_inputs": 795,
+        "not_persistent": 10911,
+        "persistent": 2220,
+        "nonpositive_base": 889,
+        "missing_inputs": 356,
+        "insufficient_years": 778,
+        "nonconsecutive_years": 34
+      },
+      "all_history_cash_blocked": 830
+    }
+  },
+  "monotonicity_violations": {
+    "WCREP_to_MC050": [],
+    "MC050_to_MC100": [],
+    "MC100_to_MC150": []
+  }
+}

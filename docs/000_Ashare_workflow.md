@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.166
+# A股选股-估值-量价操作流程 v4.167
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -300,6 +300,10 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 | `v_bear` / `v_bull` | 同一引擎、五个参数同向扰动后的每股价值：Bear = g0×0.5、折现率 +1pp、终值回报 −1pp、fade 7 年、g_T −0.5pp；Bull = g0×1.25（受 g0 上限）、折现率 −1pp、终值回报 +1pp（不高于起点回报）、fade 13 年、g_T +0.5pp；zero_growth 只扰折现率 ±1pp；银行与保险（股利折现覆盖）不算。任一侧触护栏即留空。**Bull 不给交易层用**，带宽仍是 §6.5.1 的 ±10% |
 
 建带结尾另按「每只最新 ok 带」打印路径分布（只数、市值占比、前三行业）。
+
+#### 6.5.4 维持性现金占用研究开关
+
+`build_historical_valuation_bands.py --maintenance-weight` 缺省 0；非零只用于实验目录中的 ROIC 带，并须同时给 `--wc-aggregation reported`（合计或明细二选一；`legacy` 复现现行）。代理估计、现金流衔接、缺失处理与测试设计统一读取 `data/experiments/exp_maintenance_cash_20260909/preregister.md`。候选侧、B2 与敏感度计算使用同一修正，金融与权益退路不应用；新增拒绝须在逐日状态生效后阻断陈旧带。按 §12 完成验证后再处理生产采纳。
 
 ### 6.6 人工复核职责
 

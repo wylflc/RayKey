@@ -1,0 +1,2 @@
+BASE|--daily-states data/experiments/exp_maintenance_cash_20260909/val/BASE/states_base.csv --hold-states data/experiments/exp_maintenance_cash_20260909/val/BASE/states_hold.csv
+MC150M15SEP09|--daily-states data/experiments/exp_maintenance_cash_20260909/val/MC150/states_base.csv --hold-states data/experiments/exp_maintenance_cash_20260909/val/MC150/states_hold.csv --width -0.0691 --swap-margin 0.15

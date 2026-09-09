@@ -1,0 +1,3 @@
+持仓侧逐日状态 952,236 行 → /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey/data/experiments/exp_maintenance_cash_20260909/val/MC100/states_hold.csv
+  两侧都有的行：B2 更高 209,167｜候选侧更高或相等 741,123｜只在候选侧 164｜只在 B2 1,782
+  票数：两侧都有 297｜只在候选侧 0｜只在 B2 0｜同日收盘不一致 0 行

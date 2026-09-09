@@ -27,7 +27,7 @@
   用市值会**循环**（估值依赖 WACC、WACC 依赖市值），标准解法是迭代或用目标结构；
   这里取账面权重，代价是高市净率公司的股权权重被低估、WACC 偏低（偏乐观）。
 * **维持性资本开支 ≈ 折旧摊销**：框架要的是「维持竞争地位所需」的那部分，报表不单独披露。
-  折旧摊销是最常用的代理（Buffett 原文即用它），代价是高增长期公司的扩张性开支
+  折旧摊销是常见近似，并不等于独立估计的真实维持性支出；高增长期公司的扩张性开支
   会被算成再投资（正确）、而通胀期的重置成本高于历史成本折旧（低估维持开支，偏乐观）。
 * **超额现金 = max(0, 货币资金 + 交易性金融资产 − 2%×营收)**：2% 是营运现金的通行经验值。
 * **2019 年前没有单列的利息费用**：`FE_INTEREST_EXPENSE` 实测只覆盖 30% 的财年（新准则才单列），
@@ -38,6 +38,7 @@
 from __future__ import annotations
 
 import csv
+import math
 import statistics
 from collections import Counter
 from dataclasses import dataclass, field, replace
@@ -108,6 +109,7 @@ class RoicYear:
     capex: float = 0.0
     dep_amort: float = 0.0
     working_capital: float | None = None
+    working_capital_reported: float | None = None  # Aggregate OR components, never both.
     cfo: float | None = None
     interest_expense: float = 0.0
     treasury_shares: float = 0.0      # 库存股（已回购未注销，资产负债表 TREASURY_SHARES；OI-082 周期守卫的权益回加项）
@@ -120,6 +122,7 @@ class RoicYear:
     delayed_until: str = ""                            # OI-130：有重述日而无存档版本时，现行值自此日起才可用
     tax_rate_observed: bool = False   # True=税率来自本期 所得税/利润总额；False=利润总额非正时回退法定税率
     annualized_months: int = 0        # OI-132：购买法收购当年 NOPAT／EBIT 已按并表月数年化（0 = 未调整）
+    cash_inputs_complete: bool = False  # Strict availability for the optional maintenance proxy.
 
 
 def _year_from_parts(code: str, period: str, parts: dict[str, dict], notice_cap: bool,
@@ -178,10 +181,23 @@ def _year_from_parts(code: str, period: str, parts: dict[str, dict], notice_cap:
             ic = max(ic, ic_floor * year.total_equity)
         year.invested_capital = ic if ic > 0 else None
     year.working_capital = _sum(bal, WC_ASSET_FIELDS) - _sum(bal, WC_LIAB_FIELDS)
+    def aggregate_or_parts(total: str, parts: tuple[str, ...]) -> float:
+        reported = _num(bal.get(total))
+        return reported if reported is not None else _sum(bal, parts)
+    year.working_capital_reported = (
+        _sum(bal, ("INVENTORY", "PREPAYMENT", "CONTRACT_ASSET"))
+        + aggregate_or_parts("NOTE_ACCOUNTS_RECE", ("ACCOUNTS_RECE", "NOTE_RECE"))
+        - _sum(bal, ("ADVANCE_RECEIVABLES", "CONTRACT_LIAB", "TAX_PAYABLE", "STAFF_SALARY_PAYABLE"))
+        - aggregate_or_parts("NOTE_ACCOUNTS_PAYABLE", ("ACCOUNTS_PAYABLE", "NOTE_PAYABLE")))
     if cfl:
         year.capex = _num(cfl.get("CONSTRUCT_LONG_ASSET")) or 0.0
         year.dep_amort = _sum(cfl, DEPR_FIELDS)
         year.cfo = _num(cfl.get("NETCASH_OPERATE"))
+        year.cash_inputs_complete = (
+            _num(cfl.get("CONSTRUCT_LONG_ASSET")) is not None
+            and any(_num(cfl.get(f)) is not None for f in DEPR_FIELDS)
+            and any(_num(bal.get(f)) is not None for f in WC_ASSET_FIELDS)
+            and any(_num(bal.get(f)) is not None for f in WC_LIAB_FIELDS))
     return year
 
 
@@ -517,6 +533,58 @@ def reinvestment_rate(history: list[RoicYear]) -> float | None:
     return (capex_sum - depr_sum + delta_wc) / nopat_sum
 
 
+@dataclass(frozen=True)
+class MaintenanceEstimate:
+    ratio: float | None
+    status: str
+    intervals: int = 0
+    positive_intervals: int = 0
+    net_reinvestment: float = 0.0
+    growth_allowance: float = 0.0
+    nopat_total: float = 0.0
+
+
+def maintenance_cash_ratio(history: list[RoicYear]) -> MaintenanceEstimate:
+    """Growth-adjusted persistent cash need; research definition in §6.5.4.
+
+    Callers supply only point-in-time annual versions after entity resets.
+    Missing data are unknown, not zero. This proxy is not observed maintenance capex.
+    """
+    ordered = sorted(history, key=lambda y: y.period)
+    if len(ordered) < 4:
+        return MaintenanceEstimate(None, "insufficient_years")
+    if any(y.is_financial for y in ordered):
+        return MaintenanceEstimate(None, "financial")
+    gaps, investments, allowances, profits = [], [], [], []
+    capital_intensities = []
+    for prev, year in zip(ordered, ordered[1:]):
+        if int(year.period[:4]) != int(prev.period[:4]) + 1:
+            return MaintenanceEstimate(None, "nonconsecutive_years")
+        if prev.annualized_months or year.annualized_months:
+            return MaintenanceEstimate(None, "acquisition_annualized")
+        if not prev.cash_inputs_complete or not year.cash_inputs_complete:
+            return MaintenanceEstimate(None, "missing_cash_inputs")
+        required = (prev.revenue, year.revenue, prev.invested_capital, year.nopat,
+                    prev.working_capital, year.working_capital, year.capex, year.dep_amort)
+        if any(x is None or not math.isfinite(x) for x in required):
+            return MaintenanceEstimate(None, "missing_inputs")
+        if min(prev.revenue, year.revenue, prev.invested_capital, year.nopat) <= 0:
+            return MaintenanceEstimate(None, "nonpositive_base")
+        capital_intensities.append(prev.invested_capital / prev.revenue)
+        investment = year.capex - year.dep_amort + year.working_capital - prev.working_capital
+        allowance = max(year.revenue - prev.revenue, 0.0) * statistics.median(capital_intensities)
+        gaps.append(investment - allowance)
+        investments.append(investment)
+        allowances.append(allowance)
+        profits.append(year.nopat)
+    n, positive = len(gaps), sum(g > 0 for g in gaps)
+    persistent = positive * 3 >= n * 2 and sum(gaps) > 0
+    return MaintenanceEstimate(
+        sum(gaps) / sum(profits) if persistent else 0.0,
+        "persistent" if persistent else "not_persistent", n, positive,
+        sum(investments), sum(allowances), sum(profits))
+
+
 def cost_of_debt(history: list[RoicYear]) -> float:
     """`利息费用 / 平均有息负债`，夹在 [2%, 12%]。无债或不可算时回退 4.5%。"""
     ordered = sorted(history, key=lambda y: y.period)
@@ -665,4 +733,3 @@ def reset_supersedes(reset: dict[str, dict[str, str]], code: str, report_date: s
     """重置后报告期已评估（`post_seen`）时，早于重置日的带不可再用。"""
     r = reset.get(code)
     return bool(r) and post_seen and (report_date or "") < r["reset"]
-

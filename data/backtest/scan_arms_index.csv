@@ -821,6 +821,15 @@ MAXBOTH,archive+current,m1+m2,,23,102,51,trend_x5_w-0.0261_x1c_dtax_sma20_swap_c
 MAXCORR65,archive,m1,,23,23,0,trend_x5_w0.0484_x1c_sma20_swap_corr0.65_tranche_slmin_skipma60_sl2.5312_addma_swk20_sp_lot100_lrc
 MAXCORR75,archive,m1,,23,23,0,trend_x5_w0.0484_x1c_sma20_swap_corr0.75_tranche_slmin_skipma60_sl2.5312_addma_swk20_sp_lot100_lrc
 MAXRAW,archive+current,m1+m2,,23,102,51,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+MC050M14SEP09,current,m2,,14,28,14,trend_x5_w-0.0639_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+MC050M15SEP09,current,m2,,14,28,14,trend_x5_w-0.0639_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+MC050M16SEP09,current,m2,,14,28,14,trend_x5_w-0.0639_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+MC100M14SEP09,current,m2,,14,28,14,trend_x5_w-0.0684_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+MC100M15SEP09,current,m2,,14,28,14,trend_x5_w-0.0684_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+MC100M16SEP09,current,m2,,14,28,14,trend_x5_w-0.0684_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+MC150M14SEP09,current,m2,,14,28,14,trend_x5_w-0.0691_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+MC150M15SEP09,current,m2,,14,28,14,trend_x5_w-0.0691_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+MC150M16SEP09,current,m2,,14,28,14,trend_x5_w-0.0691_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
 MED,archive,m1,,23,23,0,trend_x5_w0.0054_x1c_sma20_swap_corr0.75_tranche_sl2.8725_addma_swk20_sp_lot100_lrc
 MIM10,archive,m1,,14,28,14,trend_x5_w-0.0278_x1c_dtax_sma20_swap_corr0.7_tranche_slmin_gs1.25_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc
 MIM12,archive,m1,,14,28,14,trend_x5_w-0.0278_x1c_dtax_sma20_swap_corr0.7_tranche_slmin_gs1.25_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc
@@ -1497,6 +1506,7 @@ VXMIN12,current,m2,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche
 W14,archive,m1,,23,23,0,trend_x5_w0.06_x1c_sma20_swap_corr0.7_tranche_slmin_skipma60_sl2.5_addma_swk20_sp_lot100_lrc
 W16,archive,m1,,23,23,0,trend_x5_w0.06_x1c_sma20_swap_corr0.7_tranche_slmin_skipma60_sl2.5_addma_swk20_sp_lot100_lrc
 WARM,archive,m1,,0,1,0,trend_x4_w0_x1c_sma20_swap_corr0.85_tranche_sl2.5_q750b0.1s0.6nr_sp_lot100_lrc_WARM
+WCREPSEP09,current,m2,,14,28,14,trend_x5_w-0.0457_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
 WIN,archive,m1,,0,1,0,trend_x1_w-0.5853_x1c_sma20_swap_corr0.85_tranche_sl1.1_sp_lot100_lrc_WIN
 WJFD15,current,m2,WJr120260906,14,56,28,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_chopflatd0.015n3s0.005x4c5p0.005_cap0.6_sp_gso_lot100_lrc2
 WJFD25,current,m2,WJr120260906,14,56,28,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_chopflatd0.025n3s0.005x4c5p0.005_cap0.6_sp_gso_lot100_lrc2

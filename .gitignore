@@ -116,6 +116,8 @@ data/experiments/exp_oi150_overseas_forward/raw/
 # MA20 joint-guard research: large/redundant inputs; compact evidence and scan ledger are retained.
 data/experiments/exp_whipsaw_joint/**/candidates.csv
 data/experiments/exp_whipsaw_joint/summaries/
+# Per-path cash-model caches are consolidated into summary_rows.csv and the ledger.
+data/experiments/exp_maintenance_cash_20260909/summaries/
 data/experiments/exp_whipsaw_joint/validation_raw/
 
 # 美股移植（OI-159）：原始价格、成分快照、逐日状态与实验原始缓存不入库

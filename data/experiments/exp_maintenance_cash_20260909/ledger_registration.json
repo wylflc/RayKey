@@ -1,0 +1,106 @@
+{
+  "registered_path_summaries": 308,
+  "candidate_arms": [
+    {
+      "臂名": "MC050M14SEP09",
+      "台账": "current",
+      "计量版本": "m2",
+      "批次": "",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0639_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2"
+    },
+    {
+      "臂名": "MC050M15SEP09",
+      "台账": "current",
+      "计量版本": "m2",
+      "批次": "",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0639_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2"
+    },
+    {
+      "臂名": "MC050M16SEP09",
+      "台账": "current",
+      "计量版本": "m2",
+      "批次": "",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0639_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2"
+    },
+    {
+      "臂名": "MC100M14SEP09",
+      "台账": "current",
+      "计量版本": "m2",
+      "批次": "",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0684_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2"
+    },
+    {
+      "臂名": "MC100M15SEP09",
+      "台账": "current",
+      "计量版本": "m2",
+      "批次": "",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0684_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2"
+    },
+    {
+      "臂名": "MC100M16SEP09",
+      "台账": "current",
+      "计量版本": "m2",
+      "批次": "",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0684_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2"
+    },
+    {
+      "臂名": "MC150M14SEP09",
+      "台账": "current",
+      "计量版本": "m2",
+      "批次": "",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0691_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2"
+    },
+    {
+      "臂名": "MC150M15SEP09",
+      "台账": "current",
+      "计量版本": "m2",
+      "批次": "",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0691_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2"
+    },
+    {
+      "臂名": "MC150M16SEP09",
+      "台账": "current",
+      "计量版本": "m2",
+      "批次": "",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0691_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2"
+    },
+    {
+      "臂名": "WCREPSEP09",
+      "台账": "current",
+      "计量版本": "m2",
+      "批次": "",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0457_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2"
+    }
+  ],
+  "note": "Full/A summaries registered; U paths remain separately identified in local summary_rows.csv to avoid A/U label collisions."
+}

@@ -1,0 +1,6 @@
+BASE|--daily-states data/experiments/exp_maintenance_cash_20260909/val/BASE/states_base.csv --hold-states data/experiments/exp_maintenance_cash_20260909/val/BASE/states_hold.csv
+MC050M14SEP09|--daily-states data/experiments/exp_maintenance_cash_20260909/val/MC050/states_base.csv --hold-states data/experiments/exp_maintenance_cash_20260909/val/MC050/states_hold.csv --width -0.0639 --swap-margin 0.14
+MC050M15SEP09|--daily-states data/experiments/exp_maintenance_cash_20260909/val/MC050/states_base.csv --hold-states data/experiments/exp_maintenance_cash_20260909/val/MC050/states_hold.csv --width -0.0639 --swap-margin 0.15
+MC050M16SEP09|--daily-states data/experiments/exp_maintenance_cash_20260909/val/MC050/states_base.csv --hold-states data/experiments/exp_maintenance_cash_20260909/val/MC050/states_hold.csv --width -0.0639 --swap-margin 0.16
+MC100M15SEP09|--daily-states data/experiments/exp_maintenance_cash_20260909/val/MC100/states_base.csv --hold-states data/experiments/exp_maintenance_cash_20260909/val/MC100/states_hold.csv --width -0.0684 --swap-margin 0.15
+MC100M16SEP09|--daily-states data/experiments/exp_maintenance_cash_20260909/val/MC100/states_base.csv --hold-states data/experiments/exp_maintenance_cash_20260909/val/MC100/states_hold.csv --width -0.0684 --swap-margin 0.16
