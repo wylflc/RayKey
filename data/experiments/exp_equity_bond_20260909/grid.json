@@ -1,0 +1,67 @@
+[
+  {
+    "arm": "BASE",
+    "kind": "baseline",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv"
+  },
+  {
+    "arm": "EBFIX160",
+    "kind": "fixed",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-lower 1.6 --equity-bond-upper 1.6"
+  },
+  {
+    "arm": "EBFIX100",
+    "kind": "fixed",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-lower 1.0 --equity-bond-upper 1.0"
+  },
+  {
+    "arm": "EBQ20",
+    "kind": "percentile",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-threshold 0.2"
+  },
+  {
+    "arm": "EBQ30",
+    "kind": "percentile",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-threshold 0.3"
+  },
+  {
+    "arm": "EBQ40",
+    "kind": "percentile",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-threshold 0.4"
+  },
+  {
+    "arm": "EBS02",
+    "kind": "spread",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.02"
+  },
+  {
+    "arm": "EBS03",
+    "kind": "spread",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03"
+  },
+  {
+    "arm": "EBS04",
+    "kind": "spread",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.04"
+  },
+  {
+    "arm": "EBCR30",
+    "kind": "credit",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode credit --equity-bond-threshold .3"
+  },
+  {
+    "arm": "EBR10",
+    "kind": "ramp",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode ramp --equity-bond-lower 0 --equity-bond-threshold 0.1 --equity-bond-ramp-high 0.9"
+  },
+  {
+    "arm": "EBR20",
+    "kind": "ramp",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode ramp --equity-bond-lower 0 --equity-bond-threshold 0.2 --equity-bond-ramp-high 0.8"
+  },
+  {
+    "arm": "EBR30",
+    "kind": "ramp",
+    "args": "--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode ramp --equity-bond-lower 0 --equity-bond-threshold 0.3 --equity-bond-ramp-high 0.7"
+  }
+]

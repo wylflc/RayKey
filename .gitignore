@@ -130,3 +130,8 @@ data/experiments/exp_us_sp500_port/raw/
 
 data/experiments/exp_buy_fraction_operating_20260909/summaries/
 data/experiments/exp_buy_fraction_operating_20260909/daily_selection_*.csv
+# Rebuild equity/bond per-path caches from the preregistered SLURM job.
+data/experiments/exp_equity_bond_20260909/summaries/
+data/experiments/exp_equity_bond_20260909/daily/
+data/experiments/exp_equity_bond_20260909/high_base/summaries/
+data/experiments/exp_equity_bond_20260909/high_base/daily/

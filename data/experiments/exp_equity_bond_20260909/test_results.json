@@ -1,0 +1,18 @@
+{
+  "equity_bond_unit_tests": 8,
+  "buy_fraction_regression_tests": 10,
+  "parameter_sync_tests": 4,
+  "execution_confirmation_tests": 8,
+  "residual_cny_tests": 7,
+  "residual_clear_tests": 7,
+  "additional_distinct_policy_checks": 2,
+  "high_base_restore_check": true,
+  "cli_summary_and_diagnostic_output": true,
+  "historical_netting_regression_2010_08_25": true,
+  "documentation_errors": 0,
+  "all_targeted_checks_passed": true,
+  "baseline_defects_recorded": [
+    "OI-169",
+    "OI-170"
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "arm": "BASE",
+    "kind": "baseline"
+  },
+  {
+    "arm": "EBDQ20",
+    "kind": "percentile"
+  },
+  {
+    "arm": "EBDQ30",
+    "kind": "percentile"
+  },
+  {
+    "arm": "EBDQ40",
+    "kind": "percentile"
+  },
+  {
+    "arm": "EBDS02",
+    "kind": "spread"
+  },
+  {
+    "arm": "EBDS03",
+    "kind": "spread"
+  },
+  {
+    "arm": "EBDS04",
+    "kind": "spread"
+  },
+  {
+    "arm": "EBDC30",
+    "kind": "credit"
+  }
+]

@@ -1,0 +1,74 @@
+{
+  "completed_beijing": "2026-09-09T22:54:08.356052+08:00",
+  "inputs_unchanged": true,
+  "executed_paths": 280,
+  "summary_rows": 350,
+  "baseline_checks": [
+    "full:BASE:2009-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2010-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2010-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2011-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2011-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2012-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2012-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2013-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2013-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2014-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2014-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2015-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2015-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2016-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2009-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2010-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2010-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2011-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2011-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2012-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2012-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2013-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2013-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2014-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2014-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2015-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2015-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2016-05-01:standard_and_anchor_fields_identical"
+  ],
+  "union_groups": {
+    "U1": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088",
+        "688516"
+      ],
+      "candidates": [
+        "EBDQ20",
+        "EBDQ30",
+        "EBDS04"
+      ],
+      "reused_A": false
+    },
+    "U2": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "candidates": [
+        "EBDQ40",
+        "EBDS02",
+        "EBDS03",
+        "EBDC30"
+      ],
+      "reused_A": true
+    }
+  },
+  "candidate_models": 3,
+  "candidate_combinations": 7,
+  "known_nonbase_controls": 0,
+  "metric": "m2"
+}

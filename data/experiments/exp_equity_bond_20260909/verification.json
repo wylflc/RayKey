@@ -1,0 +1,119 @@
+{
+  "completed_beijing": "2026-09-09T22:50:35.712775+08:00",
+  "inputs_unchanged": true,
+  "executed_paths": 546,
+  "summary_rows": 602,
+  "baseline_checks": [
+    "full:BASE:2009-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2010-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2010-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2011-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2011-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2012-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2012-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2013-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2013-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2014-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2014-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2015-05-01:standard_and_anchor_fields_identical",
+    "full:BASE:2015-11-01:standard_and_anchor_fields_identical",
+    "full:BASE:2016-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2009-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2010-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2010-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2011-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2011-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2012-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2012-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2013-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2013-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2014-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2014-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2015-05-01:standard_and_anchor_fields_identical",
+    "A:BASE:2015-11-01:standard_and_anchor_fields_identical",
+    "A:BASE:2016-05-01:standard_and_anchor_fields_identical"
+  ],
+  "union_groups": {
+    "U1": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "600585",
+        "601088"
+      ],
+      "candidates": [
+        "EBFIX160",
+        "EBQ30",
+        "EBS02",
+        "EBS03"
+      ],
+      "reused_A": false
+    },
+    "U2": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "600309",
+        "601088"
+      ],
+      "candidates": [
+        "EBFIX100"
+      ],
+      "reused_A": false
+    },
+    "U3": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "candidates": [
+        "EBQ20",
+        "EBQ40",
+        "EBS04"
+      ],
+      "reused_A": true
+    },
+    "U4": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088",
+        "601328"
+      ],
+      "candidates": [
+        "EBCR30",
+        "EBR10"
+      ],
+      "reused_A": false
+    },
+    "U5": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "600309",
+        "601088",
+        "601328"
+      ],
+      "candidates": [
+        "EBR20",
+        "EBR30"
+      ],
+      "reused_A": false
+    }
+  },
+  "candidate_models": 4,
+  "candidate_combinations": 10,
+  "known_nonbase_controls": 2,
+  "metric": "m2"
+}

@@ -1,0 +1,26 @@
+{
+  "registered_rows": 350,
+  "ledger_rows_from_this_batch": 350,
+  "candidate_and_control_arm_count": 19,
+  "arms": [
+    "EBCR30",
+    "EBDC30",
+    "EBDQ20",
+    "EBDQ30",
+    "EBDQ40",
+    "EBDS02",
+    "EBDS03",
+    "EBDS04",
+    "EBFIX100",
+    "EBFIX160",
+    "EBQ20",
+    "EBQ30",
+    "EBQ40",
+    "EBR10",
+    "EBR20",
+    "EBR30",
+    "EBS02",
+    "EBS03",
+    "EBS04"
+  ]
+}

@@ -1,0 +1,3 @@
+BASE|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv
+EBCR30|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode credit --equity-bond-threshold .3
+EBR10|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode ramp --equity-bond-lower 0 --equity-bond-threshold 0.1 --equity-bond-ramp-high 0.9

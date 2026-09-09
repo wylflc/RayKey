@@ -1,0 +1,38 @@
+{
+  "case": "T+1 new position, signal close 10, execution close 20, initial cash 100000, tranche 5%",
+  "nav_rows": [
+    [
+      "2024-01-02",
+      100000.0,
+      100000.0,
+      0,
+      0.0,
+      Infinity
+    ],
+    [
+      "2024-01-03",
+      97500.0,
+      95000.0,
+      1,
+      0.0,
+      Infinity,
+      0.02564102564102564,
+      0.02564102564102564
+    ]
+  ],
+  "ledger": [
+    {
+      "date": "2024-01-03",
+      "security_code": "A",
+      "action": "买入",
+      "shares": "250",
+      "price": "20.000",
+      "amount": "5000",
+      "pv_ratio": "0.8000",
+      "intrinsic_value": "12.500",
+      "reason": "首次建仓"
+    }
+  ],
+  "actual_close_nav_before_fees": 100000,
+  "scope": "Unchanged existing BASE accounting; the overlay enforces exposure at execution-day marks separately."
+}

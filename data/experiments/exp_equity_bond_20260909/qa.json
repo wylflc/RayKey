@@ -1,0 +1,11 @@
+{
+  "input_hashes_unchanged": true,
+  "baseline_paths_reproduced": 28,
+  "daily_paths": 462,
+  "new_active_cash_deficit_paths": 0,
+  "legacy_negative_cash_paths": 0,
+  "inherited_active_cash_deficit_days": 0,
+  "timing_checks_passed": true,
+  "platforms": [],
+  "unresolved_cap_days": 1
+}

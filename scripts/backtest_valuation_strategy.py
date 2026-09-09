@@ -53,6 +53,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from swap_chop_guard import ChopConfig, ChopGuard
+from equity_bond_constraint import EquityBondConstraint
 
 DAILY_STATES = ROOT / "data/processed/a_share_daily_states_adopted.csv"
 OHLCV_DIR = ROOT / "data/raw/ohlcv"
@@ -1325,6 +1326,62 @@ def top_fraction_candidates(pool, fraction: Fraction | float):
 
 
 # ------------------------------------------------------------------ 回测
+def equity_bond_buy_shares(portfolio, marks, wanted, price, mark, day, lot_size, limit, cap):
+    """Maximum affordable final order, including fees, slippage and post-trade NAV."""
+    equity = portfolio.equity(marks)
+    stock = portfolio.gross(marks) - portfolio.cash
+    power = buying_power(portfolio, limit)
+    step = lot_size or 1e-6
+    def allowed(units):
+        amount = units * step * price
+        fee = _fee_quiet(amount, day, 'buy') if units else 0.
+        nav = equity - fee - units * step * (price - mark)
+        return (amount + fee <= power + 1e-8 and nav > 0 and
+                (cap is None or stock + units * step * mark <= cap * nav + 1e-8))
+    lo, hi = 0, max(0, int((wanted + 1e-9) / step))
+    while lo < hi:
+        middle = (lo + hi + 1) // 2
+        if allowed(middle): lo = middle
+        else: hi = middle - 1
+    return lo * step
+
+
+def enforce_equity_bond_cap(portfolio, day, marks, fill_price, cap, lot_size, ledger, net_reg):
+    """Proportionate sales, rounded up; repeat only for fee/tax residual or unavailable holdings."""
+    turnover = 0.; count = 0
+    while portfolio.lots:
+        stock = portfolio.gross(marks) - portfolio.cash
+        excess = stock - cap * portfolio.equity(marks)
+        if excess <= 1e-6: break
+        tradable = [(c, fill_price(c, None)) for c in sorted(portfolio.lots)]
+        tradable = [(c, p) for c, p in tradable if p and marks.get(c, 0) > 0]
+        value = sum(portfolio.lots[c].shares * marks[c] for c, _ in tradable)
+        if value <= 0: break
+        fraction = min(1., excess / value)
+        for code, fill in tradable:
+            lot = portfolio.lots[code]
+            quantity = lot.shares * fraction
+            if lot_size:
+                quantity = min(lot.shares, math.ceil(quantity / lot_size) * lot_size)
+            if quantity <= 0: continue
+            sp = px_sell(fill)
+            reason = '股债·总仓位上限'
+            turnover += quantity * sp; count += 1
+            if quantity >= lot.shares - 1e-8:
+                close_lot(portfolio, code, day, sp, reason, ledger=ledger, net_reg=net_reg)
+            else:
+                log_partial_sell(ledger, day, code, quantity, sp, reason)
+                consumed = []
+                portfolio.cash -= sell_dividend_tax(portfolio, lot, quantity, day, consumed)
+                portfolio.cash += quantity * sp - trade_fee(quantity * sp, day, 'sell')
+                lot.shares -= quantity
+                lot.proceeds += quantity * sp; lot.sells += 1
+                register_sale(net_reg, code, lot, quantity, sp, consumed, False, None,
+                              len(ledger) - 1 if ledger is not None else None)
+        repay_debt(portfolio, True)
+    return turnover, count
+
+
 def run(strategy: str, x: float, states, prices, actions, mas, since: str, until: str,
         capital: float, width: float = 0.10, tiers: dict[str, str] | None = None,
         credit_ratio: float = 0.0, credit_cap: float = 0.0, margin_rate: float = 0.0,
@@ -1403,7 +1460,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         vol_entry_min: float = 0.0, vol_entry_max: float = 0.0,
         vol_addon_min: float = 0.0, vol_addon_max: float = 0.0,
         vol_swap_min: float = 0.0, vol_swap_max: float = 0.0, vol_stop_min: float = 0.0,
-        candidate_log=None, buy_top_pct: float = 0.0) -> dict:
+        candidate_log=None, buy_top_pct: float = 0.0,
+        equity_bond: EquityBondConstraint | None = None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`。
 
     `tier_buy_scale`／`tier_sell_scale`（研究开关，§12.95「护城河放到决策层」）：按档位给买入线／
@@ -1420,6 +1478,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     实测现行规则下这条链路虽然存在（64 次减持里 10 次由 V 下修触发），但**太慢**
     ——徐工机械那一笔从建仓到被判贵走了 9 年半。
     """
+    if equity_bond is not None and (exec_delay < 1 or exec_price != "close" or credit_over_limit != "repay"
+                                   or fill_missing != "skip"):
+        raise ValueError("Equity/bond research requires delayed close execution and credit-over-limit repay")
     if not math.isfinite(residual_clear_tranches) or residual_clear_tranches < 0:
         raise ValueError("residual_clear_tranches must be finite and nonnegative")
     if not math.isfinite(residual_clear_cny) or residual_clear_cny < 0:
@@ -1568,6 +1629,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     min_buf_total, min_buf_total_day = float("inf"), ""     # 强平缓冲（§12.1 第 2 款），与担保比例同一时点
     min_buf_stock, min_buf_stock_day = float("inf"), ""
     credit_limit = 0.0
+    eb_records = []
     prev_trading = {n: d for d, n in zip(days, days[1:])}
     # `residual_clear`（OI-092③）：减档后余仓清空阈值。`lot`（现行，§9.3.2 第 4 步）＝不足一手
     # 才清空；`tranche`（研究口径，§12.126 A/B 主读数 −0.44 不采纳）＝传一档股数给 `sell_shares`、
@@ -1873,6 +1935,16 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     "equity_after": portfolio.equity(marks), "debt_after": portfolio.debt,
                 })
                 stats["**爆仓·强制平仓**"] += 1
+
+        eb_cap = None
+        eb_signal = None
+        if equity_bond is not None:
+            eb_signal, eb_cap = equity_bond.resolve(sig_day)
+            stats["股债·信号覆盖日" if eb_cap is not None else "股债·未覆盖日"] += 1
+            if eb_cap is not None:
+                # Credit action never sells securities; cash and subsequent proceeds repay excess debt.
+                credit_limit = min(credit_limit, max(0., eb_cap - 1.) * max(0., portfolio.equity(marks)))
+                repay_over_limit(portfolio, credit_limit)
 
         equity = portfolio.equity(marks)
         if equity <= 0:
@@ -2273,6 +2345,31 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if gain_hit and not value_rich:
                     gain_trimmed_today.add(code)
 
+        # Research cap acts after ordinary sales, before swaps/buys. Untradable holdings stay marked.
+        eb_active_cap = eb_cap if equity_bond is not None and equity_bond.mode != "credit" else None
+        eb_count = 0
+        if eb_active_cap is not None:
+            eb_turn, eb_count = enforce_equity_bond_cap(
+                portfolio, day, marks, fill_price, eb_active_cap, lot_size, ledger, net_reg)
+            turnover += eb_turn
+            sell_count += eb_count
+            stats["股债·主动减仓笔数"] += eb_count
+            if eb_count:
+                stats["股债·主动减仓日"] += 1
+            repay_debt(portfolio, True)
+
+        def eb_marks():
+            return {c: prices.get(c, {}).get(day) or marks.get(c) or last_price.get(c, 0.)
+                    for c in portfolio.lots}
+
+        def funds_available():
+            power = buying_power(portfolio, credit_limit)
+            if eb_active_cap is None:
+                return power
+            current_marks = eb_marks()
+            stock = portfolio.gross(current_marks) - portfolio.cash
+            return min(power, max(0., eb_active_cap * portfolio.equity(current_marks) - stock))
+
         # ---- 常规卖出之后、换仓与买入之前：负债超出当日额度的部分先用现金偿还（§10.2，OI-081）
         if credit_over_limit == "repay" and credit_ratio > 0:
             if repay_over_limit(portfolio, credit_limit) > 0:
@@ -2576,7 +2673,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         if (swap_recipient_margin or swap_source_block >= 0.0) and (gate != "pv" or rank_mode != "pv"):
             raise ValueError("--swap-recipient-margin／--swap-source-block 目前只定义于 --gate pv 且 --rank-mode pv"
                              "（BASE 带 --swap-source-block -1；研究臂改 gate／rank-mode 时须同时给 --swap-source-block -1）")
-        swap_funds_before = buying_power(portfolio, credit_limit) if swap_recipient_margin else 0.0
+        swap_funds_before = funds_available() if swap_recipient_margin else 0.0
         swap_gain_proceeds = 0.0             # 涨幅让位卖出款：不受闸门约束
         swap_src_min_pv = float("inf")       # 当日 P/V 授权换仓卖出源的最低持仓侧 P/V
         swap_sources_today: set[str] = set()  # 当日全部换仓卖出源（含涨幅让位）
@@ -2682,7 +2779,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 # `swap_trigger`（OI-081，用户 2026-08-22 裁定）：`power`（缺省）＝按 §10.2 可用资金
                 # （现金＋剩余授信）不足一档才换仓——授信还有余量时先融资买；`cash`＝v4.39 前旧口径，
                 # 只看现金、不计剩余授信，只用于复现旧读数。
-                funds = buying_power(portfolio, credit_limit) if swap_trigger == "power" else portfolio.cash
+                funds = funds_available() if swap_trigger == "power" else portfolio.cash
                 blocked = funds < (lump_sum or budget) or len(portfolio.lots) >= max_positions
                 if not blocked:
                     break
@@ -2897,7 +2994,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 正额度 = 还款后的可用资金 − 全部净卖出款；负值即超额还款吃掉的部分。池子为负时缺口摊给其余池子。
         if pair_sales:
             k = len(pair_sales)
-            spare = buying_power(portfolio, credit_limit) - sum(n for _c, n, _m in pair_sales)
+            spare = funds_available() - sum(n for _c, n, _m in pair_sales)
             if spare < swap_spare_frac * budget:
                 pools = [n + spare / k for _c, n, _m in pair_sales]
                 deficit = -sum(v for v in pools if v < 0)
@@ -2924,9 +3021,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 不足一档 × F 时并入分摊池、当日不走第 5 步，否则只分摊卖出款、正额度照第 5 步买。接收方集在买入段前按最终合格集定。
         swap_split_pool = 0.0
         if swap_proceeds in ("split", "splitw") and swap_target_order and swap_net_sales > 0:
-            spare = buying_power(portfolio, credit_limit) - swap_net_sales
+            spare = funds_available() - swap_net_sales
             if spare < swap_spare_frac * budget:
-                swap_split_pool = max(0.0, buying_power(portfolio, credit_limit))
+                swap_split_pool = max(0.0, funds_available())
                 pair_regular = False
                 stats["分摊换仓·正负额度并入均分" if spare >= 0 else "分摊换仓·负额度均摊"] += 1
             else:
@@ -2949,7 +3046,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         spent_unguarded = 0.0
         swap_unguarded = float("inf")
         if swap_recipient_margin:
-            funds_now = buying_power(portfolio, credit_limit)
+            funds_now = funds_available()
             swap_unguarded = funds_now - max(
                 0.0, funds_now - swap_funds_before - swap_gain_proceeds)
         # ---- 档位排序偏置（用户 2026-08-08）
@@ -3111,7 +3208,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     + ([(r, None) for r in eligible[:max_positions]] if pair_regular else []))
         daily_buys = 0
         for (code, close, value, ratio), pair_amount in buy_plan:
-            if buying_power(portfolio, credit_limit) <= 0:
+            if funds_available() <= 0:
                 break
             # 研究开关：成交日新建仓与加仓合计最多 N 笔。到限后仍可抵消同名卖单，
             # 纯对冲不占买入名额；普通候选不再进入整手／比例冷却计数。
@@ -3159,7 +3256,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if _held.avg_cost > 0 and close >= _held.avg_cost * (1.0 + addon_max_gain):
                     stats[f"加仓·涨幅≥{addon_max_gain:.0%}·跳过"] += 1
                     continue
-            avail = buying_power(portfolio, credit_limit)
+            avail = funds_available()
+            if eb_active_cap is not None:
+                current_marks = eb_marks()
+                current_stock = portfolio.gross(current_marks) - portfolio.cash
+                avail = min(avail, max(0., eb_active_cap * portfolio.equity(current_marks) - current_stock))
             if pair_amount is not None:
                 amount = min(pair_amount, avail)      # 配对换仓定向额度：不按一档，按收到多少买多少
             elif lump_sum:
@@ -3207,7 +3308,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         prior = last_buy.get(code)
                         ready = (min_lot_cooldown
                                  and (prior is None or _days_between(prior, day) >= min_lot_cooldown))
-                    if ready and buying_power(portfolio, credit_limit) >= bp * lot_size:
+                    if ready and funds_available() >= bp * lot_size:
                         lots_n = 1
                         stats["高价股·按手建仓"] += 1
                     else:
@@ -3223,19 +3324,30 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 want = cut_shares.pop(code)
                 if lot_size:
                     want = int(want // lot_size) * lot_size
-                afford = (min(want, buying_power(portfolio, credit_limit) / bp)
+                afford = (min(want, funds_available() / bp)
                           if bp > 0 else 0.0)
                 if lot_size:
                     afford = int(afford // lot_size) * lot_size
                 if afford > 0:
                     shares, amount = afford, afford * bp
                     stats["割肉买回"] += 1
+            if eb_cap is not None:
+                shares = equity_bond_buy_shares(portfolio, eb_marks(), shares, bp, fill, day,
+                                                lot_size, credit_limit, eb_active_cap)
+                amount = shares * bp
+                if shares <= 0:
+                    stats["股债·买入资金或上限阻挡"] += 1
+                    continue
             # 同日买卖对冲：本次买入先与当日已卖出的同一只抵消，只对净额下单、双边费税都不付。
             if net_reg and code in net_reg and shares > 0:
                 if residual_clear_final and net_rebuy_leaves_small(
                         net_reg, portfolio, code, shares, residual_clear_cny):
                     stats["清尾·不对冲重留小仓"] += 1
                     continue
+                if eb_cap is not None:
+                    # Repayment may have consumed sale proceeds. Refinance before reversing a sale;
+                    # the final order guard above already verified cash + credit, fees and exposure.
+                    draw_credit(portfolio, shares * bp + _fee_quiet(shares * bp, day, "buy"), credit_limit)
                 netted, turn_adj = net_off_sale(net_reg, portfolio, code, shares, day, ledger)
                 if netted > 0:
                     stats["同日买卖对冲"] += 1
@@ -3253,6 +3365,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     stats["换仓款·接收方边际不足·跳过"] += 1
                     continue
                 spent_unguarded += amount
+            if eb_cap is not None:
+                shares = equity_bond_buy_shares(portfolio, eb_marks(), shares, bp, fill, day,
+                                                lot_size, credit_limit, eb_active_cap)
+                amount = shares * bp
+                if shares <= 0:
+                    stats["股债·买入资金或上限阻挡"] += 1
+                    continue
             lot = portfolio.lots.get(code)
             if lot is None:
                 # 止损价取**成交日**均线。成交日停牌时 `mas[code][day]` 整条缺失，
@@ -3325,6 +3444,20 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         # 与前三大合计，写进净值曲线。不记的话「集中度」只能靠事后从流水重建，而流水按构造
         # 缺部分减持（本次一并补上），重建值会系统性偏高。
         eq_now = portfolio.equity(marks)
+        if equity_bond is not None:
+            constraint_marks = eb_marks()
+            constraint_equity = portfolio.equity(constraint_marks)
+            stock_now = portfolio.gross(constraint_marks) - portfolio.cash
+            exposure = stock_now / constraint_equity if constraint_equity > 0 else float("inf")
+            unresolved = eb_active_cap is not None and stock_now > eb_active_cap * constraint_equity + 1e-6
+            stats["股债·日末超限日"] += int(unresolved)
+            eb_records.append({"date": day, "signal_day": sig_day,
+                "observed_on": eb_signal.observed_on if eb_signal else "",
+                "spread": eb_signal.spread if eb_signal else "",
+                "percentile": eb_signal.percentile if eb_signal else "",
+                "cap": eb_cap, "exposure": exposure, "debt": portfolio.debt,
+                "cash": portfolio.cash, "equity": eq_now, "constraint_equity": constraint_equity,
+                "active_sells": eb_count, "unresolved": unresolved})
         # ---- 逐代码贡献记账（只读持仓与闭合周期，不改任何交易状态）----
         eq_prev = equity_curve[-1][1] if equity_curve else capital
         touched = set(prev_mv) | set(portfolio.lots)
@@ -3377,7 +3510,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             "min_total_buffer": min_buf_total, "min_total_buffer_day": min_buf_total_day,
             "interest_paid": portfolio.interest_paid,
             "dividend_tax_paid": portfolio.dividend_tax_paid, "rights_paid": portfolio.rights_paid,
-            "final_debt": portfolio.debt, "stats": dict(stats)}
+            "final_debt": portfolio.debt, "stats": dict(stats), "equity_bond_records": eb_records}
 
 
 # ------------------------------------------------------------------ 指标
@@ -4220,7 +4353,26 @@ def main() -> int:
                     help="OI-148 执行成本压力：每边滑点（基点）。买入成交价 = 成交日价 × (1 + bp/1e4)、卖出 = × (1 − bp/1e4)，"
                          "进股数、整手、可用现金、成本、费税与流水价；盯市价、信号价与止损／走势判据不变；"
                          "同日买卖先净额对冲、只对净额收；强平与退市清仓同样收；分红、送转、配股认购不收。0 = 关（逐位不变）")
+    ebg = parser.add_argument_group("股债性价比（研究开关，生产关闭）")
+    ebg.add_argument("--equity-bond-mode", choices=("off", "credit", "cap", "ramp"), default="off")
+    ebg.add_argument("--equity-bond-data", type=Path)
+    ebg.add_argument("--equity-bond-metric", choices=("spread", "percentile"), default="percentile")
+    ebg.add_argument("--equity-bond-threshold", type=float, default=.3)
+    ebg.add_argument("--equity-bond-lower", type=float, default=1.)
+    ebg.add_argument("--equity-bond-upper", type=float, default=1.6)
+    ebg.add_argument("--equity-bond-ramp-high", type=float, default=.8)
+    ebg.add_argument("--equity-bond-window", type=int, default=60)
+    ebg.add_argument("--equity-bond-min-obs", type=int, default=12)
+    ebg.add_argument("--equity-bond-log-dir", type=Path)
     args = parser.parse_args()
+    equity_bond = None
+    if args.equity_bond_mode != "off":
+        if not args.equity_bond_data:
+            parser.error("--equity-bond-data is required when the constraint is enabled")
+        equity_bond = EquityBondConstraint(args.equity_bond_data, args.equity_bond_mode,
+            args.equity_bond_metric, args.equity_bond_threshold, args.equity_bond_lower,
+            args.equity_bond_upper, args.equity_bond_ramp_high,
+            args.equity_bond_window, args.equity_bond_min_obs)
     try:
         validate_buy_top_pct(args.buy_top_pct, gate=(args.gate != "pv"), rank_mode=(args.rank_mode != "pv"),
                              use_mos=args.use_mos, tier_buy_scale=args.tier_buy_scale, min_upside=args.min_upside,
@@ -4638,7 +4790,7 @@ def main() -> int:
                          liquidate_ma=args.liquidate_ma, liquidate_days=args.liquidate_days,
                          sell_line_override=args.sell_line or None,
                          trend_exit_ma=args.trend_exit_ma,
-                         rank_by_upside=args.rank_by_upside, buy_floor=args.buy_floor, buy_top_pct=args.buy_top_pct,
+                         rank_by_upside=args.rank_by_upside, buy_floor=args.buy_floor, buy_top_pct=args.buy_top_pct, equity_bond=equity_bond,
                          entry_mode=args.entry_mode,
                          dev_ma=args.dev_ma, dev_buy_max=args.dev_buy_max,
                          dev_sell_min=args.dev_sell_min, hold_strong=args.hold_strong,
@@ -4700,6 +4852,14 @@ def main() -> int:
                          vol_swap_min=args.vol_swap_min, vol_swap_max=args.vol_swap_max,
                          vol_stop_min=args.vol_stop_min,
                          candidate_log=cand_writer)
+            if args.equity_bond_log_dir is not None and equity_bond is not None:
+                args.equity_bond_log_dir.mkdir(parents=True, exist_ok=True)
+                eb_log_rows = result["equity_bond_records"]
+                if eb_log_rows:
+                    path = args.equity_bond_log_dir / f"{args.label_suffix}.csv"
+                    with path.open("w", newline="") as handle:
+                        writer = csv.DictWriter(handle, fieldnames=list(eb_log_rows[0]), lineterminator="\n")
+                        writer.writeheader(); writer.writerows(eb_log_rows)
             if cand_handle is not None:
                 cand_handle.close()
                 print(f"    合格集排序记录 → {args.candidate_log}")
