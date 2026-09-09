@@ -1,0 +1,34 @@
+{
+  "counts": {
+    "WCREP": {
+      "base_latest_ok": 179,
+      "same": 74,
+      "rr_changed": 168,
+      "growth_changed": 106,
+      "lower": 60,
+      "higher": 45
+    },
+    "WCOP": {
+      "base_latest_ok": 179,
+      "same": 73,
+      "rr_changed": 168,
+      "growth_changed": 107,
+      "higher": 48,
+      "lower": 58
+    }
+  },
+  "invariants_checked": {
+    "WCREP:nopat_ps": 17123,
+    "WCREP:roic0": 17123,
+    "WCREP:incremental_roic": 17123,
+    "WCREP:wacc": 17123,
+    "WCREP:fin_net_debt_ps": 17123,
+    "WCOP:nopat_ps": 17126,
+    "WCOP:roic0": 17126,
+    "WCOP:incremental_roic": 17126,
+    "WCOP:wacc": 17126,
+    "WCOP:fin_net_debt_ps": 17126
+  },
+  "invariant_violations": [],
+  "band_rows_per_arm": 20067
+}

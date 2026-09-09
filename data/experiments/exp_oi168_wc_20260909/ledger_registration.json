@@ -1,0 +1,6 @@
+{
+  "summary_files": 168,
+  "current_changed": true,
+  "archive_changed": false,
+  "entrypoint": "scripts.clean_derived_artifacts.write_ledger"
+}

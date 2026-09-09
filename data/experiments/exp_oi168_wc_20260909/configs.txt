@@ -1,0 +1,6 @@
+BASE|--daily-states data/experiments/exp_oi168_wc_20260909/val/BASE/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/BASE/states_hold.csv
+WCREPSEP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCREP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCREP/states_hold.csv --width -0.0457 --swap-margin 0.15
+WCOPM14SEP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.0414 --swap-margin 0.14
+WCOPM15SEP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.0414 --swap-margin 0.15
+WCOPM16SEP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.0414 --swap-margin 0.16
+WCOPRAWSEP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.0454 --swap-margin 0.15

@@ -1324,6 +1324,15 @@ class Band:
     roic0: float | None = None                # 正常化 ROIC（近 N 年中位）
     incremental_roic: float | None = None     # ΔNOPAT/ΔIC
     reinvestment_rate: float | None = None    # (capex − D&A + ΔWC)/NOPAT
+    wc_aggregation: str = "legacy"
+    wc_first_period: str = ""
+    wc_last_period: str = ""
+    wc_start: float | None = None
+    wc_end: float | None = None
+    wc_change: float | None = None
+    wc_financing_start: float | None = None
+    wc_financing_end: float | None = None
+    wc_conflict_years: int = 0
     maintenance_ratio: float = 0.0
     maintenance_raw_ratio: float | None = None
     maintenance_status: str = "off"
@@ -1696,10 +1705,21 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                          "allpairs_guarded": lambda h: roic_inputs.incremental_roic_allpairs_guarded(
                              h, base_years=args.roe_years),
                          "regression": roic_inputs.incremental_roic_regression}[iroic_mode](iroic_hist)
-            if getattr(args, "wc_aggregation", "legacy") == "reported":
+            wc_mode = getattr(args, "wc_aggregation", "legacy")
+            if wc_mode in {"reported", "operating"}:
                 from dataclasses import replace
-                history = [replace(y, working_capital=y.working_capital_reported) for y in history]
-            rr = roic_inputs.reinvestment_rate(history)
+                history = [replace(y, working_capital=getattr(y, "working_capital_" + wc_mode)) for y in history]
+            wc_history = sorted(history, key=lambda y: y.period)
+            band.wc_aggregation = wc_mode
+            band.wc_first_period, band.wc_last_period = wc_history[0].period, wc_history[-1].period
+            band.wc_start, band.wc_end = wc_history[0].working_capital, wc_history[-1].working_capital
+            if band.wc_start is not None and band.wc_end is not None:
+                band.wc_change = band.wc_end - band.wc_start
+            band.wc_financing_start = wc_history[0].financing_receivables
+            band.wc_financing_end = wc_history[-1].financing_receivables
+            band.wc_conflict_years = sum("conflict" in y.wc_receivable_basis or "conflict" in y.wc_payable_basis for y in wc_history)
+            rr = (None if wc_mode == "operating" and band.wc_change is None
+                  else roic_inputs.reinvestment_rate(history))
             maintenance_weight = getattr(args, "maintenance_weight", 0.0)
             if maintenance_weight:
                 estimate = roic_inputs.maintenance_cash_ratio(history)
@@ -2583,7 +2603,9 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "bps_basis_date", "equity_anchor_mode", "peak_weight", "growth_trust", "trough_weight", "ttm_factor", "growth_damp",
                "maintenance_ratio", "maintenance_raw_ratio", "maintenance_status", "maintenance_intervals",
                "maintenance_positive_intervals", "maintenance_net_reinvestment", "maintenance_growth_allowance",
-               "maintenance_nopat_total", "cash_blocked"]
+               "maintenance_nopat_total", "cash_blocked",
+               "wc_aggregation", "wc_first_period", "wc_last_period", "wc_start", "wc_end", "wc_change",
+               "wc_financing_start", "wc_financing_end", "wc_conflict_years"]
 
 
 def band_row(band: Band, tier: str) -> dict:
@@ -2609,6 +2631,11 @@ def band_row(band: Band, tier: str) -> dict:
         "nopat_ps": fmt(band.nopat_ps), "roic0": fmt(band.roic0, 4),
         "incremental_roic": fmt(band.incremental_roic, 4),
         "reinvestment_rate": fmt(band.reinvestment_rate, 4),
+        "wc_aggregation": band.wc_aggregation,
+        "wc_first_period": band.wc_first_period, "wc_last_period": band.wc_last_period,
+        "wc_start": fmt(band.wc_start), "wc_end": fmt(band.wc_end), "wc_change": fmt(band.wc_change),
+        "wc_financing_start": fmt(band.wc_financing_start), "wc_financing_end": fmt(band.wc_financing_end),
+        "wc_conflict_years": str(band.wc_conflict_years),
         "maintenance_ratio": fmt(band.maintenance_ratio, 6),
         "maintenance_raw_ratio": fmt(band.maintenance_raw_ratio, 6),
         "maintenance_status": band.maintenance_status,
@@ -2962,8 +2989,8 @@ def main() -> int:
     parser.add_argument("--out-bands", type=Path)
     parser.add_argument("--maintenance-weight", type=float, default=0.0,
                         help="§6.5.4 维持性现金占用代理强度（研究开关，0=关闭）")
-    parser.add_argument("--wc-aggregation", choices=("legacy", "reported"), default="legacy",
-                        help="研究对照：reported 对应收/应付采用合计或明细，避免重复；legacy复现现行")
+    parser.add_argument("--wc-aggregation", choices=("legacy", "reported", "operating"), default="legacy",
+                        help="OI-168：operating去重并含应收款项融资；reported复现仅去重；legacy复现原累加")
     parser.add_argument("--out-daily", type=Path)
     args = parser.parse_args()
     if not math.isfinite(args.maintenance_weight) or args.maintenance_weight < 0:

@@ -1,0 +1,28 @@
+{
+  "groups": {
+    "full": [
+      "BASE",
+      "WCREPSEP09",
+      "WCOPM14SEP09",
+      "WCOPM15SEP09",
+      "WCOPM16SEP09",
+      "WCOPRAWSEP09"
+    ],
+    "A": [
+      "BASE",
+      "WCREPSEP09",
+      "WCOPM14SEP09",
+      "WCOPM15SEP09",
+      "WCOPM16SEP09",
+      "WCOPRAWSEP09"
+    ],
+    "U1": [
+      "BASE",
+      "WCREPSEP09",
+      "WCOPM14SEP09",
+      "WCOPM15SEP09",
+      "WCOPM16SEP09",
+      "WCOPRAWSEP09"
+    ]
+  }
+}

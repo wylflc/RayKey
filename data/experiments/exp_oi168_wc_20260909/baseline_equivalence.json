@@ -1,0 +1,26 @@
+[
+  {
+    "side": "base",
+    "rebuilt": {
+      "sha256": "c21c33d2d221c7328727349bca797f0aaa3dad385dac71b8f6c992c50573128d",
+      "rows": 989626
+    },
+    "production_subset": {
+      "sha256": "c21c33d2d221c7328727349bca797f0aaa3dad385dac71b8f6c992c50573128d",
+      "rows": 989626
+    },
+    "equal": true
+  },
+  {
+    "side": "hold",
+    "rebuilt": {
+      "sha256": "271e5470a242e7c5b8ecb03c013de13d6c35720b016c87bb852ab19473ad3161",
+      "rows": 990064
+    },
+    "production_subset": {
+      "sha256": "271e5470a242e7c5b8ecb03c013de13d6c35720b016c87bb852ab19473ad3161",
+      "rows": 990064
+    },
+    "equal": true
+  }
+]

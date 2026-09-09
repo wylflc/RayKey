@@ -1,0 +1,39 @@
+{
+  "unit": "raw statement rows, not distinct issuers",
+  "counts": {
+    "current": {
+      "financial_rows_skipped": 983,
+      "nonfinancial_rows": 6064,
+      "receivable:aggregate": 5873,
+      "payable:aggregate": 5978,
+      "financing_receivables_nonzero": 1366,
+      "dedup_changes_wc": 5980,
+      "operating_changes_wc": 5980,
+      "receivable:absent": 131,
+      "payable:absent": 70,
+      "receivable:aggregate_conflict": 45,
+      "receivable:components": 15,
+      "payable:aggregate_conflict": 5,
+      "payable:components": 11,
+      "codes_with_dedup_change": 300
+    },
+    "archived": {
+      "nonfinancial_rows": 13,
+      "receivable:aggregate": 13,
+      "payable:aggregate": 13,
+      "financing_receivables_nonzero": 9,
+      "dedup_changes_wc": 13,
+      "operating_changes_wc": 13,
+      "financial_rows_skipped": 2,
+      "codes_with_dedup_change": 13
+    }
+  },
+  "conflict_classes": {
+    "current:historical_aggregate_equals_notes": 34,
+    "current:aggregate_equals_accounts": 4,
+    "current:aggregate_and_components_differ": 5,
+    "current:year_end_vs_next_opening": 2,
+    "current:financing_reclassification": 5
+  },
+  "limit": "Grouping uses reported totals. A conflict marker is not a claim that every historical source field was independently audited."
+}

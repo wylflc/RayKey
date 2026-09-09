@@ -1,0 +1,117 @@
+[
+  {
+    "arm": "WCREPSEP09",
+    "track": "A",
+    "initial_guardrails_passed": true,
+    "diagnostic_raw_line": false,
+    "reasons": [],
+    "negative_new_starts": 0,
+    "U_group": "U1",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -2.701259623208896,
+        "beyond_one_pp": true
+      }
+    ]
+  },
+  {
+    "arm": "WCOPM14SEP09",
+    "track": "A",
+    "initial_guardrails_passed": false,
+    "diagnostic_raw_line": false,
+    "reasons": [
+      "滚动5年年化中位损失超过轨道A护栏"
+    ],
+    "negative_new_starts": 0,
+    "U_group": "U1",
+    "U_excellent": true,
+    "U_inferior": [
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -0.8686123100324072,
+        "beyond_one_pp": false
+      }
+    ]
+  },
+  {
+    "arm": "WCOPM15SEP09",
+    "track": "A",
+    "initial_guardrails_passed": false,
+    "diagnostic_raw_line": false,
+    "reasons": [
+      "年化损失超过轨道A护栏",
+      "滚动5年年化中位损失超过轨道A护栏"
+    ],
+    "negative_new_starts": 0,
+    "U_group": "U1",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -4.69545900807633,
+        "beyond_one_pp": true
+      }
+    ]
+  },
+  {
+    "arm": "WCOPM16SEP09",
+    "track": "A",
+    "initial_guardrails_passed": true,
+    "diagnostic_raw_line": false,
+    "reasons": [],
+    "negative_new_starts": 0,
+    "U_group": "U1",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -0.3179540324030339,
+        "beyond_one_pp": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -0.49037499514592575,
+        "beyond_one_pp": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -0.17327088601303275,
+        "beyond_one_pp": false
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -0.6002777077629307,
+        "beyond_one_pp": false
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -2.4229798663853384,
+        "beyond_one_pp": true
+      }
+    ]
+  },
+  {
+    "arm": "WCOPRAWSEP09",
+    "track": "A",
+    "initial_guardrails_passed": true,
+    "diagnostic_raw_line": true,
+    "reasons": [],
+    "negative_new_starts": 0,
+    "U_group": "U1",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -1.2978384405385623,
+        "beyond_one_pp": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -2.2304706744823655,
+        "beyond_one_pp": true
+      }
+    ]
+  }
+]

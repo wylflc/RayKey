@@ -1,0 +1,20 @@
+{
+  "BASE": {
+    "observations": 508265,
+    "buy_line": 1.0454,
+    "old_line_share": 0.17770847884469715,
+    "aligned_share": 0.17770847884469715
+  },
+  "WCREP": {
+    "observations": 508265,
+    "buy_line": 1.0457,
+    "old_line_share": 0.17763961712885995,
+    "aligned_share": 0.17776553569496228
+  },
+  "WCOP": {
+    "observations": 508265,
+    "buy_line": 1.0414,
+    "old_line_share": 0.17928246092097627,
+    "aligned_share": 0.17774782839660414
+  }
+}

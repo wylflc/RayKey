@@ -1,0 +1,29 @@
+{
+  "source": "sacct",
+  "jobs": [
+    {
+      "job_id": "26490223",
+      "purpose": "build",
+      "state": "COMPLETED",
+      "elapsed": "00:07:29",
+      "max_rss_KiB": 427829,
+      "allocated_cpus": 16
+    },
+    {
+      "job_id": "26490235",
+      "purpose": "scan",
+      "state": "COMPLETED",
+      "elapsed": "00:01:43",
+      "max_rss_KiB": 68237060,
+      "allocated_cpus": 64
+    },
+    {
+      "job_id": "26490553",
+      "purpose": "attribution",
+      "state": "COMPLETED",
+      "elapsed": "00:01:20",
+      "max_rss_KiB": 11250400,
+      "allocated_cpus": 16
+    }
+  ]
+}

@@ -91,6 +91,48 @@ def _sum(row: dict, fields) -> float:
     return sum(_num(row.get(f)) or 0.0 for f in fields)
 
 
+@dataclass(frozen=True)
+class WorkingCapitalInputs:
+    reported: float | None
+    operating: float | None
+    financing_receivables: float
+    receivable_basis: str
+    payable_basis: str
+
+
+def working_capital_inputs(balance: dict) -> WorkingCapitalInputs:
+    """§6.3.6: select whole reported groups before adding operating financing receivables.
+
+    Component conflicts are diagnostics: old fields can belong to a different
+    classification, entity or opening balance. They never top up a reported total.
+    """
+    def group(total: str, parts: tuple[str, str]) -> tuple[float | None, str]:
+        parent = _num(balance.get(total))
+        children = [_num(balance.get(f)) for f in parts]
+        if parent is not None:
+            if not math.isfinite(parent):
+                return None, "invalid_total"
+            observed = [v for v in children if v is not None]
+            if any(not math.isfinite(v) for v in observed):
+                return parent, "aggregate_invalid_components"
+            conflict = (len(observed) == 2 and not math.isclose(parent, sum(observed), rel_tol=1e-12, abs_tol=.01))
+            conflict |= any(v > parent + .01 for v in observed)
+            return parent, "aggregate_conflict" if conflict else "aggregate"
+        if any(v is not None and not math.isfinite(v) for v in children):
+            return None, "invalid_components"
+        return sum(v for v in children if v is not None), "components" if any(v is not None for v in children) else "absent"
+
+    receivable, receivable_basis = group("NOTE_ACCOUNTS_RECE", ("ACCOUNTS_RECE", "NOTE_RECE"))
+    payable, payable_basis = group("NOTE_ACCOUNTS_PAYABLE", ("ACCOUNTS_PAYABLE", "NOTE_PAYABLE"))
+    assets = _sum(balance, ("INVENTORY", "PREPAYMENT", "CONTRACT_ASSET"))
+    liabilities = _sum(balance, ("ADVANCE_RECEIVABLES", "CONTRACT_LIAB", "TAX_PAYABLE", "STAFF_SALARY_PAYABLE"))
+    financing = _num(balance.get("FINANCE_RECE")) or 0.0
+    reported = (assets + receivable - liabilities - payable
+                if receivable is not None and payable is not None and math.isfinite(assets - liabilities) else None)
+    operating = reported + financing if reported is not None and math.isfinite(financing) else None
+    return WorkingCapitalInputs(reported, operating, financing, receivable_basis, payable_basis)
+
+
 @dataclass
 class RoicYear:
     """单个财年的 ROIC 口径输入。全部为**总额**（元），不是每股。"""
@@ -110,6 +152,10 @@ class RoicYear:
     dep_amort: float = 0.0
     working_capital: float | None = None
     working_capital_reported: float | None = None  # Aggregate OR components, never both.
+    working_capital_operating: float | None = None
+    financing_receivables: float = 0.0
+    wc_receivable_basis: str = ""
+    wc_payable_basis: str = ""
     cfo: float | None = None
     interest_expense: float = 0.0
     treasury_shares: float = 0.0      # 库存股（已回购未注销，资产负债表 TREASURY_SHARES；OI-082 周期守卫的权益回加项）
@@ -181,14 +227,12 @@ def _year_from_parts(code: str, period: str, parts: dict[str, dict], notice_cap:
             ic = max(ic, ic_floor * year.total_equity)
         year.invested_capital = ic if ic > 0 else None
     year.working_capital = _sum(bal, WC_ASSET_FIELDS) - _sum(bal, WC_LIAB_FIELDS)
-    def aggregate_or_parts(total: str, parts: tuple[str, ...]) -> float:
-        reported = _num(bal.get(total))
-        return reported if reported is not None else _sum(bal, parts)
-    year.working_capital_reported = (
-        _sum(bal, ("INVENTORY", "PREPAYMENT", "CONTRACT_ASSET"))
-        + aggregate_or_parts("NOTE_ACCOUNTS_RECE", ("ACCOUNTS_RECE", "NOTE_RECE"))
-        - _sum(bal, ("ADVANCE_RECEIVABLES", "CONTRACT_LIAB", "TAX_PAYABLE", "STAFF_SALARY_PAYABLE"))
-        - aggregate_or_parts("NOTE_ACCOUNTS_PAYABLE", ("ACCOUNTS_PAYABLE", "NOTE_PAYABLE")))
+    wc = working_capital_inputs(bal)
+    year.working_capital_reported = wc.reported
+    year.working_capital_operating = wc.operating
+    year.financing_receivables = wc.financing_receivables
+    year.wc_receivable_basis = wc.receivable_basis
+    year.wc_payable_basis = wc.payable_basis
     if cfl:
         year.capex = _num(cfl.get("CONSTRUCT_LONG_ASSET")) or 0.0
         year.dep_amort = _sum(cfl, DEPR_FIELDS)
