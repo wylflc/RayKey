@@ -1,0 +1,13 @@
+BASE|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.0454
+BL09000OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width 0.1000
+BL09100OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width 0.0900
+BL09400OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width 0.0600
+BL10000OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width 0.0000
+BL10100OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.0100
+BL10700OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.0700
+BL11600OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.1600
+BL11800OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.1800
+BL11900OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.1900
+BL14000OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.4000
+BL15000OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.5000
+BL20000OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -1.0000

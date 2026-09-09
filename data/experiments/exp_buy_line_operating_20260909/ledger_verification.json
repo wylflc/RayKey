@@ -1,0 +1,9 @@
+{
+  "summary_files_merged": 1316,
+  "new_candidates": 46,
+  "historical_BL_numeric_labels": 21,
+  "BL_family_total": 67,
+  "current_ledger_rows": 9660,
+  "archive_changed": false,
+  "U_ledger_policy": "各自U的BASE仅存实验summary_rows.csv，避免覆盖全/A在册BASE"
+}

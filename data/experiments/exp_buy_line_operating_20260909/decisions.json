@@ -1,0 +1,3033 @@
+[
+  {
+    "arm": "BASE",
+    "buy_line": 1.0454,
+    "diagnostic": false,
+    "numeric_verdict": "pass",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 0,
+    "verdict": "pass",
+    "U_group": "A",
+    "U_excellent": true,
+    "U_inferior": []
+  },
+  {
+    "arm": "BL05000OP09",
+    "buy_line": 0.5,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 9,
+    "increased_negative_starts": 12,
+    "verdict": "fail",
+    "U_group": "U1",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -42.75474360893937,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -33.6816633493721,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -13.365808595789858,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.8461437005262886,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -3.215552952366223,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年为负的窗口占比",
+        "oriented_delta": -39.16305916305917,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -36.88547613590271,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.2618383293444545,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.5882013046083313,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -45.493620898686544,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -40.69175502959175,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -32.94853598125559,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL06000OP09",
+    "buy_line": 0.6,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 7,
+    "increased_negative_starts": 7,
+    "verdict": "fail",
+    "U_group": "U2",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -30.847045420111808,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -27.279464717223533,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -17.167981950517163,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.4723572898439332,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.432273825938439,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年为负的窗口占比",
+        "oriented_delta": -4.169272461955389,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -21.19052834611962,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.15530201523718556,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.1289182445165335,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -34.42406684611236,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -27.866856237939874,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -20.64935206441108,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL07000OP09",
+    "buy_line": 0.7,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 0,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -20.77930653189648,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -15.73234167464792,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -4.488183279483793,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.28980854522819927,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.31398361709031036,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -15.48719100734397,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.10321399468232015,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.17071493492423417,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -21.684740931699864,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -20.532153918983443,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -16.84483640711006,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -5.889975354706611,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL07500OP09",
+    "buy_line": 0.75,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 0,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -11.114559768637122,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -8.948346717448052,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.008155857778760878,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.13213854263468194,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -7.9399850049547975,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.04546083052731681,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -11.47463894142366,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -12.641166507385904,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -8.111755530718916,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -3.3802741337867257,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL08000OP09",
+    "buy_line": 0.8,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 0,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -11.1203417268952,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -6.810393285814465,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -0.5657908210198292,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.0816746401784244,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.1014532764508283,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -5.156524444218713,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.024663356111594814,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -11.629854214476982,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -9.003497957236418,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -3.0541948959540766,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL08500OP09",
+    "buy_line": 0.85,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 0,
+    "verdict": "fail",
+    "U_group": "U5",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -3.3204557186273687,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -5.80053150145644,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.00868685453143725,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -2.6107028045065817,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -8.102396030336012,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -4.057234213547522,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -4.441829629147476,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL09000OP09",
+    "buy_line": 0.9,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -3.620857872662564,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.12280869886926199,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.03579981693640877,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.3174892564686624,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -2.10653639439054,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -1.3096207660894144,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL09100OP09",
+    "buy_line": 0.91,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -5.34490493684372,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -3.676453972023952,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -3.0083850783260093,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.1253538696690532,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.05153118021968861,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.0843023676585184,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.721743536552838,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.019987554471490587,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -4.849402115231194,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -3.0012301360158755,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -2.3712028471412907,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL09200OP09",
+    "buy_line": 0.92,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -2.3756125221694457,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -0.9354337953222158,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -1.4124031148630645,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.2872956201623986,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -2.428756148413619,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.02181312119722134,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -0.24517167676028073,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -2.063058198062062,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -1.4039135247066903,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -6.125789742005066,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL09300OP09",
+    "buy_line": 0.93,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -3.132470745416671,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -2.909259121373964,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -4.496597283990606,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.14352774058463957,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.02134063217468435,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.9026458781375655,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.044981348709520586,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -3.5058452778708507,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -2.984238841815434,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -2.3417908503030604,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL09400OP09",
+    "buy_line": 0.94,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -3.758848626791911,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -2.5655738250120574,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -4.503954973070245,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.1665492553288282,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.033872788184034,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -2.284552222751368,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.44918509848560495,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.05806507065688821,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.011139573741593245,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -3.5349122799000154,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -2.675198176998017,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -1.7955351845508005,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL09500OP09",
+    "buy_line": 0.95,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U7",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -4.1366907126411885,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -0.2651590470885923,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.03276950646819066,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.1445414904249884,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -3.821952708197357,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -2.1644562903845643,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -1.887860302752914,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL09600OP09",
+    "buy_line": 0.96,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -3.4206803190301116,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -4.646001637531294,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -4.556534486764763,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.17767706038829634,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.020917066054754685,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.9865933011510517,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.03908195748726645,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.01134899779194154,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -4.4744482563858545,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -2.974063829371254,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -3.9124519214522424,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL09700OP09",
+    "buy_line": 0.97,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -4.10455357328916,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -4.638838765567044,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -0.7273635358883368,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -4.383224973501953,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.1849268921379355,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.01577281017539417,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -2.290119973455762,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.05785447527223542,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.014320216994293367,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -6.109155102920067,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -3.173538984640445,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -3.211298422989828,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL09800OP09",
+    "buy_line": 0.98,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -1.3354940508493396,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -3.314774550753674,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -1.009644447345015,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -0.8108072270882505,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.2120630237661079,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.9828527482582339,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.03497916754170072,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.019960112844420175,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -2.829030930471821,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -6.543007509595366,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL09900OP09",
+    "buy_line": 0.99,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -5.28203927273495,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -5.646886468118895,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -3.0331740614314375,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.16909531638438202,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.038398755123674355,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -4.649151114810435,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.08746671609212331,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.0423257415833902,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -6.655952212083721,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -5.242141808499479,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -2.3092118569726594,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL10000OP09",
+    "buy_line": 1.0,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -7.053445654500534,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -6.562259303907492,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -1.6266057782439058,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -4.416599839532154,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.18938610518394944,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.1053873357321744,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -3.6458380575974947,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.4866405106642824,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.07133895042804816,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.042618774127710424,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -6.675059332282873,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -4.805044753846122,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -1.227649433571032,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL10100OP09",
+    "buy_line": 1.01,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -4.102413510847658,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -4.9096733420971646,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -0.8223492973193358,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -4.389853517908748,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.15812276947126958,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.05020433754085052,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -2.0638448831996725,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.04400345516880527,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.011163147344832258,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -4.960724848388143,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -3.3237178211952823,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -0.49944424222155837,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BL10200OP09",
+    "buy_line": 1.02,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -1.8958259018812984,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -1.8915372674797148,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -1.5135318333525993,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.031558323578976644,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.03640834279137045,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.4108603212643955,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.02500939405187602,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.01900320075446532,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -2.615659147735988,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -1.7572134182783028,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -3.0657426093004703,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL10300OP09",
+    "buy_line": 1.03,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -1.7861662551039492,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -0.46172409963703975,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -3.764853629525078,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.06985697957782522,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.3589062952803266,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.0393010243124573,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -3.1336972202328504,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -0.6215164875030543,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BL10400OP09",
+    "buy_line": 1.04,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 1,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -4.550767544372835,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -1.3422145578000255,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -0.3780164326598945,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.15362536260715343,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.04941575458028169,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.781850228896853,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.02890597267345152,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.012722227661683183,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -3.620923009545934,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -2.5665374985834877,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -5.830492569298951,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL10414OP09",
+    "buy_line": 1.0414,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 1,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -6.486595535697514,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -1.1515142403013767,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -0.29141814263951016,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.18437224880748415,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.0735889373812415,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.815187224559256,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.007182195889952531,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.005120332279796858,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -3.0899362900503933,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -3.4961578871051557,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -6.715858240195155,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL10500OP09",
+    "buy_line": 1.05,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 1,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -1.6285347011726459,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -1.076734191406381,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -0.8593853902573889,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.03051836340644143,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.01809186829797027,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.18341779802974,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.019583332823709942,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.015852112038161503,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -2.194387028031164,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -0.734898494136832,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -0.2767179585718371,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BL10600OP09",
+    "buy_line": 1.06,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 3,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -1.1356005258048363,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -1.660309421226358,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -0.3959583951664569,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.7029109164794933,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -2.0113933036022935,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -0.7006134826697485,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BL10700OP09",
+    "buy_line": 1.07,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -0.4264821593292889,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -1.308522320999761,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.06482164033950188,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.22116277781732419,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.008532475278770157,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -2.010867857636062,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -0.3656054395864583,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BL10800OP09",
+    "buy_line": 1.08,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -0.1672464377983407,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -2.356371933886525,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -3.179925377091941,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.026407155047213415,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.56248785625026,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.011658703329504416,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -2.2924631891980796,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -0.6213366953025656,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -0.7018904969400996,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BL10900OP09",
+    "buy_line": 1.09,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -2.077229393857344,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -0.3445997933996636,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.011115310112272236,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.9441998955589781,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.011801505236495535,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -2.211392570143478,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL11000OP09",
+    "buy_line": 1.1,
+    "diagnostic": false,
+    "numeric_verdict": "pass",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "pass",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -0.7441750866346075,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -1.9613916761315464,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -2.8073451808883485,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -0.7883790552046466,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BL11100OP09",
+    "buy_line": 1.11,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 1,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -6.082978249869897,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -2.6843890069504606,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -3.1869434040294022,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -3.7292696789229804,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.20196082470965365,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.07915977254059825,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -3.323476321140395,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.2880878171022616,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.057715333981511685,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.04697417115948632,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -5.132965649100019,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -2.8320334331335517,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -0.42821425693189696,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -2.997649563500998,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL11200OP09",
+    "buy_line": 1.12,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -3.986657334334509,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -1.47083507542779,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -2.9952063194933043,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -4.56016969695236,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.17301851639731958,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.08084950110512107,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -2.845894997235965,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.326313249871113,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.050193333204467644,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.037556762005386546,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -3.5314221618662325,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -2.4048744377038966,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -1.2385714206957776,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -3.9052085148583493,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL11300OP09",
+    "buy_line": 1.13,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U8",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -6.209250640325825,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -2.69540274648179,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -3.8338529551932012,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -3.3958719465857268,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.2119550628546687,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.11695805903867884,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -4.962196764777705,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.5275359920696832,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.09362363704467158,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.0680621409528509,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -5.661526184672794,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -3.0884146672805257,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -0.5736368461111752,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -4.897097748370904,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL11400OP09",
+    "buy_line": 1.14,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -4.106356159712432,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -2.7714637586044533,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -3.98782956788597,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.10269975874651827,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.06448159763705091,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -3.89198997661091,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -1.3620228978884763,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.07095117956764355,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.05279673304216004,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -5.9039525220694165,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -3.1018583770030417,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -3.2767357905078285,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL11500OP09",
+    "buy_line": 1.15,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -6.662827941978722,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -4.584305107303354,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -2.944459958462059,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.13601554296666402,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.10735487641854513,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -6.3923471514032215,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -1.387491868963442,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.09854121462806437,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.08464600444054127,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -6.602351276034324,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -6.896256265049894,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -3.5587267469825212,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL11600OP09",
+    "buy_line": 1.16,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 1,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -5.438432525107473,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -4.948707034759037,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -4.875756039486578,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.1955446423738364,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.08131512979077948,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -5.490895863830092,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.09756557686418418,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.0687286137073424,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -5.904042396137066,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -4.9622867509519715,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -6.563618573662372,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL11700OP09",
+    "buy_line": 1.17,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -1.4994896919987455,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -0.6485740606308799,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.01852661373912251,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -0.9131580284491791,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.008591674673364413,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.01363684763188372,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -0.7080278385323269,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -0.6378204853213387,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -1.239300075053501,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL11800OP09",
+    "buy_line": 1.18,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -6.006594700284273,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -6.088203328241959,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -4.727556671470701,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.15112454230349737,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.08100720993529131,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -6.288733941157343,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.08584551653739603,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.08308804995884461,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -6.707289636175917,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -5.1638239809777335,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -3.0349333754469576,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL11900OP09",
+    "buy_line": 1.19,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 3,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -7.675851983926485,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -7.419277881174091,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -3.5091797638154953,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.1741859517916245,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.11638714217550222,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -6.378323039308709,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.08616452297992433,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.07460026441934631,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -7.89783250089775,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -6.153223270866459,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -1.2596250405781828,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL12000OP09",
+    "buy_line": 1.2,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -2.7923499997309253,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -1.8091656795499622,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.021978153906381137,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.2169605575433895,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.45091368420351885,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.025974720541827256,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.0273915978794651,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -0.5521524444251247,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -2.6512722655047503,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL12500OP09",
+    "buy_line": 1.25,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 3,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -1.0172692511985826,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -1.07931539574041,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -0.6805794606192794,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.005873059944542236,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -0.15694076054741934,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.015150972958811293,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.020606500080028012,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -0.3339468528108569,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -0.2971162145756878,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -0.873767605092779,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -0.19783507515981347,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BL13000OP09",
+    "buy_line": 1.3,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 3,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -4.692342594280541,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -4.087359208301288,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -2.065460626627369,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.039995639429413476,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.06716430731367162,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.627418833426908,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.04230166295706003,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.028010773475105277,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -2.2292148191479955,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -1.2195524360898213,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -3.872991374587781,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL14000OP09",
+    "buy_line": 1.4,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -1.4143976846590633,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -1.168406018995749,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.009865318415386404,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "逐年收益中位",
+        "oriented_delta": -0.6117132259279567,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BL15000OP09",
+    "buy_line": 1.5,
+    "diagnostic": false,
+    "numeric_verdict": "ruling",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 3,
+    "verdict": "ruling",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.06767559952269803,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -0.5810342716424444,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.005294271044766041,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -0.857258515436149,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BL17500OP09",
+    "buy_line": 1.75,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": true,
+    "engine_risk_gates_passed": true,
+    "drawdown_gate_triggered": false,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U4",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -1.6503178809323338,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.013358075966545313,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.008230691601904538,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -0.21861843861724628,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.5375294059699831,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.021865515461762963,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.014733559644109995,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -1.0154176554016792,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -2.967293144511074,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL20000OP09",
+    "buy_line": 2.0,
+    "diagnostic": false,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 3,
+    "verdict": "fail",
+    "U_group": "U6",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -0.3985847467619319,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动5年回撤中位",
+        "oriented_delta": -0.3306799165659957,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "滚动3年回撤中位",
+        "oriented_delta": -1.8076037625056218,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -2.01066420099672,
+        "beyond_tolerance": true
+      }
+    ]
+  },
+  {
+    "arm": "BL30000OP09",
+    "buy_line": 3.0,
+    "diagnostic": false,
+    "numeric_verdict": "ruling",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 3,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -4.154350548136742,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -2.3289179780741076,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -3.086452111251592,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.04925739099885573,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.055861266366057205,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -2.2574484042336085,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -0.5062226130784553,
+        "beyond_tolerance": false
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.033217494077286414,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.035882464324500596,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -1.4467500955465895,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -1.49407821844193,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -0.3458886164591335,
+        "beyond_tolerance": false
+      }
+    ]
+  },
+  {
+    "arm": "BLNONEOP09",
+    "buy_line": 1000000000.0,
+    "diagnostic": true,
+    "numeric_verdict": "fail",
+    "risk_gates_passed": false,
+    "engine_risk_gates_passed": false,
+    "drawdown_gate_triggered": true,
+    "new_negative_starts": 0,
+    "increased_negative_starts": 2,
+    "verdict": "fail",
+    "U_group": "U3",
+    "U_excellent": false,
+    "U_inferior": [
+      {
+        "metric": "滚动5年年化中位",
+        "oriented_delta": -4.825262981119149,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化P25",
+        "oriented_delta": -4.44384428745459,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年年化最差",
+        "oriented_delta": -3.001115768615603,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Calmar中位",
+        "oriented_delta": -0.0483576473003175,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动5年Sharpe中位",
+        "oriented_delta": -0.07208575770026321,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "年化",
+        "oriented_delta": -3.4328353232006337,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "最大回撤",
+        "oriented_delta": -1.3217814218909663,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Calmar",
+        "oriented_delta": -0.0810951377344592,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "Sharpe",
+        "oriented_delta": -0.06456700197090748,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "互不重叠5年块中位",
+        "oriented_delta": -2.7733640904123447,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "滚动3年年化中位",
+        "oriented_delta": -2.2897829900711986,
+        "beyond_tolerance": true
+      },
+      {
+        "metric": "逐年最差",
+        "oriented_delta": -3.3501340326844877,
+        "beyond_tolerance": true
+      }
+    ]
+  }
+]

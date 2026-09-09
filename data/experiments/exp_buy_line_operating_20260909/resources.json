@@ -1,0 +1,17 @@
+{
+  "prepare": {
+    "job_id": 26498111,
+    "state": "COMPLETED",
+    "elapsed": "00:01:59",
+    "max_rss_kib": 44500,
+    "allocated_cpus": 16
+  },
+  "scan": {
+    "job_id": 26498112,
+    "state": "COMPLETED",
+    "elapsed": "00:13:35",
+    "max_rss_kib": 69347006,
+    "allocated_cpus": 64,
+    "workers": 48
+  }
+}

@@ -1,0 +1,2 @@
+BASE|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width -0.0454
+BL05000OP09|--daily-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_base.csv --hold-states data/experiments/exp_oi168_wc_20260909/val/WCOP/states_hold.csv --width 0.5000

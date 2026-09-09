@@ -1,0 +1,7 @@
+{
+  "prepare": 26498111,
+  "scan": 26498112,
+  "workers": 48,
+  "cpus": 64,
+  "memory_mib_per_cpu": 1792
+}

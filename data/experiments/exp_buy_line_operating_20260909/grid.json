@@ -1,0 +1,237 @@
+[
+  {
+    "arm": "BASE",
+    "buy_line": 1.0454,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL05000OP09",
+    "buy_line": 0.5,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL06000OP09",
+    "buy_line": 0.6,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL07000OP09",
+    "buy_line": 0.7,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL07500OP09",
+    "buy_line": 0.75,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL08000OP09",
+    "buy_line": 0.8,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL08500OP09",
+    "buy_line": 0.85,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL09000OP09",
+    "buy_line": 0.9,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL09100OP09",
+    "buy_line": 0.91,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL09200OP09",
+    "buy_line": 0.92,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL09300OP09",
+    "buy_line": 0.93,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL09400OP09",
+    "buy_line": 0.94,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL09500OP09",
+    "buy_line": 0.95,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL09600OP09",
+    "buy_line": 0.96,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL09700OP09",
+    "buy_line": 0.97,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL09800OP09",
+    "buy_line": 0.98,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL09900OP09",
+    "buy_line": 0.99,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10000OP09",
+    "buy_line": 1.0,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10100OP09",
+    "buy_line": 1.01,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10200OP09",
+    "buy_line": 1.02,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10300OP09",
+    "buy_line": 1.03,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10400OP09",
+    "buy_line": 1.04,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10414OP09",
+    "buy_line": 1.0414,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10500OP09",
+    "buy_line": 1.05,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10600OP09",
+    "buy_line": 1.06,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10700OP09",
+    "buy_line": 1.07,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10800OP09",
+    "buy_line": 1.08,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL10900OP09",
+    "buy_line": 1.09,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL11000OP09",
+    "buy_line": 1.1,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL11100OP09",
+    "buy_line": 1.11,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL11200OP09",
+    "buy_line": 1.12,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL11300OP09",
+    "buy_line": 1.13,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL11400OP09",
+    "buy_line": 1.14,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL11500OP09",
+    "buy_line": 1.15,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL11600OP09",
+    "buy_line": 1.16,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL11700OP09",
+    "buy_line": 1.17,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL11800OP09",
+    "buy_line": 1.18,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL11900OP09",
+    "buy_line": 1.19,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL12000OP09",
+    "buy_line": 1.2,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL12500OP09",
+    "buy_line": 1.25,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL13000OP09",
+    "buy_line": 1.3,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL14000OP09",
+    "buy_line": 1.4,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL15000OP09",
+    "buy_line": 1.5,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL17500OP09",
+    "buy_line": 1.75,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL20000OP09",
+    "buy_line": 2.0,
+    "diagnostic": false
+  },
+  {
+    "arm": "BL30000OP09",
+    "buy_line": 3.0,
+    "diagnostic": false
+  },
+  {
+    "arm": "BLNONEOP09",
+    "buy_line": 1000000000.0,
+    "diagnostic": true
+  }
+]

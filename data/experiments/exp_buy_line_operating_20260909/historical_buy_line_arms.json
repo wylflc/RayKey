@@ -1,0 +1,212 @@
+[
+  {
+    "臂名": "BL0700",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w0.3_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL0800",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w0.2_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL0850",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w0.15_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL090",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "23",
+    "行数": "23",
+    "剔除赢家行数": "0",
+    "策略示例": "trend_x1_w0.1_x1c_sma20_swap_corr0.85_tranche_sl2.5786_addma_nvs_swk20_cap0.15_sp_lot100_lrc"
+  },
+  {
+    "臂名": "BL0900",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w0.1_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL0950",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w0.05_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL100",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "23",
+    "行数": "23",
+    "剔除赢家行数": "0",
+    "策略示例": "trend_x1_w0_x1c_sma20_swap_corr0.85_tranche_sl2.5786_addma_nvs_swk20_cap0.15_sp_lot100_lrc"
+  },
+  {
+    "臂名": "BL1000",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w0_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL1020",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-0.02_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL105",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "23",
+    "行数": "23",
+    "剔除赢家行数": "0",
+    "策略示例": "trend_x1_w-0.05_x1c_sma20_swap_corr0.85_tranche_sl2.5786_addma_nvs_swk20_cap0.15_sp_lot100_lrc"
+  },
+  {
+    "臂名": "BL1070",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-0.07_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL1100",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-0.1_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL1125",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-0.125_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL1150",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-0.15_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL1200",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-0.2_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL1250",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-0.25_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL1300",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-0.3_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL1400",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-0.4_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL1500",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-0.5_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL2000",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-1_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  },
+  {
+    "臂名": "BL9000",
+    "台账": "archive",
+    "计量版本": "m1",
+    "批次": "",
+    "起点数": "14",
+    "行数": "28",
+    "剔除赢家行数": "14",
+    "策略示例": "trend_x5_w-8_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2"
+  }
+]
