@@ -1,0 +1,280 @@
+{
+  "completed_beijing": "2026-09-10T01:17:43.412419+08:00",
+  "manifest": {
+    "started_beijing": "2026-09-10T01:11:57.747020+08:00",
+    "job_id": "26511784",
+    "metric": "m3",
+    "base": "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 --corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 --swap --swap-partial --sell-trend-ma 20 --lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close --fee-preset user --no-artifacts --capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 --maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay --gain-sell 1.10 --gain-sell-mode ungated --swap-gain-once --swap-source-block -1 --width -0.0454 --swap-margin 0.15 --stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma60_stop --stop-basis exec --residual-clear lot --position-cap 0.6 --net-same-day --fill-missing skip --dividend-tax --swap-repeat skip --addon-trend ma-only --swap-require-weak --daily-states data/processed/a_share_daily_states_adopted.csv --hold-states data/processed/a_share_daily_states_hold.csv --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv",
+    "starts": [
+      "2009-11-01",
+      "2010-05-01",
+      "2010-11-01",
+      "2011-05-01",
+      "2011-11-01",
+      "2012-05-01",
+      "2012-11-01",
+      "2013-05-01",
+      "2013-11-01",
+      "2014-05-01",
+      "2014-11-01",
+      "2015-05-01",
+      "2015-11-01",
+      "2016-05-01"
+    ],
+    "workers": 56,
+    "winner_sets": {
+      "A": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "B_EBDS03": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "U": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "U_equals_A": true
+    }
+  },
+  "base_rows_identical_across_scans": true,
+  "old_register_v4169": {
+    "full": {
+      "滚动5年年化中位": 52.0,
+      "滚动5年年化P25": 40.99,
+      "滚动5年年化最差": 10.84,
+      "年化": 45.72,
+      "最大回撤": 66.9,
+      "互不重叠5年块中位": 66.12,
+      "逐年最差": -25.6,
+      "年均换手": 6.63
+    },
+    "A": {
+      "滚动5年年化中位": 52.66,
+      "年化": 48.91,
+      "最大回撤": 65.3
+    }
+  },
+  "negative_cash_days": {
+    "full:BASE": 0,
+    "EX5::BASE": 0,
+    "ebds:full:BASE": 0,
+    "ebds:full:EBDS02": 0,
+    "ebds:full:EBDS03": 0,
+    "ebds:EX5::BASE": 0,
+    "ebds:EX5::EBDS02": 0,
+    "ebds:EX5::EBDS03": 0
+  },
+  "min_cash_base": -0.0,
+  "in_register": {
+    "full": {
+      "滚动5年年化中位": 51.7348,
+      "滚动5年年化P25": 41.70205,
+      "滚动5年年化最差": 11.09585,
+      "年化": 44.73865,
+      "最大回撤": 65.62925,
+      "互不重叠5年块中位": 65.03165,
+      "逐年最差": -22.8745,
+      "年均换手": 6.593755,
+      "滚动5年回撤中位": 46.0663,
+      "长跑": {
+        "2009-11-01": [
+          36.4103,
+          65.41709999999999
+        ],
+        "2011-11-01": [
+          41.6212,
+          67.235
+        ]
+      },
+      "负现金日数": 0,
+      "最低现金": -0.0
+    },
+    "A": {
+      "滚动5年年化中位": 51.4429,
+      "滚动5年年化P25": 38.2446,
+      "滚动5年年化最差": 10.6212,
+      "年化": 48.884150000000005,
+      "最大回撤": 66.72935,
+      "互不重叠5年块中位": 62.03905,
+      "逐年最差": -26.0299,
+      "年均换手": 5.891388,
+      "滚动5年回撤中位": 51.59525000000001,
+      "长跑": {
+        "2009-11-01": [
+          32.7554,
+          73.0435
+        ],
+        "2011-11-01": [
+          47.0999,
+          66.1717
+        ]
+      },
+      "负现金日数": 0,
+      "最低现金": 0.0
+    }
+  },
+  "fix_effect_vs_old_base_pp": {
+    "full:年化": {
+      "median_pp": 0.02444846286310809,
+      "positive": 7,
+      "n": 14
+    },
+    "full:滚动5年年化中位": {
+      "median_pp": -0.5047876856912104,
+      "positive": 6,
+      "n": 14
+    },
+    "full:滚动5年年化P25": {
+      "median_pp": -0.021569317224051643,
+      "positive": 7,
+      "n": 14
+    },
+    "full:最大回撤": {
+      "median_pp": -0.14311001248015764,
+      "positive": 3,
+      "n": 14
+    },
+    "full:滚动5年回撤中位": {
+      "median_pp": -0.021180690168431937,
+      "positive": 6,
+      "n": 14
+    },
+    "full:年均换手": {
+      "median_pp": -2.793494478003433,
+      "positive": 6,
+      "n": 14
+    },
+    "A:年化": {
+      "median_pp": -0.39472005216344697,
+      "positive": 5,
+      "n": 14
+    },
+    "A:滚动5年年化中位": {
+      "median_pp": 0.163253137079733,
+      "positive": 8,
+      "n": 14
+    },
+    "A:滚动5年年化P25": {
+      "median_pp": -0.4129121970339572,
+      "positive": 5,
+      "n": 14
+    },
+    "A:最大回撤": {
+      "median_pp": 0.07944471619769633,
+      "positive": 10,
+      "n": 14
+    },
+    "A:滚动5年回撤中位": {
+      "median_pp": -0.005074984513309122,
+      "positive": 5,
+      "n": 14
+    },
+    "A:年均换手": {
+      "median_pp": -17.73748216239315,
+      "positive": 2,
+      "n": 14
+    }
+  },
+  "flip": [
+    {
+      "arm": "EBDS03",
+      "old": {
+        "M_full": -0.7805938328164896,
+        "M_A": -0.14002457806353563,
+        "C_full": 2.5311019501555787,
+        "C_A": 1.7001531090547362,
+        "P25_full": 4.684435416157706,
+        "DD_full": 0.015734360271513204,
+        "verdict": "fail",
+        "P_full": 1.52,
+        "P_A": 0.02
+      },
+      "new": {
+        "主读数(同窗)": {
+          "full": -0.8597680649999995,
+          "A": 2.1248040999999995,
+          "U": NaN
+        },
+        "滚5中位差(m2主读数)": {
+          "full": -1.656949999999996,
+          "A": 2.43535,
+          "U": NaN
+        },
+        "复利": {
+          "full": 1.8703499999999984,
+          "A": 2.8799999999999963,
+          "U": NaN
+        },
+        "P25": {
+          "full": 2.018600000000001,
+          "A": 2.06375,
+          "U": NaN
+        },
+        "滚5回撤": {
+          "full": 0.11750000000000371,
+          "A": -1.9894000000000052,
+          "U": NaN
+        }
+      },
+      "new_verdict_m3": "报用户裁定（主读数两表反向）"
+    },
+    {
+      "arm": "EBDS02",
+      "old": {
+        "M_full": 0.0,
+        "M_A": 0.0,
+        "C_full": 0.0,
+        "C_A": 0.0,
+        "P25_full": 0.0,
+        "DD_full": 0.0,
+        "verdict": "pass",
+        "P_full": 0.0,
+        "P_A": 0.0
+      },
+      "new": {
+        "主读数(同窗)": {
+          "full": 0.0,
+          "A": 0.0,
+          "U": NaN
+        },
+        "滚5中位差(m2主读数)": {
+          "full": 0.0,
+          "A": 0.0,
+          "U": NaN
+        },
+        "复利": {
+          "full": 0.0,
+          "A": 0.0,
+          "U": NaN
+        },
+        "P25": {
+          "full": 0.0,
+          "A": 0.0,
+          "U": NaN
+        },
+        "滚5回撤": {
+          "full": 0.0,
+          "A": 0.0,
+          "U": NaN
+        }
+      },
+      "new_verdict_m3": "可采纳"
+    }
+  ],
+  "ledger": {
+    "base_rows_added": 28,
+    "registered_files": 70,
+    "ledger_rows_added": 70
+  }
+}
