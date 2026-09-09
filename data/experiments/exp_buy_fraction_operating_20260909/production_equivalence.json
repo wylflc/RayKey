@@ -1,0 +1,26 @@
+[
+  {
+    "side": "states_base.csv",
+    "subset": {
+      "sha256": "6337c7c65b9a69ab937c40df9ce4a2db832427ac664ad4d8f3800163c2f5b842",
+      "rows": 989626
+    },
+    "production": {
+      "sha256": "6337c7c65b9a69ab937c40df9ce4a2db832427ac664ad4d8f3800163c2f5b842",
+      "rows": 989626
+    },
+    "equal": true
+  },
+  {
+    "side": "states_hold.csv",
+    "subset": {
+      "sha256": "b8d9cfe7263fb2fed2575b4e7cd8efca426d8bcc36ca70039e3430954d29b289",
+      "rows": 990064
+    },
+    "production": {
+      "sha256": "b8d9cfe7263fb2fed2575b4e7cd8efca426d8bcc36ca70039e3430954d29b289",
+      "rows": 990064
+    },
+    "equal": true
+  }
+]

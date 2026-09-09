@@ -1,0 +1,10 @@
+{
+  "buy_top_pct": 10,
+  "strategy_parameter_sync": 4,
+  "backtest_universe": 4,
+  "backtest_exclusions": 3,
+  "t1_judge": 10,
+  "total": 31,
+  "all_passed": true,
+  "documentation_audit_errors": 0
+}

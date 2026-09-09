@@ -1,0 +1,9 @@
+{
+  "summary_files_merged": 308,
+  "new_fraction_candidates": 9,
+  "known_nonbase_controls": 1,
+  "fraction_family_arms": 9,
+  "current_ledger_rows": 9940,
+  "archive_changed": false,
+  "U_summaries": "实验summary_rows.csv内按集合保存，未覆写全/A台账"
+}

@@ -35,6 +35,7 @@ argparse 缺省值多为研究口径或历史口径，单独运行本脚本时�
 from __future__ import annotations
 
 import argparse
+from fractions import Fraction
 import bisect
 import calendar
 import csv
@@ -1300,6 +1301,29 @@ def net_rebuy_leaves_small(reg: dict, portfolio: Portfolio, code: str,
     return remaining * sales[-1]['price'] < clear_value
 
 
+def validate_buy_top_pct(q: float, **conflicts) -> None:
+    """Reject undefined combinations before loading data or entering a run."""
+    if not math.isfinite(q) or not 0 <= q <= 1:
+        raise ValueError("--buy-top-pct 须为 [0,1] 的有限比例，0关闭；20%填写0.20")
+    if q and any(conflicts.values()):
+        names = ", ".join(k for k, v in conflicts.items() if v)
+        raise ValueError(f"--buy-top-pct 不支持同时启用：{names}")
+
+
+def top_fraction_candidates(pool, fraction: Fraction | float):
+    """Signal-day cross-section: floor(q*N), finite positive observations, code tie-break."""
+    q = fraction if isinstance(fraction, Fraction) else Fraction(str(fraction))
+    if not 0 < q <= 1:
+        raise ValueError("横截面比例须在 (0,1]；关闭模式不调用选取函数")
+    valid = [r for r in pool if all(isinstance(v, (int, float)) and math.isfinite(v) and v > 0
+                                  for v in r[1:4])]
+    if len({r[0] for r in valid}) != len(valid):
+        raise ValueError("信号日横截面含重复公司")
+    valid.sort(key=lambda r: (r[3], r[0]))
+    count = len(valid) * q.numerator // q.denominator
+    return valid[:count], len(valid)
+
+
 # ------------------------------------------------------------------ 回测
 def run(strategy: str, x: float, states, prices, actions, mas, since: str, until: str,
         capital: float, width: float = 0.10, tiers: dict[str, str] | None = None,
@@ -1379,7 +1403,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         vol_entry_min: float = 0.0, vol_entry_max: float = 0.0,
         vol_addon_min: float = 0.0, vol_addon_max: float = 0.0,
         vol_swap_min: float = 0.0, vol_swap_max: float = 0.0, vol_stop_min: float = 0.0,
-        candidate_log=None) -> dict:
+        candidate_log=None, buy_top_pct: float = 0.0) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`。
 
     `tier_buy_scale`／`tier_sell_scale`（研究开关，§12.95「护城河放到决策层」）：按档位给买入线／
@@ -1400,6 +1424,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         raise ValueError("residual_clear_tranches must be finite and nonnegative")
     if not math.isfinite(residual_clear_cny) or residual_clear_cny < 0:
         raise ValueError("residual_clear_cny must be finite and nonnegative")
+    validate_buy_top_pct(buy_top_pct, gate=(gate != "pv"), rank_mode=(rank_mode != "pv"),
+                         use_mos=use_mos, tier_buy_scale=tier_buy_scale, min_upside=min_upside,
+                         buy_floor=buy_floor, quota_pct=quota_pct,
+                         exec_confirm_close=exec_confirm_close, t1_judge=t1_judge)
+    top_fraction = Fraction(str(buy_top_pct)) if buy_top_pct else None
+    signal_uni_idx, signal_members = 0, (set() if universe else None)
     global DIVIDEND_TAX_ON
     DIVIDEND_TAX_ON = dividend_tax
     portfolio = Portfolio(cash=capital)
@@ -2272,7 +2302,25 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if pct_buy_gate:
                 return (pcts[r[0]], r[0])     # 组内也按「相对自身多便宜」排，不再比绝对水平
             return scores.get(r[0], r[3]) if rank_mode != "pv" else r[3]
-        if pct_buy_gate:
+        top_codes, top_cutoff = set(), 0.0
+        if top_fraction is not None:
+            # Ranking membership is frozen at the signal date. The existing pool additionally
+            # removes execution-day exits; it cannot admit tomorrow's entrants into today's rank.
+            if universe:
+                while signal_uni_idx < len(universe) and universe[signal_uni_idx][0] <= sig_day:
+                    signal_members = universe[signal_uni_idx][1]
+                    signal_uni_idx += 1
+            rank_pool = (states[sig_day] if signal_members is None
+                         else [r for r in states[sig_day] if r[0] in signal_members])
+            selected, count = top_fraction_candidates(rank_pool, top_fraction)
+            top_codes = {r[0] for r in selected}
+            top_cutoff = selected[-1][3] if selected else 0.0
+            eligible = sorted((r for r in pool if r[0] in top_codes), key=_key)
+            stats["横截面·信号日数"] += 1
+            stats["横截面·分母公司日"] += count
+            stats["横截面·排名选入公司日"] += len(selected)
+            stats["横截面·成交日在册公司日"] += len(eligible)
+        elif pct_buy_gate:
             # **闸门即分位**：没有足够历史的（`pcts` 里没有）一律不可买。
             eligible = sorted((r for r in pool
                                if (p := pcts.get(r[0])) is not None and p <= buy_pct), key=_key)
@@ -3075,7 +3123,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if not buy_confirmed((code, close, value, ratio)):
                 continue
             # 配置通道的额度用完就不再按通道买；该成员此后只能走普通路径（即需过买入线）。
-            over_line = ((pcts.get(code) is None or pcts[code] > buy_pct) if pct_buy_gate
+            over_line = (code not in top_codes if top_fraction is not None else
+                         (pcts.get(code) is None or pcts[code] > buy_pct) if pct_buy_gate
                          else ratio > buy_line(code))
             if code in quota_today:
                 if quota_room <= 0 and over_line:
@@ -3215,7 +3264,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if not mas.get(code, {}).get(day):
                     stats["成交日无均线·止损价回落信号日"] += 1
                 lot = Lot(code=code, entry_date=day, entry_ratio=ratio, entry_value=value,
-                          entry_band_low=(1 - width) * value, entry_band_high=(1 + width) * value,
+                          entry_band_low=(top_cutoff if top_fraction is not None else 1 - width) * value,
+                          entry_band_high=(1 + width) * value,
                           entry_upside=value / fill - 1, peak_intrinsic=value)
                 lot.entry_stop, lot.entry_stop_ma = entry_stop_price(
                     ma, fill if entry_below_ma60 == "skip_fill" else close, stop_ma,
@@ -3820,6 +3870,9 @@ def main() -> int:
                              "不要求过买入线、不进主排序、不被换仓卖出。0=关闭（缺省）")
     parser.add_argument("--quota-swappable", action="store_true",
                         help="配置通道的持仓照常可被换仓卖出（只保留「买得进」不保留「留得住」），用于拆解两个机制各值多少")
+    parser.add_argument("--buy-top-pct", type=float, default=0.0, metavar="Q",
+                        help="研究开关：信号日在册可估公司按P/V升序取前floor(Q*N)只，替代固定买入线；"
+                             "0关闭，前20%%填写0.20；同值按代码，不替代后续走势/执行约束")
     parser.add_argument("--rank-mode", choices=("pv", "quantile", "ratio"), default="pv",
                         help="pv=原始 P/V 升序；quantile=历史分位（已实测底部饱和）；ratio=当前 P/V÷历史中位（连续量，端点不饱和）")
     parser.add_argument("--quantile-window", type=int, default=0,
@@ -4168,6 +4221,13 @@ def main() -> int:
                          "进股数、整手、可用现金、成本、费税与流水价；盯市价、信号价与止损／走势判据不变；"
                          "同日买卖先净额对冲、只对净额收；强平与退市清仓同样收；分红、送转、配股认购不收。0 = 关（逐位不变）")
     args = parser.parse_args()
+    try:
+        validate_buy_top_pct(args.buy_top_pct, gate=(args.gate != "pv"), rank_mode=(args.rank_mode != "pv"),
+                             use_mos=args.use_mos, tier_buy_scale=args.tier_buy_scale, min_upside=args.min_upside,
+                             buy_floor=args.buy_floor, quota_pct=args.quota_pct,
+                             exec_confirm_close=args.exec_confirm_close, t1_judge=args.t1_judge)
+    except ValueError as exc:
+        sys.exit(str(exc))
     if args.vol_form == "trend" and args.vol_short >= args.vol_window:
         sys.exit("--vol-short 须小于 --vol-window")
     if (args.vol_swap_min or args.vol_swap_max) and not args.swap_require_weak:
@@ -4408,6 +4468,7 @@ def main() -> int:
         for x in args.x:
           for trend_tol in args.trend_tol:
             label = (f"{strategy}_x{x:g}_w{width:g}"
+                     + (f"_top{args.buy_top_pct:g}" if args.buy_top_pct else "")
                      + (f"_tol{trend_tol:g}" if trend_tol else "")
                      + (f"_x{args.exec_delay}{EXEC_PRICE_TAG[args.exec_price]}" if args.exec_delay else "")
                      + ("_c1" if args.exec_confirm_close else "")
@@ -4577,7 +4638,7 @@ def main() -> int:
                          liquidate_ma=args.liquidate_ma, liquidate_days=args.liquidate_days,
                          sell_line_override=args.sell_line or None,
                          trend_exit_ma=args.trend_exit_ma,
-                         rank_by_upside=args.rank_by_upside, buy_floor=args.buy_floor,
+                         rank_by_upside=args.rank_by_upside, buy_floor=args.buy_floor, buy_top_pct=args.buy_top_pct,
                          entry_mode=args.entry_mode,
                          dev_ma=args.dev_ma, dev_buy_max=args.dev_buy_max,
                          dev_sell_min=args.dev_sell_min, hold_strong=args.hold_strong,

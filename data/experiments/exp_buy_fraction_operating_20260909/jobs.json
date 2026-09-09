@@ -1,0 +1,7 @@
+{
+  "prepare": 26499632,
+  "scan_dependency": "afterok:26499632",
+  "scan": 26499655,
+  "workers": 48,
+  "scan_cpus": 64
+}

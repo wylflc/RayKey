@@ -127,3 +127,6 @@ data/raw/ohlcv_us/
 data/raw/us/
 data/processed/us_daily_states_*.csv
 data/experiments/exp_us_sp500_port/raw/
+
+data/experiments/exp_buy_fraction_operating_20260909/summaries/
+data/experiments/exp_buy_fraction_operating_20260909/daily_selection_*.csv

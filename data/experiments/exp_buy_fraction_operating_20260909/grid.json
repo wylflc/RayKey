@@ -1,0 +1,57 @@
+[
+  {
+    "arm": "BASE",
+    "kind": "fixed",
+    "value": 1.0454
+  },
+  {
+    "arm": "FIX110FR09",
+    "kind": "fixed_control",
+    "value": 1.1
+  },
+  {
+    "arm": "PCT16OP09",
+    "kind": "fraction",
+    "value": 0.16
+  },
+  {
+    "arm": "PCT17OP09",
+    "kind": "fraction",
+    "value": 0.17
+  },
+  {
+    "arm": "PCT18OP09",
+    "kind": "fraction",
+    "value": 0.18
+  },
+  {
+    "arm": "PCT19OP09",
+    "kind": "fraction",
+    "value": 0.19
+  },
+  {
+    "arm": "PCT20OP09",
+    "kind": "fraction",
+    "value": 0.2
+  },
+  {
+    "arm": "PCT21OP09",
+    "kind": "fraction",
+    "value": 0.21
+  },
+  {
+    "arm": "PCT22OP09",
+    "kind": "fraction",
+    "value": 0.22
+  },
+  {
+    "arm": "PCT23OP09",
+    "kind": "fraction",
+    "value": 0.23
+  },
+  {
+    "arm": "PCT24OP09",
+    "kind": "fraction",
+    "value": 0.24
+  }
+]
