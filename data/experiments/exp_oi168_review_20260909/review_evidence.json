@@ -1,0 +1,74 @@
+{
+  "reviewed_head": "318d5ed012b3ccc5389b206f9c01400ca63ad338",
+  "baseline_reproduction": {
+    "paths": 28,
+    "fields_checked": 1316,
+    "mismatches": []
+  },
+  "default_field_migration": {
+    "real_balance_rows": 6077,
+    "fields_checked": 42539,
+    "income": "Identical synthetic income on both sides to isolate the migration; not an earnings audit.",
+    "mismatches": []
+  },
+  "daily_candidates": {
+    "cached_rows": 181,
+    "changed_values": 107,
+    "line_crossings": [
+      {
+        "security_code": "300274",
+        "security_name": "阳光电源",
+        "close": "87.0",
+        "cached_value": 76.5943,
+        "current_value": 84.5652,
+        "cached_pv": 1.1359,
+        "current_pv": 1.0288,
+        "eligible_cached": false,
+        "eligible_current": false
+      },
+      {
+        "security_code": "601965",
+        "security_name": "中国汽研",
+        "close": "13.67",
+        "cached_value": 13.4884,
+        "current_value": 12.8031,
+        "cached_pv": 1.0135,
+        "current_pv": 1.0677,
+        "eligible_cached": false,
+        "eligible_current": false
+      },
+      {
+        "security_code": "000596",
+        "security_name": "古井贡酒",
+        "close": "98.21",
+        "cached_value": 92.2917,
+        "current_value": 96.3624,
+        "cached_pv": 1.0641,
+        "current_pv": 1.0192,
+        "eligible_cached": false,
+        "eligible_current": true
+      },
+      {
+        "security_code": "603369",
+        "security_name": "今世缘",
+        "close": "30.41",
+        "cached_value": 28.9339,
+        "current_value": 29.385,
+        "cached_pv": 1.051,
+        "current_pv": 1.0349,
+        "eligible_cached": false,
+        "eligible_current": true
+      }
+    ],
+    "mechanical_eligible_before": 16,
+    "mechanical_eligible_after": 18,
+    "scope": "Same cached closes/MAs, no network price refresh, no account/funding/order execution simulation."
+  },
+  "alignment_drift_reproducer": {
+    "registered_share_pct": 17.77,
+    "current_share_pct": 17.93,
+    "next_share_pct": 18.09,
+    "default_cli": "基准 current.csv × panel.csv：在册观测 10,000\n  买入线 1.0000 → 下侧合格面 17.930%\n  对齐容差 ±0.20pp\n\nnext.csv × panel.csv：在册观测 10,000\n  原线 1.0000 在本侧的下侧合格面 18.090%（与在册差 +0.160pp）\n  容差内 → **保留原线 1.0000**（`--width 0.0000`）；在册合格面不改写\n",
+    "explicit_registered_share_cli": "基准 current.csv × panel.csv：在册观测 10,000\n  买入线 1.0000 → 下侧合格面 17.930%；在册合格面按 --registered-share 取 17.770%\n  对齐容差 ±0.20pp\n\nnext.csv × panel.csv：在册观测 10,000\n  原线 1.0000 在本侧的下侧合格面 18.090%（与在册差 +0.320pp）\n  超出容差 → 买入线 **0.9912**（`--width 0.0088`）→ 下侧合格面 17.780%，重登在册合格面\n"
+  }
+}
