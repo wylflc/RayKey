@@ -1,0 +1,9 @@
+# OI-171（§12.1 第 7 款执行成本压力）：每边滑点 0／10／20／30bp，BASE 与 EBDS03 同档配对；剔除集 A 由 0bp BASE 2011-11-01 锚点自动取，U=A（§12.223）。
+BASE|
+S10|--slippage-bp 10
+S20|--slippage-bp 20
+S30|--slippage-bp 30
+EBDS03|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03
+EBDS03_S10|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --slippage-bp 10
+EBDS03_S20|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --slippage-bp 20
+EBDS03_S30|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --slippage-bp 30

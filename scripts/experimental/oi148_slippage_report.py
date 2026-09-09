@@ -21,6 +21,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import sweep_backtest_configs as sweep  # noqa: E402
 
 TIERS = (0, 10, 20, 30)
+CAND = "BUY2"            # 候选臂标签（--cand）；各档标签 <CAND>_S<bp>
 NAN = float("nan")
 RATIO_TOL = 0.005        # 比率项阈值（§12.1 第 4 款：0.005 对应 −0.15pp、0.033 对应 −1pp）
 RATIO_RULING = 0.033
@@ -31,7 +32,7 @@ def base_label(t: int) -> str:
 
 
 def cand_label(t: int) -> str:
-    return "BUY2" if t == 0 else f"BUY2_S{t}"
+    return CAND if t == 0 else f"{CAND}_S{t}"
 
 
 def level(arms, label, key):
@@ -95,8 +96,7 @@ def clause4(arms_u, label, ref):
     return out
 
 
-def identity(exp: Path, say):
-    ref_path = ROOT / "data/experiments/exp_metric_m2/sweep.txt"
+def identity(exp: Path, say, ref_path: Path):
     say("## 1. 0bp 逐位复现")
     if not ref_path.exists():
         say(f"  参照 {ref_path} 不存在，跳过读数核对"); return
@@ -104,7 +104,7 @@ def identity(exp: Path, say):
     g_ref, *_ = sweep.load_scan(ref_path)
     worst, n = 0.0, 0
     for grp in ("", sweep.EX5_PREFIX):
-        for label in ("BASE", "BUY2"):
+        for label in ("BASE", CAND):
             a, b = g_new[grp].get(label, {}), g_ref[grp].get(label, {})
             for start in sorted(set(a) & set(b)):
                 for k in sweep.FIELDS:
@@ -117,7 +117,7 @@ def identity(exp: Path, say):
                         worst = diff
                         if diff > 0:
                             say(f"  ✗ {grp or '全样本'} {label} {start} {k}: 本轮 {x} 参照 {y}")
-    say(f"  14 起点读数对 exp_metric_m2 同臂同起点核对 {n} 个值，最大绝对差 {worst:.3e}")
+    say(f"  14 起点读数对 {ref_path.relative_to(ROOT)} 同臂同起点核对 {n} 个值，最大绝对差 {worst:.3e}")
     pairs = []
     for kind in ("equity", "trades"):
         new = sorted(exp.glob(f"artifacts/*_slip0_BASE_{kind}.csv"))
@@ -155,7 +155,12 @@ def fill_check(exp: Path, say):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--exp", type=Path, default=ROOT / "data/experiments/exp_oi148_slippage")
+    ap.add_argument("--cand", default="BUY2", help="候选臂标签，各档为 <cand>_S<bp>")
+    ap.add_argument("--ref-scan", type=Path, default=ROOT / "data/experiments/exp_metric_m2/sweep.txt",
+                    help="0bp 逐位复现的参照扫描文件（同臂同起点逐值核对）")
     args = ap.parse_args()
+    global CAND
+    CAND = args.cand
     exp = args.exp
     lines = []
 
@@ -175,7 +180,7 @@ def main():
         g_u, _o, _f2, note_u, _v, _ff = sweep.load_scan(exp / "sweep_tiers_U.txt")
         arms_u = g_u[sweep.EX5_PREFIX]
     say(f"计量版本 {ver}；剔除集 A：{note_a}；剔除集 U：{note_u or '缺'}；跑挂：{dict(failed[''])} / {dict(failed[sweep.EX5_PREFIX])}")
-    identity(exp, say)
+    identity(exp, say, args.ref_scan)
 
     say("\n## 2. 各档 BASE 成本表（水平 = 各起点再取中位；Δ = 对 0bp 的逐起点配对差中位，pp；最低担保／强平取 14 起点最值）")
     cost_keys = (("年化", "年化"), ("滚5中位", "滚动5年年化中位"), ("滚5P25", "滚动5年年化P25"), ("滚5回撤", "滚动5年回撤中位"),
@@ -200,7 +205,7 @@ def main():
             row += [f"{-turn0 * t / 1e4 * 100:+.2f}" if turn0 == turn0 else "—"]
             say("| " + " | ".join(row) + " |")
 
-    say("\n## 3. 候选 BUY2 与同档 BASE 配对（§12.1 第 2 款；Δ 单位 pp；A／U 按 0bp 锚点固定）")
+    say(f"\n## 3. 候选 {CAND} 与同档 BASE 配对（§12.1 第 2 款；Δ 单位 pp；A／U 按 0bp 锚点固定）")
     say("| 档 | Δ主(全) | Δ主(A) | Δ主(U) | Δ复利(全) | Δ复利(A) | Δ复利(U) | ΔP25(全) | Δ滚5回撤(全) | 判定 |")
     say("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |")
     verdicts = {}

@@ -5,7 +5,7 @@
 标出双门槛通过的臂，再找**相邻档连续通过**的最长区间——第 5 款要平台不要单点峰。
 ±0.15pp 内按噪声处理：与 BASE 同在噪声带内的档不算「更好」，只算「不更差」。
 
-用法：scan_plateau.py <sweep 文件> --flag --swap-margin --scale 0.01
+用法：scan_plateau.py <sweep 文件> --label 换仓边际 --current 0.15 --scale 100   （臂名末尾数字 ÷ scale = 档位）
 """
 import argparse, statistics as st, sys
 from pathlib import Path
@@ -42,7 +42,7 @@ def main() -> None:
         starts = [s for s in DEFAULT_STARTS if s in base]
         rows = []
         for label, arm in arms.items():
-            val = args.current if label == "BASE" else int(label[2:]) / args.scale
+            val = args.current if label == "BASE" else int(re.search(r"(\d+)$", label).group(1)) / args.scale   # 臂名末尾数字 = 档位
             common = [s for s in starts if s in arm]
             cell = {}
             for nm, k in GATES:

@@ -1,0 +1,14 @@
+# OI-171（§12.1 第 4 款①）：EBDS03（利差 < 3pp 去融资、其余完整恢复 BASE，§12.220 实现）上换仓边际 0.10~0.20 按 0.01 一档重扫，
+# 不沿用 BASE 的 0.15；EBDS03_M15 = §12.223 的 EBDS03 本臂重跑，同文件内配对。BASE（0.15）为对照。
+BASE|
+EBDS03_M10|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.10
+EBDS03_M11|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.11
+EBDS03_M12|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.12
+EBDS03_M13|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.13
+EBDS03_M14|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.14
+EBDS03_M15|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.15
+EBDS03_M16|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.16
+EBDS03_M17|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.17
+EBDS03_M18|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.18
+EBDS03_M19|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.19
+EBDS03_M20|--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --swap-margin 0.20
