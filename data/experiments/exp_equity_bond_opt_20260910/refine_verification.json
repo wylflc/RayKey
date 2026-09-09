@@ -1,0 +1,44 @@
+{
+  "completed_beijing": "2026-09-10T05:18:38.384848+08:00",
+  "job_id": "26518513",
+  "inputs_unchanged": true,
+  "baseline_paths": 28,
+  "baseline_all_fields_identical": true,
+  "executed_paths": 350,
+  "summary_rows": 364,
+  "union_groups": {
+    "RU1": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "candidates": [
+        "C070R30",
+        "C090R45"
+      ],
+      "reused_A": true
+    },
+    "RU2": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088",
+        "688516"
+      ],
+      "candidates": [
+        "C070R35",
+        "C070R40",
+        "C070R45",
+        "C090R30",
+        "C090R35",
+        "C090R40"
+      ],
+      "reused_A": false
+    }
+  }
+}

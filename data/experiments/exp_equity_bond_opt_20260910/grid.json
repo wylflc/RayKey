@@ -1,0 +1,249 @@
+[
+  {
+    "arm": "BASE",
+    "kind": "baseline"
+  },
+  {
+    "arm": "OFF",
+    "kind": "control"
+  },
+  {
+    "arm": "FIX100",
+    "kind": "fixed",
+    "cap": 1.0
+  },
+  {
+    "arm": "C000R30",
+    "kind": "hysteresis",
+    "cap": 0.0,
+    "release": 0.03
+  },
+  {
+    "arm": "C000R35",
+    "kind": "hysteresis",
+    "cap": 0.0,
+    "release": 0.035
+  },
+  {
+    "arm": "C000R40",
+    "kind": "hysteresis",
+    "cap": 0.0,
+    "release": 0.04
+  },
+  {
+    "arm": "C000R45",
+    "kind": "hysteresis",
+    "cap": 0.0,
+    "release": 0.045
+  },
+  {
+    "arm": "C000R50",
+    "kind": "hysteresis",
+    "cap": 0.0,
+    "release": 0.05
+  },
+  {
+    "arm": "C030R30",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.03
+  },
+  {
+    "arm": "C030R35",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "C030R40",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.04
+  },
+  {
+    "arm": "C030R45",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.045
+  },
+  {
+    "arm": "C030R50",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.05
+  },
+  {
+    "arm": "C050R30",
+    "kind": "hysteresis",
+    "cap": 0.5,
+    "release": 0.03
+  },
+  {
+    "arm": "C050R35",
+    "kind": "hysteresis",
+    "cap": 0.5,
+    "release": 0.035
+  },
+  {
+    "arm": "C050R40",
+    "kind": "hysteresis",
+    "cap": 0.5,
+    "release": 0.04
+  },
+  {
+    "arm": "C050R45",
+    "kind": "hysteresis",
+    "cap": 0.5,
+    "release": 0.045
+  },
+  {
+    "arm": "C050R50",
+    "kind": "hysteresis",
+    "cap": 0.5,
+    "release": 0.05
+  },
+  {
+    "arm": "C080R30",
+    "kind": "hysteresis",
+    "cap": 0.8,
+    "release": 0.03
+  },
+  {
+    "arm": "C080R35",
+    "kind": "hysteresis",
+    "cap": 0.8,
+    "release": 0.035
+  },
+  {
+    "arm": "C080R40",
+    "kind": "hysteresis",
+    "cap": 0.8,
+    "release": 0.04
+  },
+  {
+    "arm": "C080R45",
+    "kind": "hysteresis",
+    "cap": 0.8,
+    "release": 0.045
+  },
+  {
+    "arm": "C080R50",
+    "kind": "hysteresis",
+    "cap": 0.8,
+    "release": 0.05
+  },
+  {
+    "arm": "C100R35",
+    "kind": "hysteresis",
+    "cap": 1.0,
+    "release": 0.035
+  },
+  {
+    "arm": "C100R40",
+    "kind": "hysteresis",
+    "cap": 1.0,
+    "release": 0.04
+  },
+  {
+    "arm": "C100R45",
+    "kind": "hysteresis",
+    "cap": 1.0,
+    "release": 0.045
+  },
+  {
+    "arm": "C100R50",
+    "kind": "hysteresis",
+    "cap": 1.0,
+    "release": 0.05
+  },
+  {
+    "arm": "PE14",
+    "kind": "pe",
+    "threshold": 14
+  },
+  {
+    "arm": "PE16",
+    "kind": "pe",
+    "threshold": 16
+  },
+  {
+    "arm": "PE18",
+    "kind": "pe",
+    "threshold": 18
+  },
+  {
+    "arm": "PE20",
+    "kind": "pe",
+    "threshold": 20
+  },
+  {
+    "arm": "PEQ70",
+    "kind": "pe_q",
+    "threshold": 0.7
+  },
+  {
+    "arm": "PEQ80",
+    "kind": "pe_q",
+    "threshold": 0.8
+  },
+  {
+    "arm": "PEQ90",
+    "kind": "pe_q",
+    "threshold": 0.9
+  },
+  {
+    "arm": "MA60X120",
+    "kind": "price_ma",
+    "threshold": 1.2
+  },
+  {
+    "arm": "MA60X140",
+    "kind": "price_ma",
+    "threshold": 1.4
+  },
+  {
+    "arm": "MA60X160",
+    "kind": "price_ma",
+    "threshold": 1.6
+  },
+  {
+    "arm": "PART120",
+    "kind": "partial",
+    "cap": 1.2
+  },
+  {
+    "arm": "PART140",
+    "kind": "partial",
+    "cap": 1.4
+  },
+  {
+    "arm": "PART160",
+    "kind": "partial",
+    "cap": 1.6
+  },
+  {
+    "arm": "TREND06",
+    "kind": "trend",
+    "ma": 6
+  },
+  {
+    "arm": "TREND10",
+    "kind": "trend",
+    "ma": 10
+  },
+  {
+    "arm": "TREND12",
+    "kind": "trend",
+    "ma": 12
+  },
+  {
+    "arm": "CONFIRM2",
+    "kind": "confirm",
+    "months": 2
+  },
+  {
+    "arm": "CONFIRM3",
+    "kind": "confirm",
+    "months": 3
+  }
+]

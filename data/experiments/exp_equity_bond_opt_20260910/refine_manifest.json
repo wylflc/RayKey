@@ -1,0 +1,20 @@
+{
+  "started_beijing": "2026-09-10T05:15:59.410395+08:00",
+  "job_id": "26518513",
+  "inputs": {
+    "data/experiments/exp_equity_bond_opt_20260910/preregister_refine.md": {
+      "bytes": 1021,
+      "sha256": "38cfe2775a22eed578a97bfa734b519147c265b9143d655435eb083e05cb8d9f"
+    },
+    "data/experiments/exp_equity_bond_opt_20260910/refine.py": {
+      "bytes": 4320,
+      "sha256": "85a92fc42d56d3320f8bd43c472e559f9509f3c6c948fa6c1fe789f8ac865b4e"
+    },
+    "data/experiments/exp_equity_bond_opt_20260910/refine_engine.py": {
+      "bytes": 423,
+      "sha256": "e021ea0c679c54f1458302e16dd3885cb90d3deadebffbea5605a701581eee81"
+    }
+  },
+  "first_manifest": "manifest.json",
+  "new_candidates": 8
+}

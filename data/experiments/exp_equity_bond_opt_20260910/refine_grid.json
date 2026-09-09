@@ -1,0 +1,50 @@
+[
+  {
+    "arm": "C070R30",
+    "kind": "hysteresis",
+    "cap": 0.7,
+    "release": 0.03
+  },
+  {
+    "arm": "C070R35",
+    "kind": "hysteresis",
+    "cap": 0.7,
+    "release": 0.035
+  },
+  {
+    "arm": "C070R40",
+    "kind": "hysteresis",
+    "cap": 0.7,
+    "release": 0.04
+  },
+  {
+    "arm": "C070R45",
+    "kind": "hysteresis",
+    "cap": 0.7,
+    "release": 0.045
+  },
+  {
+    "arm": "C090R30",
+    "kind": "hysteresis",
+    "cap": 0.9,
+    "release": 0.03
+  },
+  {
+    "arm": "C090R35",
+    "kind": "hysteresis",
+    "cap": 0.9,
+    "release": 0.035
+  },
+  {
+    "arm": "C090R40",
+    "kind": "hysteresis",
+    "cap": 0.9,
+    "release": 0.04
+  },
+  {
+    "arm": "C090R45",
+    "kind": "hysteresis",
+    "cap": 0.9,
+    "release": 0.045
+  }
+]

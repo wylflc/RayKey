@@ -1,0 +1,13 @@
+{
+  "paths_checked": 2296,
+  "unique_daily_paths": 1848,
+  "complete_start_and_window_sets": true,
+  "expected_calendar_windows_verified": true,
+  "daily_dates_equal": true,
+  "finite_decision_inputs": true,
+  "arms": 53,
+  "refinement_included": true,
+  "production_verdict_issues": "OI-172/173 remain open; this experiment validates completeness and counts 0→positive",
+  "negative_cash_days": 0,
+  "no_future_performance_claim": true
+}

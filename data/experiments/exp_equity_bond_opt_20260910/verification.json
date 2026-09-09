@@ -1,0 +1,107 @@
+{
+  "completed_beijing": "2026-09-10T05:13:44.409248+08:00",
+  "job_id": "26517945",
+  "inputs_unchanged": true,
+  "baseline_values_checked": 1316,
+  "baseline_paths": 28,
+  "baseline_windows_identical": true,
+  "executed_paths": 1526,
+  "summary_rows": 1932,
+  "union_groups": {
+    "U1": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "candidates": [
+        "OFF",
+        "C030R30",
+        "C030R35",
+        "C030R40",
+        "C030R45",
+        "C030R50",
+        "C050R35",
+        "C050R40",
+        "C050R45",
+        "C050R50",
+        "C080R35",
+        "C080R40",
+        "C080R45",
+        "C100R35",
+        "C100R40",
+        "C100R45",
+        "C100R50",
+        "PE18",
+        "PE20",
+        "PEQ70",
+        "MA60X120",
+        "MA60X140",
+        "PART120",
+        "TREND06",
+        "TREND10",
+        "TREND12",
+        "CONFIRM2",
+        "CONFIRM3"
+      ],
+      "reused_A": true
+    },
+    "U2": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "600309",
+        "601088"
+      ],
+      "candidates": [
+        "FIX100"
+      ],
+      "reused_A": false
+    },
+    "U3": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088",
+        "688516"
+      ],
+      "candidates": [
+        "C000R30",
+        "C000R35",
+        "C000R40",
+        "C000R45",
+        "C000R50",
+        "C050R30",
+        "C080R30",
+        "C080R50",
+        "PE14",
+        "PE16",
+        "PEQ90",
+        "MA60X160"
+      ],
+      "reused_A": false
+    },
+    "U4": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "600585",
+        "601088"
+      ],
+      "candidates": [
+        "PEQ80",
+        "PART140",
+        "PART160"
+      ],
+      "reused_A": false
+    }
+  }
+}

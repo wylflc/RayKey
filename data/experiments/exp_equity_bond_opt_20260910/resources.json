@@ -1,0 +1,16 @@
+{
+  "stage1": {
+    "job": 26517945,
+    "state": "COMPLETED",
+    "elapsed": "00:12:48",
+    "max_rss_kib": 67816681,
+    "cpus": 64
+  },
+  "stage2": {
+    "job": 26518513,
+    "state": "COMPLETED",
+    "elapsed": "00:02:56",
+    "max_rss_kib": 67489416,
+    "cpus": 64
+  }
+}

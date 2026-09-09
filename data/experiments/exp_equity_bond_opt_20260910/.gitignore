@@ -1,0 +1,8 @@
+cache/
+daily/
+nav/
+pilot/
+errors/
+# Per-pass scans duplicate summary_rows/refine_rows; retain the merged report input.
+sweep_*.txt
+!sweep_full_A.txt
