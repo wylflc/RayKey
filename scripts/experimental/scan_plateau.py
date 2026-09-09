@@ -7,6 +7,7 @@
 
 用法：scan_plateau.py <sweep 文件> --label 换仓边际 --current 0.15 --scale 100   （臂名末尾数字 ÷ scale = 档位）
 """
+import re
 import argparse, statistics as st, sys
 from pathlib import Path
 

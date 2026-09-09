@@ -25,15 +25,20 @@ run() {  # run <臂名> <额外参数...>：2011-11-01 长跑，带产物、候�
 }
 mkdir -p "$EXP/sig" "$EXP/cache"
 echo "=== [$(date +%T)] ③ 两臂 2011-11-01 长跑（后台）＋ P/V 分档前向 ==="
-run BASE & PID_BASE=$!
+PID_BASE=; PID_EB=
+if ! ls "$EXP/sig/BASE"/*_trades.csv >/dev/null 2>&1; then run BASE & PID_BASE=$!; else echo "  BASE 长跑已有产物，跳过"; fi
 # shellcheck disable=SC2086
-run EBDS03 $EB & PID_EB=$!
+if ! ls "$EXP/sig/EBDS03"/*_trades.csv >/dev/null 2>&1; then run EBDS03 $EB & PID_EB=$!; else echo "  EBDS03 长跑已有产物，跳过"; fi
 python3 scripts/experimental/panel_tier_forward.py --states $S/a_share_daily_states_adopted.csv --panel $P \
   --since 2005-01-01 > "$EXP/sig/panel_tier_forward.txt" 2>&1 &
 
 echo "=== [$(date +%T)] ① 换仓边际重扫：$(grep -c '|' "$EXP/configs/margin.txt") 臂 × 14 起点 × 两遍 ==="
-python3 "$EXP/launch.py" --cache-dir "$EXP/cache/margin" --sweep "$EXP/configs/margin.txt" --out "$EXP/sweep_margin.txt" --workers 56 \
-  --title "OI-171 EBDS03 换仓边际 0.10~0.20 一档重扫（对照 BASE 0.15）" | tee "$EXP/report_margin.txt"
+if [ -s "$EXP/sweep_margin.txt" ] && ! grep -q 'ERR\|EMPTY' "$EXP/sweep_margin.txt" && [ "$(grep -c '^\(EX5:\)\?[A-Z]' "$EXP/sweep_margin.txt")" = 336 ]; then
+  echo "  sweep_margin.txt 已完整（336 行），跳过重扫"
+else
+  python3 "$EXP/launch.py" --cache-dir "$EXP/cache/margin" --sweep "$EXP/configs/margin.txt" --out "$EXP/sweep_margin.txt" --workers 56 \
+    --title "OI-171 EBDS03 换仓边际 0.10~0.20 一档重扫（对照 BASE 0.15）" | tee "$EXP/report_margin.txt"
+fi
 python3 scripts/experimental/dose_table.py "$EXP/sweep_margin.txt" --sort label | tee "$EXP/dose_margin.txt"
 python3 scripts/experimental/scan_plateau.py "$EXP/sweep_margin.txt" --label 换仓边际 --current 0.15 --scale 100 | tee "$EXP/plateau_margin.txt"
 
@@ -42,7 +47,7 @@ python3 "$EXP/launch.py" --cache-dir "$EXP/cache/slip" --sweep "$EXP/configs/sli
   --title "OI-171 EBDS03 执行成本压力 0／10／20／30bp（同档配对）" | tee "$EXP/report_tiers.txt"
 { echo "#NOTE|U = A：EBDS03 0bp 锚点前五与 BASE 相同（§12.223 winner_sets），U 单遍即 A 单遍"; cat "$EXP/sweep_tiers.txt"; } > "$EXP/sweep_tiers_U.txt"
 
-wait "$PID_BASE"
+[ -n "$PID_BASE" ] && wait "$PID_BASE"
 echo "=== [$(date +%T)] ② 剔除赢家只数 K=1／3／5／10（赢家取本批 BASE 2011-11-01 长跑 contrib）==="
 TRADES=$(ls "$EXP/sig/BASE"/*_trades.csv | head -1)
 python3 "$EXP/launch.py" --cache-dir "$EXP/cache/dose" scripts/experimental/ex_winner_dose.py "$EXP/configs/dose.txt" \
