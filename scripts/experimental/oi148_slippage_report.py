@@ -180,7 +180,7 @@ def main():
         g_u, _o, _f2, note_u, _v, _ff = sweep.load_scan(exp / "sweep_tiers_U.txt")
         arms_u = g_u[sweep.EX5_PREFIX]
     say(f"计量版本 {ver}；剔除集 A：{note_a}；剔除集 U：{note_u or '缺'}；跑挂：{dict(failed[''])} / {dict(failed[sweep.EX5_PREFIX])}")
-    identity(exp, say, args.ref_scan)
+    identity(exp, say, args.ref_scan.resolve())
 
     say("\n## 2. 各档 BASE 成本表（水平 = 各起点再取中位；Δ = 对 0bp 的逐起点配对差中位，pp；最低担保／强平取 14 起点最值）")
     cost_keys = (("年化", "年化"), ("滚5中位", "滚动5年年化中位"), ("滚5P25", "滚动5年年化P25"), ("滚5回撤", "滚动5年回撤中位"),
