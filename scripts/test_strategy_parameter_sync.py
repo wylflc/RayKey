@@ -31,6 +31,9 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(daily_scan.SEC93_SWAP_SOURCE_BLOCK, -1.0)  # 换仓接收方守卫关（v4.137 回退 v4.135）
         # v4.109（OI-110）：估值减持线已删除，生产侧不得再有该常量
         self.assertFalse(hasattr(daily_scan, "SEC93_SELL_LINE"))
+        # v4.176（OI-171）：股债总仓位上限 3pp／100%，生产常量与回测 BASE 同值
+        self.assertEqual((daily_scan.SEC93_EQUITY_BOND_THRESHOLD, daily_scan.SEC93_EQUITY_BOND_CAP), (0.03, 1.0))
+        self.assertEqual(daily_scan.SEC93_EQUITY_BOND_DATA, ROOT / "data/reference/equity_bond_csi300.csv")
         self.assertEqual(daily_scan.DEFAULT_HOLD_BANDS, ROOT / "data/processed/a_share_pool_model_bands_hold.csv")
 
     def test_backtest_baseline_matches_production(self) -> None:
@@ -71,6 +74,14 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn("--dividend-tax", args)
         self.assertNotIn("--no-rights-events", args)
         self.assertEqual(option_value(args, "--swap-repeat"), "skip")
+        # v4.176：股债总仓位上限显式入 BASE（cap／spread／阈值／上限／阈值以上完整恢复），美股基准不带
+        self.assertEqual(option_value(args, "--equity-bond-mode"), "cap")
+        self.assertEqual(option_value(args, "--equity-bond-metric"), "spread")
+        self.assertEqual(float(option_value(args, "--equity-bond-threshold")), daily_scan.SEC93_EQUITY_BOND_THRESHOLD)
+        self.assertEqual(float(option_value(args, "--equity-bond-lower")), daily_scan.SEC93_EQUITY_BOND_CAP)
+        self.assertEqual(ROOT / option_value(args, "--equity-bond-data"), daily_scan.SEC93_EQUITY_BOND_DATA)
+        self.assertIn("--equity-bond-restore-above", args)
+        self.assertNotIn("--equity-bond-mode", shlex.split(sweep.BASE_US))
 
     def test_workflow_current_table_matches_production(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
@@ -146,6 +157,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn(f"至少低 `{daily_scan.SEC93_SWAP_MARGIN:.2f}`", workflow)
         self.assertIn("授信 = 净资产 × 66.6%，不设金额上限", workflow)
         self.assertIn(f"| 单票机械上限 | 单票市值 ÷ 当日净资产 `N` ≥ {daily_scan.SEC93_POSITION_CAP:.0%} 时不再加仓", workflow)
+        self.assertIn(f"| 股债总仓位上限 | 沪深 300 股债利差（`1/PE_TTM − 10 年国债收益率`，信号日已知的最新观测）`< {daily_scan.SEC93_EQUITY_BOND_THRESHOLD:.0%}` 时总仓位（持仓市值 ÷ 当日净资产 `N`）上限 `{daily_scan.SEC93_EQUITY_BOND_CAP:.0%}`", workflow)
         # v4.68/v4.69（OI-092）：§9.3 成文与回测实现同口径的关键句
         self.assertIn("| 新建仓走势 | T 日 `收盘 > MA20 > MA60` |", workflow)
         self.assertIn("现价跌破当日生效线即**当日**整仓清空", workflow)

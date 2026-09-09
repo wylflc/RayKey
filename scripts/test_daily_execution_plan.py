@@ -30,10 +30,45 @@ class ExecutionPlanTest(unittest.TestCase):
         scan.CLOSE_SERIES.clear()      # 无K线序列 → 相关性未知 → 放行（OI-093 语义）
         self.nav = 3_000_000.0        # 一档 15 万
 
-    def run_plan(self, rows, holdings, funds, members=None, counters=None, holding_rows=None, sell_counters=None):
+    def run_plan(self, rows, holdings, funds, members=None, counters=None, holding_rows=None, sell_counters=None, **kw):
         return scan.section93_execution_plan(rows, self.nav, funds, holdings, set(), set(),
                                              members, counters if counters is not None else {}, holding_rows,
-                                             sell_counters=sell_counters)
+                                             sell_counters=sell_counters, **kw)
+
+    def test_equity_bond_cap_forces_proportional_sells(self) -> None:
+        # §9.3.1 股债总仓位上限（v4.176）：净资产 200 万，持仓 A 200 万 + B 100 万 = 150%；上限 100% → 超 100 万，按市值比例 1/3
+        # 减仓、按手向上取整（A 6,700 股、B 6,700 股）；预算 = 现金 0 − 负债 100 万 = −100 万，卖出款 100.5 万先补缺口
+        self.nav = 2_000_000.0
+        rows = [row("000001", "A", close=100.0, ma20=101.0, ma60=90.0, pv=2.5),
+                row("000002", "B", close=50.0, ma20=51.0, ma60=40.0, pv=2.5)]
+        holdings = {"000001": hold("A", 20000, None, None), "000002": hold("B", 20000, None, None)}
+        res = self.run_plan(rows, holdings, funds=0.0, members={"000001", "000002"}, exposure_cap=1.0, cap_cash=-1_000_000.0)
+        sells = {s["security_code"]: s for s in res["sells"] if s["rule"] == "股债·总仓位上限"}
+        self.assertEqual({c: s["sell_shares"] for c, s in sells.items()}, {"000001": 6700, "000002": 6700})
+        self.assertEqual(res["eb_sells"], ["000001", "000002"])
+        self.assertAlmostEqual(res["funds0"], -1_000_000.0)
+        self.assertAlmostEqual(res["cash"], -1_000_000.0 + 6700 * 100 + 6700 * 50)
+        self.assertAlmostEqual(res["eb_stock_before"], 3_000_000.0)
+        self.assertAlmostEqual(res["eb_stock_after"], 3_000_000.0 - 670_000 - 335_000)
+        # 未触发（exposure_cap=None）：同一输入没有减仓行，预算仍取 funds
+        res = self.run_plan(rows, holdings_copy := {"000001": hold("A", 20000, None, None), "000002": hold("B", 20000, None, None)},
+                            funds=0.0, members={"000001", "000002"})
+        self.assertFalse([s for s in res["sells"] if s["rule"] == "股债·总仓位上限"]); self.assertIsNone(res["exposure_cap"])
+
+    def test_equity_bond_cap_limits_buys_to_room(self) -> None:
+        # 净资产 105 万、持仓 100 万、上限 100% → 余量 5 万；一档 5.25 万 → 只买 500 股；第二只候选余量 0 被挡下
+        self.nav = 1_050_000.0
+        rows = [row("000001", "A", close=100.0, ma20=101.0, ma60=90.0, pv=2.5),
+                row("000003", "C", close=100.0, ma20=95.0, ma60=90.0, pv=0.5),
+                row("000004", "D", close=100.0, ma20=95.0, ma60=90.0, pv=0.6)]
+        holdings = {"000001": hold("A", 10000, None, None)}
+        res = self.run_plan(rows, holdings, funds=1_000_000.0, members={"000001"}, exposure_cap=1.0, cap_cash=1_000_000.0)
+        self.assertEqual([(p["security_code"], p["shares"]) for p in res["plan"]], [("000003", 500)])
+        self.assertEqual([c["security_code"] for c in res["eb_capped"]], ["000004"])
+        self.assertAlmostEqual(res["eb_stock_after"], 1_050_000.0)
+        # 无上限时同一输入买满一档 500 股 → 1500 股？一档 5.25 万 ÷ 100 元 = 525 股 → 500 股（按手），第二只同样 500 股
+        res = self.run_plan(rows, {"000001": hold("A", 10000, None, None)}, funds=1_000_000.0, members={"000001"})
+        self.assertEqual([(p["security_code"], p["shares"]) for p in res["plan"]], [("000003", 500), ("000004", 500)])
 
     def test_trim_ignores_trend(self) -> None:
         rows = [row("000001", "A", close=100.0, ma20=101.0, ma60=90.0, pv=2.5),

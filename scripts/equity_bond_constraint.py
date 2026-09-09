@@ -1,4 +1,5 @@
-"""Research-only equity/bond exposure signal; specification: workflow §12.1."""
+"""Equity/bond exposure signal (spread = 1/PE_TTM − CN10Y). Production rule: workflow §9.3.1 股债总仓位上限
+(cap／spread／3pp／100%，`restore_above` = no cap and untouched credit above the threshold); other modes are research (§12.1)."""
 from bisect import bisect_left, bisect_right, insort
 from collections import deque
 import csv
@@ -18,7 +19,7 @@ class EquityBondSignal:
 
 class EquityBondConstraint:
     def __init__(self, path, mode='cap', metric='percentile', threshold=.3,
-                 lower=0.0, upper=1.6, ramp_high=.8, window=60, min_obs=12):
+                 lower=0.0, upper=1.6, ramp_high=.8, window=60, min_obs=12, restore_above=False):
         if mode not in ('cap', 'credit', 'ramp') or metric not in ('spread', 'percentile'):
             raise ValueError('Invalid equity/bond mode or metric')
         if not all(math.isfinite(v) for v in (threshold, lower, upper, ramp_high)):
@@ -33,6 +34,7 @@ class EquityBondConstraint:
             raise ValueError('Ramp requires percentile and threshold < ramp_high <= 1')
         self.mode, self.metric, self.threshold = mode, metric, threshold
         self.lower, self.upper, self.ramp_high = lower, upper, ramp_high
+        self.restore_above = bool(restore_above)   # 阈值以上不设上限、不改授信（完整恢复 BASE；v4.176 生产分支）
         self.days, self.signals = [], []
         ordered, history = [], deque()
         with Path(path).open(newline='', encoding='utf-8-sig') as handle:
@@ -71,5 +73,7 @@ class EquityBondConstraint:
             weight = max(0., min(1., (value - self.threshold) / (self.ramp_high - self.threshold)))
             cap = self.lower + weight * (self.upper - self.lower)
         else:
+            if value >= self.threshold and self.restore_above:
+                return signal, None
             cap = self.lower if value < self.threshold else self.upper
         return signal, cap

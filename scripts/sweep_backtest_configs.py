@@ -130,6 +130,11 @@ BASE = (
     "--net-same-day "
     "--fill-missing skip --dividend-tax --swap-repeat skip "
     "--addon-trend ma-only --swap-require-weak "
+    # **股债总仓位上限（v4.176，用户 2026-09-10 裁定采纳，§12.224～§12.226）**：沪深 300 股债利差 < 3pp 时总仓位上限 100%
+    # （不新增融资、现金与卖出款先偿债、超限按持仓市值比例减仓），≥ 3pp 完整恢复（`--equity-bond-restore-above`，
+    # 与 §12.220 的 high_base_engine.py 等价）。回撤通道采纳：ΔMDD −11／−10pp，主读数 −0.86／+2.12。
+    "--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread "
+    "--equity-bond-threshold 0.03 --equity-bond-lower 1.0 --equity-bond-restore-above "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--hold-states data/processed/a_share_daily_states_hold.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv"
@@ -142,7 +147,11 @@ DEFAULT_STARTS = [f"{y}-{m}-01" for y in range(2009, 2017) for m in ("05", "11")
 
 # **美股基准 `BASE_US`（OI-159，预登记 docs/reports/us_sp500_backtest_prereg.zh.md §4）**：与 `BASE` 逐项同式，只改市场项——
 # 1 股为单位、无费税、现金账户（授信 0）、现金红利固定预提 15%、50 万美元、`--market us` 数据落点；两条线沿用 1.0454／0.15。
+EQUITY_BOND_FLAGS = ("--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread "
+                     "--equity-bond-threshold 0.03 --equity-bond-lower 1.0 --equity-bond-restore-above ")
+assert EQUITY_BOND_FLAGS in BASE
 BASE_US = (BASE
+           .replace(EQUITY_BOND_FLAGS, "")      # 美股不设股债总仓位上限（数据为沪深 300；OI-159 口径只改市场项）
            .replace("--lot-size 100 --lot-ratio-cooldown", "--lot-size 1 --no-lot-ratio-cooldown")
            .replace("--fee-preset user", "--fee-preset none")
            .replace("--capital 3000000 --credit-ratio 0.666", "--capital 500000 --credit-ratio 0")
@@ -150,7 +159,7 @@ BASE_US = (BASE
            .replace("--daily-states data/processed/a_share_daily_states_adopted.csv", "--market us --daily-states data/processed/us_daily_states_adopted.csv")
            .replace("--hold-states data/processed/a_share_daily_states_hold.csv", "--hold-states data/processed/us_daily_states_hold.csv")
            .replace("--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv", "--universe-file data/processed/pit_attention/panel_sp500_us.csv"))
-assert BASE_US != BASE and "--market us" in BASE_US
+assert BASE_US != BASE and "--market us" in BASE_US and "--equity-bond" not in BASE_US
 # 美股标准起点集：XBRL 三年史自 2012 年成立，路径 ≥ 10 年的半年档起点 2012-05-01 起（数据末端 2026-08 → 至 2016-05-01，9 个）
 DEFAULT_STARTS_US = [f"{y}-{m}-01" for y in range(2012, 2017) for m in ("05", "11")][:-1]
 

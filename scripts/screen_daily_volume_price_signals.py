@@ -406,6 +406,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--funds", type=float, default=None,
                         help="当日**可用资金 = 现金 + 未用授信**（OI-062）。买入计划以此为预算；"
                              "不给则退回「可用资金＝净资产」的旧估算并显著告警。满仓/带融资账户必须给。")
+    parser.add_argument("--cash", type=float, default=None,
+                        help="当日现金（§9.3.1 股债总仓位上限触发日用：预算 = 现金 − 融资负债）；缺省读账户快照 cash_cny")
+    parser.add_argument("--debt", type=float, default=None,
+                        help="当日融资负债（同上）；缺省读账户快照 margin_debt_cny")
     parser.add_argument("--rf", type=float, default=None,
                         help="十年国债收益率，银行股利折现用（§6.5.1 第 4 条）；"
                              "缺省取 data/reference/cost_of_equity_inputs.csv 不晚于信号日的最新一行")
@@ -478,6 +482,47 @@ SEC93_SWAP_SOURCE_BLOCK = -1.0  # 换仓接收方守卫研究开关（与回测 
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
+# §9.3.1「股债总仓位上限」（v4.176，用户 2026-09-10 裁定采纳，回测日志 §12.224～§12.226）：沪深 300 股债利差（1/PE_TTM − 10 年国债）
+# 取信号日已知的最新观测，< 3pp 时总仓位（持仓市值 ÷ 净资产）上限 100%：授信视为 0（预算 = 现金 − 融资负债，卖出款先偿债）、
+# 常规卖出后仍超限按可交易持仓市值比例减仓（按手向上取整）、每笔买入以买后总仓位 ≤ 上限为限；≥ 3pp 无上限、完整按其余规则。
+# 与回测 BASE `--equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --equity-bond-lower 1.0 --equity-bond-restore-above` 同值。
+SEC93_EQUITY_BOND_THRESHOLD = 0.03
+SEC93_EQUITY_BOND_CAP = 1.0
+SEC93_EQUITY_BOND_DATA = ROOT / "data/reference/equity_bond_csi300.csv"
+SEC93_ACCOUNT_SNAPSHOT = ROOT / "data/processed/portfolio_account_snapshot.csv"   # §10.2：融资负债与现金的缺省来源
+
+
+def equity_bond_signal(as_of: str, path: Path | None = None):
+    """§9.3.1 股债总仓位上限：信号日已知的最新观测 → (signal, cap)，cap None = 无上限。序列未开始返回 (None, None)；
+    数据缺失或观测过期（引擎同一判据：估值观测 > 45 天、债息 > 10 天）直接抛错，禁止静默放行。"""
+    from equity_bond_constraint import EquityBondConstraint
+    constraint = EquityBondConstraint(path or SEC93_EQUITY_BOND_DATA, "cap", "spread", SEC93_EQUITY_BOND_THRESHOLD,
+                                      SEC93_EQUITY_BOND_CAP, 1.6, restore_above=True)
+    return constraint.resolve(as_of)
+
+
+def latest_account_snapshot(as_of: str, path: Path | None = None) -> dict[str, str] | None:
+    """账户快照台账不晚于信号日的最新一行（§10.2 融资负债来源）；文件缺失或无可用行返回 None。"""
+    path = path or SEC93_ACCOUNT_SNAPSHOT
+    if not path.exists():
+        return None
+    rows = [r for r in csv.DictReader(path.open(newline="", encoding="utf-8-sig")) if (r.get("as_of") or "") <= as_of]
+    return max(rows, key=lambda r: r["as_of"]) if rows else None
+
+
+def account_cash_debt(as_of: str, cash: float | None, debt: float | None) -> tuple[float, float, str]:
+    """上限触发日的现金与融资负债：优先命令行 `--cash`／`--debt`，缺省读账户快照；两者都没有即中止（不得按估算下单）。"""
+    source = "命令行"
+    if cash is None or debt is None:
+        snap = latest_account_snapshot(as_of)
+        if snap is None:
+            raise SystemExit("股债总仓位上限已触发但缺现金与融资负债：给 --cash/--debt，或先登记账户快照台账（§10.2）")
+        cash = to_float(snap.get("cash_cny")) if cash is None else cash
+        debt = to_float(snap.get("margin_debt_cny")) if debt is None else debt
+        if cash is None or debt is None:
+            raise SystemExit(f"账户快照 {snap.get('as_of')} 缺 cash_cny／margin_debt_cny：给 --cash/--debt 后重跑")
+        source = f"账户快照 {snap.get('as_of')}"
+    return float(cash), float(debt), source
 def _default_rf(as_of: str = "") -> float | None:
     """取信号日可得的最新国债利率；缺失时不使用手抄兜底值。"""
     try:
@@ -773,7 +818,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                              members: set[str] | None = None,
                              counters: dict[str, int] | None = None,
                              holding_rows: list[dict[str, object]] | None = None,
-                             sell_counters: dict[str, int] | None = None) -> dict[str, object]:
+                             sell_counters: dict[str, int] | None = None,
+                             exposure_cap: float | None = None, cap_cash: float | None = None) -> dict[str, object]:
     """§9.3.2 全部六步：先卖后买。
 
     卖出侧（第 4 步）逐持仓判：⓪止损复核（T+1 尾盘现价对当日生效线，本表只列候选、不计其卖出款）、
@@ -783,6 +829,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     买入侧（第 3、5 步）：`P/V` 升序、去相关、逐个买一档；高价股一档买不起一手时按 §9.3.3 计数器买一手或跳过。
     `counters` 是买入侧计数器、`sell_counters` 是卖出侧计数器（§9.3.3，两侧互不消费）。
     `holding_rows`：不在输入池内的持仓行情（出名单／无法估值者），只进卖出侧。
+    `exposure_cap`／`cap_cash`：§9.3.1 股债总仓位上限触发日给（上限、现金 − 融资负债）；此时预算不含授信，
+    常规卖出后按持仓市值比例减仓至上限，每笔买入以买后总仓位 ≤ 上限为限（与回测 enforce_equity_bond_cap／equity_bond_buy_shares 同序同式）。
     """
     holdings = holdings or {}
     counters = counters if counters is not None else {}
@@ -807,6 +855,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     # §10.2：`--funds` 为负（券商可用保证金为负、已超授信）时照负值起算——卖出款先补足该缺口，余额才进买入；
     # 负预算在买入段落入「不足一手」分支跳过，不会产生负手数。
     cash = nav if funds is None else funds
+    if exposure_cap is not None and cap_cash is not None:
+        cash = cap_cash                      # 上限触发：授信视为 0，预算 = 现金 − 融资负债（可为负，卖出款先补缺口）
     funds0 = cash
     sells: list[dict[str, object]] = []
     sell_notes: list[tuple[str, str]] = []     # (名称, 说明)：条件成立但未卖的解释行
@@ -888,6 +938,33 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 trimmed_today.add(code)
         elif why:
             sell_notes.append((h.get("name", code), why))
+
+    # ---------------- 股债总仓位上限（§9.3.1，v4.176）：常规卖出后仍超限，按可交易持仓市值比例减仓、按手向上取整；
+    # 先于换仓与买入，与回测 enforce_equity_bond_cap 同序；减仓持仓当日仍可作换仓卖出源（引擎不排除）。
+    def stock_value() -> float:
+        return sum(float(h["shares"]) * (to_float((by_code.get(c) or {}).get("close")) or 0.0) for c, h in holdings.items())
+    eb_sells: list[str] = []
+    eb_stock_before = stock_value() if exposure_cap is not None else None
+    if exposure_cap is not None:
+        excess = eb_stock_before - exposure_cap * nav
+        if excess > 1e-6:
+            tradable = [(c, to_float(by_code[c].get("close"))) for c in sorted(holdings)
+                        if c in by_code and float(holdings[c]["shares"]) > 0]
+            tradable = [(c, p) for c, p in tradable if p and p > 0]
+            value = sum(float(holdings[c]["shares"]) * p for c, p in tradable)
+            fraction = min(1.0, excess / value) if value > 0 else 0.0
+            for code, price in tradable:
+                held = float(holdings[code]["shares"])
+                qty = min(held, math.ceil(held * fraction / SEC93_LOT) * SEC93_LOT)
+                if qty <= 0:
+                    continue
+                cond = (f"常规卖出后总仓位 {eb_stock_before / nav:.1%} > 上限 {exposure_cap:.0%}，"
+                        f"按市值比例 {fraction:.1%} 减仓、按手向上取整")
+                sells.append(sell_row(code, by_code[code], "股债·总仓位上限", cond, qty, price,
+                                      note="整仓清出" if qty >= held else ""))
+                holdings[code]["shares"] = held - qty
+                cash += qty * price
+                eb_sells.append(code)
 
     # ---------------- 合格集
     frozen_out = [r for r in rows
@@ -1014,6 +1091,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
 
     # ---------------- 买入
     plan, capped, cooled = [], [], []
+    eb_capped: list[dict] = []
+    eb_stock = stock_value() if exposure_cap is not None else 0.0     # 换仓卖出后的持仓市值；每笔买入后累加
     for cand in picked:
         price = to_float(cand.get("close")) or 0.0
         if price <= 0:
@@ -1021,6 +1100,12 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         code = str(cand["security_code"]).zfill(6)
         lot_amount = price * SEC93_LOT
         budget = min(tranche, cash)
+        if exposure_cap is not None:
+            eb_room = exposure_cap * nav - eb_stock
+            if eb_room < lot_amount:
+                eb_capped.append(cand)
+                continue
+            budget = min(budget, eb_room)
         held_value = float(holdings.get(code, {}).get("shares", 0.0) or 0.0) * price
         room = None
         if SEC93_POSITION_CAP and nav > 0:
@@ -1043,6 +1128,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 continue
         amount = lots * lot_amount
         cash -= amount
+        eb_stock += amount
         plan.append({
             "trade_date": "",
             "security_code": code,
@@ -1132,7 +1218,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             "eligible": eligible, "capped": capped, "cooled": cooled,
             "frozen_out": frozen_out, "tactical_out": tactical_out,
             "n_cheap": n_cheap, "cash": cash, "tranche": tranche,
-            "funds0": funds0, "funds_given": funds is not None,
+            "funds0": funds0, "funds_given": funds is not None, "exposure_cap": exposure_cap, "eb_sells": eb_sells, "eb_capped": eb_capped,
+            "eb_stock_before": eb_stock_before, "eb_stock_after": (eb_stock if exposure_cap is not None else None),
             "n_held": len(holdings),
             "n_addon": sum(1 for r in eligible
                            if str(r["security_code"]).zfill(6) in held_codes
@@ -1168,6 +1255,17 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
     invested = float(result["funds0"]) + sold_cash - result["cash"]
     print(f"\n§9.3 机械执行（§9.2 四张表）")
     print(f"  1. 一档 {result['tranche'] / 1e4:,.2f} 万（净资产 {nav / 1e4:,.2f} 万 × {SEC93_TRANCHE_PCT:.1%}）")
+    eb = result.get("eb")
+    if eb:
+        head = f"  §9.3.1 股债总仓位上限：利差 {eb['spread']:.2%}（观测 {eb['observed_on']}；阈值 {SEC93_EQUITY_BOND_THRESHOLD:.0%}）→ "
+        if eb.get("cap") is None:
+            print(head + "未触发，无上限")
+        else:
+            print(head + f"**触发：上限 {eb['cap']:.0%}**｜授信视为 0，预算 = 现金 {eb['cash'] / 1e4:,.2f} 万 − 融资负债 "
+                  f"{eb['debt'] / 1e4:,.2f} 万 = {(eb['cash'] - eb['debt']) / 1e4:,.2f} 万（{eb['source']}）"
+                  f"｜常规卖出后总仓位 {result['eb_stock_before'] / nav:.1%}"
+                  + (f"，按比例减仓 {len(result['eb_sells'])} 只" if result.get("eb_sells") else "，未超限")
+                  + f"｜买后总仓位 {result['eb_stock_after'] / nav:.1%}")
     print(f"  2. 合格集：`P/V ≤ {SEC93_BUY_LINE}` 的 {result['n_cheap']} 只；"
           f"再过走势条件的 **{len(result['eligible'])} 只**"
           f"（新建仓 `收>MA20>MA60`；**已持仓只须 `MA20>MA60`**，其中 {result['n_addon']} 只"
@@ -1232,6 +1330,8 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
         print(f"  4. 买入清单：⚠ **未给 `--funds`，按「可用资金＝净资产」估算、不做换仓**"
               f"（OI-062：满仓/带融资账户上此计划资金上不可执行）"
               f"｜投入 {invested / 1e4:,.1f} 万（仓位 {invested / nav * 100:.1f}%）｜余 {result['cash'] / 1e4:,.1f} 万")
+    for cand in result.get("eb_capped") or []:
+        print(f"     [股债总仓位上限挡下] {cand.get('security_name','')} P/V {cand['model_pv']:.2f}｜买后总仓位将超 {result['exposure_cap']:.0%}，不足一手余量")
     for cand, w in result["capped"]:
         print(f"     [单票上限挡下] {cand.get('security_name','')} P/V {cand['model_pv']:.2f}"
               f"｜现持仓已占净资产 {w:.1%}，已达/不足一手可补至 {SEC93_POSITION_CAP:.0%} 上限，不加仓")
@@ -1394,9 +1494,21 @@ def main() -> int:
             before = {side: dict(cd_state[side]) for side in COOLDOWN_SIDES}
             if not cd_writable:
                 print(f"  ⚠ 冷却计数器 {args.cooldown_state} 的应用日晚于 {args.as_of}（历史重放）：本次不应用、不回写")
+            # §9.3.1 股债总仓位上限：信号日已知的最新观测；数据缺失或过期直接报错（禁止静默放行）
+            eb_signal, eb_cap = equity_bond_signal(args.as_of)
+            eb_info, cap_cash = None, None
+            if eb_signal is None:
+                print(f"  ⚠ 股债利差序列在 {args.as_of} 之前尚无观测：本次不判总仓位上限")
+            else:
+                eb_info = {"spread": eb_signal.spread, "observed_on": eb_signal.observed_on, "cap": eb_cap}
+                if eb_cap is not None:
+                    cash_now, debt_now, source = account_cash_debt(args.as_of, args.cash, args.debt)
+                    cap_cash = cash_now - debt_now
+                    eb_info.update({"cash": cash_now, "debt": debt_now, "source": source})
             result = section93_execution_plan(rows, args.nav, args.funds, holdings, blocked or set(),
                                               load_tactical_gate_codes(), members, cd_state["buy"], holding_rows,
-                                              sell_counters=cd_state["sell"])
+                                              sell_counters=cd_state["sell"], exposure_cap=eb_cap, cap_cash=cap_cash)
+            result["eb"] = eb_info
             report_section93(result, args.nav, args.plan_out, args.as_of, args.sell_out)
             if cd_writable:
                 for c in set().union(*before.values(), *cd_state.values()):

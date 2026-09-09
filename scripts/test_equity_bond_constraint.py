@@ -102,6 +102,19 @@ class EquityBondTest(unittest.TestCase):
                 self.assertGreater(records['2024-01-08']['debt'],0.)
 
 
+    def test_restore_above_threshold_returns_no_cap(self):
+        # v4.176 生产分支：利差 ≥ 阈值时 cap=None（不设上限、不改授信），< 阈值时 cap=lower；与 §12.220 high_base 子类等价
+        rows=[('2024-01-02',10),('2024-01-05',100)]          # 1/10−.02=+8pp ≥ 3pp；1/100−.02=−1pp < 3pp
+        plain=self.signal(rows, mode='cap'); restore=self.signal(rows, mode='cap', restore_above=True)
+        self.assertEqual(plain.resolve('2024-01-03')[1], 1.6); self.assertIsNone(restore.resolve('2024-01-03')[1])
+        self.assertEqual(plain.resolve('2024-01-08')[1], 1.); self.assertEqual(restore.resolve('2024-01-08')[1], 1.)
+        self.assertEqual(restore.resolve('2024-01-08')[0].observed_on, '2024-01-05')
+        days={d:[row('A',.8)] for d in ('2024-01-02','2024-01-03','2024-01-04','2024-01-05','2024-01-08','2024-01-09')}
+        result,_=fixture(days,x=.8,credit_ratio=.666,credit_cap=1e12,lot_size=100,position_cap=0.,equity_bond=restore,net_same_day=True)
+        records={r['date']:r for r in result['equity_bond_records']}
+        self.assertIsNone(records['2024-01-05']['cap'])          # 阈值以上：无上限（记录 cap 为空）
+        self.assertEqual(records['2024-01-08']['cap'], 1.)
+
     def test_repayment_then_same_day_netting_funds_reversal(self):
         # A gain trim followed by an eligible add-on reverses part of the sale after repayment.
         for gain in (.01, .1, .3):
