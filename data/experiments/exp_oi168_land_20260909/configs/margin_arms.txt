@@ -1,0 +1,10 @@
+# OI-168 落地（v4.169）：营运资金口径 operating 的生产逐日状态上，换仓边际按 0.01 一档重扫（§12.1：边际不随买入线缩放）。
+# 买入线 1.0454 按 §12.1 对齐容差保留（原线合格面 17.928% 对在册 17.771%，差 0.157pp < 0.2pp，见 alignment.txt）。
+# BASE = 新口径生产状态 + 现行边际 0.15，即新在册基准；其余臂只改边际。
+BASE|
+OI168LM12|--swap-margin 0.12
+OI168LM13|--swap-margin 0.13
+OI168LM14|--swap-margin 0.14
+OI168LM16|--swap-margin 0.16
+OI168LM17|--swap-margin 0.17
+OI168LM18|--swap-margin 0.18

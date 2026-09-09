@@ -63,7 +63,8 @@ class WorkingCapitalTests(unittest.TestCase):
         row["FINANCE_RECE"] = "25"
         second = _year_from_parts("T", "2024-12-31", {"balance": row, "income": inc}, False)
         self.assertEqual(second.working_capital_operating - first.working_capital_operating, 20)
-        for field in ("nopat", "invested_capital", "interest_debt", "excess_cash", "working_capital", "working_capital_reported"):
+        self.assertEqual(second.working_capital, second.working_capital_operating)  # 生产口径 = operating
+        for field in ("nopat", "invested_capital", "interest_debt", "excess_cash", "working_capital_legacy", "working_capital_reported"):
             self.assertEqual(getattr(first, field), getattr(second, field), field)
 
     def test_only_financing_change_enters_reinvestment(self):

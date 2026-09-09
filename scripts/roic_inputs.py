@@ -68,6 +68,8 @@ DEBT_FIELDS = ("SHORT_LOAN", "SHORT_BOND_PAYABLE", "NONCURRENT_LIAB_1YEAR",
 DEPR_FIELDS = ("FA_IR_DEPR", "IA_AMORTIZE", "LPE_AMORTIZE", "USERIGHT_ASSET_AMORTIZE")
 # 经营性营运资金。用资产负债表存量差分而非现金流量表的加回项——后者在并购年份会混入
 # 合并范围变动，存量差分同样会但至少口径单一、可复核。
+# **下面两组只服务 `legacy` 复现口径与 `cash_inputs_complete`**：合计字段 `NOTE_ACCOUNTS_*` 与明细 `ACCOUNTS_*`／`NOTE_*`
+# 同时列出、相加即重复计数（OI-168）。生产口径由 `working_capital_inputs` 按 §6.3 第 6 条归并。
 WC_ASSET_FIELDS = ("INVENTORY", "ACCOUNTS_RECE", "NOTE_ACCOUNTS_RECE", "NOTE_RECE",
                    "PREPAYMENT", "CONTRACT_ASSET")
 WC_LIAB_FIELDS = ("ACCOUNTS_PAYABLE", "NOTE_ACCOUNTS_PAYABLE", "NOTE_PAYABLE",
@@ -150,9 +152,10 @@ class RoicYear:
     revenue: float | None = None
     capex: float = 0.0
     dep_amort: float = 0.0
-    working_capital: float | None = None
-    working_capital_reported: float | None = None  # Aggregate OR components, never both.
-    working_capital_operating: float | None = None
+    working_capital: float | None = None            # 生产口径 = operating（§6.3 第 6 条，v4.169）
+    working_capital_legacy: float | None = None     # v4.168 前：合计与明细相加（只作复现）
+    working_capital_reported: float | None = None   # Aggregate OR components, never both（只作复现）.
+    working_capital_operating: float | None = None  # reported + 经营性应收款项融资
     financing_receivables: float = 0.0
     wc_receivable_basis: str = ""
     wc_payable_basis: str = ""
@@ -226,10 +229,11 @@ def _year_from_parts(code: str, period: str, parts: dict[str, dict], notice_cap:
         if ic_floor > 0:
             ic = max(ic, ic_floor * year.total_equity)
         year.invested_capital = ic if ic > 0 else None
-    year.working_capital = _sum(bal, WC_ASSET_FIELDS) - _sum(bal, WC_LIAB_FIELDS)
+    year.working_capital_legacy = _sum(bal, WC_ASSET_FIELDS) - _sum(bal, WC_LIAB_FIELDS)
     wc = working_capital_inputs(bal)
     year.working_capital_reported = wc.reported
     year.working_capital_operating = wc.operating
+    year.working_capital = wc.operating
     year.financing_receivables = wc.financing_receivables
     year.wc_receivable_basis = wc.receivable_basis
     year.wc_payable_basis = wc.payable_basis

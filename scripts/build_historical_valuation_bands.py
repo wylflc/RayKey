@@ -1324,7 +1324,7 @@ class Band:
     roic0: float | None = None                # 正常化 ROIC（近 N 年中位）
     incremental_roic: float | None = None     # ΔNOPAT/ΔIC
     reinvestment_rate: float | None = None    # (capex − D&A + ΔWC)/NOPAT
-    wc_aggregation: str = "legacy"
+    wc_aggregation: str = "operating"          # §6.3 第 6 条生产口径（v4.169）；legacy／reported 只作研究复现
     wc_first_period: str = ""
     wc_last_period: str = ""
     wc_start: float | None = None
@@ -1705,8 +1705,9 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                          "allpairs_guarded": lambda h: roic_inputs.incremental_roic_allpairs_guarded(
                              h, base_years=args.roe_years),
                          "regression": roic_inputs.incremental_roic_regression}[iroic_mode](iroic_hist)
-            wc_mode = getattr(args, "wc_aggregation", "legacy")
-            if wc_mode in {"reported", "operating"}:
+            # §6.3 第 6 条：`RoicYear.working_capital` 已是生产口径 operating；研究复现口径才换字段
+            wc_mode = getattr(args, "wc_aggregation", "operating")
+            if wc_mode in {"reported", "legacy"}:
                 from dataclasses import replace
                 history = [replace(y, working_capital=getattr(y, "working_capital_" + wc_mode)) for y in history]
             wc_history = sorted(history, key=lambda y: y.period)
@@ -2989,16 +2990,17 @@ def main() -> int:
     parser.add_argument("--out-bands", type=Path)
     parser.add_argument("--maintenance-weight", type=float, default=0.0,
                         help="§6.5.4 维持性现金占用代理强度（研究开关，0=关闭）")
-    parser.add_argument("--wc-aggregation", choices=("legacy", "reported", "operating"), default="legacy",
-                        help="OI-168：operating去重并含应收款项融资；reported复现仅去重；legacy复现原累加")
+    parser.add_argument("--wc-aggregation", choices=("legacy", "reported", "operating"), default="operating",
+                        help="§6.3 第 6 条营运资金口径（OI-168，v4.169 起生产 operating）：operating 去重并含应收款项融资；"
+                             "reported 复现仅去重；legacy 复现 v4.168 前的合计与明细相加")
     parser.add_argument("--out-daily", type=Path)
     args = parser.parse_args()
     if not math.isfinite(args.maintenance_weight) or args.maintenance_weight < 0:
         parser.error("--maintenance-weight 必须是非负有限数")
     if args.maintenance_weight and (args.value_model != "roic" or args.roic_zero_anchor != "nopat"):
         parser.error("现金占用研究只适用 roic，不能叠加旧 fcff 零增长开关")
-    if args.maintenance_weight and args.wc_aggregation != "reported":
-        parser.error("现金占用研究须用 --wc-aggregation reported，避免营运资金重复计数")
+    if args.maintenance_weight and args.wc_aggregation == "legacy":
+        parser.error("现金占用研究不得用 --wc-aggregation legacy（合计与明细重复计数）")
     global PV_BASIS
     PV_BASIS = getattr(args, "pv_basis", "ev")
     global STATE_EFFECTIVE

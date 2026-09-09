@@ -26,8 +26,9 @@ class MaintenanceProxyTests(unittest.TestCase):
              "NOTE_ACCOUNTS_PAYABLE":"10", "ACCOUNTS_PAYABLE":"6", "NOTE_PAYABLE":"4"}
         inc={"NOTICE_DATE":"2025-04-01","TOTAL_PROFIT":"100"}
         y=_year_from_parts("test","2024-12-31",{"balance":bal,"income":inc},False)
-        self.assertEqual(y.working_capital,70)  # Preserve the original control.
+        self.assertEqual(y.working_capital_legacy,70)  # v4.168 前的累加口径只作复现
         self.assertEqual(y.working_capital_reported,60)
+        self.assertEqual(y.working_capital,60)  # 生产口径 operating（无融资应收时 = reported）
         bal.pop("NOTE_ACCOUNTS_RECE");bal.pop("NOTE_ACCOUNTS_PAYABLE")
         y=_year_from_parts("test","2024-12-31",{"balance":bal,"income":inc},False)
         self.assertEqual(y.working_capital_reported,60)

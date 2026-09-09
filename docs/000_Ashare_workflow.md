@@ -232,7 +232,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 3. 季报财务为累计口径；单季值用同年累计差分，TTM 用最近四个单季求和。
 4. 一致预期使用逐份研报归母净利润中位数，覆盖少于三家时不得采用；禁止混用送转前后的研报 EPS。
 5. 跨字段比率必须使用同一披露口径；字段缺失时整体退回上一套已披露口径，不拼接半新半旧的数据。
-6. **经营营运资金的科目归并（OI-168）**：应收/应付组有合计时取合计，合计缺失才取同一报表行的明细和，不叠加二者；合计与明细冲突时保留合计及冲突诊断，不以混入次年期初、旧主体或旧分类的明细强行补齐。经营性应收款项融资 `FINANCE_RECE` 独立计入资产侧；旧票据字段被归入新融资应收且合计已排除它时，只承接新分类一次。存货、预付、合同资产及经营负债沿用现有范围。唯一实现 `roic_inputs.working_capital_inputs`；同一已披露三表版本内归并，再依第2条选择历史版本。建带研究对照 `--wc-aggregation operating` 使用该口径，`reported` 仅复现上轮去重、`legacy` 仅复现原累加；生产切换依 §12，核验设计见 `data/experiments/exp_oi168_wc_20260909/preregister.md`。
+6. **经营营运资金的科目归并（OI-168）**：应收/应付组有合计时取合计，合计缺失才取同一报表行的明细和，不叠加二者；合计与明细冲突时保留合计及冲突诊断，不以混入次年期初、旧主体或旧分类的明细强行补齐。经营性应收款项融资 `FINANCE_RECE` 独立计入资产侧；旧票据字段被归入新融资应收且合计已排除它时，只承接新分类一次。存货、预付、合同资产及经营负债沿用现有范围。唯一实现 `roic_inputs.working_capital_inputs`；同一已披露三表版本内归并，再依第2条选择历史版本。生产口径 = `--wc-aggregation operating`（`RoicYear.working_capital` 与建带缺省即此口径，§6.7 命令显式给出）；`reported`（仅去重）与 `legacy`（合计与明细相加，`RoicYear.working_capital_legacy`）只作研究复现开关，不得用于生产带与 `BASE`。核验设计与采纳证据见 `data/experiments/exp_oi168_wc_20260909/preregister.md`、`data/experiments/exp_oi168_land_20260909/preregister.md` 及回测日志 12.216～12.217 节。
 
 ### 6.4 预告与快报的叠加
 
@@ -304,7 +304,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 #### 6.5.4 维持性现金占用研究开关
 
-`build_historical_valuation_bands.py --maintenance-weight` 缺省 0；非零只用于实验目录中的 ROIC 带，并须同时给 `--wc-aggregation reported`（合计或明细二选一；`legacy` 复现现行）。代理估计、现金流衔接、缺失处理与测试设计统一读取 `data/experiments/exp_maintenance_cash_20260909/preregister.md`。候选侧、B2 与敏感度计算使用同一修正，金融与权益退路不应用；新增拒绝须在逐日状态生效后阻断陈旧带。按 §12 完成验证后再处理生产采纳。
+`build_historical_valuation_bands.py --maintenance-weight` 缺省 0；非零只用于实验目录中的 ROIC 带，并须使用非 `legacy` 的营运资金口径（生产 `operating`；`reported` 只复现上轮研究）。代理估计、现金流衔接、缺失处理与测试设计统一读取 `data/experiments/exp_maintenance_cash_20260909/preregister.md`。候选侧、B2 与敏感度计算使用同一修正，金融与权益退路不应用；新增拒绝须在逐日状态生效后阻断陈旧带。按 §12 完成验证后再处理生产采纳。
 
 ### 6.6 人工复核职责
 
@@ -331,7 +331,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 --since 2002-01-01 \
   --roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
-  --roic-trail-weight 0 --minority-basis earnings \
+  --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
   --out-bands data/processed/roic_bands.csv \
   --out-daily data/processed/roic_daily_raw.csv
 # 2b. B2 带与逐日状态（持仓侧第二输入；与第 2 步串行、不得并发）
@@ -339,7 +339,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 --since 2002-01-01 \
   --roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
-  --roic-trail-weight 0 --minority-basis earnings \
+  --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
   --ttm-trust on --ttm-trust-delta 0.02 \
   --out-bands data/processed/roic_bands_b2.csv \
   --out-daily data/processed/roic_daily_raw_b2.csv
@@ -791,7 +791,7 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 
 历史面板 `effective_from` 与 `effective_to` 均为有效期边界，结束日包含在内。禁止把区间起点当成完整快照，也禁止手工修改面板 CSV；名单变化先改判定源，再运行装配脚本。
 
-换估值口径或换宇宙做 A/B 时，使用 `scripts/experimental/align_buy_line.py` 把买入线重解到同一在册合格面，保留四位小数；换仓边际按 0.01 一档重新扫描，不随买入线缩放。
+换估值口径或换宇宙做 A/B 时，使用 `scripts/experimental/align_buy_line.py` 把买入线重解到同一在册合格面，保留四位小数。**对齐容差**：先在新口径逐日状态上计算原买入线的下侧合格面，它与在册合格面之差的绝对值 < 0.2pp 时保留原线（脚本 `--tolerance-pp 0.2` 缺省判定并打印两侧合格面），在册合格面不随之改写、仍取上次实际重解时的值，避免多次容差内漂移累积；达到或超过容差才取对齐解并重登在册合格面。换仓边际按 0.01 一档重新扫描，不随买入线缩放。
 
 当前参数读取 §9.3.1；在册合格面、基准读数和实验证据从 `docs/Ashare_backtest_log.md` 查找。配对只使用同纪元、同计量口径、同起点和同剔除集的基准。报告参数选择依据及取舍，不将历史最优读数作为未来收益承诺。
 

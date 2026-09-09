@@ -1,0 +1,7 @@
+基准 states_base.csv × panel_moat_bank_v6b.csv：在册观测 508,265
+  买入线 1.0454 → 下侧合格面 17.771%；在册合格面按 --registered-share 取 17.771%
+  对齐容差 ±0.20pp
+
+states_base.csv × panel_moat_bank_v6b.csv：在册观测 508,265
+  原线 1.0454 在本侧的下侧合格面 17.928%（与在册差 +0.157pp）
+  容差内 → **保留原线 1.0454**（`--width -0.0454`）；在册合格面不改写

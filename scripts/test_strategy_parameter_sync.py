@@ -78,6 +78,9 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertNotIn("超限跳过", workflow)
         self.assertIn("| 单次买入 | 当日净资产 `N × 5.0%` |", workflow)
         self.assertIn(f"| 买入线 | `P/V ≤ {daily_scan.SEC93_BUY_LINE:.4f}` |", workflow)
+        # v4.169（OI-168）：§6.7 两条建带命令显式给出生产营运资金口径 operating；§12.1 对齐容差 0.2pp
+        self.assertEqual(workflow.count("--minority-basis earnings --wc-aggregation operating \\"), 2)
+        self.assertIn("绝对值 < 0.2pp 时保留原线", workflow)
         self.assertNotIn("| 减持 |", workflow)                # v4.109（OI-110）：估值减持行已删
         # v4.110（OI-116）：止盈行不得退回「无」——涨幅减持即按盈利触发的减仓
         self.assertIn("| 止盈 | 只有本表「涨幅减持」一条按盈利触发的减仓", workflow)
