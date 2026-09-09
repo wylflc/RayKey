@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.175 | 2026-09-10 | §12.1 第 2 款增回撤通道：主读数两表均 ≥ −1pp、复利两表均 ≥ −0.15pp、全期最大回撤配对差两表均 ≤ −5pp、滚 5 最差（全样本）≥ −0.15pp、候选更浅 ≥ 5pp 的 `BASE` 回撤段（两表合并按重叠归并）≥ 2 → 可采纳·回撤通道；闸门／否决照旧。判定收拢为 `sweep_backtest_configs.adoption_verdict`（dose_table／oi148 报表调用），【采纳判定】表增 ΔMDD／Δ滚5最差／回撤段列。依据 §12.224 |
 | v4.174 | 2026-09-10 | 轨道 A 记账修复：日末盯市对当日新建仓取成交日收盘（OI-169）；买入委托含费税须在现金＋剩余授信内、最终委托按手缩量、同日对冲退回卖出款先在授信内融回（OI-170）；summary 与扫描文件增 `最低现金`／`最低现金日`／`负现金日数`，跨起点尾部同报。落点：§12.1 第 2 款「资金记账」、`backtest_valuation_strategy`（affordable_amount／affordable_shares／net_off_sale）、`sweep_backtest_configs.FIELDS`。BASE 与在评候选（OI-171）按 m3 同批重算，在册读数重登，OI-169/170 结案。依据 §12.223 |
 | v4.173 | 2026-09-10 | §12.1 第 2 款主读数改为同起点同窗口滚 5 CAGR 配对差（先相减、起点内中位、再跨起点中位），计量版本 m2→m3；滚 5 中位配对差留标准指标集只描述；summary 增 `滚动5年窗口年化`、扫描文件增 `#WIN5` 行；阈值、双表判定与其余读数不变；m2 读数只读，BASE 与在评候选待 OI-169/170 修复后同批重算。落点：§12.1、`backtest_valuation_strategy.METRIC_VERSION`、`sweep_backtest_configs`、dose_table／ex_winner_symmetry_report／oi148_slippage_report／scan_plateau。依据 §12.222 |
 | v4.172 | 2026-09-09 | §12.1新增股债性价比研究约束：月度利差/历史分位、停新增融资或总仓位上限、0～160%连续映射、T+1及费税整手守卫；生产缺省关闭；盯市/负现金偏差登记OI-169/170，利差3pp机械U资格记OI-171。依据§12.220 |

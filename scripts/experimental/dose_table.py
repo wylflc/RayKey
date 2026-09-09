@@ -47,30 +47,10 @@ def level(arms, label, key):
 
 
 def verdict(arms_all, arms_ex, label):
+    """§12.1 第 2 款判定：唯一实现在 `sweep_backtest_configs.adoption_verdict`（四读数双表 → 回撤通道 → 闸门／否决）。"""
     if label not in arms_ex:
         return "去赢家缺表"
-    vals = {}
-    for name, key in sbc.VERDICT_KEYS:
-        vals[name] = (paired(arms_all, label, key)[0], paired(arms_ex, label, key)[0])
-    out, reasons = "可采纳", []
-    for name, (a, e) in vals.items():
-        lo, hi = min(a, e), max(a, e)
-        if lo < -sbc.RULING_TOLERANCE:
-            return f"不采纳（{name} {lo*100:+.2f}）"
-        if lo < -sbc.NOISE_BAND:
-            if hi >= sbc.CLEAR_GAIN and out != "不采纳":
-                out, reasons = "报用户裁定", reasons + [f"{name}两表反向"]
-            else:
-                return f"不采纳（{name}一表 {lo*100:+.2f}）"
-    base, arm = arms_all.get("BASE", {}), arms_all.get(label, {})
-    common = [s for s in arm if s in base]
-    if common:
-        dd = statistics.median(arm[s]["滚动5年回撤中位"] - base[s]["滚动5年回撤中位"] for s in common)
-        neg_up = sum(1 for s in common if arm[s]["滚动5年为负的窗口占比"] > base[s]["滚动5年为负的窗口占比"])
-        if dd > sbc.DRAWDOWN_GATE:
-            out, reasons = "不采纳", reasons + [f"闸门 回撤 {dd*100:+.1f}"]
-        if neg_up > len(common) / 2:
-            out, reasons = "不采纳", reasons + [f"否决 负窗↑{neg_up}/{len(common)}"]
+    out, reasons, _vals = sbc.adoption_verdict(arms_all, arms_ex, label)
     return out + (f"（{'；'.join(reasons)}）" if reasons else "")
 
 

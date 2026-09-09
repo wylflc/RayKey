@@ -68,32 +68,8 @@ def sfmt(x, scale=100.0, prec=2):
 
 
 def verdict(arms_all, arms_ex, label, ref):
-    """§12.1 第 2 款：主读数／复利读数两表各取；闸门／否决取全样本。与 sweep._print_verdicts 同式，对照臂可指定。"""
-    vals = {}
-    for name, key in sweep.VERDICT_KEYS:
-        vals[name] = (paired(arms_all, label, ref, key), paired(arms_ex, label, ref, key))
-    verdict_, reasons = "可采纳", []
-    for name, (a, e) in vals.items():
-        if a != a or e != e:
-            return "不可判", [f"{name}缺表"], vals
-        lo, hi = min(a, e), max(a, e)
-        if lo < -sweep.RULING_TOLERANCE:
-            verdict_ = "不采纳"; reasons.append(f"{name} {lo*100:+.2f}pp < −{sweep.RULING_TOLERANCE*100:.0f}pp"); break
-        if lo < -sweep.NOISE_BAND:
-            if hi >= sweep.CLEAR_GAIN and verdict_ != "不采纳":
-                verdict_ = "报用户裁定"; reasons.append(f"{name}两表反向（{a*100:+.2f}／{e*100:+.2f}）")
-            else:
-                verdict_ = "不采纳"; reasons.append(f"{name}一表 {lo*100:+.2f}pp 而另一表不到 +{sweep.CLEAR_GAIN*100:.0f}pp"); break
-    a, b = arms_all.get(label, {}), arms_all.get(ref, {})
-    common = [s for s in a if s in b]
-    if common and verdict_ != "不可判":
-        dd = statistics.median(a[s]["滚动5年回撤中位"] - b[s]["滚动5年回撤中位"] for s in common)
-        neg_up = sum(1 for s in common if a[s]["滚动5年为负的窗口占比"] > b[s]["滚动5年为负的窗口占比"])
-        if dd > sweep.DRAWDOWN_GATE:
-            verdict_ = "不采纳"; reasons.append(f"闸门：回撤 Δ {dd*100:+.1f}pp")
-        if neg_up > len(common) / 2:
-            verdict_ = "不采纳"; reasons.append(f"否决：负窗↑ {neg_up}/{len(common)}")
-    return verdict_, reasons, vals
+    """§12.1 第 2 款：唯一实现在 `sweep_backtest_configs.adoption_verdict`，对照臂可指定（同档 BASE）。"""
+    return sweep.adoption_verdict(arms_all, arms_ex, label, ref)
 
 
 def clause4(arms_u, label, ref):

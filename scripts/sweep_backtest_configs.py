@@ -243,6 +243,10 @@ def _date_str(value: float) -> str:
 # 用户 2026-09-10（v4.173，§12.222）：**主读数改为同起点同窗口的滚 5 CAGR 配对差**（同窗口先相减、起点内中位、
 # 再跨起点中位；`start_delta(…, WIN5_KEY)`），计量版本 m3。「起点内两臂滚 5 中位之差」是分布中心的移动、不是同窗典型
 # 增益（§12.221：EBDS03 两者反号 −0.78 vs +1.52），降为标准指标集里的描述项。阈值、双表与其余四项读数不变。
+# 用户 2026-09-10（v4.175，§12.224）：**回撤通道**——主读数两表均 ≥ −1pp、复利两表均 ≥ −0.15pp、全期最大回撤配对差两表均
+# ≤ −5pp、滚 5 最差窗口（全样本）≥ −0.15pp、候选更浅 ≥ 5pp 的 BASE 回撤段（两表合并按重叠归并）≥ 2 段 → 可采纳·回撤通道；
+# 闸门／否决照旧。动机：EBDS03 最大回撤 −11pp、年化 +1.9/+2.9、主读数 −0.86 只能报裁定；阈值全部复用既有数（裁定带下沿、
+# 噪声带、闸门 3pp 之上取 5pp）。判定唯一实现 `adoption_verdict`，dose_table／oi148 报表都调用它。
 # **标准指标集**（§12.1 第 2 款）：每轮扫描在全样本与去赢家两个口径上各出一份，
 # 每项报水平值、逐起点配对差中位与「变好的起点数」。`good` = +1 越大越好 / −1 越小越好。
 # 长跑锚点是单起点，只报水平与差、不报符号数、不进第 4 款的「不劣」判定，故不在本表里。
@@ -294,6 +298,8 @@ DRAWDOWN_GATE = 0.03      # 滚 5 年回撤中位配对 Δ 超过 +3pp（更深�
 NOISE_BAND = 0.0015       # §12.1 第 2 款：配对差中位 ≥ −0.15pp 视为不劣
 RULING_TOLERANCE = 0.01   # 一表落在 [−1pp, −0.15pp) 且另一表同项 ≥ CLEAR_GAIN → 报用户裁定
 CLEAR_GAIN = 0.01
+DD_PATH_MDD_GAIN = 0.05   # 回撤通道（v4.175）：全期最大回撤配对差中位两表均 ≤ −5pp（更浅）
+DD_PATH_EPISODES = 2      # 回撤通道：候选更浅 ≥ 5pp 的 BASE 最大回撤区间（两表合并、按重叠归并）不少于两段
 VERDICT_KEYS = (("主读数", WIN5_KEY), ("复利读数", "年化"))   # m3：主读数 = 同窗口配对差（§12.222）
 
 
@@ -452,9 +458,9 @@ def report(path: Path, title: str) -> None:
             _print_appendix(grp)
 
 
-def _paired_median(arms, label: str, key: str) -> float:
-    """某臂对 BASE 的逐起点配对差中位；臂或 BASE 缺失、或任一起点缺同窗序列（m3 主读数）时 NaN。"""
-    base, arm = arms.get("BASE"), arms.get(label)
+def _paired_median(arms, label: str, key: str, ref: str = "BASE") -> float:
+    """某臂对 ref（缺省 BASE）的逐起点配对差中位；臂或对照缺失、或任一起点缺同窗序列（m3 主读数）时 NaN。"""
+    base, arm = (arms or {}).get(ref), (arms or {}).get(label)
     if not base or not arm:
         return float("nan")
     common = [s for s in arm if s in base]
@@ -462,46 +468,105 @@ def _paired_median(arms, label: str, key: str) -> float:
     return float("nan") if not vals or any(v != v for v in vals) else statistics.median(vals)
 
 
+def drawdown_episodes(arms_all, arms_ex, label: str, ref: str = "BASE") -> list[dict]:
+    """回撤通道的「回撤段」：两表合并，按 ref 各起点最大回撤区间的日期重叠归并成段；每段报起点数 n 与候选 ΔMDD 中位
+    delta（正 = 更深）。区间取扫描行的 `最大回撤起日／止日`（yyyymmdd 数字），缺日期的起点不计。"""
+    items = []
+    for arms in (arms_all, arms_ex):
+        base, arm = (arms or {}).get(ref), (arms or {}).get(label)
+        if not base or not arm:
+            continue
+        for s in arm:
+            b = base.get(s)
+            if b and b.get("最大回撤起日") and b.get("最大回撤止日"):
+                items.append((int(b["最大回撤起日"]), int(b["最大回撤止日"]), arm[s]["最大回撤"] - b["最大回撤"]))
+    episodes: list[dict] = []
+    for a, b, d in sorted(items):
+        if episodes and a <= episodes[-1]["end"]:
+            episodes[-1]["end"] = max(episodes[-1]["end"], b); episodes[-1]["deltas"].append(d)
+        else:
+            episodes.append({"start": a, "end": b, "deltas": [d]})
+    for ep in episodes:
+        ep["n"], ep["delta"] = len(ep["deltas"]), statistics.median(ep["deltas"])
+    return episodes
+
+
+def _episode_text(episodes: list[dict]) -> str:
+    return "、".join(f"{_date_str(float(ep['start']))[:7]}~{_date_str(float(ep['end']))[:7]}×{ep['n']} {ep['delta']*100:+.1f}"
+                    for ep in episodes) or "—"
+
+
+def adoption_verdict(arms_all, arms_ex, label: str, ref: str = "BASE", verdict_keys=None, dd_path: bool = True):
+    """§12.1 第 2 款采纳判定的唯一实现（dose_table／oi148 报表都调用这里）。
+
+    四读数双表判（v4.129）→ 回撤通道（v4.175）→ 闸门／否决（全样本表）。返回 (判定, 理由, 读数)；读数含
+    主读数／复利读数 的 (全, 去) 配对差、`ΔMDD` (全, 去)、`Δ滚5最差`（全样本）与 `回撤段`（drawdown_episodes）。
+    `verdict_keys` 只供历史 m2 文件核对时改用旧主读数；`dd_path=False` 关闭回撤通道（对照旧规则用）。"""
+    keys = tuple(verdict_keys or VERDICT_KEYS)
+    vals = {name: (_paired_median(arms_all, label, key, ref), _paired_median(arms_ex, label, key, ref)) for name, key in keys}
+    vals["ΔMDD"] = (_paired_median(arms_all, label, "最大回撤", ref), _paired_median(arms_ex, label, "最大回撤", ref))
+    vals["Δ滚5最差"] = _paired_median(arms_all, label, "滚动5年年化最差", ref)
+    vals["回撤段"] = drawdown_episodes(arms_all, arms_ex, label, ref)
+    verdict, reasons = "可采纳", []
+    for name, _key in keys:
+        a, e = vals[name]
+        if a != a or e != e:
+            return "不可判", [f"{name}缺表"], vals
+        lo, hi = min(a, e), max(a, e)
+        if lo < -RULING_TOLERANCE:
+            verdict = "不采纳"; reasons.append(f"{name} {lo*100:+.2f}pp < −{RULING_TOLERANCE*100:.0f}pp"); break
+        if lo < -NOISE_BAND:
+            if hi >= CLEAR_GAIN and verdict != "不采纳":
+                verdict = "报用户裁定"; reasons.append(f"{name}两表反向（{a*100:+.2f}／{e*100:+.2f}）")
+            else:
+                verdict = "不采纳"; reasons.append(f"{name}一表 {lo*100:+.2f}pp 而另一表不到 +{CLEAR_GAIN*100:.0f}pp"); break
+    if verdict != "可采纳" and dd_path:
+        (ma, me), w = vals["ΔMDD"], vals["Δ滚5最差"]
+        main, comp = vals[keys[0][0]], vals[keys[1][0]]
+        deep = [ep for ep in vals["回撤段"] if ep["delta"] <= -DD_PATH_MDD_GAIN]
+        mdd_ok = ma == ma and me == me and max(ma, me) <= -DD_PATH_MDD_GAIN
+        checks = [(min(main) >= -RULING_TOLERANCE, f"{keys[0][0]} {min(main)*100:+.2f}pp < −{RULING_TOLERANCE*100:.0f}pp"),
+                  (min(comp) >= -NOISE_BAND, f"{keys[1][0]} {min(comp)*100:+.2f}pp < −{NOISE_BAND*100:.2f}pp"),
+                  (mdd_ok, f"ΔMDD {ma*100:+.1f}／{me*100:+.1f}pp 未达 −{DD_PATH_MDD_GAIN*100:.0f}pp"),
+                  (w == w and w >= -NOISE_BAND, f"滚5最差 {w*100:+.2f}pp < −{NOISE_BAND*100:.2f}pp"),
+                  (len(deep) >= DD_PATH_EPISODES, f"更浅 ≥{DD_PATH_MDD_GAIN*100:.0f}pp 的回撤段 {len(deep)} < {DD_PATH_EPISODES}")]
+        failed = [why for ok, why in checks if not ok]
+        if not failed:
+            verdict, reasons = "可采纳·回撤通道", [f"ΔMDD {ma*100:+.1f}／{me*100:+.1f}pp；回撤段 {_episode_text(vals['回撤段'])}"]
+        elif mdd_ok:                                  # 回撤达标但别的条件不满足：说明为什么没走通道
+            reasons.append("回撤通道未过：" + "；".join(failed))
+    base, arm = (arms_all or {}).get(ref, {}), (arms_all or {}).get(label, {})
+    common = [s for s in arm if s in base]
+    if common:
+        dd = statistics.median(arm[s]["滚动5年回撤中位"] - base[s]["滚动5年回撤中位"] for s in common)
+        neg_up = sum(1 for s in common if arm[s]["滚动5年为负的窗口占比"] > base[s]["滚动5年为负的窗口占比"])
+        if dd > DRAWDOWN_GATE:
+            verdict = "不采纳"; reasons.append(f"闸门：回撤 Δ {dd*100:+.1f}pp")
+        if neg_up > len(common) / 2:
+            verdict = "不采纳"; reasons.append(f"否决：负窗↑ {neg_up}/{len(common)}")
+    return verdict, reasons, vals
+
+
 def _print_verdicts(arms_all, arms_ex, order: list[str]) -> None:
-    """§12.1 第 2 款采纳判定（OI-118／OI-119）：主读数与复利读数两表各取，闸门与否决取全样本表。"""
+    """§12.1 第 2 款采纳判定（OI-118／OI-119，v4.175 回撤通道）：主读数与复利读数两表各取，闸门与否决取全样本表。"""
     print("【采纳判定】§12.1 第 2 款：主读数（m3：同起点同窗口滚 5 CAGR 配对差）／复利读数在全样本表与去赢家表（剔除集 A）各取；"
-          f"均 ≥ −{NOISE_BAND*100:.2f}pp → 可采纳；一表某项在 [−{RULING_TOLERANCE*100:.0f}pp, −{NOISE_BAND*100:.2f}pp) "
-          f"且另一表同项 ≥ +{CLEAR_GAIN*100:.0f}pp → 报用户裁定；其余不采纳。闸门／否决取全样本表；正号数只报不判")
+          f"均 ≥ −{NOISE_BAND*100:.2f}pp → 可采纳；回撤通道：主读数两表均 ≥ −{RULING_TOLERANCE*100:.0f}pp、复利两表均 ≥ −{NOISE_BAND*100:.2f}pp、"
+          f"ΔMDD（全期最大回撤配对差）两表均 ≤ −{DD_PATH_MDD_GAIN*100:.0f}pp、滚 5 最差（全样本）≥ −{NOISE_BAND*100:.2f}pp、"
+          f"候选更浅 ≥{DD_PATH_MDD_GAIN*100:.0f}pp 的 BASE 回撤段 ≥ {DD_PATH_EPISODES} → 可采纳·回撤通道；"
+          f"一表某项在 [−{RULING_TOLERANCE*100:.0f}pp, −{NOISE_BAND*100:.2f}pp) 且另一表同项 ≥ +{CLEAR_GAIN*100:.0f}pp → 报用户裁定；"
+          "其余不采纳。闸门／否决取全样本表；正号数只报不判。回撤段 = 更浅≥5pp 段数/归并段数（段 = 起点最大回撤区间按重叠归并）")
     if not arms_ex:
         print("  去赢家表缺失（--no-ex-top5 或第二遍跑挂）：双表判定不可做，本轮只有描述读数")
         return
-    print(f"{'配置':<14}{'Δ主(全)':>9}{'Δ主(去)':>9}{'Δ复利(全)':>10}{'Δ复利(去)':>10}  判定")
-    base_all = arms_all.get("BASE", {})
+    print(f"{'配置':<14}{'Δ主(全)':>9}{'Δ主(去)':>9}{'Δ复利(全)':>10}{'Δ复利(去)':>10}{'ΔMDD(全)':>10}{'ΔMDD(去)':>10}{'Δ滚5最差':>9}{'回撤段':>7}  判定")
+    fmt = lambda x, w=9: f"{'—':>{w}}" if x != x else f"{x*100:>+{w}.2f}"
     for label in order:
         if label == "BASE" or label not in arms_all:
             continue
-        vals = {}
-        for name, key in VERDICT_KEYS:
-            vals[name] = (_paired_median(arms_all, label, key), _paired_median(arms_ex, label, key))
-        verdict, reasons = "可采纳", []
-        for name, (a, e) in vals.items():
-            if a != a or e != e:
-                verdict, reasons = "不可判", [f"{name}缺表"]
-                break
-            lo, hi = min(a, e), max(a, e)
-            if lo < -RULING_TOLERANCE:
-                verdict = "不采纳"; reasons.append(f"{name} {lo*100:+.2f}pp < −{RULING_TOLERANCE*100:.0f}pp"); break
-            if lo < -NOISE_BAND:
-                if hi >= CLEAR_GAIN and verdict != "不采纳":
-                    verdict = "报用户裁定"; reasons.append(f"{name}两表反向（{a*100:+.2f}／{e*100:+.2f}）")
-                else:
-                    verdict = "不采纳"; reasons.append(f"{name}一表 {lo*100:+.2f}pp 而另一表不到 +{CLEAR_GAIN*100:.0f}pp"); break
-        arm = arms_all.get(label, {})
-        common = [s for s in arm if s in base_all]
-        if common and verdict != "不可判":
-            dd = statistics.median(arm[s]["滚动5年回撤中位"] - base_all[s]["滚动5年回撤中位"] for s in common)
-            neg_up = sum(1 for s in common if arm[s]["滚动5年为负的窗口占比"] > base_all[s]["滚动5年为负的窗口占比"])
-            if dd > DRAWDOWN_GATE:
-                verdict = "不采纳"; reasons.append(f"闸门：回撤 Δ {dd*100:+.1f}pp")
-            if neg_up > len(common) / 2:
-                verdict = "不采纳"; reasons.append(f"否决：负窗↑ {neg_up}/{len(common)}")
-        fmt = lambda x: f"{'—':>9}" if x != x else f"{x*100:>+9.2f}"
-        print(f"{label:<14}{fmt(vals['主读数'][0])}{fmt(vals['主读数'][1])}{fmt(vals['复利读数'][0]):>10}{fmt(vals['复利读数'][1]):>10}"
+        verdict, reasons, vals = adoption_verdict(arms_all, arms_ex, label)
+        deep = sum(1 for ep in vals["回撤段"] if ep["delta"] <= -DD_PATH_MDD_GAIN)
+        print(f"{label:<14}{fmt(vals['主读数'][0])}{fmt(vals['主读数'][1])}{fmt(vals['复利读数'][0], 10)}{fmt(vals['复利读数'][1], 10)}"
+              f"{fmt(vals['ΔMDD'][0], 10)}{fmt(vals['ΔMDD'][1], 10)}{fmt(vals['Δ滚5最差'])}{deep:>4}/{len(vals['回撤段']):<2}"
               f"  {verdict}" + (f"（{'；'.join(reasons)}）" if reasons else ""))
 
 

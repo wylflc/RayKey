@@ -89,11 +89,15 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn("复利读数 = **全期 CAGR** 的配对差中位；", workflow)
         # v4.129（OI-118／OI-119）：主读数与复利读数两表各取、−0.15pp／[−1pp, −0.15pp)＋≥+1pp 报用户裁定；正号数只报不判
         self.assertIn("坏情形、闸门、否决取全样本表；**主读数与复利读数在全样本表与去赢家表（剔除集 A）各取一份，四个读数按下式判**", workflow)
-        self.assertIn("均 ≥ −0.15pp → 可采纳；一表的某项落在 [−1pp, −0.15pp) 且另一表同项 ≥ +1pp → 报用户裁定；其余不采纳。正号起点数只报不判。", workflow)
+        self.assertIn("均 ≥ −0.15pp → 可采纳；**回撤通道**：主读数两表均 ≥ −1pp、复利读数两表均 ≥ −0.15pp、全期最大回撤配对差中位两表均 ≤ −5pp", workflow)
+        self.assertIn("一表的某项落在 [−1pp, −0.15pp) 且另一表同项 ≥ +1pp → 报用户裁定；其余不采纳。", workflow)
+        self.assertIn("正号起点数只报不判。", workflow)
         self.assertNotIn("任一为负即不采纳", workflow)
         self.assertIn("主读数与复利读数（全样本表）各自损失不超过 1pp", workflow)
         import sweep_backtest_configs as sweep_verdict
         self.assertEqual((sweep_verdict.NOISE_BAND, sweep_verdict.RULING_TOLERANCE, sweep_verdict.CLEAR_GAIN), (0.0015, 0.01, 0.01))
+        # v4.175：回撤通道阈值（全期最大回撤配对差两表均 ≤ −5pp、更浅 ≥5pp 的回撤段 ≥ 2）
+        self.assertEqual((sweep_verdict.DD_PATH_MDD_GAIN, sweep_verdict.DD_PATH_EPISODES), (0.05, 2))
         # 扫描器的决策读数键须与成文同步（年化 = 全期 CAGR）
         import sweep_backtest_configs as sweep
         self.assertIn("年化", sweep.DELTA_KEYS)
