@@ -1,0 +1,44 @@
+{
+  "as_of": "2026-09-10",
+  "baseline_commit": "c25e3e77",
+  "watchlist_companies": 29,
+  "status_counts": {
+    "ok": 22,
+    "rejected": 2,
+    "unavailable": 3,
+    "keep": 2
+  },
+  "model_value_changed_codes": [
+    "ADBE",
+    "DIS"
+  ],
+  "readme_matches": 29,
+  "reading_row_matches": 29,
+  "cleared_unvaluable_companies": 5,
+  "quote_dates_match": 29,
+  "classification_changes": 0,
+  "unchanged_a_share_pool": true,
+  "unchanged_valuation_parameters": true,
+  "statement_rows_before": 444,
+  "statement_rows_after": 444,
+  "changed_common_statement_rows": 10,
+  "metadata_changed_common_rows": 91,
+  "adobe_report_replacement": [
+    [
+      "ADBE",
+      "2026-05-29",
+      "ttm"
+    ],
+    [
+      "ADBE",
+      "2026-08-28",
+      "ttm"
+    ]
+  ],
+  "disney_original_inputs_guard": {
+    "status": "rejected",
+    "path": "zero_growth",
+    "thin_equity_ratio": 0.5183942317355437
+  },
+  "all_checks_passed": true
+}

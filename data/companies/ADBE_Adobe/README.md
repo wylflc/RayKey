@@ -7,15 +7,15 @@
 | 名单状态 | worth_attention |
 | 质量档 | L2 |
 | 参考分 | 78.80 |
-| 合理价区间 | 193.31 ~ 236.27 USD |
-| 估值证据日 | 2026-06-11 |
-| 估值事件 | 二季报（FY2026Q2） |
+| 合理价区间 | 202.80 ~ 247.86 USD |
+| 估值证据日 | 2026-09-10 |
+| 估值事件 | 三季报（FY2026Q3，官方业绩三表） |
 
 ## 当前估值
 
 ROIC·增长
 
-ROIC·增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-05-29 TTM，SEC companyfacts 10-Q TTM）：NOPAT/经营账面财年序列 0.198／0.165／0.158／0.141／0.154 → ratio0 **0.155**（blend(λ=0.5,w=0.00,v=0.00)）× 经营账面 BPS_op 127.07（稀释股数 402m）= 每股 NOPAT 锚 **19.752**；股本口径：十年窗 |X_y|≥5% 年份 FY2017 -0.7b／FY2018 -1.7b／FY2019 -1.7b／FY2020 -2.6b／FY2021 -3.3b／FY2022 -5.3b／FY2023 -3.0b／FY2024 -8.1b／FY2025 -9.6b；年报已计累计外生权益 -35.9b（最新年报经营账面 E_op 47.5b，母公司权益 11.6b）；年报后 x -9.21/股（ttm_x,x_large_negative；其后归母净利 3.60b、已付股息 0.00b）；BPS_op = 当期 BPS 28.62 − x − X_cum/股 -89.25 = 127.07；周期守卫 NOPAT/经营账面：当期 0.156（最新年报 0.154 × f 1.01）vs 十年中位 0.178 = 0.88×，坡道 w=0.00／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.154 + λ×(当期 − 三年中位) = 0.155，五年中位 0.158，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 9.1b；ROIC0 43.9%；WACC 6.87%（r 9.25% = rf 4.79% + β1.0×ERP 4.46%；rd 3.46%；t 21%；账面权重）；增长 g0=0.0%（来源 trailing：资本腿 —=min(增量ROIC —,40%)×再投资率 -10%，增速腿 0.0%=CAGR 10.1%×(1−w 0.00)×d 1.00），ROIC_T=min(WACC+档位超额, ROIC0)=9.9%，g_T=3.0%，fade 10 年，终值占比 73%；净负债/股 3.784（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 214.786 USD/普通股** → **214.79 USD**；带 = V×[0.90,1.10]。标签：buybacks=PaymentsForRepurchaseOfCommonStock;capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue;cash_invest=ShortTermInvestments;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=DepreciationDepletionAndAmortization;dividends_paid=;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpenseNonoperating;lt_debt_current=LongTermDebtCurrent;lt_de
+ROIC·增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-08-28 TTM，Adobe official Q3 FY2026 earnings tables (unaudited; before 10-Q); TTM income=FY2025+9M26-9M25; cash flows=prior TTM+Q3_26-Q3_25）：NOPAT/经营账面财年序列 0.198／0.165／0.158／0.141／0.154 → ratio0 **0.156**（blend(λ=0.5,w=0.00,v=0.00)）× 经营账面 BPS_op 134.11（稀释股数 395m）= 每股 NOPAT 锚 **20.919**；股本口径：十年窗 |X_y|≥5% 年份 FY2017 -0.7b／FY2018 -1.7b／FY2019 -1.7b／FY2020 -2.6b／FY2021 -3.3b／FY2022 -5.3b／FY2023 -3.0b／FY2024 -8.1b／FY2025 -9.6b；年报已计累计外生权益 -35.9b（最新年报经营账面 E_op 47.5b，母公司权益 11.6b）；年报后 x -13.38/股（ttm_x,x_large_negative；其后归母净利 5.43b、已付股息 0.00b）；BPS_op = 当期 BPS 29.78 − x − X_cum/股 -90.94 = 134.11；周期守卫 NOPAT/经营账面：当期 0.157（最新年报 0.154 × f 1.02）vs 十年中位 0.178 = 0.88×，坡道 w=0.00／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.154 + λ×(当期 − 三年中位) = 0.156，五年中位 0.158，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 9.3b；ROIC0 43.9%；WACC 6.96%（r 9.25% = rf 4.79% + β1.0×ERP 4.46%；rd 3.46%；t 22%；账面权重）；增长 g0=0.0%（来源 trailing：资本腿 —=min(增量ROIC —,40%)×再投资率 -10%，增速腿 0.0%=CAGR 10.1%×(1−w 0.00)×d 1.00），ROIC_T=min(WACC+档位超额, ROIC0)=10.0%，g_T=3.0%，fade 10 年，终值占比 73%；净负债/股 3.148（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 225.328 USD/普通股** → **225.33 USD**；带 = V×[0.90,1.10]。标签：
 
 <details>
 <summary>历史研究原文（非现行估值、评级或交易依据）</summary>

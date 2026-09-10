@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import roic_inputs  # noqa: E402
+from minority_claims import equity_bridge  # noqa: E402
 from intrinsic_value import (ValuationError, cost_of_equity, intrinsic_value,  # noqa: E402
                              terminal_growth_ceiling, DEFAULT_G_TERMINAL)
 
@@ -24,6 +25,7 @@ YEARS_CSV = ROOT / "data/interim/overseas_roic_years.csv"
 INPUTS_CSV = ROOT / "data/reference/overseas_valuation_inputs.csv"
 REPORT_EVIDENCE = ROOT / "data/reference/overseas_report_evidence.csv"
 BAND_LOW_COEF, BAND_HIGH_COEF = 0.90, 1.10
+THIN_EQUITY_MAX = 0.50  # §6.5.1；与 A 股生产薄权益守卫同口径
 BETA_BY_TIER = {"L1": 0.9, "L2": 1.0, "L3": 1.3, "L4": 1.3, "boundary_pending": 1.3}
 TERMINAL_EXCESS_BY_TIER = {"L1": 0.06, "L2": 0.03, "L3": 0.0, "L4": 0.0, "boundary_pending": 0.0}
 ROE_YEARS, MIN_YEARS, IROE_CAP, G0_CAP, G0_FLOOR = 5, 3, 0.40, 0.25, 0.0
@@ -295,15 +297,21 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     m_share = (min(max(latest.minority_equity / latest.total_equity, 0.0), roic_inputs.MINORITY_SHARE_CAP)
                if latest.total_equity and latest.total_equity > 0 else 0.0)
 
-    def bridge(ev_ps: float) -> float:
-        total_equity = ev_ps - fin_nd_ps
-        minority = max(minority_book_ps, m_share * total_equity) if (m_share > 0 and total_equity > 0) else minority_book_ps
-        return fin_nd_ps + minority
+    def bridge(ev_ps: float) -> tuple[float, float]:
+        # 随 EV 缩放的少数份额不进入薄权益固定扣减；账面下界生效时才加账面额。
+        return equity_bridge(ev_ps, fin_nd_ps, minority_book_ps, m_share)
 
-    net_debt_ps = bridge(nopat_ps / w) if w else fin_nd_ps + minority_book_ps
+    def thin_equity_reason(ev_ps: float, fixed: float) -> str:
+        if ev_ps > 0 and fixed > 0 and fixed / ev_ps >= THIN_EQUITY_MAX:
+            return (f"薄权益：每股固定扣减 {fixed:.2f} ≥ {THIN_EQUITY_MAX:.0%} × 每股企业价值 {ev_ps:.2f}，"
+                    "股权价值为两大数之差不可估")
+        return ""
+
     if nopat_ps <= 0:
         res["reason"] = "正常化每股 NOPAT 非正"; return res
-    v_zero = nopat_ps / w - net_debt_ps
+    zero_ev_ps = nopat_ps / w
+    net_debt_ps, nd_zero_fixed = bridge(zero_ev_ps)
+    v_zero = zero_ev_ps - net_debt_ps
     roic_ok = roic0 is not None and roic0 > g_terminal + MIN_TERMINAL_SPREAD
     common = dict(r=r, rf=rf, erp=erp, beta=beta, rd=rd, tax=tax, wacc=w, roic0=roic0, iroic=iroic, rr=rr,
                   ratio0=ratio0, mode=mode, nopat_ps=nopat_ps, net_debt_ps=net_debt_ps, bps=bps, shares=shares,
@@ -316,10 +324,15 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
                   ratio_noncyc=ratio_noncyc, ratio_cyc=ratio_cyc,
                   x_ps=x_ps, x_cum_ps=x_cum_ps, bps_op=bps_op, x_mode=x_mode, x_note=x_note, np_ytd=np_ytd, div_ytd=div_ytd,
                   x_by_year={k: v for k, v in x_by_year.items() if v}, applied=applied, e_op_ref=e_op_ref,
-                  equity_ref=annual_latest.parent_equity, book_break=book_break)
+                  equity_ref=annual_latest.parent_equity, book_break=book_break,
+                  ev_ps=zero_ev_ps, fin_net_debt_ps=fin_nd_ps, minority_book_ps=minority_book_ps,
+                  net_debt_fixed_ps=nd_zero_fixed, thin_equity_ratio=nd_zero_fixed / zero_ev_ps)
     if not roic_ok:
         if v_zero <= 0:
             res["reason"] = f"零增长股权价值 {v_zero:.2f} ≤ 0：净负债超过零增长企业价值"; res.update(common); return res
+        reason = thin_equity_reason(zero_ev_ps, nd_zero_fixed)
+        if reason:
+            res.update(common, reason=reason, path="zero_growth"); return res
         res.update(common, status="ok", path="zero_growth", value=v_zero, g0=0.0, roic_t=None, terminal_share=1.0)
         return res
     g_capital = min(iroic, IROE_CAP) * min(rr, 1.0) if (rr is not None and iroic is not None and iroic > 0 and rr > 0) else None
@@ -342,11 +355,16 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
         iv = intrinsic_value(nopat_ps, roic0, g0, w, roe_terminal=roic_t, g_terminal=g_terminal, n=N_FADE, n1=N1)
     except ValuationError as exc:
         res["reason"] = str(exc); res.update(common); return res
-    net_debt_ps = bridge(iv.intrinsic_value)
-    common["net_debt_ps"] = net_debt_ps
+    net_debt_ps, nd_fixed = bridge(iv.intrinsic_value)
+    common.update(net_debt_ps=net_debt_ps, ev_ps=iv.intrinsic_value,
+                  net_debt_fixed_ps=nd_fixed,
+                  thin_equity_ratio=nd_fixed / iv.intrinsic_value if iv.intrinsic_value > 0 else None)
     value = iv.intrinsic_value - net_debt_ps
     if value <= 0:
         res["reason"] = f"股权价值 {value:.2f} ≤ 0：净负债 {net_debt_ps:.2f} 超过企业价值 {iv.intrinsic_value:.2f}"; res.update(common); return res
+    reason = thin_equity_reason(iv.intrinsic_value, nd_fixed)
+    if reason:
+        res.update(common, reason=reason, path="growth"); return res
     res.update(common, status="ok", path="growth", value=value, g0=g0, g_src=g_src, g_capital=g_capital, g_trail=g_trail,
                cagr=cagr, damp=damp, roic_t=roic_t, terminal_share=iv.terminal_share, ev_ps=iv.intrinsic_value)
     return res
@@ -426,7 +444,8 @@ def main() -> int:
     current = load_years.current  # type: ignore[attr-defined]
     current_meta = load_years.current_meta  # type: ignore[attr-defined]
     evidence = load_report_evidence(args.as_of)
-    rows = list(csv.DictReader(WATCHLIST.open(encoding="utf-8-sig")))
+    with WATCHLIST.open(encoding="utf-8-sig") as handle:
+        rows = list(csv.DictReader(handle))
     quotes = {}
     if args.quotes == "fetch" and not args.check:
         try:

@@ -2,14 +2,12 @@
 
 > 海外观察清单；不进入 A 股执行清单。当前值读取清单，研究原文按其证据日期复核。
 
-> 2026-09-10 估值核验：以下机器值含 SEC 利息费用符号错误，且海外引擎漏了薄权益拒绝。逐期统一符号后的隔离复算 V 为 37.83、同价 P/V 为 2.77；生产带尚未替换，不能把原 P/V 3.96 当作可靠的严重高估结论。见[核验报告](../../../docs/reports/disney_pv_pe_audit_2026-09-10.zh.md)及 OI-175／OI-176。
-
 | 项 | 当前值 |
 | --- | --- |
 | 名单状态 | worth_attention |
 | 质量档 | L2 |
 | 参考分 | 70.70 |
-| 合理价区间 | 23.81 ~ 29.11 USD |
+| 合理价区间 | 34.05 ~ 41.61 USD |
 | 估值证据日 | 2026-08-05 |
 | 估值事件 | 三季报（FY2026Q3） |
 
@@ -17,7 +15,7 @@
 
 ROIC·零增长
 
-ROIC·零增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-06-27 TTM，SEC companyfacts 10-Q TTM）：NOPAT/经营账面财年序列 0.046／0.049／0.020／0.042／0.093 → ratio0 **0.063**（blend(λ=1.0,w=0.37,v=0.00)）× 经营账面 BPS_op 65.96（稀释股数 1,743m）= 每股 NOPAT 锚 **4.152**；股本口径：十年窗 |X_y|≥5% 年份 FY2019 +34.8b；结构断点 2017-09-30 起重切窗口；年报已计累计外生权益 +0.8b（最新年报经营账面 E_op 109.0b，母公司权益 109.9b）；年报后 x -3.32/股（ttm_x|equity_gap；其后归母净利 7.29b、已付股息 1.34b）；BPS_op = 当期 BPS 63.13 − x − X_cum/股 +0.48 = 65.96；周期守卫 NOPAT/经营账面：当期 0.073（最新年报 0.093 × f 0.78）vs 十年中位 0.048 = 1.52×，坡道 w=0.37／谷 v=0.00；信任度 λ=1.0，非周期锚 = 三年中位 0.042 + λ×(当期 − 三年中位) = 0.073，五年中位 0.046，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 8.2b；ROIC0 3.1%；WACC 7.56%（r 9.25% = rf 4.79% + β1.0×ERP 4.46%；rd 4.50%；t 28%；账面权重）；零增长：V = NOPAT/股 ÷ WACC − 净负债/股；净负债/股 28.481（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 26.460 USD/普通股** → **26.46 USD**；带 = V×[0.90,1.10]。标签：buybacks=PaymentsForRepurchaseOfCommonStock;capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue;cash_invest=;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=DepreciationDepletionAndAmortization;dividends_paid=PaymentsOfDividendsCommonStock;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpense;lt_debt_current=LongTermDebtCurrent;lt_debt
+ROIC·零增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-06-27 TTM，SEC companyfacts 10-Q TTM）：NOPAT/经营账面财年序列 0.046／0.049／0.049／0.074／0.127 → ratio0 **0.075**（blend(λ=1.0,w=0.46,v=0.00)）× 经营账面 BPS_op 65.96（稀释股数 1,743m）= 每股 NOPAT 锚 **4.930**；股本口径：十年窗 |X_y|≥5% 年份 FY2019 +34.8b；结构断点 2017-09-30 起重切窗口；年报已计累计外生权益 +0.8b（最新年报经营账面 E_op 109.0b，母公司权益 109.9b）；年报后 x -3.32/股（ttm_x|equity_gap；其后归母净利 7.29b、已付股息 1.34b）；BPS_op = 当期 BPS 63.13 − x − X_cum/股 +0.48 = 65.96；周期守卫 NOPAT/经营账面：当期 0.097（最新年报 0.127 × f 0.76）vs 十年中位 0.061 = 1.58×，坡道 w=0.46／谷 v=0.00；信任度 λ=1.0，非周期锚 = 三年中位 0.074 + λ×(当期 − 三年中位) = 0.097，五年中位 0.049，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 8.2b；ROIC0 3.5%；WACC 7.43%（r 9.25% = rf 4.79% + β1.0×ERP 4.46%；rd 3.90%；t 28%；账面权重）；零增长：V = NOPAT/股 ÷ WACC − 净负债/股；净负债/股 28.481（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 37.829 USD/普通股** → **37.83 USD**；带 = V×[0.90,1.10]。标签：buybacks=PaymentsForRepurchaseOfCommonStock;capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue;cash_invest=;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=DepreciationDepletionAndAmortization;dividends_paid=PaymentsOfDividendsCommonStock;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpense;lt_debt_current=LongTermDebtCurrent;lt_debt
 
 <details>
 <summary>历史研究原文（非现行估值、评级或交易依据）</summary>

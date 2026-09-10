@@ -8,7 +8,7 @@
 * 港股：东财 HK F10 三张表（`RPT_HKF10_FN_{BALANCE,INCOME,CASHFLOW}_PC`），年度值加最新季报／中报，
   同样合成 TTM。
   报表货币按公司（清单内人民币列报公司显式登记）。股数取 `hong_kong_financial_indicators.csv` 最新已发行股数。
-* 6-K／境外发行人季报不进入 SEC companyfacts 的公司，由官方财报逐项维护
+* SEC companyfacts 尚未覆盖的已披露季报（含境外发行人 6-K、10-Q 提交前官方业绩三表），由官方财报逐项维护
   `data/reference/overseas_statement_overrides.csv`；披露事件与公开可得日只认
   `data/reference/overseas_report_evidence.csv`，不拿程序运行日或预期财报日代替证据日。
 * 韩股：无免密钥三表源——不出行，清单上保持「无法估值」并写明缺口（§6.5.2.4）。
@@ -571,6 +571,11 @@ def _ytd_dividends(current: float | None, annual_paid: float | None) -> float | 
     return 0.0 if not annual_paid else None
 
 
+def _sec_amount(key: str, value: float | None) -> float | None:
+    """SEC 纯利息费用逐期转为费用正值；净收支和税收收益保留符号（§6.8）。"""
+    return abs(value) if key == "interest_expense" and value is not None else value
+
+
 def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: list[dict],
                         evidence_date: str = "", dei: dict | None = None) -> dict | None:
     """Build a latest TTM snapshot from a domestic issuer's latest 10-Q."""
@@ -587,6 +592,8 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
         cur, old, concept = _duration_pair(tax, maps[key], end, filed)
         tags[key] = concept
         base = _num(annual.get(key))
+        # 同一公司年报和 10-Q 可以采用不同的费用符号；必须先统一各期，再滚动。
+        base, cur, old = (_sec_amount(key, amount) for amount in (base, cur, old))
         return base + cur - old if base is not None and cur is not None and old is not None else None
 
     def inst(key: str) -> float | None:
@@ -649,7 +656,7 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
     # 财年公开可得日取该期 10-K／20-F／40-F 的实际 filed 日。
     for end in ends:
         def v(key):
-            return series.get(key, {}).get(end)
+            return _sec_amount(key, series.get(key, {}).get(end))
         rev, pretax, opinc, taxv = v("revenue"), v("pretax"), v("operating_income"), v("income_tax")
         if rev is None and pretax is None:
             continue

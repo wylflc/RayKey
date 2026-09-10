@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.179
+# A股选股-估值-量价操作流程 v4.180
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -415,7 +415,9 @@ python3 scripts/build_a_share_core_valuation_pool.py \
 
 港股、美股和韩股只作为观察附表，不写入 A 股核心池，也不进入 §9.3。质量判断沿用 §5，估值遵守价格独立、证据改带和可证伪原则；交易货币不得跨市场直接比较（`P/V` 可以）。
 
-**海外估值**：合理估值按 §6.5.1 的 ROIC 引擎由三大报表重算，海外输入与折现率按本节处理，最新季报／中报按「最近完整财年＋本期累计−上年同期累计」合成 TTM 作为当前观察点，年度历史仍用于 ROIC0、增量 ROIC 与再投资率。r = 美债 10Y ＋ β×经营地 Damodaran ERP（β 与终值超额回报分别读取海外引擎 `BETA_BY_TIER`、`TERMINAL_EXCESS_BY_TIER`，无质量档者按名单状态读取；终值增长受 `terminal_growth_ceiling` 约束），报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（`FINANCIAL_KEEP`）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」。三表来源：美股 SEC XBRL companyfacts、港股东财 HK F10；6-K／境外发行人未进入 companyfacts 的季报按官方财报维护 `data/reference/overseas_statement_overrides.csv`（原始文件不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。
+**输入符号与拒绝传播**：SEC 的纯利息费用标签按每个年度／累计期间的费用金额正值统一，再合成 TTM；不得对合成结果取绝对值代替逐期统一，所得税收益及其他有经济含义的正负值保留。零增长与增长路径均在各自企业价值的股权桥之后执行 §6.5.1 薄权益守卫，固定扣减按该节的净金融负债与少数股东账面下界口径计算；拒绝后清空当前带、合理价和 P/V，档案显示原因，不回退历史带。
+
+**海外估值**：合理估值按 §6.5.1 的 ROIC 引擎由三大报表重算，海外输入与折现率按本节处理，最新季报／中报按「最近完整财年＋本期累计−上年同期累计」合成 TTM 作为当前观察点，年度历史仍用于 ROIC0、增量 ROIC 与再投资率。r = 美债 10Y ＋ β×经营地 Damodaran ERP（β 与终值超额回报分别读取海外引擎 `BETA_BY_TIER`、`TERMINAL_EXCESS_BY_TIER`，无质量档者按名单状态读取；终值增长受 `terminal_growth_ceiling` 约束），报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（`FINANCIAL_KEEP`）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」。三表来源：美股 SEC XBRL companyfacts、港股东财 HK F10；SEC 结构化事实尚未覆盖的已披露季报（包括境外发行人 6-K 和 10-Q 提交前的官方业绩三表）按官方财报维护 `data/reference/overseas_statement_overrides.csv`（原始文件不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。
 
 ```bash
 python3 scripts/fetch_overseas_earnings_calendar.py --as-of YYYY-MM-DD --apply

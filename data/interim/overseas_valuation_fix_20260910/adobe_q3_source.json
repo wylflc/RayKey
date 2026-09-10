@@ -1,0 +1,103 @@
+{
+  "source_url": "https://www.adobe.com/cc-shared/assets/investor-relations/pdfs/01906202/au56y4ter.pdf",
+  "disclosed_on": "2026-09-10",
+  "report_period": "2026-08-28",
+  "income_ytd_millions_current_prior": {
+    "revenue": [
+      19776,
+      17575
+    ],
+    "operating_income": [
+      7010,
+      6445
+    ],
+    "pretax": [
+      7017,
+      6470
+    ],
+    "income_tax": [
+      1589,
+      1196
+    ],
+    "interest_expense": [
+      194,
+      197
+    ],
+    "net_income": [
+      5428,
+      5274
+    ]
+  },
+  "cashflow_quarter_millions_current_prior": {
+    "cfo": [
+      2523,
+      2198
+    ],
+    "capex": [
+      85,
+      72
+    ],
+    "dep_amort": [
+      215,
+      208
+    ],
+    "buybacks": [
+      2232,
+      2057
+    ]
+  },
+  "annual_base": {
+    "revenue": "23769000000.0",
+    "operating_income": "8706000000.0",
+    "pretax": "8734000000.0",
+    "income_tax": "1604000000.0",
+    "interest_expense": "263000000.0",
+    "net_income": "7130000000.0"
+  },
+  "prior_ttm_cashflow_base": {
+    "cfo": "10481000000.0",
+    "capex": "201000000.0",
+    "dep_amort": "759000000.0",
+    "buybacks": "9120000000.0"
+  },
+  "balance_sheet_millions": {
+    "total_equity": 11764,
+    "debt_current": 1597,
+    "debt_noncurrent": 4766,
+    "cash": 4359,
+    "short_term_investments": 1280,
+    "diluted_quarter_shares": 395
+  },
+  "ttm_override": {
+    "market": "US",
+    "security_code": "ADBE",
+    "security_name": "Adobe",
+    "period": "2026-08-28",
+    "notice_date": "2026-09-10",
+    "report_currency": "USD",
+    "period_type": "ttm",
+    "report_label": "三季报（FY2026Q3，官方业绩三表）",
+    "evidence_url": "https://www.adobe.com/cc-shared/assets/investor-relations/pdfs/01906202/au56y4ter.pdf",
+    "source": "Adobe official Q3 FY2026 earnings tables (unaudited; before 10-Q); TTM income=FY2025+9M26-9M25; cash flows=prior TTM+Q3_26-Q3_25",
+    "revenue": "25970000000",
+    "operating_income": "9271000000",
+    "pretax": "9281000000",
+    "income_tax": "1997000000",
+    "interest_expense": "260000000",
+    "net_income": "7284000000",
+    "cfo": "10806000000",
+    "capex": "214000000",
+    "dep_amort": "766000000",
+    "buybacks": "9295000000",
+    "total_equity": "11764000000",
+    "parent_equity": "11764000000",
+    "minority_equity": "0",
+    "interest_debt": "6363000000",
+    "cash_like": "5639000000",
+    "shares": "395000000",
+    "dividends_paid": "0",
+    "net_income_ytd": "5428000000",
+    "dividends_paid_ytd": "0"
+  },
+  "missing_tci": "Current TTM comprehensive income not disclosed in earnings release; left blank; normalization uses annual historical TCI, not current TTM TCI."
+}

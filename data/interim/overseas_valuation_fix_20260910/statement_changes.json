@@ -1,0 +1,1168 @@
+{
+  "rows_before": 444,
+  "rows_after": 444,
+  "numeric_changes": [
+    {
+      "key": [
+        "DIS",
+        "2023-09-30",
+        "annual"
+      ],
+      "fields": {
+        "interest_expense": [
+          "-1973000000.0",
+          "1973000000.0"
+        ],
+        "ebit": [
+          "2796000000.0",
+          "6742000000.0"
+        ],
+        "nopat": [
+          "1987511008.5971901",
+          "4792488991.40281"
+        ]
+      }
+    },
+    {
+      "key": [
+        "DIS",
+        "2024-09-28",
+        "annual"
+      ],
+      "fields": {
+        "interest_expense": [
+          "-2070000000.0",
+          "2070000000.0"
+        ],
+        "ebit": [
+          "5499000000.0",
+          "9639000000.0"
+        ],
+        "nopat": [
+          "4194177170.0356717",
+          "7351822829.964329"
+        ]
+      }
+    },
+    {
+      "key": [
+        "DIS",
+        "2025-09-27",
+        "annual"
+      ],
+      "fields": {
+        "interest_expense": [
+          "-1812000000.0",
+          "1812000000.0"
+        ],
+        "ebit": [
+          "10191000000.0",
+          "13815000000.0"
+        ],
+        "nopat": [
+          "10191000000.0",
+          "13815000000.0"
+        ]
+      }
+    },
+    {
+      "key": [
+        "DIS",
+        "2026-06-27",
+        "ttm"
+      ],
+      "fields": {
+        "interest_expense": [
+          "-1829000000.0",
+          "1795000000.0"
+        ],
+        "ebit": [
+          "10921000000.0",
+          "14545000000.0"
+        ],
+        "nopat": [
+          "7911086745.09804",
+          "10536283921.568628"
+        ]
+      }
+    },
+    {
+      "key": [
+        "GLW",
+        "2007-12-31",
+        "annual"
+      ],
+      "fields": {
+        "parent_equity": [
+          "",
+          "9542000000.0"
+        ],
+        "shares": [
+          "",
+          "1558884218.0"
+        ]
+      }
+    },
+    {
+      "key": [
+        "TSLA",
+        "2009-12-31",
+        "annual"
+      ],
+      "fields": {
+        "shares": [
+          "",
+          "104604044.0"
+        ]
+      }
+    },
+    {
+      "key": [
+        "TSLA",
+        "2012-12-31",
+        "annual"
+      ],
+      "fields": {
+        "shares": [
+          "114214274.0",
+          "107349188.0"
+        ]
+      }
+    },
+    {
+      "key": [
+        "TSLA",
+        "2013-12-31",
+        "annual"
+      ],
+      "fields": {
+        "shares": [
+          "123090990.0",
+          "119421414.0"
+        ]
+      }
+    },
+    {
+      "key": [
+        "TSLA",
+        "2014-12-31",
+        "annual"
+      ],
+      "fields": {
+        "shares": [
+          "125687607.0",
+          "124539343.0"
+        ]
+      }
+    },
+    {
+      "key": [
+        "TSM",
+        "2015-12-31",
+        "annual"
+      ],
+      "fields": {
+        "parent_equity": [
+          "",
+          "1194970100000.0"
+        ]
+      }
+    }
+  ],
+  "metadata_changes": [
+    {
+      "key": [
+        "AMD",
+        "2008-12-27",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2009-12-26",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2010-12-25",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2011-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2012-12-29",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2013-12-28",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2014-12-27",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2015-12-26",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2016-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2017-12-30",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2018-12-29",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2019-12-28",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2020-12-26",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2021-12-25",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2022-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2023-12-30",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2024-12-28",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "AMD",
+        "2025-12-27",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2007-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2008-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2009-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2010-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2011-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2012-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2013-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2014-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2015-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2016-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2017-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2018-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2019-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2020-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2021-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2022-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2023-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2024-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "GLW",
+        "2025-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2009-09-03",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2010-09-02",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2011-09-01",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2012-08-30",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2013-08-29",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2014-08-28",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2015-09-03",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2016-09-01",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2017-08-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2018-08-30",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2019-08-29",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2020-09-03",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2021-09-02",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2022-09-01",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2023-08-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2024-08-29",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "MU",
+        "2025-08-28",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "PDD",
+        "2016-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "PDD",
+        "2017-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "PDD",
+        "2018-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "PDD",
+        "2019-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "PDD",
+        "2020-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "PDD",
+        "2021-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "PDD",
+        "2022-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "PDD",
+        "2023-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "PDD",
+        "2024-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "PDD",
+        "2025-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2009-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2010-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2011-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2012-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2013-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2014-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2015-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2016-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2017-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2018-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2019-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2020-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2021-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2022-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2023-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2024-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSLA",
+        "2025-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSM",
+        "2015-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSM",
+        "2016-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSM",
+        "2017-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSM",
+        "2018-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSM",
+        "2019-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSM",
+        "2020-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSM",
+        "2021-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSM",
+        "2022-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSM",
+        "2023-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    },
+    {
+      "key": [
+        "TSM",
+        "2024-12-31",
+        "annual"
+      ],
+      "fields": [
+        "tags_used"
+      ]
+    }
+  ],
+  "removed_rows": [
+    {
+      "market": "US",
+      "security_code": "ADBE",
+      "security_name": "Adobe",
+      "period": "2026-05-29",
+      "fiscal_year": "2026",
+      "notice_date": "2026-06-11",
+      "report_currency": "USD",
+      "revenue": "25198000000.0",
+      "operating_income": "9090000000.0",
+      "pretax": "9111000000.0",
+      "income_tax": "1882000000.0",
+      "interest_expense": "261000000.0",
+      "ebit": "9372000000.0",
+      "tax_rate": "0.206563",
+      "tax_rate_observed": "1",
+      "nopat": "7436086927.889364",
+      "total_equity": "11518000000.0",
+      "parent_equity": "11518000000.0",
+      "minority_equity": "0.0",
+      "interest_debt": "6645000000.0",
+      "cash_like": "5626000000.0",
+      "excess_cash": "5122040000.0",
+      "invested_capital": "13040960000.0",
+      "capex": "201000000.0",
+      "dep_amort": "759000000.0",
+      "cfo": "10481000000.0",
+      "shares": "402500000.0",
+      "buybacks": "9120000000.0",
+      "dividends_paid": "0.0",
+      "net_income": "7229000000.0",
+      "tci": "7315000000.0",
+      "net_income_ytd": "3601000000.0",
+      "dividends_paid_ytd": "0.0",
+      "tags_used": "buybacks=PaymentsForRepurchaseOfCommonStock;capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue;cash_invest=ShortTermInvestments;cfo=NetCashProvidedByUsedInOperatingActivities;dep_amort=DepreciationDepletionAndAmortization;dividends_paid=;income_tax=IncomeTaxExpenseBenefit;interest_expense=InterestExpenseNonoperating;lt_debt_current=LongTermDebtCurrent;lt_debt_noncurrent=LongTermDebtNoncurrent;lt_debt_total=LongTermDebt;minority_equity=;net_income=NetIncomeLoss;operating_income=OperatingIncomeLoss;parent_equity=StockholdersEquity;pretax=IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest;revenue=Revenues;shares=WeightedAverageNumberOfDilutedSharesOutstanding;st_debt=DebtCurrent;tci=ComprehensiveIncomeNetOfTax;total_equity=StockholdersEquity",
+      "source": "SEC companyfacts 10-Q TTM",
+      "period_type": "ttm",
+      "report_label": "二季报（FY2026Q2）",
+      "evidence_url": "https://news.adobe.com/news/2026/06/adobe-q2fy26-financial-results"
+    }
+  ],
+  "added_rows": [
+    {
+      "market": "US",
+      "security_code": "ADBE",
+      "security_name": "Adobe",
+      "period": "2026-08-28",
+      "fiscal_year": "2026",
+      "notice_date": "2026-09-10",
+      "report_currency": "USD",
+      "revenue": "25970000000.0",
+      "operating_income": "9271000000.0",
+      "pretax": "9281000000.0",
+      "income_tax": "1997000000.0",
+      "interest_expense": "260000000.0",
+      "ebit": "9541000000.0",
+      "tax_rate": "0.215171",
+      "tax_rate_observed": "1",
+      "nopat": "7488055597.4571705",
+      "total_equity": "11764000000.0",
+      "parent_equity": "11764000000.0",
+      "minority_equity": "0.0",
+      "interest_debt": "6363000000.0",
+      "cash_like": "5639000000.0",
+      "excess_cash": "5119600000.0",
+      "invested_capital": "13007400000.0",
+      "capex": "214000000.0",
+      "dep_amort": "766000000.0",
+      "cfo": "10806000000.0",
+      "shares": "395000000.0",
+      "buybacks": "9295000000.0",
+      "dividends_paid": "0.0",
+      "net_income": "7284000000.0",
+      "tci": "",
+      "net_income_ytd": "5428000000.0",
+      "dividends_paid_ytd": "0.0",
+      "tags_used": "",
+      "source": "Adobe official Q3 FY2026 earnings tables (unaudited; before 10-Q); TTM income=FY2025+9M26-9M25; cash flows=prior TTM+Q3_26-Q3_25",
+      "period_type": "ttm",
+      "report_label": "三季报（FY2026Q3，官方业绩三表）",
+      "evidence_url": "https://www.adobe.com/cc-shared/assets/investor-relations/pdfs/01906202/au56y4ter.pdf"
+    }
+  ]
+}
