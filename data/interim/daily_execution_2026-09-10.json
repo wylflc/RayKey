@@ -1,0 +1,23 @@
+{
+  "as_of": "2026-09-10",
+  "reported_total_assets_cny": "4654877",
+  "reported_net_assets_cny": "2759382.59",
+  "derived_margin_debt_cny": "1895494.41",
+  "reported_cash_cny": "0.00",
+  "reported_available_margin_cny": "-3077.08",
+  "trades": [],
+  "dividend": {
+    "security_code": "601318",
+    "shares": 4900,
+    "cash_per_share": "0.98",
+    "computed_amount_cny": "4802.00",
+    "amount_basis": "公告每股派息×持股数推算，未获用户金额分项",
+    "receipt_and_full_debt_repayment": "user_confirmed",
+    "debt_reduction_cny": "4433.75",
+    "unreconciled_net_cost_cny": "368.25"
+  },
+  "external_cash_flow_cny": "0.00",
+  "external_cash_flow_basis": "not reported, assumed zero",
+  "workflow_version": "a-share-selection-operation-v4.179",
+  "evidence_job_id": 26547797
+}

@@ -1,1 +1,2 @@
 trade_date,security_code,security_name,rule,condition,close,ma20,ma60,model_pv,hold_pv,cost_basis,gain_pct,entry_stop_price,stop_line,current_shares,sell_shares,amount,swap_for,cooldown_skips,note
+2026-09-10,601225,陕西煤业,换仓,持仓侧 P/V 1.2117 且弱势｜卖出款去向：中材国际 0.5305（边际 +0.6812）｜触发闸门：同力股份 0.8072（差 0.4045 ≥ 0.1500）,26.09,26.168,24.4172,1.2117,1.2117,26.707,-0.0231,24.12,,5000.0,5000.0,130450.0,920599,0,余仓不足一手，整笔清空

@@ -1,0 +1,245 @@
+{
+  "signal_date": "2026-09-10",
+  "execution_date": "2026-09-11",
+  "checked_at_utc": "2026-09-10T14:39:45.888390+00:00",
+  "workflow_version": "a-share-selection-operation-v4.179",
+  "jobs": {
+    "evidence": {
+      "id": 26547797,
+      "state": "COMPLETED",
+      "elapsed": "00:01:51",
+      "max_rss_kb": 45152
+    },
+    "scan": {
+      "id": 26547862,
+      "state": "COMPLETED",
+      "elapsed": "00:01:22",
+      "max_rss_kb": 130322
+    },
+    "events": {
+      "id": 26547847,
+      "state": "COMPLETED",
+      "elapsed": "00:02:09",
+      "max_rss_kb": 21445
+    }
+  },
+  "checks": {
+    "pool_equals_candidates_equals_worth_attention": 181,
+    "valid_pv": 178,
+    "below_buy_line": 32,
+    "eligible": 16,
+    "holdings": 9,
+    "market_data_errors": 0,
+    "history_insufficient": [
+      "001232"
+    ],
+    "stale_bands": [
+      "000725",
+      "688981"
+    ],
+    "stops_hit": 0,
+    "weak_holdings": [
+      "601225"
+    ],
+    "review_queue": 0,
+    "cooldown_active": 0,
+    "sells": 1,
+    "buys": 1,
+    "account_reconciled": true,
+    "holdings_market_value_cny": "4654877.00",
+    "reported_available_margin_cny": "-3077.08",
+    "tranche_cny": "137969.13",
+    "estimated_remaining_funds_before_fees_cny": "688.92",
+    "existing_accounts_and_decisions_byte_prefix_unchanged": true,
+    "share_counts_unchanged": true,
+    "ping_an_corporate_action_applied_once": true,
+    "production_model_bands_unchanged_during_scan": true,
+    "scan_tracking_prices_pv_stops_consistent": true,
+    "execution_logic_replay": "passed offline; correlation summary read from live scan output, not independently recalculated",
+    "strategy_parameter_sync": "4 tests passed",
+    "announcement_coverage_companies": 18,
+    "announcement_coverage_rows": 13,
+    "new_announcements_reviewed": 8,
+    "evidence_company_updates": 4,
+    "documentation_audit": "passed",
+    "strategy_return_check": "passed",
+    "whitespace_check": "passed with CRLF recognized",
+    "new_decision_ids_unique": true,
+    "new_decision_rows": 18,
+    "targeted_dossier_render": "4/4 passed; unrelated historical quote drift left unchanged"
+  },
+  "correlations": {
+    "600970": {
+      "security_name": "中材国际",
+      "pv": 0.5305,
+      "correlation": 0.34,
+      "with": "中国平安"
+    },
+    "000651": {
+      "security_name": "格力电器",
+      "pv": 0.5847,
+      "correlation": 0.4,
+      "with": "中国平安"
+    },
+    "603529": {
+      "security_name": "爱玛科技",
+      "pv": 0.7134,
+      "correlation": 0.27,
+      "with": "中国平安"
+    },
+    "600036": {
+      "security_name": "招商银行",
+      "pv": 0.7731,
+      "correlation": 0.51,
+      "with": "中国平安"
+    },
+    "601318": {
+      "security_name": "中国平安",
+      "pv": 0.7861,
+      "correlation": 0.51,
+      "with": "招商银行"
+    },
+    "920599": {
+      "security_name": "同力股份",
+      "pv": 0.8072,
+      "correlation": 0.25,
+      "with": "中材国际"
+    },
+    "002379": {
+      "security_name": "宏桥控股",
+      "pv": 0.8211,
+      "correlation": 0.58,
+      "with": "电投能源"
+    },
+    "601838": {
+      "security_name": "成都银行",
+      "pv": 0.8414,
+      "correlation": 0.59,
+      "with": "招商银行"
+    },
+    "002532": {
+      "security_name": "天山铝业",
+      "pv": 0.894,
+      "correlation": 0.75,
+      "with": "宏桥控股"
+    },
+    "600938": {
+      "security_name": "中国海油",
+      "pv": 0.8964,
+      "correlation": 0.4,
+      "with": "卫星化学"
+    },
+    "002648": {
+      "security_name": "卫星化学",
+      "pv": 0.9205,
+      "correlation": 0.41,
+      "with": "电投能源"
+    },
+    "601398": {
+      "security_name": "工商银行",
+      "pv": 0.9804,
+      "correlation": 0.68,
+      "with": "招商银行"
+    },
+    "600989": {
+      "security_name": "宝丰能源",
+      "pv": 0.9838,
+      "correlation": 0.68,
+      "with": "卫星化学"
+    },
+    "603369": {
+      "security_name": "今世缘",
+      "pv": 1.0053,
+      "correlation": 0.41,
+      "with": "中国平安"
+    },
+    "002128": {
+      "security_name": "电投能源",
+      "pv": 1.0233,
+      "correlation": 0.71,
+      "with": "天山铝业"
+    },
+    "601288": {
+      "security_name": "农业银行",
+      "pv": 1.0437,
+      "correlation": 0.8,
+      "with": "工商银行"
+    }
+  },
+  "limitations": [
+    "行业与竞品为部分巡检；市场宽度未取得全市场完整数值。",
+    "三只无有效P/V：京东方A和中芯国际带陈旧，嘉立创行情历史不足。",
+    "红利金额按公告每股派息及持股数推算；368.25元净差额未获券商费用分项确认。",
+    "历史价格缓存未刷新；未运行回测；相关性未用第二行情源复核。",
+    "执行金额按信号日收盘估算，未扣手续费及可能的股息税，执行时按券商实际资金和成交价取整。",
+    "公司档案README现价展示沿用核心池CSV所标注的09-09行情；今日执行以09-10候选表、持仓跟踪与每日扫描日志为准。",
+    "历史决策日志存在原有空/重复decision_id，本轮18条新增ID非空且唯一，历史字节前缀保持不变。"
+  ],
+  "input_baseline_sha256": {
+    "data/processed/a_share_holdings.csv": {
+      "sha256": "e27ea0ece750b44eff8624cd088d43056a019a9f6fa88b1dcba394f246990f75",
+      "size": 429
+    },
+    "data/processed/portfolio_account_snapshot.csv": {
+      "sha256": "5c70f186074025edeba9b251e948f4b0f5d3e33a79e947a56dfd8f72542d7672",
+      "size": 51270
+    },
+    "data/processed/holdings_corporate_actions_applied.csv": {
+      "sha256": "c8bea541d891f8bb706f4d4eac6ac16bc246995ee3d0aef4562d9a9d7fb75b9e",
+      "size": 1315
+    },
+    "data/processed/a_share_workflow_decision_log.csv": {
+      "sha256": "3d14dcabdef821dfc3cf2126cb747410a37095b0e5272a196aec7427774b8b7e",
+      "size": 1913582
+    },
+    "data/processed/a_share_pool_model_bands_adopted.csv": {
+      "sha256": "5ccd5a34cbcc114367560385c8ece16e4fec2c838f19beff243e247e7cdd28fa",
+      "size": 132658
+    },
+    "data/processed/a_share_pool_model_bands_hold.csv": {
+      "sha256": "42b63fab5c9055c53f03852affd04bea1e9c9d3cbd9be2950becdec64ce73670",
+      "size": 133197
+    },
+    "data/processed/daily_buy_candidates.csv": {
+      "sha256": "5b602aa8d6ca7ca994a4fe8436a6661f1a03f6a86dc491d2573ea6adaab76cf5",
+      "size": 70798
+    },
+    "data/processed/daily_sell_plan.csv": {
+      "sha256": "c3bad7d5e1a357f4a5820e01ee254cf773e1b824e8c8bc7936bc72162f780b26",
+      "size": 198
+    },
+    "data/processed/daily_entry_plan.csv": {
+      "sha256": "781480d744899ee718c4a41eeea8ea21d7b9898d4066767f49b310f987407520",
+      "size": 142
+    },
+    "data/processed/daily_cooldown_state.csv": {
+      "sha256": "970cfca0dff56db8dcdb328b3d4a214103869c56297e35c1a00acb37348fbfe7",
+      "size": 86
+    }
+  },
+  "file_sha256": {
+    "data/processed/a_share_holdings.csv": "f67a04a20194b5a94becd336a2d6259621754de9d98631e2909a743b7855b122",
+    "data/processed/portfolio_account_snapshot.csv": "8c84a7d1dc0d70230084568889df4154896339436f7b7acf4c0a5f11a3b7a611",
+    "data/processed/holdings_corporate_actions_applied.csv": "ba74fe4a1c082d85729e49e60995e74d07e739a126b67fa13bc8dc13905d9d7f",
+    "data/processed/a_share_workflow_decision_log.csv": "2ea51aebbf5d653136ea77aaa0b2438070856fe8cef17843bf8177552a447688",
+    "data/processed/a_share_valuation_dossiers.csv": "8ef1a720427eae8e47e793ecc7ecd3b817726016cd95b928dcd1a778012b1048",
+    "data/processed/a_share_pool_model_bands_adopted.csv": "5ccd5a34cbcc114367560385c8ece16e4fec2c838f19beff243e247e7cdd28fa",
+    "data/processed/a_share_pool_model_bands_hold.csv": "42b63fab5c9055c53f03852affd04bea1e9c9d3cbd9be2950becdec64ce73670",
+    "data/processed/daily_buy_candidates.csv": "7176327a07dc2ae43739cad94553fc4d246943da472bcf08e68a539534271c9d",
+    "data/processed/daily_sell_plan.csv": "f430faa89dc2aa54074aecd18b13d5bcc09acd08acb11fcfda79adb119c9bd43",
+    "data/processed/daily_entry_plan.csv": "c0ac8b13325efb38ad7fe8c95b17561dde29eb03f88658525f0fd00b1d8496f9",
+    "data/processed/daily_cooldown_state.csv": "970cfca0dff56db8dcdb328b3d4a214103869c56297e35c1a00acb37348fbfe7",
+    "data/processed/daily_holdings_tracking.csv": "979c9ca4f5136d9dced53849d33a313cae0defd046e1ef318a1a89a045a8cb27",
+    "data/interim/a_share_report_disclosures.csv": "4edfe65baeb99a1e57e8d4b04f94d0fb2f7bbb5dc96933d9c8ee5435f0242418",
+    "data/interim/a_share_earnings_forecasts.csv": "614901a7623c42bf92b692dd9d0498642a34b77ac15fc3cf732d68e55f640ef7",
+    "data/interim/a_share_report_update_queue.csv": "4c8c026574bc8aa0c78c15cdf16a20c066d4392e8bb8217649d8c9f47b96d25e",
+    "data/interim/daily_execution_2026-09-10.json": "0d5e797e167e998efedc45f99d52473c22c6e9d71e1be24473bcfcc925db3516",
+    "data/interim/daily_announcements_2026-09-10.json": "de090ce75161736263d27b2831dca8510fbb518930eccae19dfa89907f10b532",
+    "data/interim/daily_corporate_actions_2026-09-10.json": "73abd4a655b3bc785c1a11017bbe84978aba35d689ee1ec32e9082ad0f33b80e",
+    "data/interim/daily_event_review_2026-09-10.json": "fc8abdf7e1201a0af4821c380783fe1610c5552632463e2cefade7a44812ff2c",
+    "data/interim/daily_market_context_2026-09-10.json": "e203015d1ecfc30fa6bd17d2a89769bc87576220ce08296297f18398d0259cde",
+    "docs/000_daily_scan_log.md": "98ed65bb91bd444962b0642888c797ac08e16e0e55061acba634a2f2a296a7e4",
+    "docs/000_a_share_core_valuation_pool.md": "53fa4c64c70251f2c21392c62f3b60ae1b1313b212556a00c43c02c2ee0cc6a4",
+    "scripts/slurm/daily_events_20260910.sbatch": "c2ac8216da16a930cb9beb384f88bd7b709609f4ca2d32b9edf868dd341dabea"
+  }
+}

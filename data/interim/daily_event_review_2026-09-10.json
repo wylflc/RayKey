@@ -1,0 +1,334 @@
+{
+  "signal_date": "2026-09-10",
+  "reviewed_at_utc": "2026-09-10T14:36:42.086414+00:00",
+  "announcement_snapshot": "data/interim/daily_announcements_2026-09-10.json",
+  "announcement_retrieved_at_utc": "2026-09-10T14:30:01.486147+00:00",
+  "covered_codes": [
+    "000651",
+    "002128",
+    "002379",
+    "002532",
+    "002648",
+    "002714",
+    "600036",
+    "600938",
+    "600970",
+    "600989",
+    "601225",
+    "601288",
+    "601318",
+    "601398",
+    "601838",
+    "603369",
+    "603529",
+    "920599"
+  ],
+  "held_count": 9,
+  "eligible_count": 16,
+  "relevant_announcement_count": 13,
+  "new_announcement_count": 8,
+  "per_company_checks": [
+    {
+      "security_code": "000651",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "002128",
+      "held": true,
+      "announcement_ids": [
+        "AN202609081829138508"
+      ],
+      "new_announcement_ids": [],
+      "status": "previously_reviewed_announcements_only",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "002379",
+      "held": false,
+      "announcement_ids": [
+        "AN202609081829136994",
+        "AN202609081829136982"
+      ],
+      "new_announcement_ids": [],
+      "status": "previously_reviewed_announcements_only",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "002532",
+      "held": false,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "002648",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "002714",
+      "held": true,
+      "announcement_ids": [
+        "AN202609101829233405",
+        "AN202609091829179621",
+        "AN202609081829136872"
+      ],
+      "new_announcement_ids": [
+        "AN202609101829233405",
+        "AN202609091829179621"
+      ],
+      "status": "new_announcements_key_sections_reviewed",
+      "assessment": "09-10晚间H股公告原文第4页核验：09-09回购H股12万股、支付473.083万港元；09-10回购23.58万股、支付892.9232万港元，作为库存股份持有，授权期内累计回购138.28万股；未作已注销处理，不把回购金额直接加入合理价。"
+    },
+    {
+      "security_code": "600036",
+      "held": true,
+      "announcement_ids": [
+        "AN202609081829136261"
+      ],
+      "new_announcement_ids": [],
+      "status": "previously_reviewed_announcements_only",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "600938",
+      "held": false,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "600970",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "600989",
+      "held": false,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "601225",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "601288",
+      "held": false,
+      "announcement_ids": [
+        "AN202609101829228409",
+        "AN202609101829228408"
+      ],
+      "new_announcement_ids": [
+        "AN202609101829228409",
+        "AN202609101829228408"
+      ],
+      "status": "new_announcements_key_sections_reviewed",
+      "assessment": "09-10晚间公告核验：09-29临时股东会资料重申2026中期每10股派1.297元、A股预计10-21派息；定增拟募资不超过1600亿元、其中财政部1300亿元，用于补充核心一级资本（09-06董事会方案）。议案待审议及发行，尚无已完成股本变动，2026财年尚不完整，当前FY2025每股分红锚不变。"
+    },
+    {
+      "security_code": "601318",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-10除息：每股现金0.98元，A股股权登记日09-09，除息及现金红利发放日09-10；今日持仓成本及止损锚已同额折减。股利折现按既有OI-131实现归一化，完整财年分红锚未换年。"
+    },
+    {
+      "security_code": "601398",
+      "held": false,
+      "announcement_ids": [
+        "AN202609101829229131",
+        "AN202609101829229129",
+        "AN202609101829229037",
+        "AN202609101829229036"
+      ],
+      "new_announcement_ids": [
+        "AN202609101829229131",
+        "AN202609101829229129",
+        "AN202609101829229037",
+        "AN202609101829229036"
+      ],
+      "status": "new_announcements_key_sections_reviewed",
+      "assessment": "09-10晚间公告核验：200亿元无固定期限资本债第四期发行完成，前5年票息1.86%，用于补充其他一级资本；09-29临时股东会资料重申2026中期每10股派1.511元、拟10-21向A股派息，以及拟定增募资不超过1000亿元用于补充核心一级资本（此前09-06方案）。本次为议案与融资进展，普通股定增未完成，2026财年尚不完整，当前FY2025每股分红锚不变。"
+    },
+    {
+      "security_code": "601838",
+      "held": false,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "603369",
+      "held": false,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "603529",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "920599",
+      "held": false,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    }
+  ],
+  "new_documents": [
+    {
+      "art_code": "AN202609101829233405",
+      "title": "牧原股份:H股公告(翌日披露报表)",
+      "notice_date": "2026-09-11",
+      "display_time": "2026-09-10 18:52:12:624",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609101829233405_1.pdf",
+      "sha256": "0debb5c1bbe63034bf97ddbd46d9a8f69aeb1dabcbbb96c4e78daa48a2335db2",
+      "size": 136513,
+      "review_method": "pypdf text/key sections; rendered page 4"
+    },
+    {
+      "art_code": "AN202609101829229131",
+      "title": "工商银行:工商银行2026年第二次临时股东会会议资料",
+      "notice_date": "2026-09-11",
+      "display_time": "2026-09-10 17:09:27:496",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609101829229131_1.pdf",
+      "sha256": "88cfecebf2a9e7e6bea089df7d931d8636135255fd4bdd447e9d8f76426b594f",
+      "size": 478025,
+      "review_method": "pypdf text/key sections"
+    },
+    {
+      "art_code": "AN202609101829229129",
+      "title": "工商银行:工商银行H股通函",
+      "notice_date": "2026-09-11",
+      "display_time": "2026-09-10 17:09:21:587",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609101829229129_1.pdf",
+      "sha256": "d967b64ba29ee15517c5f93cc5ee94318fbdea750d1dc12529f3960fdec4aa19",
+      "size": 724171,
+      "review_method": "rendered cover and cross-check A-share materials"
+    },
+    {
+      "art_code": "AN202609101829229037",
+      "title": "工商银行:工商银行关于2026年无固定期限资本债券(第四期)(债券通)发行完毕的公告",
+      "notice_date": "2026-09-11",
+      "display_time": "2026-09-10 17:08:36:563",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609101829229037_1.pdf",
+      "sha256": "a3e440912cf71f0c54a6f54ec94c6577b8b2084a59860e71b0defb3ab3d1d612",
+      "size": 87321,
+      "review_method": "pypdf text/key sections"
+    },
+    {
+      "art_code": "AN202609101829229036",
+      "title": "工商银行:工商银行关于召开2026年第二次临时股东会的通知",
+      "notice_date": "2026-09-11",
+      "display_time": "2026-09-10 17:08:00:542",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609101829229036_1.pdf",
+      "sha256": "eb4cf043c442f2f9d8ea5223f6d3b28bb050a6335ab335ebccf3b7b8084cf374",
+      "size": 133089,
+      "review_method": "pypdf text/key sections"
+    },
+    {
+      "art_code": "AN202609101829228409",
+      "title": "农业银行:农业银行关于召开2026年度第二次临时股东会的通知",
+      "notice_date": "2026-09-11",
+      "display_time": "2026-09-10 16:59:33:585",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609101829228409_1.pdf",
+      "sha256": "0a23dfe5cff4e004f8d756102662fd1ce28b000d7a08cd009d6b729f39c25691",
+      "size": 166119,
+      "review_method": "pypdf text/key sections"
+    },
+    {
+      "art_code": "AN202609101829228408",
+      "title": "农业银行:农业银行2026年度第二次临时股东会会议资料",
+      "notice_date": "2026-09-11",
+      "display_time": "2026-09-10 16:59:09:529",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609101829228408_1.pdf",
+      "sha256": "4350ab04c4ba33553e3660af3b51553d674e3ab8645799034433635008f52961",
+      "size": 986812,
+      "review_method": "pypdf text/key sections"
+    },
+    {
+      "art_code": "AN202609091829179621",
+      "title": "牧原股份:H股公告(翌日披露报表)",
+      "notice_date": "2026-09-10",
+      "display_time": "2026-09-09 18:48:03:560",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609091829179621_1.pdf",
+      "sha256": "40c2bb82421768fb665ebabf741a806bb82256e4124662752fab50165c004d2c",
+      "size": 136513,
+      "review_method": "pypdf text/key sections; rendered page 4"
+    }
+  ],
+  "corporate_action": "09-10除息：每股现金0.98元，A股股权登记日09-09，除息及现金红利发放日09-10；今日持仓成本及止损锚已同额折减。股利折现按既有OI-131实现归一化，完整财年分红锚未换年。",
+  "company_assessments": {
+    "601318": {
+      "name": "中国平安",
+      "assessment": "09-10除息：每股现金0.98元，A股股权登记日09-09，除息及现金红利发放日09-10；今日持仓成本及止损锚已同额折减。股利折现按既有OI-131实现归一化，完整财年分红锚未换年。",
+      "source_urls": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12580396&stockid=601318"
+    },
+    "002714": {
+      "name": "牧原股份",
+      "assessment": "09-10晚间H股公告原文第4页核验：09-09回购H股12万股、支付473.083万港元；09-10回购23.58万股、支付892.9232万港元，作为库存股份持有，授权期内累计回购138.28万股；未作已注销处理，不把回购金额直接加入合理价。",
+      "source_urls": "https://pdf.dfcfw.com/pdf/H2_AN202609101829233405_1.pdf; https://pdf.dfcfw.com/pdf/H2_AN202609091829179621_1.pdf"
+    },
+    "601398": {
+      "name": "工商银行",
+      "assessment": "09-10晚间公告核验：200亿元无固定期限资本债第四期发行完成，前5年票息1.86%，用于补充其他一级资本；09-29临时股东会资料重申2026中期每10股派1.511元、拟10-21向A股派息，以及拟定增募资不超过1000亿元用于补充核心一级资本（此前09-06方案）。本次为议案与融资进展，普通股定增未完成，2026财年尚不完整，当前FY2025每股分红锚不变。",
+      "source_urls": "https://pdf.dfcfw.com/pdf/H2_AN202609101829229037_1.pdf; https://pdf.dfcfw.com/pdf/H2_AN202609101829229131_1.pdf"
+    },
+    "601288": {
+      "name": "农业银行",
+      "assessment": "09-10晚间公告核验：09-29临时股东会资料重申2026中期每10股派1.297元、A股预计10-21派息；定增拟募资不超过1600亿元、其中财政部1300亿元，用于补充核心一级资本（09-06董事会方案）。议案待审议及发行，尚无已完成股本变动，2026财年尚不完整，当前FY2025每股分红锚不变。",
+      "source_urls": "https://pdf.dfcfw.com/pdf/H2_AN202609101829228408_1.pdf; https://pdf.dfcfw.com/pdf/H2_AN202609101829228409_1.pdf"
+    }
+  },
+  "sector_checks": [
+    {
+      "scope": "大盘及银行板块",
+      "finding": "沪深主指缩量下跌、银行板块相对走强；指数收盘和成交额已与腾讯收盘快照核对。市场宽度未取得完整家数。",
+      "source": "https://www.cnfin.com/yw-lb/detail/20260910/4468004_1.html"
+    },
+    {
+      "scope": "煤炭与化工",
+      "finding": "检索出现港口动力煤指数走强、部分陕蒙坑口回调及乙二醇报价抬升的线索；品种、地区与成本口径不同，尚未完成公司实现售价及价差交叉核验，不用其改动生产盈利锚。",
+      "source": "https://fund.eastmoney.com/a/202609103870406226.html; https://www.china5e.com/news/news-1209021-1.html; https://licai.cofool.com/user/guide_view_3477607.html"
+    },
+    {
+      "scope": "生猪",
+      "finding": "已查询9月10日猪肉批发市场报价及同业资讯；未核验统一生猪出栏价与公司完全成本同口径序列。沿用09-07已核验的牧原8月销售数据，未以批发猪肉价替代生猪实现售价。",
+      "source": "https://4g.stockstar.com/detail/IG2026091000019150; https://www.cpcti.com/?channel=4"
+    }
+  ],
+  "valuation_outcome": "本轮未发现需新增重建模型的已核实事实；沿用扫描前已更新的v4.179生产带，完成平安除息动态归一化。银行资本补充议案待实际发行后核验每股摊薄及分红锚。",
+  "limitations": [
+    "公告查询截至北京时间22:30，公告日期包含09-11但仅纳入已在该时刻公开条目。",
+    "8份新公告重点阅读分红、资本补充和回购内容；牧原两份第4页及工行H股通函封面另经渲染核验，H股通函条款以对应A股会议资料交叉核对，未声称逐页全文审计。",
+    "18家公司公告范围覆盖完成；产业、竞争者和档案高频指标仅部分核验，未完成全面行业巡检。"
+  ]
+}
