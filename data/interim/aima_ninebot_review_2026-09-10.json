@@ -167,5 +167,81 @@
     "no_complete_direct_peer_return_panel",
     "no_completed_new_capital_replicability_verdict"
   ],
-  "report": "docs/reports/aima_ninebot_review_2026-09-10.zh.md"
+  "report": "docs/reports/aima_ninebot_review_2026-09-10.zh.md",
+  "oi168_trigger_and_scope_followup": {
+    "reviewed_at_utc": "2026-09-10T19:36:47.498395+00:00",
+    "trigger": "Maintenance cash model audit found duplicate payable aggregation in Hualu Hengsheng 2025 cached annual report; follow-on common-function audit found omitted financing receivables.",
+    "discovery_company": "600426 华鲁恒升",
+    "hualu_payable_inputs": {
+      "aggregate": 1614897803.7,
+      "accounts": 1324897803.7,
+      "notes": 290000000.0
+    },
+    "initial_audit_log_beijing": "2026-09-09T16:08:58+08:00",
+    "bug_recorded_by_beijing": "2026-09-09T16:50:08+08:00",
+    "production_landing_commit_beijing": "2026-09-09T19:46:37+08:00",
+    "production_landing_used_frozen_inputs": true,
+    "production_snapshot_v_diff": {
+      "comparison": "318d5ed0^ to 318d5ed0",
+      "rows": 181,
+      "counts": {
+        "unchanged": 74,
+        "higher": 47,
+        "lower": 60
+      },
+      "unchanged_threshold_absolute_relative_pct": 0.001,
+      "all_report_and_available_dates_unchanged": true,
+      "file": "data/interim/oi168_production_v_changes_2026-09-09.csv"
+    },
+    "research_raw_latest_valid_band_counts": {
+      "higher": 48,
+      "lower": 58,
+      "unchanged": 73,
+      "total": 179,
+      "scope": "research raw latest-report valid bands, differs from materialized production snapshot"
+    },
+    "current_production_diagnostics": {
+      "rows": 181,
+      "wc_aggregation_counts": {
+        "operating": 181
+      },
+      "positive_wc_conflict_rows": 0
+    },
+    "source_audit_scope": {
+      "nonfinancial_cached_annual_rows": 6064,
+      "rows_with_dedup_wc_change": 5980,
+      "security_codes_with_dedup_change": 300,
+      "not_all_listed_issuers": true
+    },
+    "sources": [
+      "docs/reports/reinvestment_cash_flow_audit_2026-09-09.md",
+      "data/experiments/exp_maintenance_cash_20260909/preregister.md",
+      "data/experiments/exp_oi168_wc_20260909/source_audit.json",
+      "data/experiments/exp_oi168_land_20260909/preregister.md",
+      "docs/reports/oi168_working_capital_2026-09-09.md"
+    ],
+    "limitations": [
+      "common calculation repair does not certify every historical source item",
+      "34 early source-conflict rows retained outside then-current estimation and backtest windows",
+      "unchanged V does not imply unchanged WC inputs"
+    ],
+    "production_vs_research_count_reconciliation": {
+      "old_band_fallback_unchanged": [
+        "000725",
+        "688981"
+      ],
+      "603993": {
+        "research_direction": "higher",
+        "production_direction": "lower",
+        "exright_cash_applied": 0.095
+      },
+      "688271": {
+        "research_direction": "unchanged",
+        "production_direction": "lower",
+        "exright_cash_applied": 0.13
+      },
+      "pure_wc_research_changed": 106,
+      "all_production_snapshot_changed": 107
+    }
+  }
 }
