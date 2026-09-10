@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.178
+# A股选股-估值-量价操作流程 v4.179
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -259,6 +259,14 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 4. 带文件写 `bps_operating`／`external_equity_ps`／`external_equity_cum_ps`／`shares_est`／`bps_basis_date`／`equity_anchor_mode` 列；建带结尾打印 `|x|/BPS` 分布、超过 10% 的最新带名单与各退化模式计数（§13 第 3 条）。
 5. **BPS 的股本基准按数据判定**：`bps_basis_date` 由本行与上一行 BPS 之比对照送转因子按对数距离判定；回测逐日展开、生产带除权归一化、档案折算三处的**送转**窗口一律自 `bps_basis_date` 起算，**现金分红**窗口自公告日起算。
 
+**少数股权交易的事件口径**：发现少数股权收购、回购／退出义务或对应分红远期时，在 `data/reference/minority_claim_events.json` 登记原始披露事实；按 `known_from` 取估值时已知版本，并要求快照 `report_date` 与模型报告期一致，不把签约当作交割，不向历史回填较晚披露的数值。普通非事件公司维持上述窗口法。事件公司的处理统一为：
+
+- 同期完整股权桥快照包含股数、合并权益、债务字段合计、现金、营业收入、各项回购及分红义务、已在债务合计内的金额，以及覆盖／未覆盖的少数权益。已计金额从金融债务中移出，单独的合同现金请求权计一次；未计金额补入资本结构。流动／非流动科目迁移不改变经济扣减。
+- 明确固定对价退出的权利，扣披露的回购负债现值及退出前分红现值，不再分走永续权益；仍存续的少数股权按最新同口径盈利份额与账面下界计值，其已经确认的分红请求权作为同一普通权益请求权的下界，不重复相加。无法核清覆盖关系或退出对价仍取决于未来估值时，标记 `minority_claim_blocked`、判无法估值，不假定只扣固定负债即可取得全部权益。
+- 持股变化后不混用变化前的集团盈利占比：用最新完整财年的集团少数损益，减去该子公司当年披露的少数损益，再加该子公司同年利润乘当前未被固定退出覆盖的持股比例，除以同年合并利润，夹 `[0, 0.95]`；多子公司逐项合计，负利润或缺失输入判不可估。该代理值和账面下界均留痕，不把子公司持股比例直接当作集团利润比例。
+- 事件期间的经营分子按合并 NOPAT 总额归一化后除以快照股数；历史分子折到同一股数，沿用增长信任、峰谷守卫、增长与折现参数。季报当期化只用合并净利 TTM／年报合并净利，禁止将买入少数股权带来的归母增厚当作合并经营增长；无合并 TTM 则使用年报锚并注明。债务与权益权重取同一快照，现金已含交割付款，不再叠加外生权益残差。需同口径完整快照而尚未补齐时判不可估。
+- 候选、B2、零增长及敏感度共用 `scripts/minority_claims.py` 的股权桥；预告仅披露归母利润时不对事件带作比例叠加。新拒绝必须阻断旧带回退，档案／阅读页显示具体原因；事实更新后重算恢复，禁止手填估值带。事件表只登记财报事实和合同权利，不接受 `m`、EV、IV、估值倍数或目标价。
+
 统一参数：折现率 `r = 10%`（统一要求回报率，不逐公司调整）；`g_T = 3%`；显式期 10 年线性 fade。护栏拒绝（亏损、`ROE_T/ROIC_T` 贴 `g_T`、零增长股权价值 ≤ 0、**薄权益**——每股净负债 ≥ 50% 每股企业价值）统一判「无法估值」（§6.5.2.4）。生产参数由 §6.7 的建带命令唯一给出，不在逐票档案临时改写。
 
 所有正常模型带均为 `[0.90×V, 1.10×V]`，中值即 `V`；带宽只作区间展示，不代表统计置信区间。
@@ -363,7 +371,7 @@ python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD \
   --bands data/processed/roic_bands_b2.csv --states data/processed/a_share_daily_states_b2.csv \
   --out data/processed/a_share_pool_model_bands_b2.csv
 python3 scripts/apply_forecast_band_overlay.py --signal-date YYYY-MM-DD --bands data/processed/a_share_pool_model_bands_b2.csv
-python3 scripts/build_hold_model_bands.py   # 持仓侧池带 = 逐票取候选侧与 B2 较高 V → a_share_pool_model_bands_hold.csv
+python3 scripts/build_hold_model_bands.py --signal-date YYYY-MM-DD   # 持仓侧池带 = 逐票取候选侧与 B2 较高 V → a_share_pool_model_bands_hold.csv
 python3 scripts/apply_model_bands_to_dossiers.py --signal-date YYYY-MM-DD
 python3 scripts/build_company_dossier_readmes.py   # 档案 CSV → README（§6.6 带变动后重渲染；--check 只验漂移）
 

@@ -31,6 +31,7 @@ OUT = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
 
 from divspread_names import is_divspread_financial   # v4.56：银行＋保险同一判定（OI-085）
 from a_share_signal_dates import evidence_iso_for_signal
+import minority_claims
 
 
 def is_bank(name: str, code: str = "") -> bool:
@@ -67,6 +68,7 @@ def main() -> int:
     print(f"成员 {len(pool)} 只 ← 池（分层表 L1-L3 ∪ 池 CSV；池外档案不进生产带文件）")
 
     best: dict[str, dict] = {}
+    claim_blocked: dict[str, dict] = {}
     evaluated: dict[str, tuple[str, str]] = {}   # code → (可得日, 报告期)
     # §6.5.2.4 主体重置：重置后报告期已评估（含拒绝行）时，不再采纳早于重置日的 ok 行；
     # 重置后无 ok 行时写入最新评估行（status 非 ok、无 V），让 model_evaluated_at 与「无法估值」同时传下去
@@ -95,6 +97,9 @@ def main() -> int:
                 pk = (avail, row.get("report_date") or "")
                 if code not in post_latest or pk > (post_latest[code].get("available_at", ""), post_latest[code].get("report_date", "")):
                     post_latest[code] = row
+            if minority_claims.row_blocked(row):
+                if code not in claim_blocked or minority_claims.row_key(row) > minority_claims.row_key(claim_blocked[code]):
+                    claim_blocked[code] = row
             if row.get("status") != "ok":
                 continue
             key = (avail, row.get("report_date") or "")
@@ -105,6 +110,11 @@ def main() -> int:
     for c in [c for c in best if c in reset and c in post_seen and (best[c].get("report_date") or "") < reset[c]]:
         best[c] = dict(post_latest[c])
         print(f"  · 主体重置：{pool.get(c, c)} 重置后无 ok 带，不沿用重置前的带（写入最新评估行 {best[c].get('report_date')}，status={best[c].get('status')}）")
+    for code, row in claim_blocked.items():
+        if code not in best or minority_claims.row_key(row) >= minority_claims.row_key(best[code]):
+            best[code] = dict(row)
+    for code, row in list(best.items()):
+        best[code] = minority_claims.invalidate_row(row, a.as_of)
     # 银行：V 换成采纳逐日状态最后一行的股利折现值
     bank_codes = {c for c, n in pool.items() if is_bank(n, c)}
     bank_last: dict[str, dict] = {}
@@ -117,14 +127,14 @@ def main() -> int:
                     bank_last[c] = row
     replaced = 0
     for c, row in best.items():
-        if c in bank_codes and c in bank_last:
+        if c in bank_codes and c in bank_last and not minority_claims.row_blocked(row):
             v = float(bank_last[c]["intrinsic_value"])
             row["intrinsic_value"] = f"{v:.4f}"
             row["band_low"], row["band_high"] = f"{v * 0.90:.4f}", f"{v * 1.10:.4f}"
             row["roic_path"] = "bank_divspread"
             replaced += 1
 
-    for col in ("model_evaluated_at", "model_evaluated_report_date"):
+    for col in ("model_evaluated_at", "model_evaluated_report_date", *minority_claims.ROW_FIELDS):
         if col not in fields:
             fields.append(col)
     for c, row in best.items():

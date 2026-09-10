@@ -1,0 +1,10 @@
+{
+  "minority_claim_tests": 22,
+  "production_bridge_tests": 16,
+  "forecast_ex_date_tests": 1,
+  "strategy_parameter_sync_tests": 4,
+  "valuation_validation_cases": 12,
+  "documentation_errors": 0,
+  "git_diff_check": "pass with core.whitespace=cr-at-eol (CSV line endings)",
+  "scope": "targeted replay; no full-market rebuild or backtest"
+}

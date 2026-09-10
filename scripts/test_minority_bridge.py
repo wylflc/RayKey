@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import roic_inputs as ri  # noqa: E402
+from minority_claims import equity_bridge
 
 
 def _year(period, net_profit=None, minority_profit=None,
@@ -49,17 +50,11 @@ class MinorityShare(unittest.TestCase):
 
 
 class EquityBridge(unittest.TestCase):
-    """`build_historical_valuation_bands.equity_bridge` 的口径，就地复算（闭包不可直接导入）。"""
+    """Exercise the production bridge shared by model and forecast overlay."""
 
     @staticmethod
     def bridge(ev, fin_nd, book_ps, m, x_ps=0.0, basis="earnings"):
-        minority, proportional = book_ps, 0.0
-        if basis == "earnings" and m > 0:
-            total_eq = ev - fin_nd
-            if total_eq > 0 and m * total_eq > book_ps:
-                minority = proportional = m * total_eq
-        nd = fin_nd + minority - x_ps
-        return nd, nd - proportional
+        return equity_bridge(ev, fin_nd, book_ps, m if basis == "earnings" else 0.0, x_ps)
 
     def nd(self, *a, **k):
         return self.bridge(*a, **k)[0]

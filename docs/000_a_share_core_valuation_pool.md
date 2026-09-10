@@ -205,7 +205,7 @@
 | --- | --- | --- | --- | ---: | ---: | --- | --- |
 | 000063 | [中兴通讯](../data/companies/000063_中兴通讯/README.md) | — | boundary_pending | 22.70-27.74 | 25.22 | 内在价值模型·ROIC 口径 | 2026-09-10 |
 | 000425 | [徐工机械](../data/companies/000425_徐工机械/README.md) | — | boundary_pending | 8.14-9.95 | 9.04 | 内在价值模型·ROIC 口径 | 2026-09-10 |
-| 000938 | [紫光股份](../data/companies/000938_紫光股份/README.md) | — | boundary_pending | 11.21-13.70 | 12.46 | 内在价值模型·ROIC 口径 | 2026-09-10 |
+| 000938 | [紫光股份](../data/companies/000938_紫光股份/README.md) | — | boundary_pending | — | — | 无法估值 | 2026-09-10 |
 | 000951 | [中国重汽](../data/companies/000951_中国重汽/README.md) | — | boundary_pending | 16.16-19.76 | 17.96 | 内在价值模型·ROIC 口径 | 2026-09-10 |
 | 000977 | [浪潮信息](../data/companies/000977_浪潮信息/README.md) | — | boundary_pending | 24.90-30.44 | 27.67 | 内在价值模型·ROIC 口径 | 2026-09-10 |
 | 002130 | [沃尔核材](../data/companies/002130_沃尔核材/README.md) | — | boundary_pending | 12.29-15.02 | 13.65 | 内在价值模型·ROIC 口径 | 2026-09-10 |

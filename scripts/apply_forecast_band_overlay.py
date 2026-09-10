@@ -10,6 +10,7 @@ import argparse
 import csv
 import sys
 from pathlib import Path
+import minority_claims
 
 from a_share_signal_dates import evidence_iso_for_signal
 
@@ -251,9 +252,11 @@ def recompute(band: dict, scale: float) -> tuple[float | None, float, str] | Non
         if fin_nd is not None and minority_book is not None:
             m_share = num(band.get("minority_share")) or 0.0
             x_ps = num(band.get("external_equity_ps")) or 0.0
-            total_equity = ev_new - fin_nd
-            minority = max(minority_book, m_share * total_equity) if (m_share > 0 and total_equity > 0) else minority_book
-            return ev_new, total_equity - minority + x_ps, "nopat_ps"
+            debt, _ = minority_claims.equity_bridge(
+                ev_new, fin_nd, minority_book, m_share, x_ps,
+                num(band.get("minority_fixed_claim_ps")) or 0.0,
+                num(band.get("minority_dividend_floor_ps")) or 0.0)
+            return ev_new, ev_new - debt, "nopat_ps"
         return ev_new, ev_new - net_debt, "nopat_ps"
     return None
 
@@ -320,11 +323,12 @@ def main() -> int:
                 if cap and price and price > 0:
                     market_shares[(row.get("security_code") or "").strip()] = cap * 1e9 / price
 
-    out_header = header + [c for c in OVERLAY_COLS if c not in header]
+    out_header = header + [c for c in (*OVERLAY_COLS, *minority_claims.ROW_FIELDS) if c not in header]
     applied, skipped, unchanged = [], [], 0
     bank_cleared: list[tuple[str, str, str]] = []
 
     for band in rows:
+        band.update(minority_claims.invalidate_row(band, args.as_of))
         for col in OVERLAY_COLS:
             band.setdefault(col, "")
         code = (band.get("security_code") or "").strip()
@@ -332,6 +336,11 @@ def main() -> int:
         band_period = (band.get("report_date") or "")[:10]
         if (band.get("status") or "").strip() not in ("", "ok"):
             unchanged += 1
+            continue
+
+        if minority_claims.event_as_of(code, args.as_of):
+            band["overlay_note"] = "少数股权事件采用同期合并利润与请求权快照，归母预告不能线性叠加；等待完整快照更新"
+            skipped.append((name, band["overlay_note"]))
             continue
 
         ev = pick_evidence(code, forecasts, express, band_period, args.as_of)

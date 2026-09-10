@@ -555,10 +555,17 @@ def load_model_bands(path: Path, as_of: str) -> dict[str, dict]:
 
     **不能按报告期排序取最新**——未到披露日的带在当日不可用，那是后视。
     """
+    import minority_claims
     latest: dict[str, tuple[str, dict]] = {}
+    blocked: dict[str, dict] = {}
     stale: dict[str, tuple[str, str]] = {}
     with path.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
+            avail = row.get("band_available_at") or row.get("available_at") or ""
+            code = (row.get("security_code") or "").zfill(6)
+            if len(avail) == 10 and avail <= as_of and minority_claims.row_blocked(row):
+                if code not in blocked or minority_claims.row_key(row) >= minority_claims.row_key(blocked[code]):
+                    blocked[code] = row
             status = row.get("status")
             if status not in (None, "", "ok"):
                 continue
@@ -576,7 +583,9 @@ def load_model_bands(path: Path, as_of: str) -> dict[str, dict]:
         print(f"  [陈旧带排除·OI-068] 模型带早于 {MODEL_BAND_MIN_AVAILABLE} 共 {len(dropped)} 只，"
               f"无 P/V 不进判定（档案层同判无法估值，§6.5.2.4 统一口径）："
               + "、".join(f"{n}({d})" for _, (d, n) in sorted(dropped.items())))
-    return {code: row for code, (_, row) in latest.items()}
+    return {code: row for code, (_, row) in latest.items()
+            if not minority_claims.row_blocked(minority_claims.invalidate_row(row, as_of))
+            and (code not in blocked or minority_claims.row_key(row) > minority_claims.row_key(blocked[code]))}
 
 
 @lru_cache(maxsize=1)

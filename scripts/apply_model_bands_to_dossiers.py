@@ -10,6 +10,7 @@ import argparse
 import csv
 import sys
 from pathlib import Path
+import minority_claims
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -45,8 +46,9 @@ DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 
 def latest_model_bands(path: Path, min_available: str, codes: set[str] | None = None,
                        as_of: str | None = None) -> tuple[dict, dict]:
-    """按 (available_at, report_date) 取最新可用带，返回可用与过旧两组。"""
+    """按 (available_at, report_date) 取最新带，返回可用与过旧／事件阻断两组。"""
     best: dict[str, dict] = {}
+    blocked: dict[str, dict] = {}
     import roic_inputs
     reset = roic_inputs.load_entity_reset()
     post_seen: set[str] = set()
@@ -61,6 +63,10 @@ def latest_model_bands(path: Path, min_available: str, codes: set[str] | None = 
             continue                                  # v4.54：全市场带文件只看池外档案代码
         if as_of and (row.get("available_at") or "")[:10] > as_of:
             continue
+        if minority_claims.row_blocked(row):
+            c = row["security_code"]
+            if c not in blocked or minority_claims.row_key(row) > minority_claims.row_key(blocked[c]):
+                blocked[c] = row
         if row.get("status") != "ok":
             continue
         if roic_inputs.reset_supersedes(reset, row.get("security_code") or "", row.get("report_date") or "",
@@ -77,7 +83,18 @@ def latest_model_bands(path: Path, min_available: str, codes: set[str] | None = 
             best[code] = row
     if any(r.get("forecast_overlay") == "manual_override" for r in best.values()):
         raise ValueError("模型带含人工覆盖值，请按工作流程重建模型带")
+    if as_of:
+        for c, r in list(best.items()):
+            checked = minority_claims.invalidate_row(r, as_of)
+            if minority_claims.row_blocked(checked):
+                blocked[c] = checked
+    for c, r in list(blocked.items()):
+        if c in best and minority_claims.row_key(best[c]) > minority_claims.row_key(r):
+            blocked.pop(c)
+        else:
+            best.pop(c, None)
     stale = {c: r for c, r in best.items() if r["available_at"][:10] < min_available}
+    stale.update(blocked)
     return {c: r for c, r in best.items() if c not in stale}, stale
 
 
@@ -157,10 +174,13 @@ def main() -> int:
                                      else "模型价值趋零（零增长永续价值≈净负债，IV<0.01）" if code in near_zero
                                      else "银行/保险股利折现：无已知完整财年现金分红" if code in near_zero_div
                                      else "模型对各期均拒绝出带"))
+            if code in stale and minority_claims.row_blocked(stale[code]):
+                row["band_method"] = "无法估值·" + stale[code]["reason"]
             row["decided_by"] = "内在价值模型（§6.5.2.3；模型重新可算后自动回归模型带）"
             row["anchor_earnings_yi"] = ""
             row["reviewed_at"] = args.as_of
-            (kept_stale if code in stale else kept_unvaluable).append(row["security_name"])
+            (kept_stale if code in stale and not minority_claims.row_blocked(stale[code])
+             else kept_unvaluable).append(row["security_name"])
             continue
 
         # 已归一化的生产带保持幂等；池外原始模型带按相同事件规则调整到信号日。

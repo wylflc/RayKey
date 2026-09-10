@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "events": [
+    {
+      "security_code": "000938",
+      "event_id": "000938-h3c-2024-closing",
+      "effective_date": "2024-09-05",
+      "report_date": "2024-06-30",
+      "known_from": "2024-09-05",
+      "status": "unresolved",
+      "reason": "30%股权交易已付款交割、持股由51%变为81%；交割后同期股权桥尚未披露，不能继续使用交割前盈利份额与债务现金",
+      "sources": [
+        "https://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=10468964&stockid=000938"
+      ]
+    },
+    {
+      "security_code": "000938",
+      "event_id": "000938-h3c-2024-annual",
+      "effective_date": "2024-12-31",
+      "report_date": "2024-12-31",
+      "known_from": "2025-04-29",
+      "status": "unresolved",
+      "reason": "新华三持股结构改变且剩余股权有期权远期安排；历史少数盈利份额未区分回购权利与存续权益，不能叠加扣减",
+      "sources": [
+        "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=11044954&stockid=000938"
+      ]
+    },
+    {
+      "security_code": "000938",
+      "event_id": "000938-h3c-2025-annual",
+      "effective_date": "2025-12-31",
+      "report_date": "2025-12-31",
+      "known_from": "2026-04-15",
+      "status": "unresolved",
+      "reason": "新华三19%股权远期负债95.40亿元已含于债务；共同受让及后续退出权利未完成统一计量，42.33%历史盈利份额与该负债不能同时沿用",
+      "facts": {
+        "redemption_liability": 9540163117.01,
+        "liability_in_reported_debt": 9540163117.01,
+        "reported_debt_field": "NONCURRENT_LIAB_1YEAR",
+        "h3c_minority_fraction": 0.19,
+        "h3c_minority_equity": 2247053000.75,
+        "h3c_annual_net_profit": 3151488963.87,
+        "h3c_annual_minority_profit": 598782903.14
+      },
+      "sources": [
+        "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12088791&stockid=000938",
+        "https://disc.static.szse.cn/download/disc/disk03/finalpage/2025-11-18/008e5307-2a50-4cba-b8c2-e25de01082bd.PDF"
+      ]
+    },
+    {
+      "security_code": "000938",
+      "event_id": "000938-h3c-2026-interim",
+      "effective_date": "2026-06-30",
+      "report_date": "2026-06-30",
+      "known_from": "2026-08-29",
+      "status": "unresolved",
+      "reason": "旧19%远期已终止；新10.06%回购及全体少数股东分红远期列其他非流动负债，退出含按未来估值协商的上翻权利，固定负债不足以替代全部权益；待同期合同请求权完整计量",
+      "facts": {
+        "derecognized_redemption_liability": 9540163117.01,
+        "redemption_liability": 4446099542.00,
+        "dividend_liability": 791780085.62,
+        "liability_in_reported_debt": 0,
+        "reported_liability_caption": "其他非流动负债",
+        "h3c_minority_fraction": 0.1202,
+        "redemption_fraction": 0.1006,
+        "h3c_minority_equity": 1384474274.48,
+        "h3c_interim_net_profit": 2388090625.02,
+        "h3c_interim_minority_profit": 345484036.88
+      },
+      "sources": [
+        "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12565854&stockid=000938",
+        "https://disc.static.szse.cn/download/disc/disk03/finalpage/2025-11-18/008e5307-2a50-4cba-b8c2-e25de01082bd.PDF",
+        "https://disc.static.szse.cn/download/disc/disk03/finalpage/2025-11-29/d43837cd-6faa-41d1-8f84-6678ef0a4f72.PDF"
+      ]
+    }
+  ]
+}

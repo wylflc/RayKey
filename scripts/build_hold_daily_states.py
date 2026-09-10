@@ -21,6 +21,7 @@ import argparse
 import csv
 import sys
 from pathlib import Path
+import minority_claims
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASE = ROOT / "data/processed/a_share_daily_states_adopted.csv"
@@ -59,6 +60,8 @@ class BlockReader:
                 break
             block.append(row)
         self.rows += len(block)
+        if code in minority_claims.registry():
+            block = [r for r in block if minority_claims.state_allowed(dict(zip(self.header, r)))]
         return code, block
 
 

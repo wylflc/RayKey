@@ -94,6 +94,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import roic_inputs  # noqa: E402
+import minority_claims  # noqa: E402
 from disclosure_dates import available_at as statutory_available_at  # noqa: E402
 import restatement_archive  # noqa: E402
 
@@ -1353,6 +1354,10 @@ class Band:
     roic_path: str | None = None              # growth ／ zero_growth ／ equity_fallback
     minority_share: float | None = None       # 少数股东经济份额 m（--minority-basis earnings）
     minority_share_basis: str = ""            # earnings ／ book_fallback ／ none
+    minority_claim_status: str = ""
+    minority_claim_event: str = ""
+    minority_fixed_claim_ps: float = 0.0
+    minority_dividend_floor_ps: float = 0.0
     roic_nopat_mode: str = ""                 # median ／ onesided ／ cyclical_median
     roic_g_source: str = ""                   # capital ／ trailing ／ none
     mos: float | None = None
@@ -1477,7 +1482,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
         # 单边口径**读 TTM ROE 来定取哪一侧**，故 TTM 各分量的公告日同样进生效日——
         # 只在最终取了 TTM 那一侧才结转，就是拿后来才披露的数做了当期的选择（§12.4 前视）。
         evidence += eps.evidence_dates + roe.evidence_dates
-    available_at = max(evidence)
+    available_at = max([*evidence, getattr(args, "minority_as_of", "")])
 
     params = TIER_PARAMS.get(tier, TIER_PARAMS[DEFAULT_TIER])
     rf = erp = beta = None
@@ -1530,6 +1535,22 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                 rf=rf, erp=erp, beta=beta, g_terminal=g_terminal, roe_terminal=roe_t,
                 mos=MOS_BY_TIER.get(tier),
                 incremental_roe=iroe_value, incremental_roe_basis=iroe_basis)
+
+    claim_event = minority_claims.event_as_of(code, available_at)
+    claim_snapshot = None
+    if claim_event is not None:
+        band.minority_claim_event = claim_event["event_id"]
+        reason = minority_claims.blocking_reason(code, available_at, period)
+        if reason:
+            band.status, band.reason = "rejected", reason
+            band.minority_claim_status = "blocked"
+            return band
+        claim_snapshot = minority_claims.reconcile(claim_event)
+        band.minority_claim_status = "reconciled"
+        if getattr(args, "value_model", "dcf") != "roic" or code not in ROIC_YEARS:
+            band.status, band.reason = "rejected", "少数股权事件需要完整合并三表，不能退回权益口径"
+            band.minority_claim_status = "blocked"
+            return band
 
     # §6.5.1 第 1/3 条（v4.59，OI-086）权益口径：最新年报之后的外生权益 x 不进清洁盈余的账面，
     # `eps0 = roe0 × (BPS − x)`，x 按面值加回股权价值。年报为无三大报表时的参照（股数用 净利÷EPS，只进二阶项）；
@@ -1679,7 +1700,12 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                     roic0 = roic_inputs.normalized_roic(history)   # 主体重置：ROIC0 也只看重置后的财年
             base_year = min((y for y in long_hist_all if book_break is None or y.period >= book_break),
                             key=lambda y: y.period, default=None)
+            if claim_snapshot and claim_event["snapshot"]["annual_report_date"] != latest.period:
+                band.reason = "少数股权快照的年度利润与模型年报窗口不一致"
+                return band
             def e_op(year) -> float | None:
+                if claim_snapshot is not None:
+                    return latest.parent_equity  # Normalize consolidated amounts, then divide by snapshot shares.
                 return operating_equity(year, x_cum, base_year)
             if e_op(latest) is None and latest.parent_equity and latest.parent_equity > 0:
                 # 累计外生权益吃光账面（大额增发后持续亏损）：退回不调整并留痕，不让比率分母为零
@@ -1758,7 +1784,9 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                     ROIC_STATS["WACC·市值权重"] += 1
                 else:
                     ROIC_STATS["WACC·市值不可得退账面"] += 1
-            w = roic_inputs.wacc(r, rd, tax, equity_weight, latest.interest_debt)
+            w = roic_inputs.wacc(r, rd, tax,
+                                claim_snapshot.total_equity if claim_snapshot else equity_weight,
+                                claim_snapshot.capital_debt if claim_snapshot else latest.interest_debt)
             band.roic0, band.incremental_roic, band.reinvestment_rate = roic0, iroic, rr
             band.wacc, band.cost_of_debt, band.tax_rate = w, rd, tax
             if latest.nopat is None or latest.nopat <= 0:
@@ -1798,7 +1826,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                     long_hist = [y for y in long_hist if y.period >= book_break]
                 if tax_norm is not None:
                     long_hist = roic_inputs.with_tax_rate(long_hist, tax_norm)
-                long_ratios = [y.nopat / (e_op(y) + (y.treasury_shares if anchor_mode == "per_share" else 0.0))
+                long_ratios = [y.nopat / (e_op(y) + (y.treasury_shares if anchor_mode == "per_share" and not claim_snapshot else 0.0))
                                for y in sorted(long_hist, key=lambda x: x.period)
                                if y.nopat is not None and e_op(y) is not None]
                 peak_s = None
@@ -1882,6 +1910,10 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                 # 年报行 f=1 与旧式逐位相同；f 不可算（年报净利 ≤0、季报缺行、年报滞后一年以上）则 f=1。
                 f_ttm = (ttm_profit_factor(series, period, latest, reset_date if reset_active else None)
                          if getattr(args, "ttm_current", "on") == "on" else 1.0)
+                if claim_snapshot is not None:
+                    f_ttm = (claim_snapshot.ttm_profit / claim_snapshot.annual_profit
+                             if claim_snapshot.ttm_profit is not None and getattr(args, "ttm_current", "on") == "on"
+                             else 1.0)
                 band.ttm_factor = f_ttm
                 if reset_active and len(ratios) < 3:
                     # 主体重置且重置后不足三个年报：锚 = 最新年报比率 × TTM 因子（当期化），无中位、无峰谷守卫；
@@ -1982,6 +2014,15 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
             band.bps_operating, band.external_equity_ps = bps_op, x_ps
             band.external_equity_cum_ps, band.shares_est = x_cum_ps, shares_now
             band.bps_basis_date, band.equity_anchor_mode = basis_now, (x_mode + ("|" + x_note if x_note else ""))
+            if claim_snapshot is not None:
+                x_ps = x_cum_ps = 0.0
+                shares_now = claim_snapshot.shares
+                bps_op = latest.parent_equity / shares_now
+                band.bps_operating, band.external_equity_ps = bps_op, 0.0
+                band.external_equity_cum_ps, band.shares_est = 0.0, shares_now
+                band.bps_basis_date = period
+                band.equity_anchor_mode = ("minority_event_consolidated"
+                                          if claim_snapshot.ttm_profit is not None else "minority_event_annual_no_ttm")
             EXT_EQUITY_STATS[f"模式·{x_mode.split(',')[0]}"] += 1
             if abs(x_ps) > 0.05 * bps:
                 EXT_EQUITY_STATS["|x|>5%BPS 的带"] += 1
@@ -2006,6 +2047,14 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                 m_share, m_basis = roic_inputs.minority_share(history)
                 band.minority_share, band.minority_share_basis = m_share, m_basis
                 ROIC_STATS[f"少数股东份额·{m_basis}"] += 1
+            if claim_snapshot is not None:
+                fin_net_debt_ps = claim_snapshot.financial_net_debt / shares_now
+                minority_book_ps = claim_snapshot.residual_book / shares_now
+                m_share = claim_snapshot.residual_share
+                band.fin_net_debt_ps, band.minority_book_ps = fin_net_debt_ps, minority_book_ps
+                band.minority_share, band.minority_share_basis = m_share, "event_residual_earnings"
+                band.minority_fixed_claim_ps = claim_snapshot.fixed_claim / shares_now
+                band.minority_dividend_floor_ps = claim_snapshot.dividend_floor / shares_now
 
             def equity_bridge(ev_value: float) -> tuple[float, float]:
                 """每股企业价值 →（每股净负债含少数股东扣减，其中**不随 EV 缩放**的部分）。
@@ -2013,15 +2062,10 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                 薄权益守卫（OI-091）判的是「股权价值＝两个大数之差」，放大倍数 = EV ÷ 股权价值，
                 只由固定扣减决定；按盈利份额分走的那一份与 `EV − 净金融负债` 同比例缩放，
                 对相对误差无放大作用，不计入守卫。账面下界生效时该份额是固定额，计入。"""
-                minority_ps, proportional = minority_book_ps, 0.0
-                if minority_basis == "earnings" and m_share > 0:
-                    total_equity_ps = ev_value - fin_net_debt_ps
-                    if total_equity_ps > 0:
-                        by_earnings = m_share * total_equity_ps
-                        if by_earnings > minority_book_ps:
-                            minority_ps, proportional = by_earnings, by_earnings
-                nd = fin_net_debt_ps + minority_ps - x_ps
-                return nd, nd - proportional
+                return minority_claims.equity_bridge(
+                    ev_value, fin_net_debt_ps, minority_book_ps,
+                    m_share if minority_basis == "earnings" or claim_snapshot else 0.0, x_ps,
+                    band.minority_fixed_claim_ps, band.minority_dividend_floor_ps)
 
             net_debt_ps, _ = equity_bridge(nopat_ps / w if w else 0.0)
             band.net_debt_ps = net_debt_ps
@@ -2362,8 +2406,26 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
 
 
 def build_band(code: str, name: str, tier: str, series: dict[str, dict], actions: list[dict],
-               period: str, args) -> Band:
+               period: str, args, known_from: str | None = None) -> Band:
+    if known_from:
+        import copy
+        args = copy.copy(args)
+        args.minority_as_of = known_from
     band = _build_band(code, name, tier, series, actions, period, args)
+    if known_from:
+        band.available_at = max(band.available_at, known_from)
+    reason = minority_claims.blocking_reason(code, band.available_at, period)
+    event = minority_claims.event_as_of(code, band.available_at)
+    if event and band.status == "ok" and band.minority_share_basis != "event_residual_earnings":
+        reason = "少数股权事件须通过合并股权桥，权益退路不适用"
+    if event and band.status != "ok" and not reason:
+        reason = "少数股权事件后估值未通过，不沿用旧带：" + band.reason
+    if reason:
+        band.status, band.reason = "rejected", reason
+        band.minority_claim_status = "blocked"
+        band.minority_claim_event = minority_claims.event_as_of(code, band.available_at)["event_id"]
+        band.value = band.band_low = band.band_high = band.max_buy_price = None
+        band.v_bear = band.v_bull = band.v_zero_growth = None
     # Only a newly introduced cash rejection invalidates old research bands.
     # A default-off call follows the exact original code path once.
     if band.status != "ok" and band.maintenance_ratio > 0:
@@ -2380,12 +2442,12 @@ def applicable_bands(bands: list[Band]) -> list[Band]:
 
     按 available_at 排序后单调扫描，丢弃「已被更新报告期覆盖」的带；返回可直接二分的序列。
     """
-    ordered = sorted([b for b in bands if b.status == "ok" or b.cash_blocked],
+    ordered = sorted([b for b in bands if b.status == "ok" or b.cash_blocked or b.minority_claim_status == "blocked"],
                      key=lambda b: (b.available_at, b.report_date))
     kept: list[Band] = []
     best = ""
     for band in ordered:
-        if band.report_date <= best:
+        if band.report_date < best or (band.report_date == best and not band.minority_claim_event):
             continue  # 迟到的旧报告期：披露时已被更新的报告期取代，永远轮不到它
         best = band.report_date
         if kept and kept[-1].available_at == band.available_at:
@@ -2466,13 +2528,25 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
     # 生效日按 `--state-effective`（缺省「可得日前一交易日」，与生产扫描的当晚吸收同构）；
     # `band_available_at` 列仍记录原始可得日，故该列可能晚于 `date` 一个交易日——这是口径的一部分。
     keys = effective_keys(usable, prices)
+    # Contract facts never become known on the previous trading day merely
+    # because the ordinary financial-report convention backdates state keys.
+    for i, b in enumerate(usable):
+        if b.minority_claim_event:
+            event = minority_claims.event_as_of(code, b.available_at)
+            if event:
+                keys[i] = max(keys[i], event["known_from"])
     out = []
     for date, close in prices:
         index = bisect_right(keys, date) - 1
         if index < 0:
             continue
         band = usable[index]
-        if band.cash_blocked:
+        if band.cash_blocked or band.minority_claim_status == "blocked":
+            continue
+        if minority_claims.blocking_reason(code, date, band.report_date):
+            continue
+        event = minority_claims.event_as_of(code, date)
+        if event and band.minority_claim_event != event["event_id"]:
             continue
         if reset_cut and date >= reset_cut and band.report_date < reset_date:
             continue
@@ -2513,6 +2587,7 @@ def daily_states(code: str, bands: list[Band], prices: list[tuple[str, float]],
             "valuation_label": valuation_label(close, value),
             "ev_ps": f"{ev_day:.4f}" if ev_day is not None else "",
             "pv_equity": f"{pv_equity:.4f}",
+            "minority_claim_event": band.minority_claim_event,
         })
     return out
 
@@ -2606,7 +2681,8 @@ BAND_FIELDS = ["security_code", "security_name", "quality_tier", "report_date", 
                "maintenance_positive_intervals", "maintenance_net_reinvestment", "maintenance_growth_allowance",
                "maintenance_nopat_total", "cash_blocked",
                "wc_aggregation", "wc_first_period", "wc_last_period", "wc_start", "wc_end", "wc_change",
-               "wc_financing_start", "wc_financing_end", "wc_conflict_years"]
+               "wc_financing_start", "wc_financing_end", "wc_conflict_years",
+               "minority_claim_status", "minority_claim_event", "minority_fixed_claim_ps", "minority_dividend_floor_ps"]
 
 
 def band_row(band: Band, tier: str) -> dict:
@@ -2654,6 +2730,10 @@ def band_row(band: Band, tier: str) -> dict:
         "roic_path": band.roic_path or "",
         "minority_share": fmt(band.minority_share, 4),
         "minority_share_basis": band.minority_share_basis,
+        "minority_claim_status": band.minority_claim_status,
+        "minority_claim_event": band.minority_claim_event,
+        "minority_fixed_claim_ps": fmt(band.minority_fixed_claim_ps),
+        "minority_dividend_floor_ps": fmt(band.minority_dividend_floor_ps),
         "roic_nopat_mode": band.roic_nopat_mode, "roic_g_source": band.roic_g_source,
         "payout": fmt(band.payout),
         "g_trailing": fmt(band.g_trailing), "g_sustainable": fmt(band.g_sustainable),
@@ -3145,6 +3225,12 @@ def main() -> int:
         bands = [build_band(code, name, tier,
                             series_as_of(series, series[p]["notice_date"]) if code in VERSIONED_CODES else series,
                             actions.get(code, []), p, args) for p in periods]
+        for event in minority_claims.registry().get(code, []):
+            p, known = event["report_date"], event["known_from"]
+            if (event["status"] == "reconciled" and p in periods
+                    and not any(b.report_date == p and b.available_at == known for b in bands)):
+                bands.append(build_band(code, name, tier, series_as_of(series, known),
+                                        actions.get(code, []), p, args, known_from=known))
         all_bands.extend((code, b) for b in bands)
         band_rows.extend(band_row(b, tier) for b in bands)
         # OI-074 ③：路径分布统计的原料——每只的最新 ok 带路径、市值代理（末日收盘 × 隐含股本）

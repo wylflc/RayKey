@@ -35,7 +35,7 @@ HEADER = """# {name}（{code}）估值档案
 | 质量分层 | {tier_line} |
 | 质量证据日 | {quality_evidence_date} |
 | 研究策略标签 | {tag} |
-| 合理价区间 | **{band_low} ~ {band_high}** |
+| 合理价区间 | **{band_display}** |
 | 估值方法 | {band_method} |
 | 估值更新日 | **{reviewed_at}** |
 """
@@ -201,13 +201,16 @@ def render(row: dict, pool: dict, bands: dict, tiers: dict | None = None) -> tup
         tier_line=tier_line,
         quality_evidence_date=tmeta.get("evidence_available_at") or "未记录",
         tag=meta.get("strategy_tag") or tmeta.get("primary_strategy_tag") or "—",
-        band_low=row["band_low"],
-        band_high=row["band_high"],
+        band_display=(f'{row["band_low"]} ~ {row["band_high"]}'
+                      if _num(row.get("band_low")) is not None and _num(row.get("band_high")) is not None
+                      else "无法估值"),
         band_method=row["band_method"],
         reviewed_at=row["reviewed_at"],
     )]
 
     derivation = row['band_derivation'].strip()
+    if derivation == "model_unvaluable":
+        derivation = row["band_method"]
     derivation = derivation.replace("与 §9.3.1.2 回测所用带**同一套口径**。", "")
     derivation = derivation.replace("故 `P/V` = 现价 ÷ V（`scripts/pv_ratio.py` 唯一实现）与回测的 `valuation_ratio` 逐位一致。",
                                     "池内 `P/V` 按现价 ÷ V 计算；交易资格按工作流程判定。")
