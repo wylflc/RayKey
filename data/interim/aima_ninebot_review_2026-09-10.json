@@ -1,0 +1,171 @@
+{
+  "as_of": "2026-09-10",
+  "timezone": "Asia/Shanghai",
+  "workflow_version": "a-share-selection-operation-v4.179",
+  "scope": "valuation_attribution_and_rationale_audit_only",
+  "production_membership_changed": false,
+  "causal_commit": "318d5ed0",
+  "causal_commit_beijing": "2026-09-09T19:46:37+08:00",
+  "aima_production_field_comparison": {
+    "report_date": {
+      "before": "2026-06-30",
+      "after": "2026-06-30"
+    },
+    "available_at": {
+      "before": "2026-08-25",
+      "after": "2026-08-25"
+    },
+    "nopat_ps": {
+      "before": "2.6239",
+      "after": "2.6239"
+    },
+    "roic0": {
+      "before": "0.5450",
+      "after": "0.5450"
+    },
+    "incremental_roic": {
+      "before": "0.2643",
+      "after": "0.2643"
+    },
+    "reinvestment_rate": {
+      "before": "0.0857",
+      "after": "0.4523"
+    },
+    "g0": {
+      "before": "0.0226",
+      "after": "0.1196"
+    },
+    "wacc": {
+      "before": "0.0884",
+      "after": "0.0884"
+    },
+    "net_debt_ps": {
+      "before": "-3.5398",
+      "after": "-3.4931"
+    },
+    "ev_ps": {
+      "before": "21.3526",
+      "after": "27.1632"
+    },
+    "intrinsic_value": {
+      "before": "24.8924",
+      "after": "30.6563"
+    },
+    "terminal_share": {
+      "before": "0.6203",
+      "after": "0.7167"
+    },
+    "valuation_quality_score": {
+      "before": "69",
+      "after": "54"
+    },
+    "v_bear": {
+      "before": "17.0159",
+      "after": "17.9253"
+    },
+    "v_bull": {
+      "before": "36.5989",
+      "after": "56.0776"
+    },
+    "tax_rate": {
+      "before": "0.1233",
+      "after": "0.1233"
+    }
+  },
+  "aima_reinvestment_trace": {
+    "periods": [
+      "2021-12-31",
+      "2022-12-31",
+      "2023-12-31",
+      "2024-12-31",
+      "2025-12-31"
+    ],
+    "flow_periods": [
+      "2022-12-31",
+      "2023-12-31",
+      "2024-12-31",
+      "2025-12-31"
+    ],
+    "nopat_sum": 7985311634.550146,
+    "capex_minus_depreciation": 7064311732.08,
+    "tax_treatment": "observed_annual_rates_no_normalization",
+    "wc_modes": {
+      "legacy": {
+        "wc_start": -13552962985.039999,
+        "wc_end": -19933055623.72,
+        "wc_change": -6380092638.680002,
+        "reinvestment_rate": 0.08568470771254293
+      },
+      "reported": {
+        "wc_start": -6702141703.75,
+        "wc_end": -10135565709.74,
+        "wc_change": -3433424005.99,
+        "reinvestment_rate": 0.45469580803586845
+      },
+      "operating": {
+        "wc_start": -6652846281.16,
+        "wc_end": -10105671663.85,
+        "wc_change": -3452825382.6900005,
+        "reinvestment_rate": 0.4522661750311831
+      }
+    }
+  },
+  "half_year_2026": {
+    "603529": {
+      "revenue": 11439706808.78,
+      "revenue_yoy_pct": -12.21,
+      "parent_profit": 665066034.88,
+      "parent_profit_yoy_pct": -45.15,
+      "operating_cashflow": -601399794.09,
+      "weighted_roe_pct_not_annualized": 6.48,
+      "group_gross_margin_pct": 17.429966407527598,
+      "vehicle_and_parts_revenue": 11220046359.73,
+      "vehicle_and_parts_cost": 9289363537.07,
+      "vehicle_and_parts_gross_margin_pct": 17.207440689277686,
+      "segment_scope": "two_wheel_three_wheel_bicycles_and_parts"
+    },
+    "689009": {
+      "revenue": 14357844376.09,
+      "revenue_yoy_pct": 22.28,
+      "parent_profit": 1008342602.79,
+      "parent_profit_yoy_pct": -18.79,
+      "operating_cashflow": 1967248745.33,
+      "weighted_roe_pct_not_annualized": 13.12,
+      "group_gross_margin_pct": 28.564455218777564,
+      "two_wheel_revenue": 7493280736.63,
+      "two_wheel_cost": 6205746773.23,
+      "two_wheel_reported_gross_margin_pct": 17.18251335634665,
+      "two_wheel_issuer_adjusted_gross_margin_pct": 19.28,
+      "adjustments": "store_subsidies_and_assurance_warranty_cost",
+      "domestic_two_wheel_store_count_lower_bound_exclusive": 11500
+    }
+  },
+  "ninebot_annual_weighted_roe_pct": {
+    "2024": 19.1,
+    "2025": 26.08
+  },
+  "sources": {
+    "aima_h1": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12525903&stockid=603529",
+    "ninebot_h1": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12486193&stockid=689009",
+    "ninebot_2025_annual_summary": "https://static.cninfo.com.cn/finalpage/2026-03-31/1225063691.PDF"
+  },
+  "source_text_sha256": {
+    "aima_h1": "55010b442e0aa36df0bbda14609dbbd892a5b5d46b21f21466ce143c50deaf00",
+    "ninebot_h1": "f5818b5ffa32bd157938917c9cf44a81179013399b7781a20541e3d3d7b4a14d"
+  },
+  "audit_findings": [
+    "growth_jump_from_wc_input_correction_not_new_earnings",
+    "group_margin_not_two_wheel_pricing_power",
+    "historical_roe_windows_and_business_stages_differ",
+    "short_term_profit_interpretation_asymmetric",
+    "absence_of_certification_does_not_disprove_brand_moat",
+    "aima_cashflow_explanation_exists_in_report",
+    "aima_market_share_claims_lack_consistent_denominator"
+  ],
+  "limitations": [
+    "no_independent_demographic_preference_survey",
+    "no_complete_direct_peer_return_panel",
+    "no_completed_new_capital_replicability_verdict"
+  ],
+  "report": "docs/reports/aima_ninebot_review_2026-09-10.zh.md"
+}
