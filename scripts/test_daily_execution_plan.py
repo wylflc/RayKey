@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import csv
+import contextlib
+import io
 import tempfile
 import unittest
 from pathlib import Path
@@ -69,6 +71,33 @@ class ExecutionPlanTest(unittest.TestCase):
         # 无上限时同一输入买满一档 500 股 → 1500 股？一档 5.25 万 ÷ 100 元 = 525 股 → 500 股（按手），第二只同样 500 股
         res = self.run_plan(rows, {"000001": hold("A", 10000, None, None)}, funds=1_000_000.0, members={"000001"})
         self.assertEqual([(p["security_code"], p["shares"]) for p in res["plan"]], [("000003", 500), ("000004", 500)])
+
+    def test_adopted_30pct_cap_repays_debt_and_reports_recovery_band(self) -> None:
+        self.nav=2_000_000.
+        rows=[row('000001','A',100.,101.,90.,2.5),row('000002','B',50.,51.,40.,2.5)]
+        holdings={'000001':hold('A',20000,None,None),'000002':hold('B',20000,None,None)}
+        result=self.run_plan(rows,holdings,funds=9_000_000.,members=set(holdings),
+                             exposure_cap=scan.SEC93_EQUITY_BOND_CAP,cap_cash=-1_000_000.)
+        sells=[r for r in result['sells'] if r['rule']=='股债·总仓位上限']
+        self.assertEqual([r['sell_shares'] for r in sells],[16000,16000])
+        self.assertEqual(result['eb_stock_after'],600000.)
+        self.assertEqual(result['cash'],1400000.)
+        result['eb']=dict(spread=.032,observed_on='2024-01-05',cap=.3,cash=0.,debt=1_000_000.,source='test')
+        with tempfile.TemporaryDirectory() as tmp,contextlib.redirect_stdout(io.StringIO()) as output:
+            scan.report_section93(result,self.nav,Path(tmp)/'plan.csv','2024-01-08')
+        self.assertIn('恢复 ≥3.5%',output.getvalue())
+        self.assertIn('沿用受限状态',output.getvalue())
+
+    def test_adopted_30pct_cap_also_limits_new_buys(self) -> None:
+        self.nav=1_000_000.
+        rows=[row('000001','A',100.,101.,90.,2.5),row('000002','B',100.,95.,90.,.5),
+              row('000003','C',100.,95.,90.,.6)]
+        holdings={'000001':hold('A',2900,None,None)}
+        result=self.run_plan(rows,holdings,funds=9_000_000.,members={'000001'},
+                             exposure_cap=scan.SEC93_EQUITY_BOND_CAP,cap_cash=710000.)
+        self.assertEqual([(r['security_code'],r['shares']) for r in result['plan']],[('000002',100)])
+        self.assertEqual(result['eb_stock_after'],300000.)
+        self.assertEqual([r['security_code'] for r in result['eb_capped']],['000003'])
 
     def test_trim_ignores_trend(self) -> None:
         rows = [row("000001", "A", close=100.0, ma20=101.0, ma60=90.0, pv=2.5),

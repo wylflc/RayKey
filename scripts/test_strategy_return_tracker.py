@@ -64,14 +64,14 @@ class StrategyReturnTrackerTest(unittest.TestCase):
         self.assertEqual([o["strategy_epoch"] for o in kept], ["E1", "E3", "E3"])
 
     def test_epoch_table_labels_by_date_and_override_wins(self):
-        # v4.176：纪元表 (E1 2026-08-28, E2 2026-09-10)——生效日前 E1、生效日起 E2，与行内旧标签无关；--epoch/--from 覆盖优先
+        # 每次实质规则变更按首个执行日换纪元，旧单位净值链不重置；一次性覆盖仍优先。
         rows = [row("2026-08-28", 100, base="100"), row("2026-09-09", 110, epoch="E1"), row("2026-09-10", 120), row("2026-09-11", 130, epoch="E1")]
         out = tracker.compute(rows)
-        self.assertEqual([o["strategy_epoch"] for o in out], ["E1", "E1", "E2", "E2"])
+        self.assertEqual([o["strategy_epoch"] for o in out], ["E1", "E1", "E2", "E3"])
         self.assertEqual(out[3]["strategy_unit_nav"], "1.300000")                        # 链不重置
         out = tracker.compute(rows, epoch_from=("E9", "2026-09-11"))
         self.assertEqual([o["strategy_epoch"] for o in out], ["E1", "E1", "E2", "E9"])
-        self.assertEqual(tracker.EPOCHS[-1], ("E2", "2026-09-10"))
+        self.assertEqual(tracker.EPOCHS[-1], ("E3", "2026-09-11"))
 
     def test_inconsistent_base_is_rejected(self):
         with self.assertRaises(ValueError):

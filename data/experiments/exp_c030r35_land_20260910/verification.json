@@ -1,0 +1,53 @@
+{
+  "completed_beijing": "2026-09-10T16:10:40.140745+08:00",
+  "job_id": "26530989",
+  "native_base_paths": 28,
+  "legacy_anchor_paths": 2,
+  "all_summary_values_identical": false,
+  "all_decision_and_standard_fields_exact": true,
+  "summary_equivalent_with_descriptive_rounding": true,
+  "descriptive_rounding": [
+    {
+      "group": "A",
+      "start": "2014-05-01",
+      "field": "前五赢家占正贡献",
+      "new": "0.5344167375792335",
+      "reference": "0.5344167375792334",
+      "delta": 1.1102230246251565e-16
+    }
+  ],
+  "verifier_changes_after_first_run": {
+    "data/experiments/exp_c030r35_land_20260910/preregister.md": {
+      "before": {
+        "bytes": 1917,
+        "sha256": "0a8c7a7e33d2ac15f730a59608345269b641f4b1c05e9cdbd2eff6f87b16eabc"
+      },
+      "after": {
+        "bytes": 2681,
+        "sha256": "672cf7fb927637b816222576f0a6accd18e4c2b96527253b740ce2863f77a897"
+      }
+    },
+    "data/experiments/exp_c030r35_land_20260910/run.py": {
+      "before": {
+        "bytes": 10685,
+        "sha256": "41fc3e88e289b77dffe46c37b017864607e6e271c68ff185296fc32f877e6241"
+      },
+      "after": {
+        "bytes": 12528,
+        "sha256": "ac5d4f1a243001dfc514d2691d727d128b7f934a07852d288f645fbb63f5538d"
+      }
+    }
+  },
+  "summary_fields_checked": 2460,
+  "daily_portfolio_rows_checked": 100114,
+  "daily_constraint_rows_checked": 100084,
+  "exact_nav_cash_debt_positions_weights": true,
+  "complete_start_and_window_sets": true,
+  "negative_cash_days": 0,
+  "live_signal_observations_identical": 258,
+  "base_us_unchanged": true,
+  "inputs_unchanged": true,
+  "production_base_changed": true,
+  "epoch": "E3",
+  "first_execution_date": "2026-09-11"
+}

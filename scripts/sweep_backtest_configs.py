@@ -130,11 +130,10 @@ BASE = (
     "--net-same-day "
     "--fill-missing skip --dividend-tax --swap-repeat skip "
     "--addon-trend ma-only --swap-require-weak "
-    # **股债总仓位上限（v4.176，用户 2026-09-10 裁定采纳，§12.224～§12.226）**：沪深 300 股债利差 < 3pp 时总仓位上限 100%
-    # （不新增融资、现金与卖出款先偿债、超限按持仓市值比例减仓），≥ 3pp 完整恢复（`--equity-bond-restore-above`，
-    # 与 §12.220 的 high_base_engine.py 等价）。回撤通道采纳：ΔMDD −11／−10pp，主读数 −0.86／+2.12。
+    # §9.3.1 股债总仓位上限：触发／受限仓位／恢复门槛显式登记；
+    # 完整历史状态与生产扫描器共用，不随回测起点重置。采纳依据见 §12.228～§12.229。
     "--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread "
-    "--equity-bond-threshold 0.03 --equity-bond-lower 1.0 --equity-bond-restore-above "
+    "--equity-bond-threshold 0.03 --equity-bond-lower 0.3 --equity-bond-restore-above --equity-bond-release-threshold 0.035 "
     "--daily-states data/processed/a_share_daily_states_adopted.csv "
     "--hold-states data/processed/a_share_daily_states_hold.csv "
     "--universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv"
@@ -148,7 +147,7 @@ DEFAULT_STARTS = [f"{y}-{m}-01" for y in range(2009, 2017) for m in ("05", "11")
 # **美股基准 `BASE_US`（OI-159，预登记 docs/reports/us_sp500_backtest_prereg.zh.md §4）**：与 `BASE` 逐项同式，只改市场项——
 # 1 股为单位、无费税、现金账户（授信 0）、现金红利固定预提 15%、50 万美元、`--market us` 数据落点；两条线沿用 1.0454／0.15。
 EQUITY_BOND_FLAGS = ("--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread "
-                     "--equity-bond-threshold 0.03 --equity-bond-lower 1.0 --equity-bond-restore-above ")
+                     "--equity-bond-threshold 0.03 --equity-bond-lower 0.3 --equity-bond-restore-above --equity-bond-release-threshold 0.035 ")
 assert EQUITY_BOND_FLAGS in BASE
 BASE_US = (BASE
            .replace(EQUITY_BOND_FLAGS, "")      # 美股不设股债总仓位上限（数据为沪深 300；OI-159 口径只改市场项）

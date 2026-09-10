@@ -1,0 +1,15 @@
+{
+  "paths": 30,
+  "summary_differences": [
+    {
+      "group": "A",
+      "start": "2014-05-01",
+      "field": "前五赢家占正贡献",
+      "new": "0.5344167375792335",
+      "old": "0.5344167375792334",
+      "delta": 1.1102230246251565e-16
+    }
+  ],
+  "nav_differences": [],
+  "daily_differences": []
+}

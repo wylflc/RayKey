@@ -25,7 +25,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT = ROOT / "data/processed/portfolio_account_snapshot.csv"
 DEFAULT_EPOCH = "E1"
 EPOCHS = (("E1", "2026-08-28"),   # 策略基准日
-          ("E2", "2026-09-10"))   # v4.176 股债总仓位上限（用户 2026-09-10 裁定生效日＝当日）
+          ("E2", "2026-09-10"),   # 股债同阈值去融资
+          ("E3", "2026-09-11"))   # 30%／3.5pp；2026-09-10收盘后采纳，T+1首个执行日
 NEW_COLUMNS = ("net_assets_before_flow_cny", "strategy_nav_basis", "strategy_unit_nav", "strategy_epoch")
 STRATEGY_COLUMNS = ("strategy_return_pct", "account_peak_net_assets_cny", "drawdown_from_peak_pct",
                     "strategy_nav_basis", "strategy_unit_nav", "strategy_epoch")

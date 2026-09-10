@@ -50,6 +50,62 @@ class EquityBondTest(unittest.TestCase):
         s=EquityBondConstraint(self.path,mode='ramp',threshold=.2,ramp_high=.8, min_obs=1)
         self.assertEqual(s.resolve('2024-01-05')[1],0.)
 
+    def hysteresis(self, rows):
+        with self.path.open('w',newline='') as f:
+            w=csv.writer(f);w.writerow(['observed_on','pe_ttm','bond_yield','bond_observed_on'])
+            for d,spread in rows:w.writerow([d,16.,.0625-spread,d])
+        return EquityBondConstraint(self.path,metric='spread',threshold=.03,lower=.3,
+                                    restore_above=True,release_threshold=.035)
+
+    def test_hysteresis_boundaries_restart_and_no_future_state(self):
+        rows=[('2024-01-02',.032),('2024-01-05',.029),('2024-01-08',.03),
+              ('2024-01-09',.0349),('2024-01-10',.035),('2024-01-11',.031),('2024-01-12',.029)]
+        c=self.hysteresis(rows)
+        expected=[None,.3,.3,.3,None,None,.3]
+        for (d,_),cap in reversed(list(zip(rows,expected))):self.assertEqual(c.resolve(d)[1],cap)
+        # A new daily process first queried inside the band must recover the old trigger.
+        self.assertEqual(self.hysteresis(rows).resolve('2024-01-09')[1],.3)
+        for n in range(1,len(rows)+1):
+            prefix=self.hysteresis(rows[:n])
+            self.assertEqual(prefix.resolve(rows[n-1][0]),c.resolve(rows[n-1][0]))
+        self.assertEqual(c.resolve('2023-12-29'),(None,None))
+        with self.assertRaisesRegex(ValueError,'Stale'):c.resolve('2024-03-01')
+
+    def test_release_validation_and_legacy_compatibility(self):
+        c=self.hysteresis([('2024-01-02',.029),('2024-01-05',.032),('2024-01-08',.04)])
+        for extra in ({'release_threshold':.02},{'release_threshold':float('nan')},
+                      {'release_threshold':float('inf')},{'mode':'credit'},
+                      {'restore_above':False},{'metric':'percentile'}):
+            kw=dict(mode='cap',metric='spread',threshold=.03,lower=.3,restore_above=True,release_threshold=.035)
+            kw.update(extra)
+            with self.assertRaises(ValueError):EquityBondConstraint(self.path,**kw)
+        legacy=EquityBondConstraint(self.path,metric='spread',threshold=.03,lower=.3,restore_above=True)
+        same=EquityBondConstraint(self.path,metric='spread',threshold=.03,lower=.3,restore_above=True,release_threshold=.03)
+        for d in c.days:self.assertEqual(legacy.resolve(d),same.resolve(d))
+        self.assertIsNone(legacy.resolve('2024-01-05')[1]);self.assertEqual(c.resolve('2024-01-05')[1],.3)
+
+    def test_hysteresis_t1_cash_and_30pct_execution(self):
+        c=self.hysteresis([('2024-01-02',.04),('2024-01-05',.029),
+                           ('2024-01-08',.032),('2024-01-10',.035)])
+        days={d:[row('A',.8)] for d in ('2024-01-02','2024-01-03','2024-01-04','2024-01-05',
+                                       '2024-01-08','2024-01-09','2024-01-10','2024-01-11','2024-01-12')}
+        result,ledger=fixture(days,x=.6,credit_ratio=.666,credit_cap=1e12,lot_size=100,
+                              position_cap=0.,equity_bond=c,net_same_day=True)
+        records={r['date']:r for r in result['equity_bond_records']}
+        self.assertIsNone(records['2024-01-05']['cap'])
+        for d in ('2024-01-08','2024-01-09','2024-01-10'):
+            self.assertEqual(records[d]['cap'],.3);self.assertEqual(records[d]['debt'],0.)
+            self.assertLessEqual(records[d]['exposure'],.3+1e-9)
+        self.assertIsNone(records['2024-01-11']['cap'])
+        self.assertTrue(all(r['cash']>=-1e-6 and not r['unresolved'] for r in records.values()))
+        self.assertTrue(any(r['date']=='2024-01-08' and r['reason']=='股债·总仓位上限' for r in ledger))
+
+    def test_daily_scan_rebuilds_same_state(self):
+        import screen_daily_volume_price_signals as scan
+        c=self.hysteresis([('2024-01-02',.029),('2024-01-05',.032),('2024-01-08',.035),('2024-01-09',.031)])
+        for d in reversed(c.days):self.assertEqual(scan.equity_bond_signal(d,self.path),c.resolve(d))
+        self.assertEqual(scan.equity_bond_signal('2024-01-05',self.path)[1],.3)
+
     def portfolio(self):
         p=bt.Portfolio(cash=0.,debt=60000.)
         lot=bt.Lot(code='A',entry_date='2023-01-01',shares=16000.,avg_cost=10.,invested=160000.,

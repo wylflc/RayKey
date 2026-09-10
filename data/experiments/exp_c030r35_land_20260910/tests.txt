@@ -1,0 +1,156 @@
+................/gpfs/work1/0/qt15419/zwang/mm_quant/RayKey/scripts/test_apply_holdings_corporate_action.py:30: ResourceWarning: unclosed file <_io.TextIOWrapper name='/scratch-local/zwang.26530989/tmpat8eloj3/h.csv' mode='r' encoding='utf-8'>
+  rows = {r["security_code"]: r for r in csv.DictReader(h.open(encoding="utf-8"))}
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/gpfs/work1/0/qt15419/zwang/mm_quant/RayKey/scripts/test_apply_holdings_corporate_action.py:35: ResourceWarning: unclosed file <_io.TextIOWrapper name='/scratch-local/zwang.26530989/tmpat8eloj3/ledger.csv' mode='r' encoding='utf-8'>
+  led = list(csv.DictReader(ledger.open(encoding="utf-8")))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./gpfs/work1/0/qt15419/zwang/mm_quant/RayKey/scripts/test_apply_holdings_corporate_action.py:69: ResourceWarning: unclosed file <_io.TextIOWrapper name='/scratch-local/zwang.26530989/tmpio2ww41x/h.csv' mode='r' encoding='utf-8'>
+  rows = {r["security_code"]: r for r in csv.DictReader(h.open(encoding="utf-8"))}
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.../gpfs/work1/0/qt15419/zwang/mm_quant/RayKey/scripts/test_apply_holdings_corporate_action.py:44: ResourceWarning: unclosed file <_io.TextIOWrapper name='/scratch-local/zwang.26530989/tmpnwmyfdd1/h.csv' mode='r' encoding='utf-8'>
+  rows = {r["security_code"]: r for r in csv.DictReader(h.open(encoding="utf-8"))}
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/gpfs/work1/0/qt15419/zwang/mm_quant/RayKey/scripts/test_apply_holdings_corporate_action.py:49: ResourceWarning: unclosed file <_io.TextIOWrapper name='/scratch-local/zwang.26530989/tmpnwmyfdd1/h.csv' mode='r' encoding='utf-8'>
+  rows = {r["security_code"]: r for r in csv.DictReader(h.open(encoding="utf-8"))}
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.....................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 393 tests in 0.832s
+
+OK
+  SEC TEST: 下载失败 offline
+三大报表取数：2 只 × 3 张表｜as-of 2026-08-25（应到年报期 2025-12-31）｜落点 /scratch-local/zwang.26530989/tmp3jkxbkij/
+  balance: 名单 2 只已全部在库且年报期到 2025-12-31，跳过（--refresh 全量重取）
+  income: 名单 2 只已全部在库且年报期到 2025-12-31，跳过（--refresh 全量重取）
+  cashflow: 名单 2 只已全部在库且年报期到 2025-12-31，跳过（--refresh 全量重取）
+
+三大报表覆盖：名单 2 只全部三表齐备且年报期 ≥ 1 → /scratch-local/zwang.26530989/tmp3jkxbkij/statement_coverage_gaps.csv（空）
+三大报表取数：3 只 × 3 张表｜as-of 2027-01-06（应到年报期 2026-12-31）｜落点 /scratch-local/zwang.26530989/tmpbdcuiqdg/
+  balance: 已有 2 只，新增补取 1 只、年报期落后 2026-12-31 重取 2 只
+    年报期落后重取 2 只：补到 2026-12-31 的 2 只
+  balance: 4 行、2 只（名单 3）、10 列 → balance.csv
+    关键列非空覆盖：TOTAL_ASSETS=4/4  TOTAL_EQUITY=0/4  TOTAL_PARENT_EQUITY=4/4  MONETARYFUNDS=0/4
+  income: 已有 2 只，新增补取 1 只、年报期落后 2026-12-31 重取 2 只
+    年报期落后重取 2 只：补到 2026-12-31 的 2 只
+  income: 4 行、2 只（名单 3）、10 列 → income.csv
+    关键列非空覆盖：OPERATE_PROFIT=0/4  TOTAL_PROFIT=0/4  INCOME_TAX=0/4  PARENT_NETPROFIT=0/4
+  cashflow: 已有 2 只，新增补取 1 只、年报期落后 2026-12-31 重取 2 只
+    年报期落后重取 2 只：补到 2026-12-31 的 2 只
+  cashflow: 4 行、2 只（名单 3）、10 列 → cashflow.csv
+    关键列非空覆盖：NETCASH_OPERATE=0/4  CONSTRUCT_LONG_ASSET=0/4  FA_IR_DEPR=0/4
+
+命中表口径：balance:RPT_F10_FINANCE_GBALANCE×2｜cashflow:RPT_F10_FINANCE_GCASHFLOW×2｜income:RPT_F10_FINANCE_GINCOME×2
+
+⚠ **三大报表覆盖缺口 1 只**（名单 3 只）→ /scratch-local/zwang.26530989/tmpbdcuiqdg/statement_coverage_gaps.csv
+    300001  无报表：缺表 balance/income/cashflow　→ 建带静默退回权益口径
+  **1 只无报表**：这些代码建带会退回权益口径，回测没有该估值模式，其带不得用于决策。须补取或登记 open issue 后再继续 §6.7。
+
+**失败 3 项**：300001/balance：**四套表全空**；300001/income：**四套表全空**；300001/cashflow：**四套表全空**
+三大报表取数：2 只 × 3 张表｜as-of 2026-08-25（应到年报期 2025-12-31）｜落点 /scratch-local/zwang.26530989/tmp0jwoh1e9/
+  balance: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 1 只
+    年报期落后重取 1 只：补到 2025-12-31 的 0 只，仍未到（尚未披露或取数失败）1 只：000001
+  balance: 4 行、2 只（名单 2）、10 列 → balance.csv
+    关键列非空覆盖：TOTAL_ASSETS=4/4  TOTAL_EQUITY=0/4  TOTAL_PARENT_EQUITY=4/4  MONETARYFUNDS=0/4
+  income: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 1 只
+    年报期落后重取 1 只：补到 2025-12-31 的 0 只，仍未到（尚未披露或取数失败）1 只：000001
+  income: 4 行、2 只（名单 2）、10 列 → income.csv
+    关键列非空覆盖：OPERATE_PROFIT=0/4  TOTAL_PROFIT=0/4  INCOME_TAX=0/4  PARENT_NETPROFIT=0/4
+  cashflow: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 1 只
+    年报期落后重取 1 只：补到 2025-12-31 的 0 只，仍未到（尚未披露或取数失败）1 只：000001
+  cashflow: 4 行、2 只（名单 2）、10 列 → cashflow.csv
+    关键列非空覆盖：NETCASH_OPERATE=0/4  CONSTRUCT_LONG_ASSET=0/4  FA_IR_DEPR=0/4
+
+三大报表覆盖：名单 2 只全部三表齐备且年报期 ≥ 1 → /scratch-local/zwang.26530989/tmp0jwoh1e9/statement_coverage_gaps.csv（空）
+
+**失败 15 项**：000001/RPT_F10_FINANCE_GBALANCE：URLError；000001/RPT_F10_FINANCE_BBALANCE：URLError；000001/RPT_F10_FINANCE_SBALANCE：URLError；000001/RPT_F10_FINANCE_IBALANCE：URLError；000001/balance：**四套表全空**，保留原有行；000001/RPT_F10_FINANCE_GINCOME：URLError；000001/RPT_F10_FINANCE_BINCOME：URLError；000001/RPT_F10_FINANCE_SINCOME：URLError；000001/RPT_F10_FINANCE_IINCOME：URLError；000001/income：**四套表全空**，保留原有行；000001/RPT_F10_FINANCE_GCASHFLOW：URLError；000001/RPT_F10_FINANCE_BCASHFLOW：URLError…
+三大报表取数：2 只 × 3 张表｜as-of 2027-01-06（应到年报期 2026-12-31）｜落点 /scratch-local/zwang.26530989/tmp9hs7ly5f/
+  balance: 已有 2 只，新增补取 0 只、年报期落后 2026-12-31 重取 2 只
+    年报期落后重取 2 只：补到 2026-12-31 的 2 只
+  balance: 4 行、2 只（名单 2）、10 列 → balance.csv
+    关键列非空覆盖：TOTAL_ASSETS=4/4  TOTAL_EQUITY=0/4  TOTAL_PARENT_EQUITY=4/4  MONETARYFUNDS=0/4
+  income: 已有 2 只，新增补取 0 只、年报期落后 2026-12-31 重取 2 只
+    年报期落后重取 2 只：补到 2026-12-31 的 2 只
+  income: 4 行、2 只（名单 2）、10 列 → income.csv
+    关键列非空覆盖：OPERATE_PROFIT=0/4  TOTAL_PROFIT=0/4  INCOME_TAX=0/4  PARENT_NETPROFIT=0/4
+  cashflow: 已有 2 只，新增补取 0 只、年报期落后 2026-12-31 重取 2 只
+    年报期落后重取 2 只：补到 2026-12-31 的 2 只
+  cashflow: 4 行、2 只（名单 2）、10 列 → cashflow.csv
+    关键列非空覆盖：NETCASH_OPERATE=0/4  CONSTRUCT_LONG_ASSET=0/4  FA_IR_DEPR=0/4
+
+命中表口径：balance:RPT_F10_FINANCE_GBALANCE×2｜cashflow:RPT_F10_FINANCE_GCASHFLOW×2｜income:RPT_F10_FINANCE_GINCOME×2
+
+三大报表覆盖：名单 2 只全部三表齐备且年报期 ≥ 1 → /scratch-local/zwang.26530989/tmp9hs7ly5f/statement_coverage_gaps.csv（空）
+三大报表取数：2 只 × 3 张表｜as-of 2026-08-25（应到年报期 2025-12-31）｜落点 /scratch-local/zwang.26530989/tmp5l5ggyt2/
+  balance: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 0 只、重述探针 2 只
+    重述探针：2 只在库，UPDATE_DATE 未变 0 只，**检出重述 0 只**，取不到保留本地 2 只
+  balance: 4 行、2 只（名单 2）、10 列 → balance.csv
+    关键列非空覆盖：TOTAL_ASSETS=4/4  TOTAL_EQUITY=0/4  TOTAL_PARENT_EQUITY=4/4  MONETARYFUNDS=0/4
+  income: 名单 2 只已全部在库且年报期到 2025-12-31，跳过（--refresh 全量重取）
+  cashflow: 名单 2 只已全部在库且年报期到 2025-12-31，跳过（--refresh 全量重取）
+
+三大报表覆盖：名单 2 只全部三表齐备且年报期 ≥ 1 → /scratch-local/zwang.26530989/tmp5l5ggyt2/statement_coverage_gaps.csv（空）
+三大报表取数：2 只 × 3 张表｜as-of 2026-08-25（应到年报期 2025-12-31）｜落点 /scratch-local/zwang.26530989/tmpjsqu2sib/
+  balance: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 0 只、重述探针 2 只
+    重述探针：2 只在库，UPDATE_DATE 未变 1 只，**检出重述 1 只**：600519(2025)
+    重述前版本存档 1 行 → superseded/balance.csv（OI-130）
+  balance: 4 行、2 只（名单 2）、10 列 → balance.csv
+    关键列非空覆盖：TOTAL_ASSETS=4/4  TOTAL_EQUITY=0/4  TOTAL_PARENT_EQUITY=4/4  MONETARYFUNDS=0/4
+  income: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 0 只、探针检出重述重取 1 只
+  income: 4 行、2 只（名单 2）、10 列 → income.csv
+    关键列非空覆盖：OPERATE_PROFIT=0/4  TOTAL_PROFIT=0/4  INCOME_TAX=0/4  PARENT_NETPROFIT=0/4
+  cashflow: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 0 只、探针检出重述重取 1 只
+  cashflow: 4 行、2 只（名单 2）、10 列 → cashflow.csv
+    关键列非空覆盖：NETCASH_OPERATE=0/4  CONSTRUCT_LONG_ASSET=0/4  FA_IR_DEPR=0/4
+
+**重述日志**：关键值实变 1 项、1 只 → /scratch-local/zwang.26530989/tmpjsqu2sib/statement_restatements.csv（追加）：600519(2025-12-31)
+
+命中表口径：balance:RPT_F10_FINANCE_GBALANCE×2｜cashflow:RPT_F10_FINANCE_GCASHFLOW×1｜income:RPT_F10_FINANCE_GINCOME×1
+
+三大报表覆盖：名单 2 只全部三表齐备且年报期 ≥ 1 → /scratch-local/zwang.26530989/tmpjsqu2sib/statement_coverage_gaps.csv（空）
+三大报表取数：2 只 × 3 张表｜as-of 2026-08-25（应到年报期 2025-12-31）｜落点 /scratch-local/zwang.26530989/tmp26mz8es7/
+  balance: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 0 只、重述探针 2 只
+    重述探针：2 只在库，UPDATE_DATE 未变 2 只，**检出重述 0 只**
+  balance: 4 行、2 只（名单 2）、10 列 → balance.csv
+    关键列非空覆盖：TOTAL_ASSETS=4/4  TOTAL_EQUITY=0/4  TOTAL_PARENT_EQUITY=4/4  MONETARYFUNDS=0/4
+  income: 名单 2 只已全部在库且年报期到 2025-12-31，跳过（--refresh 全量重取）
+  cashflow: 名单 2 只已全部在库且年报期到 2025-12-31，跳过（--refresh 全量重取）
+
+命中表口径：balance:RPT_F10_FINANCE_GBALANCE×2
+
+三大报表覆盖：名单 2 只全部三表齐备且年报期 ≥ 1 → /scratch-local/zwang.26530989/tmp26mz8es7/statement_coverage_gaps.csv（空）
+三大报表取数：2 只 × 3 张表｜as-of 2026-08-25（应到年报期 2025-12-31）｜落点 /scratch-local/zwang.26530989/tmpxaeq2vuv/
+  balance: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 1 只
+    年报期落后重取 1 只：补到 2025-12-31 的 1 只
+  balance: 5 行、2 只（名单 2）、10 列 → balance.csv
+    关键列非空覆盖：TOTAL_ASSETS=5/5  TOTAL_EQUITY=0/5  TOTAL_PARENT_EQUITY=5/5  MONETARYFUNDS=0/5
+  income: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 1 只
+    年报期落后重取 1 只：补到 2025-12-31 的 1 只
+  income: 5 行、2 只（名单 2）、10 列 → income.csv
+    关键列非空覆盖：OPERATE_PROFIT=0/5  TOTAL_PROFIT=0/5  INCOME_TAX=0/5  PARENT_NETPROFIT=0/5
+  cashflow: 已有 2 只，新增补取 0 只、年报期落后 2025-12-31 重取 1 只
+    年报期落后重取 1 只：补到 2025-12-31 的 1 只
+  cashflow: 5 行、2 只（名单 2）、10 列 → cashflow.csv
+    关键列非空覆盖：NETCASH_OPERATE=0/5  CONSTRUCT_LONG_ASSET=0/5  FA_IR_DEPR=0/5
+
+命中表口径：balance:RPT_F10_FINANCE_GBALANCE×1｜cashflow:RPT_F10_FINANCE_GCASHFLOW×1｜income:RPT_F10_FINANCE_GINCOME×1
+
+三大报表覆盖：名单 2 只全部三表齐备且年报期 ≥ 1 → /scratch-local/zwang.26530989/tmpxaeq2vuv/statement_coverage_gaps.csv（空）
+三大报表取数：2 只 × 3 张表｜as-of 2027-01-06（应到年报期 2026-12-31）｜落点 /scratch-local/zwang.26530989/tmpfzmil0_1/
+  balance: 已有 2 只，新增补取 0 只、年报期落后 2026-12-31 重取 2 只
+    年报期落后重取 2 只：补到 2026-12-31 的 2 只
+  balance: 4 行、2 只（名单 2）、10 列 → balance.csv
+    关键列非空覆盖：TOTAL_ASSETS=4/4  TOTAL_EQUITY=0/4  TOTAL_PARENT_EQUITY=4/4  MONETARYFUNDS=0/4
+  income: 已有 2 只，新增补取 0 只、年报期落后 2026-12-31 重取 2 只
+    年报期落后重取 2 只：补到 2026-12-31 的 2 只
+  income: 4 行、2 只（名单 2）、10 列 → income.csv
+    关键列非空覆盖：OPERATE_PROFIT=0/4  TOTAL_PROFIT=0/4  INCOME_TAX=0/4  PARENT_NETPROFIT=0/4
+  cashflow: 已有 2 只，新增补取 0 只、年报期落后 2026-12-31 重取 2 只
+    年报期落后重取 2 只：补到 2026-12-31 的 2 只
+  cashflow: 4 行、2 只（名单 2）、10 列 → cashflow.csv
+    关键列非空覆盖：NETCASH_OPERATE=0/4  CONSTRUCT_LONG_ASSET=0/4  FA_IR_DEPR=0/4
+
+命中表口径：balance:RPT_F10_FINANCE_GBALANCE×2｜cashflow:RPT_F10_FINANCE_GCASHFLOW×2｜income:RPT_F10_FINANCE_GINCOME×2
+
+⚠ **三大报表覆盖缺口 2 只**（名单 2 只）→ /scratch-local/zwang.26530989/tmpfzmil0_1/statement_coverage_gaps.csv
+    000001  年报期不足：最少一张表仅 2 期 < 3　→ 建带 rejected
+    600519  年报期不足：最少一张表仅 2 期 < 3　→ 建带 rejected

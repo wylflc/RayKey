@@ -1,5 +1,8 @@
-"""Equity/bond exposure signal (spread = 1/PE_TTM − CN10Y). Production rule: workflow §9.3.1 股债总仓位上限
-(cap／spread／3pp／100%，`restore_above` = no cap and untouched credit above the threshold); other modes are research (§12.1)."""
+"""Shared historical equity/bond state for live scans and backtests (workflow §9.3.1).
+
+An explicit release threshold enables hysteresis. Omitting it preserves the
+original single-threshold research behavior. A released constraint imposes no cap.
+"""
 from bisect import bisect_left, bisect_right, insort
 from collections import deque
 import csv
@@ -19,7 +22,8 @@ class EquityBondSignal:
 
 class EquityBondConstraint:
     def __init__(self, path, mode='cap', metric='percentile', threshold=.3,
-                 lower=0.0, upper=1.6, ramp_high=.8, window=60, min_obs=12, restore_above=False):
+                 lower=0.0, upper=1.6, ramp_high=.8, window=60, min_obs=12, restore_above=False,
+                 *, release_threshold=None):
         if mode not in ('cap', 'credit', 'ramp') or metric not in ('spread', 'percentile'):
             raise ValueError('Invalid equity/bond mode or metric')
         if not all(math.isfinite(v) for v in (threshold, lower, upper, ramp_high)):
@@ -32,10 +36,18 @@ class EquityBondConstraint:
             raise ValueError('Percentile threshold must be in [0, 1]')
         if mode == 'ramp' and (metric != 'percentile' or not threshold < ramp_high <= 1):
             raise ValueError('Ramp requires percentile and threshold < ramp_high <= 1')
+        if release_threshold is not None:
+            if not math.isfinite(release_threshold) or release_threshold < threshold:
+                raise ValueError('Release threshold must be finite and >= trigger threshold')
+            if mode != 'cap' or metric != 'spread' or not restore_above:
+                raise ValueError('Release threshold requires cap/spread/restore_above')
         self.mode, self.metric, self.threshold = mode, metric, threshold
         self.lower, self.upper, self.ramp_high = lower, upper, ramp_high
-        self.restore_above = bool(restore_above)   # 阈值以上不设上限、不改授信（完整恢复 BASE；v4.176 生产分支）
+        self.restore_above = bool(restore_above)
+        self.release_threshold = release_threshold
         self.days, self.signals = [], []
+        self.restricted = []
+        active = False
         ordered, history = [], deque()
         with Path(path).open(newline='', encoding='utf-8-sig') as handle:
             for row in csv.DictReader(handle):
@@ -53,6 +65,14 @@ class EquityBondConstraint:
                      if len(ordered) >= min_obs else None)
                 self.days.append(day)
                 self.signals.append(EquityBondSignal(day, spread, q, len(ordered)))
+                if release_threshold is not None:
+                    if spread < threshold:
+                        active = True
+                    elif spread >= release_threshold:
+                        active = False
+                    # Cache state at every observation, not at each resolve call:
+                    # restarts, skipped dates and reverse queries must agree.
+                    self.restricted.append(active)
                 history.append(spread); insort(ordered, spread)
                 if len(history) > window:
                     ordered.pop(bisect_left(ordered, history.popleft()))
@@ -66,6 +86,8 @@ class EquityBondConstraint:
         signal = self.signals[i]
         if (date.fromisoformat(signal_day) - date.fromisoformat(signal.observed_on)).days > 45:
             raise ValueError(f'Stale equity/bond observation on {signal_day}')
+        if self.release_threshold is not None:
+            return signal, self.lower if self.restricted[i] else None
         value = signal.spread if self.metric == 'spread' else signal.percentile
         if value is None:
             return signal, None

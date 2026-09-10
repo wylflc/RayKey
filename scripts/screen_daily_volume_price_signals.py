@@ -407,7 +407,7 @@ def parse_args() -> argparse.Namespace:
                         help="当日**可用资金 = 现金 + 未用授信**（OI-062）。买入计划以此为预算；"
                              "不给则退回「可用资金＝净资产」的旧估算并显著告警。满仓/带融资账户必须给。")
     parser.add_argument("--cash", type=float, default=None,
-                        help="当日现金（§9.3.1 股债总仓位上限触发日用：预算 = 现金 − 融资负债）；缺省读账户快照 cash_cny")
+                        help="当日现金（§9.3.1 股债总仓位上限受限期间用：预算 = 现金 − 融资负债）；缺省读账户快照 cash_cny")
     parser.add_argument("--debt", type=float, default=None,
                         help="当日融资负债（同上）；缺省读账户快照 margin_debt_cny")
     parser.add_argument("--rf", type=float, default=None,
@@ -482,22 +482,22 @@ SEC93_SWAP_SOURCE_BLOCK = -1.0  # 换仓接收方守卫研究开关（与回测 
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
 # 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
-# §9.3.1「股债总仓位上限」（v4.176，用户 2026-09-10 裁定采纳，回测日志 §12.224～§12.226）：沪深 300 股债利差（1/PE_TTM − 10 年国债）
-# 取信号日已知的最新观测，< 3pp 时总仓位（持仓市值 ÷ 净资产）上限 100%：授信视为 0（预算 = 现金 − 融资负债，卖出款先偿债）、
-# 常规卖出后仍超限按可交易持仓市值比例减仓（按手向上取整）、每笔买入以买后总仓位 ≤ 上限为限；≥ 3pp 无上限、完整按其余规则。
-# 与回测 BASE `--equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --equity-bond-lower 1.0 --equity-bond-restore-above` 同值。
+# §9.3.1 股债总仓位上限；生产与回测共用 EquityBondConstraint 的完整历史状态。
+# 受限期间预算 = 现金 − 融资负债，比例减仓在常规卖出后执行；解除只恢复原买入许可。
 SEC93_EQUITY_BOND_THRESHOLD = 0.03
-SEC93_EQUITY_BOND_CAP = 1.0
+SEC93_EQUITY_BOND_CAP = 0.3
+SEC93_EQUITY_BOND_RELEASE_THRESHOLD = 0.035
 SEC93_EQUITY_BOND_DATA = ROOT / "data/reference/equity_bond_csi300.csv"
 SEC93_ACCOUNT_SNAPSHOT = ROOT / "data/processed/portfolio_account_snapshot.csv"   # §10.2：融资负债与现金的缺省来源
 
 
 def equity_bond_signal(as_of: str, path: Path | None = None):
-    """§9.3.1 股债总仓位上限：信号日已知的最新观测 → (signal, cap)，cap None = 无上限。序列未开始返回 (None, None)；
+    """§9.3.1 股债总仓位上限：按完整历史重建信号日状态 → (signal, cap)，cap None = 无上限。序列未开始返回 (None, None)；
     数据缺失或观测过期（引擎同一判据：估值观测 > 45 天、债息 > 10 天）直接抛错，禁止静默放行。"""
     from equity_bond_constraint import EquityBondConstraint
     constraint = EquityBondConstraint(path or SEC93_EQUITY_BOND_DATA, "cap", "spread", SEC93_EQUITY_BOND_THRESHOLD,
-                                      SEC93_EQUITY_BOND_CAP, 1.6, restore_above=True)
+                                      SEC93_EQUITY_BOND_CAP, 1.6, restore_above=True,
+                                      release_threshold=SEC93_EQUITY_BOND_RELEASE_THRESHOLD)
     return constraint.resolve(as_of)
 
 
@@ -511,7 +511,7 @@ def latest_account_snapshot(as_of: str, path: Path | None = None) -> dict[str, s
 
 
 def account_cash_debt(as_of: str, cash: float | None, debt: float | None) -> tuple[float, float, str]:
-    """上限触发日的现金与融资负债：优先命令行 `--cash`／`--debt`，缺省读账户快照；两者都没有即中止（不得按估算下单）。"""
+    """受限期间的现金与融资负债：优先命令行 `--cash`／`--debt`，缺省读账户快照；两者都没有即中止（不得按估算下单）。"""
     source = "命令行"
     if cash is None or debt is None:
         snap = latest_account_snapshot(as_of)
@@ -829,7 +829,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     买入侧（第 3、5 步）：`P/V` 升序、去相关、逐个买一档；高价股一档买不起一手时按 §9.3.3 计数器买一手或跳过。
     `counters` 是买入侧计数器、`sell_counters` 是卖出侧计数器（§9.3.3，两侧互不消费）。
     `holding_rows`：不在输入池内的持仓行情（出名单／无法估值者），只进卖出侧。
-    `exposure_cap`／`cap_cash`：§9.3.1 股债总仓位上限触发日给（上限、现金 − 融资负债）；此时预算不含授信，
+    `exposure_cap`／`cap_cash`：§9.3.1 股债总仓位上限受限期间给（上限、现金 − 融资负债）；此时预算不含授信，
     常规卖出后按持仓市值比例减仓至上限，每笔买入以买后总仓位 ≤ 上限为限（与回测 enforce_equity_bond_cap／equity_bond_buy_shares 同序同式）。
     """
     holdings = holdings or {}
@@ -1257,11 +1257,13 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
     print(f"  1. 一档 {result['tranche'] / 1e4:,.2f} 万（净资产 {nav / 1e4:,.2f} 万 × {SEC93_TRANCHE_PCT:.1%}）")
     eb = result.get("eb")
     if eb:
-        head = f"  §9.3.1 股债总仓位上限：利差 {eb['spread']:.2%}（观测 {eb['observed_on']}；阈值 {SEC93_EQUITY_BOND_THRESHOLD:.0%}）→ "
+        head = (f"  §9.3.1 股债总仓位上限：利差 {eb['spread']:.2%}（观测 {eb['observed_on']}；"
+                f"触发 <{SEC93_EQUITY_BOND_THRESHOLD:.1%}，恢复 ≥{SEC93_EQUITY_BOND_RELEASE_THRESHOLD:.1%}）→ ")
         if eb.get("cap") is None:
-            print(head + "未触发，无上限")
+            print(head + "当前未受限，按原融资与买入规则执行")
         else:
-            print(head + f"**触发：上限 {eb['cap']:.0%}**｜授信视为 0，预算 = 现金 {eb['cash'] / 1e4:,.2f} 万 − 融资负债 "
+            status = "低于触发线" if eb['spread'] < SEC93_EQUITY_BOND_THRESHOLD else "沿用受限状态，尚未达到恢复线"
+            print(head + f"**受限：上限 {eb['cap']:.0%}**（{status}）｜授信视为 0，预算 = 现金 {eb['cash'] / 1e4:,.2f} 万 − 融资负债 "
                   f"{eb['debt'] / 1e4:,.2f} 万 = {(eb['cash'] - eb['debt']) / 1e4:,.2f} 万（{eb['source']}）"
                   f"｜常规卖出后总仓位 {result['eb_stock_before'] / nav:.1%}"
                   + (f"，按比例减仓 {len(result['eb_sells'])} 只" if result.get("eb_sells") else "，未超限")

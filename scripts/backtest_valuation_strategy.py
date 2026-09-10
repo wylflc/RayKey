@@ -4423,7 +4423,7 @@ def main() -> int:
                     help="OI-148 执行成本压力：每边滑点（基点）。买入成交价 = 成交日价 × (1 + bp/1e4)、卖出 = × (1 − bp/1e4)，"
                          "进股数、整手、可用现金、成本、费税与流水价；盯市价、信号价与止损／走势判据不变；"
                          "同日买卖先净额对冲、只对净额收；强平与退市清仓同样收；分红、送转、配股认购不收。0 = 关（逐位不变）")
-    ebg = parser.add_argument_group("股债性价比（研究开关，生产关闭）")
+    ebg = parser.add_argument_group("股债性价比（生产参数由 sweep_backtest_configs.BASE 显式指定）")
     ebg.add_argument("--equity-bond-mode", choices=("off", "credit", "cap", "ramp"), default="off")
     ebg.add_argument("--equity-bond-data", type=Path)
     ebg.add_argument("--equity-bond-metric", choices=("spread", "percentile"), default="percentile")
@@ -4435,8 +4435,12 @@ def main() -> int:
     ebg.add_argument("--equity-bond-min-obs", type=int, default=12)
     ebg.add_argument("--equity-bond-log-dir", type=Path)
     ebg.add_argument("--equity-bond-restore-above", action="store_true",
-                     help="阈值以上完整恢复 BASE：不设总仓位上限、不改授信（§9.3.1 股债总仓位上限的生产分支，v4.176）")
+                     help="解除约束后恢复原融资与买入许可，不设总仓位上限；配合恢复门槛可启用滞回")
+    ebg.add_argument("--equity-bond-release-threshold", type=float,
+                     help="触发后须达到此利差才解除，区间内保持历史状态；仅支持cap/spread/restore-above，未给则同阈值切换")
     args = parser.parse_args()
+    if args.equity_bond_release_threshold is not None and args.equity_bond_mode == "off":
+        parser.error("--equity-bond-release-threshold requires an enabled cap constraint")
     equity_bond = None
     if args.equity_bond_mode != "off":
         if not args.equity_bond_data:
@@ -4444,7 +4448,8 @@ def main() -> int:
         equity_bond = EquityBondConstraint(args.equity_bond_data, args.equity_bond_mode,
             args.equity_bond_metric, args.equity_bond_threshold, args.equity_bond_lower,
             args.equity_bond_upper, args.equity_bond_ramp_high,
-            args.equity_bond_window, args.equity_bond_min_obs, restore_above=args.equity_bond_restore_above)
+            args.equity_bond_window, args.equity_bond_min_obs, restore_above=args.equity_bond_restore_above,
+            release_threshold=args.equity_bond_release_threshold)
     try:
         validate_buy_top_pct(args.buy_top_pct, gate=(args.gate != "pv"), rank_mode=(args.rank_mode != "pv"),
                              use_mos=args.use_mos, tier_buy_scale=args.tier_buy_scale, min_upside=args.min_upside,
@@ -4789,6 +4794,8 @@ def main() -> int:
                      + ("_spct" if args.swap_post_corr_trigger else "")
                      + (f"_eb{args.equity_bond_mode}{args.equity_bond_threshold:g}{'r' if args.equity_bond_restore_above else ''}"
                         if args.equity_bond_mode != "off" else "")
+                     + (f"_c{args.equity_bond_lower:g}h{args.equity_bond_release_threshold:g}"
+                        if args.equity_bond_release_threshold is not None else "")
                      + (f"_ex{len(excluded_codes)}" if excluded_codes else "")
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
                      + (f"_ml{args.min_lot_cooldown}" if args.min_lot_cooldown else "")

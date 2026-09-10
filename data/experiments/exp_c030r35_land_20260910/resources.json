@@ -1,0 +1,14 @@
+{
+  "job_id": "26530989",
+  "scheduler_state": "FAILED",
+  "elapsed_seconds": 90,
+  "allocated_cpus": 16,
+  "workers": 12,
+  "max_rss_kib": 6039836,
+  "total_cpu_seconds": 524.665,
+  "completed_tests": 393,
+  "completed_backtest_paths": 30,
+  "failure_stage": "Strict descriptive summary string comparison after all backtests; see first_run_diagnostic.json",
+  "verification_resume": "Single process --verify-existing --workers 1, passed; no backtest reruns",
+  "registration_resume": "Union-schema blank-column comparison normalized after first publication, idempotent re-entry passed; original 3066 ledger rows verified against c24ea622"
+}
