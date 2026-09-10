@@ -1,0 +1,12 @@
+{
+  "ranking_identical": true,
+  "panel_A_B_identical": true,
+  "same_day_delta_separate_from_levels": true,
+  "tolerances": [
+    "0.04",
+    "0.10",
+    "0.15"
+  ],
+  "returns_with_missing_horizon_excluded": true,
+  "independent_samples_not_daily_counts": true
+}

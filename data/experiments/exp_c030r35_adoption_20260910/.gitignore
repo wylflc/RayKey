@@ -1,0 +1,16 @@
+cache/
+daily/
+nav/
+errors/
+sig/*/candidates.csv
+sig/*/ledger.csv
+sig/*/run.log
+sig/*/*_equity.csv
+sig/*/*_trades.csv
+sig/*/*_periods.csv
+sig/*/_SIG*.csv
+sweep_*.txt
+!sweep_full_A.txt
+rows_*.csv
+signals_run.log
+__pycache__/

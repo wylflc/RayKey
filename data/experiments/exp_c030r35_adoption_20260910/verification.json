@@ -1,0 +1,110 @@
+{
+  "completed_beijing": "2026-09-10T15:08:33.041142+08:00",
+  "job_id": "26528686",
+  "inputs_unchanged": true,
+  "baseline_and_candidate_reproduced_paths": 56,
+  "executed_paths": 1624,
+  "anchor_artifact_paths": 2,
+  "summary_rows": 2324,
+  "union_groups": {
+    "U1": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "candidates": [
+        "C030R35",
+        "N020R300",
+        "N020R325",
+        "N020R350",
+        "N020R375",
+        "N020R400",
+        "N025R300",
+        "N025R325",
+        "N025R350",
+        "N025R375",
+        "N025R400",
+        "N030R300",
+        "N030R325",
+        "N030R375",
+        "N030R400",
+        "N035R300",
+        "N035R325",
+        "N035R350",
+        "N035R375",
+        "N035R400",
+        "N040R300",
+        "N040R325",
+        "N040R350",
+        "N040R375",
+        "N040R400",
+        "CM12",
+        "CM13",
+        "CM14",
+        "CM16",
+        "CM17",
+        "CM18",
+        "CM19",
+        "CM20",
+        "CS10",
+        "CS20",
+        "CS30"
+      ],
+      "controls": [
+        "BASE",
+        "BM12",
+        "BM13",
+        "BM14",
+        "BM16",
+        "BM17",
+        "BM18",
+        "BM19",
+        "BM20",
+        "BS10",
+        "BS20",
+        "BS30"
+      ],
+      "reused_A": true
+    },
+    "U2": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088",
+        "688516"
+      ],
+      "candidates": [
+        "CM10"
+      ],
+      "controls": [
+        "BASE",
+        "BM10"
+      ],
+      "reused_A": false
+    },
+    "U3": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "600585",
+        "601088"
+      ],
+      "candidates": [
+        "CM11"
+      ],
+      "controls": [
+        "BASE",
+        "BM11"
+      ],
+      "reused_A": false
+    }
+  },
+  "signals_complete": true
+}

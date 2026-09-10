@@ -1,0 +1,25 @@
+{
+  "section2": {
+    "cap": [
+      30
+    ],
+    "release": [
+      325,
+      350
+    ],
+    "margin": [
+      15
+    ]
+  },
+  "section2_and_U": {
+    "cap": [
+      30
+    ],
+    "release": [
+      350
+    ],
+    "margin": [
+      15
+    ]
+  }
+}

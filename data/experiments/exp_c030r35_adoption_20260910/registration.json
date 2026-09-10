@@ -1,0 +1,534 @@
+{
+  "rows": 1456,
+  "arms": [
+    {
+      "臂名": "EBADBASE",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBM10",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBM11",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBM12",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBM13",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBM14",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBM16",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBM17",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBM18",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBM19",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBM20",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBS10",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_slip10_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBS20",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_slip20_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADBS30",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_slip30_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADC030R35",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCM10",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCM11",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCM12",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCM13",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCM14",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCM16",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCM17",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCM18",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCM19",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCM20",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCS10",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_slip10_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCS20",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_slip20_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADCS30",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_slip30_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN020R300",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN020R325",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN020R350",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN020R375",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN020R400",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN025R300",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN025R325",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN025R350",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN025R375",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN025R400",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN030R300",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN030R325",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN030R375",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN030R400",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN035R300",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN035R325",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN035R350",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN035R375",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN035R400",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN040R300",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN040R325",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN040R350",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN040R375",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    },
+    {
+      "臂名": "EBADN040R400",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "EBADOPT20260910",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_ebcap0.03r_lot100_lrc2"
+    }
+  ],
+  "prefix": "EBADOPT20260910_EBAD",
+  "new_parameter_combinations": 48,
+  "repeated_parameter_combinations": 4,
+  "new_candidate_combinations": 35,
+  "new_control_combinations": 13,
+  "prior_registered_family_arms": 72,
+  "total_registered_family_arms": 124,
+  "entry_point": "clean_derived_artifacts.write_ledger",
+  "production_parameters_changed": false
+}

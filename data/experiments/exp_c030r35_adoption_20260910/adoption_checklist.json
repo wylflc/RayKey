@@ -1,0 +1,19 @@
+{
+  "section2": true,
+  "U_excellent": true,
+  "neighbor_platform": false,
+  "margin_platform": false,
+  "winner_cagr_same_direction": false,
+  "winner_P_same_direction": false,
+  "winner_cagr_same_direction_outside_noise": true,
+  "winner_P_same_direction_outside_noise": false,
+  "top3_net_share": 0.5264814359478649,
+  "attribution_usable": true,
+  "signals_complete": true,
+  "slippage_passes": {
+    "0": true,
+    "10": false,
+    "20": false,
+    "30": false
+  }
+}

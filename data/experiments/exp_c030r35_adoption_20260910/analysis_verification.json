@@ -1,0 +1,12 @@
+{
+  "paths_checked": 2324,
+  "unique_daily_paths": 1624,
+  "arms": 52,
+  "complete_start_and_window_sets": true,
+  "expected_calendar_windows_verified": true,
+  "daily_dates_equal": true,
+  "finite_decision_inputs": true,
+  "negative_cash_days": 0,
+  "production_parameters_changed": false,
+  "production_verdict_issues": "OI-172/173 scoped completeness and 0→positive guards"
+}

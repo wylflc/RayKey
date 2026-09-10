@@ -1,0 +1,468 @@
+[
+  {
+    "arm": "BASE",
+    "family": "control",
+    "kind": "baseline",
+    "extra": []
+  },
+  {
+    "arm": "C030R35",
+    "family": "center",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.035,
+    "extra": []
+  },
+  {
+    "arm": "N020R300",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.2,
+    "release": 0.03,
+    "extra": []
+  },
+  {
+    "arm": "N020R325",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.2,
+    "release": 0.0325,
+    "extra": []
+  },
+  {
+    "arm": "N020R350",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.2,
+    "release": 0.035,
+    "extra": []
+  },
+  {
+    "arm": "N020R375",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.2,
+    "release": 0.0375,
+    "extra": []
+  },
+  {
+    "arm": "N020R400",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.2,
+    "release": 0.04,
+    "extra": []
+  },
+  {
+    "arm": "N025R300",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.25,
+    "release": 0.03,
+    "extra": []
+  },
+  {
+    "arm": "N025R325",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.25,
+    "release": 0.0325,
+    "extra": []
+  },
+  {
+    "arm": "N025R350",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.25,
+    "release": 0.035,
+    "extra": []
+  },
+  {
+    "arm": "N025R375",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.25,
+    "release": 0.0375,
+    "extra": []
+  },
+  {
+    "arm": "N025R400",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.25,
+    "release": 0.04,
+    "extra": []
+  },
+  {
+    "arm": "N030R300",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.03,
+    "extra": []
+  },
+  {
+    "arm": "N030R325",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.0325,
+    "extra": []
+  },
+  {
+    "arm": "N030R375",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.0375,
+    "extra": []
+  },
+  {
+    "arm": "N030R400",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.04,
+    "extra": []
+  },
+  {
+    "arm": "N035R300",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.35,
+    "release": 0.03,
+    "extra": []
+  },
+  {
+    "arm": "N035R325",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.35,
+    "release": 0.0325,
+    "extra": []
+  },
+  {
+    "arm": "N035R350",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.35,
+    "release": 0.035,
+    "extra": []
+  },
+  {
+    "arm": "N035R375",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.35,
+    "release": 0.0375,
+    "extra": []
+  },
+  {
+    "arm": "N035R400",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.35,
+    "release": 0.04,
+    "extra": []
+  },
+  {
+    "arm": "N040R300",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.4,
+    "release": 0.03,
+    "extra": []
+  },
+  {
+    "arm": "N040R325",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.4,
+    "release": 0.0325,
+    "extra": []
+  },
+  {
+    "arm": "N040R350",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.4,
+    "release": 0.035,
+    "extra": []
+  },
+  {
+    "arm": "N040R375",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.4,
+    "release": 0.0375,
+    "extra": []
+  },
+  {
+    "arm": "N040R400",
+    "family": "neighborhood",
+    "kind": "hysteresis",
+    "cap": 0.4,
+    "release": 0.04,
+    "extra": []
+  },
+  {
+    "arm": "BM10",
+    "family": "margin_control",
+    "kind": "baseline",
+    "extra": [
+      "--swap-margin",
+      "0.1"
+    ]
+  },
+  {
+    "arm": "CM10",
+    "family": "margin",
+    "kind": "hysteresis",
+    "extra": [
+      "--swap-margin",
+      "0.1"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BM11",
+    "family": "margin_control",
+    "kind": "baseline",
+    "extra": [
+      "--swap-margin",
+      "0.11"
+    ]
+  },
+  {
+    "arm": "CM11",
+    "family": "margin",
+    "kind": "hysteresis",
+    "extra": [
+      "--swap-margin",
+      "0.11"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BM12",
+    "family": "margin_control",
+    "kind": "baseline",
+    "extra": [
+      "--swap-margin",
+      "0.12"
+    ]
+  },
+  {
+    "arm": "CM12",
+    "family": "margin",
+    "kind": "hysteresis",
+    "extra": [
+      "--swap-margin",
+      "0.12"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BM13",
+    "family": "margin_control",
+    "kind": "baseline",
+    "extra": [
+      "--swap-margin",
+      "0.13"
+    ]
+  },
+  {
+    "arm": "CM13",
+    "family": "margin",
+    "kind": "hysteresis",
+    "extra": [
+      "--swap-margin",
+      "0.13"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BM14",
+    "family": "margin_control",
+    "kind": "baseline",
+    "extra": [
+      "--swap-margin",
+      "0.14"
+    ]
+  },
+  {
+    "arm": "CM14",
+    "family": "margin",
+    "kind": "hysteresis",
+    "extra": [
+      "--swap-margin",
+      "0.14"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BM16",
+    "family": "margin_control",
+    "kind": "baseline",
+    "extra": [
+      "--swap-margin",
+      "0.16"
+    ]
+  },
+  {
+    "arm": "CM16",
+    "family": "margin",
+    "kind": "hysteresis",
+    "extra": [
+      "--swap-margin",
+      "0.16"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BM17",
+    "family": "margin_control",
+    "kind": "baseline",
+    "extra": [
+      "--swap-margin",
+      "0.17"
+    ]
+  },
+  {
+    "arm": "CM17",
+    "family": "margin",
+    "kind": "hysteresis",
+    "extra": [
+      "--swap-margin",
+      "0.17"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BM18",
+    "family": "margin_control",
+    "kind": "baseline",
+    "extra": [
+      "--swap-margin",
+      "0.18"
+    ]
+  },
+  {
+    "arm": "CM18",
+    "family": "margin",
+    "kind": "hysteresis",
+    "extra": [
+      "--swap-margin",
+      "0.18"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BM19",
+    "family": "margin_control",
+    "kind": "baseline",
+    "extra": [
+      "--swap-margin",
+      "0.19"
+    ]
+  },
+  {
+    "arm": "CM19",
+    "family": "margin",
+    "kind": "hysteresis",
+    "extra": [
+      "--swap-margin",
+      "0.19"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BM20",
+    "family": "margin_control",
+    "kind": "baseline",
+    "extra": [
+      "--swap-margin",
+      "0.2"
+    ]
+  },
+  {
+    "arm": "CM20",
+    "family": "margin",
+    "kind": "hysteresis",
+    "extra": [
+      "--swap-margin",
+      "0.2"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BS10",
+    "family": "slip_control",
+    "kind": "baseline",
+    "extra": [
+      "--slippage-bp",
+      "10"
+    ]
+  },
+  {
+    "arm": "CS10",
+    "family": "slip",
+    "kind": "hysteresis",
+    "extra": [
+      "--slippage-bp",
+      "10"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BS20",
+    "family": "slip_control",
+    "kind": "baseline",
+    "extra": [
+      "--slippage-bp",
+      "20"
+    ]
+  },
+  {
+    "arm": "CS20",
+    "family": "slip",
+    "kind": "hysteresis",
+    "extra": [
+      "--slippage-bp",
+      "20"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  },
+  {
+    "arm": "BS30",
+    "family": "slip_control",
+    "kind": "baseline",
+    "extra": [
+      "--slippage-bp",
+      "30"
+    ]
+  },
+  {
+    "arm": "CS30",
+    "family": "slip",
+    "kind": "hysteresis",
+    "extra": [
+      "--slippage-bp",
+      "30"
+    ],
+    "cap": 0.3,
+    "release": 0.035
+  }
+]

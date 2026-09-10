@@ -1,0 +1,13 @@
+{
+  "job_id": 26528686,
+  "state": "COMPLETED",
+  "elapsed": "00:11:24",
+  "allocated_cpus": 64,
+  "workers": 48,
+  "signal_workers": 4,
+  "max_rss_kib": 69031801,
+  "formal_paths": 1624,
+  "artifact_paths": 2,
+  "stopped_initial_job": 26528653,
+  "stopped_before_candidate_results": true
+}
