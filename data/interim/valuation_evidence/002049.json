@@ -1585,5 +1585,45 @@
     "RATING": "增持"
    }
   ]
- }
+ },
+  "manual_evidence": [
+    {
+      "review_id": "attention_review:2026-09-10:002049",
+      "reviewed_at_utc": "2026-09-10T13:16:52+00:00",
+      "evidence_available_at": "2026-08-20",
+      "evidence_status": "authoritative_sources_reviewed_with_gaps",
+      "attention_class": "boundary_pending",
+      "primary_strategy_tag": "E",
+      "report_path": "data/companies/002049_紫光国微/review_20260910.md",
+      "source_urls": [
+        "https://static.cninfo.com.cn/finalpage/2026-08-15/1225474654.PDF",
+        "https://static.cninfo.com.cn/finalpage/2026-08-20/1225484100.PDF",
+        "https://disc.static.szse.cn/disc/disk03/finalpage/2026-04-21/4f2f2ee1-d0a8-4539-b324-4191f3bd9f5d.PDF",
+        "https://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12377600",
+        "https://stock.stockstar.com/notice/SN2026081700028606.shtml",
+        "https://pdf.dfcfw.com/pdf/H2_AN202603271820810705_1.pdf"
+      ],
+      "prior_triage": {
+        "security_code": "002049",
+        "security_name": "紫光国微",
+        "attention_class": "boundary_pending",
+        "attention_reason": "2026H1 中报复核（2026-08-23）：营收 34.43 亿(+13.0%)、归母 7.98 亿(+15.3%)、ROE 5.7%（25H1 5.4%）、毛利 53.6%（25H1 55.6%）——H1 ROE 5.7%（25H1 5.4%），多年 ROE 结构结论不变；维持 boundary_pending。前判（2025年报+2026Q1，2026-08-09）：特种集成电路与智能卡，ROE 由 32% 塌至 11%、留存仅 63%",
+        "capital_replicability_note": "防3.1 多年 ROE 结构未通过",
+        "garbage_reason": "",
+        "garbage_subtype": "",
+        "boundary_recheck_trigger": "",
+        "evidence_basis": "2026H1",
+        "reviewed_at_utc": "2026-08-23T00:00:00+00:00",
+        "workflow_version": "v4.50"
+      },
+      "summary": "确认认证和产品谱系壁垒，采购压价下的份额稳定、重点型号替换及跨周期净回报仍待核验；维持边界观察，不评分。",
+      "limitations": "网页工具核对原文；本地PDF下载DNS失败；未刷新财务与报价接口、未核验8月20日以后并购一手状态、未重算估值。",
+      "metrics": {
+        "report_date": "2026-06-30",
+        "parent_netprofit_ttm_yi": 15.4289771566,
+        "special_ic_gross_profit_share": 0.6832080661
+      },
+      "special_advantage_check": "高可靠产品谱系、客户认证与安全芯片准入是已识别载体；战略意义不等于政策保底。"
+    }
+  ]
 }
