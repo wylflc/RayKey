@@ -1,0 +1,263 @@
+[
+  {
+    "security_code": "03888",
+    "fair_price_low": "25.12",
+    "fair_price_high": "30.71",
+    "quality_tier": "L2",
+    "quality_score": "72.20",
+    "attention_class": "worth_attention",
+    "valuation_price": "24.20"
+  },
+  {
+    "security_code": "00700",
+    "fair_price_low": "412.02",
+    "fair_price_high": "503.58",
+    "quality_tier": "L1",
+    "quality_score": "88.20",
+    "attention_class": "worth_attention",
+    "valuation_price": "425.60"
+  },
+  {
+    "security_code": "09992",
+    "fair_price_low": "23.07",
+    "fair_price_high": "28.19",
+    "quality_tier": "L4",
+    "quality_score": "65.30",
+    "attention_class": "documented_not_attention",
+    "valuation_price": "152.70"
+  },
+  {
+    "security_code": "09618",
+    "fair_price_low": "43.92",
+    "fair_price_high": "53.68",
+    "quality_tier": "L3",
+    "quality_score": "58.20",
+    "attention_class": "worth_attention",
+    "valuation_price": "105.50"
+  },
+  {
+    "security_code": "09988",
+    "fair_price_low": "41.91",
+    "fair_price_high": "51.22",
+    "quality_tier": "L2",
+    "quality_score": "69.50",
+    "attention_class": "worth_attention",
+    "valuation_price": "106.90"
+  },
+  {
+    "security_code": "03690",
+    "fair_price_low": "",
+    "fair_price_high": "",
+    "quality_tier": "L2",
+    "quality_score": "67.30",
+    "attention_class": "worth_attention",
+    "valuation_price": "74.75"
+  },
+  {
+    "security_code": "06862",
+    "fair_price_low": "5.19",
+    "fair_price_high": "6.34",
+    "quality_tier": "L4",
+    "quality_score": "60.10",
+    "attention_class": "documented_not_attention",
+    "valuation_price": "9.91"
+  },
+  {
+    "security_code": "TSM",
+    "fair_price_low": "280.53",
+    "fair_price_high": "342.87",
+    "quality_tier": "L1",
+    "quality_score": "87.80",
+    "attention_class": "worth_attention",
+    "valuation_price": "428.03"
+  },
+  {
+    "security_code": "ADBE",
+    "fair_price_low": "202.80",
+    "fair_price_high": "247.86",
+    "quality_tier": "L2",
+    "quality_score": "78.80",
+    "attention_class": "worth_attention",
+    "valuation_price": "248.83"
+  },
+  {
+    "security_code": "PDD",
+    "fair_price_low": "125.87",
+    "fair_price_high": "153.84",
+    "quality_tier": "L2",
+    "quality_score": "56.30",
+    "attention_class": "worth_attention",
+    "valuation_price": "77.84"
+  },
+  {
+    "security_code": "MU",
+    "fair_price_low": "179.82",
+    "fair_price_high": "219.78",
+    "quality_tier": "L2",
+    "quality_score": "59.40",
+    "attention_class": "worth_attention",
+    "valuation_price": "977.41"
+  },
+  {
+    "security_code": "NVDA",
+    "fair_price_low": "64.79",
+    "fair_price_high": "79.19",
+    "quality_tier": "L1",
+    "quality_score": "88.20",
+    "attention_class": "worth_attention",
+    "valuation_price": "218.36"
+  },
+  {
+    "security_code": "ASML",
+    "fair_price_low": "368.87",
+    "fair_price_high": "450.84",
+    "quality_tier": "L1",
+    "quality_score": "89.00",
+    "attention_class": "worth_attention",
+    "valuation_price": "1687.43"
+  },
+  {
+    "security_code": "GOOGL",
+    "fair_price_low": "197.63",
+    "fair_price_high": "241.54",
+    "quality_tier": "L1",
+    "quality_score": "84.70",
+    "attention_class": "worth_attention",
+    "valuation_price": "332.60"
+  },
+  {
+    "security_code": "AAPL",
+    "fair_price_low": "134.87",
+    "fair_price_high": "164.84",
+    "quality_tier": "L1",
+    "quality_score": "88.90",
+    "attention_class": "worth_attention",
+    "valuation_price": "326.57"
+  },
+  {
+    "security_code": "DIS",
+    "fair_price_low": "34.05",
+    "fair_price_high": "41.61",
+    "quality_tier": "L2",
+    "quality_score": "70.70",
+    "attention_class": "worth_attention",
+    "valuation_price": "105.82"
+  },
+  {
+    "security_code": "UBER",
+    "fair_price_low": "34.56",
+    "fair_price_high": "42.24",
+    "quality_tier": "L2",
+    "quality_score": "69.70",
+    "attention_class": "worth_attention",
+    "valuation_price": "72.56"
+  },
+  {
+    "security_code": "GLW",
+    "fair_price_low": "19.53",
+    "fair_price_high": "23.87",
+    "quality_tier": "L2",
+    "quality_score": "67.80",
+    "attention_class": "worth_attention",
+    "valuation_price": "163.12"
+  },
+  {
+    "security_code": "MSFT",
+    "fair_price_low": "237.79",
+    "fair_price_high": "290.63",
+    "quality_tier": "L1",
+    "quality_score": "89.00",
+    "attention_class": "worth_attention",
+    "valuation_price": "492.44"
+  },
+  {
+    "security_code": "META",
+    "fair_price_low": "519.16",
+    "fair_price_high": "634.52",
+    "quality_tier": "L1",
+    "quality_score": "82.00",
+    "attention_class": "worth_attention",
+    "valuation_price": "644.38"
+  },
+  {
+    "security_code": "005930",
+    "fair_price_low": "",
+    "fair_price_high": "",
+    "quality_tier": "L2",
+    "quality_score": "55.30",
+    "attention_class": "worth_attention",
+    "valuation_price": "269000"
+  },
+  {
+    "security_code": "000660",
+    "fair_price_low": "",
+    "fair_price_high": "",
+    "quality_tier": "L2",
+    "quality_score": "56.50",
+    "attention_class": "worth_attention",
+    "valuation_price": "1853000"
+  },
+  {
+    "security_code": "BRK.B",
+    "fair_price_low": "375.39",
+    "fair_price_high": "458.81",
+    "quality_tier": "L1",
+    "quality_score": "85.20",
+    "attention_class": "worth_attention",
+    "valuation_price": "507.00"
+  },
+  {
+    "security_code": "AMD",
+    "fair_price_low": "15.65",
+    "fair_price_high": "19.13",
+    "quality_tier": "L2",
+    "quality_score": "76.00",
+    "attention_class": "worth_attention",
+    "valuation_price": "503.60"
+  },
+  {
+    "security_code": "SPCX",
+    "fair_price_low": "",
+    "fair_price_high": "",
+    "quality_tier": "L2",
+    "quality_score": "67.70",
+    "attention_class": "worth_attention",
+    "valuation_price": "148.18"
+  },
+  {
+    "security_code": "TSLA",
+    "fair_price_low": "29.65",
+    "fair_price_high": "36.24",
+    "quality_tier": "L3",
+    "quality_score": "54.80",
+    "attention_class": "worth_attention",
+    "valuation_price": "363.56"
+  },
+  {
+    "security_code": "INTC",
+    "fair_price_low": "",
+    "fair_price_high": "",
+    "quality_tier": "L3",
+    "quality_score": "51.60",
+    "attention_class": "worth_attention",
+    "valuation_price": "100.32"
+  },
+  {
+    "security_code": "00267",
+    "fair_price_low": "16.20",
+    "fair_price_high": "19.80",
+    "quality_tier": "",
+    "quality_score": "",
+    "attention_class": "boundary_pending",
+    "valuation_price": "13.72"
+  },
+  {
+    "security_code": "00316",
+    "fair_price_low": "149.68",
+    "fair_price_high": "182.94",
+    "quality_tier": "",
+    "quality_score": "",
+    "attention_class": "boundary_pending",
+    "valuation_price": "145.60"
+  }
+]

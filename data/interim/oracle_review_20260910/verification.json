@@ -1,0 +1,14 @@
+{
+  "companies": 30,
+  "prior_companies_valuation_and_quality_unchanged": 29,
+  "orcl_status": "unvaluable_pending_input",
+  "orcl_tier": "L2",
+  "orcl_score": "72.40",
+  "model_value_and_pv_empty": true,
+  "source_rows": 20,
+  "regressions_passed": 21,
+  "document_errors": 0,
+  "calendar_overdue": 0,
+  "a_share_pool_unchanged": true,
+  "valuation_parameters_unchanged": true
+}

@@ -1,0 +1,8 @@
+{
+  "data/processed/overseas_watchlist_valuation.csv": "3dafd6ea812141ee3d5806bea0974389769b83340cd6c0ce4532a9a975945455",
+  "data/reference/overseas_report_evidence.csv": "44d12ce16ad72506e2ba4e7a9cbc5a9ec4f9631e51db6778f712c94ee2b9310a",
+  "data/reference/overseas_statement_overrides.csv": "a3ee2184b1da5e062279c3129e81083b10061f9599417446596fd8cb4f6549ab",
+  "data/interim/overseas_roic_years.csv": "753dcf2944e83e3780bb8a492dd344fb93392e6aff12e6c8bf3e48e6a5298679",
+  "data/processed/a_share_core_valuation_pool.csv": "d29f9b28df33bc2050207e7d615efcb8d4090c725e50e33aba3a9c71b8de851d",
+  "data/reference/overseas_valuation_inputs.csv": "118743168e21c5e6523aa4089a918cedd076010a86ca73755a86242398995117"
+}

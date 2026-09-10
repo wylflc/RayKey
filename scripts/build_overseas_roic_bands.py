@@ -219,7 +219,9 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     shares = getattr(latest, "shares", None)
     if not shares or shares <= 0:
         res["reason"] = "股数不可得（无稀释加权股数/期末股数标签）"; return res
-    if latest.parent_equity is None or latest.parent_equity <= 0:
+    if latest.parent_equity is None:
+        res["reason"] = "最新报告母公司权益不可得，不能以总权益替代归母权益计算每股价值"; return res
+    if latest.parent_equity <= 0:
         res["reason"] = "母公司权益非正，股数法无法折每股"; return res
     if latest.nopat is None or latest.nopat <= 0:
         res["reason"] = (f"最新报告口径 NOPAT={latest.nopat/1e9:.2f}b ≤ 0：息税前利润非正，按现金折现无意义（A 股同规，按 §6.5.2.4 判无法估值）"

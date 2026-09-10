@@ -1,0 +1,345 @@
+{
+  "as_of": "2026-09-10",
+  "quarter_period": "2026-08-31",
+  "sources": {
+    "q1": "https://investor.oracle.com/files/content_files/1q27-pressrelease-September_FINAL.pdf",
+    "fy2026": "https://www.sec.gov/Archives/edgar/data/1341439/000119312526277521/orcl-20260531.htm",
+    "companyfacts": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001341439.json"
+  },
+  "q1_current_prior_millions": {
+    "revenue": [
+      19345,
+      14926
+    ],
+    "operating_income": [
+      6728,
+      4277
+    ],
+    "pretax": [
+      5607,
+      3427
+    ],
+    "income_tax": [
+      847,
+      500
+    ],
+    "interest_expense": [
+      1428,
+      923
+    ],
+    "net_income": [
+      4760,
+      2927
+    ],
+    "cfo": [
+      23103,
+      8140
+    ],
+    "capex": [
+      28499,
+      8502
+    ],
+    "dep_amort": [
+      3358,
+      1771
+    ],
+    "buybacks": [
+      0,
+      0
+    ],
+    "dividends_paid": [
+      1484,
+      1413
+    ]
+  },
+  "q1_cashflow_millions": {
+    "cfo": 23103,
+    "capex": 28499,
+    "fcf": -5396,
+    "financing_component_customer_prepayments": 11363,
+    "cfo_ex_these_prepayments": 11740,
+    "fcf_ex_these_prepayments": -16759,
+    "capex_net_cash_outlay": 17966,
+    "atm_common_issuance_gross": 20000
+  },
+  "q1_balance_millions": {
+    "cash": 36369,
+    "securities": 708,
+    "notes_current": 7625,
+    "notes_noncurrent": 117712,
+    "reported_total_equity": 67196,
+    "parent_equity": null,
+    "minority_equity": null
+  },
+  "q1_rpo_billions": 664,
+  "q1_oci_revenue_billions": 7.4,
+  "q1_oci_growth": 1.21,
+  "annual_lease_liability_millions": {
+    "operating": 30190,
+    "finance": 7701
+  },
+  "annual_preferred_stock_millions": 4954,
+  "annual_preferred_conversion_date": "2029-01-15",
+  "fy2026_rpo_recognition_windows": {
+    "next_12_months": 0.12,
+    "months_13_to_36": 0.34,
+    "months_37_to_60": 0.34,
+    "thereafter": 0.2
+  },
+  "ttm_cfo": 46940000000.0,
+  "ttm_capex": 75660000000.0,
+  "ttm_fcf": -28720000000.0,
+  "eps": {
+    "fy2026_gaap": 5.83,
+    "q1_fy2026_gaap": 1.01,
+    "q1_fy2027_gaap": 1.56,
+    "fy2026_adjusted": 7.63,
+    "fy2026_adjusted_ex_gains": 6.83,
+    "q1_fy2026_adjusted": 1.47,
+    "q1_fy2027_adjusted": 1.92,
+    "fy2027_adjusted_guidance": 8.1,
+    "ttm_gaap_quarter_sum": 6.380000000000001,
+    "ttm_adjusted_quarter_sum": 8.08,
+    "ttm_adjusted_ex_fy2026_gains": 7.28
+  },
+  "price": 152.94,
+  "pe": {
+    "ttm_gaap_quarter_sum": 23.971786833855795,
+    "ttm_adjusted_quarter_sum": 18.928217821782177,
+    "ttm_adjusted_ex_fy2026_gains": 21.008241758241756,
+    "fy2027_adjusted_guidance": 18.881481481481483
+  },
+  "cash_sensitivity": {
+    "required_return": 0.0925,
+    "terminal_growth": 0.03,
+    "scenarios": [
+      {
+        "case": "bear",
+        "sustainable_next_year_fcfe_per_share": 6.0,
+        "value_if_steady_now": 96.0,
+        "value_if_five_zero_cash_years": 61.68278937297523
+      },
+      {
+        "case": "base",
+        "sustainable_next_year_fcfe_per_share": 9.0,
+        "value_if_steady_now": 144.0,
+        "value_if_five_zero_cash_years": 92.52418405946284
+      },
+      {
+        "case": "bull",
+        "sustainable_next_year_fcfe_per_share": 12.0,
+        "value_if_steady_now": 192.0,
+        "value_if_five_zero_cash_years": 123.36557874595046
+      }
+    ],
+    "required_steady_next_year_fcfe_per_share": 9.55875,
+    "required_year6_fcfe_if_five_zero_cash_years": 14.876759130514307,
+    "assumptions": "Illustrative FCFE sensitivity, not a forecast or production band. Includes interest, maintenance/reinvestment, preferred claims and dilution; no second net-debt deduction. Delayed case sets years 1-5 cash to zero; actual negative cash/financing would reduce value further."
+  },
+  "gaps": [
+    "Latest Q1 parent/minority equity not separated in release",
+    "Latest finance leases and mandatory convertible preferred bridge require filed Q1 10-Q",
+    "No current TTM comprehensive income in release"
+  ],
+  "annual_reconciliation": [
+    {
+      "period": "2009-05-31",
+      "original_pretax": 3745000000.0,
+      "consolidated_pretax": 7834000000.0,
+      "original_debt": 0.0,
+      "notes_borrowings": 9237000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 9237000000.0,
+      "original_da": 263000000.0,
+      "corrected_da": 1976000000.0
+    },
+    {
+      "period": "2010-05-31",
+      "original_pretax": 4282000000.0,
+      "consolidated_pretax": 8243000000.0,
+      "original_debt": 0.0,
+      "notes_borrowings": 11510000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 11510000000.0,
+      "original_da": 298000000.0,
+      "corrected_da": 2271000000.0
+    },
+    {
+      "period": "2011-05-31",
+      "original_pretax": 11411000000.0,
+      "consolidated_pretax": 11411000000.0,
+      "original_debt": 0.0,
+      "notes_borrowings": 15922000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 15922000000.0,
+      "original_da": 368000000.0,
+      "corrected_da": 2796000000.0
+    },
+    {
+      "period": "2012-05-31",
+      "original_pretax": 12962000000.0,
+      "consolidated_pretax": 12962000000.0,
+      "original_debt": 0.0,
+      "notes_borrowings": 16474000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 16474000000.0,
+      "original_da": 486000000.0,
+      "corrected_da": 2916000000.0
+    },
+    {
+      "period": "2013-05-31",
+      "original_pretax": 13898000000.0,
+      "consolidated_pretax": 13898000000.0,
+      "original_debt": 0.0,
+      "notes_borrowings": 18494000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 18494000000.0,
+      "original_da": 546000000.0,
+      "corrected_da": 2931000000.0
+    },
+    {
+      "period": "2014-05-31",
+      "original_pretax": 13704000000.0,
+      "consolidated_pretax": 13704000000.0,
+      "original_debt": 0.0,
+      "notes_borrowings": 24175000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 24175000000.0,
+      "original_da": 608000000.0,
+      "corrected_da": 2908000000.0
+    },
+    {
+      "period": "2015-05-31",
+      "original_pretax": 12834000000.0,
+      "consolidated_pretax": 12834000000.0,
+      "original_debt": 0.0,
+      "notes_borrowings": 41958000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 41958000000.0,
+      "original_da": 712000000.0,
+      "corrected_da": 2861000000.0
+    },
+    {
+      "period": "2016-05-31",
+      "original_pretax": 11442000000.0,
+      "consolidated_pretax": 11442000000.0,
+      "original_debt": 0.0,
+      "notes_borrowings": 43855000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 43855000000.0,
+      "original_da": 871000000.0,
+      "corrected_da": 2509000000.0
+    },
+    {
+      "period": "2017-05-31",
+      "original_pretax": 11517000000.0,
+      "consolidated_pretax": 11517000000.0,
+      "original_debt": 9797000000.0,
+      "notes_borrowings": 57909000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 57909000000.0,
+      "original_da": 1000000000.0,
+      "corrected_da": 2451000000.0
+    },
+    {
+      "period": "2018-05-31",
+      "original_pretax": 12891000000.0,
+      "consolidated_pretax": 12891000000.0,
+      "original_debt": 4491000000.0,
+      "notes_borrowings": 60619000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 60619000000.0,
+      "original_da": 1165000000.0,
+      "corrected_da": 2785000000.0
+    },
+    {
+      "period": "2019-05-31",
+      "original_pretax": 3774000000.0,
+      "consolidated_pretax": 12268000000.0,
+      "original_debt": 4494000000.0,
+      "notes_borrowings": 56167000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 56167000000.0,
+      "original_da": 1230000000.0,
+      "corrected_da": 2919000000.0
+    },
+    {
+      "period": "2020-05-31",
+      "original_pretax": 3890000000.0,
+      "consolidated_pretax": 12063000000.0,
+      "original_debt": 2371000000.0,
+      "notes_borrowings": 71597000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 71597000000.0,
+      "original_da": 1382000000.0,
+      "corrected_da": 2968000000.0
+    },
+    {
+      "period": "2021-05-31",
+      "original_pretax": 4375000000.0,
+      "consolidated_pretax": 12999000000.0,
+      "original_debt": 8250000000.0,
+      "notes_borrowings": 84245000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 84245000000.0,
+      "original_da": 1537000000.0,
+      "corrected_da": 2916000000.0
+    },
+    {
+      "period": "2022-05-31",
+      "original_pretax": -629000000.0,
+      "consolidated_pretax": 7649000000.0,
+      "original_debt": 3749000000.0,
+      "notes_borrowings": 75859000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 75859000000.0,
+      "original_da": 1972000000.0,
+      "corrected_da": 3122000000.0
+    },
+    {
+      "period": "2023-05-31",
+      "original_pretax": 1492000000.0,
+      "consolidated_pretax": 9126000000.0,
+      "original_debt": 4061000000.0,
+      "notes_borrowings": 90481000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 90481000000.0,
+      "original_da": 2526000000.0,
+      "corrected_da": 6108000000.0
+    },
+    {
+      "period": "2024-05-31",
+      "original_pretax": 3023000000.0,
+      "consolidated_pretax": 11741000000.0,
+      "original_debt": 10605000000.0,
+      "notes_borrowings": 86869000000.0,
+      "finance_leases": 0,
+      "corrected_debt": 86869000000.0,
+      "original_da": 3129000000.0,
+      "corrected_da": 6139000000.0
+    },
+    {
+      "period": "2025-05-31",
+      "original_pretax": 4376000000.0,
+      "consolidated_pretax": 14160000000.0,
+      "original_debt": 7271000000.0,
+      "notes_borrowings": 92568000000.0,
+      "finance_leases": 2957000000.0,
+      "corrected_debt": 95525000000.0,
+      "original_da": 3867000000.0,
+      "corrected_da": 6174000000.0
+    },
+    {
+      "period": "2026-05-31",
+      "original_pretax": 8693000000.0,
+      "consolidated_pretax": 19554000000.0,
+      "original_debt": 7199000000.0,
+      "notes_borrowings": 129541000000.0,
+      "finance_leases": 7701000000.0,
+      "corrected_debt": 137242000000.0,
+      "original_da": 7623000000.0,
+      "corrected_da": 9294000000.0
+    }
+  ],
+  "raw_sha256": "60e4f8db39c9a84106bd02677f578db14a54c8bccabcdba2b828e595c32edeca"
+}

@@ -1,0 +1,43 @@
+{
+  "as_of": "2026-09-10",
+  "completed_at_utc": "2026-09-10T21:39:50+00:00",
+  "baseline_commit": "b0805981",
+  "after_sha256": {
+    "data/companies/ORCL_甲骨文/README.md": "4e6c785d398e3ad007db91ff5b6a67ba0e2d5400253141bf1f578664f2b71b43",
+    "data/interim/oracle_review_20260910/annual_model_diagnostic.json": "ea8b0db18288842a9d83475f9097b10158a2d4302637f476993b7e949801ebf8",
+    "data/interim/oracle_review_20260910/before_companies.json": "1e05e8ee29cc14e6322f814194c4d81d7f03803437e28ae457b2cc2cd8d66847",
+    "data/interim/oracle_review_20260910/before_manifest.json": "eb7cab5608423bff387ec8dcc9e407ee94f7be797a462e3d8e6c1dff1151bba9",
+    "data/interim/oracle_review_20260910/build_inputs.py": "2612f12ffe38b09ef095386a9d7044f4454adc523f420640b54414b1e6aee5db",
+    "data/interim/oracle_review_20260910/calendar_check.log": "5769b4e21ea0c966382cd1dec0eaffbe2b3de53d799b258e32bc42ed71bec673",
+    "data/interim/oracle_review_20260910/current_model_result.json": "81699ccfc5652ad3c18ce44e80707552869f5162675ae31e51ebfd970392a4e8",
+    "data/interim/oracle_review_20260910/docs_audit.log": "07e2bc2aa70768cbfbe6c0878040a0da400930bbd2fe69ea0a6261d6b1380193",
+    "data/interim/oracle_review_20260910/evidence_tests.log": "2f9d90990e7f01fa4ee55d68f5bf6520dec7beebae824748a46871879f1851db",
+    "data/interim/oracle_review_20260910/guard_tests.log": "0490208e5a254f2f2e6e0f70f7a5ee55157accf27688d6887c0492cc0a5b37e0",
+    "data/interim/oracle_review_20260910/official_inputs.json": "a21e29002a7deb3ce6b4a7062a6e6d3e0ed4901446743908e6cf7e0ff09e3238",
+    "data/interim/oracle_review_20260910/official_overrides.csv": "e7f87ae56f4e42feb1b5081a11f69858759560156be1208e6e430edddd0c0fd3",
+    "data/interim/oracle_review_20260910/quote.json": "a6d09c301026770b6b10f5b4e09e1d4aa174732257c50af45fe0a393ff0353d4",
+    "data/interim/oracle_review_20260910/reading_build.log": "6f8792dc4ea995d3bd25110066d02bf80b346f050d9a5dec6ad76a6139856642",
+    "data/interim/oracle_review_20260910/statement_build.log": "16095b79c9ab9df9a8cf1ad117cc80b33f418748e2cedd5ec4d0a08e9218ce85",
+    "data/interim/oracle_review_20260910/unadjusted_extractor_rows.json": "f63cbc529585cd3e85939851cc2194c70a333e9e082ed47143c44ceca8f99d09",
+    "data/interim/oracle_review_20260910/valuation_build.log": "d69338d7bf8085d2b5257eed2de1764cb83a4422fe9c3d1d70f3ac34e1b5a3d4",
+    "data/interim/oracle_review_20260910/verification.json": "2b51b7bc88953bf2e14244a0e3b35ceb81c5cc577653f38ddd56136fe9138a02",
+    "data/interim/overseas_roic_years.csv": "37f1b5d7dd009b865843535609c43a52672e19c63b774ce2e990e6bdbc7150bf",
+    "data/processed/a_share_core_valuation_pool.csv": "d29f9b28df33bc2050207e7d615efcb8d4090c725e50e33aba3a9c71b8de851d",
+    "data/processed/a_share_workflow_decision_log.csv": "8ed601e3429da807dbd20aa030b70b34a6d260e2f4d91130830d11fd349c90e1",
+    "data/processed/overseas_watchlist_valuation.csv": "da0ac3f51df7f2ab2c5b23ee9fa2b05744d3efc758eb41c920c2c777ff35cf2e",
+    "data/reference/overseas_report_evidence.csv": "449b713d75b64409721dbdcbac94932afa9ec5818fde7f2e3d2cf5258c490d2c",
+    "data/reference/overseas_statement_overrides.csv": "6cbfacf86631db81b081ab164599a08d07205d4fd738556d5bd2f89fe47313f9",
+    "data/reference/overseas_valuation_inputs.csv": "118743168e21c5e6523aa4089a918cedd076010a86ca73755a86242398995117",
+    "docs/000_Ashare_workflow_open_issues.md": "306ebc61ecb56d8f2184d44ad04ab6eb77d5511a0309f7eb8e5f4a212e652339",
+    "docs/000_a_share_core_valuation_pool.md": "063b221656431cf6af5fbd4339ed14fed5069d80ac54b72df47c3d59c5224fbc",
+    "docs/reports/oracle_review_2026-09-10.zh.md": "591cc17d6178a31780bf39ff3bb19ef0a63c425b60df355fdaa2f41951ac17f3",
+    "scripts/build_overseas_roic_bands.py": "ece208b63944e9ac55937960681c8a74b109e679537dae69b9b37d8edf7c463a",
+    "scripts/test_overseas_valuation_guards.py": "5fe526130d3b1866bdbd94ed074e2f606b8da347c9a58105b19c00dd6ffe00ae"
+  },
+  "official_raw_sha256": {
+    "Oracle Q1 FY2027 official release": "49cd67ba5ab0f0fd74da84d3fbe9c897d5bb8fbfcda5eb24934beeea8e203090",
+    "Oracle FY2026 10-K": "6cd094af28aa16098cad795bf785be1866d69e59605aed1d6aef75a911a5766b",
+    "Oracle SEC companyfacts": "60e4f8db39c9a84106bd02677f578db14a54c8bccabcdba2b828e595c32edeca"
+  },
+  "scope": "One newly requested overseas company; 29 existing companies unchanged in financial inputs, quality and model bands; no model assumptions changed; missing parent-equity error message clarified and regression added"
+}

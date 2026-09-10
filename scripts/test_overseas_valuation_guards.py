@@ -139,6 +139,18 @@ class ThinEquityTest(unittest.TestCase):
             self.assertEqual(result["status"], "rejected")
             self.assertIn("≤ 0", result["reason"])
 
+    def test_missing_current_parent_equity_does_not_fall_back_to_annual(self):
+        years = model_years(10)
+        current = model_years(10)[-1]
+        current.period = "2026-08-31"
+        current.total_equity = 150
+        current.parent_equity = None
+        result = bands.value_company("TEST", "L2", years, self.inputs, current)
+        self.assertEqual(result["status"], "rejected")
+        self.assertIn("母公司权益不可得", result["reason"])
+        self.assertNotIn("非正", result["reason"])
+        self.assertNotIn("value", result)
+
     def test_rejection_clears_stored_band_and_both_reading_views(self):
         for path in ("zero_growth", "growth"):
             rejected = self.evaluate(path, 50)
