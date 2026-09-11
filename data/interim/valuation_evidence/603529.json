@@ -1549,5 +1549,27 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-11",
+   "retrieved_at_utc": "2026-09-11T09:27:01.172307+00:00",
+   "signal_date": "2026-09-11",
+   "security_code": "603529",
+   "security_name": "爱玛科技",
+   "evidence_type": "分派安排与业绩说明会",
+   "title": "半年度分派期间可转债停止转股及说明会安排",
+   "source_urls": [
+    "https://pdf.dfcfw.com/pdf/H2_AN202609111829268651_1.pdf",
+    "https://pdf.dfcfw.com/pdf/H2_AN202609111829268650_1.pdf"
+   ],
+   "summary": "09-11晚间原文核验：2026半年度每股拟派现金0.392元；09-18披露权益分派实施及转股价调整公告，爱玛转债09-17起暂停转股至股权登记日、登记日后首个交易日恢复。暂停的是可转债转股，不是A股交易。股权登记日和除息日尚未披露，不提前记红利、不调整持仓成本或止损锚；实施时核验扣除回购专户后的差异化除权参考价。09-21 10:00–11:00举行业绩说明会。",
+   "use": "事件复核完成；分派实施前不改模型、成本、止损锚或现金；跟踪09-18正式实施公告。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "rebuild_performed": false,
+    "intrinsic_value": "30.6563"
+   }
+  }
+ ]
 }

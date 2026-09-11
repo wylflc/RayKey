@@ -1,0 +1,251 @@
+{
+  "signal_date": "2026-09-11",
+  "reviewed_at_utc": "2026-09-11T09:31:09.044529+00:00",
+  "announcement_snapshot": "data/interim/daily_announcements_2026-09-11.json",
+  "announcement_retrieved_at_utc": "2026-09-11T09:23:52.044073+00:00",
+  "covered_codes": [
+    "000651",
+    "000933",
+    "002128",
+    "002532",
+    "002648",
+    "002714",
+    "600036",
+    "600938",
+    "600970",
+    "600989",
+    "601318",
+    "601398",
+    "601838",
+    "603529"
+  ],
+  "held_count": 8,
+  "eligible_count": 13,
+  "relevant_announcement_count": 10,
+  "new_announcement_count": 4,
+  "per_company_checks": [
+    {
+      "security_code": "000651",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "000933",
+      "held": false,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "002128",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "002532",
+      "held": false,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "002648",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "002714",
+      "held": true,
+      "announcement_ids": [
+        "AN202609101829233405",
+        "AN202609091829179621"
+      ],
+      "new_announcement_ids": [],
+      "status": "previously_reviewed_announcements",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "600036",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "600938",
+      "held": false,
+      "announcement_ids": [
+        "AN202609111829273103",
+        "AN202609111829273099"
+      ],
+      "new_announcement_ids": [
+        "AN202609111829273103",
+        "AN202609111829273099"
+      ],
+      "status": "new_originals_reviewed",
+      "assessment": "09-11公告核验：王德华到龄退休离任非执行董事及委员会职务，确认与董事会无分歧；霍健因工作调整不再任高级副总裁，并获委任为非执行董事及审核、薪酬委员会成员，当日起生效。A/H两份公告一致，未披露控制权、盈利、股本或资产负债变化，本次不触发模型重建。"
+    },
+    {
+      "security_code": "600970",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "600989",
+      "held": false,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "601318",
+      "held": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "601398",
+      "held": false,
+      "announcement_ids": [
+        "AN202609101829229131",
+        "AN202609101829229129",
+        "AN202609101829229037",
+        "AN202609101829229036"
+      ],
+      "new_announcement_ids": [],
+      "status": "previously_reviewed_announcements",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "601838",
+      "held": false,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "本轮公告窗口无新增需改变模型或名单的已核实事实；行业及竞品仅部分覆盖。"
+    },
+    {
+      "security_code": "603529",
+      "held": true,
+      "announcement_ids": [
+        "AN202609111829268651",
+        "AN202609111829268650"
+      ],
+      "new_announcement_ids": [
+        "AN202609111829268651",
+        "AN202609111829268650"
+      ],
+      "status": "new_originals_reviewed",
+      "assessment": "09-11晚间原文核验：2026半年度每股拟派现金0.392元；09-18披露权益分派实施及转股价调整公告，爱玛转债09-17起暂停转股至股权登记日、登记日后首个交易日恢复。暂停的是可转债转股，不是A股交易。股权登记日和除息日尚未披露，不提前记红利、不调整持仓成本或止损锚；实施时核验扣除回购专户后的差异化除权参考价。09-21 10:00–11:00举行业绩说明会。"
+    }
+  ],
+  "new_documents": [
+    {
+      "art_code": "AN202609111829273103",
+      "title": "中国海油:中国海洋石油有限公司关于非执行董事和高级管理人员变更及调整董事会下属委员会组成的公告",
+      "notice_date": "2026-09-12",
+      "display_time": "2026-09-11 17:23:06:637",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609111829273103_1.pdf",
+      "sha256": "eb8e81f333a7a205108a8301cd07d6e8da052ee1ddf82827f3bd7eac4567d432",
+      "size": 106037,
+      "review_method": "pypdf full text; CNOOC committee membership cross-checked against A-share narrative"
+    },
+    {
+      "art_code": "AN202609111829273099",
+      "title": "中国海油:港股公告:董事名单与其角色和职能",
+      "notice_date": "2026-09-12",
+      "display_time": "2026-09-11 17:22:57:630",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609111829273099_1.pdf",
+      "sha256": "17b980f0610dfefab24415365ec367762690d35f82cc37a7ead18d3736159952",
+      "size": 131531,
+      "review_method": "pypdf full text; CNOOC committee membership cross-checked against A-share narrative"
+    },
+    {
+      "art_code": "AN202609111829268651",
+      "title": "爱玛科技:爱玛科技关于实施2026年半年度权益分派时“爱玛转债”停止转股的提示性公告",
+      "notice_date": "2026-09-12",
+      "display_time": "2026-09-11 16:29:37:223",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609111829268651_1.pdf",
+      "sha256": "8bc2f43d1aa922e78addb2fcbc96cbd3c512701c9d876a3231e8fcdff63b3375",
+      "size": 64390,
+      "review_method": "pypdf full text; CNOOC committee membership cross-checked against A-share narrative"
+    },
+    {
+      "art_code": "AN202609111829268650",
+      "title": "爱玛科技:爱玛科技关于召开2026年半年度业绩说明会的公告",
+      "notice_date": "2026-09-12",
+      "display_time": "2026-09-11 16:29:37:222",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609111829268650_1.pdf",
+      "sha256": "8313b9a99516d89d135082e9bdbd3eb0ad7ec67677fff24fd71ba539844a8478",
+      "size": 68056,
+      "review_method": "pypdf full text; CNOOC committee membership cross-checked against A-share narrative"
+    }
+  ],
+  "corporate_action": "当日持仓除权除息：无；全市场18家除权均不在持仓，持仓配股亦无。平安09-10已登记，不重复处理；爱玛半年度分派等待09-18正式实施公告。",
+  "company_assessments": {
+    "603529": {
+      "name": "爱玛科技",
+      "assessment": "09-11晚间原文核验：2026半年度每股拟派现金0.392元；09-18披露权益分派实施及转股价调整公告，爱玛转债09-17起暂停转股至股权登记日、登记日后首个交易日恢复。暂停的是可转债转股，不是A股交易。股权登记日和除息日尚未披露，不提前记红利、不调整持仓成本或止损锚；实施时核验扣除回购专户后的差异化除权参考价。09-21 10:00–11:00举行业绩说明会。",
+      "source_urls": [
+        "https://pdf.dfcfw.com/pdf/H2_AN202609111829268651_1.pdf",
+        "https://pdf.dfcfw.com/pdf/H2_AN202609111829268650_1.pdf"
+      ]
+    },
+    "600938": {
+      "name": "中国海油",
+      "assessment": "09-11公告核验：王德华到龄退休离任非执行董事及委员会职务，确认与董事会无分歧；霍健因工作调整不再任高级副总裁，并获委任为非执行董事及审核、薪酬委员会成员，当日起生效。A/H两份公告一致，未披露控制权、盈利、股本或资产负债变化，本次不触发模型重建。",
+      "source_urls": [
+        "https://pdf.dfcfw.com/pdf/H2_AN202609111829273103_1.pdf",
+        "https://pdf.dfcfw.com/pdf/H2_AN202609111829273099_1.pdf"
+      ]
+    }
+  },
+  "sector_checks": [
+    {
+      "scope": "煤炭／电投能源",
+      "observed_on": "2026-09-09",
+      "finding": "CCTD页面BSPI综合指数728元/吨，环比+8元/+1.11%；蒙东3500坑口价325元/吨为08-31观测。热值、地区及长协口径不同，不直接替代电投能源实现售价。",
+      "source": "https://www.cctd.com.cn/index.php?a=lists&catid=520&m=content"
+    },
+    {
+      "scope": "生猪／牧原股份",
+      "observed_on": "2026-09-11",
+      "finding": "行情宝全国外三元11.02元/公斤、环比+0.01；玉米2392元/吨、豆粕3223元/吨。为检索时点动态行业报价，与牧原月度公司实现价格和完全成本不同，不直接替代盈利锚。",
+      "source": "https://hqb.nxin.com/app/headline/priceDetails.shtml"
+    },
+    {
+      "scope": "家电／格力电器",
+      "finding": "定位到产业在线09-02发布的9月白电排产图表；本轮仅核验页面日期与来源，图内数据未逐项核验。",
+      "source": "https://info.cheaa.com/2026/0902/658089.shtml"
+    },
+    {
+      "scope": "化工／卫星化学",
+      "finding": "检索到乙二醇库存、开工及早评线索，未取得公司产品和乙烷成本同口径的完整价差序列，不据此改动生产带。",
+      "source": "https://funds.sywgqh.com.cn/Pc/News_Center/Shenwan_Online/Oil_Online/131861.html"
+    }
+  ],
+  "valuation_outcome": "当日无财报或事件驱动估值重建；沿用生产带。国债利率例行刷新至09-10的1.6797%，银行与保险即时V随公式更新；股债利差最新09-10为6.0843%，C030R35未受限。",
+  "limitations": [
+    "公告截至北京时间17:23，日期写09-12但display_time已在截止前的公告纳入；之后晚间公告不在本轮覆盖。",
+    "全市场公告分页期间条数由3229变动至3230，相关公告按art_code去重，未声称静态全市场逐条审计。",
+    "14家公司公告窗口检查完成；产业、竞争者和档案高频指标为部分巡检，市场涨跌家数未取得完整口径。"
+  ]
+}

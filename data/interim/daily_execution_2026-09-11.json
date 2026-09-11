@@ -1,0 +1,100 @@
+{
+  "as_of": "2026-09-11",
+  "reported_total_assets_cny": "4592226.00",
+  "reported_net_assets_cny": "2697041.98",
+  "derived_margin_debt_cny": "1895184.02",
+  "reported_cash_cny": "0.00",
+  "reported_available_margin_cny": "-57662.40",
+  "trades": [
+    {
+      "side": "sell",
+      "security_code": "601225",
+      "security_name": "陕西煤业",
+      "shares": 5000,
+      "price": "26.02",
+      "gross_amount_cny": "130100.00",
+      "before": {
+        "security_code": "601225",
+        "security_name": "陕西煤业",
+        "current_shares": "5000",
+        "cost_basis": "26.707",
+        "entry_stop_price": "24.12"
+      },
+      "after": null,
+      "valuation": {
+        "as_of": "2026-09-11",
+        "security_code": "601225",
+        "security_name": "陕西煤业",
+        "price": 26.02,
+        "candidate": {
+          "intrinsic_value": "21.5317",
+          "pv": 1.2084507958033968,
+          "source": "模型带·2026-06-30"
+        },
+        "hold": {
+          "intrinsic_value": "21.5317",
+          "pv": 1.2084507958033968,
+          "source": "模型带·2026-06-30"
+        },
+        "hold_fallback_to_candidate": false
+      }
+    },
+    {
+      "side": "buy",
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "shares": 16800,
+      "price": "7.72",
+      "gross_amount_cny": "129696.00",
+      "before": {
+        "security_code": "600970",
+        "security_name": "中材国际",
+        "current_shares": "51800",
+        "cost_basis": "7.8356",
+        "entry_stop_price": "7.70383333"
+      },
+      "after": {
+        "security_code": "600970",
+        "security_name": "中材国际",
+        "current_shares": "68600",
+        "cost_basis": "7.8073",
+        "entry_stop_price": "7.70383333"
+      },
+      "valuation": {
+        "as_of": "2026-09-11",
+        "security_code": "600970",
+        "security_name": "中材国际",
+        "price": 7.72,
+        "candidate": {
+          "intrinsic_value": "14.7396",
+          "pv": 0.5237591250780211,
+          "source": "模型带·2026-06-30"
+        },
+        "hold": {
+          "intrinsic_value": "14.7396",
+          "pv": 0.5237591250780211,
+          "source": "模型带·2026-06-30"
+        },
+        "hold_fallback_to_candidate": false
+      }
+    }
+  ],
+  "external_cash_flow_cny": "0.00",
+  "external_cash_flow_basis": "not reported, assumed zero",
+  "workflow_version": "a-share-selection-operation-v4.180",
+  "evidence_job_id": 26568785,
+  "events_job_id": 26568787,
+  "execution_difference": "陕西煤业5000股与09-10卖出计划一致；中材国际16800股较估算16200股多600股，实际金额129696元，未超过信号日一档137969.13元；成交后账户事实优先，不将负保证金调整为零。",
+  "unreconciled_net_cost_cny": "93.61",
+  "reconciliation_basis": "卖出130100-买入129696=净卖出404；负债较昨日减少310.39，差额93.61为利息/费用等净影响待对账，未确认为具体费用科目。",
+  "scan_job_id": 26568816,
+  "prior_signal_budget_comparison": {
+    "prior_funds_cny": "-3077.08",
+    "actual_gross_sale_cny": "130100.00",
+    "estimated_budget_before_buy_cny": "127022.92",
+    "actual_gross_buy_cny": "129696.00",
+    "excess_vs_prior_snapshot_budget_cny": "2673.08",
+    "execution_time_broker_funds": "not provided",
+    "interpretation": "按昨日券商可用保证金与今日实际卖出价重算，买入金额比估算资金多2673.08元；实际执行时券商实时可用资金未回报，不能据此认定实时额度违规，按实成交及盘后账户记录差异。"
+  }
+}

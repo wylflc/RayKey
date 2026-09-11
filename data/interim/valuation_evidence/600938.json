@@ -1714,5 +1714,25 @@
     "RATING": "买入"
    }
   ]
- }
+ },
+ "manual_evidence": [
+  {
+   "recorded_at": "2026-09-11",
+   "retrieved_at_utc": "2026-09-11T09:31:09.044529+00:00",
+   "signal_date": "2026-09-11",
+   "security_code": "600938",
+   "security_name": "中国海油",
+   "evidence_type": "董事与高管变动",
+   "title": "非执行董事与委员会调整",
+   "source_urls": [
+    "https://pdf.dfcfw.com/pdf/H2_AN202609111829273103_1.pdf",
+    "https://pdf.dfcfw.com/pdf/H2_AN202609111829273099_1.pdf"
+   ],
+   "summary": "09-11公告核验：王德华到龄退休离任非执行董事及委员会职务，确认与董事会无分歧；霍健因工作调整不再任高级副总裁，并获委任为非执行董事及审核、薪酬委员会成员，当日起生效。A/H两份公告一致，未披露控制权、盈利、股本或资产负债变化，本次不触发模型重建。",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "rebuild_performed": false
+   }
+  }
+ ]
 }
