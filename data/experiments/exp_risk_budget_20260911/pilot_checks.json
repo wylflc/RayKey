@@ -1,0 +1,26 @@
+[
+  {
+    "arm": "OFF",
+    "signal_causality_rows": 3602,
+    "cap_overshoot_days": 0,
+    "max_overshoot": 0,
+    "risk_dominant_days": 0,
+    "missing_days": 0
+  },
+  {
+    "arm": "P24",
+    "signal_causality_rows": 3602,
+    "cap_overshoot_days": 0,
+    "max_overshoot": 0,
+    "risk_dominant_days": 2977,
+    "missing_days": 0
+  },
+  {
+    "arm": "V30",
+    "signal_causality_rows": 3602,
+    "cap_overshoot_days": 0,
+    "max_overshoot": 0,
+    "risk_dominant_days": 2986,
+    "missing_days": 270
+  }
+]

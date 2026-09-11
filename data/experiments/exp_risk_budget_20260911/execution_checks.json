@@ -1,0 +1,11 @@
+{
+  "executed_paths": 574,
+  "nav_rows": 1894651,
+  "risk_causal_rows": 1663092,
+  "negative_cash_days": 0,
+  "min_cash": -1.862645149230957e-09,
+  "cap_overshoot_days": 555,
+  "max_cap_overshoot": 0.12289723923059542,
+  "unresolved_days": 555,
+  "inputs_unchanged": true
+}

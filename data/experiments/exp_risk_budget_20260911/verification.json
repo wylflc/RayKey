@@ -1,0 +1,49 @@
+{
+  "job_id": "26572140",
+  "executed_paths": 574,
+  "summary_rows": 644,
+  "complete_groups": 46,
+  "baseline_paths": 28,
+  "baseline_exact_days": 92422,
+  "union_groups": {
+    "U1": {
+      "candidates": [
+        "P20",
+        "V25",
+        "V30",
+        "V35",
+        "V30F080",
+        "F120",
+        "F140",
+        "P24V30"
+      ],
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "600585",
+        "601088"
+      ],
+      "reused_A": false
+    },
+    "U2": {
+      "candidates": [
+        "P24",
+        "P28",
+        "V30L60",
+        "F100"
+      ],
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "reused_A": true
+    }
+  },
+  "negative_cash_days": 0,
+  "inputs_unchanged": true
+}

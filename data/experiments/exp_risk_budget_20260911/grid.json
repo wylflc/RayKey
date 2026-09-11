@@ -1,0 +1,15 @@
+[
+  {"arm":"BASE","kind":"off"},
+  {"arm":"P20","kind":"stress","budget":0.20},
+  {"arm":"P24","kind":"stress","budget":0.24},
+  {"arm":"P28","kind":"stress","budget":0.28},
+  {"arm":"V25","kind":"vol","target":0.25,"floor":1.0,"windows":[20,60]},
+  {"arm":"V30","kind":"vol","target":0.30,"floor":1.0,"windows":[20,60]},
+  {"arm":"V35","kind":"vol","target":0.35,"floor":1.0,"windows":[20,60]},
+  {"arm":"V30L60","kind":"vol","target":0.30,"floor":1.0,"windows":[60]},
+  {"arm":"V30F080","kind":"vol","target":0.30,"floor":0.8,"windows":[20,60]},
+  {"arm":"F100","kind":"fixed","cap":1.0},
+  {"arm":"F120","kind":"fixed","cap":1.2},
+  {"arm":"F140","kind":"fixed","cap":1.4},
+  {"arm":"P24V30","kind":"joint","budget":0.24,"target":0.30,"floor":1.0,"windows":[20,60]}
+]

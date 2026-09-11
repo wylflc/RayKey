@@ -1,0 +1,9 @@
+[
+  {
+    "stage": "pilot",
+    "job_id": "26572054",
+    "reason": "Preserve postponed annotations when compiling the observer after installing the constraint factory; candidate replay had not started.",
+    "engine_before": "530a4fae165e172e55b3996c0f688587b986fd157fea448e6f7ce0de47c058b8",
+    "engine_after": "1950f47aebf0b377950c223683a428db4c1dc126b48ae7e8d0f9fd426a2df622"
+  }
+]

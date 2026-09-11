@@ -1,0 +1,9 @@
+JobID|State|Elapsed|MaxRSS|AllocCPUS|ExitCode
+26572054|FAILED|00:00:34||16|1:0
+26572054.batch|FAILED|00:00:34|1641K|16|1:0
+26572119|COMPLETED|00:00:35||16|0:0
+26572119.batch|COMPLETED|00:00:35|1668K|16|0:0
+26572140|COMPLETED|00:16:17||16|0:0
+26572140.batch|COMPLETED|00:16:17|17152592K|16|0:0
+
+Short pilot memory samples undercount child processes; use formal batch MaxRSS for capacity planning.

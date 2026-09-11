@@ -1,0 +1,26 @@
+{
+  "checked_beijing": "2026-09-11T19:11:34.570624+08:00",
+  "python_files_compiled": 11,
+  "formal_policy_tests_passed": 10,
+  "documentation_audit_errors": 0,
+  "report_readme_local_links": 23,
+  "diff_check": "git -c core.whitespace=cr-at-eol diff --cached --check",
+  "csv_line_endings": "Native ledger writer uses CRLF; cr-at-eol prevents false trailing-whitespace failures.",
+  "known_execution_exceptions": "555 path-days exactly match original unresolved cap records; see execution_checks.json.",
+  "output_hashes": {
+    "data/experiments/exp_risk_budget_20260911/engine.py": "1950f47aebf0b377950c223683a428db4c1dc126b48ae7e8d0f9fd426a2df622",
+    "data/experiments/exp_risk_budget_20260911/report.py": "7c88c60f150903a7c5a0484ed06abea198ce12bda6029dc40f84b0e3b9bd7e54",
+    "data/experiments/exp_risk_budget_20260911/run.py": "7dab43aaf12a13de2eca13dcc0ffdbb3a04cff56e24e67acf1e11d5f455cf9e3",
+    "data/experiments/exp_risk_budget_20260911/register.py": "a4c94d59c67e9fe5db74bd7a508406e7cfa816a44e77e3522b32fe1b35069eff",
+    "data/experiments/exp_risk_budget_20260911/common.py": "1b6798519bbfc0c2befd1d7d0056d409f2fac4874ad64aff03e7f956d2f8fb5e",
+    "data/experiments/exp_risk_budget_20260911/test_policy.py": "cdf9aa206e1f098aa30b6bf033f8ec3fd7ed9adb2390772fd94ae8e446a5002a",
+    "data/experiments/exp_risk_budget_20260911/plot.py": "0e57254f0652195a914162f344415ff9e4a191580f8deb5b25657bfb96b27159",
+    "data/experiments/exp_risk_budget_20260911/followup_cost.py": "a92aa4bb4c1f1e3c28f5e52c3092de5a14b71894d0aea6a2de37d9d27a2ac2bf",
+    "data/experiments/exp_risk_budget_20260911/audit_run.py": "9e3b31d82ba62a747c26869199932f38e4635a2686f788c4516105d953b203f5",
+    "data/experiments/exp_risk_budget_20260911/build_report.py": "e5a1061948409c2609bd0e0cba01cae09acf8a15dc1e7b84a5b0cf0000166d3b",
+    "data/experiments/exp_risk_budget_20260911/policy.py": "fbb0c52a82bb59923bd733cca7cb82540597465d0633885f99caf528d05e92d4",
+    "docs/reports/risk_budget_backtest_2026-09-11.zh.md": "0bee6d879ea5a6125c9b411b0dba7617c8f4fdc13dea86dd71840552c94b4d90",
+    "data/experiments/exp_risk_budget_20260911/risk_return_tradeoff.png": "3288d16b3ecfdf606096c320f536ed7935a2006bad334465bc392b74c0d9b17a",
+    "data/experiments/exp_risk_budget_20260911/formal_report.txt": "a2cea49f84bf8790e1cbab10d80eedc7adc2bde3fff245ab6772d7a82b955852"
+  }
+}
