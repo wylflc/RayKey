@@ -1,0 +1,60 @@
+{
+  "BASE20091101": {
+    "held_days": 4029,
+    "ma60_coverage_below95_days": 107,
+    "first_six_missing_dates": [
+      "2010-08-23",
+      "2010-09-20",
+      "2010-10-22",
+      "2011-04-15",
+      "2011-04-21",
+      "2011-05-06"
+    ],
+    "last_six_missing_dates": [
+      "2026-08-21",
+      "2026-08-24",
+      "2026-08-25",
+      "2026-08-26",
+      "2026-08-27",
+      "2026-08-28"
+    ]
+  },
+  "BASE20111101": {
+    "held_days": 3553,
+    "ma60_coverage_below95_days": 172,
+    "first_six_missing_dates": [
+      "2012-02-17",
+      "2012-03-20",
+      "2012-04-23",
+      "2012-05-14",
+      "2012-05-25",
+      "2013-09-13"
+    ],
+    "last_six_missing_dates": [
+      "2026-08-21",
+      "2026-08-24",
+      "2026-08-25",
+      "2026-08-26",
+      "2026-08-27",
+      "2026-08-28"
+    ]
+  },
+  "resources": {
+    "job_id": "26571637",
+    "state": "COMPLETED",
+    "elapsed_seconds": 64,
+    "max_rss_kib": 495835,
+    "allocated_cpus": 16,
+    "workers": 1
+  },
+  "preflight_failures": [
+    {
+      "job_id": "26571573",
+      "stage": "Overbroad hash check included live production states overridden by frozen state arguments"
+    },
+    {
+      "job_id": "26571614",
+      "stage": "Overbroad hash check included daily scan output not used by replay"
+    }
+  ]
+}
