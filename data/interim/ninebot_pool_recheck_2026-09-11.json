@@ -1,0 +1,302 @@
+{
+  "as_of": "2026-09-11",
+  "timezone": "Asia/Shanghai",
+  "workflow_version": "a-share-selection-operation-v4.180",
+  "scope": "boundary_pending hard-trigger recheck for 689009; no membership change; user ruling requested",
+  "registered_trigger": "载体转化为高于同业的持续回报：连续两个完整年度 ROE ≥15% 且高于直接同业中位，或出现法律／物理／认证级新载体（牌照、配额、独家证、型号定型）",
+  "trigger_numeric_check": {
+    "roe_2024": 19.1,
+    "roe_2025": 26.08,
+    "both_ge_15": true,
+    "peer_set_5": [
+      "爱玛科技",
+      "雅迪控股",
+      "绿源集团",
+      "新日股份",
+      "小牛电动"
+    ],
+    "peer5_median": {
+      "2021": 17.5,
+      "2022": 19.04,
+      "2023": 13.19,
+      "2024": 7.72,
+      "2025": 11.04,
+      "2026H1": 4.41
+    },
+    "above_peer5_median": {
+      "2021": false,
+      "2022": false,
+      "2023": false,
+      "2024": true,
+      "2025": true,
+      "2026H1": true
+    },
+    "leaders_median_yadea_aima": {
+      "2021": 25.68,
+      "2022": 34.95,
+      "2023": 30.25,
+      "2024": 19.32,
+      "2025": 25.75,
+      "2026H1": 9.02
+    },
+    "above_leaders_median": {
+      "2021": false,
+      "2022": false,
+      "2023": false,
+      "2024": false,
+      "2025": true,
+      "2026H1": true
+    },
+    "verdict": "numeric part met for 2024 and 2025 against the five-company direct peer set; against the two leaders only 2025"
+  },
+  "roe_panel_pct": {
+    "九号公司": {
+      "src": "annual reports (repo quant_evidence, 2025 AR p.主要财务指标)",
+      "2021": 10.3,
+      "2022": 9.8,
+      "2023": 11.5,
+      "2024": 19.1,
+      "2025": 26.08,
+      "2026H1": 13.12
+    },
+    "爱玛科技": {
+      "src": "annual reports (repo quant_evidence); 2026H1 interim",
+      "2021": 17.5,
+      "2022": 31.1,
+      "2023": 25.4,
+      "2024": 23.8,
+      "2025": 21.2,
+      "2026H1": 6.48
+    },
+    "雅迪控股": {
+      "src": "eastmoney HKF10 RPT_HKF10_FN_MAININDICATOR ROE_AVG (lead-level)",
+      "2021": 33.86,
+      "2022": 38.79,
+      "2023": 35.1,
+      "2024": 14.83,
+      "2025": 30.3,
+      "2026H1": 11.56
+    },
+    "绿源集团": {
+      "src": "eastmoney HKF10 RPT_HKF10_FN_MAININDICATOR ROE_AVG (lead-level)",
+      "2021": 11.16,
+      "2022": 19.04,
+      "2023": 13.19,
+      "2024": 7.72,
+      "2025": 11.04,
+      "2026H1": 4.41
+    },
+    "新日股份": {
+      "src": "eastmoney RPT_F10_FINANCE_MAINFINADATA ROEJQ (lead-level)",
+      "2021": 1.1,
+      "2022": 14.93,
+      "2023": 6.4,
+      "2024": 1.67,
+      "2025": 3.29,
+      "2026H1": 2.19
+    },
+    "小牛电动": {
+      "src": "eastmoney USF10 RPT_USF10_FN_GMAININDICATOR ROE_AVG (lead-level)",
+      "2021": 20.0,
+      "2022": -3.84,
+      "2023": -22.62,
+      "2024": -19.08,
+      "2025": -4.29,
+      "2026H1": -24.17
+    }
+  },
+  "peer_2026h1_revenue_yoy_pct": {
+    "九号公司": 22.28,
+    "九号两轮车": 9.85,
+    "九号境内": 10.16,
+    "雅迪控股": -4.95,
+    "爱玛科技": -12.21,
+    "绿源集团": -20.42,
+    "新日股份": -8.64,
+    "小牛电动": 21.27
+  },
+  "two_wheel_units_and_revenue": {
+    "quarters_wan_units_and_yi_cny": {
+      "2025Q1": [
+        100.38,
+        28.62
+      ],
+      "2025Q2": [
+        138.87,
+        39.6
+      ],
+      "2026Q1": [
+        122.76,
+        33.82
+      ],
+      "2026Q2": [
+        161.64,
+        41.12
+      ]
+    },
+    "H1_2025": {
+      "units_wan": 239.25,
+      "revenue_yi": 68.22,
+      "asp_cny": 2851.0,
+      "store_subsidy_netted_yi": 0.6856
+    },
+    "H1_2026": {
+      "units_wan": 284.4,
+      "revenue_yi": 74.94,
+      "asp_cny": 2635.0,
+      "store_subsidy_netted_yi": 1.34
+    },
+    "units_yoy_pct": 18.87,
+    "revenue_yoy_pct": 9.85,
+    "asp_yoy_pct": -7.58,
+    "Q2_units_yoy_pct": 16.4,
+    "Q2_revenue_yoy_pct": 3.84,
+    "Q2_asp_yoy_pct": -10.8,
+    "FY2025": {
+      "units_wan": 409.03,
+      "revenue_yi": 118.59,
+      "asp_cny": 2899.0,
+      "units_yoy_pct": 57.39,
+      "revenue_yoy_pct": 64.45
+    }
+  },
+  "gross_margin_pct": {
+    "H1_2025": {
+      "scooter": 30.62,
+      "two_wheel": 23.71,
+      "atv": 25.86,
+      "other_products": 54.35,
+      "parts": 47.67,
+      "domestic": 25.4,
+      "overseas": 38.66,
+      "group": 30.39
+    },
+    "H1_2026": {
+      "scooter": 33.92,
+      "two_wheel": 17.18,
+      "atv": 27.1,
+      "other_short_transport_and_parts": 53.05,
+      "service_robots_and_parts": 46.57,
+      "domestic": 18.05,
+      "overseas": 42.03,
+      "group": 28.56
+    },
+    "two_wheel_issuer_adjusted": {
+      "H1_2025": 25.21,
+      "FY2025": 25.76,
+      "H1_2026": 19.28
+    },
+    "FY2025_annual_report": {
+      "scooter": 27.72,
+      "two_wheel": 23.76,
+      "atv": 21.22,
+      "other_short_transport_and_parts": 51.15,
+      "service_robots_and_parts": 52.35,
+      "domestic": 25.84,
+      "overseas": 36.01,
+      "two_wheel_gm_change_pp": 2.65,
+      "scooter_gm_change_pp": -5.6
+    },
+    "aima": {
+      "FY2025_group": 18.29,
+      "H1_2026_group": 17.43,
+      "H1_2026_vehicles_and_parts": 17.21
+    },
+    "two_wheel_premium_over_aima_pp": {
+      "FY2025": 5.47,
+      "H1_2026": -0.25
+    }
+  },
+  "profit_bridge_H1_yi_cny": {
+    "pretax": {
+      "2025": 17.24,
+      "2026": 12.21,
+      "yoy_pct": -29.18
+    },
+    "fx": {
+      "2025": 2.57,
+      "2026": -3.71
+    },
+    "pretax_ex_fx": {
+      "2025": 14.67,
+      "2026": 15.92,
+      "yoy_pct": 8.52
+    },
+    "pretax_ex_fx_margin_pct": {
+      "2025": 12.49,
+      "2026": 11.09
+    },
+    "income_tax": {
+      "2025": 4.73,
+      "2026": 1.32
+    },
+    "effective_tax_rate_pct": {
+      "2025": 27.4,
+      "2026": 10.8
+    },
+    "parent_net_profit": {
+      "2025": 12.42,
+      "2026": 10.08,
+      "yoy_pct": -18.79
+    },
+    "sales_expense": {
+      "2025": 8.93,
+      "2026": 11.89,
+      "yoy_pct": 33.12
+    },
+    "rd_expense": {
+      "2025": 5.22,
+      "2026": 7.51,
+      "yoy_pct": 43.68
+    },
+    "operating_cash_flow": {
+      "2025": 36.53,
+      "2026": 19.67,
+      "yoy_pct": -46.14
+    },
+    "revenue": {
+      "2025": 117.42,
+      "2026": 143.58,
+      "yoy_pct": 22.28
+    }
+  },
+  "segment_revenue_H1_2026_yi_cny": {
+    "scooter": 25.0,
+    "two_wheel": 74.93,
+    "atv": 7.1,
+    "other_short_transport_and_parts": 10.98,
+    "service_robots_and_parts": 25.58,
+    "domestic": 80.64,
+    "overseas": 62.94,
+    "overseas_yoy_pct": 42.34,
+    "domestic_yoy_pct": 10.16,
+    "scooter_yoy_pct": 14.64,
+    "atv_yoy_pct": 31.9,
+    "robots_plus_other_vs_2025_other_plus_parts_yoy_pct": 66.07
+  },
+  "channel": {
+    "two_wheel_stores_2025_12_31": "约 1 万家（2025 年报）",
+    "two_wheel_stores_2026_06_30": ">11,500（2026 中报）",
+    "scooter_cumulative_shipments_2026_06_30": ">1,600 万台",
+    "two_wheel_domestic_cumulative_2026_07_31": ">1,300 万台",
+    "mower_cumulative_units_2026_04": "100 万台下线"
+  },
+  "sources": {
+    "ninebot_h1_2026": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=689009&id=12486193",
+    "ninebot_ar_2025": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=689009&id=12048090",
+    "ninebot_q1_2026": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=689009&id=12276831",
+    "ninebot_h1_2025": "https://pdf.dfcfw.com/pdf/H2_AN202508011719666674_1.pdf",
+    "ninebot_q1_2025": "https://pdf.dfcfw.com/pdf/H2_AN202504291664475585_1.pdf",
+    "aima_h1_2026": "https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12525903&stockid=603529",
+    "yadea_luyuan_f10": "https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_HKF10_FN_MAININDICATOR",
+    "xinri_f10": "https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_F10_FINANCE_MAINFINADATA",
+    "niu_f10": "https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_USF10_FN_GMAININDICATOR"
+  },
+  "limitations": [
+    "peer ROE for 雅迪/绿源/新日/小牛 from eastmoney F10 (§5.2 lead-level); 九号/爱玛 from annual reports",
+    "no industry unit volume for 2026H1; share change inferred from listed-peer revenue",
+    "no segment operating profit; only gross margin by product and region",
+    "H1 2025 product categories differ (其他产品/配件 vs 2026 服务机器人及配件/其他短交通产品及配件)"
+  ],
+  "generated_at_utc": "2026-09-11T09:07:45.042079+00:00"
+}
