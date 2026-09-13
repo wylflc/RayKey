@@ -5,6 +5,11 @@
 
 | 编号 | 主题 | 处置 | 结案 | 详见 |
 | --- | --- | --- | --- | --- |
+| OI-174 | 待考察：融资约束替代规则的剩余 7 个 U 资格候选（C100R35、C100R40、CONFIRM2、CONFIRM3、TREND10、TREND12、C030R45） | C030R35 已按用户裁定落地为 BASE（v4.178）；其余 7 臂对新 BASE 同批重跑（全/A/U 224 路径）全部不采纳、U 全面优秀 0——六个 100% 仓位类臂去赢家主读数 −4.8～−5.1pp、最大回撤更深 6.7～8.4pp，C030R45 主读数 −1.47pp；旧基准资格不沿用，结案 | —（不改） | §12.234、`data/experiments/exp_oi174_requal_20260913/` |
+| OI-178 | 缺陷：SEC 合并范围及债务／折旧摊销标签适配不足 | §6.8 增标签组合规则并落地 `compose_sum`／`compose_debt`：合并税前不由境内单项兜底、债务分层只取一次（票据、`DebtCurrent`、融资租赁）、折旧＋无形资产摊销；18 家 SEC 申报公司逐行核对，15 家历史输入变动、11 家带变（微软 +7.1%，其余 ≤ 1.8%）；甲骨文优先股与最新权益缺口继续拒绝 | v4.183 | [核验报告](reports/sec_tag_composition_2026-09-13.zh.md)、`data/interim/oi178_sec_composition_20260913/`、`scripts/test_sec_tag_composition.py` |
+| OI-173 | 缺陷：负收益窗口否决把任意负窗占比增大计入 | `adoption_verdict` 与决策表改数「由 0 转正」的起点（`neg_window_flip`），非零增大不计、恰半不否决；22 份 m3 文件 190 臂复核 36 臂计数变小、判定无翻转 | v4.181 | §12.232、`data/experiments/exp_verdict_recheck_20260913/`、`scripts/test_adoption_verdict.py` |
+| OI-172 | 缺陷：m3 判定对部分缺起点／缺窗口取交集仍给有限读数 | 判定前校验起点集合＝标准起点集、同窗窗口集合相同、决策字段有限，缺表即不可判并列缺陷（`pairing_defects`）；`coverage="common"` 只供单独标记的诊断；补审核反例、缺起点、非有限值测试 | v4.181 | §12.232、`scripts/test_adoption_verdict.py` |
+| OI-167 | 缺陷：回测整手兜底可绕过单股买入上限 | 正式引擎在一手兜底前复核上限余量、不足一手跳过（不触发卖出），策略名 `cap0.6s`；在册输入护栏五项配对差中位全 0、14/28 路径逐位相同、守卫触发 31 次；BASE 在册重登、旧行保留 | v4.182 | §12.233、`data/experiments/exp_oi167_land_20260913/`、`scripts/test_position_cap_lot.py` |
 | OI-177 | 缺陷：SEC 利息费用符号未统一并污染 TTM（海外原重复编号 OI-175） | 纯费用逐期统一符号再合成 TTM，保留税收收益等净项符号；迪士尼 4 行输入纠错，V 26.46→37.83；全海外清单重建并验证 | v4.180 | [修复核验](reports/overseas_valuation_fix_2026-09-10.zh.md)、`data/interim/overseas_valuation_fix_20260910/` |
 | OI-176 | 缺陷：海外估值遗漏薄权益拒绝 | 两条路径复用固定扣减股权桥和既有薄权益守卫；边界、比例少数份额与拒绝传播回归通过，全部 29 家估值及阅读入口一致 | v4.180 | [修复核验](reports/overseas_valuation_fix_2026-09-10.zh.md)、`scripts/test_overseas_valuation_guards.py` |
 | OI-175 | 缺陷：少数股权回购负债与少数盈利份额重复扣减、持股变化后中位份额滞后 | §6.5.1按披露时点登记同报告期合同请求权，固定退出／存续权益去重并重估份额、合并利润当期化；未核清则拒绝且阻断候选／B2／持仓／预告旧带回退。紫光事件后8期改拒绝、五份缓存各清理464行，首表及档案撤销11.21—13.70元；中伟31期及紫光事件前90期不变。模型缺陷已修复；紫光上翻等可变请求权仍待核清，当前无法估值，复核任务留公司档案 | v4.179 | [核验报告](reports/oi175_minority_claims_2026-09-10.md)、`data/interim/oi175_20260910/` |
