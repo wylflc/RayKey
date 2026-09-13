@@ -1,0 +1,37 @@
+{
+  "verdict": "可采纳",
+  "reasons": [],
+  "main_delta": [
+    0.0,
+    0.0
+  ],
+  "compound_delta": [
+    0.0,
+    0.0
+  ],
+  "mdd_delta": [
+    0.0,
+    0.0
+  ],
+  "worst5_delta": 0.0,
+  "gate_or_veto": false,
+  "track_a_pass": true,
+  "identical_paths": 14,
+  "changed_paths": 14,
+  "guard_skips_total": 31,
+  "winners_reference": [
+    "000338",
+    "000651",
+    "000933",
+    "002128",
+    "601088"
+  ],
+  "winners_new": [
+    "000338",
+    "000651",
+    "000933",
+    "002128",
+    "601088"
+  ],
+  "inputs_effect_identical_paths": 14
+}

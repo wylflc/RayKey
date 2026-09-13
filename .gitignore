@@ -135,3 +135,15 @@ data/experiments/exp_equity_bond_20260909/summaries/
 data/experiments/exp_equity_bond_20260909/daily/
 data/experiments/exp_equity_bond_20260909/high_base/summaries/
 data/experiments/exp_equity_bond_20260909/high_base/daily/
+# 2026-09-13 批次（OI-167 落地、OI-174 复核）的可重建大产物：逐路径缓存、净值、统计、约束流水、状态子集与参考表冻结副本
+data/experiments/exp_oi167_land_20260913/cache/
+data/experiments/exp_oi167_land_20260913/nav/
+data/experiments/exp_oi167_land_20260913/stats/
+data/experiments/exp_oi167_land_20260913/daily/
+data/experiments/exp_oi167_land_20260913/errors/
+data/experiments/exp_oi167_land_20260913/states/
+data/experiments/exp_oi167_land_20260913/raw/
+data/experiments/exp_oi174_requal_20260913/cache/
+data/experiments/exp_oi174_requal_20260913/nav/
+data/experiments/exp_oi174_requal_20260913/daily/
+data/experiments/exp_oi174_requal_20260913/errors/

@@ -3342,6 +3342,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if lot_size:
                 lots_n = int(amount // (bp * lot_size))
                 if lots_n <= 0:
+                    # OI-167（§9.3.1 单票机械上限「不足一手跳过」、§9.3.1.1「本档金额 = min(一档, 可用资金, 单票上限余量)」）：
+                    # 上限余量装不下一手时本档跳过，**不得再经下面的高价股一手兜底越过上限**——兜底只解决「一档买不起一手」，
+                    # 不解决「上限余量不够一手」。生产扫描器同判（`room < lot_amount` → 单票上限挡下）。
+                    if position_cap and bp * lot_size > room + 1e-8:
+                        stats["单股上限·余量不足一手·跳过"] += 1
+                        continue
                     # 高价股（茅台一手 13 万）一档金额买不起一手。**不因此放弃建仓**，改为
                     # 每次买一手、隔 `min_lot_cooldown` 个交易日再买下一手（用户 2026-08-09 指令）。
                     # 冷却期是必需的：不设的话一手会天天买，等于把该股的定投速度放大到一档以上。
@@ -4780,7 +4786,8 @@ def main() -> int:
                         if args.gate.startswith("self-pct") else "")
                      + (f"_{args.tier_mode}" if args.tier_mode != "none" else "")
                      + ("_minup" if args.min_upside else "")
-                     + (f"_cap{args.position_cap:g}" if args.position_cap else "")
+                     # OI-167 起 `s` = 单票上限余量不足一手时跳过（严格整手守卫）；旧名 `_cap0.6` 的台账行为原实现，只供复现
+                     + (f"_cap{args.position_cap:g}s" if args.position_cap else "")
                      + (f"_only{args.only_tiers}" if args.only_tiers else "")
                      + ("_sp" if args.swap_partial else "")
                      + ("_relm" if args.swap_margin_mode == "ratio" else "")
