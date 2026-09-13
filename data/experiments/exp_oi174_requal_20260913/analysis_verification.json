@@ -1,0 +1,9 @@
+{
+  "arms": 8,
+  "complete_start_and_window_sets": true,
+  "negative_cash_days": 0,
+  "verdict_implementation": "sweep_backtest_configs.adoption_verdict (OI-172/173 fixed)",
+  "u_excellent": [],
+  "clause2_pass": [],
+  "production_parameters_changed": false
+}

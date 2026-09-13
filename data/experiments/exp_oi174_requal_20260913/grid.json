@@ -1,0 +1,44 @@
+[
+  {
+    "arm": "BASE",
+    "kind": "baseline"
+  },
+  {
+    "arm": "C100R35",
+    "kind": "hysteresis",
+    "cap": 1.0,
+    "release": 0.035
+  },
+  {
+    "arm": "C100R40",
+    "kind": "hysteresis",
+    "cap": 1.0,
+    "release": 0.04
+  },
+  {
+    "arm": "CONFIRM2",
+    "kind": "confirm",
+    "months": 2
+  },
+  {
+    "arm": "CONFIRM3",
+    "kind": "confirm",
+    "months": 3
+  },
+  {
+    "arm": "TREND10",
+    "kind": "trend",
+    "ma": 10
+  },
+  {
+    "arm": "TREND12",
+    "kind": "trend",
+    "ma": 12
+  },
+  {
+    "arm": "C030R45",
+    "kind": "hysteresis",
+    "cap": 0.3,
+    "release": 0.045
+  }
+]

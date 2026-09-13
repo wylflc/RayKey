@@ -1,0 +1,31 @@
+{
+  "completed_beijing": "2026-09-14T05:15:29.400356+08:00",
+  "job_id": "26654814",
+  "inputs_unchanged": true,
+  "baseline_values_checked": 1316,
+  "baseline_paths": 28,
+  "baseline_windows_identical": true,
+  "executed_paths": 224,
+  "summary_rows": 336,
+  "union_groups": {
+    "U1": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "candidates": [
+        "C100R35",
+        "C100R40",
+        "CONFIRM2",
+        "CONFIRM3",
+        "TREND10",
+        "TREND12",
+        "C030R45"
+      ],
+      "reused_A": true
+    }
+  }
+}
