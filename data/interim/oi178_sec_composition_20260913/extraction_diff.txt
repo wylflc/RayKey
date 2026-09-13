@@ -1,0 +1,294 @@
+changed companies: 15 ['AAPL', 'ADBE', 'AMD', 'ASML', 'DIS', 'GLW', 'GOOGL', 'INTC', 'META', 'MSFT', 'MU', 'NVDA', 'ORCL', 'TSLA', 'UBER']
+unchanged US companies: ['BRK.B', 'PDD', 'TSM']
+
+=== AAPL: 6 rows (of 20)
+  interest_debt: 6 rows, rel change min +0.6% max +1.2%
+  invested_capital: 6 rows, rel change min +0.6% max +1.0%
+
+=== ADBE: 6 rows (of 20)
+  interest_debt: 6 rows, rel change min -26.7% max +0.7%
+  invested_capital: 6 rows, rel change min -12.2% max +0.2%
+  2022-12-02 annual: interest_debt: 4.129→3.629; invested_capital: 12.44→11.94
+      debt tag new=LongTermDebt
+  2024-11-29 annual: interest_debt: 5.628→4.128; invested_capital: 12.28→10.78
+      debt tag new=LongTermDebt+DebtCurrent
+
+=== AMD: 10 rows (of 19)
+  interest_debt: 7 rows, rel change min -2.4% max +10.2%
+  dep_amort: 3 rows, rel change min +441.5% max +634.9%
+  invested_capital: 7 rows, rel change min -2.4% max +20.2%
+  2009-12-26 annual: interest_debt: 4.252→4.56; invested_capital: 3.408→3.716
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+LongTermDebtAndCapitalLeaseObligationsCurrent
+  2014-12-27 annual: interest_debt: 2.197→2.374; invested_capital: 1.454→1.631
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtAndCapitalLeaseObligationsCurrent+ShortTermBorrowings
+  2015-12-26 annual: interest_debt: 2.255→2.485; invested_capital: 1.138→1.368
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtAndCapitalLeaseObligationsCurrent+ShortTermBorrowings
+  2023-12-30 annual: dep_amort: 0.441→3.241
+      dep tag old=DepreciationDepletionAndAmortization+DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2024-12-28 annual: dep_amort: 0.454→2.854
+      dep tag old=DepreciationDepletionAndAmortization+DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2025-12-27 annual: dep_amort: 0.521→2.821
+      dep tag old=DepreciationDepletionAndAmortization+DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+
+=== ASML: 8 rows (of 20)
+  interest_debt: 8 rows, rel change min +0.1% max +8.2%
+  invested_capital: 8 rows, rel change min +0.1% max +2.5%
+  2016-12-31 annual: interest_debt: 3.035→3.283; invested_capital: 10.09→10.33
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtAndCapitalLeaseObligationsCurrent
+
+=== DIS: 7 rows (of 10)
+  interest_debt: 7 rows, rel change min +0.3% max +0.5%
+  invested_capital: 7 rows, rel change min +0.1% max +0.2%
+
+=== GLW: 19 rows (of 20)
+  pretax: 7 rows, rel change min +49.7% max +857.4%
+  interest_debt: 3 rows, rel change min +0.6% max +5.1%
+  dep_amort: 19 rows, rel change min +0.9% max +9.8%
+  nopat: 8 rows, rel change min +70.0% max +609.9%
+  invested_capital: 3 rows, rel change min +0.1% max +0.6%
+  2007-12-31 annual: pretax: None→2.274; dep_amort: 0.597→0.607; nopat: 0.854→2.231
+      pretax tag old=IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest+IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic | new=ProfitLoss+IncomeTaxExpenseBenefit
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2008-12-31 annual: pretax: 0.801→2.882; interest_debt: 1.527→1.605; dep_amort: 0.684→0.695; nopat: 0.86→2.941; invested_capital: 13.26→13.34
+      pretax tag old=IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest+IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic | new=IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic+IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+LongTermDebtCurrent
+  2009-12-31 annual: pretax: 0.202→1.934; dep_amort: 0.782→0.792; nopat: 0.284→2.016
+      pretax tag old=IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest+IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic | new=IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic+IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2010-12-31 annual: pretax: 0.975→3.845; dep_amort: 0.846→0.854; nopat: 0.7649→3.659
+      pretax tag old=IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest+IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic | new=IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic+IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2011-12-31 annual: pretax: 0.972→3.213; dep_amort: 0.942→0.957; nopat: 0.6366→2.883
+      pretax tag old=IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest+IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic | new=IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic+IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2012-12-31 annual: pretax: 0.498→2.117; dep_amort: 0.978→0.997; nopat: 0.3654→1.819
+      pretax tag old=IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest+IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic | new=IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic+IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2013-12-31 annual: pretax: 1.274→2.473; interest_debt: 3.272→3.293; dep_amort: 0.971→1.002; nopat: 0.8364→2.056; invested_capital: 19.94→19.96
+      pretax tag old=IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest+IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic | new=IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic+IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+LongTermDebtAndCapitalLeaseObligationsCurrent
+  2014-12-31 annual: pretax: 2.384→3.568; dep_amort: 1.167→1.2; nopat: 1.504→2.557
+      pretax tag old=IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest+IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic | new=IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic+IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2015-12-31 annual: dep_amort: 1.13→1.184
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2016-12-31 annual: dep_amort: 1.131→1.195
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2017-12-31 annual: dep_amort: 1.083→1.158
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2018-12-31 annual: dep_amort: 1.199→1.293
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2019-12-31 annual: dep_amort: 1.39→1.503
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2020-12-31 annual: interest_debt: 7.891→7.972; dep_amort: 1.399→1.52; invested_capital: 18.89→18.97
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+DebtCurrent
+  2021-12-31 annual: dep_amort: 1.352→1.481
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2022-12-31 annual: dep_amort: 1.329→1.452
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2023-12-31 annual: dep_amort: 1.247→1.369
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2024-12-31 annual: dep_amort: 1.229→1.35
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2025-12-31 annual: dep_amort: 1.237→1.347
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+
+=== GOOGL: 12 rows (of 14)
+  interest_debt: 12 rows, rel change min -3.3% max +30.7%
+  dep_amort: 1 rows, rel change min +1.2% max +1.2%
+  invested_capital: 12 rows, rel change min -0.4% max +1.1%
+  2015-12-31 annual: interest_debt: 3.995→5.22; invested_capital: 109.3→110.5
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent
+  2019-12-31 annual: interest_debt: 3.958→4.758; invested_capital: 88.96→89.76
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+CommercialPaper+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2023-12-31 annual: interest_debt: 12.87→14.62; invested_capital: 191.5→193.2
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+CommercialPaper+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2024-12-31 annual: interest_debt: 14.18→15.86; invested_capital: 250.6→252.3
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+CommercialPaper+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2025-12-31 annual: interest_debt: 48.54→51.04; invested_capital: 345→347.5
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+CommercialPaper+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2026-06-30 ttm: interest_debt: 100.2→102.8; dep_amort: 25.24→25.54; invested_capital: 507.1→509.7
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+CommercialPaper+FinanceLeaseLiabilityNoncurrent+FinanceLeaseLiabilityCurrent
+
+=== INTC: 19 rows (of 20)
+  pretax: 1 rows, rel change min +25.6% max +25.6%
+  interest_debt: 11 rows, rel change min -11.3% max +2.1%
+  dep_amort: 14 rows, rel change min +5.5% max +22.4%
+  nopat: 1 rows, rel change min +25.6% max +25.6%
+  invested_capital: 11 rows, rel change min -3.5% max +0.5%
+  2008-12-27 annual: pretax: 6.117→7.686; dep_amort: 4.36→4.616; nopat: 4.839→6.078
+      pretax tag old=IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest+IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic | new=IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic+IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2009-12-26 annual: interest_debt: 2.378→2.221; dep_amort: 4.744→5.052; invested_capital: 35.51→35.36
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+  2010-12-25 annual: dep_amort: 4.398→4.638
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2011-12-31 annual: interest_debt: 7.284→7.331; dep_amort: 5.141→6.064; invested_capital: 44.03→44.08
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+  2012-12-29 annual: dep_amort: 6.357→7.522
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2013-12-28 annual: interest_debt: 13.16→13.45; dep_amort: 6.79→8.032; invested_capital: 60.83→61.11
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+  2014-12-27 annual: interest_debt: 13.7→13.71; dep_amort: 7.38→8.549; invested_capital: 65.69→65.7
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+  2017-12-30 annual: interest_debt: 28.55→26.81; invested_capital: 93.58→91.84
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+  2019-12-28 annual: interest_debt: 32.7→29; invested_capital: 106.4→102.7
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+  2020-12-26 annual: interest_debt: 38.91→36.4; dep_amort: 10.48→12.24; invested_capital: 113.3→110.8
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+  2021-12-25 annual: dep_amort: 9.953→11.79
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2022-12-31 annual: interest_debt: 42.01→42.05; dep_amort: 11.13→13.04; invested_capital: 118.2→118.3
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+  2023-12-30 annual: dep_amort: 7.847→9.602
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2024-12-28 annual: dep_amort: 9.951→11.38
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2025-12-27 annual: dep_amort: 10.76→11.71
+      dep tag old=DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2026-06-27 ttm: dep_amort: 11.44→12.38
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+
+=== META: 13 rows (of 17)
+  interest_debt: 5 rows, rel change min +2.0% max +57.1%
+  invested_capital: 13 rows, rel change min +0.1% max +63.6%
+  2012-12-31 annual: interest_debt: 1.5→2.356; invested_capital: 3.731→4.587
+      debt tag new=LongTermDebtNoncurrent+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2022-12-31 annual: interest_debt: 9.923→10.61; invested_capital: 97.23→97.92
+      debt tag new=LongTermDebtNoncurrent+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+
+=== MSFT: 19 rows (of 19)
+  interest_debt: 10 rows, rel change min +2.9% max +165.3%
+  dep_amort: 19 rows, rel change min +13.7% max +39.3%
+  invested_capital: 10 rows, rel change min +1.7% max +19.8%
+  2008-06-30 annual: dep_amort: 1.4→1.872
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2009-06-30 annual: dep_amort: 1.7→2.291
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2010-06-30 annual: dep_amort: 1.8→2.507
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2011-06-30 annual: dep_amort: 2→2.537
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2012-06-30 annual: dep_amort: 2.2→2.758
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2013-06-30 annual: dep_amort: 2.6→3.339
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2014-06-30 annual: dep_amort: 3.4→4.245
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2015-06-30 annual: dep_amort: 4.1→5.4
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2016-06-30 annual: dep_amort: 4.9→5.878
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+  2017-06-30 annual: interest_debt: 86.19→88.73; dep_amort: 6.1→7.8; invested_capital: 152.9→155.4
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+ShortTermBorrowings+CommercialPaper+FinanceLeaseLiability
+  2018-06-30 annual: interest_debt: 76.24→80.54; dep_amort: 7.7→9.9; invested_capital: 27.4→31.7
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+ShortTermBorrowings+CommercialPaper+FinanceLeaseLiability
+  2019-06-30 annual: interest_debt: 72.18→78.75; dep_amort: 9.7→11.6; invested_capital: 43.21→49.78
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+ShortTermBorrowings+CommercialPaper+FinanceLeaseLiability
+  2020-06-30 annual: interest_debt: 63.33→72.82; dep_amort: 10.7→12.3; invested_capital: 47.96→57.46
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+FinanceLeaseLiability
+  2021-06-30 annual: interest_debt: 58.15→70.69; dep_amort: 9.3→10.9; invested_capital: 73.16→85.7
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+FinanceLeaseLiability
+  2022-06-30 annual: interest_debt: 49.78→64.68; dep_amort: 12.6→14.6; invested_capital: 115.5→130.4
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+FinanceLeaseLiability
+  2023-06-30 annual: interest_debt: 47.24→64.3; dep_amort: 11→13.5; invested_capital: 146.4→163.5
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+ShortTermBorrowings+CommercialPaper+FinanceLeaseLiability
+  2024-06-30 annual: interest_debt: 51.63→78.78; dep_amort: 15.2→20; invested_capital: 249.5→276.6
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+ShortTermBorrowings+CommercialPaper+FinanceLeaseLiability
+  2025-06-30 annual: interest_debt: 43.15→89.32; dep_amort: 22→28; invested_capital: 297.7→343.9
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+ShortTermBorrowings+CommercialPaper+FinanceLeaseLiability
+  2026-06-30 annual: interest_debt: 40.29→106.9; dep_amort: 34.3→39; invested_capital: 412.5→479.1
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+FinanceLeaseLiability
+
+=== MU: 9 rows (of 18)
+  interest_debt: 9 rows, rel change min -6.4% max +25.2%
+  invested_capital: 9 rows, rel change min -2.3% max +5.4%
+  2012-08-30 annual: interest_debt: 3.486→3.262; invested_capital: 9.609→9.385
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+  2021-09-02 annual: interest_debt: 6.123→6.93; invested_capital: 41.98→42.78
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+DebtCurrent+FinanceLeaseLiabilityCurrent
+  2022-09-01 annual: interest_debt: 6.123→7.009; invested_capital: 47.31→48.2
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+DebtCurrent+FinanceLeaseLiabilityCurrent
+  2023-08-31 annual: interest_debt: 12.33→13.5; invested_capital: 47.16→48.34
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+DebtCurrent+FinanceLeaseLiabilityCurrent
+  2024-08-29 annual: interest_debt: 11.77→13.72; invested_capital: 49.3→51.25
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+DebtCurrent+FinanceLeaseLiabilityCurrent
+  2025-08-28 annual: interest_debt: 12.09→15.14; invested_capital: 56.7→59.74
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+DebtCurrent+FinanceLeaseLiabilityCurrent
+  2026-05-28 ttm: interest_debt: 5.722→6.304; invested_capital: 82.23→82.81
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+DebtCurrent+FinanceLeaseLiabilityCurrent
+
+=== NVDA: 12 rows (of 20)
+  interest_debt: 7 rows, rel change min -10.6% max +1.5%
+  invested_capital: 12 rows, rel change min -0.8% max +3.3%
+  2026-01-25 annual: interest_debt: 9.467→8.468; invested_capital: 121.4→120.4
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+  2026-07-26 ttm: interest_debt: 34.37→33.37; invested_capital: 212.8→211.8
+      debt tag new=LongTermDebtNoncurrent+DebtCurrent
+
+=== ORCL: 1 rows (of 20)
+  dep_amort: 1 rows, rel change min +452.2% max +452.2%
+  2008-05-31 annual: dep_amort: 0.268→1.48
+      dep tag old=Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+
+=== TSLA: 17 rows (of 18)
+  interest_debt: 16 rows, rel change min -30.1% max +83551.2%
+  dep_amort: 4 rows, rel change min +2.7% max +5.9%
+  invested_capital: 16 rows, rel change min -26.1% max +220.2%
+  2014-12-31 annual: interest_debt: 2.96→2.43; invested_capital: 2.03→1.5
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+LongTermDebtAndCapitalLeaseObligationsCurrent
+  2015-12-31 annual: interest_debt: 2.04→2.674; invested_capital: 1.991→2.625
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+LongTermDebtAndCapitalLeaseObligationsCurrent
+  2016-12-31 annual: interest_debt: 0.007007→5.861; invested_capital: 2.659→8.513
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+DebtCurrent
+  2017-12-31 annual: interest_debt: 9.629→10.22; invested_capital: 11.73→12.32
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+DebtCurrent
+  2018-12-31 annual: interest_debt: 10.63→11.63; dep_amort: 1.11→1.176; invested_capital: 13.13→14.13
+      dep tag old=DepreciationDepletionAndAmortization+DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebtAndCapitalLeaseObligations+DebtCurrent
+  2019-12-31 annual: interest_debt: 11.8→12.02; dep_amort: 1.37→1.414; invested_capital: 13.49→13.71
+      dep tag old=DepreciationDepletionAndAmortization+DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebt+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2020-12-31 annual: interest_debt: 10.22→9.93; dep_amort: 1.57→1.621; invested_capital: 14.54→14.25
+      dep tag old=DepreciationDepletionAndAmortization+DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebt+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2021-12-31 annual: interest_debt: 5.342→5.746; dep_amort: 1.91→1.961; invested_capital: 19.73→20.13
+      dep tag old=DepreciationDepletionAndAmortization+DepreciationAndAmortization+Depreciation | new=Depreciation+AmortizationOfIntangibleAssets
+      debt tag new=LongTermDebt+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2023-12-31 annual: interest_debt: 4.657→3.255; invested_capital: 40.87→39.46
+      debt tag new=LongTermDebt+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2024-12-31 annual: interest_debt: 7.878→5.87; invested_capital: 46.89→44.88
+      debt tag new=LongTermDebt+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2025-12-31 annual: interest_debt: 8.153→6.807; invested_capital: 48.8→47.45
+      debt tag new=LongTermDebt+FinanceLeaseLiabilityNoncurrent+CapitalLeaseObligationsNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2026-06-30 ttm: interest_debt: 9.061→8.002; invested_capital: 55.07→54.02
+      debt tag new=LongTermDebt+FinanceLeaseLiabilityNoncurrent+FinanceLeaseLiabilityCurrent
+
+=== UBER: 8 rows (of 10)
+  interest_debt: 8 rows, rel change min +1.6% max +5.4%
+  invested_capital: 7 rows, rel change min +0.7% max +3.2%
+  2019-12-31 annual: interest_debt: 5.734→6.042; invested_capital: 9.576→9.884
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+FinanceLeaseLiabilityNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent
+  2023-12-31 annual: interest_debt: 9.484→9.962; invested_capital: 16.85→17.33
+      debt tag new=LongTermDebtNoncurrent+LongTermDebtCurrent+FinanceLeaseLiabilityNoncurrent+FinanceLeaseLiabilityCurrent+CapitalLeaseObligationsCurrent

@@ -73,23 +73,43 @@ GAAP = {
                 "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueGoodsNet"],
     "operating_income": ["OperatingIncomeLoss"],
     "pretax": ["IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
-               "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
-               "IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic"],
+               "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments"],
+    # OI-178：合并税前利润的组合分量（`PRETAX_RULES`）——境内＋境外；持续经营净利（含少数股东）＋所得税。
+    # 境内单项（…Domestic）不得单独兜底为合并额（甲骨文 FY2026 境内 8.693b 对合并 19.554b）。
+    "pretax_domestic": ["IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic"],
+    "pretax_foreign": ["IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign"],
+    "continuing_income": ["IncomeLossFromContinuingOperations"],
+    "profit_loss": ["ProfitLoss"],
     "income_tax": ["IncomeTaxExpenseBenefit"],
     "interest_expense": ["InterestExpense", "InterestExpenseNonoperating", "InterestExpenseDebt", "InterestAndDebtExpense"],
     "total_equity": ["StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest", "StockholdersEquity"],
     "parent_equity": ["StockholdersEquity"],
     "minority_equity": ["MinorityInterest"],
+    # OI-178：有息负债按层级组合（`compose_debt`）：非流动长期债务／一年内到期部分／合计三者互斥取一层，
+    # 流动债务合计（DebtCurrent）存在即整体取用，融资租赁另加；经营租赁负债不计（与港股「融资租赁负债」行同口径）。
     "lt_debt_noncurrent": ["LongTermDebtNoncurrent"],
     "lt_debt_current": ["LongTermDebtCurrent"],
-    "lt_debt_total": ["LongTermDebt", "LongTermDebtAndCapitalLeaseObligations"],
-    "st_debt": ["ShortTermBorrowings", "CommercialPaper", "DebtCurrent"],
+    "lt_debt_total": ["LongTermDebt"],                       # 含一年内到期部分的合计
+    "lt_notes_noncurrent": ["LongTermNotesPayable"],          # 票据发行人（甲骨文、微软）的非流动票据
+    "notes_current": ["NotesPayableCurrent"],
+    "notes_total": ["NotesPayable"],
+    "ltd_lease_noncurrent": ["LongTermDebtAndCapitalLeaseObligations"],           # 已含融资租赁的非流动合计
+    "ltd_lease_current": ["LongTermDebtAndCapitalLeaseObligationsCurrent"],
+    "ltd_lease_total": ["LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities"],
+    "debt_current_total": ["DebtCurrent"],                    # 短债＋一年内到期长债的流动合计
+    "st_debt": ["ShortTermBorrowings", "CommercialPaper"],
+    "fin_lease_noncurrent": ["FinanceLeaseLiabilityNoncurrent", "CapitalLeaseObligationsNoncurrent"],
+    "fin_lease_current": ["FinanceLeaseLiabilityCurrent", "CapitalLeaseObligationsCurrent"],
+    "fin_lease_total": ["FinanceLeaseLiability", "CapitalLeaseObligations"],
     "cash": ["CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"],
     "cash_invest": ["MarketableSecuritiesCurrent", "ShortTermInvestments", "AvailableForSaleSecuritiesDebtSecuritiesCurrent",
                     "DebtSecuritiesCurrent"],
     "capex": ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets"],
+    # OI-178：折旧＋摊销取合计标签；只有拆分标签时折旧＋无形资产摊销（`DEP_AMORT_RULES`），单独折旧只作最后兜底并记标签
     "dep_amort": ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization",
-                  "DepreciationAmortizationAndAccretionNet", "Depreciation"],
+                  "DepreciationAmortizationAndAccretionNet"],
+    "depreciation": ["Depreciation"],
+    "amort_intangible": ["AmortizationOfIntangibleAssets"],
     "cfo": ["NetCashProvidedByUsedInOperatingActivities", "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"],
     "shares": ["WeightedAverageNumberOfDilutedSharesOutstanding", "WeightedAverageNumberOfShareOutstandingBasicAndDiluted",
                "WeightedAverageNumberOfSharesOutstandingBasic"],
@@ -127,7 +147,96 @@ IFRS = {
     "tci": ["ComprehensiveIncomeAttributableToOwnersOfParent", "ComprehensiveIncome"],
 }
 DURATION = {"revenue", "operating_income", "pretax", "income_tax", "interest_expense", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid",
-            "net_income", "tci"}
+            "net_income", "tci", "pretax_domestic", "pretax_foreign", "continuing_income", "profit_loss", "depreciation", "amort_intangible"}
+# OI-178（§6.8）：按顺序取第一条各分量齐全的组合式
+PRETAX_RULES = (("pretax",), ("pretax_domestic", "pretax_foreign"), ("continuing_income", "income_tax"), ("profit_loss", "income_tax"))
+DEP_AMORT_RULES = (("dep_amort",), ("depreciation", "amort_intangible"), ("depreciation",))
+
+
+def compose_sum(get, rules) -> tuple[float | None, tuple[str, ...]]:
+    """按 `rules` 顺序取第一条各分量都有值的组合式，返回 (分量之和, 所用键)；全部不齐返回 (None, ())。"""
+    for parts in rules:
+        vals = [get(k) for k in parts]
+        if all(v is not None for v in vals):
+            return sum(vals), parts
+    return None, ()
+
+
+def compose_debt(get) -> tuple[float, tuple[str, ...]]:
+    """有息负债 = 非流动长期债务 + 流动债务 + 融资租赁负债，每一层只取一次（OI-178，§6.8）。
+
+    非流动：LongTermDebtNoncurrent → LongTermNotesPayable → LongTermDebtAndCapitalLeaseObligations（已含租赁）→ LongTermDebt。
+    `LongTermDebt` 的口径按同期是否另有流动债务行判定：有流动行（DebtCurrent／LongTermDebtCurrent／NotesPayableCurrent／
+    …CapitalLeaseObligationsCurrent）即视为非流动行（Adobe、特斯拉的报表标签），否则视为含一年内到期部分的合计；
+    `…IncludingCurrentMaturities`／NotesPayable 只作合计，合计有一年内到期拆分时相减，无拆分时只再加短期借款。
+    流动：DebtCurrent 是短债与一年内到期长债的合计，存在即整体取用，且非流动层含租赁时视其同样含当期租赁；否则一年内到期长债
+    ＋ 短期借款（ShortTermBorrowings，缺则 CommercialPaper），短期借款与一年内到期长债金额相同视为同一行只计一次（AMD）。
+    融资租赁：非流动＋流动，缺拆分取合计；已并入含租赁标签的层级不再加。经营租赁负债不计（与港股「融资租赁负债」行同口径）。
+    返回 (金额, 实际计入的键)。"""
+    used: list[str] = []
+
+    def first(keys):
+        for k in keys:
+            v = get(k)
+            if v is not None:
+                return k, v
+        return None, None
+
+    cur_key, cur_ltd = first(("lt_debt_current", "ltd_lease_current", "notes_current"))
+    dc = get("debt_current_total")
+    has_current_line = cur_ltd is not None or dc is not None
+    nc_key, nc = first(("lt_debt_noncurrent", "lt_notes_noncurrent", "ltd_lease_noncurrent"))
+    includes_current = False
+    if nc is None:
+        tot_key, total = first(("lt_debt_total", "ltd_lease_total", "notes_total"))
+        if total is not None:
+            nc_key = tot_key
+            if tot_key == "lt_debt_total" and has_current_line:
+                nc = total                                   # 报表非流动行（另有流动行）
+            elif cur_ltd is not None:
+                nc = max(total - cur_ltd, 0.0)               # 合计减一年内到期部分
+            else:
+                nc, includes_current = total, True           # 无拆分的合计：已含流动部分
+    debt = 0.0
+    if nc is not None:
+        debt += nc; used.append(nc_key)
+    lease_nc_done = nc_key in ("ltd_lease_noncurrent", "ltd_lease_total")
+    lease_c_done = cur_key == "ltd_lease_current" or (includes_current and nc_key == "ltd_lease_total")
+    if includes_current:                                     # 合计已含一年内到期部分：只再加短期借款
+        st_key, st = first(("st_debt",))
+        if st is not None:
+            debt += st; used.append(st_key)
+    elif dc is not None:                                     # 流动合计整体取用，不再叠加一年内到期长债与短期借款
+        debt += dc; used.append("debt_current_total")
+        lease_c_done = lease_c_done or lease_nc_done         # 「债务及融资租赁」两行同口径：非流动含租赁则流动合计亦含
+    else:
+        if cur_ltd is not None:
+            debt += cur_ltd; used.append(cur_key)
+        st_key, st = first(("st_debt",))
+        if st is not None and not (cur_ltd is not None and abs(st - cur_ltd) < 1e-6):
+            debt += st; used.append(st_key)
+    l_nc = None if lease_nc_done else get("fin_lease_noncurrent")
+    l_c = None if lease_c_done else get("fin_lease_current")
+    if l_nc is None and l_c is None:
+        if not (lease_nc_done or lease_c_done):
+            total_lease = get("fin_lease_total")
+            if total_lease is not None:
+                debt += total_lease; used.append("fin_lease_total")
+    else:
+        if l_nc is not None:
+            debt += l_nc; used.append("fin_lease_noncurrent")
+        if l_c is not None:
+            debt += l_c; used.append("fin_lease_current")
+    return debt, tuple(used)
+
+
+def _composed_tags(tags: dict, parts_by_field: dict[str, tuple[str, ...]]) -> dict:
+    """逐行 tags：组合字段记为分量标签以 `+` 连接（如 pretax=…Domestic+…Foreign），便于逐行核对组合式。"""
+    out = dict(tags)
+    for field, parts in parts_by_field.items():
+        if parts:
+            out[field] = "+".join(tags.get(k, k) for k in parts)
+    return out
 HK_ITEMS = {
     "revenue": ("income", ["营业额", "营运收入"]),
     "operating_income": ("income", ["经营溢利"]),
@@ -597,15 +706,30 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
         return base + cur - old if base is not None and cur is not None and old is not None else None
 
     def inst(key: str) -> float | None:
-        value, concept = _instant_value(tax, maps[key], end, filed)
-        tags[key] = concept
+        value, concept = _instant_value(tax, maps.get(key, []), end, filed)
+        if concept:
+            tags[key] = concept
         return value
 
     def ytd(key: str) -> float | None:
         cur, _old, _concept = _duration_pair(tax, maps[key], end, filed)
         return cur
 
-    revenue, opinc, pretax, taxv = ttm("revenue"), ttm("operating_income"), ttm("pretax"), ttm("income_tax")
+    def ttm_composed(annual_key: str, rules) -> tuple[float | None, tuple[str, ...]]:
+        """OI-178：组合字段的 TTM = 年报组合值 + 本期累计分量之和 − 上年同期累计分量之和；按 `rules` 取第一条分量齐全的组合式。"""
+        base = _num(annual.get(annual_key))
+        if base is None:
+            return None, ()
+        for parts in rules:
+            pairs = [_duration_pair(tax, maps.get(k, []), end, filed) for k in parts]
+            if all(c is not None and o is not None for c, o, _t in pairs):
+                for k, (_c, _o, concept) in zip(parts, pairs):
+                    tags[k] = concept
+                return base + sum(c for c, _o, _t in pairs) - sum(o for _c, o, _t in pairs), parts
+        return None, ()
+
+    revenue, opinc, taxv = ttm("revenue"), ttm("operating_income"), ttm("income_tax")
+    pretax, pretax_parts = ttm_composed("pretax", PRETAX_RULES)
     interest = ttm("interest_expense") or 0.0
     total_eq, parent_eq, minority = inst("total_equity"), inst("parent_equity"), inst("minority_equity") or 0.0
     if total_eq is not None and parent_eq is not None and abs(total_eq - parent_eq) < 1e-6 and minority:
@@ -613,19 +737,19 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
     if parent_eq is None and total_eq is not None:          # 同年报行：归母 = 合计 − 少数股东
         parent_eq = total_eq - minority
         tags["parent_equity"] = f"{tags.get('total_equity', 'total_equity')}-minority"
-    lt_nc, lt_cur, lt_total = inst("lt_debt_noncurrent"), inst("lt_debt_current"), inst("lt_debt_total")
-    debt = ((lt_nc or 0.0) + (lt_cur or 0.0)) if lt_nc is not None else (lt_total or 0.0)
-    debt += inst("st_debt") or 0.0
+    debt, debt_parts = compose_debt(inst)
     cash = (inst("cash") or 0.0) + (inst("cash_invest") or 0.0)
+    dep, dep_parts = ttm_composed("dep_amort", DEP_AMORT_RULES)
     shares, share_tag = _shares_value(tax, maps["shares"], end, filed, maps.get("shares_instant"), dei)
     tags["shares"] = share_tag
     if revenue is None or (pretax is None and opinc is None) or parent_eq is None or shares is None:
         return None
     fy = int(annual["period"][:4]) + 1
     label = {"Q1": "一季报", "Q2": "二季报", "Q3": "三季报"}[fp]
+    row_tags = _composed_tags(tags, {"pretax": pretax_parts, "interest_debt": debt_parts, "dep_amort": dep_parts})
     return _build_row("US", symbol, name, end, evidence_date or filed, annual["report_currency"], revenue,
                       opinc, pretax, taxv, interest, total_eq, parent_eq, minority, debt, cash,
-                      abs(ttm("capex") or 0.0), ttm("dep_amort") or 0.0, ttm("cfo"), shares, tags,
+                      abs(ttm("capex") or 0.0), dep or 0.0, ttm("cfo"), shares, row_tags,
                       "SEC companyfacts 10-Q TTM", TAX_DEFAULT["US"],
                       buybacks=abs(ttm("buybacks") or 0.0), dividends=abs(ttm("dividends_paid") or 0.0),
                       net_income=ttm("net_income"), tci=ttm("tci"), net_income_ytd=ytd("net_income"),
@@ -657,31 +781,29 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
     for end in ends:
         def v(key):
             return _sec_amount(key, series.get(key, {}).get(end))
-        rev, pretax, opinc, taxv = v("revenue"), v("pretax"), v("operating_income"), v("income_tax")
+        row_tags = dict(tags)
+        rev, opinc, taxv = v("revenue"), v("operating_income"), v("income_tax")
+        pretax, pretax_parts = compose_sum(v, PRETAX_RULES)      # OI-178：合并税前利润不得由境内单项兜底
         if rev is None and pretax is None:
             continue
         intexp = v("interest_expense") or 0.0
-        # 有息负债：长期（非流动+一年内到期，缺拆分则取合计）+ 短期
-        if v("lt_debt_noncurrent") is not None:
-            lt = (v("lt_debt_noncurrent") or 0.0) + (v("lt_debt_current") or 0.0)
-        else:
-            lt = v("lt_debt_total") or 0.0
-        st = v("st_debt") or 0.0
-        debt = lt + st
+        debt, debt_parts = compose_debt(v)                       # OI-178：票据、流动合计与融资租赁按层级只取一次
+        dep, dep_parts = compose_sum(v, DEP_AMORT_RULES)          # OI-178：折旧＋无形资产摊销
         cash = (v("cash") or 0.0) + (v("cash_invest") or 0.0)
         total_eq, parent_eq, minority = v("total_equity"), v("parent_equity"), v("minority_equity") or 0.0
         if total_eq is not None and parent_eq is not None and abs(total_eq - parent_eq) < 1e-6 and minority:
             total_eq = parent_eq + minority
         if parent_eq is None and total_eq is not None:      # 只报「含少数股东的权益合计」的公司：归母 = 合计 − 少数股东
             parent_eq = total_eq - minority
-            tags["parent_equity"] = f"{tags.get('total_equity', 'total_equity')}-minority"
+            row_tags["parent_equity"] = f"{tags.get('total_equity', 'total_equity')}-minority"
         notice = _annual_notice(tax, end)
         shares = v("shares") or v("shares_instant") or dei_shares(facts.get("dei"), notice)
         if shares and "shares" not in tags and "shares_instant" not in tags:
-            tags["shares"] = "dei:EntityCommonStockSharesOutstanding"
+            row_tags["shares"] = "dei:EntityCommonStockSharesOutstanding"
+        row_tags = _composed_tags(row_tags, {"pretax": pretax_parts, "interest_debt": debt_parts, "dep_amort": dep_parts})
         rows.append(_build_row("US", symbol, name, end, notice, ccy or "USD", rev, opinc, pretax, taxv, intexp,
-                               total_eq, parent_eq, minority, debt, cash, v("capex") or 0.0, v("dep_amort") or 0.0,
-                               v("cfo"), shares, tags, src, TAX_DEFAULT["US"],
+                               total_eq, parent_eq, minority, debt, cash, v("capex") or 0.0, dep or 0.0,
+                               v("cfo"), shares, row_tags, src, TAX_DEFAULT["US"],
                                buybacks=abs(v("buybacks") or 0.0), dividends=abs(v("dividends_paid") or 0.0),
                                net_income=v("net_income"), tci=v("tci"),
                                period_type="annual", report_label=f"年报（FY{end[:4]}，截至 {end}）"))

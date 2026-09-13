@@ -1,0 +1,13 @@
+{
+  "as_of": "2026-09-14",
+  "extraction_rows": 464,
+  "changed_companies": 15,
+  "changed_bands": 11,
+  "unchanged_sec_filers": [
+    "BRK.B",
+    "PDD",
+    "TSM"
+  ],
+  "oracle_status": "unvaluable_pending_input",
+  "tests": "test_sec_tag_composition (18) + test_overseas_valuation_guards"
+}

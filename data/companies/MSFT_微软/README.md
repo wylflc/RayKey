@@ -7,7 +7,7 @@
 | 名单状态 | worth_attention |
 | 质量档 | L1 |
 | 参考分 | 89.00 |
-| 合理价区间 | 237.79 ~ 290.63 USD |
+| 合理价区间 | 254.73 ~ 311.33 USD |
 | 估值证据日 | 2026-07-29 |
 | 估值事件 | 年报（FY2026） |
 
@@ -15,7 +15,7 @@
 
 ROIC·增长
 
-ROIC·增长（工作流程海外估值口径，财年 2022~2026，SEC companyfacts us-gaap）：NOPAT/经营账面财年序列 0.331／0.268／0.268／0.251／0.266 → ratio0 **0.266**（blend(λ=0.5,w=0.00,v=0.00)）× 经营账面 BPS_op 68.69（稀释股数 7,453m）= 每股 NOPAT 锚 **18.276**；股本口径：十年窗 |X_y|≥5% 年份 FY2018 +9.3b／FY2019 -7.7b／FY2020 -16.7b／FY2021 -19.7b／FY2022 -23.5b／FY2023 -11.2b；年报已计累计外生权益 -69.6b（最新年报经营账面 E_op 512.0b，母公司权益 442.4b）；年报后 x +0.00/股（annual_row）；BPS_op = 当期 BPS 59.36 − x − X_cum/股 -9.34 = 68.69；周期守卫 NOPAT/经营账面：当期 0.266（最新年报 0.266 × f 1.00）vs 十年中位 0.321 = 0.83×，坡道 w=0.00／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.266 + λ×(当期 − 三年中位) = 0.266，五年中位 0.268，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 22.3b；ROIC0 45.7%；WACC 8.44%（r 8.80% = rf 4.79% + β0.9×ERP 4.46%；rd 5.57%；t 19%；账面权重）；增长 g0=8.8%（来源 capital：资本腿 8.8%=min(增量ROIC 20.8%,40%)×再投资率 42%，增速腿 0.0%=CAGR 17.4%×(1−w 0.00)×d 1.00），ROIC_T=min(WACC+档位超额, ROIC0)=14.4%，g_T=3.0%，fade 10 年，终值占比 75%；净负债/股 -4.013（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 264.208 USD/普通股** → **264.21 USD**；带 = V×[0.90,1.10]。标签：buybacks=PaymentsForRepurchaseOfCommonStock;capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cash_invest=ShortTermInvestments;cfo=NetCashProvidedByUsedInOperatingActivities+NetCashProvidedByUsedInOperatingActivitiesContinuingOperations;dep_amort=Depreciation;dividends_paid=PaymentsOfDividendsCo
+ROIC·增长（工作流程海外估值口径，财年 2022~2026，SEC companyfacts us-gaap）：NOPAT/经营账面财年序列 0.331／0.268／0.268／0.251／0.266 → ratio0 **0.266**（blend(λ=0.5,w=0.00,v=0.00)）× 经营账面 BPS_op 68.69（稀释股数 7,453m）= 每股 NOPAT 锚 **18.276**；股本口径：十年窗 |X_y|≥5% 年份 FY2018 +9.3b／FY2019 -7.7b／FY2020 -16.7b／FY2021 -19.7b／FY2022 -23.5b／FY2023 -11.2b；年报已计累计外生权益 -69.6b（最新年报经营账面 E_op 512.0b，母公司权益 442.4b）；年报后 x +0.00/股（annual_row）；BPS_op = 当期 BPS 59.36 − x − X_cum/股 -9.34 = 68.69；周期守卫 NOPAT/经营账面：当期 0.266（最新年报 0.266 × f 1.00）vs 十年中位 0.321 = 0.83×，坡道 w=0.00／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.266 + λ×(当期 − 三年中位) = 0.266，五年中位 0.268，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 22.3b；ROIC0 41.1%；WACC 7.59%（r 8.80% = rf 4.79% + β0.9×ERP 4.46%；rd 3.20%；t 19%；账面权重）；增长 g0=6.7%（来源 capital：资本腿 6.7%=min(增量ROIC 17.7%,40%)×再投资率 38%，增速腿 0.0%=CAGR 17.4%×(1−w 0.00)×d 1.00），ROIC_T=min(WACC+档位超额, ROIC0)=13.6%，g_T=3.0%，fade 10 年，终值占比 78%；净负债/股 4.922（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 283.028 USD/普通股** → **283.03 USD**；带 = V×[0.90,1.10]。标签：amort_intangible=AmortizationOfIntangibleAssets;buybacks=PaymentsForRepurchaseOfCommonStock;capex=PaymentsToAcquirePropertyPlantAndEquipment;cash=CashAndCashEquivalentsAtCarryingValue+CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;cash_invest=ShortTermInvestments;cfo=NetCashProvidedByUsedInOperatingActivities+NetCashProvidedByUsedInOperatingActivitiesContinuingOperations;dep_amort=D
 
 <details>
 <summary>历史研究原文（非现行估值、评级或交易依据）</summary>
