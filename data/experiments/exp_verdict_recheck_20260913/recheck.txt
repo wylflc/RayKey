@@ -1,0 +1,37 @@
+m3 扫描文件 22 份，候选臂 190 条，判定或负窗计数有差异 36 条
+data/experiments/exp_c030r35_adoption_20260910/sweep_full_A.txt | BM18 | 不采纳 | 不采纳 | 1 | 0 | 14 | 复利读数 -1.16pp < −1pp
+data/experiments/exp_c030r35_adoption_20260910/sweep_full_A.txt | BS10 | 不采纳 | 不采纳 | 3 | 2 | 14 | 主读数一表 -0.61pp 而另一表不到 +1pp
+data/experiments/exp_c030r35_adoption_20260910/sweep_full_A.txt | BS20 | 不采纳 | 不采纳 | 4 | 2 | 14 | 主读数 -1.23pp < −1pp
+data/experiments/exp_c030r35_adoption_20260910/sweep_full_A.txt | BS30 | 不采纳 | 不采纳 | 4 | 2 | 14 | 主读数 -2.42pp < −1pp
+data/experiments/exp_ebds03_clause4_20260910/sweep_tiers.txt | S10 | 不采纳 | 不采纳 | 1 | 0 | 14 | 主读数一表 -0.63pp 而另一表不到 +1pp
+data/experiments/exp_ebds03_clause4_20260910/sweep_tiers.txt | S20 | 不采纳 | 不采纳 | 4 | 0 | 14 | 主读数 -1.25pp < −1pp
+data/experiments/exp_ebds03_clause4_20260910/sweep_tiers.txt | S30 | 不采纳 | 不采纳 | 4 | 0 | 14 | 主读数 -1.19pp < −1pp
+data/experiments/exp_ebds03_clause4_20260910/sweep_tiers.txt | EBDS03_S10 | 可采纳 | 可采纳 | 1 | 0 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | OFF | 无去赢家表 | 无去赢家表 | 4 | 2 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | FIX100 | 无去赢家表 | 无去赢家表 | 1 | 0 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | PE14 | 无去赢家表 | 无去赢家表 | 4 | 2 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | PE16 | 无去赢家表 | 无去赢家表 | 1 | 0 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | PE18 | 无去赢家表 | 无去赢家表 | 4 | 2 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | PE20 | 无去赢家表 | 无去赢家表 | 4 | 2 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | PEQ70 | 无去赢家表 | 无去赢家表 | 3 | 1 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | PEQ80 | 无去赢家表 | 无去赢家表 | 1 | 0 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | PEQ90 | 无去赢家表 | 无去赢家表 | 1 | 0 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | MA60X140 | 无去赢家表 | 无去赢家表 | 4 | 2 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | MA60X160 | 无去赢家表 | 无去赢家表 | 1 | 0 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | PART120 | 无去赢家表 | 无去赢家表 | 3 | 1 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | PART140 | 无去赢家表 | 无去赢家表 | 4 | 2 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full.txt | PART160 | 无去赢家表 | 无去赢家表 | 4 | 2 | 14 | 
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | OFF | 不采纳 | 不采纳 | 4 | 2 | 14 | 主读数 -2.12pp < −1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | FIX100 | 不采纳 | 不采纳 | 1 | 0 | 14 | 主读数 -24.91pp < −1pp；回撤通道未过：主读数 -24.91pp < −1pp；复利读数 -24.19pp < −0.15pp；滚5最差 -13.07pp < −0.15pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | PE14 | 不采纳 | 不采纳 | 4 | 2 | 14 | 主读数 -9.12pp < −1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | PE16 | 不采纳 | 不采纳 | 1 | 0 | 14 | 主读数 -2.94pp < −1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | PE18 | 不采纳 | 不采纳 | 4 | 2 | 14 | 主读数 -2.12pp < −1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | PE20 | 不采纳 | 不采纳 | 4 | 2 | 14 | 主读数 -2.12pp < −1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | PEQ70 | 不采纳 | 不采纳 | 3 | 1 | 14 | 主读数 -19.39pp < −1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | PEQ80 | 不采纳 | 不采纳 | 1 | 0 | 14 | 主读数 -13.11pp < −1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | PEQ90 | 不采纳 | 不采纳 | 1 | 0 | 14 | 主读数 -9.63pp < −1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | MA60X140 | 不采纳 | 不采纳 | 4 | 2 | 14 | 主读数 -4.06pp < −1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | MA60X160 | 不采纳 | 不采纳 | 1 | 0 | 14 | 主读数 -2.15pp < −1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | PART120 | 不采纳 | 不采纳 | 3 | 1 | 14 | 主读数一表 -0.57pp 而另一表不到 +1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | PART140 | 不采纳 | 不采纳 | 4 | 2 | 14 | 主读数一表 -0.59pp 而另一表不到 +1pp
+data/experiments/exp_equity_bond_opt_20260910/sweep_full_A.txt | PART160 | 不采纳 | 不采纳 | 4 | 2 | 14 | 复利读数 -1.91pp < −1pp

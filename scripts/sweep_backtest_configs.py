@@ -34,6 +34,7 @@ import atexit
 import collections
 import os
 import csv
+import math
 import re
 import shlex
 import shutil
@@ -195,16 +196,34 @@ def parse_window_series(text: str) -> dict[str, float]:
     return out
 
 
-def start_delta(arm_row: dict, base_row: dict, key: str) -> float:
-    """一个起点上某读数的配对差。`WIN5_KEY`（m3 主读数）= 同窗口先相减再取起点内中位，任一方缺序列或无共同窗口
-    → NaN（缺表，不能判）；其余键 = 两臂该起点读数之差。"""
+def start_delta(arm_row: dict, base_row: dict, key: str, coverage: str = "strict") -> float:
+    """一个起点上某读数的配对差。`WIN5_KEY`（m3 主读数）= 同窗口先相减再取起点内中位；其余键 = 两臂该起点读数之差。
+    任一方缺值或非有限值 → NaN（缺表，不能判）。
+
+    OI-172：缺省 `coverage="strict"` 要求两臂的窗口集合**完全相同**——候选只缺不利窗口时取交集会把 −30pp 读成 +10pp，
+    故缺任一窗口即 NaN。`coverage="common"` 只取共同窗口，仅供明确标记的共同覆盖诊断，正式判定不得使用。"""
+    if coverage not in ("strict", "common"):
+        raise ValueError(f"coverage 只能是 strict／common：{coverage}")
     if key != WIN5_KEY:
-        return arm_row[key] - base_row[key]
+        a, b = arm_row.get(key), base_row.get(key)
+        if a is None or b is None or not math.isfinite(a) or not math.isfinite(b):
+            return float("nan")
+        return a - b
     arm_w, base_w = arm_row.get(WIN5_KEY), base_row.get(WIN5_KEY)
     if not arm_w or not base_w:
         return float("nan")
-    common = [m for m in arm_w if m in base_w]
-    return statistics.median(arm_w[m] - base_w[m] for m in common) if common else float("nan")
+    if coverage == "strict" and set(arm_w) != set(base_w):
+        return float("nan")
+    diffs = [arm_w[m] - base_w[m] for m in arm_w if m in base_w]
+    if not diffs or any(not math.isfinite(d) for d in diffs):
+        return float("nan")
+    return statistics.median(diffs)
+
+
+def neg_window_flip(arm_row: dict, base_row: dict) -> bool:
+    """§12.1 第 2 款否决项的逐起点判据：滚 5 负收益窗口占比**由 0 转正**（OI-173）。
+    对照已有负窗（>0）的起点，候选占比再大也不计——那是「变差」不是「转正」，成文规则只数后者。"""
+    return base_row["滚动5年为负的窗口占比"] <= 0 < arm_row["滚动5年为负的窗口占比"]
 
 
 def metric_header() -> str:
@@ -466,14 +485,54 @@ def report(path: Path, title: str) -> None:
             _print_appendix(grp)
 
 
-def _paired_median(arms, label: str, key: str, ref: str = "BASE") -> float:
-    """某臂对 ref（缺省 BASE）的逐起点配对差中位；臂或对照缺失、或任一起点缺同窗序列（m3 主读数）时 NaN。"""
+def _paired_median(arms, label: str, key: str, ref: str = "BASE", coverage: str = "strict") -> float:
+    """某臂对 ref（缺省 BASE）的逐起点配对差中位；臂或对照缺失、任一起点配对差 NaN（缺同窗序列、窗口集合不同、非有限值）时 NaN。
+    OI-172：缺省 `coverage="strict"` 要求两臂起点集合完全相同，否则 NaN；`coverage="common"` 取共同起点，仅供标记为共同覆盖的诊断。"""
     base, arm = (arms or {}).get(ref), (arms or {}).get(label)
     if not base or not arm:
         return float("nan")
+    if coverage == "strict" and set(arm) != set(base):
+        return float("nan")
     common = [s for s in arm if s in base]
-    vals = [start_delta(arm[s], base[s], key) for s in common]
+    vals = [start_delta(arm[s], base[s], key, coverage) for s in common]
     return float("nan") if not vals or any(v != v for v in vals) else statistics.median(vals)
+
+
+VERDICT_FIELDS = ("年化", "最大回撤", "滚动5年年化最差", "滚动5年回撤中位", "滚动5年为负的窗口占比")
+
+
+def pairing_defects(arms, label: str, ref: str, starts, table: str, need_win5: bool = True) -> list[str]:
+    """OI-172：正式判定前的完整性校验。两臂都须覆盖 `starts` 全部起点、决策字段有限；`need_win5` 时每个起点两臂的
+    同窗序列非空、窗口集合相同且全部有限。返回缺陷说明（空 = 通过）；部分缺表即不可判，不得用交集给出有限读数。"""
+    base, arm = (arms or {}).get(ref), (arms or {}).get(label)
+    if not base or not arm:
+        return [f"{table}缺臂（{ref if not base else label}）"]
+    out = []
+    for name, rows in ((ref, base), (label, arm)):
+        missing = [s for s in starts if s not in rows]
+        if missing:
+            out.append(f"{table}{name} 缺起点 {len(missing)}/{len(starts)}：{'、'.join(m[:7] for m in missing)}")
+        extra = sorted(set(rows) - set(starts))
+        if extra:
+            out.append(f"{table}{name} 多出起点 {'、'.join(m[:7] for m in extra)}")
+    if out:
+        return out
+    for s in starts:
+        a, b = arm[s], base[s]
+        bad = [k for k in VERDICT_FIELDS if not (isinstance(a.get(k), (int, float)) and isinstance(b.get(k), (int, float))
+                                                and math.isfinite(a[k]) and math.isfinite(b[k]))]
+        if bad:
+            out.append(f"{table}{s[:7]} 决策字段非有限值：{'、'.join(bad)}")
+        if not need_win5:
+            continue
+        aw, bw = a.get(WIN5_KEY), b.get(WIN5_KEY)
+        if not aw or not bw:
+            out.append(f"{table}{s[:7]} 缺同窗序列（{label if not aw else ref}）")
+        elif set(aw) != set(bw):
+            out.append(f"{table}{s[:7]} 窗口集合不同：{label} {len(aw)} 窗／{ref} {len(bw)} 窗")
+        elif any(not math.isfinite(v) for v in (*aw.values(), *bw.values())):
+            out.append(f"{table}{s[:7]} 窗口年化非有限值")
+    return out
 
 
 def drawdown_episodes(arms_all, arms_ex, label: str, ref: str = "BASE") -> list[dict]:
@@ -504,17 +563,26 @@ def _episode_text(episodes: list[dict]) -> str:
                     for ep in episodes) or "—"
 
 
-def adoption_verdict(arms_all, arms_ex, label: str, ref: str = "BASE", verdict_keys=None, dd_path: bool = True):
+def adoption_verdict(arms_all, arms_ex, label: str, ref: str = "BASE", verdict_keys=None, dd_path: bool = True,
+                     required_starts=None):
     """§12.1 第 2 款采纳判定的唯一实现（dose_table／oi148 报表都调用这里）。
 
-    四读数双表判（v4.129）→ 回撤通道（v4.175）→ 闸门／否决（全样本表）。返回 (判定, 理由, 读数)；读数含
-    主读数／复利读数 的 (全, 去) 配对差、`ΔMDD` (全, 去)、`Δ滚5最差`（全样本）与 `回撤段`（drawdown_episodes）。
+    先做完整性校验（OI-172：两表两臂均覆盖 `required_starts`——缺省为现行标准起点集 `DEFAULT_STARTS`——且同窗序列
+    窗口集合相同、决策字段有限，否则「不可判」并列出缺陷）→ 四读数双表判（v4.129）→ 回撤通道（v4.175）→ 闸门／否决
+    （全样本表；否决 = 负窗占比由 0 转正的起点过半，OI-173）。返回 (判定, 理由, 读数)；读数含主读数／复利读数 的 (全, 去)
+    配对差、`ΔMDD` (全, 去)、`Δ滚5最差`（全样本）与 `回撤段`（drawdown_episodes）。
     `verdict_keys` 只供历史 m2 文件核对时改用旧主读数；`dd_path=False` 关闭回撤通道（对照旧规则用）。"""
     keys = tuple(verdict_keys or VERDICT_KEYS)
+    starts = list(DEFAULT_STARTS if required_starts is None else required_starts)
+    need_win5 = any(key == WIN5_KEY for _name, key in keys)
+    defects = (pairing_defects(arms_all, label, ref, starts, "全样本表", need_win5)
+               + pairing_defects(arms_ex, label, ref, starts, "去赢家表", need_win5))
     vals = {name: (_paired_median(arms_all, label, key, ref), _paired_median(arms_ex, label, key, ref)) for name, key in keys}
     vals["ΔMDD"] = (_paired_median(arms_all, label, "最大回撤", ref), _paired_median(arms_ex, label, "最大回撤", ref))
     vals["Δ滚5最差"] = _paired_median(arms_all, label, "滚动5年年化最差", ref)
     vals["回撤段"] = drawdown_episodes(arms_all, arms_ex, label, ref)
+    if defects:
+        return "不可判", defects, vals
     verdict, reasons = "可采纳", []
     for name, _key in keys:
         a, e = vals[name]
@@ -543,15 +611,13 @@ def adoption_verdict(arms_all, arms_ex, label: str, ref: str = "BASE", verdict_k
             verdict, reasons = "可采纳·回撤通道", [f"ΔMDD {ma*100:+.1f}／{me*100:+.1f}pp；回撤段 {_episode_text(vals['回撤段'])}"]
         elif mdd_ok:                                  # 回撤达标但别的条件不满足：说明为什么没走通道
             reasons.append("回撤通道未过：" + "；".join(failed))
-    base, arm = (arms_all or {}).get(ref, {}), (arms_all or {}).get(label, {})
-    common = [s for s in arm if s in base]
-    if common:
-        dd = statistics.median(arm[s]["滚动5年回撤中位"] - base[s]["滚动5年回撤中位"] for s in common)
-        neg_up = sum(1 for s in common if arm[s]["滚动5年为负的窗口占比"] > base[s]["滚动5年为负的窗口占比"])
-        if dd > DRAWDOWN_GATE:
-            verdict = "不采纳"; reasons.append(f"闸门：回撤 Δ {dd*100:+.1f}pp")
-        if neg_up > len(common) / 2:
-            verdict = "不采纳"; reasons.append(f"否决：负窗↑ {neg_up}/{len(common)}")
+    base, arm = arms_all[ref], arms_all[label]
+    dd = statistics.median(arm[s]["滚动5年回撤中位"] - base[s]["滚动5年回撤中位"] for s in starts)
+    flipped = sum(1 for s in starts if neg_window_flip(arm[s], base[s]))
+    if dd > DRAWDOWN_GATE:
+        verdict = "不采纳"; reasons.append(f"闸门：回撤 Δ {dd*100:+.1f}pp")
+    if flipped > len(starts) / 2:
+        verdict = "不采纳"; reasons.append(f"否决：负窗 0→正 {flipped}/{len(starts)}")
     return verdict, reasons, vals
 
 
@@ -562,7 +628,8 @@ def _print_verdicts(arms_all, arms_ex, order: list[str]) -> None:
           f"ΔMDD（全期最大回撤配对差）两表均 ≤ −{DD_PATH_MDD_GAIN*100:.0f}pp、滚 5 最差（全样本）≥ −{NOISE_BAND*100:.2f}pp、"
           f"候选更浅 ≥{DD_PATH_MDD_GAIN*100:.0f}pp 的 BASE 回撤段 ≥ {DD_PATH_EPISODES} → 可采纳·回撤通道；"
           f"一表某项在 [−{RULING_TOLERANCE*100:.0f}pp, −{NOISE_BAND*100:.2f}pp) 且另一表同项 ≥ +{CLEAR_GAIN*100:.0f}pp → 报用户裁定；"
-          "其余不采纳。闸门／否决取全样本表；正号数只报不判。回撤段 = 更浅≥5pp 段数/归并段数（段 = 起点最大回撤区间按重叠归并）")
+          "其余不采纳。闸门／否决取全样本表（否决 = 负窗占比由 0 转正的起点过半）；正号数只报不判。回撤段 = 更浅≥5pp 段数/归并段数"
+          "（段 = 起点最大回撤区间按重叠归并）。判定前先校验两表两臂起点集合＝标准起点集、同窗窗口集合相同、决策字段有限，否则不可判")
     if not arms_ex:
         print("  去赢家表缺失（--no-ex-top5 或第二遍跑挂）：双表判定不可做，本轮只有描述读数")
         return
@@ -625,7 +692,7 @@ def _prepare_group(arms, order: list[str], failed, title: str) -> dict | None:
         # `arm`/`common` 是循环变量，闭包会晚绑定到最后一轮——必须用默认参数当场固定，
         # 否则每一行打印出来的都是最后一条臂的读数（Δ 列因为是即时算的，反而看不出错）。
         med = lambda k, _a=arm, _c=common: _med(_a[s][k] for s in _c)
-        neg_up = sum(1 for s in common if arm[s]["滚动5年为负的窗口占比"] > base[s]["滚动5年为负的窗口占比"])
+        neg_up = sum(1 for s in common if neg_window_flip(arm[s], base[s]))     # OI-173：只数由 0 转正的起点
         rows.append((statistics.median(dz[PRIMARY_KEY]), label, dz, len(common), med, neg_up))
     rows.sort(key=lambda t: -t[0])
     return {"arms": arms, "base": base, "starts": starts, "rows": rows, "title": title}
@@ -637,8 +704,9 @@ def _print_decision(grp: dict) -> None:
     print(f"{grp['title']}（{len(starts)} 个起点，对照＝BASE；Δ 按年化（复利读数）排序；月末锚定滚动窗口）")
     print("【决策读数】Δ 为逐起点配对差中位（pp），符号 = 该读数为正的起点数（只报不判）；Δ滚5同窗 = 主读数（m3：同起点"
           "同窗口先相减、起点内中位、再跨起点中位；滚 5 中位的配对差见附表）；回撤 Δ 正 = 更深，"
-          f"「更浅」= 回撤变浅的起点数；负窗↑ = 负收益窗口占比变大的起点数；闸门：回撤 Δ > +{DRAWDOWN_GATE*100:.0f}pp 或 负窗↑ 过半")
-    print(f"{'配置':<14}{'Δ滚5同窗':>9}{'符号':>7}{'Δ年化':>8}{'符号':>7}{'Δ滚5P25':>9}{'符号':>7}{'Δ滚5回撤':>9}{'更浅':>7}{'负窗↑':>7}"
+          f"「更浅」= 回撤变浅的起点数；负窗0→正 = 负收益窗口占比由 0 转正的起点数（对照已有负窗的起点不计，OI-173）；"
+          f"闸门：回撤 Δ > +{DRAWDOWN_GATE*100:.0f}pp 或 负窗0→正 过半；主读数为 — 表示该臂与 BASE 的起点或同窗窗口集合不全（OI-172），不能判")
+    print(f"{'配置':<14}{'Δ滚5同窗':>9}{'符号':>7}{'Δ年化':>8}{'符号':>7}{'Δ滚5P25':>9}{'符号':>7}{'Δ滚5回撤':>9}{'更浅':>7}{'负窗0→正':>8}"
           f"{'滚5中位':>8}{'滚5P25':>8}{'滚5最差':>8}{'滚5回撤':>8}{'滚5Calmar':>10}{'滚5Sharpe':>10}{'负窗%':>6}{'换手':>6}{'仓位':>5}  闸门")
     for _sort, label, dz, n, med, neg_up in rows:
         d5, dcg, d25, dd = (dz[WIN5_KEY], dz["年化"],
@@ -651,14 +719,14 @@ def _print_decision(grp: dict) -> None:
             if neg_up > n / 2:
                 flags.append("负窗转正")
             if m5 != m5:
-                flags.append("主读数缺同窗序列")
+                flags.append("主读数缺同窗序列／窗口集合不全")
             elif m5 < -NOISE_BAND or statistics.median(dcg) < -NOISE_BAND:
                 flags.append("主/复利 < −0.15pp")
         c5 = f"{'—':>9}{'—':>7}" if m5 != m5 else f"{m5 * 100:>+9.2f}{f'{sum(1 for v in d5 if v > 0)}/{n}':>7}"
         print(f"{label:<14}{c5}"
               f"{statistics.median(dcg) * 100:>+8.2f}{f'{sum(1 for v in dcg if v > 0)}/{n}':>7}"
               f"{statistics.median(d25) * 100:>+9.2f}{f'{sum(1 for v in d25 if v > 0)}/{n}':>7}"
-              f"{statistics.median(dd) * 100:>+9.2f}{f'{sum(1 for v in dd if v < 0)}/{n}':>7}{f'{neg_up}/{n}':>7}"
+              f"{statistics.median(dd) * 100:>+9.2f}{f'{sum(1 for v in dd if v < 0)}/{n}':>7}{f'{neg_up}/{n}':>8}"
               f"{_fmt(med('滚动5年年化中位'))}{_fmt(med('滚动5年年化P25'))}{_fmt(med('滚动5年年化最差'))}"
               f"{_fmt(med('滚动5年回撤中位'), prec=1)}{_fmt(med('滚动5年Calmar中位'), 1, 10)}{_fmt(med('滚动5年Sharpe中位'), 1, 10)}"
               f"{_fmt(med('滚动5年为负的窗口占比'), 100, 6, 1)}{_fmt(med('年均换手'), 1, 6)}{_fmt(med('平均仓位'), 100, 5, 0)}"

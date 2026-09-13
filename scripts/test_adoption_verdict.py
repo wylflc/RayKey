@@ -1,7 +1,10 @@
-"""§12.1 第 2 款采纳判定（`sweep_backtest_configs.adoption_verdict`）：四读数双表、回撤通道（v4.175）、闸门／否决。"""
+"""§12.1 第 2 款采纳判定（`sweep_backtest_configs.adoption_verdict`）：四读数双表、回撤通道（v4.175）、闸门／否决；
+OI-172 完整性校验（起点集合、同窗窗口集合、有限值）与 OI-173 否决只数「负窗由 0 转正」。"""
+import math
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sweep_backtest_configs as sw  # noqa: E402
@@ -33,7 +36,7 @@ def arms(main=0.0, cagr=0.0, mdd=0.0, worst=0.02, mdd_starts=STARTS, r5dd=0.0, m
 class AdoptionVerdictTest(unittest.TestCase):
     def verdict(self, *a, **k):
         full, ex = arms(*a, **k)
-        return sw.adoption_verdict(full, ex, "CAND")
+        return sw.adoption_verdict(full, ex, "CAND", required_starts=STARTS)
 
     def test_four_readings_pass(self):
         v, reasons, vals = self.verdict(main=0.01, cagr=0.01)
@@ -75,19 +78,85 @@ class AdoptionVerdictTest(unittest.TestCase):
     def test_missing_window_series_is_undecidable(self):
         full, ex = arms(main=0.01, cagr=0.01)
         del full["CAND"][STARTS[0]][sw.WIN5_KEY]
-        self.assertEqual(sw.adoption_verdict(full, ex, "CAND")[0], "不可判")
-        # 历史 m2 文件核对：改用旧主读数键，回撤通道可关
+        v, reasons, _ = sw.adoption_verdict(full, ex, "CAND", required_starts=STARTS)
+        self.assertEqual(v, "不可判"); self.assertIn("缺同窗序列", reasons[0])
+        # 历史 m2 文件核对：改用旧主读数键（不要求同窗序列），回撤通道可关
         full, ex = arms(main=-0.008, cagr=0.01, mdd=-0.08)
+        for rows in (*full.values(), *ex.values()):
+            for r in rows.values():
+                del r[sw.WIN5_KEY]
         keys = (("主读数", "年化"), ("复利读数", "年化"))
-        self.assertEqual(sw.adoption_verdict(full, ex, "CAND", verdict_keys=keys)[0], "可采纳")
-        self.assertEqual(sw.adoption_verdict(full, ex, "CAND", verdict_keys=keys, dd_path=False)[0], "可采纳")
+        self.assertEqual(sw.adoption_verdict(full, ex, "CAND", verdict_keys=keys, required_starts=STARTS)[0], "可采纳")
+        self.assertEqual(sw.adoption_verdict(full, ex, "CAND", verdict_keys=keys, dd_path=False, required_starts=STARTS)[0], "可采纳")
+
+    # ---- OI-172：部分缺窗／缺起点／非有限值一律不可判（审核报告 P2 反例：BASE 三窗 10%，候选 20/−20/−50%）
+    def test_partial_windows_cannot_pass(self):
+        full, ex = arms(main=0.01, cagr=0.01)
+        for s in STARTS:
+            full["BASE"][s][sw.WIN5_KEY] = {m: 0.10 for m in WIN}
+            full["CAND"][s][sw.WIN5_KEY] = {WIN[0]: 0.20, WIN[1]: -0.20, WIN[2]: -0.50}
+        self.assertAlmostEqual(sw.start_delta(full["CAND"][STARTS[0]], full["BASE"][STARTS[0]], sw.WIN5_KEY), -0.30)
+        for s in STARTS:                       # 候选只留第一个（有利）窗口：交集读 +10pp，严格口径必须 NaN
+            full["CAND"][s][sw.WIN5_KEY] = {WIN[0]: 0.20}
+        self.assertTrue(math.isnan(sw.start_delta(full["CAND"][STARTS[0]], full["BASE"][STARTS[0]], sw.WIN5_KEY)))
+        self.assertAlmostEqual(sw.start_delta(full["CAND"][STARTS[0]], full["BASE"][STARTS[0]], sw.WIN5_KEY, coverage="common"), 0.10)
+        v, reasons, _ = sw.adoption_verdict(full, ex, "CAND", required_starts=STARTS)
+        self.assertEqual(v, "不可判"); self.assertTrue(any("窗口集合不同" in r for r in reasons))
+        with self.assertRaises(ValueError):
+            sw.start_delta(full["CAND"][STARTS[0]], full["BASE"][STARTS[0]], sw.WIN5_KEY, coverage="union")
+
+    def test_missing_start_cannot_pass(self):
+        full, ex = arms(main=0.01, cagr=0.01)
+        del full["CAND"][STARTS[-1]]           # 候选少一个起点：交集给有限值，严格口径不可判
+        self.assertTrue(math.isnan(sw._paired_median(full, "CAND", "年化")))
+        self.assertFalse(math.isnan(sw._paired_median(full, "CAND", "年化", coverage="common")))
+        v, reasons, _ = sw.adoption_verdict(full, ex, "CAND", required_starts=STARTS)
+        self.assertEqual(v, "不可判"); self.assertTrue(any("缺起点" in r for r in reasons))
+        full, ex = arms(main=0.01, cagr=0.01)   # 两臂起点齐但与标准起点集不符：同样不可判
+        v, reasons, _ = sw.adoption_verdict(full, ex, "CAND", required_starts=(*STARTS, "2011-05-01"))
+        self.assertEqual(v, "不可判"); self.assertTrue(any("缺起点 1/5" in r for r in reasons))
+
+    def test_non_finite_values_cannot_pass(self):
+        full, ex = arms(main=0.01, cagr=0.01)
+        full["CAND"][STARTS[1]]["年化"] = float("nan")
+        v, reasons, _ = sw.adoption_verdict(full, ex, "CAND", required_starts=STARTS)
+        self.assertEqual(v, "不可判"); self.assertTrue(any("非有限值" in r for r in reasons))
+        full, ex = arms(main=0.01, cagr=0.01)
+        full["CAND"][STARTS[1]][sw.WIN5_KEY][WIN[1]] = float("inf")
+        self.assertTrue(math.isnan(sw.start_delta(full["CAND"][STARTS[1]], full["BASE"][STARTS[1]], sw.WIN5_KEY)))
+        self.assertEqual(sw.adoption_verdict(full, ex, "CAND", required_starts=STARTS)[0], "不可判")
+
+    # ---- OI-173：否决只数「负窗占比由 0 转正」的起点，非零增大不计，恰好半数不否决
+    def test_nonzero_increase_is_not_a_veto(self):
+        full, ex = arms(main=0.01, cagr=0.01)
+        for s in STARTS:                       # 双方本就有负窗：1% → 2%，四读数各 +1pp，不得否决
+            full["BASE"][s]["滚动5年为负的窗口占比"] = 0.01
+            full["CAND"][s]["滚动5年为负的窗口占比"] = 0.02
+        v, reasons, _ = sw.adoption_verdict(full, ex, "CAND", required_starts=STARTS)
+        self.assertEqual((v, reasons), ("可采纳", []))
+        self.assertFalse(sw.neg_window_flip(full["CAND"][STARTS[0]], full["BASE"][STARTS[0]]))
+
+    def test_zero_to_positive_over_half_vetoes(self):
+        full, ex = arms(main=0.01, cagr=0.01)
+        for s in STARTS[:3]:                   # 3/4 起点由 0 转正 → 否决
+            full["CAND"][s]["滚动5年为负的窗口占比"] = 0.01
+        v, reasons, _ = sw.adoption_verdict(full, ex, "CAND", required_starts=STARTS)
+        self.assertEqual(v, "不采纳"); self.assertIn("否决：负窗 0→正 3/4", reasons)
+
+    def test_exactly_half_is_not_over_half(self):
+        full, ex = arms(main=0.01, cagr=0.01)
+        for s in STARTS[:2]:                   # 2/4 不过半 → 不否决
+            full["CAND"][s]["滚动5年为负的窗口占比"] = 0.01
+        self.assertEqual(sw.adoption_verdict(full, ex, "CAND", required_starts=STARTS)[0], "可采纳")
 
     def test_dose_table_and_slippage_delegate(self):
         sys.path.insert(0, str(Path(__file__).resolve().parent / "experimental"))
         import dose_table, oi148_slippage_report
         full, ex = arms(main=-0.008, cagr=0.01, mdd=-0.08)
-        self.assertTrue(dose_table.verdict(full, ex, "CAND").startswith("可采纳·回撤通道"))
-        self.assertEqual(oi148_slippage_report.verdict(full, ex, "CAND", "BASE")[0], "可采纳·回撤通道")
+        with mock.patch.object(sw, "DEFAULT_STARTS", list(STARTS)):     # 正式入口缺省按现行标准起点集校验完整性
+            self.assertTrue(dose_table.verdict(full, ex, "CAND").startswith("可采纳·回撤通道"))
+            self.assertEqual(oi148_slippage_report.verdict(full, ex, "CAND", "BASE")[0], "可采纳·回撤通道")
+        self.assertEqual(dose_table.verdict(full, ex, "CAND")[:3], "不可判"[:3])                 # 4 个合成起点 ≠ 14 个标准起点
 
 
 if __name__ == "__main__":
