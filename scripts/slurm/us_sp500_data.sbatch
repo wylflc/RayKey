@@ -8,7 +8,7 @@
 # OI-159 P1 数据层：利率 → companyfacts → 价格（Yahoo 段约 10 分钟，Tiingo 段按 50 请求/小时约 3~4 小时）
 # 用法：sbatch scripts/slurm/us_sp500_data.sbatch [fetch_us_ohlcv_history.py 的参数，如 --phase yahoo --only AAPL,META]
 
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 set -o pipefail
 python3 scripts/fetch_us_rates.py || exit 1
 python3 scripts/fetch_us_companyfacts.py || echo "companyfacts 有失败项（见 stderr），继续"

@@ -15,7 +15,7 @@
 # 单臂单侧建带实测 38 s / 0.31 GB；单次回测约 1.5 分钟 / 1.49 GB。--workers 48 ≈ 72 GB < -n 64 的 112 GB。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 EXP=data/experiments/exp_oi115_trailleg
 ST=data/experiments/states/exp_oi115_trailleg

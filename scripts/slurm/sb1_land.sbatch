@@ -10,7 +10,7 @@
 # 本作业：①新基准与 v4.134 基准两遍 14 起点（在册读数重登、剔除集 A 复核、对 v4.134 的配对差）；②2011-11-01 两臂长跑落产物；
 # ③§12.1 第 11 款归因集中度；④第 4 款② 剔除赢家只数 1/3/5/10 剂量；⑤新基准单起点流水 swap_flow_diag。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_swap_variants
 echo "=== [$(date +%T)] ① 新基准 vs v4.134 两遍 14 起点 ==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/base_sb1_land.txt" \

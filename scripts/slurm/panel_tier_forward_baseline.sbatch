@@ -8,7 +8,7 @@
 
 # §12.1 第 9 款信号层三表之一的基线：面板在册月末 P/V → 前向 3/5 年含分红再投总回报。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 OUT=data/experiments/exp_selection_edge
 mkdir -p "$OUT"

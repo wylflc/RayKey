@@ -10,7 +10,7 @@
 # BASE 侧的候选日志/成交流水/闭合周期复用 exp_oi114_swap_margin 的 _OI114SRC 那次长跑。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 SRC=data/experiments/exp_oi114_swap_margin
 EXP=data/experiments/exp_oi114_adopt

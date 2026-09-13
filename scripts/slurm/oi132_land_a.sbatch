@@ -10,7 +10,7 @@
 # 跑 §6.7 第 2／2b／3 步重建生产带与逐日状态，末尾按 §12.30 对旧状态文件重解买入线（只报数，不改常量）。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 S=data/processed
 EXP=data/experiments/exp_oi132_consolidation
 COMMON="--all --value-model roic --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 \

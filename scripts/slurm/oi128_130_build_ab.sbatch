@@ -13,7 +13,7 @@
 # NEW 臂再做换仓边际 0.01 一档剂量扫描与信号层 P/V 分档前向回报。生产文件不动，落地另起作业。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi128_130_adopt
 S=data/processed
 mkdir -p "$EXP/configs"

@@ -2,7 +2,7 @@
 import csv, sys, datetime as dt
 from collections import defaultdict
 from pathlib import Path
-ROOT=Path('/gpfs/work1/0/qt15419/zwang/mm_quant/RayKey')
+ROOT=Path('/gpfs/scratch1/shared/zwang/mm_quant/RayKey')
 def load_actions(p):
     a=defaultdict(dict)
     for r in csv.DictReader(open(p,encoding='utf-8')):

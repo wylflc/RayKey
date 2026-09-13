@@ -11,7 +11,7 @@
 # 与回测的收益读数相互独立，不受买入线、换仓边际、赢家集中度影响。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi128_minority
 S=data/processed
 P=$S/pit_attention/panel_moat_bank_v6b.csv

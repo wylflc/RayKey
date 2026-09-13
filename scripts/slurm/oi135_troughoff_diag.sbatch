@@ -8,7 +8,7 @@
 
 # §12.173 补：GE_TROUGHOFF 的路径层诊断（信号层看不出增益从哪来，要看成交与持仓路径）。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_reaudit_minority
 D=$EXP/why; mkdir -p "$D/GE_TROUGHOFF"
 BASECMD=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE.replace('--no-artifacts ',''))")

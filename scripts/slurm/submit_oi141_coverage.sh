@@ -1,7 +1,7 @@
 #!/bin/bash
 # OI-141 C12／C13／C14 一条命令跑完：先为需重建的臂各提交一个建带作业，再以 afterok 依赖提交扫描作业。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 export EXP=data/experiments/exp_oi141
 deps=""
 while IFS=$'\t' read -r arm extra divs panel; do

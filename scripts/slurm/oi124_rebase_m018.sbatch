@@ -11,7 +11,7 @@
 #    去赢家名单按新 BASE 自身前五重选。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi124_w0base
 
 echo "=== [$(date +%T)] §6.7 第 7 步 换仓边际标度漂移守卫 ==="

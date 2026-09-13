@@ -11,7 +11,7 @@
 # （§12.30 / align_buy_line.py）→ 14 起点 × 两遍 A/B。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi128_minority
 S=data/processed
 COMMON="--all --value-model roic --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 \

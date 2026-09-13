@@ -4,7 +4,7 @@
 # 先为清单里「需重建」且尚未落盘的臂各提交一个建带作业，再以 afterok 依赖提交扫描作业。
 # 状态文件已清理时自动重建；强制重跑某臂可删掉其 align_buy_line.txt。EXP 可用环境变量覆盖。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 export EXP="${EXP:-data/experiments/exp_strategy_shortlist}"
 deps=""
 while IFS=$'\t' read -r arm extra divs panel; do

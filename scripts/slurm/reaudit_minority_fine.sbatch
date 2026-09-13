@@ -8,7 +8,7 @@
 
 # §12.171 表 F（买入线加密）与表 G（相关性上限加密）。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_reaudit_minority
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/buyline_fine.txt" \
   --out "$EXP/sweep_buyline.txt" --workers 44 \

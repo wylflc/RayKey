@@ -10,7 +10,7 @@
 # BASE 与 C100 各三档，六个进程并行；单进程约 75 秒、内存 < 1 GB。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 SE=data/experiments/exp_selection_edge
 CF=data/experiments/exp_corr_filter

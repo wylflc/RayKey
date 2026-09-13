@@ -11,7 +11,7 @@
 # Δ 归因的对照臂 = 改动前的 0.1437 生产臂（exp_oi114_swap_margin 的 _OI114SRC 长跑）。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 OLD=data/experiments/exp_oi114_swap_margin
 EXP=data/experiments/exp_oi114_adopt_m19

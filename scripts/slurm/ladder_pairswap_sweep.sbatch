@@ -9,7 +9,7 @@
 # §12.177：表 A 阶梯涨幅减持（--gain-ladder，44 臂）与表 B 配对换仓（--swap-mode pairwise，15 臂），
 # 各 14 起点两遍（全样本＋去赢家）。两表串行——BASE 臂的 summary 文件名相同，不可并行跑两份扫描。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_ladder_pairswap
 for a in ladder pairswap; do
   echo "=== [$(date +%T)] 表 $a（$(grep -c '|' "$EXP/configs/$a.txt") 臂 × 14 起点 × 两遍）==="

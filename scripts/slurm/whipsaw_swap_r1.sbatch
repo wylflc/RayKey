@@ -10,7 +10,7 @@
 # ① 15 臂 × 14 起点 × 两遍（全样本＋去赢家 A）；② BASE 2011-11-01 summary 与 §12.193 0bp 在册产物逐位核对；
 # ③ 2011-11-01 单起点逐臂成交流水＋被挡事件记录＋周期产物，供 whipsaw_swap_diag.py 复盘。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_whipsaw_swap
 CFG="$EXP/configs/round1.txt"
 echo "=== [$(date +%T)] 扫描 $(grep -c '|' "$CFG") 臂 × 14 起点 × 两遍 ==="

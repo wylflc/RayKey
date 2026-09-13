@@ -9,7 +9,7 @@
 #SBATCH -o logs/%x_%j.out
 #SBATCH -e logs/%x_%j.err
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 export OMP_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 python3 data/experiments/exp_oi168_wc_20260909/run.py --workers 48

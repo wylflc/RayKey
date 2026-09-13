@@ -13,7 +13,7 @@
 # 不跑第 1 步（输入纪元与 exp_oi168_wc_20260909 相同，令变化只归因于口径）；第 4 步起由 oi168_land_scan.sbatch 继续。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 EXP=data/experiments/exp_oi168_land_20260909
 S=data/processed

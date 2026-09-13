@@ -12,7 +12,7 @@
 # ② 剔除赢家只数 K=1/3/5/10（configs/t1gain_dose.txt，赢家取 §12.192 m2 BASE 2011-11-01 长跑 trades 的 contrib 列）；
 # ③ 剔除集 A/B/U 对称性按新标签（集合名@挑战臂）重跑 SC 与 T1_GAIN，读数须与 §12.200 提交版逐位相同。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_t1_info
 TRADES=data/experiments/exp_metric_m2/artifacts/trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2_m2_BASE_trades.csv
 

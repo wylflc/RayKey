@@ -8,7 +8,7 @@
 
 # OI-148 补跑剔除集 A（按 0bp 锚点固定：BASE 2011-11-01 前五赢家）单遍，并重出报告。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi148_slippage
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/slip_tiers.txt" --out "$EXP/sweep_tiers_A.txt" --workers 58 \
   --exclude-codes 000338,000651,000933,002128,601088 \

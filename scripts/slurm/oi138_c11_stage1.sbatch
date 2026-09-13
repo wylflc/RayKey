@@ -9,7 +9,7 @@
 # OI-138 C11 第一阶段：四族在现行 BASE 上重跑——三个规则族带邻档（families_stage1.txt），
 # 两侧口径统一族 B2ALL／MAXBOTH 先按 §12.30 对在册线与边际重解买入线再跑（MAXRAW 为未重解对照）。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi138
 S=data/processed
 read -r BASE_LINE BASE_MARGIN < <(python3 - <<'PY'

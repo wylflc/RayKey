@@ -14,7 +14,7 @@
 # 92 次运行 × 约 1.5 分钟；--workers 24 ≈ 36 GB < -n 48 的 84 GB。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 EXP=data/experiments/exp_window_step
 CFG=data/experiments/exp_oi115_trailleg/configs/trail_arms.txt

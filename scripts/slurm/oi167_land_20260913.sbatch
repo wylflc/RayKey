@@ -10,7 +10,7 @@
 #SBATCH -e logs/%x_%j.err
 set -euo pipefail
 # RAYKEY_ROOT 允许在仓库副本（如项目空间配额受限时的 scratch 克隆）上运行；缺省为正式仓库
-cd "${RAYKEY_ROOT:-/gpfs/work1/0/qt15419/zwang/mm_quant/RayKey}"
+cd "${RAYKEY_ROOT:-/gpfs/scratch1/shared/zwang/mm_quant/RayKey}"
 export OMP_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 python3 -m unittest discover -s scripts -p 'test_*.py' > data/experiments/exp_oi167_land_20260913/tests.txt 2>&1

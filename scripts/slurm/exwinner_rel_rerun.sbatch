@@ -10,7 +10,7 @@
 # ① v4.135 基准（BASE）与 V4134 两遍 14 起点（第二遍按新尺剔除集 A）；② 2011-11-01 两臂长跑落产物（trades 带 contrib 列）；
 # ③ 第 11 款归因（贡献尺）；④ 第 4 款② 剔除赢家只数 1/3/5/10；⑤ 剔除集 A/B/U 对称性。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_swap_variants
 CFG=$EXP/configs/base_sb1_land.txt
 BASE=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE)")

@@ -9,7 +9,7 @@
 # OI-141 待跑 C12（宇宙 v6a）／C13（divspread 剂量）／C14（四个在册参数剂量）：
 # 清单 data/experiments/exp_oi141/configs/shortlist_arms.tsv，建带臂须已由 submit_oi141_coverage.sh 建好（afterok）。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi141
 python3 scripts/experimental/make_shortlist_configs.py --exp "$EXP"
 

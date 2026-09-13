@@ -33,7 +33,7 @@ TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S %Z'
 
 ## Compute resources
 
-This is a Snellius interactive session. `/gpfs/work1/0/qt15419/zwang/mm_quant/RayKey` and `/home/zwang/project/mm_quant/RayKey` resolve to the same repository.
+This is a Snellius interactive session. The repository lives at `/gpfs/scratch1/shared/zwang/mm_quant/RayKey` (personal scratch space, moved on 2026-09-14 after the shared project space `/gpfs/work1/0/qt15419` exhausted its inode quota); the old project-space copy is not maintained. Run `myquota` before large writes.
 
 - Submit work expected to exceed 10 minutes, use multiple processes or exceed session memory through SLURM. Keep interactive work to short inspections and single-company queries.
 - Put jobs in `scripts/slurm/`, logs in `logs/`. Before submission, delete log files older than 14 days with `find logs -type f -mtime +14 -delete`.

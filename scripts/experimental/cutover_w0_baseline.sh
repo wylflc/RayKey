@@ -2,7 +2,7 @@
 # OI-124：把 W=0 链换入生产文件名。现行 W=1.0 的七份改名留作 *_w100.bak，可整体回滚。
 # 用法：cutover_w0_baseline.sh [--rollback]
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 P=data/processed
 FILES="roic_bands roic_daily_raw roic_bands_b2 roic_daily_raw_b2 \
 a_share_daily_states_adopted a_share_daily_states_b2 a_share_daily_states_hold"

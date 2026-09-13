@@ -12,7 +12,7 @@
 # 第 5.5 步只报不改：报「严重」即停在第 6 步之前，不物化核心池。
 
 set -uo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 D=2026-09-01          # 北京日期（TZ=Asia/Shanghai）
 P=data/processed
 

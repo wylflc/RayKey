@@ -10,7 +10,7 @@
 # 按 A(BASE 前五) / B(TW000 前五) / U(并集) 三组各跑 7 臂 × 14 起点 = 294 次运行。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 EXP=data/experiments/exp_oi115_trailleg
 

@@ -12,7 +12,7 @@
 # 第 2 段 13 臂 × 23 起点 × 两遍 = 598 次运行；--workers 48 ≈ 72 GB 上界，低于 -n 64 的 112 GB。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 EXP=data/experiments/exp_oi114_swap_margin
 

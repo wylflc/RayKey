@@ -9,7 +9,7 @@
 
 # 同日财务、全市场模型和逐日状态已完成重建；只按用户裁定同步池成员。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 RESOLUTION_DATE=2026-09-07
 PROCESSED=data/processed
 

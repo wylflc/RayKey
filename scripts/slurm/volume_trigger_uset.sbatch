@@ -10,7 +10,7 @@
 #   sbatch scripts/slurm/volume_trigger_uset.sbatch
 # 前置：第一阶段 sweep_stage1.txt 已跑且 summary 已归并进 data/backtest/scan_summaries.csv（赢家名单从台账同标签行读）。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_volume_trigger
 for ARM in VT_E12 VS_MIN08; do
   echo "=== [$(date +%T)] 剔除集对称性：挑战臂 $ARM ==="

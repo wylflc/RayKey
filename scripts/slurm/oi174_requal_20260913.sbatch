@@ -9,7 +9,7 @@
 #SBATCH -o logs/%x_%j.out
 #SBATCH -e logs/%x_%j.err
 set -euo pipefail
-cd "${RAYKEY_ROOT:-/gpfs/work1/0/qt15419/zwang/mm_quant/RayKey}"
+cd "${RAYKEY_ROOT:-/gpfs/scratch1/shared/zwang/mm_quant/RayKey}"
 export OMP_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 E=data/experiments/exp_oi174_requal_20260913

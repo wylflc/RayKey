@@ -10,7 +10,7 @@
 # 用法：sbatch --export=ALL,CFG=<配置文件>,SINCE=2011-11-01 scripts/slurm/whipsaw_swap_diag.sbatch
 # 产物落 data/experiments/exp_whipsaw_swap/bt<起点年份>/<臂>/；末尾把 BASE 的 summary 与 §12.193 0bp 在册产物逐位核对。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_whipsaw_swap
 CFG="${CFG:-$EXP/configs/round1.txt}"
 SINCE="${SINCE:-2011-11-01}"

@@ -9,7 +9,7 @@
 # §12.179：换仓机制变体（接收方守卫／触发期／卖出款分摊／三条合一／OI-142／边际粗扫，35 臂），14 起点两遍（全样本＋去赢家）。
 # 末尾另跑 2011-11-01 单起点三臂的成交流水，供 swap_flow_diag.py 对照 §12.178 的 BASE／SPT015 读数。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_swap_variants
 echo "=== [$(date +%T)] swapvar（$(grep -c '|' "$EXP/configs/swapvar.txt") 臂 × 14 起点 × 两遍）==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/swapvar.txt" \

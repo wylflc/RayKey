@@ -10,7 +10,7 @@
 # delta_attribution.py 读的是**闭合周期**文件（`<out-dir>/<label>_trades.csv`，含 exit_date/proceeds/invested），
 # 不是 `--trade-log` 的逐笔流水；故此处不给 `--no-artifacts`，并把产物落到各臂独立 out-dir。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_reaudit_minority
 rm -rf "$EXP/attrib"; mkdir -p "$EXP/attrib/base" "$EXP/attrib/ge"
 

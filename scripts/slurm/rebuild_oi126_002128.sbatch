@@ -11,7 +11,7 @@
 # 第 1 步不重跑：财务输入沿用本日 §7.1 那批，与订正同源，保持单变量。
 
 set -uo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 D=2026-09-01
 P=data/processed
 

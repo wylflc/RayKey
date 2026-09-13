@@ -10,7 +10,7 @@
 #   sbatch --export=ALL,CFGS="round2.txt trunc2024.txt" scripts/slurm/whipsaw_swap_sweep.sbatch
 # 每个配置文件 <name>.txt 出 sweep_<name>.txt 与 report_<name>.txt（data/experiments/exp_whipsaw_swap/）。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_whipsaw_swap
 for cfg in ${CFGS:-round2.txt}; do
   name="${cfg%.txt}"

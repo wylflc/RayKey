@@ -8,7 +8,7 @@
 # OI-131：修正臂的信号层跑的是**含银行**口径（本条只动银行，剔除银行就看不到效果），
 # 故 BASE 侧须用同一口径重跑一遍才可比。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi131_exright
 python3 scripts/experimental/panel_tier_forward.py \
   --states data/processed/a_share_daily_states_adopted.csv \

@@ -11,7 +11,7 @@
 # **前置**：生产逐日状态已换成 W=0 链，且 sweep_backtest_configs.BASE 的 --width 已改成重解值。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi124_w0base
 
 for s in margin poscap credit; do

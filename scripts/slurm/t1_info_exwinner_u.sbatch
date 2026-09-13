@@ -10,7 +10,7 @@
 #   sbatch scripts/slurm/t1_info_exwinner_u.sbatch
 # 前置：exp_t1_info/sweep_t1.txt 第一遍已跑（各臂锚定起点 summary 在 data/backtest/）。配置只含 BASE＋两挑战臂（configs/t1_u.txt）。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_t1_info
 for ARM in SC T1_GAIN; do
   echo "=== [$(date +%T)] 剔除集对称性：挑战臂 $ARM ==="

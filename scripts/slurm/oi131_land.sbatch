@@ -10,7 +10,7 @@
 # 本作业跑 §6.7 第 4~7 步（展示层全链）＋ 新基准单臂重扫（在册读数重登、剔除集 A 重选）。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 D=2026-09-01
 EXP=data/experiments/exp_oi131_exright
 S=data/processed

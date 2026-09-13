@@ -9,7 +9,7 @@
 # §12.174：OI-140 C1 组合臂（8 臂 × 14 起点 × 两遍）＋ OI-135 C2 GE_TROUGHOFF 剔除集 A/B/U。
 # C2 依赖 C1 先落 GE_TROUGHOFF 单臂的 summary（镜像集 B 从它读前五赢家），故串行。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_reaudit_minority
 
 echo "=== [$(date +%T)] 表 N：三条候选的组合臂 ==="

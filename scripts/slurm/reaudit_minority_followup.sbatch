@@ -8,7 +8,7 @@
 
 # §12.171 表 H（单点峰补剂量）／表 J（GUARDEFF 口径换仓边际重扫）／表 I（剔除集对称性 A/B/U）。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_reaudit_minority
 
 echo "=== [$(date +%T)] 表 H：单点峰补剂量（16 臂）==="

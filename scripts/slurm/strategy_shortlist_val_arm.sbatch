@@ -13,7 +13,7 @@
 # 建带公共开关**不在本脚本抄写**：从 docs/000_Ashare_workflow.md §6.7 第 2 步命令现读，生产口径改了这里自动跟。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 ARM="$1"; EXTRA="${2:--}"; DIVS_ARG="${3:--}"; PANEL="${4:--}"; DIVS="$DIVS_ARG"
 EXP="${EXP:-data/experiments/exp_strategy_shortlist}"
 S=data/processed

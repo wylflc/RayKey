@@ -9,7 +9,7 @@
 # OI-148 执行成本压力档位 0／10／20／30bp：①0bp 逐位复现（14 起点读数对 exp_metric_m2、2011 锚点产物逐字节）；
 # ②BASE 与 BUY2 各档两遍（全样本＋A，A 按 0bp 锚点自动取）；③剔除集 U 按 0bp 锚点固定单遍；④成交价核对与报告。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi148_slippage
 mkdir -p "$EXP/artifacts"
 BASECMD=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE.replace('--no-artifacts ',''))")

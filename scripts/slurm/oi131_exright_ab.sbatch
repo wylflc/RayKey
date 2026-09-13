@@ -11,7 +11,7 @@
 # 两条候选臂：FIXALIGN = 买入线按 §12.30 重解；FIXASIS = 沿用在册 0.9976。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi131_exright
 S=data/processed
 

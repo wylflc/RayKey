@@ -8,7 +8,7 @@
 
 # §12.171 表 E：涨幅减持阈值 × 走势闸门剂量扫描。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_reaudit_minority
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/gain_dose.txt" \
   --out "$EXP/sweep_gain.txt" --workers 44 \

@@ -12,7 +12,7 @@
 # --workers 48 ≈ 72 GB < -n 64 的 112 GB；23 起点同配置实测 7 分 34 秒（作业 26273155），本轮更小。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 EXP=data/experiments/exp_oi115_trailleg
 

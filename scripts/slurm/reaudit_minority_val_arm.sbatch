@@ -11,7 +11,7 @@
 # 产物落 data/experiments/exp_reaudit_minority/val/<臂>/，末尾按 §12.30 重解买入线（只报数）。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 ARM="$1"; EXTRA="$2"
 S=data/processed
 E=$S/experiments/exp_reaudit_minority/val/$ARM

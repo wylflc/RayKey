@@ -10,7 +10,7 @@
 # BASE／C100／G110U／组合 各一份 2011-11-01 长跑（带候选日志与成交流水；不给 --no-artifacts 以出闭合周期）。
 # panel_tier_forward.py 只依赖逐日状态，三条规则臂不改状态，与 BASE 逐位相同，不重跑。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi136_137
 S=data/processed; P=$S/pit_attention/panel_moat_bank_v6b.csv
 BASECMD=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE.replace('--no-artifacts ',''))")

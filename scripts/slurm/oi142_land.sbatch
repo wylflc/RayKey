@@ -9,7 +9,7 @@
 # v4.134 落地（OI-142 同日一档）：sweep BASE 已带 --swap-gain-once。本作业：新基准两遍 14 起点重扫（在册读数重登、剔除集 A 复核）
 # ＋ 2011-11-01 单起点流水与 swap_flow_diag 读数（同日两档计数应为 0）。规则臂不改逐日状态，不重建生产链。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_swap_variants
 echo "=== [$(date +%T)] 新基准两遍 14 起点重扫 ==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/base_only_gso.txt" \

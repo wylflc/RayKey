@@ -11,7 +11,7 @@
 # 单次回测实测约 1.5 分钟、峰值 1.49 GB；--workers 24 ≈ 36 GB，低于 -n 32 的 56 GB。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 EXP=data/experiments/exp_oi113_addon_gate
 

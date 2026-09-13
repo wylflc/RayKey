@@ -9,7 +9,7 @@
 # 去赢家诊断：2011-11-01 起点、剔除集 A（688516/000933/002128/601328/600919）下 v4.135 与 v4.134 两臂长跑，
 # 落 periods（逐年收益）与 trades，用于核对全样本与去赢家逐年差异落在哪些年份。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_swap_variants
 OUT=$EXP/bt2011_exA
 mkdir -p "$OUT"

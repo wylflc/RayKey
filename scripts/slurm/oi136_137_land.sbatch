@@ -9,7 +9,7 @@
 # v4.132 落地（OI-136／137）：生产常量与 sweep BASE 已改为 --max-corr 1.0 / --gain-sell 1.10 ungated / --swap-margin 0.15。
 # 本作业：换仓边际标度漂移守卫 ＋ 新基准两遍 14 起点重扫（在册读数重登、剔除集 A 复核）。规则臂不改逐日状态，不重建生产链。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi136_137
 
 echo "=== [$(date +%T)] 换仓边际标度漂移守卫（MARGIN 0.15）==="

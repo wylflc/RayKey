@@ -9,7 +9,7 @@
 # OI-171 EBDS03 §12.1 第 4 款三项（①换仓边际重扫 ②剔除赢家 K 剂量 ③第 10~12 款信号层／归因）＋ 第 7 款滑点四档。
 # 预登记 data/experiments/exp_ebds03_clause4_20260910/preregister.md。用法：sbatch --account=tes21035 scripts/slurm/ebds03_clause4_20260910.sbatch
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_ebds03_clause4_20260910
 ENGINE=data/experiments/exp_equity_bond_20260909/high_base_engine.py
 EB="--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03"

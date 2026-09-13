@@ -10,7 +10,7 @@
 #   sbatch scripts/slurm/exec_timing_sweep.sbatch
 # 配置 data/experiments/exp_exec_timing/configs/timing.txt，出 sweep_timing.txt 与 report_timing.txt。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_exec_timing
 echo "=== [$(date +%T)] timing.txt：$(grep -c '|' "$EXP/configs/timing.txt") 臂 × 14 起点 × 两遍 ==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/timing.txt" --out "$EXP/sweep_timing.txt" --workers 56 \

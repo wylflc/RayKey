@@ -10,7 +10,7 @@
 #   sbatch scripts/slurm/t1_info_sweep.sbatch
 # 配置 data/experiments/exp_t1_info/configs/t1.txt，出 sweep_t1.txt 与 report_t1.txt。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_t1_info
 echo "=== [$(date +%T)] t1.txt：$(grep -c '|' "$EXP/configs/t1.txt") 臂 × 14 起点 × 两遍 ==="
 python3 scripts/sweep_backtest_configs.py "$EXP/configs/t1.txt" --out "$EXP/sweep_t1.txt" --workers 56 \

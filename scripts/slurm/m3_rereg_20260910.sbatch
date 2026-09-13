@@ -13,6 +13,6 @@
 # + EBDS02/EBDS03 全/A（84 路径，候选包装）+ 剔除集 U 单遍（U≠A 时 42 路径）。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 python3 data/experiments/exp_m3_rereg_20260910/run.py --workers 56

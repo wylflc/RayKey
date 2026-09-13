@@ -13,7 +13,7 @@
 # → 信号层不变量（panel_tier_forward 两遍）。前置：oi168_land_build.sbatch 完成（--dependency=afterok）。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 D=${SIGNAL_DATE:-2026-09-09}
 EXP=data/experiments/exp_oi168_land_20260909

@@ -8,7 +8,7 @@
 
 # OI-131 采纳前置：① 换仓边际按 0.01 一档重定；② §12.1 第 10 款 P/V 分档前向回报。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi131_exright
 S=data/processed
 

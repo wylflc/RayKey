@@ -11,7 +11,7 @@
 # 而买入线由 0.9976 重解到 1.0278（标度移 3.0%，为 §6.7 第 7 步在册容差 ±0.01 的 3 倍）。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi128_minority
 
 echo "=== [$(date +%T)] 换仓边际剂量扫描（13 臂 + 1 诊断臂）× 14 起点 × 两遍 ==="

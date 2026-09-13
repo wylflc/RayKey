@@ -10,7 +10,7 @@
 # 逐日状态、宇宙、两条线全部沿用当前生产 BASE，不重建带、不重解买入线。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_reaudit_minority
 
 echo "=== [$(date +%T)] 表 A：操作规则逐项回退（25 臂 × 14 起点 × 两遍）==="

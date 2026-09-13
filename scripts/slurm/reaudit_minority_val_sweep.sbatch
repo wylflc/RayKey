@@ -11,7 +11,7 @@
 # （§12.30：换口径必须重解到同一在册合格面，否则比的是两条不同宽度的闸门）。换仓边际一律沿用 0.18。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_reaudit_minority
 V=$EXP/val
 CFG=$EXP/configs/val_revert.txt

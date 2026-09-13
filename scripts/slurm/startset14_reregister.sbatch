@@ -12,7 +12,7 @@
 # 读数落 §12.1 在册行与回测日志 §12.160。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 EXP=data/experiments/exp_startset14
 mkdir -p "$EXP/configs"

@@ -11,7 +11,7 @@
 # 以便同时产出 *_trades.csv 供 delta_attribution.py（第 10 款）作对照臂基准。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 OUT=data/experiments/exp_selection_edge
 mkdir -p "$OUT"

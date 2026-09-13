@@ -8,7 +8,7 @@
 
 # §12.171 表 C：旧纪元被否决的候选在 OI-128 纪元上重测；表 C2：两侧估值口径统一族（买入线先重解）。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_reaudit_minority
 S=data/processed
 

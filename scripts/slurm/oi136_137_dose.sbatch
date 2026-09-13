@@ -8,7 +8,7 @@
 
 # §12.174 表 T：剔除赢家只数 1／3／5／10 的剂量曲线（§12.1 第 4 款②），C100／G110U／组合 对同剔除集 BASE。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_oi136_137
 TR=$(ls data/experiments/exp_reaudit_minority/why/BASE/*_trades.csv | head -1)
 python3 scripts/experimental/ex_winner_dose.py "$EXP/configs/dose_arms.txt" --trades "$TR" \

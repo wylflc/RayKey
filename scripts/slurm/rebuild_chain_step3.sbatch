@@ -10,7 +10,7 @@
 # 采纳逐日状态 → 合成持仓侧逐日状态。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 for f in roic_bands.csv roic_daily_raw.csv roic_bands_b2.csv roic_daily_raw_b2.csv; do
   [ -s "data/processed/$f" ] || { echo "缺少前置产物 data/processed/$f，请先跑第 2/2b 步" >&2; exit 1; }

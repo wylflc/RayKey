@@ -11,7 +11,7 @@
 # 实测串行耗时：建带 8:05 + B2 7:29 + 银行覆盖 2×2:45 + 合成持仓侧 2:32 ≈ 24 分钟。
 
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 P=data/processed
 
 COMMON="--all --value-model roic --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 \

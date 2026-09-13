@@ -10,7 +10,7 @@
 #   sbatch scripts/slurm/volume_trigger_stage1.sbatch
 # 单次回测约 2.5 分钟、1.5 GB；56 并发 ≈ 14 波 ≈ 35 分钟，84 GB < 64 核 × 1792 MiB。
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_volume_trigger
 python3 scripts/test_volume_gate.py
 echo "=== [$(date +%T)] 第一阶段：$(grep -c '|' "$EXP/configs/vol_stage1.txt") 臂 × 14 起点 × 两遍 ==="

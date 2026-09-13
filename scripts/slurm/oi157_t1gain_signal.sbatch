@@ -10,7 +10,7 @@
 # 成交流水、出闭合周期），信号层三表（250／750 日）＋换仓四表对照（±0.04／0.10／0.15）＋ P/V 分档前向（只依赖状态，
 # 两臂相同、跑一次）＋第 11 款 Δ 归因。用法：sbatch scripts/slurm/oi157_t1gain_signal.sbatch
 set -euo pipefail
-cd /gpfs/work1/0/qt15419/zwang/mm_quant/RayKey
+cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 EXP=data/experiments/exp_t1_info
 S=data/processed; P=$S/pit_attention/panel_moat_bank_v6b.csv
 BASECMD=$(python3 -c "import sys; sys.path.insert(0,'scripts'); import sweep_backtest_configs as s; print(s.BASE.replace('--no-artifacts ',''))")
