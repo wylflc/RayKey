@@ -77,7 +77,7 @@ BASE = (
     "--corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 "
     "--swap --swap-partial --sell-trend-ma 20 "
     # `--lot-ratio-cooldown` 自 v4.129（OI-120）起买入侧与卖出侧各自计数；旧口径（买卖共用）为研究开关 `--lot-cooldown-shared`。
-    "--lot-size 100 --lot-ratio-cooldown --exec-delay 1 --exec-price close "
+    "--lot-size 100 --lot-ratio-cooldown --lot-cooldown-start confirmed --exec-delay 1 --exec-price close "
     "--fee-preset user --no-artifacts "
     # **回测基础设置＝融资口径**（用户 2026-08-17 裁定，2026-08-22 改为不封顶）：本金 300 万、授信 = 净资产×66.6%（v4.66）
     # 不设金额上限、强平线 130%、融资年利率 3.5%。

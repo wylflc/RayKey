@@ -170,7 +170,7 @@ B97X,archive,m1,,23,23,0,trend_x1_w-0.5884_x1c_sma20_swap_corr0.85_tranche_sl1.1
 B97cap15,archive,m1,,23,23,0,trend_x1_w-0.5884_x1c_sma20_swap_corr0.85_tranche_sl1.1044_cap0.15_sp_lot100_lrc
 B97cap30,archive,m1,,23,23,0,trend_x1_w-0.5884_x1c_sma20_swap_corr0.85_tranche_sl1.1044_cap0.3_sp_lot100_lrc
 B97off,archive,m1,,23,23,0,trend_x1_w-0.5884_x1c_sma20_swap_nostop_corr0.85_tranche_sl1.1044_sp_lot100_lrc
-BASE,archive+current,m1+m2+m3,EBCAPA20260909;EBCAPU120260909;EBCAPU220260909;EBCAPU320260909;EBCAPU420260909;EBCAPU520260909;EBCAPfull20260909;EBLOWA20260909;EBLOWU120260909;EBLOWU220260909;EBLOWfull20260909;M2REG20260905;M3REG20260910;SB1DB20260905;TROUGH20260905;WJr120260906;WJr220260906,25,524,317,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
+BASE,archive+current,m1+m2+m3,EBCAPA20260909;EBCAPU120260909;EBCAPU220260909;EBCAPU320260909;EBCAPU420260909;EBCAPU520260909;EBCAPfull20260909;EBLOWA20260909;EBLOWU120260909;EBLOWU220260909;EBLOWfull20260909;M2REG20260905;M3REG20260910;SB1DB20260905;TROUGH20260905;WJr120260906;WJr220260906,25,552,331,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6_sp_gso_lot100_lrc2
 BASE0,archive,m1,,23,23,0,trend_x1_w-0.5853_x1c_sma20_swap_corr0.85_tranche_sl1.1_sp_lot100_lrc
 BASENEW,archive,m1,,23,23,0,trend_x5_w0.0593_x1c_sma20_swap_corr0.7_tranche_slmin_skipma60_sl2.5236_addma_swk20_sp_lot100_lrc
 BASEP,archive,m1,,23,23,0,trend_x5_w0.0593_x1c_sma20_swap_corr0.7_tranche_slmin_skipma60_sl2.5236_addma_swk20_sp_lot100_lrc

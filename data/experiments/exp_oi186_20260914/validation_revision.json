@@ -1,0 +1,11 @@
+{
+  "first_completed_job": "26679633",
+  "prior_engine": {
+    "bytes": 348412,
+    "sha256": "9fdd0bc87b88ea9989cc78477232830937ed7092712be1f0815838ab33647c47"
+  },
+  "affected_case": "A/30bp/2011-05-01",
+  "cause": "删除附带的零计划股数提前跳过分支，保留原有不足一手换仓路径；已有冷却在上游阻挡",
+  "requires_rerun": true,
+  "final_job": "26680547"
+}

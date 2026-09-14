@@ -313,7 +313,7 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertEqual(res["plan"], [])
         self.assertIn("卖出款去向：无——卖出款当日未投出", swap["condition"])
 
-    def test_cooldown_counter_consumed_and_set(self) -> None:
+    def test_plan_does_not_start_cooldown(self) -> None:
         pricey = row("000020", "P", close=2000.0, ma20=1900.0, ma60=1800.0, pv=0.5)   # 一手 20 万 > 一档 15 万
         counters: dict[str, int] = {}
         res = self.run_plan([pricey], {}, funds=1_000_000.0, members={"000020"}, counters=counters)
@@ -324,7 +324,8 @@ class ExecutionPlanTest(unittest.TestCase):
         counters = {}
         res = self.run_plan([pricier], {}, funds=1_000_000.0, members={"000021"}, counters=counters)
         self.assertEqual(res["plan"][0]["cooldown_skips"], 2)
-        self.assertEqual(counters["000021"], 2)
+        self.assertEqual(counters, {})
+        counters["000021"] = 2  # 独立成交确认后读入的状态
         res = self.run_plan([pricier], {}, funds=1_000_000.0, members={"000021"}, counters=counters)
         self.assertEqual(res["plan"], [])                            # 冷却中跳过
         self.assertEqual(counters["000021"], 1)
@@ -340,8 +341,9 @@ class ExecutionPlanTest(unittest.TestCase):
         sell: dict[str, int] = {}
         res = self.run_plan([pricey], holdings, funds=0.0, members={"000022"}, counters=buy, sell_counters=sell)
         self.assertEqual(res["sells"][0]["sell_shares"], 100)        # 一档不足一手 → 按手减
-        self.assertEqual(sell["000022"], 2)
+        self.assertEqual(sell, {})
         self.assertEqual(buy, {})                                    # 卖出冷却不写买入侧
+        sell["000022"] = 2  # 独立成交确认后读入的状态
         holdings = {"000022": hold("R", 200, 1000.0, None)}
         res = self.run_plan([pricey], holdings, funds=0.0, members={"000022"}, counters=buy, sell_counters=sell)
         self.assertEqual([s for s in res["sells"] if s["rule"] == "涨幅减持"], [])   # 冷却中跳过
@@ -356,41 +358,13 @@ class ExecutionPlanTest(unittest.TestCase):
         self.assertEqual(res["sells"][0]["rule"], "涨幅减持")          # 减持照常
         self.assertEqual(res["sells"][0]["sell_shares"], 100)
         self.assertEqual(buy["000022"], 2)                           # 买入侧计数不被消费
-        self.assertEqual(sell["000022"], 2)
-
-    def test_cooldown_state_round_trip_by_side(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "cooldown.csv"
-            before = {"buy": {"000021": 2}, "sell": {"000022": 3}}
-            after = {"buy": {"000021": 1}, "sell": {"000022": 2, "000023": 1}}
-            scan.save_cooldown_state(path, before, after, {"000021": "P", "000022": "R", "000023": "S"}, "2026-09-02")
-            state, names, writable = scan.load_cooldown_state(path, "2026-09-03")
-            self.assertTrue(writable)
-            self.assertEqual(state, {"buy": {"000021": 1}, "sell": {"000022": 2, "000023": 1}})
-            state, _names, _w = scan.load_cooldown_state(path, "2026-09-02")   # 同日重跑从 remaining_before 重算
-            self.assertEqual(state, {"buy": {"000021": 2}, "sell": {"000022": 3}})
+        self.assertEqual(sell, {})
 
     def test_missing_quote_holding_is_flagged_not_silent(self) -> None:
         holdings = {"000030": hold("M", 1000, 10.0, 9.0)}
         res = self.run_plan([], holdings, funds=0.0, members={"000030"})
         self.assertEqual(res["sells"][0]["rule"], "数据缺失")
         self.assertEqual(res["missing_holdings"], ["M"])
-
-    def test_cooldown_state_roundtrip_idempotent(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "cd.csv"
-            scan.save_cooldown_state(path, {"buy": {"000001": 0}}, {"buy": {"000001": 2}}, {"000001": "A"}, "2026-08-24")
-            empty = {"buy": {}, "sell": {}}
-            counters, names, writable = scan.load_cooldown_state(path, "2026-08-24")
-            self.assertEqual(counters, empty)                        # 同日重跑：从 remaining_before 起算
-            self.assertTrue(writable)
-            counters, _n, writable = scan.load_cooldown_state(path, "2026-08-25")
-            self.assertEqual(counters, {"buy": {"000001": 2}, "sell": {}})
-            counters, _n, writable = scan.load_cooldown_state(path, "2026-08-20")
-            self.assertEqual(counters, empty)
-            self.assertFalse(writable)                               # 历史重放：不应用不回写
-            with path.open(encoding="utf-8") as fh:
-                self.assertEqual(list(csv.DictReader(fh))[0]["security_name"], "A")
 
     def test_holding_trim_signal_shared_helper(self) -> None:
         self.assertEqual(scan.holding_trim_signal(100.0, 99.0, 40.0)[0], "涨幅减持")   # 收盘 ≥ MA20 也减（v4.132 不看走势）

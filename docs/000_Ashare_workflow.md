@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.185
+# A股选股-估值-量价操作流程 v4.186
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -48,6 +48,7 @@
 | 每日买入计划 | `data/processed/daily_entry_plan.csv` |
 | 每日卖出清单 | `data/processed/daily_sell_plan.csv`（止损复核、涨幅减持、出名单、换仓、余仓清空） |
 | 比例冷却计数器 | `data/processed/daily_cooldown_state.csv`（§9.3.3，扫描器每日读写） |
+| 比例冷却成交凭据 | `data/processed/cooldown_executions.csv`（§9.3.3，用户确认的净成交，只追加） |
 | 每日持仓跟踪 | `data/processed/daily_holdings_tracking.csv` |
 | 每日阅读日志 | `docs/000_daily_scan_log.md` |
 | 审计日志 | `data/processed/a_share_workflow_decision_log.csv`，只追加不覆盖；核心池重建每次写一行汇总，逐票只在 `pool_layer` 变化时写行；换纪元时把旧纪元行移入 `data/archive/decision_log_<起>_to_<止>.csv`（公司分析索引同读） |
@@ -661,7 +662,11 @@ python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 
 #### 9.3.3 高价股比例冷却
 
-一手金额大于一档时仍成交一手。令 `x = 一手金额 ÷ 一档`，随后跳过 `round(x) − 1` 次该票的合格机会；买入侧一个计数器，卖出侧（涨幅减持、出名单减持、换仓卖出）另一个计数器，两侧互不消费。冷却按合格次数，不按自然日。计数器持久化在 `data/processed/daily_cooldown_state.csv`（`side` 列为 `buy`／`sell`），扫描器每次生成执行清单时读入、消费、回写；同一信号日重跑从 `remaining_before` 重算，`--as-of` 早于文件 `applied_trade_date` 的历史重放不应用也不回写。
+一手金额大于一档时仍可计划成交一手，**只有用户确认实际成交后才启动冷却**。令 `x = 实际净成交金额 ÷ 原信号日一档金额`，随后跳过 `max(0, round(x) − 1)` 次该票的合格机会；完整一手按实际成交价计，部分成交按实际金额计，同一计划同日的分笔成交合计后算一次；同股同侧同日的回执须归属同一原始计划，一手按成交均价计算未超过一档的不启动比例冷却。买入侧一个计数器，卖出侧（涨幅减持、出名单减持、换仓卖出）另一个计数器，两侧互不消费；止损、强平及股债强制减仓不启动本冷却。
+
+扫描只能消费已启动的冷却，不得因生成计划、资金不足、未成交或净额对冲为零启动冷却。合格机会沿用买入合格集与卖出减档信号，每个信号日同股同侧最多消费一次；无相应信号不消费，已有冷却在一手金额降至一档以内时仍适用。冷却计数不按自然日推进。实际成交日盘后的新信号是成交后的第一次机会。
+
+用户确认的净成交通过 §11.5 登记到 `data/processed/cooldown_executions.csv`，同一 `execution_id` 重复登记相同内容为幂等、内容冲突报错；分笔成交用不同本地记录标识，不存券商账户或成交编号。`data/processed/daily_cooldown_state.csv` 为已确认成交及合格机会派生的计数快照，扫描读入、消费并原子回写；同一信号日重跑从 `remaining_before` 重算。当天扫描后才补记当天成交的须重跑当天扫描；早于最近已扫描日的成交不得直接回写当前冷却，须先按历史输入重放受影响区间。历史扫描早于当前状态时不应用、不回写当前计数。缺少成交凭据的非零计数不得自动迁移为已确认冷却。
 
 #### 9.3.4 现有持仓衔接
 
@@ -708,7 +713,7 @@ python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 | `strategy_return_pct` | (`strategy_unit_nav` − 1) × 100，保留两位 |
 | `account_peak_net_assets_cny` | 基准日起 `strategy_unit_nav` 最高值 × 基准净资产 |
 | `drawdown_from_peak_pct` | (`strategy_unit_nav` ÷ 基准日起最高单位净值 − 1) × 100，保留两位 |
-| `strategy_epoch` | 策略纪元标签；影响估值、选股或下单的实质规则变动自生效日起换新标签：纪元表落在 `strategy_return_tracker.EPOCHS`（标签、生效日），`--write` 按行日期自动标段，`--epoch <标签> --from <日期>` 只作一次性覆盖；单位净值、峰值与回撤连续不重置；文档、展示与指标算法修订不换纪元。`E2` 对应 2026-09-10；`E3` 自 2026-09-11 起，使用 §9.3.1 交易规则（2026-09-10 收盘后采纳、T+1执行） |
+| `strategy_epoch` | 策略纪元标签；影响估值、选股或下单的实质规则变动自生效日起换新标签：纪元表落在 `strategy_return_tracker.EPOCHS`（标签、生效日），`--write` 按行日期自动标段，`--epoch <标签> --from <日期>` 只作一次性覆盖；单位净值、峰值与回撤连续不重置；文档、展示与指标算法修订不换纪元。`E2` 对应 2026-09-10；`E3` 自 2026-09-11 起（2026-09-10 收盘后采纳）；`E4` 自 2026-09-15 起，使用 §9.3.3 确认成交冷却（2026-09-14 收盘后确认，T+1首个执行日） |
 
 基准日前各行的策略列只存历史数据，不参与计算。快照日期不连续时按相邻两行链乘。当日报告账户段列出策略收益率、策略期回撤与纪元。
 
@@ -763,7 +768,16 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 1. 更新持仓股数与成本；清仓删除该行。
 2. 由零股建仓时按 §9.3.5 写入止损价；加仓不改。
 3. 运行 `python3 scripts/resolve_trade_valuation.py --as-of YYYY-MM-DD --code <代码> --price <成交价>`，取输出的合理价、候选侧与持仓侧 `P/V`、估值来源；决策日志追加 `execution_record`，记录方向、股数、成交价、当日 `P/V` 和对应规则。
-4. 次日自动纳入跟踪。
+4. 对 §9.3.3 适用的实际净成交运行下列命令登记冷却凭据；`--tranche` 使用原信号日档位，`--rule` 为 `buy`／`gain`／`exit`／`swap`。未成交、完全对冲不登记。当天已扫描则登记后重跑当天扫描。
+
+```bash
+python3 scripts/record_cooldown_execution.py \
+  --execution-id <本地成交记录标识> --signal-date <原信号日> --as-of <成交日> \
+  --code <代码> --name <名称> --side <buy或sell> --rule <规则> \
+  --shares <实际净成交股数> --price <实际成交均价> --tranche <原信号日一档金额>
+```
+
+5. 次日自动纳入跟踪。
 
 ## 12. 改参数与回测验证
 

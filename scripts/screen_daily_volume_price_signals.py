@@ -25,6 +25,8 @@ from a_share_quotes import quote_symbol
 from a_share_signal_dates import evidence_iso_for_signal
 from workflow_decision_log import DEFAULT_DECISION_LOG, WORKFLOW_VERSION, append_decision_log
 from pv_ratio import trading_pv  # noqa: E402  v4.62 OI-091：P/V 唯一实现
+from lot_cooldown import (CooldownBook, Opportunities, cooldown_skips,
+                          DEFAULT_STATE as DEFAULT_COOLDOWN_STATE)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -417,7 +419,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sell-out", type=Path, default=DEFAULT_SELL_PLAN_OUT,
                         help="§9.3.2 第 4 步卖出清单落点（止损复核／涨幅减持／出名单／换仓）")
     parser.add_argument("--cooldown-state", type=Path, default=DEFAULT_COOLDOWN_STATE,
-                        help="§9.3.3 比例冷却计数器（买入、涨幅减持、换仓共用）；扫描器每日读写")
+                        help="§9.3.3 买卖分侧的已确认成交冷却；扫描只消费")
+    parser.add_argument("--cooldown-executions", type=Path, default=None,
+                        help="确认净成交凭据；缺省为冷却状态同目录下的 cooldown_executions.csv")
     parser.add_argument("--holdings", type=Path, default=SEC93_HOLDINGS)
     parser.add_argument("--triage", type=Path, default=SEC93_TRIAGE,
                         help="三类表：持仓不在 worth_attention 者按 §9.3.2 第 4 步每日减一档")
@@ -730,58 +734,8 @@ def load_exchange_map(path: Path | None = None) -> dict[str, str]:
         return {str(r["security_code"]).zfill(6): r.get("exchange", "") for r in csv.DictReader(fh)}
 
 
-# ---- §9.3.3 比例冷却计数器（买入、涨幅减持、换仓共用；按合格次数计，不按自然日）
-DEFAULT_COOLDOWN_STATE = ROOT / "data/processed/daily_cooldown_state.csv"
-COOLDOWN_FIELDS = ["security_code", "security_name", "side", "remaining_skips", "remaining_before", "applied_trade_date"]
+# ---- §9.3.3 冷却由确认成交启动；扫描只消费合格机会。
 COOLDOWN_SIDES = ("buy", "sell")
-
-
-def load_cooldown_state(path: Path, as_of: str) -> tuple[dict[str, dict[str, int]], dict[str, str], bool]:
-    """返回 ({"buy": 买入侧计数器, "sell": 卖出侧计数器}, 名称, 可写)。同一信号日重跑从 `remaining_before` 重算（幂等）；
-    状态文件的 `applied_trade_date` 晚于 `as_of`（历史重放）时不应用也不回写。无 `side` 列的旧行按买入侧读。"""
-    counters: dict[str, dict[str, int]] = {side: {} for side in COOLDOWN_SIDES}
-    names: dict[str, str] = {}
-    if not path.exists():
-        return counters, names, True
-    with path.open(newline="", encoding="utf-8-sig") as fh:
-        rows = list(csv.DictReader(fh))
-    if any((r.get("applied_trade_date") or "") > as_of for r in rows):
-        return {side: {} for side in COOLDOWN_SIDES}, {}, False
-    for r in rows:
-        code = str(r.get("security_code") or "").zfill(6)
-        side = (r.get("side") or "buy").strip().lower()
-        applied = r.get("applied_trade_date") or ""
-        value = to_float(r.get("remaining_before") if applied == as_of else r.get("remaining_skips")) or 0
-        if code and side in counters and value > 0:
-            counters[side][code] = int(value)
-            names[code] = r.get("security_name", "")
-    return counters, names, True
-
-
-def save_cooldown_state(path: Path, before: dict[str, dict[str, int]], after: dict[str, dict[str, int]],
-                        names: dict[str, str], as_of: str) -> None:
-    rows = []
-    for side in COOLDOWN_SIDES:
-        b, a = before.get(side, {}), after.get(side, {})
-        for code in sorted(set(b) | set(a)):
-            if (a.get(code, 0) or 0) <= 0 and (b.get(code, 0) or 0) <= 0:
-                continue
-            rows.append({"security_code": code, "security_name": names.get(code, ""), "side": side,
-                         "remaining_skips": a.get(code, 0), "remaining_before": b.get(code, 0),
-                         "applied_trade_date": as_of})
-    write_csv(path, rows, COOLDOWN_FIELDS)
-
-
-def lot_ratio_ready(counters: dict[str, int], code: str, lot_value: float, tranche: float) -> bool:
-    """§9.3.3：一手金额是一档的 x 倍时，成交一手后跳过随后 `round(x) − 1` 次合格机会
-    （与回测 `lot_ratio_ready` 同式）。计数器 > 0 即本次跳过并减一。"""
-    if tranche <= 0 or lot_value <= 0:
-        return False
-    if counters.get(code, 0) > 0:
-        counters[code] -= 1
-        return False
-    counters[code] = max(1, round(lot_value / tranche)) - 1
-    return True
 
 
 def tranche_sell_shares(tranche: float, price: float, held: float) -> float:
@@ -832,10 +786,10 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     """§9.3.2 全部六步：先卖后买。
 
     卖出侧（第 4 步）逐持仓判：⓪止损复核（T+1 尾盘现价对当日生效线，本表只列候选、不计其卖出款）、
-    ②出 `worth_attention` 每日减一档（不加走势条件）、①涨幅 ≥ 125% 且 `收盘 < MA20` 减一档、
-    ③换仓（资金不足一档时：先换涨幅达标的弱势持仓，否则换最贵的弱势持仓且 P/V 差 ≥ 换仓差）、
+    ②出 `worth_attention` 每日减一档（不加走势条件）、①涨幅达到在册条件减一档、
+    ③换仓（资金不足一档时：先换涨幅达标的持仓，否则换最贵的弱势持仓且 P/V 差 ≥ 换仓差）、
     ④任何减档后余仓不足一手清空。涨幅减持与换仓卖出款当日计入可用资金。
-    买入侧（第 3、5 步）：`P/V` 升序、去相关、逐个买一档；高价股一档买不起一手时按 §9.3.3 计数器买一手或跳过。
+    买入侧（第 3、5 步）：`P/V` 升序、相关性只列报告、逐个买一档；已有冷却按 §9.3.3 跳过合格机会，计划不启动冷却。
     `counters` 是买入侧计数器、`sell_counters` 是卖出侧计数器（§9.3.3，两侧互不消费）。
     `holding_rows`：不在输入池内的持仓行情（出名单／无法估值者），只进卖出侧。
     `exposure_cap`／`cap_cash`：§9.3.1 股债总仓位上限受限期间给（上限、现金 − 融资负债）；此时预算不含授信，
@@ -844,6 +798,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     holdings = holdings or {}
     counters = counters if counters is not None else {}
     sell_counters = sell_counters if sell_counters is not None else {}
+    buy_opportunities, sell_opportunities = Opportunities(counters), Opportunities(sell_counters)
     blocked = blocked or set()
     tactical_gated = tactical_gated or set()
     tranche = nav * SEC93_TRANCHE_PCT
@@ -895,16 +850,15 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                    swap_for: str = "") -> float:
         """减一档（含 §9.3.3 高价股按手）。返回卖出股数并记入清单；0 = 冷却中跳过或不足一手。"""
         held = float(holdings[code]["shares"])
+        if not sell_opportunities.ready(code):
+            sell_notes.append((holdings[code].get("name", code),
+                               f"{rule}命中但已确认成交的冷却未结束（余 {sell_counters.get(code, 0)} 次）"))
+            return 0.0
         shares = tranche_sell_shares(tranche, price, held)
         cooldown = 0
         if not shares and held >= SEC93_LOT:
-            if lot_ratio_ready(sell_counters, code, price * SEC93_LOT, tranche):
-                shares = SEC93_LOT if held - SEC93_LOT >= SEC93_LOT else held
-                cooldown = sell_counters.get(code, 0)
-            else:
-                sell_notes.append((holdings[code].get("name", code),
-                                   f"{rule}命中但一手金额 > 一档，§9.3.3 冷却中跳过（余 {sell_counters.get(code, 0)} 次）"))
-                return 0.0
+            shares = SEC93_LOT if held - SEC93_LOT >= SEC93_LOT else held
+            cooldown = cooldown_skips(shares * price, tranche)
         if not shares:
             return 0.0
         note = "余仓不足一手，整笔清空" if shares >= held else ""
@@ -1107,6 +1061,9 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         if price <= 0:
             continue
         code = str(cand["security_code"]).zfill(6)
+        if not buy_opportunities.ready(code):
+            cooled.append((cand, counters.get(code, 0), False))
+            continue
         lot_amount = price * SEC93_LOT
         budget = min(tranche, cash)
         if exposure_cap is not None:
@@ -1130,8 +1087,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 capped.append((cand, held_value / nav))
                 continue
             # 高价股／可用资金不足一手：§9.3.3 计数器决定本次买一手还是跳过
-            if lot_ratio_ready(counters, code, lot_amount, tranche) and cash >= lot_amount:
-                lots, cooldown = 1, counters.get(code, 0)
+            if cash >= lot_amount:
+                lots, cooldown = 1, cooldown_skips(lot_amount, tranche)
             else:
                 cooled.append((cand, counters.get(code, 0), cash < lot_amount))
                 continue
@@ -1210,6 +1167,12 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         netted_rows.append((code, n))
     sells[:] = [r for r in sells if r["rule"] not in NETTABLE or float(r["sell_shares"]) > 0]
     plan[:] = [r for r in plan if float(r["shares"]) > 0]
+    for planned in plan:
+        if planned["cooldown_skips"]:
+            planned["cooldown_skips"] = cooldown_skips(float(planned["amount"]), tranche)
+    for planned in sells:
+        if planned["cooldown_skips"]:
+            planned["cooldown_skips"] = cooldown_skips(float(planned["amount"] or 0), tranche)
     stop_conflict = [str(r["security_name"]) for r in sells
                      if r["rule"] == "止损复核" and str(r["security_code"]).zfill(6) in by_plan]
 
@@ -1317,7 +1280,7 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
         print(f"     [{s['rule']}] {s['security_code']} {str(s['security_name']):<9}"
               f"｜{s['condition']}｜卖 {s['sell_shares']:g} 股 {amt}"
               + (f"｜触发者 {s['swap_for']}" if s["swap_for"] else "")
-              + (f"｜其后跳过 {s['cooldown_skips']} 次" if s["cooldown_skips"] else "")
+              + (f"｜按估算金额成交确认后冷却 {s['cooldown_skips']} 次" if s["cooldown_skips"] else "")
               + (f"｜{s['note']}" if s["note"] else ""))
     for name, why in result.get("sell_notes") or []:
         print(f"     [未卖·说明] {name}：{why}")
@@ -1361,7 +1324,7 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
         print(f"     {i:>3} {p['security_code']} {p['security_name']:<9}"
               f"｜现价 {p['close']:>8.2f}｜带 {band:>17}｜P/V {p['model_pv']:.2f}"
               f"｜{p['shares']:>5} 股 {p['amount'] / 1e4:>5.2f} 万"
-              + (f"｜其后跳过 {p['cooldown_skips']} 次" if p["cooldown_skips"] else ""))
+              + (f"｜按估算金额成交确认后冷却 {p['cooldown_skips']} 次" if p["cooldown_skips"] else ""))
     if not plan:
         print("     今日无合格标的，持币")
     # OI-065：**空计划也必须落盘**（只含表头），否则前一日的旧计划会原样留在盘上冒充今日结论。
@@ -1432,6 +1395,9 @@ def main() -> int:
         else:
             print("§8.4 缺口回溯：未检出上次扫描日，本次按单日快照执行")
     rows = scan(input_rows, args.as_of, symbols, args.timeout, args.workers, since)
+    failure = data_error_exit_code(rows)
+    if failure:
+        return failure  # Failed scans must not consume previously confirmed cooldowns.
     blocked = load_blocked_codes(args.review_queue)
     for row in rows:
         # §7.5 复核期买入冻结的可见性列；硬排除在 section93_entry_plan 内执行。
@@ -1501,7 +1467,9 @@ def main() -> int:
             members = load_worth_attention_codes(args.triage)
             if members is None:
                 print(f"  ⚠ 三类表缺失（{args.triage}）：本次不判「出名单」")
-            cd_state, cd_names, cd_writable = load_cooldown_state(args.cooldown_state, args.as_of)
+            cd_book = CooldownBook.load(args.cooldown_state, args.as_of, args.cooldown_executions)
+            cd_state = {side: dict(cd_book.before[side]) for side in COOLDOWN_SIDES}
+            cd_names, cd_writable = cd_book.names, cd_book.writable
             before = {side: dict(cd_state[side]) for side in COOLDOWN_SIDES}
             if not cd_writable:
                 print(f"  ⚠ 冷却计数器 {args.cooldown_state} 的应用日晚于 {args.as_of}（历史重放）：本次不应用、不回写")
@@ -1525,7 +1493,7 @@ def main() -> int:
                 for c in set().union(*before.values(), *cd_state.values()):
                     cd_names.setdefault(c, holdings.get(c, {}).get("name", "") or next(
                         (str(r.get("security_name", "")) for r in rows if str(r.get("security_code", "")).zfill(6) == c), ""))
-                save_cooldown_state(args.cooldown_state, before, cd_state, cd_names, args.as_of)
+                cd_book.save(cd_state)
                 active = [(side, c, n) for side in COOLDOWN_SIDES for c, n in cd_state[side].items() if n > 0]
                 print(f"  §9.3.3 冷却计数器已写 {args.cooldown_state}（冷却中 {len(active)} 项"
                       + ("：" + "、".join(f"{cd_names.get(c, c)}[{side}] 余 {n}" for side, c, n in active) if active else "") + "）")
@@ -1535,7 +1503,7 @@ def main() -> int:
         print(f"§9.3 机械执行层未运行：模型带文件不存在（{args.model_bands}）。"
               f"重建见 §6.7；不跑它则本次只产出 §8 的取数，**买入判定缺席**")
 
-    return data_error_exit_code(rows)
+    return 0
 
 
 DATA_ERROR_ABORT_RATIO = 0.5
