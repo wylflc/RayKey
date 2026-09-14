@@ -1,0 +1,30 @@
+{
+  "codes": 296,
+  "gap_events": 73,
+  "gap_codes": 58,
+  "changed_ma20": 1355,
+  "changed_ma60": 4170,
+  "changed_trend": 285,
+  "changed_return_points": 72,
+  "independent_ma_windows": 8620,
+  "max_ma_error": 9.556799795973347e-13,
+  "max_index_relative_error": 1.6116017476257495e-14,
+  "example": [
+    {
+      "code": "002128",
+      "date": "2017-08-14",
+      "window": 20,
+      "legacy": 9.07700000000001,
+      "fixed": 8.792000000000003,
+      "independent": 8.792
+    },
+    {
+      "code": "002128",
+      "date": "2017-08-14",
+      "window": 60,
+      "legacy": 8.876333333333356,
+      "fixed": 8.581333333333383,
+      "independent": 8.581333333333333
+    }
+  ]
+}

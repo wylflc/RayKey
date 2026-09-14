@@ -1,0 +1,50 @@
+[
+  {
+    "start": "2009-11-01",
+    "code": "002128",
+    "event_date": "2017-06-15",
+    "previous_quote": "2017-03-16",
+    "next_quote": "2017-08-14",
+    "cash": "0.3",
+    "bonus": "0.0",
+    "rights": "0.0",
+    "subscription": "0.0",
+    "cycles": 1
+  },
+  {
+    "start": "2009-11-01",
+    "code": "601088",
+    "event_date": "2017-07-10",
+    "previous_quote": "2017-06-02",
+    "next_quote": "2017-09-01",
+    "cash": "0.46",
+    "bonus": "0.0",
+    "rights": "0.0",
+    "subscription": "0.0",
+    "cycles": 1
+  },
+  {
+    "start": "2011-11-01",
+    "code": "002128",
+    "event_date": "2017-06-15",
+    "previous_quote": "2017-03-16",
+    "next_quote": "2017-08-14",
+    "cash": "0.3",
+    "bonus": "0.0",
+    "rights": "0.0",
+    "subscription": "0.0",
+    "cycles": 1
+  },
+  {
+    "start": "2011-11-01",
+    "code": "601088",
+    "event_date": "2017-07-10",
+    "previous_quote": "2017-06-02",
+    "next_quote": "2017-09-01",
+    "cash": "0.46",
+    "bonus": "0.0",
+    "rights": "0.0",
+    "subscription": "0.0",
+    "cycles": 1
+  }
+]

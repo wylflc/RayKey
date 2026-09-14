@@ -1,0 +1,10 @@
+{
+  "first_job": "26675174",
+  "status": "168 computation paths completed; reporting failed on duplicate group keyword while attaching reused 0bp rows",
+  "fix": "Use dict(r,bp=0,group=...) and reuse completed unchanged paths; no simulation change",
+  "first_runtime": "1m47s",
+  "first_peak_rss_kib": 21676657,
+  "reporting_job": "26675328",
+  "reporting_status": "COMPLETED",
+  "reporting_runtime": "56s"
+}

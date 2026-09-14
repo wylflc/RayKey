@@ -1,0 +1,37 @@
+{
+  "completed_beijing": "2026-09-14T18:27:58.875078+08:00",
+  "job_id": "26674519",
+  "inputs_unchanged": true,
+  "baseline_values_checked": 1316,
+  "baseline_paths": 28,
+  "baseline_windows_identical": true,
+  "executed_paths": 224,
+  "summary_rows": 252,
+  "track_a_pass": true,
+  "union_groups": {
+    "U1": {
+      "codes": [
+        "000338",
+        "000651",
+        "000933",
+        "002128",
+        "601088"
+      ],
+      "candidates": [
+        "BOTH1",
+        "BOTH2",
+        "BOTH3",
+        "MA20_1",
+        "MA60_1"
+      ],
+      "reused_A": true
+    }
+  },
+  "current_winners": [
+    "000338",
+    "000651",
+    "000933",
+    "002128",
+    "601088"
+  ]
+}

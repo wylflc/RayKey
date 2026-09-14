@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce the frozen rank-1 table, then remove repeated MA60-cycle signals."""
+"""Re-evaluate a frozen rank-1 cohort with current event handling and MA60 cycles."""
 from __future__ import annotations
 import argparse
 import bisect
@@ -21,6 +21,8 @@ def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--candidate-log',type=Path,default=ROOT/'data/experiments/exp_selection_edge/candidates.csv')
     ap.add_argument('--out',type=Path,required=True)
+    ap.add_argument('--require-original-table',action='store_true',
+                    help='Historical-checkout audit only: fail unless the original table and trend membership reproduce.')
     args=ap.parse_args()
     rows=[r for r in csv.DictReader(args.candidate_log.open()) if int(r['rank'])==1]
     bycode=defaultdict(dict)
@@ -28,7 +30,7 @@ def main():
         c,d=r['security_code'],r['signal_date']
         if d in bycode[c]:raise ValueError(f'Duplicate rank1 {c} {d}')
         bycode[c][d]=r
-    actions=bt.load_actions(); legacy_actions=bhv.load_actions()
+    actions=bt.load_actions(); index_actions=bhv.load_actions()
     files=[args.candidate_log,bhv.ACTIONS,Path(__file__),Path(__file__).with_name('pv_episode_forward.py'),
            Path(__file__).with_name('moat_param_lab.py'),ROOT/'scripts/backtest_valuation_strategy.py',
            ROOT/'scripts/build_historical_valuation_bands.py',args.out/'rank1_preregister.md']
@@ -39,7 +41,7 @@ def main():
         raw=bhv.load_ohlcv(c); days=[d for d,p in raw]; prices=[p for d,p in raw]
         hashes[str(bhv.OHLCV_DIR/f'{c}.csv')]=sha(bhv.OHLCV_DIR/f'{c}.csv')
         di={d:i for i,d in enumerate(days)}
-        legacy=total_return_index(raw,legacy_actions.get(c,[]))
+        reinvested=total_return_index(raw,index_actions.get(c,[]))
         tri,_,_=return_indices(days,prices,actions.get(c,{}))
         ma=bt.adjusted_moving_averages(dict(raw),actions.get(c,{}),windows=(20,60))
         eligible=[d in bycode[c] for d in days]
@@ -65,7 +67,7 @@ def main():
                     sd=days[e['signal_i']];r=bycode[c][sd];ed=r['exec_date'];start=di.get(ed)
                     end=start+h if start is not None else None
                     good=end is not None and end<len(days)
-                    ret=legacy[days[end]]/legacy[ed]-1 if good else None
+                    ret=reinvested[days[end]]/reinvested[ed]-1 if good else None
                     correct=tri[end]/tri[start]-1 if good else None
                     count[g,h]+=1
                     if good:obs[g,h].append((c,sd[:4],ret,correct))
@@ -101,12 +103,14 @@ def main():
     write_csv(args.out/'rank1_by_code.csv',company)
     result={'completed_at_utc':datetime.now(timezone.utc).isoformat(),'job_id':os.getenv('SLURM_JOB_ID'),
             'original_table_reproduced':checks,'rank1_signals':len(rows),'trend_mismatches':trend_mismatch,
+            'return_basis':'complete-event-calendar self-financing reinvestment (OI-179)',
+            'cohort_note':'Frozen historical rank1; current trend mismatches are disclosed, not silently removed.',
             'missing_exec_quotes':missing_exec,'stop_anchor_delayed_signals':anchor_delay,
             'input_sha256':hashes,'results':summary,
             'output_sha256':{p.name:sha(p) for p in args.out.glob('rank1_*.csv')}}
     (args.out/'rank1_manifest.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({'reproduction':checks,'trend_mismatch_n':len(trend_mismatch),'results':summary},ensure_ascii=False,indent=2))
-    if not all(checks.values()) or trend_mismatch:
+    if args.require_original_table and (not all(checks.values()) or trend_mismatch):
         raise SystemExit('Frozen rank1 validation failed; inspect manifest before interpreting.')
 
 

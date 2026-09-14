@@ -1,0 +1,236 @@
+{
+  "reproduced_old_groups": 32,
+  "nonoverlap_checks": 1286,
+  "current_slope_checks": 2902,
+  "gates": {
+    "OLD": {
+      "before": 3076,
+      "after": 3076
+    },
+    "RETURN_FIX": {
+      "before": 3076,
+      "after": 3076
+    },
+    "MA_FIX": {
+      "before": 3076,
+      "after": 3076
+    },
+    "FIXED": {
+      "before": 3076,
+      "after": 3076
+    },
+    "TREND_FIXED": {
+      "before": 3076,
+      "after": 3076
+    },
+    "OLD_BOTH1": {
+      "before": 3076,
+      "after": 2422
+    },
+    "FIXED_BOTH1": {
+      "before": 3076,
+      "after": 2422
+    },
+    "TREND_BOTH1": {
+      "before": 3076,
+      "after": 2422
+    },
+    "CURRENT_OLD": {
+      "before": 3038,
+      "after": 3038
+    },
+    "CURRENT_OLD_BOTH1": {
+      "before": 2900,
+      "after": 2900
+    },
+    "CURRENT_BASE": {
+      "before": 3040,
+      "after": 3040
+    },
+    "CURRENT_BOTH1": {
+      "before": 2902,
+      "after": 2902
+    }
+  },
+  "inputs_unchanged": true,
+  "input_sha256": {
+    "data/experiments/exp_ma_slope_20260914/signals/BOTH1/2011-11-01/candidates.csv": "843b0dafe7bb1aac50080f3525551cc626b2ba4c6c34d1e540ff89bc63a0ad44",
+    "data/experiments/exp_oi179_20260914/post/signals.py": "7762e4e9650fb8fe925d7ad951d5a5238bec75d54d66ee4ba556a958b3ad9bad",
+    "scripts/experimental/moat_param_lab.py": "6b94547dacf9153b5931f4ddf0e31d9ed3a622888497367166642bcd50662f64",
+    "data/experiments/exp_oi179_20260914/signals/BASE/2011-11-01/candidates.csv": "c2bf541d221a889da4f7cd9bd7aa1370a51f55fa414c26d8a4676b87594c7314",
+    "data/experiments/exp_selection_edge/candidates.csv": "4754200280f59638b9a0187e640a7e8c929d2a67136a1a06765bc07a1254daef",
+    "scripts/experimental/pv_episode_forward.py": "bbc061073218410e0c6dbc6940369cbf28ef2e1fd14d7b8e7b0880f830e3bf2a",
+    "data/experiments/exp_oi179_20260914/legacy.py": "5eadd18d0b1f6aa3d369213aaf2542364fa6cb0ef1c0bdb7176c0df19d408cc4",
+    "data/experiments/exp_ma_slope_20260914/signals/BASE/2011-11-01/candidates.csv": "b7bdbabd908db666ba9223a8077ece211ed81edb5cf6fe683e626f38984b01b1",
+    "data/experiments/exp_oi179_20260914/signals/BOTH1/2011-11-01/candidates.csv": "de8164361fa5cc8b0aeded05ec3e4e726aa92bb5788326740adf54994402afea",
+    "data/experiments/exp_oi179_20260914/raw/a_share_corporate_actions.csv": "4338f9fd395a53104d52c1ad20dfb02c56d2b6efd2e50afb1db7b11bbf932786",
+    "scripts/backtest_valuation_strategy.py": "14c922dc12d19e17130d9c98c01430dfe031757e321d98f8ef4cdf78c4fa48fb",
+    "data/raw/ohlcv/000001.csv": "2ebef9bf7a06472f8aadc74ac15e695b3a86845f73139c83147206856b8a0ac1",
+    "data/raw/ohlcv/000022.csv": "b1387d3074e0c44c917b3cee09327703e55497588ae30108af205586fd2063ba",
+    "data/raw/ohlcv/000063.csv": "9686f1843204c14b4d29f46388e14a6826fb23444a01a95b8e804dd17af46cfa",
+    "data/raw/ohlcv/000333.csv": "cd06ceb6c5e60ba10ddeadf3abff5d0e5e4b13f4321f33ce622ee0c6aba3982e",
+    "data/raw/ohlcv/000338.csv": "44b2c1d5cf983aaa96a64e03642e086c453baf82318fed32b223a8a506b85114",
+    "data/raw/ohlcv/000423.csv": "025df01aa37d012618a69a5cdab926c23f9c6660f2363dc8861089c8fd4ae0c6",
+    "data/raw/ohlcv/000568.csv": "210ef9eaceb053e523422c09ca583166563174ddc930be060696d3e5885b8af2",
+    "data/raw/ohlcv/000651.csv": "b7857f5870150ccfcfdf374202bb767be84003a68356189b2175b4c7fa4bc187",
+    "data/raw/ohlcv/000661.csv": "b231a63ff8a7f725b1bb2f3497aebdbe1a56f18bb02dfb6eb54082d816ead818",
+    "data/raw/ohlcv/000786.csv": "baa1d36473b43df1f9c898f314908ba63f5c25eeb8037a01b1afd6d245cab620",
+    "data/raw/ohlcv/000792.csv": "5ef5273d1cb00272b781b8059224479a7996879648636dee37fa57fe42c51225",
+    "data/raw/ohlcv/000858.csv": "acc80b311968fbe65b0a2d715f2a44e3246ce66d09df48eecbdf21f09781270a",
+    "data/raw/ohlcv/000933.csv": "7c8bf79095a955e76a3b97949d68b4a3ec656fc4f4ff5d310aedaa7e39d8f47c",
+    "data/raw/ohlcv/000951.csv": "a457e7733e1862402ede67f7ce447e40e637d6ef69428e401776d8d52c2c7534",
+    "data/raw/ohlcv/002001.csv": "b252755b4eae21ef336173d9878b6189f96f5e0faaa73ae0a23ae435948aba32",
+    "data/raw/ohlcv/002024.csv": "1ee180ef2281ade4a3a5a2f5e4b32daf9242ed1c972dc3f02378f1f948e1b728",
+    "data/raw/ohlcv/002128.csv": "57aae44372ab990b23dd81f517b9f1d5030e88ac643760a3be476ce8b8d7f287",
+    "data/raw/ohlcv/002152.csv": "f0853581469f24f384941eb13de31b7bfaaf58b06188248c138a7b2a745cfe2b",
+    "data/raw/ohlcv/002158.csv": "bb96fd9a47218afb96655861ada19895991c9fc332178122324124a20d084b02",
+    "data/raw/ohlcv/002236.csv": "33248df92b2a123010668b9eceb86d26a2aa6381e963355c4ce5cfde69b496b8",
+    "data/raw/ohlcv/002304.csv": "db4ca0edb717e720f504dc8ebfe4f1f72f3aadda6fcef55f0f6f71589722ad7c",
+    "data/raw/ohlcv/002466.csv": "94d4cc18871278407208d7434215b666f18a5cf00a3c4eab0d7cc0cc0a6bab72",
+    "data/raw/ohlcv/002508.csv": "6bd19c1390cfed1f5e14991ca8e9d401d1786534378072f0ffe3ec4714760a45",
+    "data/raw/ohlcv/002532.csv": "a39ac54751e8b55dbb59e03520eb6f3f11f4a82bdafd155d1c46f26386e04641",
+    "data/raw/ohlcv/002648.csv": "0f19f32b7f43033a5e98acd548e867668f7d21580b70d396f1811e86b1f6da91",
+    "data/raw/ohlcv/002714.csv": "cec6761c997a6e6da860dc9add6023a69a08ff64223100739445fd7f5db5b60d",
+    "data/raw/ohlcv/002833.csv": "1cadc55a9a785dd06136ae0430d685c5ec7a8923b9ec16596a295cb017e49957",
+    "data/raw/ohlcv/002841.csv": "10f0315cdc4b121268f9ffcfca26747a4aae71898c2bd8a3bcdfb544aaf662b0",
+    "data/raw/ohlcv/300059.csv": "750793d6eec9cf3a7f3eeb6b58f16d278cb918bd0d0b807fd3f122b371073ff2",
+    "data/raw/ohlcv/300750.csv": "2a8da86ccb956b868757a76b3f89dd3f79b5338a0300dbb56ade0f6897c7cd8f",
+    "data/raw/ohlcv/600000.csv": "d3dcaa25b55b99c0ea03241ab09df9919b584fce61f5bf3a3500f9e163471d7e",
+    "data/raw/ohlcv/600009.csv": "4bc419dd3667c5d548304608b34d41b3e816014eac701e4239eaa64e67ad1069",
+    "data/raw/ohlcv/600015.csv": "8498620c67b02a50031f49828242b99a5579de7c273aa0809127096790cde869",
+    "data/raw/ohlcv/600016.csv": "eda5618877c2eb84426baf4f6afb43f59a53ecfd4b1094afa3419740fc49dc85",
+    "data/raw/ohlcv/600031.csv": "652f57aecfb9b18e6d9b1467f70c0a6588414f0ea90e2827143627a46941c653",
+    "data/raw/ohlcv/600036.csv": "2d3b686bb75cbeace9b1141b4eac9254cefc694dc46a36a86ee3fc8d259453e3",
+    "data/raw/ohlcv/600066.csv": "d2eb8ca67d21d7dd825a01cd89437ddaffc9a1025d2d0b2612ceeacad8e4a73b",
+    "data/raw/ohlcv/600176.csv": "10fdabf765b00a2b5fbaa1790d71ce9fa4b93c83889f87b508bbef0487bee258",
+    "data/raw/ohlcv/600188.csv": "08eeed5c54407215ccc1a5561b5e43436a772d007ab24cc3611a27dc6b6fe36f",
+    "data/raw/ohlcv/600271.csv": "d1360d770576dc03e2cacc21b5a61f659d85e174d0f7e894a664b12eaa27dcaa",
+    "data/raw/ohlcv/600309.csv": "7eae7b9623f6f3575fe8d23db4e9e541daa17c40c6c8da071ea1577f29cf1e4e",
+    "data/raw/ohlcv/600426.csv": "5f7e34715a64d45c52a29a77957b3c7fa9fa4a664d452ab9a5365c02cd0f1c83",
+    "data/raw/ohlcv/600519.csv": "b8273a2e097064f8885c12fbc0492f92bc394da7f787cb43a9ce73be1f783d4e",
+    "data/raw/ohlcv/600566.csv": "2a369a2c07316a0838fe5f4a1ffccd21a38067832eee9ecf0ab14af8c0ea3aa3",
+    "data/raw/ohlcv/600585.csv": "a77132cfb06058040ecb0a6d1db2e23b7627e5a8a9c745bf66f39b85a92e1ec5",
+    "data/raw/ohlcv/600660.csv": "c80b0a190516528ef95ea510393a931e355fe85b2810f4cdf92bd9d8250905f4",
+    "data/raw/ohlcv/600690.csv": "46da3b7f49beab521d1a12ddf4cf3fbfeb50f8d46b4af2d2c44b32374d6a1929",
+    "data/raw/ohlcv/600750.csv": "f7f1eea0bbc99df968f94494d0c0185ef2e39d688cdf16627e1340f59c9d544d",
+    "data/raw/ohlcv/600809.csv": "640f5a8a188be47583718002b23d9950202a3499dd89502d0854808d7a6e37b5",
+    "data/raw/ohlcv/600897.csv": "bdde35af1c89fe8138ea1f39719435ca403889d6ff23b6e98a138d21a629e3a0",
+    "data/raw/ohlcv/600919.csv": "4026f995a0a440ece6080d060f5d6fd91559386ae425e6b0f29024133b79d73b",
+    "data/raw/ohlcv/600938.csv": "724e9cc80d3c7aceaf879a689538ec03b5d603738490502c39f4e3bf4bb7010e",
+    "data/raw/ohlcv/600970.csv": "bea20d13b521e2344dce2a0a41527c50a8cf119441416056aa6459e4d6904b9f",
+    "data/raw/ohlcv/601009.csv": "89ad4de4a351ac3ba24a0b87ce18b524f76cbdcf27cbfbbcbd686b8adfd00753",
+    "data/raw/ohlcv/601077.csv": "8c25517053b8c9d38c57c66ceb9b09db0d8de7b98d8cd58d38f12598b8a73379",
+    "data/raw/ohlcv/601088.csv": "f0c2bdbbdae8cb702e37b517b4502a74603429f4680be93f4152398effb09d68",
+    "data/raw/ohlcv/601166.csv": "671996104ba5492d87f2a79ef716c9e585651e005afc735316b3d0ed1555ec27",
+    "data/raw/ohlcv/601169.csv": "8d00824c6ceaef9a777e2c9b989963505a2952ce24a8ef77448c1cbe62910fdc",
+    "data/raw/ohlcv/601187.csv": "6c7965aeca34504d87b5a530e806b39bcb1ddee9bc88dd812006366cffc72966",
+    "data/raw/ohlcv/601225.csv": "a19649b8d42610520b96ea7ce4cd387f9e3303d86df9b107d9827296d5c2818d",
+    "data/raw/ohlcv/601229.csv": "0161ecfb4d5a243949023dcb3c57800536b3eb9892a1beb02c7d55d802560419",
+    "data/raw/ohlcv/601288.csv": "475ffd51428c3a4d7b29bc7099f4181ee447cd138bb83c2da37c7d5f90a242c3",
+    "data/raw/ohlcv/601328.csv": "4ea32d414f0445b4dee70aab876ff1221778322d8df2d31159dea4d782ee27ab",
+    "data/raw/ohlcv/601398.csv": "801390ca052948aba5bdb0aff767709e7a508e330f951b9f9b12faaf53d10428",
+    "data/raw/ohlcv/601658.csv": "ddf439a0bcede5e061c80531a845f6500727e29a81917e7f580fcce2d02f9400",
+    "data/raw/ohlcv/601818.csv": "4c4db561014fc068c5d90ffc34c91d4fd7c17234785617ffb3c43120ba15e4ae",
+    "data/raw/ohlcv/601825.csv": "8104e648bbcc6b52d80b4a73188923f391e05b0aaab6ca6a2a405a9da1e41e46",
+    "data/raw/ohlcv/601838.csv": "ba5d563ebb13392c29ab0a5367a9a2eeacedda4d4f241ad29b1fd74c50df80a2",
+    "data/raw/ohlcv/601857.csv": "8a4f8e8653b2d42784952514f877f8b83591a588a77fec288ac1fac3e2f0498e",
+    "data/raw/ohlcv/601916.csv": "4d236a1ad9252c89ed06c7e955b1f454ec2795575a73d9c71e18df355b2eb188",
+    "data/raw/ohlcv/601939.csv": "ba8cd3a90b6d24039454f3c9e8eca6f612198fb7cf8a663ae1597ea3a59fefee",
+    "data/raw/ohlcv/601963.csv": "8fd91a0d07eca82b08e4052475adfdee0c43f1b7eb77f958e990c89d2c350d33",
+    "data/raw/ohlcv/601988.csv": "69f6614bd908ba7b1c3af913b601aae23d247dd7966b98b04933e5eadd367001",
+    "data/raw/ohlcv/601998.csv": "7317359880ba8c6cc612fddb36483636aeca6e09d81360d4954fe7ec089b7b6f",
+    "data/raw/ohlcv/603156.csv": "8e526c2779fb324efa1fb960e1c103f2a2c6f57ef797dd2847593264e8450e2e",
+    "data/raw/ohlcv/603279.csv": "a07eead880e7bbd8808f51f0c0215dc80c3fe8880f3db00601e0d8318bb4b1d6",
+    "data/raw/ohlcv/603369.csv": "ac804ea0c5ba4b934c76e97fb1dd1c01cc957cefd6496d41c9004105a59d57b5",
+    "data/raw/ohlcv/603529.csv": "e05d8886f98437db9f75bcfee4502b6b1e7b39b3f3167d3f96a7d10632830333",
+    "data/raw/ohlcv/603605.csv": "a345fbd3f2da1d455757db70fb7624e58a52c614a5bfc79ca0c86664ae8ead99",
+    "data/raw/ohlcv/603993.csv": "aafb3f5db405f0dfe269a87f7b6fcf273cba8578e1d48292ea76510c55bb8fa9",
+    "data/raw/ohlcv/688516.csv": "6c8cc7d86cc831513539fd742604142f7f56452a9e12c0114c7a18845d083dc6"
+  },
+  "definitions": {
+    "OLD": {
+      "path": "data/experiments/exp_selection_edge/candidates.csv",
+      "old_ma": true,
+      "old_return": true,
+      "require_trend": false,
+      "require_slope": false
+    },
+    "RETURN_FIX": {
+      "path": "data/experiments/exp_selection_edge/candidates.csv",
+      "old_ma": true,
+      "old_return": false,
+      "require_trend": false,
+      "require_slope": false
+    },
+    "MA_FIX": {
+      "path": "data/experiments/exp_selection_edge/candidates.csv",
+      "old_ma": false,
+      "old_return": true,
+      "require_trend": false,
+      "require_slope": false
+    },
+    "FIXED": {
+      "path": "data/experiments/exp_selection_edge/candidates.csv",
+      "old_ma": false,
+      "old_return": false,
+      "require_trend": false,
+      "require_slope": false
+    },
+    "TREND_FIXED": {
+      "path": "data/experiments/exp_selection_edge/candidates.csv",
+      "old_ma": false,
+      "old_return": false,
+      "require_trend": true,
+      "require_slope": false
+    },
+    "OLD_BOTH1": {
+      "path": "data/experiments/exp_selection_edge/candidates.csv",
+      "old_ma": true,
+      "old_return": true,
+      "require_trend": false,
+      "require_slope": true
+    },
+    "FIXED_BOTH1": {
+      "path": "data/experiments/exp_selection_edge/candidates.csv",
+      "old_ma": false,
+      "old_return": false,
+      "require_trend": false,
+      "require_slope": true
+    },
+    "TREND_BOTH1": {
+      "path": "data/experiments/exp_selection_edge/candidates.csv",
+      "old_ma": false,
+      "old_return": false,
+      "require_trend": true,
+      "require_slope": true
+    },
+    "CURRENT_OLD": {
+      "path": "data/experiments/exp_ma_slope_20260914/signals/BASE/2011-11-01/candidates.csv",
+      "old_ma": true,
+      "old_return": true,
+      "require_trend": false,
+      "require_slope": false
+    },
+    "CURRENT_OLD_BOTH1": {
+      "path": "data/experiments/exp_ma_slope_20260914/signals/BOTH1/2011-11-01/candidates.csv",
+      "old_ma": true,
+      "old_return": true,
+      "require_trend": false,
+      "require_slope": false
+    },
+    "CURRENT_BASE": {
+      "path": "data/experiments/exp_oi179_20260914/signals/BASE/2011-11-01/candidates.csv",
+      "old_ma": false,
+      "old_return": false,
+      "require_trend": false,
+      "require_slope": false
+    },
+    "CURRENT_BOTH1": {
+      "path": "data/experiments/exp_oi179_20260914/signals/BOTH1/2011-11-01/candidates.csv",
+      "old_ma": false,
+      "old_return": false,
+      "require_trend": false,
+      "require_slope": false
+    }
+  }
+}

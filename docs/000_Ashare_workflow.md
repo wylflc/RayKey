@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.184
+# A股选股-估值-量价操作流程 v4.185
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -550,6 +550,8 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 除上表判定所需量外不再计算或展示其他量价指标。
 
 日线取数只有一份实现（`screen_daily_volume_price_signals.fetch_daily_rows`：东财主源、腾讯备源、北交所走腾讯）；§11.3 持仓跟踪的收盘与 MA60 同用它取数。
+
+均线、跨日价格和成交量折算须遍历完整除权事件日历，纳入两次报价之间的全部事件，不能要求除权日存在该股票报价。历史价到T日的折算窗口为 `(历史报价日, T]`，T之后事件不影响截至T的结果；停牌日不新增均线样本。相邻报价的含权收益按期间事件先后承接现金、送转和配股，停牌期现金在下一可得收盘价再投；不能在无报价日虚构再投价格。实现与边界核验见 `backtest_valuation_strategy.exright_affine`、`quote_action_factors` 和 `test_suspended_actions.py`。
 
 ### 8.4 故障与缺口
 

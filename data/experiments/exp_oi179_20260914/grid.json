@@ -1,0 +1,8 @@
+[
+ {"arm":"BASE","kind":"control","lag":0,"windows":[]},
+ {"arm":"BOTH1","kind":"primary","lag":1,"windows":[20,60]},
+ {"arm":"BOTH2","kind":"sensitivity","lag":2,"windows":[20,60]},
+ {"arm":"BOTH3","kind":"sensitivity","lag":3,"windows":[20,60]},
+ {"arm":"MA20_1","kind":"decomposition","lag":1,"windows":[20]},
+ {"arm":"MA60_1","kind":"decomposition","lag":1,"windows":[60]}
+]

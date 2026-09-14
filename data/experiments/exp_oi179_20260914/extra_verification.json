@@ -1,0 +1,136 @@
+{
+  "checked_actual_buys": 3608,
+  "independent_full_window_checks": 320,
+  "max_slope_error": 2.4868995751603507e-14,
+  "signal_count_and_median_checks": 96,
+  "nonoverlap_adjacent_checks": 1286,
+  "attribution": {
+    "2009-11-01": {
+      "net_delta_contrib": -0.47538500000000006,
+      "top3_absolute_share": 0.2829408969820282,
+      "largest_changes": [
+        {
+          "start": "2009-11-01",
+          "code": "002128",
+          "base_contrib": 1.098839,
+          "slope_contrib": 0.762826,
+          "delta_contrib": -0.3360129999999999
+        },
+        {
+          "start": "2009-11-01",
+          "code": "601225",
+          "base_contrib": 0.130836,
+          "slope_contrib": 0.316245,
+          "delta_contrib": 0.185409
+        },
+        {
+          "start": "2009-11-01",
+          "code": "000651",
+          "base_contrib": 0.8753770000000002,
+          "slope_contrib": 1.0036470000000002,
+          "delta_contrib": 0.12827
+        },
+        {
+          "start": "2009-11-01",
+          "code": "601988",
+          "base_contrib": 0.126851,
+          "slope_contrib": 0.00021100000000000003,
+          "delta_contrib": -0.12664
+        },
+        {
+          "start": "2009-11-01",
+          "code": "600309",
+          "base_contrib": 0.235311,
+          "slope_contrib": 0.350836,
+          "delta_contrib": 0.11552499999999999
+        },
+        {
+          "start": "2009-11-01",
+          "code": "688516",
+          "base_contrib": 0.425306,
+          "slope_contrib": 0.316545,
+          "delta_contrib": -0.108761
+        },
+        {
+          "start": "2009-11-01",
+          "code": "000338",
+          "base_contrib": 0.852751,
+          "slope_contrib": 0.744016,
+          "delta_contrib": -0.10873500000000003
+        },
+        {
+          "start": "2009-11-01",
+          "code": "601169",
+          "base_contrib": 0.124176,
+          "slope_contrib": 0.018428,
+          "delta_contrib": -0.105748
+        }
+      ]
+    },
+    "2011-11-01": {
+      "net_delta_contrib": -0.21858399999999956,
+      "top3_absolute_share": 0.33269967797042166,
+      "largest_changes": [
+        {
+          "start": "2011-11-01",
+          "code": "002128",
+          "base_contrib": 1.2102169999999999,
+          "slope_contrib": 0.7533810000000001,
+          "delta_contrib": -0.4568359999999998
+        },
+        {
+          "start": "2011-11-01",
+          "code": "601225",
+          "base_contrib": 0.130788,
+          "slope_contrib": 0.432255,
+          "delta_contrib": 0.30146700000000004
+        },
+        {
+          "start": "2011-11-01",
+          "code": "600309",
+          "base_contrib": 0.098162,
+          "slope_contrib": 0.3397260000000001,
+          "delta_contrib": 0.24156400000000008
+        },
+        {
+          "start": "2011-11-01",
+          "code": "000651",
+          "base_contrib": 0.6146629999999997,
+          "slope_contrib": 0.7937149999999998,
+          "delta_contrib": 0.1790520000000001
+        },
+        {
+          "start": "2011-11-01",
+          "code": "600938",
+          "base_contrib": 0.07913600000000001,
+          "slope_contrib": 0.250633,
+          "delta_contrib": 0.17149699999999998
+        },
+        {
+          "start": "2011-11-01",
+          "code": "688516",
+          "base_contrib": 0.401476,
+          "slope_contrib": 0.247253,
+          "delta_contrib": -0.154223
+        },
+        {
+          "start": "2011-11-01",
+          "code": "600660",
+          "base_contrib": 0.224498,
+          "slope_contrib": 0.106795,
+          "delta_contrib": -0.117703
+        },
+        {
+          "start": "2011-11-01",
+          "code": "601988",
+          "base_contrib": 0.12892800000000001,
+          "slope_contrib": 0.015435000000000003,
+          "delta_contrib": -0.11349300000000001
+        }
+      ]
+    }
+  },
+  "source_sha256": {
+    "data/experiments/exp_oi179_20260914/post/validate_extra.py": "fcaa1c6495106f97ebc9662f5946c77d9c42e6304442a6326e1e1f2275c82aaf"
+  }
+}

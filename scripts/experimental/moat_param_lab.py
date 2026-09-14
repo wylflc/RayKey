@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import build_historical_valuation_bands as bhv  # noqa: E402
+from backtest_valuation_strategy import quote_action_factors
 
 BUY_LINE, SELL_LINE = 0.9407, 2.5236          # 实验当时冻结的分桶边界，只作描述性对照，不是任何生效阈值
 BUCKETS = ((0, 0.8), (0.8, BUY_LINE), (BUY_LINE, 1.2), (1.2, 1.6), (1.6, 2.0),
@@ -41,20 +42,27 @@ BUCKETS = ((0, 0.8), (0.8, BUY_LINE), (BUY_LINE, 1.2), (1.2, 1.6), (1.6, 2.0),
 
 
 def total_return_index(prices: list[tuple[str, float]], actions: list[dict]) -> dict[str, float]:
-    """持 1 股、现金分红按除权日收盘再投、送转按比例加股 → 逐日总回报指数（与价同基）。"""
-    by_day: dict[str, list[dict]] = defaultdict(list)
+    """完整事件日历的自融资总回报；停牌期现金在下一报价再投，配股扣认购款。"""
+    by_day = {}
     for a in actions:
-        if a.get("ex_dividend_date"):
-            by_day[a["ex_dividend_date"]].append(a)
+        day = a.get("ex_dividend_date")
+        if not day:
+            continue
+        cash = bhv._num(a.get("cash_per_share")) or 0.0
+        bonus = bhv._num(a.get("share_ratio")) or 0.0
+        rights = bhv._num(a.get("rights_ratio")) or 0.0
+        subscription = bhv._num(a.get("rights_price")) or 0.0
+        oc, ob, ore, op = by_day.get(day, (0.0, 0.0, 0.0, 0.0))
+        by_day[day] = (oc + cash, (1 + ob) * (1 + bonus) - 1,
+                       ore + rights, subscription if rights > 0 else op)
     shares, out = 1.0, {}
-    for day, close in prices:
-        for a in by_day.get(day, ()):
-            cash = bhv._num(a.get("cash_per_share")) or 0.0
-            ratio = bhv._num(a.get("share_ratio")) or 0.0
-            paid = shares * cash
-            shares *= (1 + ratio)
-            if close > 0 and paid > 0:
-                shares += paid / close
+    factors = quote_action_factors([d for d, _ in prices], by_day)
+    for (day, close), (factor, cash) in zip(prices, factors):
+        if not math.isfinite(close) or close <= 0:
+            raise ValueError(f'Invalid reinvestment close on {day}: {close}')
+        shares *= factor + cash / close
+        if not math.isfinite(shares) or shares <= 0:
+            raise ValueError(f'Nonpositive self-financing wealth on {day}')
         out[day] = shares * close
     return out
 

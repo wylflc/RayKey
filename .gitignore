@@ -154,3 +154,11 @@ data/experiments/exp_ma_slope_20260914/stats/
 data/experiments/exp_ma_slope_20260914/daily/
 data/experiments/exp_ma_slope_20260914/errors/
 data/experiments/exp_ma_slope_20260914/signals/
+# OI-179：逐路径价格/交易输出及参考输入副本按本批脚本重建，保留汇总、哈希和审计证据。
+data/experiments/exp_oi179_20260914/cache/
+data/experiments/exp_oi179_20260914/nav/
+data/experiments/exp_oi179_20260914/stats/
+data/experiments/exp_oi179_20260914/daily/
+data/experiments/exp_oi179_20260914/errors/
+data/experiments/exp_oi179_20260914/signals/
+data/experiments/exp_oi179_20260914/raw/

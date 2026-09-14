@@ -1,0 +1,18 @@
+{
+  "full": {
+    "old_cagr_median": 0.4493011736430007,
+    "fixed_cagr_median": 0.4247014055052134,
+    "current_cagr_median": 0.4247014055052134,
+    "current_input_unchanged_paths": 14,
+    "old_mdd": 0.46191115415401457,
+    "current_mdd": 0.4720834518567812
+  },
+  "A": {
+    "old_cagr_median": 0.5301605677326745,
+    "fixed_cagr_median": 0.5301605677326745,
+    "current_cagr_median": 0.5301605677326745,
+    "current_input_unchanged_paths": 14,
+    "old_mdd": 0.49314129545233976,
+    "current_mdd": 0.49314129545233976
+  }
+}

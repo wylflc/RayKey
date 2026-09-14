@@ -1,0 +1,32 @@
+{
+  "track_a_pass": true,
+  "paired": {
+    "guardfull": {
+      "cagr_pp": -0.07291360779395628,
+      "P_pp": 0.0,
+      "mdd_pp": 0.0,
+      "roll5dd_pp": 0.0
+    },
+    "guardA": {
+      "cagr_pp": 0.0,
+      "P_pp": 0.0,
+      "mdd_pp": 0.0,
+      "roll5dd_pp": 0.0
+    }
+  },
+  "negative_flips": 0,
+  "old_winners": [
+    "000338",
+    "000651",
+    "000933",
+    "002128",
+    "601088"
+  ],
+  "corrected_winners": [
+    "000338",
+    "000651",
+    "000933",
+    "002128",
+    "601088"
+  ]
+}

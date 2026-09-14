@@ -601,19 +601,36 @@ def load_risk_free() -> list[tuple[str, float]]:
         return sorted((r["observed_on"], float(r["risk_free_rate"])) for r in csv.DictReader(handle))
 
 
+def quote_action_factors(days: list[str], events: dict[str, tuple[float, float, float, float]]):
+    """每个报价日对应上次报价之后的股数倍数、净现金（均以期初1股计）。
+
+    完整遍历 (上次报价日, 本次报价日]，停牌期间先记现金、按事件发生时股数派息/认购，
+    不在无报价日虚构分红再投。首个报价已经是当日除权后价格，其因子恒为 (1, 0)。
+    """
+    if not days:
+        return
+    event_days = sorted(d for d in events if days[0] < d <= days[-1])
+    cursor = 0
+    for day in days:
+        factor, distribution = 1.0, 0.0
+        while cursor < len(event_days) and event_days[cursor] <= day:
+            cash, bonus, rights, subscription = events[event_days[cursor]]
+            distribution += factor * (cash - rights * subscription)
+            factor *= 1 + bonus + rights
+            cursor += 1
+        yield factor, distribution
+
+
 def daily_returns(prices: dict[str, dict[str, float]],
-                  actions: dict[str, dict[str, tuple[float, float]]]) -> dict[str, dict[str, float]]:
+                  actions: dict[str, dict[str, tuple[float, float, float, float]]]) -> dict[str, dict[str, float]]:
     """逐票日收益率。**必须按送转折算**，否则除权日会被当成一次 −50% 的暴跌算进相关性。"""
     out: dict[str, dict[str, float]] = {}
     for code, series in prices.items():
         days = sorted(series)
         ret = {}
-        for prev, cur in zip(days, days[1:]):
-            base = series[prev]
-            cash, ratio, rr, rp = actions.get(code, {}).get(cur, (0.0, 0.0, 0.0, 0.0))
-            if base > 0:
-                # 配股按全额认购：持有 1 股变 (1+k+rr) 股、付 rr×配股价
-                ret[cur] = (series[cur] * (1 + ratio + rr) + cash - rr * rp) / base - 1
+        for i, (factor, distribution) in enumerate(quote_action_factors(days, actions.get(code, {}))):
+            if i and (base := series[days[i - 1]]) > 0:
+                ret[days[i]] = (series[days[i]] * factor + distribution) / base - 1
         out[code] = ret
     return out
 
@@ -776,7 +793,7 @@ def moving_averages(series: dict[str, float], windows=(5, 10, 20, 60, 120, 240))
     return out
 
 
-def exright_affine(days: list[str], events: dict[str, tuple[float, float]]) -> tuple[list[float], list[float]]:
+def exright_affine(days: list[str], events: dict[str, tuple[float, float, float, float]]) -> tuple[list[float], list[float]]:
     """每个交易日「当日口径 → 末日口径」的仿射映射 `q = A·p + B`（除权折算的累积形式）。
 
     除权日 `e` 的事件 `(D, r, rr, rp)` 把 `e` 之前任一日的价格折到 `e` 当日口径：`p → (p − D + rr·rp)/(1 + r + rr)`
@@ -786,13 +803,19 @@ def exright_affine(days: list[str], events: dict[str, tuple[float, float]]) -> t
     """
     n = len(days)
     scale, shift = [1.0] * n, [0.0] * n
+    if not days:
+        return scale, shift
+    event_days = sorted(d for d in events if days[0] < d <= days[-1])
+    cursor = len(event_days) - 1
     a, b = 1.0, 0.0
     for i in range(n - 1, -1, -1):
-        scale[i], shift[i] = a, b
-        event = events.get(days[i])
-        if event:                               # 第 i 日除权：i 之前的日子多一层 (p − D + rr·配股价)/(1 + r + rr)
-            cash, ratio, rr, rp = event
+        # 当日报价已除权，只折算严格晚于该报价日且不晚于末日的全部事件。
+        # 事件不要求该股票当天有报价；连续停牌期间的多次事件按倒序复合。
+        while cursor >= 0 and event_days[cursor] > days[i]:
+            cash, ratio, rr, rp = events[event_days[cursor]]
             a, b = a / (1.0 + ratio + rr), b + a * (rr * rp - cash) / (1.0 + ratio + rr)
+            cursor -= 1
+        scale[i], shift[i] = a, b
     return scale, shift
 
 
@@ -4758,7 +4781,7 @@ def main() -> int:
                         ("_rct" if args.residual_clear == "tranche" else ""))
                      + (f"_rccny{args.residual_clear_cny:g}" if args.residual_clear_cny else "")
                      + ("_rcfinal" if args.residual_clear_final else "")
-                     + ("_rawma" if args.ma_basis == "raw" else "")
+                     + ("_rawma" if args.ma_basis == "raw" else "_ca2")
                      + ("_frzstop" if args.exright_stop == "frozen" else "")
                      + (f"_ma{'-'.join(map(str,args.trend_ma))}" if args.trend_ma != [20, 60] else "")
                      + (f"_sl{args.sell_line:g}" if args.sell_line else "")

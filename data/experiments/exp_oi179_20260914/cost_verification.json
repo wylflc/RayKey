@@ -1,0 +1,18 @@
+{
+  "executed_paths": 168,
+  "reused_zero_paths": 56,
+  "rows": 224,
+  "inputs_unchanged": true,
+  "candidates": 1,
+  "slippage_bp": [
+    0,
+    10,
+    20,
+    30
+  ],
+  "job_id": "26675328",
+  "computation_job_id": "26675174",
+  "reporting_job_id": "26675328",
+  "executed_paths_note": "168 paths computed in the first job; the reporting job reused all 168",
+  "source_sha256": "2d82360a3ed97897837e7cfabcbee774fdf451ccdba4a6f1735d505acf5b5bbd"
+}
