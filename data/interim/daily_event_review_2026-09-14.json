@@ -1,0 +1,233 @@
+{
+  "signal_date": "2026-09-14",
+  "reviewed_at_utc": "2026-09-14T07:17:27.685344+00:00",
+  "announcement_snapshot": "data/interim/daily_announcements_2026-09-14.json",
+  "announcement_retrieved_at_utc": "2026-09-14T07:10:55.221534+00:00",
+  "covered_codes": [
+    "000651",
+    "002128",
+    "002648",
+    "002714",
+    "600036",
+    "600938",
+    "600970",
+    "600989",
+    "601318",
+    "601398",
+    "601838",
+    "603529"
+  ],
+  "held_count": 8,
+  "eligible_count": 11,
+  "relevant_announcement_count": 11,
+  "new_announcement_count": 2,
+  "per_company_checks": [
+    {
+      "security_code": "000651",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "公告窗口未检出新增需改变名单或模型的事实；已披露公告沿用此前原文复核结论。行业及竞品为部分巡检。"
+    },
+    {
+      "security_code": "002128",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "公告窗口未检出新增需改变名单或模型的事实；已披露公告沿用此前原文复核结论。行业及竞品为部分巡检。"
+    },
+    {
+      "security_code": "002648",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "公告窗口未检出新增需改变名单或模型的事实；已披露公告沿用此前原文复核结论。行业及竞品为部分巡检。"
+    },
+    {
+      "security_code": "002714",
+      "held": true,
+      "eligible": false,
+      "announcement_ids": [
+        "AN202609111829278492",
+        "AN202609101829233405"
+      ],
+      "new_announcement_ids": [
+        "AN202609111829278492"
+      ],
+      "status": "new_primary_document_reviewed",
+      "assessment": "已核验PDF第1、4页图像；H股回购为现金分配及库存股变化，未注销，不改变本账户A股持仓，不把回购金额直接加到合理价；不构成新经营利润或资本输入，维持当前生产带。"
+    },
+    {
+      "security_code": "600036",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "公告窗口未检出新增需改变名单或模型的事实；已披露公告沿用此前原文复核结论。行业及竞品为部分巡检。"
+    },
+    {
+      "security_code": "600938",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609111829273103",
+        "AN202609111829273099"
+      ],
+      "new_announcement_ids": [],
+      "status": "previously_reviewed_announcements",
+      "assessment": "公告窗口未检出新增需改变名单或模型的事实；已披露公告沿用此前原文复核结论。行业及竞品为部分巡检。"
+    },
+    {
+      "security_code": "600970",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "公告窗口未检出新增需改变名单或模型的事实；已披露公告沿用此前原文复核结论。行业及竞品为部分巡检。"
+    },
+    {
+      "security_code": "600989",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "公告窗口未检出新增需改变名单或模型的事实；已披露公告沿用此前原文复核结论。行业及竞品为部分巡检。"
+    },
+    {
+      "security_code": "601318",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "公告窗口未检出新增需改变名单或模型的事实；已披露公告沿用此前原文复核结论。行业及竞品为部分巡检。"
+    },
+    {
+      "security_code": "601398",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609101829229131",
+        "AN202609101829229129",
+        "AN202609101829229037",
+        "AN202609101829229036"
+      ],
+      "new_announcement_ids": [],
+      "status": "previously_reviewed_announcements",
+      "assessment": "公告窗口未检出新增需改变名单或模型的事实；已披露公告沿用此前原文复核结论。行业及竞品为部分巡检。"
+    },
+    {
+      "security_code": "601838",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609111829275333"
+      ],
+      "new_announcement_ids": [
+        "AN202609111829275333"
+      ],
+      "status": "new_primary_document_reviewed",
+      "assessment": "中期分派按已披露方案实施；今日未持有且尚未到除息日，不计账户现金或提前除权。完整财年股利锚仍按2025财年，2026H1中期分红不单独年化、不叠加到上一完整财年锚；当前不触发新利润或资产输入重算，生产带不变。"
+    },
+    {
+      "security_code": "603529",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609111829268651",
+        "AN202609111829268650"
+      ],
+      "new_announcement_ids": [],
+      "status": "previously_reviewed_announcements",
+      "assessment": "公告窗口未检出新增需改变名单或模型的事实；已披露公告沿用此前原文复核结论。行业及竞品为部分巡检。"
+    }
+  ],
+  "primary_documents": [
+    {
+      "art_code": "AN202609111829275333",
+      "title": "2026年半年度权益分派实施公告",
+      "public_display_time_beijing": "2026-09-11 18:07:04",
+      "notice_date": "2026-09-12",
+      "facts": "2026H1每股现金红利0.489元（含税），股权登记日09-17，除息和现金发放日09-18；实施前总股本4238435356股，分红合计2072594889.08元。",
+      "assessment": "中期分派按已披露方案实施；今日未持有且尚未到除息日，不计账户现金或提前除权。完整财年股利锚仍按2025财年，2026H1中期分红不单独年化、不叠加到上一完整财年锚；当前不触发新利润或资产输入重算，生产带不变。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609111829275333_1.pdf",
+      "pdf_sha256": "7462a2d74699e054e043d33e1c14f7c187252be1fb10ac9d16e2b5cebb7eee1e",
+      "reviewed_at_utc": "2026-09-14T07:17:27.685344+00:00"
+    },
+    {
+      "art_code": "AN202609111829278492",
+      "title": "H股翌日披露报表",
+      "public_display_time_beijing": "2026-09-11 19:09:18",
+      "notice_date": "2026-09-12",
+      "facts": "09-11回购H股106800股，支付4069166港元，回购价格37.52–38.54港元，拟持作库存股份。期末已发行H股（不含库存）308733500股，库存股份1489600股，H股总数310223100股。",
+      "assessment": "已核验PDF第1、4页图像；H股回购为现金分配及库存股变化，未注销，不改变本账户A股持仓，不把回购金额直接加到合理价；不构成新经营利润或资本输入，维持当前生产带。",
+      "pages_reviewed": [
+        1,
+        4
+      ],
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609111829278492_1.pdf",
+      "pdf_sha256": "7a4c4fb8735d0e0908779a5d5c5710ff958287219e09bb1fde98bbe4fbc3f46f",
+      "reviewed_at_utc": "2026-09-14T07:17:27.685344+00:00"
+    }
+  ],
+  "industry_checks": [
+    {
+      "topic": "生猪",
+      "observed_period": "2026-08-31至2026-09-06",
+      "published_on": "2026-09-08",
+      "fact": "农业农村部全国500县口径活猪11.59元/公斤，环比+0.3%；为周度集贸价，不替代牧原公司销售均价或同期完全成本。",
+      "source_url": "https://agri.hunan.gov.cn/agri/tslm/njnqx/202609/t20260908_34058979.html"
+    },
+    {
+      "topic": "煤炭",
+      "observed_on": "2026-09-09",
+      "fact": "CCTD页面BSPI综合指数728元/吨、环比+8；非电投能源合同实现价，当前未取得更新一期数值。",
+      "source_url": "https://www.cctd.com.cn/index.php?a=lists&catid=520&m=content"
+    },
+    {
+      "topic": "空调",
+      "observed_period": "2026年9月排产计划",
+      "published_on": "2026-08-14",
+      "fact": "奥维云网PSI：9月内销排产同比-6.5%、出口-7.1%；为预排产而非格力实际销售。本轮补查既有行业资料，不作当日新事实。",
+      "source_url": "https://finance.sina.com.cn/stock/relnews/cn/2026-08-14/doc-ininhhrn4177122.shtml"
+    },
+    {
+      "topic": "铝与氧化铝",
+      "observed_on": "2026-09-14",
+      "status": "unverified",
+      "fact": "9月14日长江现货页可定位，正文报价受限未读出；不据标题或旧价生成当日铝价/氧化铝价差。",
+      "source_url": "https://www.ccmn.cn/news/ZX018/202609/12396d7cf0d74b8db0364687172da2b1.html"
+    },
+    {
+      "topic": "乙烷与烯烃",
+      "status": "unverified",
+      "fact": "已检索乙烷/乙烯当日报价并尝试EIA数据页，未取得可核验的最新到岸价与产品价差；不声称卫星化学或宝丰能源高频指标完整复核。"
+    },
+    {
+      "topic": "两轮车、银行保险、订单与油气",
+      "status": "partial",
+      "fact": "当日官方公司公告窗口与国债利率已查；两轮车价格战、银行竞品动态、海外工程新签及原油现货等未做全来源巡检。"
+    }
+  ],
+  "corporate_action_holdings_count": 0,
+  "valuation_update": "当日无估值更新；国债例行刷新引起银行/保险实时合理价变化，非财报或事件重建",
+  "limitations": [
+    "公告覆盖截至北京时间15:10，之后晚间披露不在本轮覆盖。",
+    "12家公司公告窗口检查完成；行业、竞品和高频指标仅部分覆盖，逐项列明；未取得完整市场涨跌家数。"
+  ]
+}

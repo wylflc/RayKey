@@ -1,0 +1,70 @@
+{
+  "signal_date": "2026-09-14",
+  "retrieved_at_utc": "2026-09-14T07:10:55.512510+00:00",
+  "source": "eastmoney:RPT_SHAREBONUS_DET, full-market ex-dividend date query",
+  "events": {
+    "002605": {
+      "name": "姚记科技",
+      "plan": "10派2.00元(含税,扣税后1.80元)",
+      "cash_per_share": 0.2,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "300908": {
+      "name": "仲景食品",
+      "plan": "10转4.50股",
+      "cash_per_share": 0.0,
+      "share_ratio": 0.45,
+      "progress": "实施分配"
+    },
+    "603014": {
+      "name": "威高血净",
+      "plan": "10派2.10元(含税,扣税后1.89元)",
+      "cash_per_share": 0.21000000000000002,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603170": {
+      "name": "宝立食品",
+      "plan": "10派1.50元(含税,扣税后1.35元)",
+      "cash_per_share": 0.15,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603192": {
+      "name": "汇得科技",
+      "plan": "10派1.25元(含税,扣税后1.125元)",
+      "cash_per_share": 0.125,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603931": {
+      "name": "格林达",
+      "plan": "10派0.65元(含税,扣税后0.585元)",
+      "cash_per_share": 0.065,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688092": {
+      "name": "爱科科技",
+      "plan": "10派0.40元(含税,扣税后0.36元)",
+      "cash_per_share": 0.04,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688334": {
+      "name": "西高院",
+      "plan": "10派2.44元(含税,扣税后2.196元)",
+      "cash_per_share": 0.244,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688623": {
+      "name": "双元科技",
+      "plan": "10派1.03元(含税,扣税后0.927元)",
+      "cash_per_share": 0.10300000000000001,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    }
+  }
+}
