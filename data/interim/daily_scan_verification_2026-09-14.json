@@ -183,12 +183,12 @@
     "12家公司公告窗口检查完成；行业、竞品和高频指标仅部分覆盖，逐项列明；未取得完整市场涨跌家数。",
     "未刷新历史价格缓存、未运行回测。",
     "相关性读取实时扫描输出，未用第二数据源独立重算；离线复核验证执行与资金规则。",
-    "交易净额与负债变化差641.78元，费用分项未确认；中材成交较旧预算多用14548.40元，执行时券商实时可用额未回报。",
+    "641.78元差额由用户确认为周末跨期3个自然日融资利息；中材成交较旧预算多用14548.40元，执行时券商实时可用额未回报。",
     "两份公司README的现价展示沿用核心池CSV注明的历史行情日；当日执行以09-14扫描表、跟踪表和日报为准。"
   ],
   "file_sha256": {
     "data/processed/a_share_holdings.csv": "e737fc004e5beae827c298c90315dae3745f3384df629a00f743edab5fa70acb",
-    "data/processed/portfolio_account_snapshot.csv": "7d4999678458007eadce0566aef83f6aea3c0859e8270e406e48af9c5f91ef95",
+    "data/processed/portfolio_account_snapshot.csv": "cad8042f571205bac390b0a13c057dd4ecb3c816e5d232e4e99d0f3122271c02",
     "data/processed/a_share_workflow_decision_log.csv": "f5e53f69f6b14963f567cbfe4ee4584c06a141ccc9c8756ed4886bf9cc73aa45",
     "data/processed/holdings_corporate_actions_applied.csv": "ba74fe4a1c082d85729e49e60995e74d07e739a126b67fa13bc8dc13905d9d7f",
     "data/processed/a_share_pool_model_bands_adopted.csv": "5ccd5a34cbcc114367560385c8ece16e4fec2c838f19beff243e247e7cdd28fa",
@@ -199,7 +199,7 @@
     "data/processed/daily_buy_candidates.csv": "d0593f2ee6e810625c896d6f36ab6f43f08bae89d084ffa8f5cfb095c4415f73",
     "data/processed/daily_holdings_tracking.csv": "3ec8a183d5ccee3457c2cb4e22606b5e4b1b793339a263bd39d07877988ef386",
     "data/processed/a_share_valuation_dossiers.csv": "a0eb4fe502928d49a7503fdc11a345fd603c7c2782f0781118556b1677df1dfe",
-    "docs/000_daily_scan_log.md": "3fe7bc3f64930a719e97c12fb852d923e00a3a5bd71700ed4ea95dcaec1d1c32",
+    "docs/000_daily_scan_log.md": "21eba8642112d50dc624552db4a6365528bac3ffea9abe79d83b35e73de0f623",
     "docs/000_a_share_core_valuation_pool.md": "fed32b663015a7e5babc67f1cb33223c88ebfe5c8f86dd247e3bdecd9b89074d",
     "data/interim/daily_event_review_2026-09-14.json": "adc5fc4ad67c8aac08f77a2d3b0a81b1fe21fedfdd65886e0aedb543dae15390",
     "data/interim/daily_announcements_2026-09-14.json": "42b81ffc589f2385328b7facacf0c92968340dc2797e61d39fe54090ba2ad840",
@@ -207,5 +207,18 @@
     "data/interim/daily_market_context_2026-09-14.json": "49f755fc29a9a618ec0895edb3f563d4d36e6e7e349e849384d4502afb4ddf80",
     "data/reference/cost_of_equity_inputs.csv": "fa57095fb9021cb6c6f465a7ee41da2410bad89ad9359f38a6dcfc1ef7d0a056",
     "data/reference/equity_bond_csi300.csv": "80e352f048590ebf835946cd314c24f24871292da9cc7ca142fdfb842dea8dd0"
+  },
+  "account_amendment": {
+    "confirmed_at_utc": "2026-09-14T08:23:40.195787+00:00",
+    "source": "user_confirmation_same_day",
+    "interest_cny": 641.78,
+    "accrual_calendar_days": 3,
+    "from": "2026-09-11",
+    "to": "2026-09-14",
+    "numeric_account_fields_unchanged": true,
+    "original_file_sha256": {
+      "data/processed/portfolio_account_snapshot.csv": "7d4999678458007eadce0566aef83f6aea3c0859e8270e406e48af9c5f91ef95",
+      "docs/000_daily_scan_log.md": "3fe7bc3f64930a719e97c12fb852d923e00a3a5bd71700ed4ea95dcaec1d1c32"
+    }
   }
 }

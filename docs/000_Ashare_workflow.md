@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.183
+# A股选股-估值-量价操作流程 v4.184
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -801,7 +801,10 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
    **执行成本压力**（采纳前必报）：候选与 `BASE` 各按每边滑点 0／10／20／30bp（`--slippage-bp`：买入成交价 × (1 + bp/1e4)、卖出 × (1 − bp/1e4)，进股数、整手、可用现金、成本、费税；盯市价与信号价不变；同日买卖先净额对冲、只对净额收；强平与退市清仓同样收；分红、送转、配股认购不收）跑标准起点集两遍，同档配对，剔除集 A／U 按 0bp 锚点固定（`--exclude-codes` 单遍）；报各档主读数与复利读数的 Δ、滚 5 回撤／最低担保比例／强平次数的变化，以及第 2 款判定是否随档位翻转；`BASE` 各档对 0bp 的配对差同表列出；档位不作否决线。入口 `scripts/slurm/oi148_slippage.sbatch`，报表 `scripts/experimental/oi148_slippage_report.py`。
 8. 只有第 1~7 款通过、第 10~12 款读数齐备且用户裁定后，才修改 §9.3.1、生产常量和回测 `BASE`。
 9. 实验过程写入回测 log：每节不超过 1.5 KB，只写「测了什么／结论／决策读数／落地」，完整表格与逐臂读数放 `data/experiments/<实验目录>/` 并在节内给目录名；最终版本变化写入 changelog，每行只写规则变化与落点、依据只给回测日志节号；当前操作只写回本文件。
-10. 信号层三表：`scripts/experimental/selection_edge_audit.py`（边际选择检验、排序信息量、换仓方向性；回测须带 `--candidate-log` 与 `--trade-log`）与 `scripts/experimental/panel_tier_forward.py`（`P/V` 分档前向回报）。采纳候选在候选臂与 `BASE` 上各跑一遍并报差；另每季在 `BASE` 上重算一遍作不变量检验。各表报逐日配对差中位、为正日数与逐年同号年数。换仓方向性一表须同报 `scripts/experimental/swap_regime_control.py` 的四表对照（面板层 `P/V` 信息量、合成换仓、`P/V` 匹配对照、样本独立性），匹配对照的容差至少取 ±0.04／±0.10／±0.15 三档、只报符号稳健的读数；该表的样本量按不同 `(源, 标的)` 配对数计，不按日数；只有与合成换仓反号的年份计入机制层结论。三表不进第 2 款的决策读数，读数写入回测 log。
+10. 信号层三表：`scripts/experimental/selection_edge_audit.py`（边际选择检验、排序信息量、换仓方向性；回测须带 `--candidate-log` 与 `--trade-log`）与 `scripts/experimental/panel_tier_forward.py`（`P/V` 分档前向回报）。采纳候选在候选臂与 `BASE` 上各跑一遍并报差；另每季在 `BASE` 上重算一遍作不变量检验。配对比较报逐日配对差中位、为正日数与逐年同号年数；股票×日期分组分布须标明重复观测，不能把行数作为独立样本量。换仓方向性一表须同报 `scripts/experimental/swap_regime_control.py` 的四表对照（面板层 `P/V` 信息量、合成换仓、`P/V` 匹配对照、样本独立性），匹配对照的容差至少取 ±0.04／±0.10／±0.15 三档、只报符号稳健的读数；该表的样本量按不同 `(源, 标的)` 配对数计，不按日数；只有与合成换仓反号的年份计入机制层结论。三表不进第 2 款的决策读数，读数写入回测 log。
+
+    **单票前向收益引用**：明确买入线、估值版本、历史股票池、是否包含趋势条件、排名范围、信号日/测量起点及累计/年化口径。同报逐日、首次符合指定信号至收盘跌破当日复权 MA60 的周期去重、周期去重后同股前向窗口不重叠三组；不因排名/PV档位变化或 MA20 波动重新计数。若按实际止损线重置，另列 §9.3.5 锚止损口径，不与 MA60 周期混称。计数周期结束不截短固定期前向回报；失败信号保留，终点不足单列。报信号数、完整窗口数、公司数、逐公司/逐年分布；同股不重叠仍不证明跨股独立。复现与检验入口 `scripts/experimental/pv_episode_forward.py`、冻结旧排名表的 `rank_episode_forward.py`，配置/证据随实验登记。
+
 11. 采纳候选报 `scripts/experimental/delta_attribution.py` 的前三只贡献占比（按 trades `contrib` 列，与第 3 款同一把尺）；超过 100% 者不作采纳依据。
 12. 引用正读数时同报本族已试臂数，按 `data/backtest/scan_arms_index.csv` 的臂名计（`clean_derived_artifacts.py` 归并后自动重建）；当前逐路径读数取 `data/backtest/scan_summaries.csv`。
 

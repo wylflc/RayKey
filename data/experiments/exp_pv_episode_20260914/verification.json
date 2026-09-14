@@ -1,0 +1,33 @@
+{
+  "input_and_output_hashes_valid": true,
+  "old_table_exact_n_and_rounded_median_reproduced": true,
+  "rank1_strict_trend_mismatches": 0,
+  "nonoverlap_intervals_valid": true,
+  "fixed_forward_includes_broken_episodes": 361,
+  "fixed_forward_total": 362,
+  "independent_cash_ledger_checks": 80,
+  "max_cash_return_error": 4.440892098500626e-16,
+  "all_rank1_summary_counts_and_medians_recomputed": true,
+  "source_price_end_counts": {
+    "2018-12-20": 1,
+    "2026-08-07": 80,
+    "2026-08-28": 52
+  },
+  "jobs": {
+    "panel": {
+      "job_id": 26668227,
+      "state": "COMPLETED",
+      "elapsed": "00:01:06",
+      "allocated_cpus": 16,
+      "sacct_maxrss_kb": 46890
+    },
+    "rank1": {
+      "job_id": 26669176,
+      "state": "COMPLETED",
+      "elapsed": "00:00:22",
+      "allocated_cpus": 16,
+      "sacct_maxrss_kb": 1766
+    }
+  },
+  "resource_note": "短作业的sacct采样可能低估峰值；采样值不是持续内存测量。"
+}

@@ -8,6 +8,7 @@
 | --- | --- |
 | `align_buy_line.py` | 对齐买入线合格面；换仓边际按工作流程另行扫描 |
 | `selection_edge_audit.py` | 边际选择、排序信息与换仓方向检验 |
+| `pv_episode_forward.py`、`rank_episode_forward.py` | P/V 与趋势条件、冻结旧排名表的前向回报；MA60 周期与窗口去重，见[报告](../../docs/reports/pv_episode_review_2026-09-14.zh.md) |
 | `panel_tier_forward.py` | 面板估值分档与前向回报 |
 | `swap_regime_control.py` | 换仓方向的面板、合成、估值匹配与样本独立性对照 |
 | `delta_attribution.py` | 配对差的个股贡献归因 |
