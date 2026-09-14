@@ -402,6 +402,9 @@ def main() -> int:
         print(f"  **失败 {len(failed)} 项**：{'、'.join(failed[:10])}" + ("…" if len(failed) > 10 else ""))
     print("  ⚠ 已知缺口：①配股不在 RPT_SHAREBONUS_DET，受影响票须人工补；"
           "②universe 取自当前池与持仓，**退市/更名股票不在其中（幸存者偏差，§12.4）**")
+    if not failed:
+        from daily_execution_guard import stamp
+        stamp(actions_path, args.signal_date)
     return 1 if failed else 0
 
 

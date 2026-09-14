@@ -89,6 +89,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--timeout", type=float, default=15.0)
     parser.add_argument("--page-size", type=int, default=500)
+    parser.add_argument("--signal-date", default=None, help="本次服务的信号日，用于同日证据凭据")
     args = parser.parse_args()
 
     report_date = args.report_date or latest_ended_quarter_end()
@@ -119,6 +120,8 @@ def main() -> None:
         writer = csv.DictWriter(handle, fieldnames=FIELDNAMES)
         writer.writeheader()
         writer.writerows(out_rows)
+    from daily_execution_guard import stamp
+    stamp(args.output, args.signal_date)
     print(f"wrote {len(out_rows)} forecast rows (report_date={report_date}) to {args.output}")
 
 

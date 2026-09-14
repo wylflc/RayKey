@@ -151,7 +151,7 @@ def implied_lead(row: dict, meta: dict, band: dict | None) -> tuple[str, bool]:
             reason = reason[len("无法估值·"):]
         text = f"**无法估值**——{reason}。"
         if price:
-            text += f"现价 {price:g}（{as_of}）；"
+            text += f"估值物化价格快照 {price:g}（{as_of}）；"
         text += "无带、无 `P/V`，不进 §9.3 判定；模型重新可算后自动回归模型带（§6.5.2.4）。"
         return text, False
     mid = (low + high) / 2
@@ -160,7 +160,7 @@ def implied_lead(row: dict, meta: dict, band: dict | None) -> tuple[str, bool]:
         pv = trading_pv(price, band) if band is not None else None
         if pv is None:
             pv = price / mid
-        text = (f"现价 {price:g}（{as_of}）÷ {band_name}中值 V {mid:.2f} = **{pv:.3f}**"
+        text = (f"估值物化价格快照 {price:g}（{as_of}）÷ {band_name}中值 V {mid:.2f} = **{pv:.3f}**"
                 f"（带 {low:.2f}~{high:.2f}）。")
     else:
         pv = None
@@ -239,11 +239,7 @@ def render(row: dict, pool: dict, bands: dict, tiers: dict | None = None) -> tup
     return "".join(parts), skipped
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true", help="只比对不写盘")
-    args = parser.parse_args()
-
+def build_readmes(check: bool = False) -> int:
     with POOL.open(encoding="utf-8-sig") as handle:
         pool = {r["security_code"]: r for r in csv.DictReader(handle)}
     if TRIAGE.exists():
@@ -274,10 +270,10 @@ def main() -> int:
             param_skipped.append(row["security_code"])
         if not path.exists() or path.read_text(encoding="utf-8") != text:
             changed.append(row["security_code"])
-            if not args.check:
+            if not check:
                 path.write_text(text, encoding="utf-8")
 
-    print(f"档案 {len(rows)} 份，{'需更新' if args.check else '已写入'} {len(changed)} 份")
+    print(f"档案 {len(rows)} 份，{'需更新' if check else '已写入'} {len(changed)} 份")
     if changed:
         print("  " + " ".join(changed[:40]) + (" …" if len(changed) > 40 else ""))
     if param_skipped:
@@ -286,7 +282,13 @@ def main() -> int:
     if missing_dir:
         print(f"  ❌ 缺 dossier_dir：{' '.join(missing_dir)}")
         return 1
-    return 1 if (args.check and changed) else 0
+    return 1 if (check and changed) else 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--check", action="store_true", help="只比对不写盘")
+    return build_readmes(parser.parse_args().check)
 
 
 if __name__ == "__main__":

@@ -47,6 +47,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
         # v4.109（OI-110）：BASE 不得带 `--sell-line`——给了就把估值减持重新打开
         self.assertNotIn("--sell-line", args)
         self.assertEqual(option_value(args, "--lot-cooldown-start"), "confirmed")
+        self.assertEqual(option_value(args, "--execution-consistency"), "signal")
         # v4.92 SPA：候选侧与持仓侧逐日状态都显式入 BASE（`--hold-states` 缺省 None = 持仓侧同候选侧，会静默退回旧口径）
         self.assertEqual(option_value(args, "--daily-states"), "data/processed/a_share_daily_states_adopted.csv")
         self.assertEqual(option_value(args, "--hold-states"), "data/processed/a_share_daily_states_hold.csv")

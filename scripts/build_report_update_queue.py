@@ -400,6 +400,9 @@ def main() -> None:
         "generated_at_utc",
     ]
     write_csv(args.output, rows, fieldnames)
+    from daily_execution_guard import stamp
+    stamp(args.output, args.signal_date, (args.forecasts, args.report_disclosures,
+                                         args.attention_triage, args.tiers, args.valuation_pool))
     forecast_hits = sum(1 for row in rows if "forecast_after_last_valuation_review" in str(row["queue_reasons"]))
     express_hits = sum(1 for row in rows if "express_report_after_last_valuation_review" in str(row["queue_reasons"]))
     periodic_hits = sum(1 for row in rows if "report_disclosure_after_last_valuation_review" in str(row["queue_reasons"]))

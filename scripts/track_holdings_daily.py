@@ -19,9 +19,10 @@ from a_share_quotes import fetch_spot_quotes
 from a_share_signal_dates import evidence_iso_for_signal
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
 from screen_daily_volume_price_signals import (DEFAULT_HOLD_BANDS, DEFAULT_MODEL_BANDS, SEC93_GAIN_SELL,
-                                               fetch_daily_rows, holding_trim_signal, is_bank, resolve_live_band)
+                                               fetch_daily_rows, holding_trim_signal, is_bank, resolve_live_band,
+                                               load_worth_attention_codes, load_model_bands)
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
-from pv_ratio import load_model_bands, trading_pv  # noqa: E402  v4.62 OI-091
+from pv_ratio import trading_pv  # noqa: E402  v4.62 OI-091
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
@@ -110,40 +111,18 @@ MA60_BASIS: dict[str, str] = {}     # 代码 → "qfq"（前复权，§8.3 口�
 
 
 def fetch_raw_close(code: str, as_of: date, timeout: float) -> tuple[float | None, float | None, float | None]:
-    """`as_of` 当日**不复权**收盘与当日 MA20／MA60，返回 `(收盘, MA20, MA60)`。
-
-    取数走扫描器 `fetch_daily_rows` **同一实现**（OI-095：东财主源、腾讯备源、北交所自动改道腾讯，
-    与 §9.3.1 入场闸门的 MA60 同源同基；两侧各自取数时两家前复权序列有差，同日入场闸门与
-    止损生效线会不同基）。收盘：不复权序列 `as_of` 当根，当日无K线（未收盘/停牌/接口失败）为 None。
-    MA60（§9.3.1 生效止损线要用的当日均线）：截至 `as_of` 的最近 60 根**前复权**收盘均值
-    （§8.3 口径）——前复权序列锚在最新一根，末根即当日不复权收盘，故均值与当日价、与已按 §11.4
-    折算过的锚同尺度。不足 60 根（新上市）为 None；前复权序列取不到时退回不复权均值并记
-    `MA60_BASIS[code] = "raw"`（报告注明）。
-    """
-    as_of_text = as_of.isoformat()
-
-    def series(fq: str) -> list[tuple[str, float]]:
-        try:
-            _, rows = fetch_daily_rows(code, "", as_of_text, timeout, fq=fq)
-        except (OSError, ValueError, KeyError, IndexError):
-            return []
-        return [(str(r["date"]), float(r["close"])) for r in rows if str(r["date"]) <= as_of_text]
-
-    def ma_of(closes: list[tuple[str, float]], window: int) -> float | None:
-        return (sum(v for _d, v in closes[-window:]) / window) if len(closes) >= window else None
-
-    raw_closes = series("")
-    close = next((v for d, v in raw_closes if d == as_of_text), None)
-    adj_closes = series("qfq")
-    if adj_closes:
-        ma20, ma60 = ma_of(adj_closes, 20), ma_of(adj_closes, 60)
-        MA60_BASIS[code] = "qfq"
-    elif raw_closes:
-        ma20, ma60 = ma_of(raw_closes, 20), ma_of(raw_closes, 60)
-        MA60_BASIS[code] = "raw"
-    else:
-        ma20 = ma60 = None
-    return close, ma20, ma60
+    """收盘与折到信号日的均线共用扫描器原始行情/事件实现。"""
+    try:
+        _, rows = fetch_daily_rows(code, "", as_of.isoformat(), timeout)
+    except (OSError, ValueError, KeyError, IndexError):
+        return None, None, None
+    rows = [r for r in rows if str(r["date"]) <= as_of.isoformat()]
+    if not rows or str(rows[-1]["date"]) != as_of.isoformat():
+        return None, None, None
+    close = float(rows[-1].get("raw_close", rows[-1]["close"]))
+    ma = lambda n: sum(float(r["close"]) for r in rows[-n:]) / n if len(rows) >= n else None
+    MA60_BASIS[code] = "actions"
+    return close, ma(20), ma(60)
 
 
 def resolve_prices(codes: list[str], as_of: date,
@@ -186,24 +165,30 @@ def resolve_prices(codes: list[str], as_of: date,
     return out, ma20s, ma60s, label
 
 
-def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeout: float) -> list[dict[str, object]]:
-    global MODEL_BANDS, CAND_BANDS
-    if MODEL_BANDS is None:
+def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeout: float, *, snapshots=None, hold_bands=None, candidate_bands=None, members=None) -> list[dict[str, object]]:
+    # Tests may supply module fixtures; normal calls always resolve their own date.
+    selected_hold = hold_bands if hold_bands is not None else MODEL_BANDS
+    selected_candidate = candidate_bands if candidate_bands is not None else CAND_BANDS
+    if selected_hold is None:
         evidence = evidence_iso_for_signal(as_of)
-        CAND_BANDS = load_model_bands(DEFAULT_MODEL_BANDS, as_of=evidence)
-        if DEFAULT_HOLD_BANDS.exists():
-            MODEL_BANDS = load_model_bands(DEFAULT_HOLD_BANDS, as_of=evidence)
-        else:
-            MODEL_BANDS = CAND_BANDS
-            print(f"  ⚠ **持仓侧带文件不存在（{DEFAULT_HOLD_BANDS}）**：P/V 退回候选侧带；重建见 §6.7 第 4 步")
+        selected_candidate = load_model_bands(DEFAULT_MODEL_BANDS, as_of=evidence)
+        selected_hold = load_model_bands(DEFAULT_HOLD_BANDS, as_of=evidence)
     with holdings_file.open(newline="", encoding="utf-8") as handle:
         holdings = list(csv.DictReader(handle))
     wanted = {s.strip().zfill(6) for s in symbols.split(",") if s.strip()}
     if wanted:
         holdings = [h for h in holdings if h["security_code"].zfill(6) in wanted]
 
+    members = load_worth_attention_codes() if members is None else members
+    if members is None:
+        raise ValueError("缺三类表，不能判定持仓退出")
     pool = load_pool(pool_file)
-    prices, ma20s, ma60s, price_label = resolve_prices([h["security_code"].zfill(6) for h in holdings], as_of, timeout)
+    if snapshots is None:
+        prices, ma20s, ma60s, price_label = resolve_prices([h["security_code"].zfill(6) for h in holdings], as_of, timeout)
+    else:
+        prices, ma20s, ma60s = ({c: to_float(r.get(key)) for c, r in snapshots.items()}
+                               for key in ('close', 'ma20', 'ma60'))
+        price_label = '收盘'
     if price_label != "收盘":
         print(f"  ⚠ 价格口径：{price_label}")
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -218,17 +203,12 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
 
         name = str(h.get("security_name", ""))
         financial = is_bank(name, code)
-        band_row, band_source = resolve_live_band(code, name, as_of.isoformat(), MODEL_BANDS or {})
-        cand_row, _ = resolve_live_band(code, name, as_of.isoformat(), CAND_BANDS or {})
-        if financial:
-            low = to_float(band_row.get("fair_price_low"))
-            high = to_float(band_row.get("fair_price_high"))
-        has_display_band = low is not None and high is not None
-        pv = trading_pv(close, band_row) if financial or has_display_band else None
-        cand_pv = trading_pv(close, cand_row) if financial or has_display_band else None
-        if not financial and pv is None and close and low is not None and high is not None:
-            mid = (low + high) / 2
-            pv = close / mid if mid > 0 else None
+        band_row, band_source = resolve_live_band(code, name, as_of.isoformat(), selected_hold or {})
+        cand_row, _ = resolve_live_band(code, name, as_of.isoformat(), selected_candidate or {})
+        low = to_float(band_row.get("fair_price_low", band_row.get("band_low")))
+        high = to_float(band_row.get("fair_price_high", band_row.get("band_high")))
+        pv = trading_pv(close, band_row)
+        cand_pv = trading_pv(close, cand_row)
         upside = band_upside(close, low, high) if close is not None else ""
 
         notes: list[str] = []
@@ -238,9 +218,9 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
             notes.append(f"持仓侧 `P/V` {pv:.2f}（候选侧 {cand_pv:.2f}；换仓来源按持仓侧判）")
         if close is None:
             notes.append("**未取到当日行情**（停牌或接口失败）：`P/V` 未算出，该票当日不进 §9.3 判定")
-        if pool_row is None:
-            notes.append("不在核心估值合格池内——按 §9.3.2 第四步逐日清仓")
-        elif low is None or high is None:
+        if code not in members:
+            notes.append("已移出 worth_attention——按 §9.3.2 第四步逐日清仓")
+        if pv is None:
             notes.append("池内无合理价区间（无法估值）：无 `P/V`，当日不进机械判定")
         # §9.3.1 涨幅减持行：唯一判定在扫描器 `holding_trim_signal`（只看涨幅，不看走势）。
         # 无带／无 P/V 的票照判（只要有收盘价与成本）。
@@ -296,7 +276,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         # `持有` 是唯一读起来像「已检查、没事」的取值，而没有现价恰恰意味着 `P/V` 没算过。
         # 一只涨幅已达标、本该减持的停牌股若显示为持有，就在卖出规则上
         # 制造了静默失效——这正是 §13 第 3 条要拦的形态。
-        action = "数据缺失" if close is None or (financial and pv is None) else "持有"
+        action = "数据缺失" if close is None or (pv is None) else "持有"
 
         rows.append(
             {

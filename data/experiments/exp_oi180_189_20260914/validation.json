@@ -1,0 +1,52 @@
+{
+  "unique_tests_passed": 156,
+  "groups": [
+    {
+      "name": "本批反例",
+      "count": 31,
+      "command": "PYTHONPATH=scripts python3 -m unittest test_workflow_execution_consistency",
+      "note": "30项整批通过后补1项零成交占位；PricesAndPlans整组13项再次通过"
+    },
+    {
+      "name": "冷却",
+      "count": 25,
+      "command": "PYTHONPATH=scripts python3 -m unittest test_lot_cooldown"
+    },
+    {
+      "name": "相关流程",
+      "count": 91,
+      "command": "PYTHONPATH=scripts python3 -m unittest test_daily_execution_plan test_exec_price_sides test_cash_accounting test_position_cap_lot test_residual_clear test_residual_cny test_suspended_actions test_live_financial_valuation test_repository_cleanup test_report_update_queue test_strategy_parameter_sync test_strategy_return_tracker"
+    },
+    {
+      "name": "原失败语义",
+      "count": 9,
+      "command": "python3 scripts/test_failure_semantics.py"
+    }
+  ],
+  "readmes": {
+    "total": 307,
+    "rewritten": 194,
+    "drift_after": 0
+  },
+  "documentation_audit_errors": 0,
+  "real_holdings_receipts_cooldown_and_research_inputs_unchanged": true,
+  "backtest": {
+    "job_id": "26683497",
+    "elapsed": "00:06:14",
+    "cpus": 32,
+    "peak_rss_kib": 32935823,
+    "paths": 225,
+    "baseline_rows_registered": 28
+  },
+  "script_sha256": {
+    "scripts/backtest_valuation_strategy.py": "9a4dd2f336838ff75a883f855082ac8c77301e5e60f46c4c9c9b6ad85f52abd8",
+    "scripts/sweep_backtest_configs.py": "17ee4c31eac6d6ccf378259a74b676a89696beb3c42ecf48792f43d5de9bb1ac",
+    "scripts/screen_daily_volume_price_signals.py": "801e9ae349bca1728a20a683a6b31279ec83d524ef63b0ae77f833f19954ebb6",
+    "scripts/daily_execution_guard.py": "7309d5fad9dedc34e45f437c313c61ccd5694413e4eb42563db377b10ca82e90",
+    "scripts/track_holdings_daily.py": "bac2b2222a7228fa8e98e2d058094870993170caee719b8c10c1e3a714d8cf33",
+    "scripts/check_report_day_price_divergence.py": "f017f7b1a0841f7b303150923ce9a2fddfac14ae1c86796bf17594f626a2f8c3",
+    "scripts/fetch_daily_market_evidence.py": "596c4d2c271b28e5076e6647d108de07ae37ab7d891a8b957b5a15c212726ab6",
+    "scripts/build_company_dossier_readmes.py": "4b4c8cb90d55c36fddf780de7787ccba1082d15a49c8c0b6fbbeb5372eac54c5",
+    "scripts/test_workflow_execution_consistency.py": "5ea7e499d7eb00397c0b4ad4c0c3271aca1a8240e237f199e992bbbdff54c34d"
+  }
+}

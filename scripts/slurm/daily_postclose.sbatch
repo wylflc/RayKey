@@ -4,6 +4,7 @@
 #SBATCH -p rome
 #SBATCH -n 16
 #SBATCH -t 01:00:00
+#SBATCH --mem-per-cpu=1792M
 #SBATCH -o logs/%x_%j.out
 #SBATCH -e logs/%x_%j.err
 
@@ -14,9 +15,13 @@ cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 
 case "$SCAN_STAGE" in
   evidence)
+    : "${SCAN_SINCE:?Set SCAN_SINCE to the previous successful scan date}"
     : "${SCAN_REPORT_DATE:?Set SCAN_REPORT_DATE to the latest reporting period}"
-    python3 scripts/fetch_a_share_report_disclosures.py --report-date "$SCAN_REPORT_DATE" --output data/interim/a_share_report_disclosures.csv
-    python3 scripts/fetch_a_share_earnings_forecasts.py --report-date "$SCAN_REPORT_DATE" --output data/interim/a_share_earnings_forecasts.csv
+    python3 scripts/fetch_a_share_report_disclosures.py --signal-date "$SCAN_DATE" --report-date "$SCAN_REPORT_DATE" --output data/interim/a_share_report_disclosures.csv
+    python3 scripts/fetch_a_share_earnings_forecasts.py --signal-date "$SCAN_DATE" --report-date "$SCAN_REPORT_DATE" --output data/interim/a_share_earnings_forecasts.csv
+    python3 scripts/fetch_ohlcv_history.py --signal-date "$SCAN_DATE" --actions-only
+    python3 scripts/fetch_daily_market_evidence.py --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
+    python3 scripts/daily_execution_guard.py evidence --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
     python3 scripts/build_report_update_queue.py --market A_SHARE --signal-date "$SCAN_DATE"
     python3 - <<'PY'
 import json
@@ -52,15 +57,15 @@ PY
   scan)
     : "${SCAN_NAV:?Set SCAN_NAV from the account snapshot}"
     : "${SCAN_FUNDS:?Set SCAN_FUNDS from broker funds plus cash}"
-    python3 scripts/check_report_day_price_divergence.py --as-of "$SCAN_DATE"
     python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --signal-date "$SCAN_DATE"
-    python3 scripts/screen_daily_volume_price_signals.py --as-of "$SCAN_DATE" \
+    scan_cash_args=()
+    if [[ -n "${SCAN_CASH:-}" ]]; then scan_cash_args+=(--cash "$SCAN_CASH"); fi
+    if [[ -n "${SCAN_DEBT:-}" ]]; then scan_cash_args+=(--debt "$SCAN_DEBT"); fi
+    python3 scripts/screen_daily_volume_price_signals.py --as-of "$SCAN_DATE" "${scan_cash_args[@]}" \
       --review-queue data/interim/a_share_report_update_queue.csv \
       --model-bands data/processed/a_share_pool_model_bands_adopted.csv \
       --hold-bands data/processed/a_share_pool_model_bands_hold.csv \
       --nav "$SCAN_NAV" --funds "$SCAN_FUNDS" --workers 16
-    python3 scripts/track_holdings_daily.py --as-of "$SCAN_DATE"
-    python3 scripts/check_report_day_price_divergence.py --as-of "$SCAN_DATE"
     ;;
   *) printf '%s\n' 'SCAN_STAGE must be evidence or scan' >&2; exit 2 ;;
 esac

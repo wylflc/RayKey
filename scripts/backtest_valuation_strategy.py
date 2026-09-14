@@ -1488,7 +1488,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         cluster_min_upside: float = 0.20, swap_partial: bool = False,
         lot_size: int = 0, rebuy: str = "off", ledger: list | None = None,
         min_lot_cooldown: int = 0, lot_ratio_cooldown: bool = False,
-        lot_cooldown_shared: bool = False, lot_cooldown_start: str = "confirmed",
+        lot_cooldown_shared: bool = False, lot_cooldown_start: str = "confirmed", execution_consistency: str = "signal",
         quota_members: dict | None = None, quota_pct: float = 0.0,
         quota_swappable: bool = False,
         gate: str = "pv", buy_pct: float = 0.05, sell_pct: float = 0.60,
@@ -2022,11 +2022,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         if equity <= 0:
             stats["**穿仓·净资产归零**"] += 1
             break
-        budget = equity * x
+        tranche_equity = equity_curve[-1][1] if exec_delay and equity_curve and execution_consistency == "signal" else equity
+        budget = tranche_equity * x
         # `--sell-x`（用户 2026-09-02：买入与卖出不必同一档位）：卖出侧一档 = 净资产 × sell_x，
         # 涨幅减持／出名单减持／换仓卖出／簇内升级／止损减档同用；不给即与买入一档相同（逐位不变）。
-        sell_budget = equity * (sell_x or x)
-        # 冷却比例冻结在原信号日净资产；委托预算的 OI-180 单独修复。
+        sell_budget = tranche_equity * (sell_x or x)
+        # 冷却比例与委托档位均冻结在原信号日净资产。
         cooldown_equity = equity_curve[-1][1] if exec_delay and equity_curve else equity
         cooldown_tranches = {"buy": cooldown_equity * x, "sell": cooldown_equity * (sell_x or x)}
         cooldown_buy = Opportunities(lot_counters_buy)
@@ -2109,9 +2110,18 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 lot.max_money_drawdown = max(lot.max_money_drawdown, 1 - money / lot.peak_money)
 
         # ---- 卖出（先卖后买：卖出释放的现金当日即可用，与「有资金就买」一致）
+        outlist_sold_today: set[str] = set()
         gain_trimmed_today: set[str] = set()   # 当日已按涨幅减持减过一档的持仓：`swap_gain_once` 下不作换仓卖出源（OI-142，v4.134）
         for code in list(portfolio.lots):
-            lot, price = portfolio.lots[code], fill_price(code, marks.get(code))
+            lot = portfolio.lots[code]
+            if execution_consistency == "signal" and confirmed_cooldown:
+                sig_close = today.get(code, (None,))[0]
+                outlist = members is not None and code not in members
+                sig_gain = bool(sig_close and gain_sell and lot.avg_cost > 0
+                                and gain_close(code, sig_close) >= lot.avg_cost * (1 + gain_sell))
+                if (outlist and sig_close) or (sig_gain and gain_sell_mode == "ungated"):
+                    cooldown_sell.ready(code)
+            price = fill_price(code, marks.get(code))
             if not price:
                 continue
             sp = px_sell(price)
@@ -2143,6 +2153,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         turnover += shares * sp
                     sell_count += 1
                     cooldown_sale(code, lot.proceeds - cooldown_proceeds, sp)
+                    outlist_sold_today.add(code)
                 continue
             # 走势退出：**跟随均线**而非建仓日固定价。用户 2026-08-09：「把跌破120日均线作为
             # 减仓阈值」。与 `--price-stop` 的区别是后者盯建仓当日那条静态止损价，此处盯当日均线。
@@ -2919,6 +2930,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         and (not t1_swap or c in hold_exec_today)
                         and (swap_repeat == "whole" or c not in reduced_today)
                         and not (swap_gain_once and c in gain_trimmed_today)
+                        and not (execution_consistency == "signal" and c in outlist_sold_today)
                         and (gate != "self-pct" or c in pcts)
                         and (not swap_require_weak
                              or ((_m := mas.get(c, {}).get(src_ma_day, {})).get(swap_weak_ma) is not None
@@ -2966,6 +2978,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 if gain_sell or gain_ladder:
                     for c, l in portfolio.lots.items():
                         if (c not in today or c == code or l.avg_cost <= 0 or c in quota_hold_today
+                                or (execution_consistency == "signal" and c in outlist_sold_today)
                                 or c in reduced_today or (swap_gain_once and c in gain_trimmed_today)):
                             continue
                         _gc = gain_close(c, today[c][0])
@@ -3020,6 +3033,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     elif not swap_gap_ok(source_ratio, cand_ratio):
                         stats["T+1确认·换仓取消·P/V边际不足"] += 1
                         continue
+                if execution_consistency == "signal" and confirmed_cooldown and swap_partial:
+                    cooldown_sell.ready(worst)
                 price = fill_price(worst, marks.get(worst))
                 if not price:
                     break
@@ -3052,7 +3067,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         and cooldown_ready(lot_counters_sell, worst, sp * lot_size, sell_budget)):
                     shares = high_price_sell(lot_worst.shares, sp)
                     stats["高价股·按手换仓"] += 1
-                if ladder_swap and partial and shares <= 0:
+                if partial and shares <= 0 and (ladder_swap or execution_consistency == "signal"):
                     continue                         # 阶梯待减不足一手：本日不让位（非阶梯路径逐位保留原行为）
                 sold_qty = shares if (partial and shares < lot_worst.shares * 0.999) else lot_worst.shares
                 _cash_before_swap = portfolio.cash
@@ -4327,6 +4342,8 @@ def main() -> int:
                         help="研究开关（§9.3.3 冷却启用前的口径）：一手价值超过一档时照常成交、不消费任何合格机会")
     parser.add_argument("--lot-cooldown-shared", action="store_true",
                         help="研究开关（OI-120 前旧口径）：比例冷却买卖共用一个计数器，买入触发的冷却会跳过减持与换仓卖出")
+    parser.add_argument("--execution-consistency", choices=("signal", "legacy"), default="signal",
+                        help="signal: 信号日档位/机会与零股换仓修复；legacy 仅复现 OI-180/181/184 旧引擎")
     parser.add_argument("--lot-cooldown-start", choices=("confirmed", "plan"), default="confirmed",
                         help="比例冷却启动时点；confirmed 按实际净成交，plan 仅复现旧基线")
     parser.add_argument("--min-lot-cooldown", type=int, default=0, metavar="D",
@@ -4896,6 +4913,7 @@ def main() -> int:
                      + (f"_lot{args.lot_size}" if args.lot_size else "")
                      + (f"_ml{args.min_lot_cooldown}" if args.min_lot_cooldown else "")
                      + ("_lrc" if args.lot_ratio_cooldown and args.lot_cooldown_shared else "")
+                     + ("_sig1" if args.execution_consistency == "signal" else "")
                      + ("_lrc3" if args.lot_ratio_cooldown and args.lot_cooldown_start == "confirmed" else
                         "_lrc2" if args.lot_ratio_cooldown and not args.lot_cooldown_shared else "")
                      + (f"_rb{args.rebuy}" if args.rebuy != "off" else "")
@@ -4984,6 +5002,7 @@ def main() -> int:
                          lot_ratio_cooldown=args.lot_ratio_cooldown,
                          lot_cooldown_shared=args.lot_cooldown_shared,
                          lot_cooldown_start=args.lot_cooldown_start,
+                         execution_consistency=args.execution_consistency,
                          quota_members=quota, quota_pct=args.quota_pct,
                          quota_swappable=args.quota_swappable,
                          gate=args.gate, buy_pct=args.buy_pct, sell_pct=args.sell_pct,

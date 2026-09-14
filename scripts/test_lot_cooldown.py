@@ -143,7 +143,7 @@ class ReceiptTest(unittest.TestCase):
         self.assertEqual(len(cd.read_rows(log)), 1)
         self.assertEqual(cd.read_rows(log)[0]['input_files'], str(self.receipts))
 
-    def test_failed_scan_does_not_publish_or_advance_state(self):
+    def test_failed_quote_preview_does_not_publish_or_advance_state(self):
         import contextlib
         import io
         from types import SimpleNamespace
@@ -153,7 +153,7 @@ class ReceiptTest(unittest.TestCase):
         book = self.load(); book.save(book.before)
         before = self.state.read_bytes()
         output = self.state.with_name('buy_candidates.csv'); output.write_text('previous scan')
-        args = SimpleNamespace(as_of='2026-09-14', rf=.02, symbols='', input=output,
+        args = SimpleNamespace(as_of='2026-09-14', nav=0, rf=.02, symbols='', input=output,
                                output_csv=output, since='', timeout=1, workers=1)
         with patch.object(scan, 'parse_args', return_value=args), patch.object(scan, 'load_csv', return_value=[]), \
              patch.object(scan, 'scan', return_value=[{'signal_state':'data_error'}, {'signal_state':'buy_candidate'}]), \

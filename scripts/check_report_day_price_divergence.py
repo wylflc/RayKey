@@ -90,13 +90,17 @@ def latest_notice_dates(as_of: date, lookback_days: int) -> dict[str, tuple[str,
 
 
 def divergence_for(code: str, exchange: str, notice: str, as_of: date,
-                   low: float, high: float, timeout: float) -> dict[str, object] | None:
+                   low: float, high: float, timeout: float, strict: bool = False) -> dict[str, object] | None:
     """返回该票披露前收盘 → 披露后首个收盘的背离读数；不满足条件返回 None。"""
     try:
         _, rows = S.fetch_daily_rows(code, exchange, as_of.isoformat(), timeout)
     except Exception:                                          # noqa: BLE001
+        if strict:
+            raise
         return None
     if len(rows) < 2:
+        if strict:
+            raise ValueError(f"背离检查行情不足：{code}")
         return None
 
     # 披露后首个交易日 = 公告日当天或其后的第一个有 bar 的交易日。
@@ -143,23 +147,33 @@ def divergence_for(code: str, exchange: str, notice: str, as_of: date,
     }
 
 
-def run(as_of: date, lookback: int, timeout: float, universe: str = "subset") -> list[dict[str, object]]:
-    pool = {row["security_code"].zfill(6): row for row in load_csv(DEFAULT_POOL)}
-    holdings = {row["security_code"].zfill(6) for row in load_csv(DEFAULT_HOLDINGS)}
+def run(as_of: date, lookback: int, timeout: float, universe: str = "subset", *, candidate_rows=None,
+        pool_path=DEFAULT_POOL, holdings_path=DEFAULT_HOLDINGS, members=None, tactical=None,
+        strict=False) -> list[dict[str, object]]:
+    pool = {row["security_code"].zfill(6): row for row in load_csv(pool_path)}
+    holdings = {row["security_code"].zfill(6) for row in load_csv(holdings_path)}
     # 「当日可买」取最近一次扫描落盘的候选表（§8.2 产物）：model_pv ≤ 买入线且收>MA20>MA60。
     # （旧口径读池表 `matrix_state=="buyable"`——该列随三态矩阵 v1.27 退役后恒空，子集因此只剩持仓。）
     buyable: set[str] = set()
-    cand_rows = load_csv(ROOT / "data/processed/daily_buy_candidates.csv")
+    cand_rows = (load_csv(ROOT / "data/processed/daily_buy_candidates.csv")
+                 if candidate_rows is None else candidate_rows)
+    members = S.load_worth_attention_codes() if members is None else members
+    tactical = S.load_tactical_gate_codes() if tactical is None else tactical
+    if members is None:
+        raise ValueError('背离复核缺三类表')
     scan_day = max((r.get("trade_date", "") for r in cand_rows), default="")
     for r in cand_rows:
-        if r.get("trade_date") != scan_day or str(r.get("review_frozen", "")).lower() == "true":
+        code = str(r.get("security_code", "")).zfill(6)
+        if code not in members or code in tactical or r.get("signal_state", "ok") != "ok":
+            continue
+        if r.get("trade_date") != as_of.isoformat() or str(r.get("review_frozen", "")).lower() == "true":
             continue
         try:
             pv, close, ma20, ma60 = (float(r["model_pv"]), float(r["close"]),
                                      float(r["ma20"]), float(r["ma60"]))
         except (KeyError, TypeError, ValueError):
             continue
-        if pv <= S.SEC93_BUY_LINE and close > ma20 > ma60:
+        if pv <= S.SEC93_BUY_LINE and ma20 > ma60 and (code in holdings or close > ma20):
             buyable.add(str(r.get("security_code", "")).zfill(6))
     if scan_day:
         print(f"  当日可买子集取自最近一次扫描（trade_date={scan_day}，{len(buyable)} 只）")
@@ -179,7 +193,7 @@ def run(as_of: date, lookback: int, timeout: float, universe: str = "subset") ->
         if not notice or low is None or high is None:
             continue
         checked += 1
-        result = divergence_for(code, row.get("exchange", ""), notice[0], as_of, low, high, timeout)
+        result = divergence_for(code, row.get("exchange", ""), notice[0], as_of, low, high, timeout, strict=strict)
         if result:
             result.update({
                 "security_code": code,
@@ -217,7 +231,7 @@ def main() -> int:
     parser.add_argument("--universe", choices=("subset", "pool"), default="subset",
                         help="subset=生效范围（持仓+当日可买）；pool=全池，仅供阈值校准")
     args = parser.parse_args()
-    hits = run(date.fromisoformat(args.as_of), args.lookback, args.timeout, args.universe)
+    hits = run(date.fromisoformat(args.as_of), args.lookback, args.timeout, args.universe, strict=True)
     return 1 if hits else 0
 
 

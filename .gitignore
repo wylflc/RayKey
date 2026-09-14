@@ -169,3 +169,13 @@ data/experiments/exp_oi186_20260914/stats/
 data/experiments/exp_oi186_20260914/daily/
 data/experiments/exp_oi186_20260914/errors/
 data/experiments/exp_oi186_20260914/ledger_*.csv
+
+# OI-180—189 paired execution audit
+data/experiments/exp_oi180_189_20260914/cache/
+data/experiments/exp_oi180_189_20260914/nav/
+data/experiments/exp_oi180_189_20260914/stats/
+data/experiments/exp_oi180_189_20260914/errors/
+data/experiments/exp_oi180_189_20260914/daily/
+data/experiments/exp_oi180_189_20260914/ledger_*.csv
+**/.daily_publish_*/
+data/processed/daily_execution_publication.lock

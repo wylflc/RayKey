@@ -80,9 +80,14 @@ def get_json(url: str, timeout: float) -> dict:
 
 
 def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float, fq: str = "qfq") -> tuple[str, list[dict[str, float | str]]]:
-    """A 股日线**唯一取数实现**（OI-095：扫描器与 `track_holdings_daily` 同用本函数，两侧 MA60 同源同基）。
-    东财主源、腾讯备源，北交所直接走腾讯。`fq="qfq"`（缺省）前复权（§8.3 均线/走势口径）；
-    `fq=""` 不复权（跟踪器取当日收盘用）。"""
+    """A 股日线唯一取数入口：东财未复权主源、腾讯备源，北交所直走腾讯。
+
+    fq="" 返回未复权历史；fq="qfq" 用同一完整公司行动库将历史折到 as_of。
+    价格、均线和标价的基准均为信号日，不依赖提供商最新前复权锚。
+    """
+    if fq:
+        source, raw = fetch_daily_rows(code, exchange, as_of, timeout, fq="")
+        return source, rebase_price_rows(raw, code, as_of)
     query = urllib.parse.urlencode(
         {
             "secid": infer_secid(code, exchange),
@@ -124,6 +129,50 @@ def fetch_daily_rows(code: str, exchange: str, as_of: str, timeout: float, fq: s
     return url, rows
 
 
+@lru_cache(maxsize=1)
+def live_actions():
+    from backtest_valuation_strategy import ACTIONS, load_actions
+    if not ACTIONS.is_file():
+        raise ValueError(f"缺公司行动历史：{ACTIONS}")
+    return load_actions()
+
+
+def rebase_price_rows(raw, code, as_of, events=None):
+    """未复权历史按完整事件日历折到 T；T 无报价时只折标价，不造样本。"""
+    from backtest_valuation_strategy import exright_affine
+    rows = []
+    for r in raw:
+        if str(r['date']) > as_of:
+            continue
+        volume = float(r['volume']) if 'volume' in r else None
+        if volume is not None and (not math.isfinite(volume) or volume < 0):
+            raise ValueError('无效成交量')
+        if volume == 0:
+            continue  # 停牌占位不构成报价，也不增加均线样本。
+        rows.append(dict(r))
+    rows.sort(key=lambda r: str(r["date"]))
+    days = [str(r["date"]) for r in rows]
+    if len(days) != len(set(days)):
+        raise ValueError("日线含重复日期")
+    for r in rows:
+        if not math.isfinite(float(r["close"])) or float(r["close"]) <= 0:
+            raise ValueError("无效原始收盘")
+    if not rows:
+        return rows
+    events = live_actions().get(code, {}) if events is None else events
+    basis_days = days if days[-1] == as_of else days + [as_of]
+    scales, shifts = exright_affine(basis_days, events)
+    for i, r in enumerate(rows):
+        r["raw_close"] = r["close"]
+        for key in ("open", "close", "high", "low"):
+            if key in r:
+                r[key] = float(r[key]) * scales[i] + shifts[i]
+        if "volume" in r:
+            r["volume"] = float(r["volume"]) / scales[i]
+        r["adjustment_basis"] = as_of
+    return rows
+
+
 def fetch_daily_rows_tencent(code: str, exchange: str, as_of: str, timeout: float, fq: str = "qfq") -> tuple[str, list[dict[str, float | str]]]:
     """后备源：腾讯日线（北交所主源，走 newfqkline）。`fq` 语义同 `fetch_daily_rows`（"" = 不复权）。
     成交量单位为手（口径内部一致）；成交额接口未提供，以收盘价×成交量×100近似，只进展示列、不进判定。"""
@@ -138,29 +187,6 @@ def fetch_daily_rows_tencent(code: str, exchange: str, as_of: str, timeout: floa
         payload = json.loads(response.read().decode("utf-8", "ignore"))
     data = (payload.get("data") or {}).get(symbol) or {}
     klines = [list(parts) for parts in ((data.get("qfqday") or data.get("day")) if fq else data.get("day")) or []]
-    # 腾讯前复权序列可能滞后一个交易日：用不复权序列补齐最新K线（不复权序列自身无此滞后）。
-    # 成交量单位沪深口径不一（股/手），按重叠日成交量比例归一后再拼接。
-    if fq and klines and str(klines[-1][0]) < as_of:
-        raw_url = f"{base}?param={symbol},day,{klines[-1][0]},{as_of},10,"
-        raw_req = urllib.request.Request(
-            raw_url, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"}
-        )
-        try:
-            with urllib.request.urlopen(raw_req, timeout=timeout) as response:
-                raw_data = (json.loads(response.read().decode("utf-8", "ignore")).get("data") or {}).get(symbol) or {}
-            raw_rows = raw_data.get("day") or []
-            overlap = {str(p[0]): float(p[5]) for p in raw_rows}
-            qfq_last_vol = float(klines[-1][5])
-            raw_same_vol = overlap.get(str(klines[-1][0]))
-            vol_scale = 1.0
-            if raw_same_vol and qfq_last_vol:
-                ratio = raw_same_vol / qfq_last_vol
-                vol_scale = 100.0 if ratio > 10 else 1.0
-            for parts in raw_rows:
-                if str(parts[0]) > str(klines[-1][0]) and str(parts[0]) <= as_of:
-                    klines.append([parts[0], parts[1], parts[2], parts[3], parts[4], float(parts[5]) / vol_scale])
-        except OSError:
-            pass
     rows: list[dict[str, float | str]] = []
     prev_close: float | None = None
     for parts in klines:
@@ -269,12 +295,21 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = 
         CLOSE_SERIES[code] = [(str(r["date"]), float(r["close"]))
                               for r in price_rows[-(CORR_WINDOW + 2):] if to_float(r.get("close"))]
         snapshot = quote_snapshot(price_rows)
+        latest = price_rows[-1]
+        snapshot.update(mark_close=latest["close"], mark_date=latest["date"],
+                        adjustment_basis=as_of, tradable=str(latest["date"]) == as_of)
+        if str(latest["date"]) != as_of:
+            snapshot.update(signal_state="no_session_quote", trade_date=as_of,
+                            close=None, ma20=None, ma60=None,
+                            note=f"末根 {latest['date']}，当日不可交易；仅保留经公司行动折算的标价")
+        else:
+            snapshot["close"] = latest.get("raw_close", latest["close"])
         if since:
             snapshot.update(gap_review(price_rows, as_of, since))
     except Exception as exc:  # noqa: BLE001 - data-provider failures should not abort the batch.
         kline_url = ""
         snapshot = {"trade_date": as_of, "signal_state": "data_error", "note": repr(exc)}
-    snapshot.update(pool_row)
+    snapshot = {**pool_row, **snapshot}
     snapshot["security_code"] = code
 
     # 带内位置：现价相对合理价区间的落点（展示列，不进任何判定）。
@@ -385,7 +420,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--since",
         default="auto",
-        help='§8.4 缺口回溯起点。"auto"（缺省）从决策日志检出上次扫描日；'
+        help='§8.4 缺口回溯起点。"auto"（缺省）从上次行情产物检出扫描日；'
              '给具体日期则强制回溯该日之后；给空串关闭回溯。',
     )
     parser.add_argument("--as-of", required=True, help="Trading date in YYYY-MM-DD format.")
@@ -402,7 +437,7 @@ def parse_args() -> argparse.Namespace:
                         help="批量模型带表；§9.3 的 P/V 用它，不用池里的逐票档案带")
     parser.add_argument("--hold-bands", type=Path, default=DEFAULT_HOLD_BANDS,
                         help="持仓侧模型带表（§6.7 第 4 步逐票取候选侧与 B2 较高 V）；§9.3.1 换仓来源的 P/V 读它，"
-                             "买入线与候选排序仍读 --model-bands；文件缺失时持仓侧退回候选侧并显著告警")
+                             "买入线与候选排序仍读 --model-bands；执行模式文件缺失时中止")
     parser.add_argument("--nav", type=float, default=0.0,
                         help="当日净资产，用于定一档 = NAV × §9.3.1 的比例。不给则只算 P/V、不出买入计划")
     parser.add_argument("--funds", type=float, default=None,
@@ -422,6 +457,10 @@ def parse_args() -> argparse.Namespace:
                         help="§9.3.3 买卖分侧的已确认成交冷却；扫描只消费")
     parser.add_argument("--cooldown-executions", type=Path, default=None,
                         help="确认净成交凭据；缺省为冷却状态同目录下的 cooldown_executions.csv")
+    parser.add_argument("--tiers", type=Path, default=SEC93_TIERS)
+    parser.add_argument("--evidence-proof", type=Path, default=None)
+    parser.add_argument("--publication", type=Path, default=None)
+    parser.add_argument("--tracking-out", type=Path, default=ROOT / "data/processed/daily_holdings_tracking.csv")
     parser.add_argument("--holdings", type=Path, default=SEC93_HOLDINGS)
     parser.add_argument("--triage", type=Path, default=SEC93_TRIAGE,
                         help="三类表：持仓不在 worth_attention 者按 §9.3.2 第 4 步每日减一档")
@@ -459,12 +498,9 @@ def load_blocked_codes(path: Path) -> set[str] | None:
 
 
 # ------------------------------------------------------------------ §9.3 机械执行层
-# **口径一律来自 `docs/000_Ashare_workflow.md` §9.3，此处不另立标准。** 三处细节：
-#   * 走势闸门 `收 > MA20 > MA60` 用**前复权**序列（收盘与均线同尺度，除息不产生假信号）；
-#   * `P/V` = **未复权现价 ÷ 当日带**。本脚本的 `close` 取自 `fqt=1` 前复权序列，
-#     而前复权序列**锚在最新一根**，故 `--as-of` 为最近交易日时末根收盘即未复权现价，两者同尺度；
-#     **回溯历史日期时该等式不成立**，故本层只在 `--as-of` 为最新交易日时给出买入计划。
-#   * 银行走工作流 §6.5.1 的股利折现口径。
+# **口径一律来自 `docs/000_Ashare_workflow.md` §9.3，此处不另立标准。**
+# close 为当日未复权价格；MA 按 §8.3 的完整事件日历折到同日口径。
+# 历史研究必须隔离状态与输出；生产输入与发布边界由 daily_execution_guard 核验。
 SEC93_BUY_LINE = 1.0454        # §9.3.1 买入线（对齐解、保留四位小数；在册合格面 17.771%，回测日志 §12.170；v4.169 营运资金口径切换时原线合格面 17.928% 在 §12.1 容差 0.2pp 内保留，§12.217）
 SEC93_MAX_CORR = 1.0           # §9.3.1：252 日相关性只计算并列报告、不作过滤（1.0 = 无一被跳过；与回测 `--max-corr` 同值）
 SEC93_SCAN_DEPTH = 40          # 每日最多考察的合格候选名次（与回测 `--scan-depth` 同值；相关性不过滤后不绑定）
@@ -519,13 +555,15 @@ def account_cash_debt(as_of: str, cash: float | None, debt: float | None) -> tup
     source = "命令行"
     if cash is None or debt is None:
         snap = latest_account_snapshot(as_of)
-        if snap is None:
+        if snap is None or snap.get("as_of") != as_of:
             raise SystemExit("股债总仓位上限已触发但缺现金与融资负债：给 --cash/--debt，或先登记账户快照台账（§10.2）")
         cash = to_float(snap.get("cash_cny")) if cash is None else cash
         debt = to_float(snap.get("margin_debt_cny")) if debt is None else debt
         if cash is None or debt is None:
             raise SystemExit(f"账户快照 {snap.get('as_of')} 缺 cash_cny／margin_debt_cny：给 --cash/--debt 后重跑")
         source = f"账户快照 {snap.get('as_of')}"
+    if not all(math.isfinite(v) and v >= 0 for v in (cash, debt)):
+        raise ValueError("现金与融资负债必须为有限非负数")
     return float(cash), float(debt), source
 def _default_rf(as_of: str = "") -> float | None:
     """取信号日可得的最新国债利率；缺失时不使用手抄兜底值。"""
@@ -567,7 +605,7 @@ def load_model_bands(path: Path, as_of: str) -> dict[str, dict]:
         for row in csv.DictReader(handle):
             avail = row.get("band_available_at") or row.get("available_at") or ""
             code = (row.get("security_code") or "").zfill(6)
-            if len(avail) == 10 and avail <= as_of and minority_claims.row_blocked(row):
+            if len(avail) == 10 and avail <= as_of and (minority_claims.row_blocked(row) or row.get("status") not in (None, "", "ok")):
                 if code not in blocked or minority_claims.row_key(row) >= minority_claims.row_key(blocked[code]):
                     blocked[code] = row
             status = row.get("status")
@@ -669,6 +707,11 @@ def resolve_live_band(code: str, name: str, as_of: str, bands: dict[str, dict],
         return {"intrinsic_value": value, "roic_path": "bank_divspread",
                 "fair_price_low": value * 0.90, "fair_price_high": value * 1.10}, "股利折现"
     band = bands.get(code, {})
+    if band.get('status') not in (None, '', 'ok'):
+        return {}, '模型拒绝'
+    value = to_float(band.get('intrinsic_value'))
+    if value is None or not math.isfinite(value) or value <= 0:
+        return {}, '模型缺失或无有效 V'
     return band, f"模型带·{band.get('report_date', '')}" if band else ""
 
 
@@ -748,12 +791,9 @@ def tranche_sell_shares(tranche: float, price: float, held: float) -> float:
 
 
 def hold_pv_of(r: dict[str, object] | None) -> float | None:
-    """持仓侧 P/V（v4.92 SPA：§9.3.1 换仓来源读它）；行上无 `hold_pv` 时退回候选侧 `model_pv`。"""
-    r = r or {}
-    for key in ("hold_pv", "model_pv"):
-        if isinstance(r.get(key), float):
-            return r[key]
-    return None
+    """持仓侧缺失或拒绝时留空，不借候选侧补值。"""
+    value = (r or {}).get("hold_pv")
+    return value if isinstance(value, float) and math.isfinite(value) else None
 
 
 def holding_trim_signal(close: float | None, ma20: float | None,
@@ -808,6 +848,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         by_code.setdefault(str(r["security_code"]).zfill(6), r)
 
     def trend_ok(r) -> bool:
+        if r.get("signal_state", "ok") != "ok" or r.get("tradable") is False:
+            return False
         c, m20, m60 = to_float(r.get("close")), to_float(r.get("ma20")), to_float(r.get("ma60"))
         if not (c and m20 and m60) or not m20 > m60:
             return False
@@ -864,13 +906,15 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         note = "余仓不足一手，整笔清空" if shares >= held else ""
         sells.append(sell_row(code, r, rule, condition, shares, price, cooldown, swap_for, note))
         holdings[code]["shares"] = held - shares
+        regular_sold.add(code)
         return shares
 
+    regular_sold: set[str] = set()
     trimmed_today: set[str] = set()    # 当日已涨幅减持的持仓：不作换仓卖出源（§9.3.1 换仓行，同一持仓每日合计至多减一档）
     for code, h in holdings.items():
         r = by_code.get(code)
         price = to_float((r or {}).get("close"))
-        if r is None or price is None or price <= 0:
+        if r is None or price is None or price <= 0 or r.get("tradable") is False:
             missing_holdings.append(h.get("name", code))
             sells.append(sell_row(code, r, "数据缺失", "无当日行情，未进任何判定", 0, None,
                                   note="停牌或取数失败：按 §9.1 执行日停牌跳过并复核"))
@@ -905,14 +949,19 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     # ---------------- 股债总仓位上限（§9.3.1，v4.176）：常规卖出后仍超限，按可交易持仓市值比例减仓、按手向上取整；
     # 先于换仓与买入，与回测 enforce_equity_bond_cap 同序；减仓持仓当日仍可作换仓卖出源（引擎不排除）。
     def stock_value() -> float:
-        return sum(float(h["shares"]) * (to_float((by_code.get(c) or {}).get("close")) or 0.0) for c, h in holdings.items())
+        return sum(float(h["shares"]) * marks[c] for c, h in holdings.items() if float(h["shares"]) > 0)
+    marks = {c: to_float((by_code.get(c) or {}).get("mark_close") or (by_code.get(c) or {}).get("close"))
+             for c in holdings}
+    unvalued = [c for c, h in holdings.items() if float(h["shares"]) > 0
+                and (marks[c] is None or not math.isfinite(marks[c]) or marks[c] <= 0)]
+    valuation_complete = not unvalued
     eb_sells: list[str] = []
-    eb_stock_before = stock_value() if exposure_cap is not None else None
-    if exposure_cap is not None:
+    eb_stock_before = stock_value() if exposure_cap is not None and valuation_complete else None
+    if exposure_cap is not None and valuation_complete:
         excess = eb_stock_before - exposure_cap * nav
         if excess > 1e-6:
             tradable = [(c, to_float(by_code[c].get("close"))) for c in sorted(holdings)
-                        if c in by_code and float(holdings[c]["shares"]) > 0]
+                        if c in by_code and by_code[c].get("tradable") is not False and float(holdings[c]["shares"]) > 0]
             tradable = [(c, p) for c, p in tradable if p and p > 0]
             value = sum(float(holdings[c]["shares"]) * p for c, p in tradable)
             fraction = min(1.0, excess / value) if value > 0 else 0.0
@@ -945,6 +994,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         and trend_ok(r)
         and str(r["security_code"]).zfill(6) not in blocked
         and str(r["security_code"]).zfill(6) not in tactical_gated
+        and (members is None or str(r["security_code"]).zfill(6) in members)
     ]
     eligible.sort(key=lambda r: r["model_pv"])
     n_cheap = sum(1 for r in rows
@@ -955,7 +1005,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     reduced_today: set[str] = set()
     swap_stop_reason = ""
     swap_src_meta: dict[str, tuple[float | None, str]] = {}   # 卖出源 → (源持仓侧 P/V 或 None, 触发者)
-    if funds is not None:
+    if funds is not None and valuation_complete:
         for cand in eligible:
             ccode = str(cand["security_code"]).zfill(6)
             if ccode in held_codes:
@@ -965,11 +1015,11 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             gain_src = []
             weak_src = []
             for hcode, h in holdings.items():
-                if hcode in reduced_today or hcode in trimmed_today or float(h["shares"]) <= 0:
+                if hcode in reduced_today or hcode in regular_sold or float(h["shares"]) <= 0:
                     continue                                   # 当日已换仓或已涨幅减持的持仓不再作卖出源
                 hr = by_code.get(hcode)
                 hp, hm20 = to_float((hr or {}).get("close")), to_float((hr or {}).get("ma20"))
-                if hp is None:
+                if hp is None or hr.get("tradable") is False:
                     continue
                 cost = h.get("cost")
                 if cost and cost > 0 and hp >= cost * (1.0 + SEC93_GAIN_SELL):
@@ -999,8 +1049,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             hr = by_code[worst]
             hp = to_float(hr.get("close")) or 0.0
             sold = reduce_one(worst, hr, "换仓", cond, hp, swap_for=ccode)
-            reduced_today.add(worst)
             if sold:
+                reduced_today.add(worst)
                 cash += sold * hp
                 swap_targets.add(ccode)
                 swap_src_meta[worst] = (src_pv, ccode)
@@ -1025,7 +1075,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         eligible = kept
 
     # ---------------- 相关性（只计算并列报告；SEC93_MAX_CORR = 1.0 时无一被剔除）
-    held_rows = [by_code[c] for c in holdings if c in by_code and float(holdings[c]["shares"]) > 0]
+    held_rows = [by_code[c] for c in holdings if c in by_code and by_code[c].get("tradable") is not False and float(holdings[c]["shares"]) > 0]
     picked: list[dict] = []
     dropped: list[tuple[dict, float, str]] = []
     corr_unknown: list[tuple[dict, str]] = []
@@ -1055,8 +1105,11 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
     # ---------------- 买入
     plan, capped, cooled = [], [], []
     eb_capped: list[dict] = []
-    eb_stock = stock_value() if exposure_cap is not None else 0.0     # 换仓卖出后的持仓市值；每笔买入后累加
+    eb_stock = stock_value() if exposure_cap is not None and valuation_complete else 0.0     # 换仓卖出后的持仓市值；每笔买入后累加
     for cand in picked:
+        if not valuation_complete:
+            buy_opportunities.ready(str(cand["security_code"]).zfill(6))
+            continue
         price = to_float(cand.get("close")) or 0.0
         if price <= 0:
             continue
@@ -1191,7 +1244,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             "frozen_out": frozen_out, "tactical_out": tactical_out,
             "n_cheap": n_cheap, "cash": cash, "tranche": tranche,
             "funds0": funds0, "funds_given": funds is not None, "exposure_cap": exposure_cap, "eb_sells": eb_sells, "eb_capped": eb_capped,
-            "eb_stock_before": eb_stock_before, "eb_stock_after": (eb_stock if exposure_cap is not None else None),
+            "valuation_complete": valuation_complete, "unvalued_holdings": unvalued,
+            "eb_stock_before": eb_stock_before, "eb_stock_after": (eb_stock if exposure_cap is not None and valuation_complete else None),
             "n_held": len(holdings),
             "n_addon": sum(1 for r in eligible
                            if str(r["security_code"]).zfill(6) in held_codes
@@ -1231,7 +1285,9 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
     if eb:
         head = (f"  §9.3.1 股债总仓位上限：利差 {eb['spread']:.2%}（观测 {eb['observed_on']}；"
                 f"触发 <{SEC93_EQUITY_BOND_THRESHOLD:.1%}，恢复 ≥{SEC93_EQUITY_BOND_RELEASE_THRESHOLD:.1%}）→ ")
-        if eb.get("cap") is None:
+        if not result.get("valuation_complete", True):
+            print(head + "持仓标价缺失，无法核验仓位；新增买入暂停：" + '、'.join(result['unvalued_holdings']))
+        elif eb.get("cap") is None:
             print(head + "当前未受限，按原融资与买入规则执行")
         else:
             status = "低于触发线" if eb['spread'] < SEC93_EQUITY_BOND_THRESHOLD else "沿用受限状态，尚未达到恢复线"
@@ -1265,8 +1321,7 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
     for cand, why in result.get("swap_blocked") or []:
         print(f"     [换仓接收方守卫剔除·§9.3.1] {cand.get('security_name','')} P/V {cand['model_pv']:.4f}｜{why}")
     if result["n_held"] == 0:
-        print("  ⚠ **没读到任何持仓**（data/processed/a_share_holdings.csv 缺失或为空）"
-              "——卖出清单为空、加仓放宽退回旧口径，买入计划不可直接照做")
+        print("     持仓文件已载入，当前空仓")
     else:
         cap_txt = f"单票上限 {SEC93_POSITION_CAP:.0%}（只挡加仓、不触发卖出）" if SEC93_POSITION_CAP else "单票无上限"
         print(f"     持仓 {result['n_held']} 只已载入｜{cap_txt}")
@@ -1326,7 +1381,10 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
               f"｜{p['shares']:>5} 股 {p['amount'] / 1e4:>5.2f} 万"
               + (f"｜按估算金额成交确认后冷却 {p['cooldown_skips']} 次" if p["cooldown_skips"] else ""))
     if not plan:
-        print("     今日无合格标的，持币")
+        if not result.get('valuation_complete', True):
+            print('     持仓标价缺失，新增买入暂停：' + '、'.join(result['unvalued_holdings']))
+        else:
+            print("     今日无可执行买入")
     # OI-065：**空计划也必须落盘**（只含表头），否则前一日的旧计划会原样留在盘上冒充今日结论。
     write_csv(out_path, plan, PLAN_FIELDS)
     print(f"  买入计划已写 {out_path}（trade_date={as_of or '—'}，{len(plan)} 条"
@@ -1356,7 +1414,7 @@ FIELDNAMES = [
     "model_intrinsic_value",
     "model_band_source",
     "model_pv",
-    # v4.92 SPA 持仓侧带三列：换仓来源读 `hold_pv`；持仓侧带缺失时等于候选侧三列。
+    # 持仓侧带三列：换仓来源只读 hold_pv，缺失或拒绝时留空。
     "hold_intrinsic_value",
     "hold_band_source",
     "hold_pv",
@@ -1370,6 +1428,10 @@ FIELDNAMES = [
     "gap_max_vol_ratio",
     "gap_max_vol_day",
     "close",
+    "mark_close",
+    "mark_date",
+    "tradable",
+    "adjustment_basis",
     "amount",
     "ma20",
     "ma60",
@@ -1379,131 +1441,123 @@ FIELDNAMES = [
 ]
 
 
+def run_execution(args, publication):
+    from daily_execution_guard import validate_inputs
+    inputs = validate_inputs(args)
+    evidence_date = evidence_iso_for_signal(args.as_of)
+    args.rf = _default_rf(args.as_of) if args.rf is None else args.rf
+    bands = load_model_bands(args.model_bands, evidence_date)
+    hold_bands = load_model_bands(args.hold_bands, evidence_date)
+    holdings = load_holdings_detail(args.holdings)
+    members = load_worth_attention_codes(args.triage)
+    blocked = load_blocked_codes(args.review_queue)
+    tactical = load_tactical_gate_codes(args.tiers)
+    book = CooldownBook.load(args.cooldown_state, args.as_of, args.cooldown_executions)
+    if book.executions.exists():
+        inputs[str(book.executions.resolve())] = book.executions_hash
+    if not book.writable:
+        raise ValueError("生产执行不得回放早于当前冷却的信号日；请使用隔离输入/输出")
+    since = detect_last_scan(args.output_csv, args.as_of) if args.since == "auto" else args.since
+    live_actions.cache_clear()
+    input_rows = load_csv(args.input)
+    rows = scan(input_rows, args.as_of, None, args.timeout, args.workers, since)
+    if ({r['security_code'] for r in rows} != {r['security_code'] for r in input_rows}
+            or len(rows) != len(input_rows)):
+        raise ValueError('主扫描返回的代码不完整或重复')
+    if data_error_exit_code(rows):
+        raise ValueError("主扫描行情失败")
+    outside = sorted(set(holdings) - {str(r['security_code']).zfill(6) for r in rows})
+    exchanges = load_exchange_map()
+    extra = scan([dict(security_code=c, security_name=holdings[c]['name'], exchange=exchanges.get(c, ''))
+                  for c in outside], args.as_of, None, args.timeout, args.workers) if outside else []
+    all_rows = rows + extra
+    if any(r.get('signal_state') == 'data_error' and r['security_code'] in holdings for r in all_rows):
+        raise ValueError('持仓行情接口失败，执行批次中止')
+    for r in all_rows:
+        r['review_frozen'] = str(r['security_code']).zfill(6) in blocked
+    attach_model_pv(all_rows, bands, args.as_of, args.rf)
+    attach_model_pv(all_rows, hold_bands, args.as_of, args.rf, prefix='hold')
+    # Event review receives this run's full opportunity set, before any plan/state write.
+    from check_report_day_price_divergence import run as review_events
+    from datetime import date
+    hits = review_events(date.fromisoformat(args.as_of), 10, args.timeout,
+                         candidate_rows=rows, pool_path=args.input, holdings_path=args.holdings,
+                         members=members, tactical=tactical, strict=True)
+    if hits:
+        raise ValueError("财报价格背离待复核，未发布计划")
+    eb_signal, eb_cap = equity_bond_signal(args.as_of)
+    cash_now, debt_now, cash_source = account_cash_debt(args.as_of, args.cash, args.debt)
+    counters = {side: dict(book.before[side]) for side in COOLDOWN_SIDES}
+    # Tracking uses the same quotes and bands as the plans; no second provider snapshot.
+    import track_holdings_daily as tracker
+    tracked = tracker.track(args.holdings, args.input, date.fromisoformat(args.as_of), '', args.timeout,
+                            snapshots={r['security_code']: r for r in all_rows},
+                            hold_bands=hold_bands, candidate_bands=bands, members=members)
+    result = section93_execution_plan(rows, args.nav, args.funds, holdings, blocked, tactical,
+                                     members, counters['buy'], extra, sell_counters=counters['sell'],
+                                     exposure_cap=eb_cap, cap_cash=cash_now - debt_now if eb_cap is not None else None)
+    result['eb'] = (dict(spread=eb_signal.spread, observed_on=eb_signal.observed_on, cap=eb_cap,
+                         cash=cash_now, debt=debt_now, source=cash_source) if eb_signal else None)
+    staged = {p: publication.stage(p) for p in (args.output_csv, args.plan_out, args.sell_out,
+                                              args.tracking_out, args.log_file)}
+    write_csv(staged[args.output_csv], rows, FIELDNAMES)
+    write_csv(staged[args.tracking_out], tracked, tracker.FIELDNAMES)
+    import contextlib
+    import io
+    report_buffer = io.StringIO()
+    with contextlib.redirect_stdout(report_buffer):
+        report_section93(result, args.nav, staged[args.plan_out], args.as_of, staged[args.sell_out])
+    log_scan_decisions(staged[args.log_file], rows, args.as_of, args.input, args.output_csv)
+    tracker.log_decisions(staged[args.log_file], tracked, date.fromisoformat(args.as_of),
+                          args.holdings, args.tracking_out, args.input)
+    append_decision_log(staged[args.log_file], [dict(
+        logged_at_utc=datetime.now(timezone.utc).isoformat(), workflow_stage='daily_execution_publication',
+        run_id=f'daily_execution:{args.as_of}', as_of=args.as_of, decision_type='execution_batch',
+        decision_result='complete', summary_reason=f"NAV={args.nav}; funds={args.funds}; cash={cash_now}; debt={debt_now}",
+        input_files=';'.join(inputs), output_file=str(args.publication),
+        operator_or_script='screen_daily_volume_price_signals.py', workflow_version=WORKFLOW_VERSION)])
+    publication.publish(staged, inputs, before_commit=lambda: book.save(counters))
+    report_text = report_buffer.getvalue()
+    for destination, stage in staged.items():
+        report_text = report_text.replace(str(stage), str(destination))
+    print(report_text, end='')
+    print(f"执行批次已发布：{args.publication}；{len(result['plan'])} 买入、{len(result['sells'])} 卖出/复核行")
+    return 0
+
+
 def main() -> int:
     args = parse_args()
-    evidence_date = evidence_iso_for_signal(args.as_of)
-    if args.rf is None:
-        args.rf = _default_rf(args.as_of)
-    print(f"时点：信号日 {args.as_of} → 证据日 {evidence_date}")
-    symbols = {item.strip().zfill(6) for item in args.symbols.split(",") if item.strip()} or None
-    input_rows = load_csv(args.input)
-    since = args.since
-    if since == "auto":
-        since = detect_last_scan(args.output_csv, args.as_of)
-        if since:
-            print(f"§8.4 缺口回溯：检出上次扫描日 {since}，将回溯 {since}→{args.as_of} 区间")
-        else:
-            print("§8.4 缺口回溯：未检出上次扫描日，本次按单日快照执行")
-    rows = scan(input_rows, args.as_of, symbols, args.timeout, args.workers, since)
-    failure = data_error_exit_code(rows)
-    if failure:
-        return failure  # Failed scans must not consume previously confirmed cooldowns.
-    blocked = load_blocked_codes(args.review_queue)
-    for row in rows:
-        # §7.5 复核期买入冻结的可见性列；硬排除在 section93_entry_plan 内执行。
-        row["review_frozen"] = bool(blocked) and str(row.get("security_code", "")).zfill(6) in (blocked or set())
-
-    # §9.3 的 P/V **必须在落盘之前挂上**：`FIELDNAMES` 里已经声明了那三列，
-    # 若等落盘后再算，写出去的就是三列空值。首版就踩过这一脚，靠落地校验（下方 priced 计数）当场发现。
-    section93_ready = bool(args.model_bands and args.model_bands.exists())
-    if section93_ready:
-        bands = load_model_bands(args.model_bands, evidence_date)
-        attach_model_pv(rows, bands, args.as_of, args.rf)
-        priced = sum(1 for r in rows if isinstance(r.get("model_pv"), float))
-        print(f"§9.3 模型带：{len(bands)} 只有带，{priced}/{len(rows)} 只算出 P/V"
-              f"（银行与保险走股利折现 rf={format(args.rf, '.4%') if args.rf is not None else '缺失'}+{BANK_RISK_PREMIUM:.0%}）")
-        if priced < len(rows):
-            missing = [str(r.get("security_name", "")) for r in rows
-                       if not isinstance(r.get("model_pv"), float)][:8]
-            print(f"  **无带 {len(rows) - priced} 只**（§9.3 判定不到它们）：{'、'.join(missing)}")
-        if rows and not priced:
-            print("  **告警：model_pv 整列为空** —— 模型带与池对不上号，§9.3 本次等于没跑")
-        # v4.92 SPA：持仓侧带（换仓来源）。缺文件不静默——退回候选侧并显著告警（§13 第 3 条）。
-        if args.hold_bands and args.hold_bands.exists():
-            hold_bands = load_model_bands(args.hold_bands, evidence_date)
-            attach_model_pv(rows, hold_bands, args.as_of, args.rf, prefix="hold")
-            n_hold = sum(1 for r in rows if isinstance(r.get("hold_pv"), float))
-            n_diff = sum(1 for r in rows if isinstance(r.get("hold_pv"), float) and isinstance(r.get("model_pv"), float)
-                         and abs(r["hold_pv"] - r["model_pv"]) > 5e-5)
-            print(f"§9.3 持仓侧带：{len(hold_bands)} 只有带，{n_hold}/{len(rows)} 只算出持仓侧 P/V，其中 {n_diff} 只与候选侧不同"
-                  f"（换仓来源按持仓侧判）")
-            if rows and priced and not n_hold:
-                print("  **告警：hold_pv 整列为空** —— 持仓侧带与池对不上号，换仓来源本次等于按候选侧判")
-        else:
-            hold_bands = bands
-            attach_model_pv(rows, hold_bands, args.as_of, args.rf, prefix="hold")
-            print(f"  ⚠ **持仓侧带文件不存在（{args.hold_bands}）**：换仓来源退回候选侧 P/V；重建见 §6.7 第 4 步")
-    write_csv(args.output_csv, rows, FIELDNAMES)
-    review_note = (
-        "复核冻结：已启用（读取更新队列）。" if blocked is not None else
-        "复核冻结：未启用（更新队列文件缺失，§7.5 冻结未生效）。"
-    )
-    log_scan_decisions(args.log_file, rows, args.as_of, args.input, args.output_csv)
-    print(f"scanned {len(rows)} rows from {args.input}; {review_note}")
-
-    # 落地校验：新增列跑完必须核对非空行数——「某列整体为空而无人察觉」是本仓库复发过四次的
-    # 静默失效签名（§13 第 3 条），而报告一旦改用手填值就再也发现不了。
-    scored = [r for r in rows if str(r.get("quality_score", "")).strip()]
-    print(f"参考分（工作流 §5.7）非空 {len(scored)}/{len(rows)} 行")
-    if rows and not scored:
-        print("**告警：quality_score 整列为空** —— 池 CSV 未透传参考分，报告不得手填，先修池物化")
-
-    # §9.3 执行清单（`attach_model_pv` 已在落盘前跑过，见上文）：先卖后买，四张表。
-    if section93_ready:
-        if args.nav > 0:
-            holdings = load_holdings_detail(args.holdings)
-            pool_codes = {str(r.get("security_code", "")).zfill(6) for r in rows}
-            holding_rows: list[dict[str, object]] = []
-            outside = [c for c in holdings if c not in pool_codes]
-            if outside:
-                exchanges = load_exchange_map()
-                pseudo = [{"security_code": c, "security_name": holdings[c].get("name", ""),
-                           "exchange": exchanges.get(c, "")} for c in outside]
-                holding_rows = scan(pseudo, args.as_of, None, args.timeout, args.workers)
-                attach_model_pv(holding_rows, bands, args.as_of, args.rf)
-                attach_model_pv(holding_rows, hold_bands, args.as_of, args.rf, prefix="hold")
-                print(f"  持仓不在输入池 {len(outside)} 只已另取行情（只进卖出侧）："
-                      + "、".join(holdings[c].get("name", c) for c in outside))
-            members = load_worth_attention_codes(args.triage)
-            if members is None:
-                print(f"  ⚠ 三类表缺失（{args.triage}）：本次不判「出名单」")
-            cd_book = CooldownBook.load(args.cooldown_state, args.as_of, args.cooldown_executions)
-            cd_state = {side: dict(cd_book.before[side]) for side in COOLDOWN_SIDES}
-            cd_names, cd_writable = cd_book.names, cd_book.writable
-            before = {side: dict(cd_state[side]) for side in COOLDOWN_SIDES}
-            if not cd_writable:
-                print(f"  ⚠ 冷却计数器 {args.cooldown_state} 的应用日晚于 {args.as_of}（历史重放）：本次不应用、不回写")
-            # §9.3.1 股债总仓位上限：信号日已知的最新观测；数据缺失或过期直接报错（禁止静默放行）
-            eb_signal, eb_cap = equity_bond_signal(args.as_of)
-            eb_info, cap_cash = None, None
-            if eb_signal is None:
-                print(f"  ⚠ 股债利差序列在 {args.as_of} 之前尚无观测：本次不判总仓位上限")
-            else:
-                eb_info = {"spread": eb_signal.spread, "observed_on": eb_signal.observed_on, "cap": eb_cap}
-                if eb_cap is not None:
-                    cash_now, debt_now, source = account_cash_debt(args.as_of, args.cash, args.debt)
-                    cap_cash = cash_now - debt_now
-                    eb_info.update({"cash": cash_now, "debt": debt_now, "source": source})
-            result = section93_execution_plan(rows, args.nav, args.funds, holdings, blocked or set(),
-                                              load_tactical_gate_codes(), members, cd_state["buy"], holding_rows,
-                                              sell_counters=cd_state["sell"], exposure_cap=eb_cap, cap_cash=cap_cash)
-            result["eb"] = eb_info
-            report_section93(result, args.nav, args.plan_out, args.as_of, args.sell_out)
-            if cd_writable:
-                for c in set().union(*before.values(), *cd_state.values()):
-                    cd_names.setdefault(c, holdings.get(c, {}).get("name", "") or next(
-                        (str(r.get("security_name", "")) for r in rows if str(r.get("security_code", "")).zfill(6) == c), ""))
-                cd_book.save(cd_state)
-                active = [(side, c, n) for side in COOLDOWN_SIDES for c, n in cd_state[side].items() if n > 0]
-                print(f"  §9.3.3 冷却计数器已写 {args.cooldown_state}（冷却中 {len(active)} 项"
-                      + ("：" + "、".join(f"{cd_names.get(c, c)}[{side}] 余 {n}" for side, c, n in active) if active else "") + "）")
-        else:
-            print("§9.3 未给 --nav，只算 P/V 不出执行清单（一档以净资产为基数）")
-    else:
-        print(f"§9.3 机械执行层未运行：模型带文件不存在（{args.model_bands}）。"
-              f"重建见 §6.7；不跑它则本次只产出 §8 的取数，**买入判定缺席**")
-
-    return 0
+    from daily_execution_guard import Publication
+    if args.nav == 0:
+        try:
+            rows = scan(load_csv(args.input), args.as_of,
+                        {c.zfill(6) for c in args.symbols.split(',') if c} or None,
+                        args.timeout, args.workers, '')
+            failure = data_error_exit_code(rows)
+            if failure:
+                return failure
+            out = args.output_csv if args.output_csv != DEFAULT_OUTPUT_CSV else args.output_csv.with_name('daily_quote_preview.csv')
+            write_csv(out, rows, FIELDNAMES)
+            print(f"行情预览：{out}；执行计划须给当日账户输入并通过 §9.1")
+            return 0
+        except (OSError, ValueError) as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+    args.publication = args.publication or args.plan_out.with_name('daily_execution_publication.json')
+    args.evidence_proof = args.evidence_proof or ROOT / f'data/interim/daily_evidence_{args.as_of}.json'
+    outputs = [args.output_csv, args.plan_out, args.sell_out, args.cooldown_state, args.tracking_out, args.log_file]
+    input_paths = {p.resolve() for p in (args.input, args.holdings, args.triage, args.tiers, args.model_bands,
+                                        args.hold_bands, args.review_queue, args.evidence_proof,
+                                        args.cooldown_executions or args.cooldown_state.with_name('cooldown_executions.csv'))}
+    if any(p.resolve() in input_paths for p in outputs):
+        print('输入与发布路径不得重叠', file=sys.stderr)
+        return 1
+    try:
+        with Publication(args.publication, args.as_of, outputs) as publication:
+            return run_execution(args, publication)
+    except (OSError, ValueError, KeyError, RuntimeError, SystemExit) as exc:
+        print(f'执行扫描失败，未发布本次计划：{exc}', file=sys.stderr)
+        return 1
 
 
 DATA_ERROR_ABORT_RATIO = 0.5
@@ -1521,7 +1575,7 @@ def data_error_exit_code(rows: list[dict]) -> int:
     if not rows:
         print("⚠️ 扫描 0 行——输入池为空或过滤条件把全部标的排除了", file=sys.stderr)
         return 2
-    failed = [r for r in rows if r.get("signal_state") == "data_error"]
+    failed = [r for r in rows if r.get("signal_state") in {"data_error", "no_session_quote"}]
     ratio = len(failed) / len(rows)
     if ratio >= DATA_ERROR_ABORT_RATIO:
         sample = "; ".join(str(r.get("note", ""))[:80] for r in failed[:3])
@@ -1529,7 +1583,7 @@ def data_error_exit_code(rows: list[dict]) -> int:
               f"——判定为系统性行情故障，本次扫描结果不可用。样例：{sample}", file=sys.stderr)
         return 1
     if failed:
-        print(f"注意：{len(failed)}/{len(rows)} 行取数失败（低于 {DATA_ERROR_ABORT_RATIO:.0%} 阈值，按个别停牌处理）")
+        print(f"注意：{len(failed)}/{len(rows)} 行取数失败（低于 {DATA_ERROR_ABORT_RATIO:.0%} 阈值，逐行注明停牌或数据缺失，不假定失败原因）")
     return 0
 
 

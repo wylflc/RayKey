@@ -54,7 +54,7 @@ def run_tracker(price, *, pool=True, monkey_quotes=None):
     real_fetch, real_load, real_open = tracker.fetch_spot_quotes, tracker.load_pool, Path.open
     real_raw = tracker.fetch_raw_close
     real_bands = tracker.MODEL_BANDS
-    tracker.MODEL_BANDS = {}   # 桩掉生产带：无带行 → pv 退回带中值（有带行时走 pv_ratio.trading_pv，v4.62/OI-091）
+    tracker.MODEL_BANDS = {}   # 空模型必须传播，不使用池展示带兜底
 
     class FakeFile:
         def __enter__(self):
@@ -108,11 +108,9 @@ def case_no_quote_leaves_pv_empty():
 
 
 def case_pv_computed_against_band_mid():
-    """无生产带行时 P/V 退回带中值（有带行走 `pv_ratio.trading_pv`，v4.62/OI-091），不是对带下沿或上沿。"""
+    """无生产带行时 P/V 留空，展示带不得补回。"""
     row = run_tracker(1800.0)  # 带 1600-2000，中值 1800 → P/V = 1.00
-    if row["pv"] != "1.00":
-        return [f"带中值 1800、现价 1800 应得 P/V=1.00，实得 `{row['pv']}`"]
-    return [] if row["action"] == "持有" else [f"正常日应判 `持有`，实得 `{row['action']}`"]
+    return [] if row["pv"] == "" and row["action"] == "数据缺失" else ["无模型却复活 P/V"]
 
 
 def case_gain_over_trim_line_is_flagged_in_note():
@@ -124,7 +122,7 @@ def case_gain_over_trim_line_is_flagged_in_note():
     cost = float(HOLDING["cost_basis"])
     price = cost * (1.0 + tracker.GAIN_SELL) * 1.1    # 稳稳越线
     row = run_tracker(price)
-    expect = f"{price / 1800.0:.2f}"
+    expect = ""
     if row["pv"] != expect:
         return [f"应得 P/V={expect}，实得 `{row['pv']}`"]
     if f"{tracker.GAIN_SELL:.0%}" not in str(row.get("note", "")):
@@ -180,7 +178,7 @@ def case_holdings_provenance_uses_actual_path():
 CASES = [
     ("无行情不得判『持有』（核心）", case_no_quote_is_not_hold),
     ("无行情时 P/V 必须为空", case_no_quote_leaves_pv_empty),
-    ("P/V 对带中值计算", case_pv_computed_against_band_mid),
+    ("缺模型时 P/V 留空", case_pv_computed_against_band_mid),
     ("涨幅越减持线必须点名", case_gain_over_trim_line_is_flagged_in_note),
     ("全市场取数失败非 0 退出", case_all_rows_failed_is_not_success),
     ("扫描 0 行非 0 退出", case_empty_scan_is_not_success),

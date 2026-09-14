@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.186
+# A股选股-估值-量价操作流程 v4.187
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -365,7 +365,7 @@ python3 scripts/rebuild_bank_bands.py divspread:0.02 \
   data/processed/roic_bands_b2.csv
 python3 scripts/build_hold_daily_states.py   # 持仓侧逐日状态 = 逐 (代码, 日期) 取两侧较高 V → a_share_daily_states_hold.csv
 
-# 4. 生成池模型带 → 叠加预告/快报 →（B2 池带同两步 → 持仓侧池带）→ 写入逐票档案 → 重渲染 README
+# 4. 生成池模型带 → 叠加预告/快报 →（B2 池带同两步 → 持仓侧池带）→ 写入逐票档案
 python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD
 python3 scripts/apply_forecast_band_overlay.py --signal-date YYYY-MM-DD
 python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD \
@@ -374,7 +374,6 @@ python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD \
 python3 scripts/apply_forecast_band_overlay.py --signal-date YYYY-MM-DD --bands data/processed/a_share_pool_model_bands_b2.csv
 python3 scripts/build_hold_model_bands.py --signal-date YYYY-MM-DD   # 持仓侧池带 = 逐票取候选侧与 B2 较高 V → a_share_pool_model_bands_hold.csv
 python3 scripts/apply_model_bands_to_dossiers.py --signal-date YYYY-MM-DD
-python3 scripts/build_company_dossier_readmes.py   # 档案 CSV → README（§6.6 带变动后重渲染；--check 只验漂移）
 
 # 5. 档案 → 建带卡 → 估值表
 python3 scripts/build_valuation_band_cards.py \
@@ -391,13 +390,16 @@ python3 scripts/validate_valuation_bands.py \
   --valuation data/processed/a_share_focus_watchlist_l1_l2_valuation.csv \
   --queue-out data/interim/valuation_rebuild_queue.csv \
   --signal-date YYYY-MM-DD
-python3 scripts/build_a_share_core_valuation_pool.py --signal-date YYYY-MM-DD
+python3 scripts/build_a_share_core_valuation_pool.py --signal-date YYYY-MM-DD   # 物化后自动渲染公司 README
+python3 scripts/build_company_dossier_readmes.py --check
 
 # 7. 换仓边际的标度漂移守卫（两套逐日状态重建后必跑）
 python3 scripts/check_swap_margin_scale_drift.py
 ```
 
 第 1 步不得跳过；披露窗未关的报告期由脚本强制重取并在结尾告警，除权事件库随第 1 步同批刷新。
+
+公司 README 的价格为核心池 CSV 的估值物化快照，明确显示价格日期；每日执行价只读 §8 的已发布行情。README 在核心池物化后渲染；仅刷新阅读版行情不改变该快照。自动渲染不得改写人工研究证据日期。
 
 第 1 步结束后 `data/interim/statement_coverage_gaps.csv` 须为空；有行即先补取三大报表，补不到的登记 `docs/000_Ashare_workflow_open_issues.md` 后再继续。第 2 步结尾的 `data/interim/valuation_statement_gaps.csv` 同此，其中的代码在第 6 步判 blocking、冻结新增买入。
 
@@ -452,9 +454,9 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 先刷新队列读取的两个证据源：
 
 ```bash
-python3 scripts/fetch_a_share_report_disclosures.py --report-date <当前报告期末> \
+python3 scripts/fetch_a_share_report_disclosures.py --signal-date YYYY-MM-DD --report-date <当前报告期末> \
   --output data/interim/a_share_report_disclosures.csv
-python3 scripts/fetch_a_share_earnings_forecasts.py --report-date <当前报告期末> \
+python3 scripts/fetch_a_share_earnings_forecasts.py --signal-date YYYY-MM-DD --report-date <当前报告期末> \
   --output data/interim/a_share_earnings_forecasts.csv
 ```
 
@@ -537,7 +539,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
   --cash <当日现金> --debt <融资负债>   # §9.3.1 股债总仓位上限受限期间用，未给时读账户快照台账
 ```
 
-`--nav` 决定一档；`--funds` 决定当天实际可执行预算。不给 `--nav` 时只生成行情和 `P/V`，不生成执行清单；不给 `--funds` 时不做换仓。产物：`daily_buy_candidates.csv`（行情、候选侧 `model_pv` 与持仓侧 `hold_pv`）、`daily_sell_plan.csv`（§9.3.2 第 4 步卖出清单）、`daily_entry_plan.csv`（第 5 步买入清单）、`daily_cooldown_state.csv`（§9.3.3 计数器）。持仓不在核心池内的票由扫描器另取行情（交易所按证券名单），只进卖出侧。`--as-of` 是信号日（最近收盘日）；模型带的证据截止由同一信号日自动推导。
+`--nav` 决定一档；`--funds` 决定当天实际可执行预算，执行模式两者必填。不给 `--nav` 时只写 `daily_quote_preview.csv` 行情预览，不发布执行计划。产物：`daily_buy_candidates.csv`（行情、候选侧 `model_pv` 与持仓侧 `hold_pv`）、`daily_sell_plan.csv`（§9.3.2 第 4 步卖出清单）、`daily_entry_plan.csv`（第 5 步买入清单）、`daily_cooldown_state.csv`（§9.3.3 计数器）。持仓不在核心池内的票由扫描器另取行情（交易所按证券名单），只进卖出侧。`--as-of` 是信号日（最近收盘日）；模型带的证据截止由同一信号日自动推导。
 
 ### 8.3 必需量
 
@@ -549,6 +551,8 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 | 相关性 | 近 252 个交易日日收益率皮尔逊相关；只对合格候选、在手持仓和已选候选按需计算 |
 
 除上表判定所需量外不再计算或展示其他量价指标。
+
+只有原始报价日期等于信号日的有效收盘可用于当日交易。均线从未复权历史按完整公司行动折到信号日口径；不得把旧前复权尾根与新未复权报价拼接，也不得在复权取数失败时降级为未复权均线。没有当日报价的持仓以已核验历史收盘经期间公司行动折算后的标记价格计市值，另列标价日期与不可交易状态；无法确定标记市值时停止新增买入及依赖总仓位的减仓计算，保留明确可判的卖出复核行。
 
 日线取数只有一份实现（`screen_daily_volume_price_signals.fetch_daily_rows`：东财主源、腾讯备源、北交所走腾讯）；§11.3 持仓跟踪的收盘与 MA60 同用它取数。
 
@@ -564,14 +568,18 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 
 信号口径与执行时点只认 §9.3.1。执行日价格变化不重算信号日合格集；停牌或执行日新增 §7 事件时跳过该票并重新复核。
 
-1. **同步证据**：按 **§7.1** 跑完「两个取数脚本 ＋ 队列重建」三条命令（**只重建队列不算同步证据**）；运行 §7.5.2 财报日价格背离检查；核查 §7.4 的每日范围。
+1. **同步证据**：按 **§7.1** 取披露、预告并重建队列；刷新公司行动，抓取上次成功扫描以来的公告与市场背景，核查 §7.4 的每日范围。用下列 evidence 阶段生成同日完成凭据；只重建队列不算同步证据。
 2. **更新估值**：队列出现 `valuation_review_needed` 时**当晚以同一信号日执行 §6.7**（含其第 1 步的逐季财务刷新）；随后重建队列，再刷新核心池阅读版。
-3. **取行情与生成买入计划**：运行 §8.2，确认净资产、可用资金、持仓和模型带均已加载。
-4. **跟踪持仓与公司行动**：运行 `track_holdings_daily.py --as-of`；先按 §11.4 用 `apply_holdings_corporate_action.py` 处理除权除息并登记台账，再检查止损、公告与估值。
-5. **形成执行清单**：由第 3 步的扫描器按 §9.3.2 先卖后买生成 `daily_sell_plan.csv` 与 `daily_entry_plan.csv`，四张表即使为空也必须显示；止损行只列候选，T+1 尾盘按现价对当日生效线复核后执行，其卖出款不计入当日买入预算。
+3. **公司行动与输入核验**：先按 §11.4 处理持仓除权除息并登记台账；完成同日证据阶段证明，再校验队列、分层、持仓、三类表、两侧模型带及账户输入。空持仓可接受，文件缺失不可接受。队列即使为空也须有当日生成凭据；账户现金和负债须来自信号日快照或当日显式输入。
+4. **暂存行情与事件复核**：取当日行情、计算两侧 P/V，以本次行情形成的合格集和持仓做 §7.5.2 复核；复核完成前不发布执行清单，也不回写冷却。随后跟踪持仓。
+5. **校验并发布执行清单**：按 §9.3.2 先卖后买生成买卖计划；整批校验通过后发布行情、清单、冷却及含日期和文件摘要的成功凭据。缺失或摘要不符的成功凭据表示计划不可用。失败返回非零，不推进冷却；四张表即使为空也必须显示。止损行只列候选，T+1 尾盘复核后执行，其卖出款不计入当日买入预算。
 6. **输出与留痕**：回复用户，并将同一内容置顶写入 `docs/000_daily_scan_log.md`；成交后按 §11.5 回写。每月首个扫描日把上月以前的条目移入 `data/archive/daily_scan_log_<起>_to_<止>.md`。
 
-当日无估值更新时可以省略 §6.7 重建，但必须明确写“当日无估值更新”。
+当日无估值更新时可以省略 §6.7 重建，但必须明确写“当日无估值更新”。队列行 `as_of` 为信号日推导的证据截止，旁置 `.meta.json` 的 `as_of` 为信号日；凭据同时校验输入摘要。估值链改变事件文件后须重新完成 evidence 凭据；新增池或持仓代码未在公告取证范围内时重新取证。
+
+常设调度入口为 `scripts/slurm/daily_postclose.sbatch`：`SCAN_STAGE=evidence` 要给 `SCAN_DATE`、`SCAN_SINCE`（上次成功扫描日）、`SCAN_REPORT_DATE`；`SCAN_STAGE=scan` 要给 `SCAN_DATE`、`SCAN_NAV`、`SCAN_FUNDS`，现金和负债可给 `SCAN_CASH`、`SCAN_DEBT`，否则读当日账户快照。evidence 阶段依次运行 §7.1 两个取数脚本、`fetch_ohlcv_history.py --actions-only`、`fetch_daily_market_evidence.py --as-of YYYY-MM-DD --since 上次扫描日`、`daily_execution_guard.py evidence --as-of YYYY-MM-DD --since 上次扫描日`、队列重建；随后完成必要的模型与公司行动回写再运行 scan。
+
+使用执行计划前运行 `python3 scripts/daily_execution_guard.py verify --as-of YYYY-MM-DD`；成功凭据必须与行情、买卖计划、跟踪表、冷却、日志和输入摘要一致。扫描采用同一发布锁；暂存或失败批次不可执行，中断安装会在下次扫描读取冷却前恢复。
 
 ### 9.2 输出格式
 
@@ -660,11 +668,15 @@ python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 
 股数以 T 日收盘估算；T+1 按实际成交价调整手数，一档金额不变。
 
+回测买卖档位冻结为信号日净资产；成交日价格只改变手数，成交日盯市继续服务资金与风险约束。出名单的持仓不得重新进入买入或换仓触发候选；同日已减档的来源不得重复换出。零股数不算卖出，不登记换仓来源。
+
 #### 9.3.3 高价股比例冷却
 
 一手金额大于一档时仍可计划成交一手，**只有用户确认实际成交后才启动冷却**。令 `x = 实际净成交金额 ÷ 原信号日一档金额`，随后跳过 `max(0, round(x) − 1)` 次该票的合格机会；完整一手按实际成交价计，部分成交按实际金额计，同一计划同日的分笔成交合计后算一次；同股同侧同日的回执须归属同一原始计划，一手按成交均价计算未超过一档的不启动比例冷却。买入侧一个计数器，卖出侧（涨幅减持、出名单减持、换仓卖出）另一个计数器，两侧互不消费；止损、强平及股债强制减仓不启动本冷却。
 
 扫描只能消费已启动的冷却，不得因生成计划、资金不足、未成交或净额对冲为零启动冷却。合格机会沿用买入合格集与卖出减档信号，每个信号日同股同侧最多消费一次；无相应信号不消费，已有冷却在一手金额降至一档以内时仍适用。冷却计数不按自然日推进。实际成交日盘后的新信号是成交后的第一次机会。
+
+合格机会按信号日判定；T+1 无成交报价不撤销前一信号日已消费的机会。模型缺失或拒绝时两侧 P/V 均各自留空，不以展示带或另一侧模型补值；出名单只按三类表判定，核心池缺行本身不构成退出信号。
 
 用户确认的净成交通过 §11.5 登记到 `data/processed/cooldown_executions.csv`，同一 `execution_id` 重复登记相同内容为幂等、内容冲突报错；分笔成交用不同本地记录标识，不存券商账户或成交编号。`data/processed/daily_cooldown_state.csv` 为已确认成交及合格机会派生的计数快照，扫描读入、消费并原子回写；同一信号日重跑从 `remaining_before` 重算。当天扫描后才补记当天成交的须重跑当天扫描；早于最近已扫描日的成交不得直接回写当前冷却，须先按历史输入重放受影响区间。历史扫描早于当前状态时不应用、不回写当前计数。缺少成交凭据的非零计数不得自动迁移为已确认冷却。
 

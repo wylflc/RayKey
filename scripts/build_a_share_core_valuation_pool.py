@@ -959,6 +959,10 @@ def main() -> None:
         if args.output_csv.exists():
             previous_pool = {row["security_code"]: row for row in load_csv(args.output_csv)}
         write_csv(args.output_csv, rows, fieldnames)
+        if args.output_csv.resolve() == DEFAULT_OUTPUT_CSV.resolve():
+            from build_company_dossier_readmes import build_readmes
+            if build_readmes():
+                raise SystemExit('核心池已物化，但公司 README 渲染失败，请修复后重跑')
     overseas_section = build_overseas_section(overseas_rows, overseas_quotes)
     flags = write_markdown(
         args.output_md, rows, args.as_of, quotes, forecasts, disclosures,

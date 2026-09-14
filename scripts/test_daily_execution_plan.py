@@ -20,6 +20,7 @@ def row(code: str, name: str, close: float, ma20: float, ma60: float, pv: float 
          "model_band_source": "模型带", "quality_tier": "L2"}
     if pv is not None:
         r["model_pv"] = pv
+        r["hold_pv"] = pv
     return r
 
 
@@ -64,12 +65,12 @@ class ExecutionPlanTest(unittest.TestCase):
                 row("000003", "C", close=100.0, ma20=95.0, ma60=90.0, pv=0.5),
                 row("000004", "D", close=100.0, ma20=95.0, ma60=90.0, pv=0.6)]
         holdings = {"000001": hold("A", 10000, None, None)}
-        res = self.run_plan(rows, holdings, funds=1_000_000.0, members={"000001"}, exposure_cap=1.0, cap_cash=1_000_000.0)
+        res = self.run_plan(rows, holdings, funds=1_000_000.0, members={"000001", "000003", "000004"}, exposure_cap=1.0, cap_cash=1_000_000.0)
         self.assertEqual([(p["security_code"], p["shares"]) for p in res["plan"]], [("000003", 500)])
         self.assertEqual([c["security_code"] for c in res["eb_capped"]], ["000004"])
         self.assertAlmostEqual(res["eb_stock_after"], 1_050_000.0)
         # 无上限时同一输入买满一档 500 股 → 1500 股？一档 5.25 万 ÷ 100 元 = 525 股 → 500 股（按手），第二只同样 500 股
-        res = self.run_plan(rows, {"000001": hold("A", 10000, None, None)}, funds=1_000_000.0, members={"000001"})
+        res = self.run_plan(rows, {"000001": hold("A", 10000, None, None)}, funds=1_000_000.0, members={"000001", "000003", "000004"})
         self.assertEqual([(p["security_code"], p["shares"]) for p in res["plan"]], [("000003", 500), ("000004", 500)])
 
     def test_adopted_30pct_cap_repays_debt_and_reports_recovery_band(self) -> None:
@@ -93,7 +94,7 @@ class ExecutionPlanTest(unittest.TestCase):
         rows=[row('000001','A',100.,101.,90.,2.5),row('000002','B',100.,95.,90.,.5),
               row('000003','C',100.,95.,90.,.6)]
         holdings={'000001':hold('A',2900,None,None)}
-        result=self.run_plan(rows,holdings,funds=9_000_000.,members={'000001'},
+        result=self.run_plan(rows,holdings,funds=9_000_000.,members={'000001', '000002', '000003'},
                              exposure_cap=scan.SEC93_EQUITY_BOND_CAP,cap_cash=710000.)
         self.assertEqual([(r['security_code'],r['shares']) for r in result['plan']],[('000002',100)])
         self.assertEqual(result['eb_stock_after'],300000.)
