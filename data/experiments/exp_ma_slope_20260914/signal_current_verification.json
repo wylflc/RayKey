@@ -1,0 +1,17 @@
+{
+  "original_reproduction": {},
+  "slope_failures": [],
+  "gate_counts": {
+    "BASE": {
+      "before": 3038,
+      "after": 3038
+    },
+    "BOTH1": {
+      "before": 2900,
+      "after": 2900
+    }
+  },
+  "stage": "current",
+  "return_basis": "legacy dividends reinvested, fixed trading-day horizon; same as previous rank1 table",
+  "missing_exec_note": "原exec_date无报价仍记缺失；周期锚可在下一有报价日建立，仅辅助，不冒充成交"
+}

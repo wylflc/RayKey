@@ -1,0 +1,59 @@
+{
+  "rows": 140,
+  "candidates": 5,
+  "arms": [
+    {
+      "臂名": "MSBOTH1",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MASLOPE20260914",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_lrc2"
+    },
+    {
+      "臂名": "MSBOTH2",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MASLOPE20260914",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_lrc2"
+    },
+    {
+      "臂名": "MSBOTH3",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MASLOPE20260914",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_lrc2"
+    },
+    {
+      "臂名": "MSMA20_1",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MASLOPE20260914",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_lrc2"
+    },
+    {
+      "臂名": "MSMA60_1",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MASLOPE20260914",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_lrc2"
+    }
+  ],
+  "prefix": "MASLOPE20260914_MS",
+  "entry_point": "clean_derived_artifacts.write_ledger",
+  "production_parameters_changed": false
+}

@@ -1,0 +1,27 @@
+{
+  "code": "002128",
+  "previous_quote": "2017-03-16",
+  "resumption_date": "2017-08-14",
+  "event_date": "2017-06-15",
+  "cash_per_share": 0.3,
+  "event_missing_from_price_calendar": true,
+  "readings": [
+    {
+      "n": 20,
+      "native_current_ma": 9.07700000000001,
+      "native_previous_ma_rebased": 8.74700000000001,
+      "native_delta": 0.33000000000000007,
+      "direct_window_delta": 0.04499999999999993,
+      "correct_slope": 0.04500000000000004
+    },
+    {
+      "n": 60,
+      "native_current_ma": 8.876333333333356,
+      "native_previous_ma_rebased": 8.563500000000023,
+      "native_delta": 0.31283333333333374,
+      "direct_window_delta": 0.017833333333333812,
+      "correct_slope": 0.01783333333333334
+    }
+  ],
+  "scope": "既有均线遗漏停牌期事件；本批只用独立窗口差计算新增斜率，BASE不改，待另审全局影响。"
+}

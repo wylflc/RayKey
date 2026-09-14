@@ -1,0 +1,136 @@
+{
+  "checked_actual_buys": 3608,
+  "independent_full_window_checks": 320,
+  "max_slope_error": 2.4868995751603507e-14,
+  "signal_count_and_median_checks": 32,
+  "nonoverlap_adjacent_checks": 435,
+  "attribution": {
+    "2009-11-01": {
+      "net_delta_contrib": -0.6205440000000003,
+      "top3_absolute_share": 0.327924351309036,
+      "largest_changes": [
+        {
+          "start": "2009-11-01",
+          "code": "688516",
+          "base_contrib": 0.6049,
+          "slope_contrib": 0.316545,
+          "delta_contrib": -0.288355
+        },
+        {
+          "start": "2009-11-01",
+          "code": "600585",
+          "base_contrib": 0.5964619999999999,
+          "slope_contrib": 0.38991000000000003,
+          "delta_contrib": -0.2065519999999999
+        },
+        {
+          "start": "2009-11-01",
+          "code": "601225",
+          "base_contrib": 0.124584,
+          "slope_contrib": 0.316245,
+          "delta_contrib": 0.191661
+        },
+        {
+          "start": "2009-11-01",
+          "code": "000651",
+          "base_contrib": 0.8922650000000001,
+          "slope_contrib": 1.0036470000000002,
+          "delta_contrib": 0.11138200000000009
+        },
+        {
+          "start": "2009-11-01",
+          "code": "601328",
+          "base_contrib": 0.36025900000000005,
+          "slope_contrib": 0.25103800000000004,
+          "delta_contrib": -0.10922100000000001
+        },
+        {
+          "start": "2009-11-01",
+          "code": "601169",
+          "base_contrib": 0.113694,
+          "slope_contrib": 0.018428,
+          "delta_contrib": -0.095266
+        },
+        {
+          "start": "2009-11-01",
+          "code": "000338",
+          "base_contrib": 0.8363080000000002,
+          "slope_contrib": 0.744016,
+          "delta_contrib": -0.09229200000000015
+        },
+        {
+          "start": "2009-11-01",
+          "code": "600938",
+          "base_contrib": 0.076243,
+          "slope_contrib": 0.167623,
+          "delta_contrib": 0.09137999999999999
+        }
+      ]
+    },
+    "2011-11-01": {
+      "net_delta_contrib": -0.25341699999999956,
+      "top3_absolute_share": 0.32697481222860697,
+      "largest_changes": [
+        {
+          "start": "2011-11-01",
+          "code": "002128",
+          "base_contrib": 1.207998,
+          "slope_contrib": 0.7533810000000001,
+          "delta_contrib": -0.4546169999999998
+        },
+        {
+          "start": "2011-11-01",
+          "code": "601225",
+          "base_contrib": 0.13045400000000001,
+          "slope_contrib": 0.432255,
+          "delta_contrib": 0.301801
+        },
+        {
+          "start": "2011-11-01",
+          "code": "600309",
+          "base_contrib": 0.09743900000000001,
+          "slope_contrib": 0.3397260000000001,
+          "delta_contrib": 0.24228700000000009
+        },
+        {
+          "start": "2011-11-01",
+          "code": "688516",
+          "base_contrib": 0.42782,
+          "slope_contrib": 0.247253,
+          "delta_contrib": -0.18056699999999998
+        },
+        {
+          "start": "2011-11-01",
+          "code": "600938",
+          "base_contrib": 0.07160499999999999,
+          "slope_contrib": 0.250633,
+          "delta_contrib": 0.17902800000000002
+        },
+        {
+          "start": "2011-11-01",
+          "code": "000651",
+          "base_contrib": 0.6178489999999998,
+          "slope_contrib": 0.7937149999999998,
+          "delta_contrib": 0.17586600000000008
+        },
+        {
+          "start": "2011-11-01",
+          "code": "600585",
+          "base_contrib": 0.49961300000000003,
+          "slope_contrib": 0.373737,
+          "delta_contrib": -0.12587600000000004
+        },
+        {
+          "start": "2011-11-01",
+          "code": "600660",
+          "base_contrib": 0.224513,
+          "slope_contrib": 0.106795,
+          "delta_contrib": -0.11771799999999999
+        }
+      ]
+    }
+  },
+  "source_sha256": {
+    "data/experiments/exp_ma_slope_20260914/validate_extra.py": "cd279757fc13359132589c7af9cc99c77027cb41cd028ff8e33beb4a7b1c68da"
+  }
+}

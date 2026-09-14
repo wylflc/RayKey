@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 60.58651465084404,
+  "baseline_fields_reproduced": 47,
+  "job_id": "26672737",
+  "rows": [
+    {
+      "arm": "BASE",
+      "cagr": "0.38470390572052815"
+    },
+    {
+      "arm": "BOTH1",
+      "cagr": "0.3501728643138553"
+    }
+  ]
+}

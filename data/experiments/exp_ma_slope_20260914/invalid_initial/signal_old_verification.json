@@ -1,0 +1,42 @@
+{
+  "original_reproduction": {
+    "daily_250": true,
+    "daily_750": true,
+    "ma60_episode_250": true,
+    "ma60_episode_750": true,
+    "ma60_nonoverlap_250": true,
+    "ma60_nonoverlap_750": true,
+    "stop_episode_250": true,
+    "stop_episode_750": true
+  },
+  "slope_failures": [],
+  "gate_counts": {
+    "BASE": {
+      "before": 3076,
+      "after": 3076
+    },
+    "BOTH1": {
+      "before": 3076,
+      "after": 2420
+    },
+    "BOTH2": {
+      "before": 3076,
+      "after": 2391
+    },
+    "BOTH3": {
+      "before": 3076,
+      "after": 2361
+    },
+    "MA20_1": {
+      "before": 3076,
+      "after": 2745
+    },
+    "MA60_1": {
+      "before": 3076,
+      "after": 2719
+    }
+  },
+  "stage": "old",
+  "return_basis": "legacy dividends reinvested, fixed trading-day horizon; same as previous rank1 table",
+  "missing_exec_note": "原exec_date无报价仍记缺失；周期锚可在下一有报价日建立，仅辅助，不冒充成交"
+}
