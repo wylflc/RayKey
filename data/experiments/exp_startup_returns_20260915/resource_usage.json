@@ -1,0 +1,10 @@
+{
+  "job_id": "26740427",
+  "state": "COMPLETED",
+  "elapsed": "00:04:11",
+  "allocated_cpus": 32,
+  "workers": 24,
+  "max_rss_kib": 34060436,
+  "max_rss_gib": 32.48256301879883,
+  "source": "sacct -j 26740427 --format=JobID,State,Elapsed,MaxRSS,AllocCPUS --parsable2"
+}

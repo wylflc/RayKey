@@ -1,0 +1,22 @@
+{
+  "1": {
+    "complete": 201,
+    "insufficient_followup": 1
+  },
+  "3": {
+    "complete": 199,
+    "insufficient_followup": 3
+  },
+  "6": {
+    "complete": 196,
+    "insufficient_followup": 6
+  },
+  "12": {
+    "complete": 190,
+    "insufficient_followup": 12
+  },
+  "36": {
+    "complete": 166,
+    "insufficient_followup": 36
+  }
+}

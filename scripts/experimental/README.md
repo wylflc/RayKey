@@ -13,6 +13,7 @@
 | `swap_regime_control.py` | 换仓方向的面板、合成、估值匹配与样本独立性对照 |
 | `delta_attribution.py` | 配对差的个股贡献归因 |
 | `oi148_slippage_report.py` | 执行成本压力报告 |
+| `startup_horizon_returns.py`、`render_startup_returns.py` | 每月独立空仓启动后的 1／3／6／12／36 个月累计收益；运行入口 `scripts/slurm/startup_horizon_returns_20260915.sbatch`，含共同起点和互不重叠窗口检查 |
 
 ## 研究工具索引
 

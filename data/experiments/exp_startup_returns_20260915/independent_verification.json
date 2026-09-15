@@ -1,0 +1,13 @@
+{
+  "complete_returns_recomputed_from_nav": 952,
+  "independent_cash_starts": 202,
+  "expected_complete_counts": {
+    "1": 201,
+    "3": 199,
+    "6": 196,
+    "12": 190,
+    "36": 166
+  },
+  "summary_checks": true,
+  "nonoverlap_checks": true
+}
