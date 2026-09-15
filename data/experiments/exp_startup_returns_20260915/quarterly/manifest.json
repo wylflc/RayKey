@@ -1,0 +1,141 @@
+{
+  "created_beijing": "2026-09-15T22:59:16.870723+08:00",
+  "selection": "calendar quarter starts: January, April, July, October",
+  "source_run": "data/experiments/exp_startup_returns_20260915",
+  "source_job_id": "26740427",
+  "workflow": "v4.188",
+  "capital": 3000000.0,
+  "cutoff": "2026-08-07",
+  "starts": [
+    "2010-01-01",
+    "2010-04-01",
+    "2010-07-01",
+    "2010-10-01",
+    "2011-01-01",
+    "2011-04-01",
+    "2011-07-01",
+    "2011-10-01",
+    "2012-01-01",
+    "2012-04-01",
+    "2012-07-01",
+    "2012-10-01",
+    "2013-01-01",
+    "2013-04-01",
+    "2013-07-01",
+    "2013-10-01",
+    "2014-01-01",
+    "2014-04-01",
+    "2014-07-01",
+    "2014-10-01",
+    "2015-01-01",
+    "2015-04-01",
+    "2015-07-01",
+    "2015-10-01",
+    "2016-01-01",
+    "2016-04-01",
+    "2016-07-01",
+    "2016-10-01",
+    "2017-01-01",
+    "2017-04-01",
+    "2017-07-01",
+    "2017-10-01",
+    "2018-01-01",
+    "2018-04-01",
+    "2018-07-01",
+    "2018-10-01",
+    "2019-01-01",
+    "2019-04-01",
+    "2019-07-01",
+    "2019-10-01",
+    "2020-01-01",
+    "2020-04-01",
+    "2020-07-01",
+    "2020-10-01",
+    "2021-01-01",
+    "2021-04-01",
+    "2021-07-01",
+    "2021-10-01",
+    "2022-01-01",
+    "2022-04-01",
+    "2022-07-01",
+    "2022-10-01",
+    "2023-01-01",
+    "2023-04-01",
+    "2023-07-01",
+    "2023-10-01",
+    "2024-01-01",
+    "2024-04-01",
+    "2024-07-01",
+    "2024-10-01",
+    "2025-01-01",
+    "2025-04-01",
+    "2025-07-01",
+    "2025-10-01",
+    "2026-01-01",
+    "2026-04-01",
+    "2026-07-01"
+  ],
+  "inputs": {
+    "data/experiments/exp_startup_returns_20260915/manifest.json": {
+      "bytes": 155754,
+      "sha256": "a17020ab160807f8b3e8115556736b4a4764bde01daf068e05b2a416f842004a"
+    },
+    "data/experiments/exp_startup_returns_20260915/completed.json": {
+      "bytes": 186,
+      "sha256": "72541bdbb7787a246a937dd1c12ab3ea46e020e7f32fd6d9b9db5fda78292263"
+    },
+    "data/experiments/exp_startup_returns_20260915/independent_verification.json": {
+      "bytes": 247,
+      "sha256": "a5cc5ae67068c2143c740e15c1510f6de09f7ffb4387e2b5934c1f46ffcea479"
+    },
+    "data/experiments/exp_startup_returns_20260915/returns_long.csv": {
+      "bytes": 124709,
+      "sha256": "33a13d316769782b26e89c5d583362b49af720947b024e8c6dced8c0bc2b538a"
+    },
+    "data/experiments/exp_startup_returns_20260915/returns_by_start.csv": {
+      "bytes": 23369,
+      "sha256": "6f50ebef4a7929c5f341b690bd3b55f5514dc2e7848e4ae4966f6aec621857b5"
+    },
+    "data/experiments/exp_startup_returns_20260915/path_summaries.csv": {
+      "bytes": 221945,
+      "sha256": "307073eaac84b8d635bce1358cedad6a6c94fef261fe9606b457b9c7e5f05aaa"
+    },
+    "scripts/experimental/summarize_startup_quarters.py": {
+      "bytes": 10434,
+      "sha256": "e9d7d6958f8d785db7ce071fd2e5608fff03c370614a635aefbb6d2d27bd7318"
+    },
+    "scripts/experimental/startup_horizon_returns.py": {
+      "bytes": 15489,
+      "sha256": "6640b8f4c9c5e5e62991b9f25d615733bec7104f6039117a0573f9eb169ae7e4"
+    },
+    "scripts/experimental/render_startup_returns.py": {
+      "bytes": 8349,
+      "sha256": "923a4294cfab3cef3c2952b108f80de624187f7fafc68f7fa90927eac05fc043"
+    }
+  },
+  "coverage": {
+    "1": {
+      "complete": 67
+    },
+    "3": {
+      "complete": 66,
+      "insufficient_followup": 1
+    },
+    "6": {
+      "complete": 65,
+      "insufficient_followup": 2
+    },
+    "12": {
+      "complete": 63,
+      "insufficient_followup": 4
+    },
+    "36": {
+      "complete": 55,
+      "insufficient_followup": 12
+    }
+  },
+  "reused_independent_paths": 67,
+  "verified_complete_returns": 316,
+  "no_new_backtest": true,
+  "source_files_unchanged": true
+}
