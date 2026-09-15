@@ -1,0 +1,105 @@
+{
+  "signal_date": "2026-09-15",
+  "retrieved_at_utc": "2026-09-15T08:03:12.280988+00:00",
+  "source": "eastmoney:RPT_SHAREBONUS_DET, full-market ex-dividend date query",
+  "events": {
+    "000682": {
+      "name": "东方电子",
+      "plan": "10派0.37元(含税,扣税后0.333元)",
+      "cash_per_share": 0.037,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "002606": {
+      "name": "大连电瓷",
+      "plan": "10派0.36元(含税,扣税后0.324元)",
+      "cash_per_share": 0.036,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "300442": {
+      "name": "润泽科技",
+      "plan": "10派4.288元(含税,扣税后3.8592元)",
+      "cash_per_share": 0.4288,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "300861": {
+      "name": "美畅股份",
+      "plan": "10派1.00元(含税,扣税后0.90元)",
+      "cash_per_share": 0.1,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "301498": {
+      "name": "乖宝宠物",
+      "plan": "10派2.50元(含税,扣税后2.25元)",
+      "cash_per_share": 0.25,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "600016": {
+      "name": "民生银行",
+      "plan": "10派1.18元(含税,扣税后1.062元)",
+      "cash_per_share": 0.118,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "600211": {
+      "name": "西藏药业",
+      "plan": "10派11.46元(含税,扣税后10.314元)",
+      "cash_per_share": 1.1460000000000001,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "600826": {
+      "name": "兰生股份",
+      "plan": "10派0.20元(含税,扣税后0.18元)",
+      "cash_per_share": 0.02,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "600999": {
+      "name": "招商证券",
+      "plan": "10派1.67元(含税,扣税后1.503元)",
+      "cash_per_share": 0.16699999999999998,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603393": {
+      "name": "新天然气",
+      "plan": "10派8.00元(含税,扣税后7.20元)",
+      "cash_per_share": 0.8,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603929": {
+      "name": "亚翔集成",
+      "plan": "10派16.50元(含税,扣税后14.85元)",
+      "cash_per_share": 1.65,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688115": {
+      "name": "思林杰",
+      "plan": "10派0.96元(含税,扣税后0.864元)",
+      "cash_per_share": 0.096,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688163": {
+      "name": "赛伦生物",
+      "plan": "10派1.20元(含税,扣税后1.08元)",
+      "cash_per_share": 0.12,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "920663": {
+      "name": "明阳科技",
+      "plan": "10派2.25元(含税,扣税后2.025元)",
+      "cash_per_share": 0.225,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    }
+  }
+}

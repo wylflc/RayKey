@@ -1,0 +1,68 @@
+{
+  "signal_date": "2026-09-15",
+  "checked_at_utc": "2026-09-15T08:09:16.593721+00:00",
+  "gross_cny": "4522048.00",
+  "holdings_sum_cny": "4522048.00",
+  "holdings_value_by_code": {
+    "002714": "207613.00",
+    "002648": "429600.00",
+    "000651": "1646900.0",
+    "603529": "626048.00",
+    "600036": "604170.0",
+    "002128": "122085.00",
+    "601318": "264110.0",
+    "600970": "621522.00"
+  },
+  "net_assets_cny": "2669156.53",
+  "debt_derived_cny": "1852891.47",
+  "cash_cny": "0",
+  "broker_available_margin_cny": "-34182",
+  "nav_daily_change_cny": "-48325.67",
+  "unattributed_debt_increase_cny": "179.67",
+  "tranche_cny": "133457.8265",
+  "eligible_codes": [
+    "600970",
+    "000651",
+    "603529",
+    "601318",
+    "600036",
+    "601838",
+    "002648",
+    "600989",
+    "002128",
+    "601398",
+    "601288"
+  ],
+  "eligible_count": 11,
+  "holding_relaxed_entries": [
+    "600970",
+    "000651",
+    "603529",
+    "601318",
+    "002648",
+    "002128"
+  ],
+  "valid_quote_and_pv_count": 178,
+  "cheap_count": 33,
+  "weak_source_pv_max": "0.9782",
+  "first_unheld_candidate": "601838",
+  "swap_gap": "0.1448",
+  "equity_bond_spread": 0.061543372549019607,
+  "equity_bond_observed_on": "2026-09-14",
+  "buy_rows": 0,
+  "sell_rows": 0,
+  "trade_confirmation": "no_trades",
+  "event_scope_matches_final": true,
+  "publication_hashes_verified": true,
+  "resource_jobs": {
+    "evidence": 26728049,
+    "preview": 26728465,
+    "scan": 26728679
+  },
+  "supporting_sha256": {
+    "data/reference/cost_of_equity_inputs.csv": "a72f639aacae94d472640efcb63fd63ee5e86c76246d0c2a40fb98f75f026782",
+    "data/reference/equity_bond_csi300.csv": "0b0975a52dcc434d058e3bf3a0091e4d931eae1ecf0885effb1ab7ff7f81f890",
+    "data/processed/portfolio_account_snapshot.csv": "dd76c64a1d550ef3c28d158be8d7149f3e4b85bc482f21605845c470d2a9ba4c",
+    "data/interim/daily_event_review_2026-09-15.json": "3cf0d0b39a642b595aa9fa6fb796ace5fdd9d803aee035862230456af14ab50c"
+  }
+}

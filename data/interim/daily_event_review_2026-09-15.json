@@ -1,0 +1,213 @@
+{
+  "signal_date": "2026-09-15",
+  "reviewed_at_utc": "2026-09-15T08:05:00.900267+00:00",
+  "announcement_snapshot": "data/interim/daily_announcements_2026-09-15.json",
+  "announcement_retrieved_at_utc": "2026-09-15T08:03:11.740322+00:00",
+  "preview_quotes": "data/interim/daily_quote_preview_2026-09-15.csv",
+  "preview_quotes_sha256": "4bac82aa07ce3cde6f0d7fae313550e98191d9e57fd1e59ea2f23283da319df5",
+  "covered_codes": [
+    "000651",
+    "002128",
+    "002648",
+    "002714",
+    "600036",
+    "600970",
+    "600989",
+    "601288",
+    "601318",
+    "601398",
+    "601838",
+    "603529"
+  ],
+  "held_count": 8,
+  "eligible_count": 11,
+  "relevant_announcement_count": 1,
+  "new_announcement_count": 1,
+  "per_company_checks": [
+    {
+      "security_code": "000651",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    },
+    {
+      "security_code": "002128",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    },
+    {
+      "security_code": "002648",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    },
+    {
+      "security_code": "002714",
+      "held": true,
+      "eligible": false,
+      "announcement_ids": [
+        "AN202609141829376972"
+      ],
+      "new_announcement_ids": [
+        "AN202609141829376972"
+      ],
+      "status": "new_primary_document_reviewed",
+      "assessment": "原文第1、4页文本及图像核验；H股库存回购未注销，不影响本账户A股股数，不把回购金额直接加入合理价，不触发当前模型重建。"
+    },
+    {
+      "security_code": "600036",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    },
+    {
+      "security_code": "600970",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    },
+    {
+      "security_code": "600989",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    },
+    {
+      "security_code": "601288",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    },
+    {
+      "security_code": "601318",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    },
+    {
+      "security_code": "601398",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    },
+    {
+      "security_code": "601838",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    },
+    {
+      "security_code": "603529",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "09-14以来查询窗口未检出公司新增公告。行业及竞品部分覆盖，不等同全部外部信息均已核验。"
+    }
+  ],
+  "primary_documents": [
+    {
+      "art_code": "AN202609141829376972",
+      "title": "H股翌日披露报表",
+      "public_display_time_beijing": "2026-09-14 18:35:06",
+      "notice_date": "2026-09-15",
+      "facts": "09-14回购H股67600股，支付2595470港元，回购价格37.88–38.74港元，拟持作库存股份。期末不含库存H股308665900股，库存1557200股，H股总数310223100股。",
+      "assessment": "原文第1、4页文本及图像核验；H股库存回购未注销，不影响本账户A股股数，不把回购金额直接加入合理价，不触发当前模型重建。",
+      "pages_reviewed": [
+        1,
+        4
+      ],
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609141829376972_1.pdf",
+      "pdf_sha256": "1e0c4b34e0167b48e3732b60c3ba3c06102f78ca672a7346da514771806713a7",
+      "reviewed_at_utc": "2026-09-15T08:05:00.900267+00:00"
+    }
+  ],
+  "industry_checks": [
+    {
+      "topic": "生猪",
+      "observed_period": "2026-09-07至2026-09-13",
+      "published_on": "2026-09-15",
+      "fact": "全国500县活猪11.54元/公斤，环比-0.4%；猪肉集贸21.22元/公斤、环比持平。周度行业价不替代牧原公司销售均价或同期完全成本。",
+      "source_url": "https://agri.hunan.gov.cn/agri/tslm/njnqx/202609/t20260915_34064676.html"
+    },
+    {
+      "topic": "智能家居政策",
+      "published_on": "2026-09-14",
+      "fact": "商务部等8部门支持地方按实际确定补贴品类及标准、支持全屋智能购新，鼓励消费信贷与贴息。无格力利润、收入或分红的量化新输入，记录政策并跟踪终端销售，维持当前带。",
+      "source_url": "https://www.mofcom.gov.cn/zcfb/gnmygl/art/2026/art_10bdf8f3a8a14d0cb567fe7ec4013e0f.html"
+    },
+    {
+      "topic": "煤炭",
+      "observed_on": "2026-09-09",
+      "fact": "CCTD最新可读BSPI综合指数728元/吨、环比+8；非电投能源长协实现价。",
+      "source_url": "https://www.cctd.com.cn/index.php?a=lists&catid=520&m=content"
+    },
+    {
+      "topic": "铝与氧化铝",
+      "status": "partial",
+      "observed_on": "2026-09-15",
+      "fact": "SMM长江铝页面显示当日A00均价较上期+60元/吨，但价格绝对值需登录；未取得同期氧化铝完整报价，不据此生成电投能源吨铝利润。",
+      "source_url": "https://hq.smm.cn/cj/content/104114299"
+    },
+    {
+      "topic": "银行宏观",
+      "published_on": "2026-09-14",
+      "fact": "新华社转载央行口径：8月末社融存量464.8万亿元、同比+7.2%，其中实体人民币贷款278.63万亿元、同比+5%。仅宏观背景，不推导逐行分红变化；国债数据已刷新至09-14。",
+      "source_url": "https://www.xinhuanet.com/fortune/20260914/06447ad39fda407a8da93deb2a607b64/c.html"
+    },
+    {
+      "topic": "乙烷与烯烃",
+      "status": "unverified",
+      "fact": "本轮检索未取得最新可核验乙烷到岸价和乙烯/聚乙烯价差；卫星化学与宝丰能源相关高频数据未覆盖完整。"
+    },
+    {
+      "topic": "原油",
+      "status": "unverified",
+      "fact": "媒体报道09-14原油上涨，但多个来源收盘价/合约数值存在差异，未取得交易所统一结算口径，本轮不采用精确油价。"
+    },
+    {
+      "topic": "两轮车、保险与工程订单及竞品",
+      "status": "partial",
+      "fact": "已查12家持仓与合格股的公司公告窗口及档案触发条件；两轮车终端价格、保险竞品、海外工程新签等未进行全来源巡检。"
+    }
+  ],
+  "corporate_action_holdings_count": 0,
+  "valuation_update": "当日无估值更新；国债例行刷新引起银行/保险实时合理价变化，非财报或事件模型重建",
+  "limitations": [
+    "公告取证截至北京时间16:03，之后晚间披露不在本轮覆盖。",
+    "全池98条公告已做标题巡检；必查12家公司窗口内1份公告原文已核验，其他公告不声称完成原文复核。",
+    "行业、竞品和高频指标为部分巡检，缺口逐项列明；完整市场涨跌家数未取齐。"
+  ]
+}
