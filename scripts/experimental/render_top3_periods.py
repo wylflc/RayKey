@@ -3,6 +3,7 @@
 import argparse
 import csv
 import json
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -18,13 +19,18 @@ LABELS={
     'complete_companies':'完整窗口公司数','median_return':'累计回报中位','mean_return':'累计回报均值',
     'positive_fraction':'正收益占比','max_company_fraction':'最大单公司样本占比','signal_year':'信号年份',
     'period':'年度/季度','first_quote':'首个报价日','last_quote':'源行情末日','cheap_states':'低PV状态条数',
-    'top3_count':'前三名实际只数'}
+    'top3_count':'前三名实际只数','activation_date':'首次激活日','anchor_date':'虚拟定锚日',
+    'stop_anchor':'当日已调整止损锚','stop_line':'当日生效止损线','qualification':'资格来源',
+    'activation_close':'激活日收盘','activation_ma20':'激活日MA20','activation_ma60':'激活日MA60',
+    'original_anchor':'最初止损锚','last_adjusted_anchor':'末次已调整锚','reset_date':'止损复位日',
+    'reset_close':'复位日收盘','reset_stop_line':'复位日止损线'}
 for h in (1,3):
     LABELS.update({f'target_{h}y':f'{h}年自然周年',f'end_{h}y':f'{h}年测量终点',
                    f'status_{h}y':f'{h}年窗口状态',f'end_close_{h}y':f'{h}年终点收盘价',
                    f'return_{h}y':f'{h}年累计总回报'})
 GROUPS={'daily_top3':'逐日前三','segment_starts':'名单分段段首','quarterly_top3':'季度首日',
-        'annual_top3':'年度首日','ma60_episodes':'MA60周期去重','ma60_nonoverlap':'MA60周期+同股窗口不重叠'}
+        'annual_top3':'年度首日','ma60_episodes':'MA60周期去重','ma60_nonoverlap':'MA60周期+同股窗口不重叠',
+        'activation_first_top3':'每个激活周期首次进入前三'}
 STATUS={'complete':'完整','execution_after_cutoff':'起点超出行情末日',
         'execution_quote_missing':'T+1无报价','forward_incomplete':'尚未满期',
         'endpoint_after_stock_history':'个股行情提前终止','endpoint_quote_missing':'终点无报价'}
@@ -46,6 +52,8 @@ def main():
     args=ap.parse_args()
     source=args.source
     m=json.loads((source/'manifest.json').read_text())
+    latched=m.get('eligibility')=='stop-latched'
+    relative_source=Path(os.path.relpath(source.resolve(),args.report.parent.resolve())).as_posix()
     segments=read(source/'segments_top3.csv')
     summary=read(source/'summary.csv')
     grouped=defaultdict(list)
@@ -65,6 +73,12 @@ def main():
         '同一股票可在多个区段重复出现；每日/段首信号行不是独立样本。MA60去重及同股窗口不重叠是附加描述，仍有跨股共同市场影响。',
         '历史面板存在回溯判断、财报修订及终点删失限制；收益统计只使用完整窗口，缺窗分列。名称用于辨认公司，代码为主键。',
         '核验：见 verification.json；完整复现配置、输入/输出哈希及作业编号见 manifest.json。']
+    if latched:
+        notes[2]=f"资格：历史面板在册且0<P/V≤{m['buy_line']:.4f}；首次收盘>MA20>MA60激活，此后只需MA20>MA60。按当日P/V升序，同值按代码升序。"
+        notes[9]='激活不要求真实成交或已进入前三。MA20≤MA60、P/V超线或暂离面板只暂停当天排名，不清除记忆；首次激活从研究起点开始。人工冻结/L3战术、资金仓位等账户闸门未模拟。'
+        notes.insert(3,'唯一复位：收盘跌破min(虚拟建仓MA60锚,当日MA60)。锚取首次信号后下一报价日MA60，随后按分红送配调整；T+1停牌时仅虚拟锚顺延，收益起点仍按固定市场T+1、缺价留空。信号当日尚未定锚，不提前使用未来均线。')
+        notes.insert(4,'资格周期与MA60统计去重分开：跌破当日MA60但未跌破生效止损线不清除激活。Excel另列全部激活/复位周期，以及每周期首次进入前三的收益。')
+        notes.insert(5,'MA60辅助计数保留已经低于MA60的合格信号，记作当日即结束的零时长观测，可能连续出现；不能解释为新的激活或建仓。判断资格持续性应看激活/止损周期，固定期收益仍完整保留。')
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.formatting.rule import CellIsRule
@@ -80,10 +94,13 @@ def main():
             ('逐年分布','by_year.csv'),('逐公司分布','by_company.csv'),
             ('年度首日辅助','annual_top3.csv'),('季度首日辅助','quarterly_top3.csv'),
             ('逐日资格覆盖','daily_coverage.csv'),('源行情覆盖','coverage.csv')]
+    if latched:
+        sheets[3:3]=[('激活及止损复位','activation_cycles.csv'),('激活周期首次前三','activation_first_top3.csv')]
     integer={'segment_id','rank','trading_days','eligible_count','years','signals','complete','missing',
              'signal_companies','complete_companies','cheap_states','top3_count'}
     numeric={'pv','signal_close','intrinsic_value','ma20','ma60','execution_close',
-             'end_close_1y','end_close_3y'}
+             'end_close_1y','end_close_3y','stop_anchor','stop_line','activation_close','activation_ma20',
+             'activation_ma60','original_anchor','last_adjusted_anchor','reset_close','reset_stop_line'}
     percent={'return_1y','return_3y','median_return','mean_return','positive_fraction','max_company_fraction'}
     from openpyxl.utils import get_column_letter
     for title,filename in sheets:
@@ -102,6 +119,7 @@ def main():
                 elif k in integer:v=int(v)
                 elif k in numeric|percent:v=float(v)
                 elif k=='group':v=GROUPS.get(v,v)
+                elif k=='qualification':v={'initial':'首次触发','continued':'激活后延续','continued_below_ma20':'回踩MA20仍合格'}.get(v,v)
                 elif k.startswith('status_'):v=STATUS.get(v,v)
                 values.append(v)
             ws.append(values)
@@ -126,14 +144,25 @@ def main():
             '以下为单只股票累计回报的中位数，不能当作组合年化收益。各期内相同股票会重复计数。','',
             '| 样本 | 信号数 | 1年完整/公司 | 1年中位 | 3年完整/公司 | 3年中位 |',
             '| --- | ---: | ---: | ---: | ---: | ---: |']
-    for g in ('segment_starts','daily_top3','ma60_episodes','ma60_nonoverlap'):
+    if latched:report[0]='# 历史P/V前三名：首次信号激活、止损后复位'
+    for g in ('segment_starts','daily_top3','ma60_episodes','ma60_nonoverlap') + (('activation_first_top3',) if latched else ()):
         a=next(r for r in summary if r['group']==g and r['years']=='1')
         b=next(r for r in summary if r['group']==g and r['years']=='3')
         n=a['signals'] if a['signals']==b['signals'] else f"{a['signals']}/{b['signals']}"
         report.append(f"| {GROUPS[g]} | {n} | {a['complete']}/{a['complete_companies']} | {pct(a['median_return'])} | {b['complete']}/{b['complete_companies']} | {pct(b['median_return'])} |")
+    if latched:
+        c=m['eligibility_comparison']
+        report+=['','## 对上一版的更正','',
+                 '上一版每天重新要求收盘高于MA20，未记录首次触发后的资格保持。本版采用用户确认的信号激活、止损复位规则。','',
+                 '| 指标 | 旧版每天严格趋势 | 本版激活后延续 |','| --- | ---: | ---: |',
+                 f"| 名单区段数 | {c['strict_segments']} | {c['latched_segments']} |",
+                 f"| 每段平均交易日 | {c['strict_average_days']:.2f} | {c['latched_average_days']:.2f} |",
+                 f"| 每段交易日中位 | {c['strict_median_days']:.1f} | {c['latched_median_days']:.1f} |",
+                 f"| 仅持续1日的段数 | {c['strict_one_day_segments']} | {c['latched_one_day_segments']} |",'',
+                 f"{c['changed_membership_days']}个交易日的前三成员不同；本版有{c['below_ma20_top3_rows']}条前三信号来自已激活股票回踩MA20。激活共{c['activations']}次，止损复位{c['stop_resets']}次。名单仍会因相对P/V排序、估值更新、MA20/MA60排列及止损变化；未额外人为合并这些变化。"]
     report+=['','## 全部分段明细','',
              '每格顺序为 **股票（代码） · P/V · 后1年 · 后3年**。排名固定为段首排名。`未满`为行情尚未覆盖完整周年，其余缺失明确列因。','',
-             '完整日期、价格、缺失原因与逐日变化见[Excel](../../data/experiments/exp_top3_periods_20260915/历史前三名分段及后续收益.xlsx)及[分段CSV](../../data/experiments/exp_top3_periods_20260915/segments_top3.csv)。']
+             f'完整日期、价格、缺失原因与逐日变化见[Excel]({relative_source}/历史前三名分段及后续收益.xlsx)及[分段CSV]({relative_source}/segments_top3.csv)。']
     previous_year=''
     def cell(r):
         if not r['security_code']:return '无合格标的'
@@ -150,8 +179,10 @@ def main():
         report.append(f"| {ident} | {r['segment_start']}～{r['segment_end']}（{r['trading_days']}） | "+' | '.join(cell(x) for x in rows)+' |')
     verification=json.loads((source/'verification.json').read_text())
     report+=['','## 复现与验证','',
-             f"统计作业 {m['job_id']}；输入流式读取{m['states_rows_read']:,}行。已核对全部{verification['daily_rows_checked']:,}条日信号和{verification['segments_checked']:,}个区段，独立重算{verification['full_universe_rank_dates']}个分散日期的全池排名、{verification['direct_ma_windows']:,}个均线窗口及{verification['independent_cash_ledgers']}条现金台账；收益最大误差{verification['max_return_error']:.2g}。边界单元检查及既有周期/除权检查合计14项通过。",'',
-             '复现入口：`scripts/slurm/top3_periods_20260915.sbatch`；完成后运行 `scripts/slurm/top3_verify_20260915.sbatch`。后者先独立核验，再生成本报告与Excel。输入方案见 `data/experiments/exp_top3_periods_20260915/preregister.md`，哈希见同目录 `manifest.json`。']
+             f"统计作业 {m['job_id']}；输入流式读取{m['states_rows_read']:,}行。已核对全部{verification['daily_rows_checked']:,}条日信号和{verification['segments_checked']:,}个区段，独立重算{verification['full_universe_rank_dates']}个日期的全池排名、{verification['direct_ma_windows']:,}个均线窗口及{verification['independent_cash_ledgers']}条现金台账；收益最大误差{verification['max_return_error']:.2g}。边界单元检查及既有周期/除权检查合计{23 if latched else 14}项通过。",'',
+             ('复现入口：`scripts/slurm/top3_latched_20260915.sbatch`；完成后运行 `scripts/slurm/top3_latched_verify_20260915.sbatch`。' if latched else
+              '复现入口：`scripts/slurm/top3_periods_20260915.sbatch`；完成后运行 `scripts/slurm/top3_verify_20260915.sbatch`。')+
+             f'后者先独立核验，再生成本报告与Excel。输入方案见[预登记]({relative_source}/preregister.md)，哈希见同目录 `manifest.json`。']
     args.report.write_text('\n'.join(report)+'\n')
     print(json.dumps({'segments':len(grouped),'nonempty_segments':nonempty,'excel':str(source/'历史前三名分段及后续收益.xlsx'),'report':str(args.report)},ensure_ascii=False))
 

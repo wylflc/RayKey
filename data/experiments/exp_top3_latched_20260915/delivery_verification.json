@@ -1,0 +1,22 @@
+{
+  "workbook_roundtrip_checked": {
+    "名单变化分段": 2688,
+    "逐日完整明细": 9589
+  },
+  "markdown_segments": 896,
+  "unit_checks_passed": 23,
+  "documentation_audit_errors": 0,
+  "statistics_job": "26724681",
+  "verification_job": 26724712,
+  "sha256": {
+    "data/experiments/exp_top3_latched_20260915/历史前三名分段及后续收益.xlsx": "5b3a3780b13baf9dc7903330dc42894f65067ae03c30bb13405fa79e6b50b006",
+    "docs/reports/top3_latched_periods_2026-09-15.zh.md": "8f0a67ebcc65e313b2f40a8edd2dc50d06e335b1c7ca7b3a29be4ff5aae0c234",
+    "data/experiments/exp_top3_latched_20260915/verification.json": "20a2f16fa0b05156c0cb53646cb3bfe65ecae8c33c24ea67fec3b4735b63c652",
+    "data/experiments/exp_top3_latched_20260915/preregister.md": "31ae10ed2c616cd81c7ca29138067fda44e08adad37c8e9af08ac47e54435767",
+    "data/experiments/exp_top3_latched_20260915/validate_delivery.py": "92b2ac93e315604f2d47d9fb86c475083a21f9ca14fc7ee3982a609290b1a040",
+    "scripts/experimental/render_top3_periods.py": "8a04fe9cf6b6afb82a5d86487f32e375f711141e5479ccf57845b45491561240",
+    "scripts/test_top3_period_forward.py": "c9ab4985c43bc4b996c89bcd9911a40e10eacf949caa0232c1ad95a28d4fa484",
+    "scripts/experimental/verify_top3_periods.py": "ef0cc5ac5c3080fe30c3e85a12ed0e9c5c095dc7d4831d2b8a8a97f523a10b20",
+    "scripts/experimental/verify_top3_latch.py": "9a82cb7d37ff4ae902c697cc2a182a4840a28715b587b81ce96c4ef215a3414d"
+  }
+}

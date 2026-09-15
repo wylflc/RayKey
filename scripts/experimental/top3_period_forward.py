@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Current BASE strict-entry top three, with calendar-year forward returns.
+"""Historical top three under strict or stop-latched signal eligibility.
 
 Signal description only. Design and data limitations are recorded beside outputs.
 """
@@ -25,7 +25,7 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(Path(__file__).resolve().parent)]
 import backtest_valuation_strategy as bt
 import build_historical_valuation_bands as bhv
 from panel_tier_forward import load_spans, in_span
-from pv_episode_forward import episodes, return_indices, sha
+from pv_episode_forward import return_indices, sha
 from sweep_backtest_configs import BASE
 
 
@@ -133,9 +133,76 @@ def membership_segments(market_days, byday):
     return rows
 
 
+def stop_latched_eligibility(days, prices, ma, cheap_days, actions):
+    """Activate on a full signal; only a closing stop breach clears memory.
+
+    Virtual entry anchors at the next quote's MA60, without using that future MA
+    on the signal day. A suspension can delay this research anchor, never the
+    independently measured T+1 execution/return date. No position is simulated.
+    """
+    eligible, cycles, active = {}, [], None
+    event_days = sorted(actions)
+    cursor = 0
+    for day in days:
+        steps = []
+        while cursor < len(event_days) and event_days[cursor] <= day:
+            steps.append(actions[event_days[cursor]])
+            cursor += 1
+        m = ma.get(day, {})
+        m20, m60 = m.get(20), m.get(60)
+        if active is not None:
+            if active['anchor_date']:
+                for dividend, bonus, rights, subscription in steps:
+                    active['last_adjusted_anchor'] = ((active['last_adjusted_anchor'] - dividend
+                                                      + rights * subscription) / (1 + bonus + rights))
+            elif m60 is not None:
+                active['anchor_date'] = day
+                active['original_anchor'] = active['last_adjusted_anchor'] = m60
+            if m60 is not None and active['anchor_date']:
+                stop = min(active['last_adjusted_anchor'], m60)
+                if prices[day] < stop:
+                    active.update(reset_date=day, reset_close=prices[day], reset_stop_line=stop)
+                    active = None
+        full = day in cheap_days and m20 is not None and m60 is not None and prices[day] > m20 > m60
+        if active is None and full:
+            active = {'activation_date':day, 'activation_close':prices[day], 'activation_ma20':m20,
+                      'activation_ma60':m60, 'anchor_date':'', 'original_anchor':'',
+                      'last_adjusted_anchor':'', 'reset_date':'', 'reset_close':'', 'reset_stop_line':''}
+            cycles.append(active)
+        if active is not None and day in cheap_days and m20 is not None and m60 is not None and m20 > m60:
+            anchor = active['last_adjusted_anchor']
+            eligible[day] = {'activation_date':active['activation_date'], 'anchor_date':active['anchor_date'],
+                             'stop_anchor':anchor, 'stop_line':min(anchor,m60) if anchor != '' else '',
+                             'qualification':'initial' if active['activation_date']==day else
+                                             'continued' if prices[day]>m20 else 'continued_below_ma20'}
+    return eligible, cycles
+
+
+def ma60_counting_episodes(eligible, prices, ma60):
+    """MA60 counting only: signals already below MA60 end on that same quote.
+
+    Latched eligibility can be below MA60 without breaching its fixed anchor.
+    Such an observation is retained as a zero-length counting episode, not
+    carried into the following above-MA60 regime or called a new activation.
+    """
+    result, active = [], None
+    for i, ok in enumerate(eligible):
+        below = ma60[i] is not None and prices[i] < ma60[i]
+        if active is not None and below:
+            active['break_i'] = i
+            active = None
+        if ok and active is None:
+            event = {'signal_i':i,'exec_i':i+1,'break_i':i if below else None}
+            result.append(event)
+            if not below:
+                active = event
+    return result
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--since', default='2009-11-01')
+    ap.add_argument('--eligibility', choices=('strict','stop-latched'), default='strict')
     ap.add_argument('--out', type=Path, required=True)
     args = ap.parse_args()
     args.out = args.out.resolve()
@@ -191,7 +258,8 @@ def main():
             cheap[code][day] = (pv, float(r[pi]), float(r[ii]), r[ai])
     print(f'Streamed {read_count:,} states; {len(cheap)} cheap companies; cutoff {cutoff}', flush=True)
     actions = bt.load_actions()
-    qualified = defaultdict(list)
+    qualified, strict_qualified = defaultdict(list), defaultdict(list)
+    activation_cycles = []
     coverage = []
     for code, states_for_code in sorted(cheap.items()):
         raw = bhv.load_ohlcv(code)
@@ -205,15 +273,26 @@ def main():
         coverage.append({'security_code': code, 'security_name': names[code],
                          'first_quote': raw[0][0], 'last_quote': raw[-1][0],
                          'cheap_states': len(states_for_code)})
+        if args.eligibility == 'stop-latched':
+            latched, cycles = stop_latched_eligibility([d for d in prices if d <= cutoff], prices, ma,
+                                                      states_for_code, actions.get(code, {}))
+            activation_cycles.extend({'security_code':code,'security_name':names[code],**r} for r in cycles)
         for day, (pv, close, value, available) in states_for_code.items():
             if day not in prices or abs(prices[day]-close) > .00051:
                 raise ValueError(f'State/price mismatch {code} {day}')
             m = ma.get(day, {})
-            if 20 in m and 60 in m and close > m[20] > m[60]:
-                qualified[day].append({'signal_date': day, 'security_code': code,
-                                       'security_name': names[code], 'pv': pv,
-                                       'signal_close': close, 'intrinsic_value': value,
-                                       'ma20': m[20], 'ma60': m[60], 'band_available_at': available})
+            full = 20 in m and 60 in m and close > m[20] > m[60]
+            if full:
+                strict_qualified[day].append({'security_code':code,'pv':pv})
+            eligible_now = full if args.eligibility == 'strict' else day in latched
+            if eligible_now:
+                row = {'signal_date': day, 'security_code': code,
+                       'security_name': names[code], 'pv': pv,
+                       'signal_close': close, 'intrinsic_value': value,
+                       'ma20': m[20], 'ma60': m[60], 'band_available_at': available}
+                if args.eligibility == 'stop-latched':
+                    row.update(latched[day])
+                qualified[day].append(row)
     bycode = defaultdict(list)
     daily = []
     for day in signal_days:
@@ -239,8 +318,8 @@ def main():
             r['price_history_end'] = days[-1]
             for h in (1,3):
                 r.update(forward(r, h, market_days, prices, tri))
-        events = episodes([d in row_map for d in days], list(prices.values()),
-                          [ma.get(d,{}).get(60) for d in days], [[] for _ in days])
+        events = ma60_counting_episodes([d in row_map for d in days], list(prices.values()),
+                                       [ma.get(d,{}).get(60) for d in days])
         company_cycles = []
         for event in events:
             r = dict(row_map[days[event['signal_i']]])
@@ -260,12 +339,25 @@ def main():
     write_csv(args.out/'daily_top3.csv', daily)
     write_csv(args.out/'segments_top3.csv', segments,
               ['segment_id','segment_start','segment_end','trading_days']+fields)
+    if args.eligibility == 'stop-latched':
+        write_csv(args.out/'activation_cycles.csv', activation_cycles)
     write_csv(args.out/'quarterly_top3.csv', quarterly, ['period']+fields)
     write_csv(args.out/'annual_top3.csv', annual, ['period']+fields)
     write_csv(args.out/'ma60_episodes.csv', sorted(cycle_rows,key=lambda r:(r['signal_date'],r['rank'])))
     groups = {'daily_top3': daily, 'segment_starts': [r for r in segments if r['security_code']],
               'quarterly_top3': [r for r in quarterly if r['security_code']],
               'annual_top3': [r for r in annual if r['security_code']], 'ma60_episodes': cycle_rows}
+    if args.eligibility == 'stop-latched':
+        # First top-3 appearance per activation, retaining the original stop
+        # anchor even when a stock enters the top three long after activation.
+        seen, stop_rows = set(), []
+        for r in daily:
+            key = r['security_code'], r['activation_date']
+            if key not in seen:
+                seen.add(key)
+                stop_rows.append(r)
+        groups['activation_first_top3'] = stop_rows
+        write_csv(args.out/'activation_first_top3.csv', stop_rows)
     for h in (1,3):
         write_csv(args.out/f'ma60_nonoverlap_{h}y.csv', sorted(nonoverlap_rows[h],key=lambda r:(r['signal_date'],r['rank'])))
     summary, yearly, company = [], [], []
@@ -286,6 +378,7 @@ def main():
     write_csv(args.out/'daily_coverage.csv', counts)
     manifest = {'completed_at_beijing':datetime.now(ZoneInfo('Asia/Shanghai')).isoformat(),
                 'job_id':os.getenv('SLURM_JOB_ID'), 'since':args.since, 'cutoff':cutoff,
+                'eligibility':args.eligibility,
                 'buy_line':buy, 'base_flags':BASE, 'states_rows_read':read_count,
                 'states_date_range':[state_min,state_max], 'market_days':len(signal_days),
                 'cheap_rows_using_prev_trading_day_disclosure':evening_rows,
@@ -297,6 +390,24 @@ def main():
                 'return_basis':'calendar 1/3 years from next market-day close; gross total return with dividend reinvestment and self-financed rights',
                 'missing_reasons':{str(h):dict(Counter(r[f'status_{h}y'] for r in daily)) for h in (1,3)},
                 'input_sha256':hashes, 'results':summary}
+    if args.eligibility == 'stop-latched':
+        strict_byday = {d:[{**r,'rank':i,'eligible_count':len(rs)} for i,r in
+                          enumerate(sorted(rs,key=lambda r:(r['pv'],r['security_code']))[:3],1)]
+                        for d,rs in strict_qualified.items()}
+        old = membership_segments(signal_days, strict_byday)
+        old_days = [int(r['trading_days']) for r in old if r['rank']==1]
+        new_days = [int(r['trading_days']) for r in segments if r['rank']==1]
+        comparison = {'strict_segments':len(old)//3,'latched_segments':len(segments)//3,
+                      'strict_average_days':st.mean(old_days),'latched_average_days':st.mean(new_days),
+                      'strict_median_days':st.median(old_days),'latched_median_days':st.median(new_days),
+                      'strict_one_day_segments':old_days.count(1),'latched_one_day_segments':new_days.count(1),
+                      'changed_membership_days':sum({r['security_code'] for r in strict_byday.get(d,[])} !=
+                                                     {r['security_code'] for r in byday.get(d,[])} for d in signal_days),
+                      'below_ma20_top3_rows':sum(r['qualification']=='continued_below_ma20' for r in daily),
+                      'activations':len(activation_cycles),
+                      'stop_resets':sum(bool(r['reset_date']) for r in activation_cycles)}
+        manifest['eligibility_comparison'] = comparison
+        write_csv(args.out/'eligibility_comparison.csv',[comparison])
     manifest['output_sha256']={p.name:sha(p) for p in sorted(args.out.glob('*.csv'))}
     (args.out/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({k:v for k,v in manifest.items() if k not in ('input_sha256','output_sha256','base_flags')},ensure_ascii=False,indent=2))

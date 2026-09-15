@@ -4,7 +4,8 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent/'experimental'))
-from top3_period_forward import anniversary, forward, membership_segments, nonoverlap_calendar
+from top3_period_forward import (anniversary, forward, membership_segments, nonoverlap_calendar,
+                                stop_latched_eligibility, ma60_counting_episodes)
 
 
 class Top3Checks(unittest.TestCase):
@@ -53,6 +54,69 @@ class Top3Checks(unittest.TestCase):
               {'execution_date':'2020-08-01','end_1y':'','target_1y':'2021-08-01'},
               {'execution_date':'2021-01-01','end_1y':'2022-01-03','target_1y':'2022-01-01'}]
         self.assertEqual(nonoverlap_calendar(rows,1),[rows[0],rows[2]])
+
+
+class LatchedChecks(unittest.TestCase):
+    def run_case(self, values, cheap=None, actions=None):
+        days=[f'2020-01-{i+1:02d}' for i in range(len(values))]
+        prices={d:v[0] for d,v in zip(days,values)}
+        ma={d:{20:v[1],60:v[2]} for d,v in zip(days,values)}
+        eligible,cycles=stop_latched_eligibility(days,prices,ma,
+                                                set(days if cheap is None else [days[i] for i in cheap]),actions or {})
+        return days,eligible,cycles
+
+    def test_retrace_pause_resume_stop_and_reactivation(self):
+        days,e,c=self.run_case([(12,11,10),(10.8,11.2,10.2),(10.5,10,10.3),
+                               (10.4,10.6,10.3),(10.1,10.5,10.4),(10.5,10.8,10.1),(11.5,10.8,10.1)])
+        self.assertEqual(list(e),[days[i] for i in (0,1,3,6)])
+        self.assertEqual(e[days[3]]['activation_date'],days[0])
+        self.assertEqual(e[days[3]]['stop_line'],10.2)
+        self.assertEqual(c[0]['reset_date'],days[4])
+        self.assertEqual(c[1]['activation_date'],days[6])
+
+    def test_valuation_gap_only_pauses(self):
+        days,e,c=self.run_case([(12,11,10),(10.8,11.2,10.2),(10.5,10.8,10.3)],cheap=[0,2])
+        self.assertEqual(list(e),[days[0],days[2]])
+        self.assertEqual(len(c),1)
+
+    def test_unqualified_price_signal_does_not_activate(self):
+        _,e,c=self.run_case([(12,11,10),(10.8,11.2,10.2)],cheap=[1])
+        self.assertEqual(e,{})
+        self.assertEqual(c,[])
+
+    def test_stop_tracked_while_outside_pool(self):
+        days,e,c=self.run_case([(12,11,10),(10.8,11.2,10.2),(9.5,10.5,10.1),
+                               (10.4,10.6,10.2)],cheap=[0,3])
+        self.assertEqual(list(e),[days[0]])
+        self.assertEqual(c[0]['reset_date'],days[2])
+
+    def test_equality_does_not_reset(self):
+        _,e,c=self.run_case([(12,11,10),(11,11.2,10),(10,10.8,10.5)])
+        self.assertEqual(len(e),3)
+        self.assertEqual(c[0]['reset_date'],'')
+
+    def test_cash_and_bonus_adjust_anchor(self):
+        days,e,c=self.run_case([(12,11,10),(12,11,10),(5.5,5.8,4.8)],
+                              actions={'2020-01-03':(1,1,0,0)})
+        self.assertEqual(e[days[2]]['stop_anchor'],4.5)
+        self.assertEqual(c[0]['reset_date'],'')
+
+    def test_signal_day_never_reads_next_ma(self):
+        days,e,c=self.run_case([(12,11,10),(11,10.5,10.2)])
+        self.assertEqual(e[days[0]]['stop_anchor'],'')
+        self.assertEqual(e[days[1]]['anchor_date'],days[1])
+        self.assertEqual(e[days[1]]['stop_anchor'],10.2)
+
+    def test_single_last_day_signal_remains(self):
+        days,e,c=self.run_case([(12,11,10)])
+        self.assertEqual(e[days[0]]['qualification'],'initial')
+        self.assertEqual(c[0]['anchor_date'],'')
+
+    def test_below_ma60_counting_closes_same_day(self):
+        result=ma60_counting_episodes([True,True,True],[9,11,12],[10,10,10])
+        self.assertEqual([r['signal_i'] for r in result],[0,1])
+        self.assertEqual(result[0]['break_i'],0)
+        self.assertIsNone(result[1]['break_i'])
 
 
 if __name__=='__main__':
