@@ -1,0 +1,19 @@
+{
+  "workbook_roundtrip_checked": {
+    "名单变化分段": 5247,
+    "逐日完整明细": 7944
+  },
+  "markdown_segments": 1749,
+  "unit_checks_passed": 14,
+  "documentation_audit_errors": 0,
+  "statistics_job": 26723229,
+  "verification_job": 26723246,
+  "sha256": {
+    "data/experiments/exp_top3_periods_20260915/历史前三名分段及后续收益.xlsx": "569fe836ec76e523b4f2f2e89864585c22ab13dd10859d16e00e5cb9c6bf6eba",
+    "docs/reports/top3_periods_2026-09-15.zh.md": "b1da395993714144c0f6034ffd1e3e02e097bc5be548c8d3e619cdd47eb1bed5",
+    "data/experiments/exp_top3_periods_20260915/verification.json": "34e82a88e5c096576030502df16315440b8c25a9adf62441f36d5b5efd1ddcf1",
+    "scripts/experimental/render_top3_periods.py": "24ca671dd80862c56a7dcabe13144731f5c0db458d684ff4d963a3bf15267dbb",
+    "scripts/test_top3_period_forward.py": "d842478c42b3984f37256d7992177a395c9fd8650955f7fa450d1cfd07b4c8e7",
+    "data/experiments/exp_top3_periods_20260915/verify.py": "b99530da7479cb14f0702423468a67744204833b04cbb6c4abbbbc877f5c2492"
+  }
+}

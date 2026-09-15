@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "daily_rows_checked": 7944,
+  "segments_checked": 1749,
+  "full_universe_rank_dates": 25,
+  "direct_ma_windows": 1094,
+  "independent_cash_ledgers": 162,
+  "max_return_error": 1.7763568394002505e-14,
+  "summary_groups_checked": 12,
+  "source_manifest_sha256": "de26d40856be288449570f14f2459ed265f9911ed7b7d811885b383edf2aa8e5"
+}
