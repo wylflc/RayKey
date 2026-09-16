@@ -202,10 +202,26 @@ class GuardedExecution(unittest.TestCase):
             w=csv.DictWriter(f,fieldnames=fields or list(rows[0]));w.writeheader();w.writerows(rows)
 
     def test_empty_holdings_and_queue_valid_with_receipt(self):
-        self.assertEqual(s.main(),0)
+        with patch.object(s, 'report_pv_top10', wraps=s.report_pv_top10) as report:
+            self.assertEqual(s.main(),0)
+        self.assertEqual(report.call_args.args[1], DAY)
+        self.assertEqual([r['security_code'] for r in report.call_args.args[0]], ['000651'])
         value=guard.verify_publication(self.a.publication,DAY)
         self.assertEqual(value['status'],'complete')
         with self.a.plan_out.open() as f:self.assertEqual(len(list(csv.DictReader(f))),1)
+
+    def test_preview_reports_weak_trend_without_publishing_execution(self):
+        self.a.nav = 0
+        self.quote['ma20'], self.quote['ma60'] = 110., 120.
+        with patch.object(s, 'scan', return_value=[copy.deepcopy(self.quote)]), \
+                patch.object(s, 'report_pv_top10', wraps=s.report_pv_top10) as report:
+            self.assertEqual(s.main(), 0)
+        ranked = report.call_args.args[0]
+        self.assertEqual(ranked[0]['model_pv'], .5)
+        self.assertEqual(ranked[0]['trend_status'], '未达标（新建仓）')
+        self.assertFalse(self.a.plan_out.exists())
+        self.assertFalse(self.a.cooldown_state.exists())
+        self.assertFalse(self.a.publication.exists())
 
     def test_each_required_file_missing(self):
         for name in ('input','review_queue','tiers','holdings','triage','model_bands','hold_bands','evidence_proof'):

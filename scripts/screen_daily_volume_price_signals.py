@@ -303,6 +303,7 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = 
                             close=None, ma20=None, ma60=None,
                             note=f"末根 {latest['date']}，当日不可交易；仅保留经公司行动折算的标价")
         else:
+            snapshot["trade_date"] = as_of
             snapshot["close"] = latest.get("raw_close", latest["close"])
         if since:
             snapshot.update(gap_review(price_rows, as_of, since))
@@ -777,6 +778,59 @@ def load_exchange_map(path: Path | None = None) -> dict[str, str]:
         return {str(r["security_code"]).zfill(6): r.get("exchange", "") for r in csv.DictReader(fh)}
 
 
+def buy_trend_ok(row: dict[str, object], held_codes: set[str]) -> bool:
+    """§9.3.1 走势条件；执行合格集与观察表共用。"""
+    if row.get("signal_state", "ok") != "ok" or str(row.get("tradable")).lower() == "false":
+        return False
+    close, ma20, ma60 = (to_float(row.get(k)) for k in ("close", "ma20", "ma60"))
+    if not all(v is not None and math.isfinite(v) and v > 0 for v in (close, ma20, ma60)):
+        return False
+    return ma20 > ma60 and (str(row["security_code"]).zfill(6) in held_codes or close > ma20)
+
+
+def build_pv_top10(rows: list[dict[str, object]], as_of: str,
+                   held_codes: set[str], members: set[str]) -> list[dict[str, object]]:
+    """§9.2 只按候选侧 P/V 排名；读取扫描快照，不改行情、交易计划或状态。"""
+    ranked = []
+    for row in rows:
+        code = str(row["security_code"]).zfill(6)
+        if code not in members or row.get("trade_date") != as_of:
+            continue
+        if str(row.get("tradable")).lower() == "false" or row.get("signal_state") in ("data_error", "no_session_quote"):
+            continue
+        close, pv = to_float(row.get("close")), to_float(row.get("model_pv"))
+        if not all(v is not None and math.isfinite(v) and v > 0 for v in (close, pv)):
+            continue
+        ranked.append({**row, "security_code": code, "close": close, "model_pv": pv})
+    ranked.sort(key=lambda r: (r["model_pv"], r["security_code"]))
+    top10 = ranked[:10]
+    for rank, row in enumerate(top10, 1):
+        averages = [to_float(row.get(k)) for k in ("ma20", "ma60")]
+        if not all(v is not None and math.isfinite(v) and v > 0 for v in averages):
+            status = "数据不足"
+        else:
+            status = "达标" if buy_trend_ok(row, held_codes) else "未达标"
+        side = "加仓" if row["security_code"] in held_codes else "新建仓"
+        row.update(pv_rank=rank, trend_status=f"{status}（{side}）")
+    return top10
+
+
+def report_pv_top10(rows: list[dict[str, object]], as_of: str) -> None:
+    """打印可直接放入每日阅读日志的观察表。"""
+    print(f"\n### P/V 前十（不筛走势；{as_of} 收盘）\n")
+    print("候选侧 P/V 从低到高；仅作观察，买卖动作见执行清单。\n")
+    print("| 排名 | 代码 | 名称 | 层级 | 收盘 | 合理价 V | P/V | 走势条件 |")
+    print("| ---: | --- | --- | --- | ---: | ---: | ---: | --- |")
+    for row in rows:
+        intrinsic = to_float(row.get("model_intrinsic_value"))
+        value = f"{intrinsic:.2f}" if intrinsic is not None and math.isfinite(intrinsic) else "—"
+        print(f"| {row['pv_rank']} | {row['security_code']} | {row.get('security_name', '')} | "
+              f"{row.get('quality_tier', '')} | {row['close']:.2f} | {value} | "
+              f"{row['model_pv']:.4f} | {row['trend_status']} |")
+    if len(rows) < 10:
+        print(f"\n当日有效 P/V 仅 {len(rows)} 只，已列全部。" if rows else "\n当日无有效 P/V，观察名单为空。")
+
+
 # ---- §9.3.3 冷却由确认成交启动；扫描只消费合格机会。
 COOLDOWN_SIDES = ("buy", "sell")
 
@@ -848,14 +902,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
         by_code.setdefault(str(r["security_code"]).zfill(6), r)
 
     def trend_ok(r) -> bool:
-        if r.get("signal_state", "ok") != "ok" or r.get("tradable") is False:
-            return False
-        c, m20, m60 = to_float(r.get("close")), to_float(r.get("ma20")), to_float(r.get("ma60"))
-        if not (c and m20 and m60) or not m20 > m60:
-            return False
-        if str(r["security_code"]).zfill(6) in held_codes:
-            return True                      # 已持仓：只看均线排列
-        return c > m20                       # 新建仓：还要站上 MA20
+        return buy_trend_ok(r, held_codes)
 
     # ---------------- 卖出侧
     # §10.2：`--funds` 为负（券商可用保证金为负、已超授信）时照负值起算——卖出款先补足该缺口，余额才进买入；
@@ -1477,6 +1524,7 @@ def run_execution(args, publication):
         r['review_frozen'] = str(r['security_code']).zfill(6) in blocked
     attach_model_pv(all_rows, bands, args.as_of, args.rf)
     attach_model_pv(all_rows, hold_bands, args.as_of, args.rf, prefix='hold')
+    pv_top10 = build_pv_top10(rows, args.as_of, set(holdings), members)
     # Event review receives this run's full opportunity set, before any plan/state write.
     from check_report_day_price_divergence import run as review_events
     from datetime import date
@@ -1507,6 +1555,7 @@ def run_execution(args, publication):
     report_buffer = io.StringIO()
     with contextlib.redirect_stdout(report_buffer):
         report_section93(result, args.nav, staged[args.plan_out], args.as_of, staged[args.sell_out])
+        report_pv_top10(pv_top10, args.as_of)
     log_scan_decisions(staged[args.log_file], rows, args.as_of, args.input, args.output_csv)
     tracker.log_decisions(staged[args.log_file], tracked, date.fromisoformat(args.as_of),
                           args.holdings, args.tracking_out, args.input)
@@ -1536,8 +1585,16 @@ def main() -> int:
             failure = data_error_exit_code(rows)
             if failure:
                 return failure
+            rf = _default_rf(args.as_of) if args.rf is None else args.rf
+            bands = load_model_bands(args.model_bands, evidence_iso_for_signal(args.as_of))
+            attach_model_pv(rows, bands, args.as_of, rf)
+            members = load_worth_attention_codes(args.triage)
+            if members is None or not args.holdings.exists():
+                raise ValueError("P/V 观察表需要三类表及持仓文件（允许空持仓）")
+            pv_top10 = build_pv_top10(rows, args.as_of, set(load_holdings_detail(args.holdings)), members)
             out = args.output_csv if args.output_csv != DEFAULT_OUTPUT_CSV else args.output_csv.with_name('daily_quote_preview.csv')
             write_csv(out, rows, FIELDNAMES)
+            report_pv_top10(pv_top10, args.as_of)
             print(f"行情预览：{out}；执行计划须给当日账户输入并通过 §9.1")
             return 0
         except (OSError, ValueError) as exc:
