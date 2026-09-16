@@ -1,0 +1,22 @@
+{
+  "signal_date": "2026-09-16",
+  "reported_at_utc": "2026-09-16T09:33:34.370494+00:00",
+  "source": "user_reported",
+  "user_confirmation": "总资产 4503922, 净资产 2650850.83, 可用保证金 - 48624.1, 现金 0",
+  "total_assets_cny": "4503922",
+  "net_assets_cny": "2650850.83",
+  "broker_available_margin_cny": "-48624.10",
+  "cash_cny": "0",
+  "debt_derived_cny": "1853071.17",
+  "scan_funds_cny": "-48624.1",
+  "holdings_market_value_cny": "4503922.00",
+  "unattributed_debt_increase_cny": "179.70",
+  "previous_estimate": {
+    "net_assets_cny": "2651030.53",
+    "margin_debt_cny": "1852891.47",
+    "scan_funds_cny": "-87305.14"
+  },
+  "supersedes": "data/interim/daily_account_estimate_2026-09-16.json",
+  "pre_update_publication_sha256": "f516708ab9be30545fbff38f7378a73045decff7eba70e91d3fd614f84052221",
+  "note": "用户盘后补报总资产4503922元、净资产2650850.83元、可用保证金-48624.10元、现金0元；持仓收盘市值与总资产完全相符。推得负债1853071.17元，比09-15增加179.70元，未确认为具体利息或费用科目，不重复扣款。今日无操作，8只持仓股数延续，无外部现金流回报。扫描funds依工作流程§10.2使用券商可用保证金加现金=-48624.10元，替代先前公式估算-87305.14元；净资产替代先前暂估2651030.53元。"
+}

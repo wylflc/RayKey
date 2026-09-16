@@ -1,12 +1,12 @@
 {
   "signal_date": "2026-09-16",
-  "generated_at_utc": "2026-09-16T08:21:31.568919+00:00",
+  "generated_at_utc": "2026-09-16T09:35:38.118606+00:00",
   "basis": "formal_close_snapshot",
   "source_sha256": {
-    "data/processed/daily_buy_candidates.csv": "257854bc03aa6b9ad11b8aa7bf2870b4443dc2db2d5f8111d6045c36962ce0d3",
+    "data/processed/daily_buy_candidates.csv": "2aa4cefaa6669c8c8c8495313162d2d1dbc693c98930651b31fa3cd2f10bfd5c",
     "data/processed/a_share_holdings.csv": "e737fc004e5beae827c298c90315dae3745f3384df629a00f743edab5fa70acb",
     "data/processed/a_share_attention_triage.csv": "a17d68a192fce4f66fd88ce4406495e1b581a05b71fbe500ff1161d230e01747",
-    "data/processed/daily_execution_publication.json": "f516708ab9be30545fbff38f7378a73045decff7eba70e91d3fd614f84052221"
+    "data/processed/daily_execution_publication.json": "328363e0cc92f056fd6790eaa1dca5d71eb9789080b5e053e9facb032a5a5ed2"
   },
   "checks": {
     "independent_order": true,

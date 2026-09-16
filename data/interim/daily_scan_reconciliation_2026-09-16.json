@@ -1,7 +1,7 @@
 {
   "signal_date": "2026-09-16",
-  "checked_at_utc": "2026-09-16T08:21:31.568919+00:00",
-  "account_source": "estimated_close_debt_carried_forward",
+  "checked_at_utc": "2026-09-16T09:35:38.118606+00:00",
+  "account_source": "user_reported",
   "gross_cny": "4503922.00",
   "holdings_value_by_code": {
     "002714": "201292.00",
@@ -13,12 +13,12 @@
     "601318": "262199.00",
     "600970": "621522.00"
   },
-  "net_assets_estimated_cny": "2651030.53",
-  "debt_carried_forward_cny": "1852891.47",
-  "cash_unreported_assumed_cny": "0.00",
-  "funds_formula_estimated_cny": "-87305.14",
-  "nav_change_before_unreported_interest_cny": "-18126.00",
-  "tranche_cny": "132551.5265",
+  "net_assets_cny": "2650850.83",
+  "debt_derived_cny": "1853071.17",
+  "cash_cny": "0.00",
+  "broker_available_margin_plus_cash_cny": "-48624.10",
+  "nav_daily_change_cny": "-18305.70",
+  "tranche_cny": "132542.5415",
   "eligible_codes": [
     "600970",
     "000651",
@@ -52,9 +52,9 @@
   "sell_rows": 1,
   "sell_shares": 3200,
   "sale_amount_cny": "131456.00",
-  "buy_shares_before_fees": 5700,
-  "buy_amount_before_fees_cny": "44118.00",
-  "remaining_funds_before_fees_cny": "32.86",
+  "buy_shares_before_fees": 10700,
+  "buy_amount_before_fees_cny": "82818.00",
+  "remaining_funds_before_fees_cny": "13.90",
   "trade_confirmation": "no_trades",
   "event_scope_matches_final": true,
   "price_and_signal_match_preview": true,
@@ -64,13 +64,15 @@
     "rights_retry_failed": 26779430,
     "market_evidence": 26779549,
     "preview": 26779567,
-    "scan": 26779935
+    "initial_scan": 26779935,
+    "scan": 26783841
   },
   "supporting_sha256": {
     "data/reference/cost_of_equity_inputs.csv": "1632881178113844574953575fe60c5cd9ac3cce9a57334c253a48b1d8eacea9",
     "data/reference/equity_bond_csi300.csv": "0fcc0354539c328b81b09928f0cca8f2d98b89146aad4d8ce9ec97d543c64c4c",
-    "data/processed/portfolio_account_snapshot.csv": "20c7f3bb342b7be4475138e6159aa02296f7c592021fd723b27faa8359f85714",
-    "data/interim/daily_event_review_2026-09-16.json": "10e7bd3d57899ff27698f2a5f1e174abfcce161d6f80bdca5c81882a855de09b"
+    "data/processed/portfolio_account_snapshot.csv": "20cc23e5ada56ff0cc3abe8b2c415b784f025991979843629e6ca767554d5a85",
+    "data/interim/daily_event_review_2026-09-16.json": "10e7bd3d57899ff27698f2a5f1e174abfcce161d6f80bdca5c81882a855de09b",
+    "data/interim/daily_account_report_2026-09-16.json": "c61ea9ea461a072c29e7650803522e8f98727113ef351893f4c6f23ca63e5503"
   },
   "valid_quote_pv_and_history_count": 178,
   "publication_hashes_verified": true,
@@ -147,7 +149,7 @@
       "peer": "招商银行"
     }
   ],
-  "formal_stdout_sha256": "95f24e4329e5138d98f64ef66b24e3aa720e30befbcea206ecc95f0ebbf2d679",
+  "formal_stdout_sha256": "117b980c9c5a4a68b96330cecc4dc85d0f4dfe56b9b6a3564ad65e5d1f5fe5e8",
   "resource_measurements": {
     "market_evidence": {
       "elapsed": "00:01:23",
@@ -159,15 +161,23 @@
       "max_rss_kib": 282030,
       "allocated_cpus": 16
     },
-    "formal_scan": {
+    "initial_scan": {
       "elapsed": "00:01:22",
       "max_rss_kib": 290675,
       "allocated_cpus": 16
+    },
+    "formal_scan": {
+      "elapsed": "00:01:30",
+      "max_rss_kib": 254179,
+      "allocated_cpus": 16
     }
   },
+  "broker_available_margin_cny": "-48624.10",
+  "unattributed_debt_increase_cny": "179.70",
+  "supersedes_estimated_account": true,
   "limitations": [
-    "账户负债沿用09-15，现金未报记0，今日融资利息未知；净资产、资金、收益与计划股数暂估",
-    "机械计划金额未计交易费用；只有32.86元余额，执行前须按券商实际可用资金、价格及费税重新向下取整",
-    "公告截至北京时间16:11；晚间新增披露不在本次范围；行业和竞品部分覆盖"
+    "机械计划金额未计交易费用；仅余13.90元，执行前须按券商实际可用资金、价格及费税向下取整",
+    "负债较昨日增加179.70元，尚未确认为具体利息或费用科目；已经包含在账户数值中，不重复扣款",
+    "本次为账户补报重算；原公告截至北京时间16:11，未扩展晚间公告覆盖；行业和竞品部分覆盖"
   ]
 }
