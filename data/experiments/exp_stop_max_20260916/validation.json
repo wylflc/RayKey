@@ -1,0 +1,24 @@
+{
+  "smoke_job": "26793428",
+  "scan_job": "26793527",
+  "smoke_elapsed": "00:03:27",
+  "smoke_time_peak_rss_kib": 1510508,
+  "scan_cpus": 32,
+  "scan_workers": 24,
+  "memory_mib_per_cpu": 1792,
+  "tests": {
+    "stop_confirmation_and_max": 9,
+    "t1_judge": 10,
+    "parameter_sync": 4,
+    "backtest_exclusions": 3
+  },
+  "documentation_audit_errors": 0,
+  "scan_state": "COMPLETED",
+  "scan_elapsed": "00:04:08",
+  "scan_peak_rss_kib": 26067499,
+  "scan_peak_rss_gib": 24.859904289245605,
+  "postprocess_sha256": {
+    "analyze.py": "b61a9e935ddd4b91c0f8a8fe4bce75501e8678e3648d3fa33d231035f5aac6bf",
+    "render.py": "8daeec79d6848656745e5c65ab69ebd6077411e2aeb266a67800d490bd398a28"
+  }
+}

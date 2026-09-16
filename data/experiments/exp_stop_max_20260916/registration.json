@@ -1,0 +1,6 @@
+{
+  "summary_rows": 84,
+  "added_keys": 84,
+  "old_rows_unchanged": true,
+  "entry_point": "clean_derived_artifacts.write_ledger"
+}

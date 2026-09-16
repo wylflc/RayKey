@@ -1,0 +1,2 @@
+BASE|--daily-states data/experiments/exp_oi167_land_20260913/states/states_base.csv --hold-states data/experiments/exp_oi167_land_20260913/states/states_hold.csv --equity-bond-log-dir /gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/experiments/exp_stop_max_20260916/daily
+STOPMAX|--daily-states data/experiments/exp_oi167_land_20260913/states/states_base.csv --hold-states data/experiments/exp_oi167_land_20260913/states/states_hold.csv --equity-bond-log-dir /gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/experiments/exp_stop_max_20260916/daily --stop-line max_entry_current

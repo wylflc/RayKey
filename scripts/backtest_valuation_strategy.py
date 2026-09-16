@@ -1150,6 +1150,17 @@ def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int,
     return ma.get(20, 0.0), 20
 
 
+def effective_stop_level(entry: float, current_ma: float, mode: str) -> float:
+    """Combine the adjusted entry anchor with today's MA, without a trailing high-water mark."""
+    if not entry or not current_ma:
+        return entry
+    if mode == "min_entry_current":
+        return min(entry, current_ma)
+    if mode == "max_entry_current":
+        return max(entry, current_ma)
+    return entry
+
+
 def update_stop_breach(price: float, stop: float, streak: int,
                        confirm_days: int = 1, deep_pct: float = 0.0) -> tuple[int, str]:
     """更新固定止损价的连续跌破状态，返回 ``(新计数, 触发类型)``。
@@ -2196,10 +2207,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             judge_day = sig_day if stop_basis == "signal" else day
             judge_price = today.get(code, (None,))[0] if stop_basis == "signal" else price
             stop_level = lot.entry_stop
-            if stop_line == "min_entry_current" and lot.entry_stop and lot.entry_stop_ma:
+            if stop_line in ("min_entry_current", "max_entry_current") and lot.entry_stop and lot.entry_stop_ma:
                 ma_cur = mas.get(code, {}).get(judge_day, {}).get(lot.entry_stop_ma, 0.0)
-                if ma_cur:
-                    stop_level = min(stop_level, ma_cur)
+                stop_level = effective_stop_level(stop_level, ma_cur, stop_line)
             # `trail_ratio`（用户 2026-08-20：「给止损锚设一个上移机制，主要针对盈利比较大的股票，
             # 锚_2 = max(锚_2, 当日股价×k)，止损价 = max(锚_2, min(锚, MA60))」）：锚_2 = k × 持有期峰价
             # （逐日取 max 即等价于 k × 峰值），只升不降，除权日同步折算。k 越小，线越晚才咬住——
@@ -2238,10 +2248,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if stop_basis == "both" and stop_enabled and not stop_trigger:
                 sig_close = today.get(code, (None,))[0]
                 sig_level = lot.entry_stop
-                if stop_line == "min_entry_current" and lot.entry_stop and lot.entry_stop_ma:
+                if stop_line in ("min_entry_current", "max_entry_current") and lot.entry_stop and lot.entry_stop_ma:
                     ma_sig = mas.get(code, {}).get(sig_day, {}).get(lot.entry_stop_ma, 0.0)
-                    if ma_sig:
-                        sig_level = min(sig_level, ma_sig)
+                    sig_level = effective_stop_level(sig_level, ma_sig, stop_line)
                 if sig_close and sig_level and sig_close < sig_level:
                     stop_trigger = "confirmed"
                     stats["止损·信号日跌破补触发"] += 1
@@ -4440,9 +4449,9 @@ def main() -> int:
     parser.add_argument("--credit-over-limit", choices=("repay", "keep"), default="repay",
                         help="负债超过当日授信额度的处理（OI-081）：repay=卖出款先偿还超额、不可新增买入（§10.2，缺省）；"
                              "keep=额度取 max(已用负债, 额度)、不强制还款（v4.39 前旧口径，复现旧读数用）")
-    parser.add_argument("--stop-line", choices=("entry", "min_entry_current"), default="entry",
+    parser.add_argument("--stop-line", choices=("entry", "min_entry_current", "max_entry_current"), default="entry",
                         help="止损线口径：entry=建仓日冻结线（旧）；min_entry_current=min(建仓日线, "
-                             "当日同周期均线)——均线下移时止损跟随下移、上移不抬线（用户 2026-08-19 实验）")
+                             "当日同周期均线)；max_entry_current=max(建仓日线, 当日同周期均线)（研究开关，非历史最高均线）")
     parser.add_argument("--entry-below-ma60", choices=("ma20_stop", "ma60_stop", "skip", "skip_fill"),
                         default="ma20_stop",
                         help="新建仓信号日过闸后跳空破 MA60 的处理：ma60_stop=照买、锚恒取成交日 MA60"
@@ -4845,6 +4854,7 @@ def main() -> int:
                      + (f"_scd{args.stop_confirm_days}" if args.stop_confirm_days != 1 else "")
                      + (f"_sdp{args.stop_deep_pct * 100:g}" if args.stop_deep_pct else "")
                      + ("_slmin" if args.stop_line == "min_entry_current" else "")
+                     + ("_slmax" if args.stop_line == "max_entry_current" else "")
                      + (f"_tr{args.trail_ratio:g}" if args.trail_ratio else "")
                      + (("_pl" + args.profit_lock.replace(":", "at").replace(",", "_")) if args.profit_lock else "")
                      + (f"_ag{args.addon_max_gain:g}" if args.addon_max_gain else "")
