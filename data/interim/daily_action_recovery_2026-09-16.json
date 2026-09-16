@@ -1,0 +1,16 @@
+{
+  "signal_date": "2026-09-16",
+  "initial_job": 26779088,
+  "initial_query_scope": 181,
+  "initial_failed_queries": [
+    "688981 配股(URLError)"
+  ],
+  "failed_retry_job": 26779430,
+  "recovery": "same fetch_ohlcv_history.py --rights-only --codes-file data/interim/daily_action_retry_codes_2026-09-16.txt --timeout 25 on interactive node; exit 0",
+  "recovery_query_result": [],
+  "source_url": "https://vip.stock.finance.sina.com.cn/corp/go.php/vISSUE_ShareBonus/stockid/688981.phtml",
+  "source_web_check": "配股表明确显示暂时没有数据、募集资金0.00；与原抓取函数返回空列表一致",
+  "completed_at_utc": "2026-09-16T08:10:50.362016+00:00",
+  "actions_sha256": "b2e157620790bc2bcdffa9abbe47ee702df4dae76b4c4be5a810b12c0227c89c",
+  "status": "all_initial_queries_completed_with_targeted_retry"
+}

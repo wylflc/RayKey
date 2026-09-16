@@ -1803,6 +1803,24 @@
     "intrinsic_value_before_event": 8.262248788175198,
     "intrinsic_value_after_event": 8.262248788175198
    }
+  },
+  {
+   "recorded_at": "2026-09-16",
+   "art_code": "AN202609151829418834",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829418834_1.pdf",
+   "pdf_sha256": "be7686700baafe02bdfde9c7c3875b6a8c7750ee5ddd81a4d3be56db75b0e02f",
+   "pages": 2,
+   "signal_date": "2026-09-16",
+   "title": "境内优先股工行优2股息派发",
+   "facts": "360036工行优2每股优先股股息3.02元，合计21.14亿元；09-23登记及除息、09-24发放，属08-28董事会已通过的计划。",
+   "assessment": "优先股股息不属于601398普通股每股分红，不加入普通股股利折现锚，不作为账户A股除权；无新增普通股模型输入。",
+   "pages_reviewed": [
+    1,
+    2
+   ],
+   "review_method": "公司PDF原文文本核验",
+   "notice_date": "2026-09-16",
+   "reviewed_at_utc": "2026-09-16T08:15:00.846920+00:00"
   }
  ]
 }

@@ -2237,6 +2237,63 @@
    "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609111829278492_1.pdf",
    "pdf_sha256": "7a4c4fb8735d0e0908779a5d5c5710ff958287219e09bb1fde98bbe4fbc3f46f",
    "reviewed_at_utc": "2026-09-14T07:17:27.685344+00:00"
+  },
+  {
+   "recorded_at": "2026-09-16",
+   "art_code": "AN202609151829422516",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829422516_1.pdf",
+   "pdf_sha256": "98a0ffb1f6fee4b282aa6f55f51c85a366364fb8aa80497acce1a9eab822fc62",
+   "pages": 2,
+   "signal_date": "2026-09-16",
+   "title": "第五届董事会第十九次会议决议公告",
+   "facts": "09-15董事会审议三项员工持股计划首期解锁议案，关联董事回避表决。",
+   "assessment": "决议与解锁公告一致，未提供新增经营利润或资本输入，不调整当前模型带。",
+   "pages_reviewed": [
+    1,
+    2
+   ],
+   "review_method": "公司PDF文本；H股报表另与新浪托管同份公告的可读文本交叉核对",
+   "notice_date": "2026-09-16",
+   "reviewed_at_utc": "2026-09-16T08:00:16.600072+00:00"
+  },
+  {
+   "recorded_at": "2026-09-16",
+   "art_code": "AN202609151829422520",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829422520_1.pdf",
+   "pdf_sha256": "3cbe6df1d85d6ed5e62bdf89fa0f0fd73350b12bb11ad374f24865b2ebc3afd0",
+   "pages": 6,
+   "signal_date": "2026-09-16",
+   "title": "H股翌日披露报表",
+   "facts": "09-15回购H股155900股，支付6004696港元，价格38.04–38.94港元，持作库存股份；期末不含库存H股308510000股、库存1713100股，H股总数310223100股。",
+   "assessment": "H股回购未注销，不调整本账户A股股数，不把回购金额直接加入合理价；当前模型输入不变。",
+   "pages_reviewed": [
+    1,
+    4
+   ],
+   "review_method": "公司PDF文本；H股报表另与新浪托管同份公告的可读文本交叉核对",
+   "notice_date": "2026-09-16",
+   "reviewed_at_utc": "2026-09-16T08:00:16.600072+00:00"
+  },
+  {
+   "recorded_at": "2026-09-16",
+   "art_code": "AN202609151829422521",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829422521_1.pdf",
+   "pdf_sha256": "70d794aeb913fbe521e50ac4fa622f1afaae8c0e54e8282e3788fc5197e5cdb8",
+   "pages": 5,
+   "signal_date": "2026-09-16",
+   "title": "2025年持股计划首个锁定期届满暨解锁条件成就",
+   "facts": "经营者、骨干员工、奋斗者计划首期锁定分别于09-23、09-24、09-25届满；实际符合解锁并分配数量分别3821712、4368769、9248385股，合计17438866股。管理委员会可择机出售或非交易过户，不代表届满即全数卖出。",
+   "assessment": "属于既有股份解锁，不新增股本或形成账户除权；跟踪后续处置，现有经营及模型输入不变。",
+   "pages_reviewed": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "review_method": "公司PDF文本；H股报表另与新浪托管同份公告的可读文本交叉核对",
+   "notice_date": "2026-09-16",
+   "reviewed_at_utc": "2026-09-16T08:00:16.600072+00:00"
   }
  ]
 }

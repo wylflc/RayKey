@@ -1,0 +1,173 @@
+{
+  "signal_date": "2026-09-16",
+  "checked_at_utc": "2026-09-16T08:21:31.568919+00:00",
+  "account_source": "estimated_close_debt_carried_forward",
+  "gross_cny": "4503922.00",
+  "holdings_value_by_code": {
+    "002714": "201292.00",
+    "002648": "429920.00",
+    "000651": "1638300.0",
+    "603529": "627800.0",
+    "600036": "601524.00",
+    "002128": "121365.00",
+    "601318": "262199.00",
+    "600970": "621522.00"
+  },
+  "net_assets_estimated_cny": "2651030.53",
+  "debt_carried_forward_cny": "1852891.47",
+  "cash_unreported_assumed_cny": "0.00",
+  "funds_formula_estimated_cny": "-87305.14",
+  "nav_change_before_unreported_interest_cny": "-18126.00",
+  "tranche_cny": "132551.5265",
+  "eligible_codes": [
+    "600970",
+    "000651",
+    "603529",
+    "601318",
+    "600036",
+    "601838",
+    "002648",
+    "600989",
+    "002128",
+    "601398"
+  ],
+  "eligible_count": 10,
+  "holding_relaxed_entries": [
+    "600970",
+    "000651",
+    "603529",
+    "601318",
+    "002648",
+    "002128"
+  ],
+  "valid_quote_and_pv_count": 179,
+  "cheap_count": 33,
+  "weak_source_code": "002714",
+  "weak_source_pv_max": "1.0503",
+  "first_unheld_candidate": "601838",
+  "swap_gap": "0.2245",
+  "equity_bond_spread": 0.06218638339920948,
+  "equity_bond_observed_on": "2026-09-15",
+  "buy_rows": 1,
+  "sell_rows": 1,
+  "sell_shares": 3200,
+  "sale_amount_cny": "131456.00",
+  "buy_shares_before_fees": 5700,
+  "buy_amount_before_fees_cny": "44118.00",
+  "remaining_funds_before_fees_cny": "32.86",
+  "trade_confirmation": "no_trades",
+  "event_scope_matches_final": true,
+  "price_and_signal_match_preview": true,
+  "independent_execution_check": true,
+  "resource_jobs": {
+    "evidence_partial": 26779088,
+    "rights_retry_failed": 26779430,
+    "market_evidence": 26779549,
+    "preview": 26779567,
+    "scan": 26779935
+  },
+  "supporting_sha256": {
+    "data/reference/cost_of_equity_inputs.csv": "1632881178113844574953575fe60c5cd9ac3cce9a57334c253a48b1d8eacea9",
+    "data/reference/equity_bond_csi300.csv": "0fcc0354539c328b81b09928f0cca8f2d98b89146aad4d8ce9ec97d543c64c4c",
+    "data/processed/portfolio_account_snapshot.csv": "20c7f3bb342b7be4475138e6159aa02296f7c592021fd723b27faa8359f85714",
+    "data/interim/daily_event_review_2026-09-16.json": "10e7bd3d57899ff27698f2a5f1e174abfcce161d6f80bdca5c81882a855de09b"
+  },
+  "valid_quote_pv_and_history_count": 178,
+  "publication_hashes_verified": true,
+  "verification_command": "python3 scripts/daily_execution_guard.py verify --as-of 2026-09-16",
+  "eligible_correlations": [
+    {
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "model_pv": "0.5251",
+      "correlation": "0.34",
+      "peer": "电投能源"
+    },
+    {
+      "security_code": "000651",
+      "security_name": "格力电器",
+      "model_pv": "0.5720",
+      "correlation": "0.45",
+      "peer": "中国平安"
+    },
+    {
+      "security_code": "603529",
+      "security_name": "爱玛科技",
+      "model_pv": "0.7013",
+      "correlation": "0.27",
+      "peer": "中国平安"
+    },
+    {
+      "security_code": "601318",
+      "security_name": "中国平安",
+      "model_pv": "0.7589",
+      "correlation": "0.52",
+      "peer": "招商银行"
+    },
+    {
+      "security_code": "600036",
+      "security_name": "招商银行",
+      "model_pv": "0.7623",
+      "correlation": "0.52",
+      "peer": "中国平安"
+    },
+    {
+      "security_code": "601838",
+      "security_name": "成都银行",
+      "model_pv": "0.8258",
+      "correlation": "0.59",
+      "peer": "招商银行"
+    },
+    {
+      "security_code": "002648",
+      "security_name": "卫星化学",
+      "model_pv": "0.8811",
+      "correlation": "0.42",
+      "peer": "电投能源"
+    },
+    {
+      "security_code": "600989",
+      "security_name": "宝丰能源",
+      "model_pv": "0.9583",
+      "correlation": "0.68",
+      "peer": "卫星化学"
+    },
+    {
+      "security_code": "002128",
+      "security_name": "电投能源",
+      "model_pv": "0.9725",
+      "correlation": "0.46",
+      "peer": "宝丰能源"
+    },
+    {
+      "security_code": "601398",
+      "security_name": "工商银行",
+      "model_pv": "0.9832",
+      "correlation": "0.67",
+      "peer": "招商银行"
+    }
+  ],
+  "formal_stdout_sha256": "95f24e4329e5138d98f64ef66b24e3aa720e30befbcea206ecc95f0ebbf2d679",
+  "resource_measurements": {
+    "market_evidence": {
+      "elapsed": "00:01:23",
+      "max_rss_kib": 20125,
+      "allocated_cpus": 16
+    },
+    "preview": {
+      "elapsed": "00:02:06",
+      "max_rss_kib": 282030,
+      "allocated_cpus": 16
+    },
+    "formal_scan": {
+      "elapsed": "00:01:22",
+      "max_rss_kib": 290675,
+      "allocated_cpus": 16
+    }
+  },
+  "limitations": [
+    "账户负债沿用09-15，现金未报记0，今日融资利息未知；净资产、资金、收益与计划股数暂估",
+    "机械计划金额未计交易费用；只有32.86元余额，执行前须按券商实际可用资金、价格及费税重新向下取整",
+    "公告截至北京时间16:11；晚间新增披露不在本次范围；行业和竞品部分覆盖"
+  ]
+}

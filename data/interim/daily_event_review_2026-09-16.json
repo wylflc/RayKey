@@ -1,0 +1,335 @@
+{
+  "signal_date": "2026-09-16",
+  "reviewed_at_utc": "2026-09-16T08:15:00.846920+00:00",
+  "announcement_snapshot": "data/interim/daily_announcements_2026-09-16.json",
+  "announcement_retrieved_at_utc": "2026-09-16T08:11:41.565675+00:00",
+  "preview_quotes": "data/interim/daily_quote_preview_2026-09-16.csv",
+  "preview_quotes_sha256": "2bdf01ea4d22978853d3c82d6a7084e4e086ddd424e2225e8f377d14261f42c2",
+  "covered_codes": [
+    "000651",
+    "002128",
+    "002648",
+    "002714",
+    "600036",
+    "600970",
+    "600989",
+    "601318",
+    "601398",
+    "601838",
+    "603529"
+  ],
+  "held_count": 8,
+  "eligible_count": 10,
+  "pool_announcement_titles_reviewed": 164,
+  "relevant_announcement_count": 6,
+  "new_announcement_count": 5,
+  "per_company_checks": [
+    {
+      "security_code": "000651",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609151829424545"
+      ],
+      "new_announcement_ids": [
+        "AN202609151829424545"
+      ],
+      "status": "primary_documents_reviewed",
+      "assessment": "原文核验结论见primary_documents"
+    },
+    {
+      "security_code": "002128",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "查询窗口未检出公司公告；产业与竞品为部分覆盖"
+    },
+    {
+      "security_code": "002648",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "查询窗口未检出公司公告；产业与竞品为部分覆盖"
+    },
+    {
+      "security_code": "002714",
+      "held": true,
+      "eligible": false,
+      "announcement_ids": [
+        "AN202609151829422516",
+        "AN202609151829422520",
+        "AN202609151829422521",
+        "AN202609141829376972"
+      ],
+      "new_announcement_ids": [
+        "AN202609151829422516",
+        "AN202609151829422520",
+        "AN202609151829422521"
+      ],
+      "status": "primary_documents_reviewed",
+      "assessment": "原文核验结论见primary_documents"
+    },
+    {
+      "security_code": "600036",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "查询窗口未检出公司公告；产业与竞品为部分覆盖"
+    },
+    {
+      "security_code": "600970",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "查询窗口未检出公司公告；产业与竞品为部分覆盖"
+    },
+    {
+      "security_code": "600989",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "查询窗口未检出公司公告；产业与竞品为部分覆盖"
+    },
+    {
+      "security_code": "601318",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "查询窗口未检出公司公告；产业与竞品为部分覆盖"
+    },
+    {
+      "security_code": "601398",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609151829418834"
+      ],
+      "new_announcement_ids": [
+        "AN202609151829418834"
+      ],
+      "status": "primary_documents_reviewed",
+      "assessment": "原文核验结论见primary_documents"
+    },
+    {
+      "security_code": "601838",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "查询窗口未检出公司公告；产业与竞品为部分覆盖"
+    },
+    {
+      "security_code": "603529",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "new_announcement_ids": [],
+      "status": "no_announcements_in_query_window",
+      "assessment": "查询窗口未检出公司公告；产业与竞品为部分覆盖"
+    }
+  ],
+  "primary_documents": [
+    {
+      "art_code": "AN202609151829422516",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829422516_1.pdf",
+      "pdf_sha256": "98a0ffb1f6fee4b282aa6f55f51c85a366364fb8aa80497acce1a9eab822fc62",
+      "pages": 2,
+      "signal_date": "2026-09-16",
+      "title": "第五届董事会第十九次会议决议公告",
+      "facts": "09-15董事会审议三项员工持股计划首期解锁议案，关联董事回避表决。",
+      "assessment": "决议与解锁公告一致，未提供新增经营利润或资本输入，不调整当前模型带。",
+      "pages_reviewed": [
+        1,
+        2
+      ],
+      "review_method": "公司PDF文本；H股报表另与新浪托管同份公告的可读文本交叉核对",
+      "notice_date": "2026-09-16",
+      "reviewed_at_utc": "2026-09-16T08:00:16.600072+00:00"
+    },
+    {
+      "art_code": "AN202609151829422520",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829422520_1.pdf",
+      "pdf_sha256": "3cbe6df1d85d6ed5e62bdf89fa0f0fd73350b12bb11ad374f24865b2ebc3afd0",
+      "pages": 6,
+      "signal_date": "2026-09-16",
+      "title": "H股翌日披露报表",
+      "facts": "09-15回购H股155900股，支付6004696港元，价格38.04–38.94港元，持作库存股份；期末不含库存H股308510000股、库存1713100股，H股总数310223100股。",
+      "assessment": "H股回购未注销，不调整本账户A股股数，不把回购金额直接加入合理价；当前模型输入不变。",
+      "pages_reviewed": [
+        1,
+        4
+      ],
+      "review_method": "公司PDF文本；H股报表另与新浪托管同份公告的可读文本交叉核对",
+      "notice_date": "2026-09-16",
+      "reviewed_at_utc": "2026-09-16T08:00:16.600072+00:00"
+    },
+    {
+      "art_code": "AN202609151829422521",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829422521_1.pdf",
+      "pdf_sha256": "70d794aeb913fbe521e50ac4fa622f1afaae8c0e54e8282e3788fc5197e5cdb8",
+      "pages": 5,
+      "signal_date": "2026-09-16",
+      "title": "2025年持股计划首个锁定期届满暨解锁条件成就",
+      "facts": "经营者、骨干员工、奋斗者计划首期锁定分别于09-23、09-24、09-25届满；实际符合解锁并分配数量分别3821712、4368769、9248385股，合计17438866股。管理委员会可择机出售或非交易过户，不代表届满即全数卖出。",
+      "assessment": "属于既有股份解锁，不新增股本或形成账户除权；跟踪后续处置，现有经营及模型输入不变。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "review_method": "公司PDF文本；H股报表另与新浪托管同份公告的可读文本交叉核对",
+      "notice_date": "2026-09-16",
+      "reviewed_at_utc": "2026-09-16T08:00:16.600072+00:00"
+    },
+    {
+      "art_code": "AN202609151829424545",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829424545_1.pdf",
+      "pdf_sha256": "50aca7e672550ce9b9aefeae7d471c38b83c18370613b8469933201e248ea066",
+      "pages": 4,
+      "signal_date": "2026-09-16",
+      "title": "2026年半年度业绩说明会记录",
+      "facts": "H1收入896.73亿元、同比-8.14%，归母132.78亿元、同比-7.87%，与已载入2026中报面板逐项一致；外销主营收入127.44亿元、同比-21.98%，生活电器销售额同比增长20%以上。截至08-31回购174万股、支付6823.23万元，50–100亿元计划至少70%拟注销。",
+      "assessment": "区分已实现回购与计划；披露重申已吸收中报和既有回购安排，未新增可替换的财务模型输入。继续跟踪出口与原材料；本次说明会未宣布新的分红削减或新增资本承诺，维持当前带。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "review_method": "公司PDF原文文本核验",
+      "notice_date": "2026-09-16",
+      "reviewed_at_utc": "2026-09-16T08:15:00.846920+00:00"
+    },
+    {
+      "art_code": "AN202609151829418834",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829418834_1.pdf",
+      "pdf_sha256": "be7686700baafe02bdfde9c7c3875b6a8c7750ee5ddd81a4d3be56db75b0e02f",
+      "pages": 2,
+      "signal_date": "2026-09-16",
+      "title": "境内优先股工行优2股息派发",
+      "facts": "360036工行优2每股优先股股息3.02元，合计21.14亿元；09-23登记及除息、09-24发放，属08-28董事会已通过的计划。",
+      "assessment": "优先股股息不属于601398普通股每股分红，不加入普通股股利折现锚，不作为账户A股除权；无新增普通股模型输入。",
+      "pages_reviewed": [
+        1,
+        2
+      ],
+      "review_method": "公司PDF原文文本核验",
+      "notice_date": "2026-09-16",
+      "reviewed_at_utc": "2026-09-16T08:15:00.846920+00:00"
+    },
+    {
+      "art_code": "AN202609141829376972",
+      "title": "H股翌日披露报表",
+      "public_display_time_beijing": "2026-09-14 18:35:06",
+      "notice_date": "2026-09-15",
+      "facts": "09-14回购H股67600股，支付2595470港元，回购价格37.88–38.74港元，拟持作库存股份。期末不含库存H股308665900股，库存1557200股，H股总数310223100股。",
+      "assessment": "原文第1、4页文本及图像核验；H股库存回购未注销，不影响本账户A股股数，不把回购金额直接加入合理价，不触发当前模型重建。",
+      "pages_reviewed": [
+        1,
+        4
+      ],
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609141829376972_1.pdf",
+      "pdf_sha256": "1e0c4b34e0167b48e3732b60c3ba3c06102f78ca672a7346da514771806713a7",
+      "reviewed_at_utc": "2026-09-15T08:05:00.900267+00:00",
+      "previously_reviewed": true
+    }
+  ],
+  "industry_checks": [
+    {
+      "topic": "生猪",
+      "status": "verified_latest_available_weekly",
+      "observed_period": "2026-09-07至2026-09-13",
+      "published_on": "2026-09-15",
+      "fact": "农业农村部500县口径全国活猪11.54元/公斤，周环比-0.4%；猪肉批发16.28元/公斤、环比-0.2%。与公司出栏售价和完全成本不同口径。",
+      "source_url": "https://agri.hunan.gov.cn/agri/tslm/njnqx/202609/t20260915_34064676.html"
+    },
+    {
+      "topic": "牧原完全成本",
+      "status": "primary_source_unverified",
+      "fact": "检索检出媒体转述09-14互动平台关于8月完全成本约11.5元/公斤的回复，未取得互动易原问答；仅登记待核线索，不据此改档案成本或模型。",
+      "source_url": "https://www.guandian.cn/m/show/601320"
+    },
+    {
+      "topic": "煤炭",
+      "status": "verified_latest_readable_observation",
+      "observed_on": "2026-09-09",
+      "fact": "CCTD页面可读BSPI 728元/吨、环比+8；蒙东3500坑口325元/吨为08-31观测。未取得09-16新一期，不把旧值称作今日报价，也不替代电投长协实现售价。",
+      "source_url": "https://www.cctd.com.cn/index.php?a=lists&catid=520&m=content"
+    },
+    {
+      "topic": "铝与氧化铝",
+      "status": "partial",
+      "observed_on": "2026-09-16",
+      "fact": "SMM氧化铝指数当日公开搜索摘要显示较前次-0.42元/吨，但未取得完整现货价水平和同日A00配对价，无法复算电投吨铝价差。",
+      "source_url": "https://hq.smm.cn/aluminum/content/104117073"
+    },
+    {
+      "topic": "家电排产与竞品",
+      "status": "partial",
+      "published_on": "2026-08-27",
+      "fact": "找到产业在线9月排产报告原始页面，正文动态加载，未取得可复核格力内外销排产数值。行业标题与竞品新品消息不替代格力经营输入。",
+      "source_url": "https://weixin.chinaiol.com/News/Details?classID=80&id=68232"
+    },
+    {
+      "topic": "乙烷与烯烃",
+      "status": "unverified",
+      "fact": "本轮未取得最新乙烷到岸价及乙烯/聚乙烯完整价差；卫星化学与宝丰能源高频指标覆盖不完整。"
+    },
+    {
+      "topic": "银行、保险、两轮车、工程订单与竞品",
+      "status": "partial",
+      "fact": "检查公司公告窗口和档案触发条件；未完成两轮车终端价格、保险竞品、逐行信贷质量、海外工程订单的全来源巡检。银行保险实时估值由今日已知国债输入复算。"
+    },
+    {
+      "topic": "家电竞品美的",
+      "status": "selected_sections_reviewed",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829423536_1.pdf",
+      "pdf_sha256": "9857edda695c7b3d5b68c0cad6d98c2c3d46bb7bcb7f60fb292ec0b77546e99e",
+      "pages_reviewed": [
+        1,
+        2,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "fact": "美的说明H1日均自有库存同比减少16%，云仓线下覆盖率94%以上，智能家居海外OBM收入占比超过50%；作为格力渠道与海外竞争跟踪。公司战略表述不直接改格力模型参数。"
+    },
+    {
+      "topic": "煤炭及煤化工同行中国神华",
+      "status": "primary_document_reviewed",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829415987_1.pdf",
+      "pdf_sha256": "9d458791200e6b47096859d58d825e5b9c1e619c82c90bf6cf05479eba9b0685",
+      "pages_reviewed": [
+        1,
+        2
+      ],
+      "fact": "8月商品煤产量44.1百万吨、销量55.9百万吨，同比均+0.7%；聚烯烃销量17.9万吨、同比+17.8%。公告明确2026年4月起纳入新并资产、2025同期已重述，只使用公告同口径同比；不替代电投或宝丰的产销量与实现利润。"
+    }
+  ],
+  "corporate_action_holdings_count": 0,
+  "valuation_update": "当日无估值更新；银行保险合理价按09-15最新可得国债利率例行复算",
+  "limitations": [
+    "公告截至北京时间16:11，之后晚间披露未覆盖。",
+    "全池164条做标题巡检；必查11家公司6份公告原文已复核（5份新增、1份复用昨日证据），其他公司不声称全部完成原文审查。",
+    "行业、竞品为部分巡检；乙烷价差、完整铝现货配对价、牧原最新完全成本原问答和市场涨跌家数未取齐。"
+  ]
+}
