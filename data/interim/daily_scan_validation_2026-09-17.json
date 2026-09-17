@@ -1,0 +1,48 @@
+{
+  "signal_date": "2026-09-17",
+  "checked_at_utc": "2026-09-17T09:45:42.438425+00:00",
+  "checks": {
+    "account_identity": true,
+    "holdings_at_close_match_reported_assets": true,
+    "prior_account_and_decision_history_preserved": true,
+    "actual_trades_and_original_tranche_verified": true,
+    "no_proportional_cooldown": true,
+    "no_duplicate_today_decisions": true,
+    "preview_and_formal_values_match": true,
+    "event_scope_matches_formal": true,
+    "tracking_stop_lines_match_to_export_precision": true,
+    "report_matches_daily_log": true,
+    "publication_guard": "passed",
+    "documentation_audit": "0 errors",
+    "diff_whitespace": "passed with cr-at-eol for existing CSV format"
+  },
+  "commands": [
+    "python3 scripts/daily_execution_guard.py verify --as-of 2026-09-17",
+    "python3 scripts/audit_repository_docs.py"
+  ],
+  "resources": [
+    {
+      "job_id": 26836903,
+      "stage": "preview",
+      "state": "COMPLETED",
+      "elapsed": "00:02:29",
+      "max_rss_kb": 333821,
+      "cpus": 16
+    },
+    {
+      "job_id": 26837193,
+      "stage": "formal",
+      "state": "COMPLETED",
+      "elapsed": "00:05:25",
+      "max_rss_kb": 271643,
+      "cpus": 16
+    }
+  ],
+  "recovery_record": "data/interim/daily_action_recovery_2026-09-17.json",
+  "supplemental_input_hashes": {
+    "data/reference/cost_of_equity_inputs.csv": "e2fbcf1f2af1719828546a814359139ccd5113c09a48d28f727fadd0e2f78d06",
+    "data/reference/equity_bond_csi300.csv": "331e8fa6c05c962ef8f15c49297f4a68275f0ee02b681b9b24a32614e2aca192",
+    "data/interim/daily_event_review_2026-09-17.json": "4331551545fa8e005a6e518fdfae909f039611a1e5913adf387daf4c2b495d64",
+    "data/interim/daily_industry_review_2026-09-17.json": "6bf59aaccc6fded10c37168e176dde362ed92a3a96399bc8f551b82e8fb39ea3"
+  }
+}

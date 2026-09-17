@@ -1,0 +1,182 @@
+{
+  "signal_date": "2026-09-17",
+  "retrieved_at_utc": "2026-09-17T09:25:41.161449+00:00",
+  "source": "eastmoney:RPT_SHAREBONUS_DET, full-market ex-dividend date query",
+  "events": {
+    "000626": {
+      "name": "远大控股",
+      "plan": "10派2.20元(含税,扣税后1.98元)",
+      "cash_per_share": 0.22000000000000003,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "002311": {
+      "name": "海大集团",
+      "plan": "10派1.50元(含税,扣税后1.35元)",
+      "cash_per_share": 0.15,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "002352": {
+      "name": "顺丰控股",
+      "plan": "10派4.90元(含税,扣税后4.41元)",
+      "cash_per_share": 0.49000000000000005,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "002797": {
+      "name": "第一创业",
+      "plan": "10派0.10元(含税,扣税后0.09元)",
+      "cash_per_share": 0.01,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "300014": {
+      "name": "亿纬锂能",
+      "plan": "10派2.30元(含税,扣税后2.07元)",
+      "cash_per_share": 0.22999999999999998,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "300394": {
+      "name": "天孚通信",
+      "plan": "10派5.00元(含税,扣税后4.50元)",
+      "cash_per_share": 0.5,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "300448": {
+      "name": "浩云科技",
+      "plan": "10派0.15元(含税,扣税后0.135元)",
+      "cash_per_share": 0.015,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "300960": {
+      "name": "通业科技",
+      "plan": "10派2.00元(含税,扣税后1.80元)",
+      "cash_per_share": 0.2,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "300979": {
+      "name": "华利集团",
+      "plan": "10派10.00元(含税,扣税后9.00元)",
+      "cash_per_share": 1.0,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "301175": {
+      "name": "中科环保",
+      "plan": "10派0.70元(含税,扣税后0.63元)",
+      "cash_per_share": 0.06999999999999999,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "301310": {
+      "name": "鑫宏业",
+      "plan": "10派1.50元(含税,扣税后1.35元)",
+      "cash_per_share": 0.15,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "301609": {
+      "name": "山大电力",
+      "plan": "10派1.50元(含税,扣税后1.35元)",
+      "cash_per_share": 0.15,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "600009": {
+      "name": "上海机场",
+      "plan": "10派2.70元(含税,扣税后2.43元)",
+      "cash_per_share": 0.27,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "600517": {
+      "name": "国网英大",
+      "plan": "10派0.45元(含税,扣税后0.405元)",
+      "cash_per_share": 0.045,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "600713": {
+      "name": "南京医药",
+      "plan": "10派0.90元(含税,扣税后0.81元)",
+      "cash_per_share": 0.09,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "601008": {
+      "name": "连云港",
+      "plan": "10派0.30元(含税,扣税后0.27元)",
+      "cash_per_share": 0.03,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "601018": {
+      "name": "宁波港",
+      "plan": "10派0.31元(含税,扣税后0.279元)",
+      "cash_per_share": 0.031,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "601236": {
+      "name": "红塔证券",
+      "plan": "10派0.50元(含税,扣税后0.45元)",
+      "cash_per_share": 0.05,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603040": {
+      "name": "新坐标",
+      "plan": "10派1.30元(含税,扣税后1.17元)",
+      "cash_per_share": 0.13,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603444": {
+      "name": "吉比特",
+      "plan": "10派100.00元(含税,扣税后90.00元)",
+      "cash_per_share": 10.0,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603496": {
+      "name": "恒为科技",
+      "plan": "10派0.06元(含税,扣税后0.054元)",
+      "cash_per_share": 0.006,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603876": {
+      "name": "鼎胜新材",
+      "plan": "10派1.00元(含税,扣税后0.90元)",
+      "cash_per_share": 0.1,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "605086": {
+      "name": "龙高股份",
+      "plan": "10派0.84元(含税,扣税后0.756元)",
+      "cash_per_share": 0.08399999999999999,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688205": {
+      "name": "德科立",
+      "plan": "10派1.00元(含税,扣税后0.90元)",
+      "cash_per_share": 0.1,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "920081": {
+      "name": "欧伦电气",
+      "plan": "10派5.00元(含税,扣税后4.50元)",
+      "cash_per_share": 0.5,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    }
+  }
+}

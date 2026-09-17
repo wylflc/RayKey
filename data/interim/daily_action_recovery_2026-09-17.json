@@ -1,0 +1,20 @@
+{
+  "signal_date": "2026-09-17",
+  "initial_job": 26836425,
+  "initial_state": "FAILED",
+  "failed_queries": [
+    "000338 rights",
+    "000538 rights",
+    "000792 rights",
+    "000858 rights",
+    "000975 rights",
+    "002050 rights"
+  ],
+  "retry_job": 26836896,
+  "retry_state": "COMPLETED",
+  "recovery_command": "python3 scripts/fetch_ohlcv_history.py --signal-date 2026-09-17 --rights-only --codes-file data/interim/daily_action_retry_codes_2026-09-17.txt --timeout 25",
+  "scope": "Initial job completed all 181 dividend queries and the other 175 rights queries; retry completed all six failed rights queries; evidence proof and queue rebuilt only after success.",
+  "market_evidence_job": 26836812,
+  "preview_cancelled_dependency_job": 26836441,
+  "preview_job": 26836903
+}

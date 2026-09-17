@@ -1,1 +1,3 @@
 execution_id,signal_date,execution_date,security_code,security_name,side,rule,shares,price,tranche
+local-20260917-002714-sell,2026-09-16,2026-09-17,002714,牧原股份,sell,swap,3200,41.36,132542.5415
+local-20260917-600970-buy,2026-09-16,2026-09-17,600970,中材国际,buy,buy,17100,7.68,132542.5415

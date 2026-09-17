@@ -1,0 +1,94 @@
+{
+  "signal_date": "2026-09-17",
+  "reviewed_at_utc": "2026-09-17T09:13:02.536462+00:00",
+  "checks": [
+    {
+      "topic": "生猪与饲料",
+      "codes": [
+        "002714"
+      ],
+      "status": "primary_source_verified",
+      "source_url": "https://xmsyj.moa.gov.cn/jcyj/202609/t20260916_6487731.htm",
+      "published_on": "2026-09-16",
+      "observed_on": "2026-09-10",
+      "facts": "全国500县第2周生猪11.54元/公斤，周环比-0.4%；玉米2.46元/公斤持平，豆粕3.36元/公斤、周环比+1.5%，育肥猪配合饲料3.35元/公斤持平。",
+      "assessment": "行业样本与牧原实现售价、完全成本不同；截至本轮未取得新公司成本原问答，不改变公司模型锚。"
+    },
+    {
+      "topic": "内蒙古煤炭与水泥",
+      "codes": [
+        "002128",
+        "600970"
+      ],
+      "status": "primary_source_verified",
+      "source_url": "https://cif.mofcom.gov.cn/cif/html/inland_month_report/2026/9/1789440091767.html",
+      "published_on": "2026-09-15",
+      "observed_period": "2026-08",
+      "facts": "内蒙古动力煤5000–5500大卡样本均价596.98元/吨，月环比+1.9%、同比+6.4%；水泥均价313元/吨，月环比-6.6%。",
+      "assessment": "区域月度样本，不替代电投低热值煤的长协实现售价，也不等同中材海外工程订单。"
+    },
+    {
+      "topic": "铝与氧化铝",
+      "codes": [
+        "002128",
+        "000651"
+      ],
+      "status": "partial",
+      "source_urls": [
+        "https://yanghualv.mysteel.com/",
+        "https://hq.smm.cn/wirecable/category/201102250311"
+      ],
+      "observed_on": "2026-09-17",
+      "facts": "Mysteel公开搜索结果价格表：山西氧化铝2710、山东2670、广西2605元/吨，三者日变动0。SMM A00当日价格页可读成交升水10–30元/吨，绝对价须登录，未取得同日同口径完整铝/氧化铝价格对。",
+      "assessment": "氧化铝数据为原数据发布方检索页摘要，明细页未成功打开；不据此计算公司吨铝利润。"
+    },
+    {
+      "topic": "空调排产与竞争",
+      "codes": [
+        "000651"
+      ],
+      "status": "partial",
+      "source_urls": [
+        "https://weixin.chinaiol.com/News/Details?classID=80&id=68232",
+        "https://bao.hvacr.cn/202608_2119733.html"
+      ],
+      "published_on": "2026-08-27",
+      "facts": "产业在线原始页面标题及日期可读，正文动态加载。转载列内销539万台同比-9.4%、出口436万台同比-11.7%，合计975万台；转载总量同比-7.7%与分项加权不自洽，未取得原始表，不采纳该总量同比。",
+      "assessment": "仅作家电需求压力线索，不改格力模型或分层；公司级排产与终端价格未完整覆盖。"
+    },
+    {
+      "topic": "乙烷与聚烯烃",
+      "codes": [
+        "002648",
+        "600989"
+      ],
+      "status": "incomplete",
+      "source_urls": [
+        "https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=EER_EPLLE_PF4_Y44MB_DPG&f=D"
+      ],
+      "facts": "EIA页面本轮无法打开，未取得最新Mont Belvieu乙烷价、到岸成本及国内乙烯/聚乙烯完整配对价差。",
+      "assessment": "不以其他化工产品或塑料指数替代企业原料盈利指标。"
+    },
+    {
+      "topic": "银行与保险",
+      "codes": [
+        "600036",
+        "601318",
+        "601838",
+        "601398",
+        "601288"
+      ],
+      "status": "partial",
+      "facts": "逐票公司公告与利率在本次evidence/preview阶段核查；信贷质量、NBV和竞品经营数据为季/月度，未取得覆盖全部主体的新一期经营数据。"
+    },
+    {
+      "topic": "两轮车与工程订单",
+      "codes": [
+        "603529",
+        "600970"
+      ],
+      "status": "partial",
+      "facts": "核查公司公告和既有触发：爱玛09-18分派实施安排公告、09-21业绩说明会；中材订单、回款与诉讼减值。未完成两轮车终端价格/上险量及所有海外项目订单全来源巡检。"
+    }
+  ]
+}

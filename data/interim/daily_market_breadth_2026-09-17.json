@@ -1,0 +1,15 @@
+{
+  "signal_date": "2026-09-17",
+  "source_url": "https://www.nbd.com.cn/articles/2026-09-17/4584226.html",
+  "published_at_beijing": "2026-09-17 15:28:22",
+  "retrieved_at_utc": "2026-09-17T09:15:51.694812+00:00",
+  "source_kind": "secondary_news_search_result",
+  "index_change_pct": {
+    "shanghai": -0.41,
+    "shenzhen": -0.33,
+    "chinext": -0.4
+  },
+  "combined_turnover_approx_cny": 1820000000000.0,
+  "declining_stocks": "超过2800只",
+  "coverage_note": "搜索结果包含记者署名和收盘正文；直接打开失败。涨跌家数仅为媒体下跌数量范围，未取得全市场精确上涨/下跌/平盘数，指数及成交额另与行情快照核对。"
+}

@@ -1,0 +1,188 @@
+{
+  "signal_date": "2026-09-16",
+  "execution_date": "2026-09-17",
+  "reported_at_utc": "2026-09-17T09:08:59.028815+00:00",
+  "source": "user_reported",
+  "holdings_before": [
+    {
+      "security_code": "002714",
+      "security_name": "牧原股份",
+      "current_shares": "4900",
+      "cost_basis": "39.225",
+      "entry_stop_price": "37.32"
+    },
+    {
+      "security_code": "002648",
+      "security_name": "卫星化学",
+      "current_shares": "16000",
+      "cost_basis": "27.8155",
+      "entry_stop_price": "24.16"
+    },
+    {
+      "security_code": "000651",
+      "security_name": "格力电器",
+      "current_shares": "43000",
+      "cost_basis": "39.1094",
+      "entry_stop_price": "37.24"
+    },
+    {
+      "security_code": "603529",
+      "security_name": "爱玛科技",
+      "current_shares": "29200",
+      "cost_basis": "21.6142",
+      "entry_stop_price": "20.76"
+    },
+    {
+      "security_code": "600036",
+      "security_name": "招商银行",
+      "current_shares": "14700",
+      "cost_basis": "40.4879",
+      "entry_stop_price": "37.93"
+    },
+    {
+      "security_code": "002128",
+      "security_name": "电投能源",
+      "current_shares": "4500",
+      "cost_basis": "29.2831",
+      "entry_stop_price": "26.23"
+    },
+    {
+      "security_code": "601318",
+      "security_name": "中国平安",
+      "current_shares": "4900",
+      "cost_basis": "54.8906",
+      "entry_stop_price": "51.1700"
+    },
+    {
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "current_shares": "80300",
+      "cost_basis": "7.7975",
+      "entry_stop_price": "7.70383333"
+    }
+  ],
+  "account_before": {
+    "as_of": "2026-09-16",
+    "net_assets_cny": "2650850.83",
+    "total_assets_cny": "4503922.00",
+    "margin_debt_cny": "1853071.17",
+    "credit_line_cny": "",
+    "leverage_ratio": "1.6990",
+    "guarantee_ratio_pct": "243.05",
+    "holdings_market_value_cny": "4503922.00",
+    "cash_cny": "0.00",
+    "position_count": "8",
+    "top_position_weight_pct": "61.80",
+    "account_peak_net_assets_cny": "2811530.99",
+    "drawdown_from_peak_pct": "-5.72",
+    "source": "user_reported",
+    "note": "用户盘后补报总资产4503922元、净资产2650850.83元、可用保证金-48624.10元、现金0元；持仓收盘市值与总资产完全相符。推得负债1853071.17元，比09-15增加179.70元，未确认为具体利息或费用科目，不重复扣款。今日无操作，8只持仓股数延续，无外部现金流回报。扫描funds依工作流程§10.2使用券商可用保证金加现金=-48624.10元，替代先前公式估算-87305.14元；净资产替代先前暂估2651030.53元。",
+    "external_cash_flow_cny": "0.00",
+    "strategy_base_net_assets_cny": "",
+    "strategy_return_pct": "-5.72",
+    "net_assets_before_flow_cny": "",
+    "strategy_nav_basis": "exact",
+    "strategy_unit_nav": "0.942850",
+    "strategy_epoch": "E4"
+  },
+  "original_buy_plan": [
+    {
+      "trade_date": "2026-09-16",
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "quality_tier": "L2",
+      "close": "7.74",
+      "model_intrinsic_value": "14.7396",
+      "model_pv": "0.5251",
+      "model_band_source": "模型带·2026-06-30",
+      "lots": "107",
+      "shares": "10700",
+      "amount": "82818.0",
+      "cooldown_skips": "0"
+    }
+  ],
+  "original_sell_plan": [
+    {
+      "trade_date": "2026-09-16",
+      "security_code": "002714",
+      "security_name": "牧原股份",
+      "rule": "换仓",
+      "condition": "持仓侧 P/V 1.0503 且弱势｜卖出款去向：中材国际 0.5251（边际 +0.5252）｜触发闸门：成都银行 0.8258（差 0.2245 ≥ 0.1500）",
+      "close": "41.08",
+      "ma20": "41.687",
+      "ma60": "39.5428",
+      "model_pv": "1.0503",
+      "hold_pv": "1.0503",
+      "cost_basis": "39.225",
+      "gain_pct": "0.0473",
+      "entry_stop_price": "37.32",
+      "stop_line": "",
+      "current_shares": "4900.0",
+      "sell_shares": "3200",
+      "amount": "131456.0",
+      "swap_for": "601838",
+      "cooldown_skips": "0",
+      "note": ""
+    }
+  ],
+  "original_signal_tranche_cny": "132542.5415",
+  "trades": [
+    {
+      "security_code": "002714",
+      "security_name": "牧原股份",
+      "side": "sell",
+      "rule": "swap",
+      "shares": 3200,
+      "price": "41.36",
+      "amount_cny": "132352.00",
+      "remaining_shares": 1700,
+      "valuation": {
+        "as_of": "2026-09-17",
+        "security_code": "002714",
+        "security_name": "牧原股份",
+        "price": 41.36,
+        "candidate": {
+          "intrinsic_value": "39.1125",
+          "pv": 1.057462448066475,
+          "source": "模型带·2026-06-30"
+        },
+        "hold": {
+          "intrinsic_value": "39.1125",
+          "pv": 1.057462448066475,
+          "source": "模型带·2026-06-30"
+        }
+      }
+    },
+    {
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "side": "buy",
+      "rule": "buy",
+      "shares": 17100,
+      "price": "7.68",
+      "amount_cny": "131424.00",
+      "remaining_shares": 97400,
+      "cost_basis_after": "7.7769",
+      "valuation": {
+        "as_of": "2026-09-17",
+        "security_code": "600970",
+        "security_name": "中材国际",
+        "price": 7.68,
+        "candidate": {
+          "intrinsic_value": "14.7396",
+          "pv": 0.5210453472278759,
+          "source": "模型带·2026-06-30"
+        },
+        "hold": {
+          "intrinsic_value": "14.7396",
+          "pv": 0.5210453472278759,
+          "source": "模型带·2026-06-30"
+        }
+      }
+    }
+  ],
+  "net_sale_cny": "928.00",
+  "debt_reduction_cny": "750.35",
+  "unattributed_difference_cny": "177.65",
+  "execution_deviation": "牧原卖出股数与09-16计划一致；中材买入比计划10700股多6400股，旧保证金加实际卖出款仅83727.90元，买入额高出47696.10元，执行时券商实时可用资金未回报；按实际成交登记。"
+}
