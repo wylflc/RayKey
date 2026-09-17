@@ -1,0 +1,103 @@
+{
+  "signal_date": "2026-09-17",
+  "illustration_only": true,
+  "production_files_unchanged": true,
+  "fees_included": false,
+  "results": {
+    "BASE": {
+      "sells": [
+        {
+          "trade_date": "",
+          "security_code": "002714",
+          "security_name": "牧原股份",
+          "rule": "换仓",
+          "condition": "持仓侧 P/V 1.0554 且弱势｜卖出款去向：无——卖出款当日未投出｜触发闸门：成都银行 0.8235（差 0.2319 ≥ 0.1500）",
+          "close": 41.28,
+          "ma20": 41.76,
+          "ma60": 39.6915,
+          "model_pv": 1.0554,
+          "hold_pv": 1.0554,
+          "cost_basis": 39.225,
+          "gain_pct": 0.0524,
+          "entry_stop_price": 37.32,
+          "stop_line": "",
+          "current_shares": 1700.0,
+          "sell_shares": 1700.0,
+          "amount": 70176.0,
+          "swap_for": "601838",
+          "cooldown_skips": 0,
+          "note": "余仓不足一手，整笔清空"
+        }
+      ],
+      "buys": [],
+      "remaining_funds": -180.72999999999593,
+      "swap_stop_reason": "最贵弱势持仓 持仓侧 P/V 1.0013 与候选 工商银行 P/V 0.9867 差 0.0146 < 0.1500"
+    },
+    "REPEAT": {
+      "sells": [
+        {
+          "trade_date": "",
+          "security_code": "002714",
+          "security_name": "牧原股份",
+          "rule": "换仓",
+          "condition": "持仓侧 P/V 1.0554 且弱势｜卖出款去向：中材国际 0.5210（边际 +0.5344）（当日换仓卖出款合并投放）｜触发闸门：成都银行 0.8235（差 0.2319 ≥ 0.1500）",
+          "close": 41.28,
+          "ma20": 41.76,
+          "ma60": 39.6915,
+          "model_pv": 1.0554,
+          "hold_pv": 1.0554,
+          "cost_basis": 39.225,
+          "gain_pct": 0.0524,
+          "entry_stop_price": 37.32,
+          "stop_line": "",
+          "current_shares": 1700.0,
+          "sell_shares": 1700.0,
+          "amount": 70176.0,
+          "swap_for": "601838",
+          "cooldown_skips": 0,
+          "note": "余仓不足一手，整笔清空"
+        },
+        {
+          "trade_date": "",
+          "security_code": "002128",
+          "security_name": "电投能源",
+          "rule": "换仓",
+          "condition": "持仓侧 P/V 1.0013 且弱势｜卖出款去向：中材国际 0.5210（边际 +0.4803）（当日换仓卖出款合并投放）｜触发闸门：成都银行 0.8235（差 0.1778 ≥ 0.1500）",
+          "close": 27.77,
+          "ma20": 28.1755,
+          "ma60": 26.6687,
+          "model_pv": 1.0013,
+          "hold_pv": 1.0013,
+          "cost_basis": 29.2831,
+          "gain_pct": -0.0517,
+          "entry_stop_price": 26.23,
+          "stop_line": "",
+          "current_shares": 4500.0,
+          "sell_shares": 4500.0,
+          "amount": 124965.0,
+          "swap_for": "601838",
+          "cooldown_skips": 0,
+          "note": "余仓不足一手，整笔清空"
+        }
+      ],
+      "buys": [
+        {
+          "trade_date": "",
+          "security_code": "600970",
+          "security_name": "中材国际",
+          "quality_tier": "L2",
+          "close": 7.68,
+          "model_intrinsic_value": 14.7396,
+          "model_pv": 0.521,
+          "model_band_source": "模型带·2026-06-30",
+          "lots": 162,
+          "shares": 16200,
+          "amount": 124416.0,
+          "cooldown_skips": 0
+        }
+      ],
+      "remaining_funds": 368.2700000000041,
+      "swap_stop_reason": "最贵弱势持仓 持仓侧 P/V 0.8054 与候选 成都银行 P/V 0.8235 差 -0.0181 < 0.1500"
+    }
+  }
+}

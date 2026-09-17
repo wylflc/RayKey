@@ -1,0 +1,11 @@
+--- smoke/run.py
++++ formal/run.py
+@@ -114,6 +114,8 @@
+                     '--candidate-log', str(EXP / 'traces' / f'candidates_{tag}.csv')]
+     with (EXP / 'errors' / f'{tag}.txt').open('w') as f:
+         subprocess.run(command, cwd=ROOT, check=True, stdout=subprocess.DEVNULL, stderr=f)
++    sw.RUN_DIR.mkdir(parents=True, exist_ok=True)
++    (sw.RUN_DIR / f'summary_{tag}.csv').write_bytes((sw.OUT_DIR / f'summary_{tag}.csv').read_bytes())
+     row = summary(sw.OUT_DIR / f'summary_{tag}.csv')
+     assert row['计量版本'] == sw.METRIC_VERSION and row['负现金日数'] == '0'
+     line = '|'.join([out_label, since] + [f'{sw._field_value(row,k):.6f}' for k in sw.FIELDS])

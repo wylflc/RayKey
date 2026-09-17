@@ -1,0 +1,15 @@
+{
+  "changed_at_beijing": "2026-09-17T18:27:26.037330+08:00",
+  "reason": "Standard scanner reads winner anchor from RUN_DIR; mirror per-path summaries there so automatic A pass can use the unchanged standard reader.",
+  "scope": "scan runner output routing only; engine and all market/valuation inputs unchanged",
+  "before": {
+    "bytes": 8857,
+    "sha256": "6aaf30898e403c845a0cbc832a5a529323881af89d8d9a1d2481564f594f0fe3"
+  },
+  "after": {
+    "bytes": 9009,
+    "sha256": "c5cc2752a5e09f41c83bc3ef547fef9bba074e596eb4c6e1f5f9c404d672ca67"
+  },
+  "smoke_job": 26838928,
+  "smoke_native_baseline_reproduced": true
+}

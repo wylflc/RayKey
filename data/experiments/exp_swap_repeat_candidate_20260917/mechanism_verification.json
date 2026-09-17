@@ -1,0 +1,69 @@
+{
+  "source_once_per_day": true,
+  "margin_and_funding_conditions_preserved": true,
+  "zero_quantity_sales": false,
+  "baseline_repeated_triggers": 0,
+  "groups": [
+    {
+      "group": "full",
+      "arm": "BASE",
+      "paths": 14,
+      "median_swap_sales": 226.0,
+      "median_repeated_target_days": 0.0,
+      "extra_source_sales_sum": 0,
+      "extra_sales_tiny_gap_fraction": 0,
+      "maximum_sources_per_target": 1
+    },
+    {
+      "group": "full",
+      "arm": "REPEAT",
+      "paths": 14,
+      "median_swap_sales": 247.0,
+      "median_repeated_target_days": 44.5,
+      "extra_source_sales_sum": 733,
+      "extra_sales_tiny_gap_fraction": 0.4229195088676671,
+      "maximum_sources_per_target": 6
+    },
+    {
+      "group": "A",
+      "arm": "BASE",
+      "paths": 14,
+      "median_swap_sales": 208.0,
+      "median_repeated_target_days": 0.0,
+      "extra_source_sales_sum": 0,
+      "extra_sales_tiny_gap_fraction": 0,
+      "maximum_sources_per_target": 1
+    },
+    {
+      "group": "A",
+      "arm": "REPEAT",
+      "paths": 14,
+      "median_swap_sales": 231.0,
+      "median_repeated_target_days": 29.0,
+      "extra_source_sales_sum": 455,
+      "extra_sales_tiny_gap_fraction": 0.5032967032967033,
+      "maximum_sources_per_target": 4
+    },
+    {
+      "group": "U",
+      "arm": "BASE",
+      "paths": 14,
+      "median_swap_sales": 195.5,
+      "median_repeated_target_days": 0.0,
+      "extra_source_sales_sum": 0,
+      "extra_sales_tiny_gap_fraction": 0,
+      "maximum_sources_per_target": 1
+    },
+    {
+      "group": "U",
+      "arm": "REPEAT",
+      "paths": 14,
+      "median_swap_sales": 210.0,
+      "median_repeated_target_days": 32.0,
+      "extra_source_sales_sum": 481,
+      "extra_sales_tiny_gap_fraction": 0.5301455301455301,
+      "maximum_sources_per_target": 6
+    }
+  ],
+  "repeated_observations_note": "不同起点共享历史，合计事件数仅为路径内审计计数，不是独立市场样本数。"
+}

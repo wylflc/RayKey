@@ -1,0 +1,64 @@
+{
+  "deterministic_tests": {
+    "command": "python3 data/experiments/exp_swap_repeat_candidate_20260917/test_repeat.py",
+    "passed": 7
+  },
+  "native_smoke_fields_identical": 52,
+  "previous_baseline_fields_identical": 1344,
+  "input_files": 578,
+  "input_bytes": 4774259911,
+  "complete_paths": 84,
+  "source_once_per_day": true,
+  "negative_cash_days": 0,
+  "runner_validation": {
+    "standard_winner_reader_passed": true,
+    "winner_count": 5,
+    "output_format_passed": true
+  },
+  "jobs": {
+    "smoke": {
+      "id": 26838928,
+      "state": "COMPLETED",
+      "elapsed": "00:09:32",
+      "cpus": 16,
+      "time_command_maxrss_kib": 1510924
+    },
+    "formal": {
+      "id": 26839243,
+      "state": "COMPLETED",
+      "elapsed": "00:13:19",
+      "cpus": 32,
+      "workers": 24,
+      "sacct_maxrss_kib": 30327626
+    }
+  },
+  "docs_audit": {
+    "command": "python3 scripts/audit_repository_docs.py",
+    "errors": 0
+  },
+  "backtest_log_section_bytes": 1117,
+  "registration": {
+    "summary_rows": 84,
+    "added_keys": 84,
+    "old_rows_unchanged": true,
+    "candidate_arm": "SWAPREPEAT",
+    "candidate_arm_count": 1,
+    "entry_point": "clean_derived_artifacts.write_ledger"
+  },
+  "research_file_sha256": {
+    "analyze.py": "a6436182b5e8b5dea378367d36e6f4a4321bd3fb201d94fc0b6faee015439a4e",
+    "diagnose.py": "ef64d0bc1550c69d12dd63fc70f715057274c4601eef5195245e23a89301b903",
+    "render.py": "b30eecf723641600e1e74627950f85867f53cecf994b2749854e8d6c2648d089",
+    "today_case.py": "0d796c632131ca66e06f1059d9f6ee5b83d49bb25b740b5447ed727ae561eb5a",
+    "test_repeat.py": "7557d7ca77852900a22ff59c0bda5805ae659966f9d1c92520c1692ef550b37a",
+    "run.py": "c5cc2752a5e09f41c83bc3ef547fef9bba074e596eb4c6e1f5f9c404d672ca67",
+    "engine.py": "06d887b2fbfe5e246744271ef5f3477f0b65e4577e65f9d40708014cfa250413",
+    "preregister.md": "b0a9532a1eb38720dbcdd41cd425c92b8c9e7fce9581a4d450fdcf1e8b7d7029",
+    "runner_revision.json": "16bc7ea81335e330e68ee13dc96c5237e8a54824e735c986e61e5876c0bc1c60",
+    "runner_validation.json": "329ef09efe2dacb05b093bb9f4188dbb2bf278be210deca5d374cfb8b4d166fd",
+    "today_counterfactual.json": "b85fc46183b6a43b84540f373f76d8adeace626cc768638ed38bb00d230fbac9"
+  },
+  "report_sha256": "cfd7ae3d0f648a86ad1891d41d63c4b61ccda3b5732586293087a90c664115d1",
+  "production_parameters_changed": false,
+  "production_orders_changed": false
+}
