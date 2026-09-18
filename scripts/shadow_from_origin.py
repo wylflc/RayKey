@@ -306,10 +306,30 @@ def replay(snapshots, supplement, manifest, opening_shares):
     return rows, fills, states, checks, corr_calls
 
 
+def opening_confirmation(manifest):
+    digest = manifest.get('opening_confirmation_sha256')
+    if not digest:
+        if len(manifest['scenarios']) != 2:
+            raise ValueError('A single opening scenario requires confirmation evidence')
+        return None
+    path = BOOK/'opening_confirmation.json'
+    if sh.sha(path.read_bytes()) != digest:
+        raise ValueError('Opening confirmation evidence changed')
+    evidence = json.loads(path.read_text())
+    shares = evidence['shares_before_0828'] + evidence['confirmed_buys']['2026-08-28']
+    if (evidence['baseline_date'] != manifest['baseline_date'] or
+            evidence['opening_shares'] != shares or
+            shares + evidence['confirmed_buys']['2026-08-31'] != evidence['shares_confirmed_on_0903'] or
+            manifest['scenarios'] != {evidence['selected_scenario']: shares}):
+        raise ValueError('Confirmed fills and opening scenario do not reconcile')
+    return evidence
+
+
 def load():
     manifest = json.loads((BOOK/'manifest.json').read_text())
     if manifest['code_sha256'] != hashes():
         raise ValueError('Frozen replay code changed')
+    opening_confirmation(manifest)
     snapshots = []
     for day, digest in sorted(manifest['snapshots'].items()):
         path = BOOK/'snapshots'/f'{day}.json'
@@ -425,29 +445,51 @@ def run():
         accounting_closed=True, prefix_invariance=True, production_unchanged=True,
         production_sha256=before, code_sha256=hashes(), correlation_calls={k:v[-1] for k,v in outcomes.items()}))
     last = comparison[-1]
-    lines = ['# 从2026-08-28开始的影子组合：期初持仓两种情景', '',
+    confirmed = opening_confirmation(manifest)
+    names = list(outcomes)
+    labels = {name: ('已确认影子组合' if confirmed else
+              '300股漏记在' + ('08-28' if name.endswith('0828') else '08-31')) for name in names}
+    def table_row(cells):
+        return '| ' + ' | '.join(map(str, cells)) + ' |'
+    title = '期初股数已确认' if confirmed else '期初持仓两种情景'
+    explanation = (
+        '用户补充确认08-28买入4,900股、08-31买入5,100股。原记录分别为4,600股、5,100股，'
+        '故少记300股发生在08-28。原有5,500股→08-28收盘10,400股→08-31收盘15,500股，'
+        '与09-03订正一致。08-31漏记假设已排除，旧路径仅留作历史证据。'
+        if confirmed else
+        '09-03用户确认陕西煤业15,500股、成本26.707，原记15,200股。原决策日志注明：少记的300股落在08-28还是08-31无法判定，暂保留两个期初情景。')
+    lines = [f'# 从2026-08-28开始的影子组合：{title}', '',
         '**本表替代将09-14当成主起点的解释。09-14起的E4报告仅保留作分段对照。**', '',
         f'08-28收盘至{snapshots[-1]["date"]}，共{len(snapshots)-1}个交易日；截至{manifest["retrospective_through"]}为历史回放，其后为前向记录。参数随原日版本变化，影子持仓、资金、批次与冷却连续递推，未按实盘重置。', '',
         '## 已找到的订正', '',
-        '09-03用户确认陕西煤业15,500股、成本26.707，原记15,200股。09-01的8,016元和09-02的7,830元分别等于300×26.72、300×26.10，已闭合。原决策日志同时注明：少记的300股落在08-28还是08-31无法判定。', '',
-        '因此保留两个期初情景；正式账户的2,811,530.99元基准及收益不变。影子用各情景的收盘持仓净资产作分母，未将券商与持仓的差额当作现金。这是有条件回放，不声称初始账户已经完全对账。', '',
-        '| 指标 | 300股漏记在08-31 | 300股漏记在08-28 | 实盘报告 |', '| --- | ---: | ---: | ---: |']
-    a,b = outcomes.values()
-    lines += [f'| 08-28陕西煤业股数 | 10,100 | 10,400 | 日期未定 |',
-        f'| 初始净资产/分母 | {a[0][0]["net_assets"]:,.2f} | {b[0][0]["net_assets"]:,.2f} | {real0:,.2f} |',
-        f'| 期末净资产 | {a[0][-1]["net_assets"]:,.2f} | {b[0][-1]["net_assets"]:,.2f} | {last["actual_net_assets"]:,.2f} |',
-        f'| 累计收益 | {a[0][-1]["return_pct"]:.4f}% | {b[0][-1]["return_pct"]:.4f}% | {last["actual_return_pct"]:.4f}% |', '',
-        '## 逐日累计收益', '', '| 日期 | 300股漏记在08-31 | 300股漏记在08-28 | 实盘报告 |', '| --- | ---: | ---: | ---: |']
+        explanation, '',
+        '09-01的8,016元和09-02的7,830元分别等于300×26.72、300×26.10，已闭合。正式账户的2,811,530.99元基准及收益不变。影子用收盘持仓净资产作分母，未将券商与持仓的差额当作现金。这是有条件回放，不声称初始账户已经完全对账。', '',
+        table_row(['指标'] + [labels[n] for n in names] + ['实盘报告']),
+        table_row(['---'] + ['---:'] * (len(names)+1)),
+        table_row(['08-28陕西煤业股数'] + [f'{manifest["scenarios"][n]:,}' for n in names] + ['10,400' if confirmed else '日期未定'])]
+    for label, index, key, fmt, real in (
+            ('初始净资产/分母', 0, 'net_assets', ',.2f', real0),
+            ('期末净资产', -1, 'net_assets', ',.2f', last['actual_net_assets']),
+            ('累计收益', -1, 'return_pct', '.4f', last['actual_return_pct'])):
+        suffix = '%' if key == 'return_pct' else ''
+        lines.append(table_row([label] + [format(outcomes[n][0][index][key], fmt)+suffix for n in names]
+                               + [format(real, fmt)+suffix]))
+    lines += ['', '## 逐日累计收益', '',
+              table_row(['日期'] + [labels[n] for n in names] + ['实盘报告']),
+              table_row(['---'] + ['---:'] * (len(names)+1))]
     for r in comparison:
-        lines.append(f'| {r["date"]} | {r["missing_300_on_0831_return_pct"]:.4f}% | {r["missing_300_on_0828_return_pct"]:.4f}% | {r["actual_return_pct"]:.4f}% |')
+        lines.append(table_row([r['date']] + [f'{r[n+"_return_pct"]:.4f}%' for n in names]
+                               + [f'{r["actual_return_pct"]:.4f}%']))
     lines += ['', '## 解释范围', '',
-        '- 期初情景解释的是记录歧义，并非置信区间或最坏情况范围；无法借此认定任一情景就是实际账户。',
+        ('- 期初股数与漏记日期已确认；该路径沿用原10,400股情景，后续仅更新这条路径。'
+         if confirmed else '- 期初情景解释的是记录歧义，并非置信区间或最坏情况范围。'),
         '- 使用原日名单、双侧估值、均线、闸门与BASE参数；用现有修正记账引擎承接历史参数，不刻意复现历史软件缺陷。相关性按信号日截止的252日收益计算，历史补取价格与原归档收盘交叉核验。',
         '- 模拟按次日收盘成交，券商实时授信算法未重建；融资沿用比例公式。收益差异包含持仓、规则执行、融资与口径因素，不能全部归为人工执行。',
         '- 原始持仓建立前已收股息的递延税批次不全；08-28之后的公司行动、模拟成交与计息持续记账。',
-        '- 09-03订正并未确认08-28或08-31的全部资产差额已消失：若300股已在08-28持有，剩余差额为792.65元；08-31补300股后仍差1,510.99元，未伪造现金弥补。',
+        '- 补计300股后的资产残差：08-28为792.65元，08-31为1,510.99元。股份日期确认不等于这两笔残差已解释，未伪造现金弥补。',
         '- 原始8月末与9月初交易有整仓卖出、清单外加仓等裁量，不能把此前实盘收益拼接成影子收益。逐笔影子成交见各情景fills.csv。', '',
-        '输入与证据：manifest.json、snapshots/、supplement/、opening_correction.json、rule_schedule.csv、daily_comparison.csv、verification.json。', '']
+        '输入与证据：manifest.json、snapshots/、supplement/、opening_correction.json、rule_schedule.csv、daily_comparison.csv、verification.json。'
+        + (' 本次确认见opening_confirmation.json；旧双情景版本见Git c13edc82。' if confirmed else ''), '']
     (BOOK/'report.md').write_text('\n'.join(lines))
     print(json.dumps(last,ensure_ascii=False,indent=2))
 

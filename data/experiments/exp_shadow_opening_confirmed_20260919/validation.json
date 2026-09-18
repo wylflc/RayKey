@@ -1,0 +1,83 @@
+{
+  "recorded_at_beijing": "2026-09-19T00:23:21.345351+08:00",
+  "as_of": "2026-09-18",
+  "job_id": 26903011,
+  "job_state": "COMPLETED",
+  "elapsed": "00:00:22",
+  "allocated_cpus": 16,
+  "workers": 1,
+  "python_peak_rss_kib": 60120,
+  "tests": {
+    "test_shadow_origin.py": 9,
+    "test_shadow_portfolio.py": 14
+  },
+  "test_count": 23,
+  "original_confirmed_path_byte_identical": true,
+  "excluded_path_outputs_unchanged": true,
+  "historical_snapshots_and_prices_unchanged": true,
+  "actual_trading_files_unchanged": true,
+  "account_changes": [
+    {
+      "date": "2026-08-28",
+      "columns": [
+        "holdings_market_value_cny",
+        "note"
+      ],
+      "old_market_value": "4680424.00",
+      "new_market_value": "4688545.00"
+    },
+    {
+      "date": "2026-08-31",
+      "columns": [
+        "holdings_market_value_cny",
+        "note"
+      ],
+      "old_market_value": "4508966.00",
+      "new_market_value": "4517252.00"
+    },
+    {
+      "date": "2026-09-01",
+      "columns": [
+        "holdings_market_value_cny",
+        "note"
+      ],
+      "old_market_value": "4731851.00",
+      "new_market_value": "4739867.00"
+    },
+    {
+      "date": "2026-09-02",
+      "columns": [
+        "holdings_market_value_cny",
+        "note"
+      ],
+      "old_market_value": "4675563.00",
+      "new_market_value": "4683393.00"
+    }
+  ],
+  "reported_account_values_and_strategy_returns_unchanged": true,
+  "strategy_return_check_passed": true,
+  "confirmation_sha256": "8be1f2d6c8acf3223979de9cdf39a48f77b430c2d3e632781c3fe70a629f2511",
+  "manifest_sha256": "fd053436d01bfd61386e5d0badff1326611e450600bc107a0256d6b00529408f",
+  "corrected_account_sha256": "ccde1b8a1b8bc3862afb36602e755d045416a48dca778cc751dec6342a4c5bf8",
+  "code_sha256": {
+    "shadow_from_origin.py": "5f2f9053b3de3aae7221b8fe42e26d9c556976e3639fc08401f1d609aeebac15",
+    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
+    "backtest_valuation_strategy.py": "040018a8eef3365d54206858c5b218b06b6bc566d7634ae4b918434071cbb865",
+    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6"
+  },
+  "prefix_invariance": true,
+  "accounting_closed": true,
+  "last": {
+    "﻿date": "2026-09-18",
+    "actual_epoch": "E4",
+    "actual_net_assets": "2660026.61",
+    "actual_return_pct": "-5.388678998697449",
+    "missing_300_on_0828_return_pct": "-5.590115937103379",
+    "missing_300_on_0828_net_assets": "2653614.808105385"
+  },
+  "documentation_audit_errors": 0,
+  "diff_whitespace_check_passed": true
+}

@@ -1,16 +1,18 @@
 {
-  "created_at_beijing": "2026-09-18T23:41:38.267648+08:00",
-  "baseline_date": "2026-08-28",
-  "retrospective_through": "2026-09-18",
-  "status": "opening_shares_confirmed_residual_unreconciled",
-  "code_sha256": {
-    "shadow_from_origin.py": "5f2f9053b3de3aae7221b8fe42e26d9c556976e3639fc08401f1d609aeebac15",
-    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
-    "backtest_valuation_strategy.py": "040018a8eef3365d54206858c5b218b06b6bc566d7634ae4b918434071cbb865",
-    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
-    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
-    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
-    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6"
+  "revision": "c13edc82d99088d03aa07e8130575ae121470511",
+  "manifest_sha256": "ed7d892f4579bd42198e9c80b44f0d2e10007eb28dce8b00e1d77908c0110267",
+  "account_sha256": "545af2425b0c12c8b991e69db016a26297403bd7f9b363ae4fe279ec7c35bb38",
+  "confirmed_path_sha256": {
+    "accounting.csv": "646bdea7e3131713f4b9c14a20f83fc68f445efd4863e4ca14322ddc93e57cbb",
+    "fills.csv": "c727e2e4e2c9c596df361dcfb2e3e1a34b5e15e4a9e8a2dfc6930f427f1f04c6",
+    "equity.csv": "fd9c38b414e640f1eedb13fa190e878e576e54da6c7f1fa513de4e1a53005e5d",
+    "states.json": "42134a3f03be41c92da7577c4b3e3d4d26b8f904c8561131b04f4d3aa9593a1e"
+  },
+  "excluded_path_sha256": {
+    "accounting.csv": "d91a7f9a3dd62b38b9f3abd77173131fd46dc00c735b9fc144fc1f7baec44161",
+    "fills.csv": "ebfc455ece25cacef8dbfb47d88071d97d6baaa9f634aa63083f5685bb4609c3",
+    "equity.csv": "b0d563d1d91fd9c530c6552d045d3cec00d1f2a6a9425ef1a0d21411b8a9e457",
+    "states.json": "b36ef1fbc539fea5415686302ca3d1169bcdd811715afa70b622f5b62da24c00"
   },
   "snapshots": {
     "2026-08-28": "c836d973436d75a40d6ee998fa4cdbbc432ea1f6656d7aa9d15ac6e1766b10f0",
@@ -61,28 +63,5 @@
     "603369": "6710dce18082b94c187de652f2e2528b3b36bd72d3267f02fa9c2c992bcddd84",
     "603529": "30df023586652b661161ba59d5e8f0bb8f0a63c530f6a68b68a886c0bfd09bab",
     "920599": "e4dbf6e3ba5587b8c5eaa02adc5dc9eba3fdf1a7505bcb7c23de7e2f2c15fc95"
-  },
-  "correction_sha256": "5e16774974b44bc4974f140145f13bde43d07d8f93890c5e7e0f4777ee269d7f",
-  "scenarios": {
-    "missing_300_on_0828": 10400
-  },
-  "fees": {
-    "commission": 0.0001,
-    "min_fee": 5.0,
-    "stamp": 0.0005,
-    "transfer": 1e-05,
-    "stamp_mode": "flat"
-  },
-  "account_source_sha256": "545af2425b0c12c8b991e69db016a26297403bd7f9b363ae4fe279ec7c35bb38",
-  "excluded_scenarios": {
-    "missing_300_on_0831": {
-      "shares": 10100,
-      "status": "ruled_out_by_user_confirmed_fills",
-      "archived_through": "2026-09-18"
-    }
-  },
-  "opening_confirmation_sha256": "8be1f2d6c8acf3223979de9cdf39a48f77b430c2d3e632781c3fe70a629f2511",
-  "opening_confirmed_at_beijing": "2026-09-19T00:18:11.008377+08:00",
-  "previous_manifest_revision": "c13edc82d99088d03aa07e8130575ae121470511",
-  "previous_manifest_sha256": "ed7d892f4579bd42198e9c80b44f0d2e10007eb28dce8b00e1d77908c0110267"
+  }
 }

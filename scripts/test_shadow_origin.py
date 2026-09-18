@@ -1,5 +1,8 @@
 """Continuation must preserve trading, dividend and cooldown state across rules."""
 import copy
+import json
+from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -72,6 +75,34 @@ class OriginTests(unittest.TestCase):
         self.assertEqual(origin.merge_prices(old,new),new)
         with self.assertRaisesRegex(ValueError,'revised'):
             origin.merge_prices(old,[dict(date='2026-09-18',close=12.)])
+
+    def test_confirmed_fills_exclude_wrong_opening_path(self):
+        evidence=dict(baseline_date='2026-08-28',shares_before_0828=5500,
+            confirmed_buys={'2026-08-28':4900,'2026-08-31':5100},opening_shares=10400,
+            shares_confirmed_on_0903=15500,selected_scenario='missing_300_on_0828')
+        with tempfile.TemporaryDirectory() as tmp, patch.object(origin,'BOOK',Path(tmp)):
+            path=Path(tmp)/'opening_confirmation.json'
+            path.write_text(json.dumps(evidence))
+            manifest=dict(baseline_date='2026-08-28',scenarios={'missing_300_on_0828':10400},
+                          opening_confirmation_sha256=origin.sh.sha(path.read_bytes()))
+            self.assertEqual(origin.opening_confirmation(manifest),evidence)
+            manifest['scenarios']={'missing_300_on_0831':10100}
+            with self.assertRaisesRegex(ValueError,'do not reconcile'):
+                origin.opening_confirmation(manifest)
+            manifest['scenarios']={'missing_300_on_0828':10400}
+            evidence['confirmed_buys']['2026-08-28']=4600
+            path.write_text(json.dumps(evidence))
+            with self.assertRaisesRegex(ValueError,'evidence changed'):
+                origin.opening_confirmation(manifest)
+            manifest['opening_confirmation_sha256']=origin.sh.sha(path.read_bytes())
+            with self.assertRaisesRegex(ValueError,'do not reconcile'):
+                origin.opening_confirmation(manifest)
+
+    def test_cannot_select_one_opening_without_confirmation(self):
+        with self.assertRaisesRegex(ValueError,'requires confirmation'):
+            origin.opening_confirmation(dict(scenarios={'missing_300_on_0828':10400}))
+        self.assertIsNone(origin.opening_confirmation(dict(
+            scenarios={'missing_300_on_0828':10400,'missing_300_on_0831':10100})))
 
     def test_execution_day_closing_membership_cannot_force_same_day_exit(self):
         snapshots=[]
