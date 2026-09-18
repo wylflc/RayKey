@@ -1,0 +1,217 @@
+{
+  "signal_date": "2026-09-18",
+  "retrieved_at_utc": "2026-09-18T08:46:39.212698+00:00",
+  "source": "eastmoney:RPT_SHAREBONUS_DET, full-market ex-dividend date query",
+  "events": {
+    "000703": {
+      "name": "恒逸石化",
+      "plan": "10派9.00元(含税,扣税后8.10元)",
+      "cash_per_share": 0.9,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "000963": {
+      "name": "华东医药",
+      "plan": "10派3.50元(含税,扣税后3.15元)",
+      "cash_per_share": 0.35,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "001359": {
+      "name": "平安电工",
+      "plan": "10派1.60元(含税,扣税后1.44元)",
+      "cash_per_share": 0.16,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "002255": {
+      "name": "海陆重工",
+      "plan": "10派0.60元(含税,扣税后0.54元)",
+      "cash_per_share": 0.06,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "002592": {
+      "name": "ST八菱",
+      "plan": "10派1.00元(含税,扣税后0.90元)",
+      "cash_per_share": 0.1,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "002972": {
+      "name": "科安达",
+      "plan": "10派1.00元(含税,扣税后0.90元)",
+      "cash_per_share": 0.1,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "301525": {
+      "name": "儒竞科技",
+      "plan": "10派0.50元(含税,扣税后0.45元)",
+      "cash_per_share": 0.05,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "600177": {
+      "name": "雅戈尔",
+      "plan": "10派2.00元(含税,扣税后1.80元)",
+      "cash_per_share": 0.2,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "600420": {
+      "name": "国药现代",
+      "plan": "10派0.50元(含税,扣税后0.45元)",
+      "cash_per_share": 0.05,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "600820": {
+      "name": "隧道股份",
+      "plan": "10派0.50元(含税,扣税后0.45元)",
+      "cash_per_share": 0.05,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "601096": {
+      "name": "宏盛华源",
+      "plan": "10派0.228元(含税,扣税后0.2052元)",
+      "cash_per_share": 0.0228,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "601607": {
+      "name": "上海医药",
+      "plan": "10派1.00元(含税,扣税后0.90元)",
+      "cash_per_share": 0.1,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "601838": {
+      "name": "成都银行",
+      "plan": "10派4.89元(含税,扣税后4.401元)",
+      "cash_per_share": 0.489,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603039": {
+      "name": "泛微网络",
+      "plan": "10派0.75元(含税,扣税后0.675元)",
+      "cash_per_share": 0.075,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603111": {
+      "name": "康尼机电",
+      "plan": "10派1.50元(含税,扣税后1.35元)",
+      "cash_per_share": 0.15,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603163": {
+      "name": "圣晖集成",
+      "plan": "10派2.00元(含税,扣税后1.80元)",
+      "cash_per_share": 0.2,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603319": {
+      "name": "美湖股份",
+      "plan": "10派0.50元(含税,扣税后0.45元)",
+      "cash_per_share": 0.05,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603387": {
+      "name": "基蛋生物",
+      "plan": "10派1.50元(含税,扣税后1.35元)",
+      "cash_per_share": 0.15,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603698": {
+      "name": "航天工程",
+      "plan": "10派0.60元(含税,扣税后0.54元)",
+      "cash_per_share": 0.06,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603757": {
+      "name": "大元泵业",
+      "plan": "10派1.00元(含税,扣税后0.90元)",
+      "cash_per_share": 0.1,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603867": {
+      "name": "新化股份",
+      "plan": "10派2.00元(含税,扣税后1.80元)",
+      "cash_per_share": 0.2,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "603927": {
+      "name": "中科软",
+      "plan": "10派0.50元(含税,扣税后0.45元)",
+      "cash_per_share": 0.05,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688001": {
+      "name": "华兴源创",
+      "plan": "10派0.21元(含税,扣税后0.189元)",
+      "cash_per_share": 0.020999999999999998,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688002": {
+      "name": "睿创微纳",
+      "plan": "10派5.00元(含税,扣税后4.50元)",
+      "cash_per_share": 0.5,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688006": {
+      "name": "杭可科技",
+      "plan": "10派0.67元(含税,扣税后0.603元)",
+      "cash_per_share": 0.067,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688366": {
+      "name": "昊海生科",
+      "plan": "10派2.50元(含税,扣税后2.25元)",
+      "cash_per_share": 0.25,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "688525": {
+      "name": "佰维存储",
+      "plan": "10派4.242元(含税,扣税后3.8178元)",
+      "cash_per_share": 0.4242,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "920176": {
+      "name": "维琪科技",
+      "plan": "10派4.00元(含税,扣税后3.60元)",
+      "cash_per_share": 0.4,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "920183": {
+      "name": "海菲曼",
+      "plan": "10派2.04元(含税,扣税后1.836元)",
+      "cash_per_share": 0.20400000000000001,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    },
+    "920445": {
+      "name": "龙竹科技",
+      "plan": "10派0.50元(含税,扣税后0.45元)",
+      "cash_per_share": 0.05,
+      "share_ratio": 0.0,
+      "progress": "实施分配"
+    }
+  }
+}

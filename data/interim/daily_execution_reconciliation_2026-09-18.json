@@ -1,0 +1,210 @@
+{
+  "signal_date": "2026-09-18",
+  "holdings_before": [
+    {
+      "security_code": "002714",
+      "security_name": "牧原股份",
+      "current_shares": "1700",
+      "cost_basis": "39.225",
+      "entry_stop_price": "37.32"
+    },
+    {
+      "security_code": "002648",
+      "security_name": "卫星化学",
+      "current_shares": "16000",
+      "cost_basis": "27.8155",
+      "entry_stop_price": "24.16"
+    },
+    {
+      "security_code": "000651",
+      "security_name": "格力电器",
+      "current_shares": "43000",
+      "cost_basis": "39.1094",
+      "entry_stop_price": "37.24"
+    },
+    {
+      "security_code": "603529",
+      "security_name": "爱玛科技",
+      "current_shares": "29200",
+      "cost_basis": "21.6142",
+      "entry_stop_price": "20.76"
+    },
+    {
+      "security_code": "600036",
+      "security_name": "招商银行",
+      "current_shares": "14700",
+      "cost_basis": "40.4879",
+      "entry_stop_price": "37.93"
+    },
+    {
+      "security_code": "002128",
+      "security_name": "电投能源",
+      "current_shares": "4500",
+      "cost_basis": "29.2831",
+      "entry_stop_price": "26.23"
+    },
+    {
+      "security_code": "601318",
+      "security_name": "中国平安",
+      "current_shares": "4900",
+      "cost_basis": "54.8906",
+      "entry_stop_price": "51.1700"
+    },
+    {
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "current_shares": "97400",
+      "cost_basis": "7.7769",
+      "entry_stop_price": "7.70383333"
+    }
+  ],
+  "holdings_after": [
+    {
+      "security_code": "002648",
+      "security_name": "卫星化学",
+      "current_shares": "16000",
+      "cost_basis": "27.8155",
+      "entry_stop_price": "24.16"
+    },
+    {
+      "security_code": "000651",
+      "security_name": "格力电器",
+      "current_shares": "43000",
+      "cost_basis": "39.1094",
+      "entry_stop_price": "37.24"
+    },
+    {
+      "security_code": "603529",
+      "security_name": "爱玛科技",
+      "current_shares": "29200",
+      "cost_basis": "21.6142",
+      "entry_stop_price": "20.76"
+    },
+    {
+      "security_code": "600036",
+      "security_name": "招商银行",
+      "current_shares": "14700",
+      "cost_basis": "40.4879",
+      "entry_stop_price": "37.93"
+    },
+    {
+      "security_code": "002128",
+      "security_name": "电投能源",
+      "current_shares": "4500",
+      "cost_basis": "29.2831",
+      "entry_stop_price": "26.23"
+    },
+    {
+      "security_code": "601318",
+      "security_name": "中国平安",
+      "current_shares": "4900",
+      "cost_basis": "54.8906",
+      "entry_stop_price": "51.1700"
+    },
+    {
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "current_shares": "106500",
+      "cost_basis": "7.7729",
+      "entry_stop_price": "7.70383333"
+    }
+  ],
+  "trades": [
+    {
+      "as_of": "2026-09-18",
+      "security_code": "002714",
+      "security_name": "牧原股份",
+      "price": 41.54,
+      "candidate": {
+        "intrinsic_value": "39.1125",
+        "pv": 1.0620645573665708,
+        "source": "模型带·2026-06-30"
+      },
+      "hold": {
+        "intrinsic_value": "39.1125",
+        "pv": 1.0620645573665708,
+        "source": "模型带·2026-06-30"
+      },
+      "side": "sell",
+      "shares": 1700,
+      "rule": "swap",
+      "signal_date": "2026-09-17",
+      "signal_tranche": 131617.159,
+      "plan_alignment": "matches_sale_plan"
+    },
+    {
+      "as_of": "2026-09-18",
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "price": 7.73,
+      "candidate": {
+        "intrinsic_value": "14.7396",
+        "pv": 0.5244375695405574,
+        "source": "模型带·2026-06-30"
+      },
+      "hold": {
+        "intrinsic_value": "14.7396",
+        "pv": 0.5244375695405574,
+        "source": "模型带·2026-06-30"
+      },
+      "side": "buy",
+      "shares": 9100,
+      "rule": "buy",
+      "signal_date": "2026-09-17",
+      "signal_tranche": 131617.159,
+      "plan_alignment": "user_confirmed_unplanned_addition"
+    }
+  ],
+  "account": {
+    "as_of": "2026-09-18",
+    "net_assets_cny": "2660026.61",
+    "total_assets_cny": "4512302.00",
+    "margin_debt_cny": "1852275.39",
+    "credit_line_cny": "",
+    "leverage_ratio": "1.6963",
+    "guarantee_ratio_pct": "243.61",
+    "holdings_market_value_cny": "",
+    "cash_cny": "0.00",
+    "position_count": "7",
+    "top_position_weight_pct": "",
+    "account_peak_net_assets_cny": "",
+    "drawdown_from_peak_pct": "",
+    "source": "user_reported_assets_debt_derived",
+    "note": "用户2026-09-18盘后回报：卖出牧原股份1700股@41.54=70618元，清仓；买入中材国际9100股@7.73=70343元，97400→106500股，加权成本7.7729元、止损锚7.70383333不变。总资产4512302、净资产2660026.61，推得负债1852275.39；现金0、券商可用保证金-51006.36，扫描funds=-51006.36。未报告外部出入金按0。净卖出275元，负债减少45.43元，差229.57元待对账，未确认为利息或费用科目、不重复扣款。牧原股数符合09-17清单；中材为清单外实际加仓（原计划无买入），按旧保证金与实际卖出款计算旧预算仅261.27元，实买超出70081.73元，执行时券商实时可用额未报告。持仓收盘市值待当日行情核对。",
+    "external_cash_flow_cny": "0.00",
+    "strategy_base_net_assets_cny": "",
+    "strategy_return_pct": "",
+    "net_assets_before_flow_cny": "",
+    "strategy_nav_basis": "",
+    "strategy_unit_nav": "",
+    "strategy_epoch": ""
+  },
+  "net_sale_cny": 275,
+  "debt_reduction_cny": 45.43,
+  "unclassified_difference_cny": 229.57,
+  "account_verified": {
+    "as_of": "2026-09-18",
+    "net_assets_cny": "2660026.61",
+    "total_assets_cny": "4512302.00",
+    "margin_debt_cny": "1852275.39",
+    "credit_line_cny": "",
+    "leverage_ratio": "1.6963",
+    "guarantee_ratio_pct": "243.61",
+    "holdings_market_value_cny": "4512302.00",
+    "cash_cny": "0.00",
+    "position_count": "7",
+    "top_position_weight_pct": "62.33",
+    "account_peak_net_assets_cny": "2811530.99",
+    "drawdown_from_peak_pct": "-5.39",
+    "source": "user_reported_assets_debt_derived",
+    "note": "用户2026-09-18盘后回报：卖出牧原股份1700股@41.54=70618元，清仓；买入中材国际9100股@7.73=70343元，97400→106500股，加权成本7.7729元、止损锚7.70383333不变。总资产4512302、净资产2660026.61，推得负债1852275.39；现金0、券商可用保证金-51006.36，扫描funds=-51006.36。未报告外部出入金按0。净卖出275元，负债减少45.43元，差229.57元待对账，未确认为利息或费用科目、不重复扣款。牧原股数符合09-17清单；中材为清单外实际加仓（原计划无买入），按旧保证金与实际卖出款计算旧预算仅261.27元，实买超出70081.73元，执行时券商实时可用额未报告。7只持仓按09-18收盘市值合计4512302元，与实报总资产完全相符。最大持仓格力市值1658080.00元，占净资产62.33%，暂停加仓；一档133001.3305元。净资产日增27683.43元（+1.05%），累计策略收益及回撤均-5.39%，E4。",
+    "external_cash_flow_cny": "0.00",
+    "strategy_base_net_assets_cny": "",
+    "strategy_return_pct": "-5.39",
+    "net_assets_before_flow_cny": "",
+    "strategy_nav_basis": "exact",
+    "strategy_unit_nav": "0.946113",
+    "strategy_epoch": "E4"
+  },
+  "market_value_reconciliation_cny": 0
+}

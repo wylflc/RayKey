@@ -1,0 +1,477 @@
+{
+  "signal_date": "2026-09-18",
+  "status": "complete_with_reported_industry_limitations",
+  "primary_documents": [
+    {
+      "art_code": "AN202609171829540727",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829540727_1.pdf",
+      "pdf_sha256": "9901cd70c86493b6d9ef6641a7a4a60637851e9df44c7597a2659136866b883a",
+      "pages": 3,
+      "retrieved_at_utc": "2026-09-18T08:41:11.012900+00:00",
+      "security_code": "002128",
+      "notice_date": "2026-09-17",
+      "title": "电投能源20260917投资者关系活动记录表",
+      "facts": "电解铝产能161万吨，半年收入占比63%，铝液销售超过90%；火电装机562万千瓦、新能源738万千瓦。",
+      "assessment": "复述已披露经营情况及未来规划，无新的实际财务观察值；补充研究指标，不改变模型带。",
+      "pages_reviewed": [
+        1,
+        2,
+        3
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487601+00:00"
+    },
+    {
+      "art_code": "AN202609171829540681",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829540681_1.pdf",
+      "pdf_sha256": "ae1150131d7b358866771a77f67d1fd9a6a270657275db864d838d061c7ab5e6",
+      "pages": 20,
+      "retrieved_at_utc": "2026-09-18T08:41:14.104234+00:00",
+      "security_code": "002128",
+      "notice_date": "2026-09-17",
+      "title": "电投能源2026年中期业绩说明材料",
+      "facts": "半年收入239.23亿元、归母52.93亿元、EPS1.79元，与已载入2026-06-30财务面板相符；截至8月底煤炭产能6300万吨、新能源738万千瓦。",
+      "assessment": "没有新一期已实现报表或盈利预告；不将规模、预算或未投产项目计为已实现利润，不用展示市值/PE反推合理价。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487625+00:00"
+    },
+    {
+      "art_code": "AN202609171829522383",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522383_1.pdf",
+      "pdf_sha256": "8f6ade82ee7c1bf17c50d3dd3a3498a03fa25f92e33deeee5352965f9b0070ee",
+      "pages": 2,
+      "retrieved_at_utc": "2026-09-18T08:41:15.336771+00:00",
+      "security_code": "603529",
+      "notice_date": "2026-09-18",
+      "title": "爱玛转债转股价格调整公告",
+      "facts": "09-24转股价格37.06调整至36.68；09-17至09-23暂停转股，09-24恢复。",
+      "assessment": "仅涉及可转债转股安排，A股不因此停牌。",
+      "pages_reviewed": [
+        1,
+        2
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487630+00:00"
+    },
+    {
+      "art_code": "AN202609171829522386",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522386_1.pdf",
+      "pdf_sha256": "ce3ac3fe5e8491de405a41a3847731e9dfa03c42e8ee4cdf1aed278b3f84b002",
+      "pages": 6,
+      "retrieved_at_utc": "2026-09-18T08:41:16.787967+00:00",
+      "security_code": "603529",
+      "notice_date": "2026-09-18",
+      "title": "差异化权益分派法律意见书",
+      "facts": "回购专户不参与分配，虚拟分红0.385元；意见书核验差异化除息方案。",
+      "assessment": "与公司实施公告口径一致，无另加公司行动。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487634+00:00"
+    },
+    {
+      "art_code": "AN202609171829522384",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522384_1.pdf",
+      "pdf_sha256": "615be1a6c75b09e7eab34d403137619d3cd2a33ddaff3b691a82fc54b7ec291e",
+      "pages": 2,
+      "retrieved_at_utc": "2026-09-18T08:41:17.652147+00:00",
+      "security_code": "603529",
+      "notice_date": "2026-09-18",
+      "title": "爱玛科技分红总额调整公告",
+      "facts": "总股本增至864248384股，扣回购14794934股，参与分配849453450股；总额332985752.40元，每股0.392不变。",
+      "assessment": "由可转债小额转股导致分红总额微调，无需增加主观估值。",
+      "pages_reviewed": [
+        1,
+        2
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487638+00:00"
+    },
+    {
+      "art_code": "AN202609171829522385",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522385_1.pdf",
+      "pdf_sha256": "ada0034fd0fa19eac191ab7d83e61a1054a037bb4b1a4d8ccdb59a018d7420f5",
+      "pages": 5,
+      "retrieved_at_utc": "2026-09-18T08:41:18.155057+00:00",
+      "security_code": "603529",
+      "notice_date": "2026-09-18",
+      "title": "爱玛科技2026年半年度权益分派实施公告",
+      "facts": "09-23登记，09-24除息及发放；实派0.392元/股，差异化价格调整用虚拟分派0.385元/股；无送转。",
+      "assessment": "事件发生前不调整账户、成本、止损锚或生产带；除息日按价格口径0.385处理，实际红利按0.392核对券商到账。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487641+00:00"
+    },
+    {
+      "art_code": "AN202609171829524303",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829524303_1.pdf",
+      "pdf_sha256": "63e20a0a8d89efa6fdb9b3807e890cff62f8f450d6b60ce898e06522d8cd72a7",
+      "pages": 6,
+      "retrieved_at_utc": "2026-09-18T08:41:19.203121+00:00",
+      "security_code": "002714",
+      "notice_date": "2026-09-18",
+      "title": "牧原H股翌日披露报表",
+      "facts": "09-17回购H股67800股，支付2523178港元，价格36.84–37.62港元；持作库存，累计库存1918900股，H股总数310223100不变。",
+      "assessment": "H股库存回购无注销，不改变本账户A股股数；今日A股清仓按用户成交记录。",
+      "pages_reviewed": [
+        1,
+        4
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487645+00:00"
+    },
+    {
+      "art_code": "AN202609171829521135",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829521135_1.pdf",
+      "pdf_sha256": "e342074a6df9353df52ef13ec97c7eae712de13f5687a48b85a28132c74b7cf8",
+      "pages": 4,
+      "retrieved_at_utc": "2026-09-18T08:47:17.455842+00:00",
+      "security_code": "601838",
+      "notice_date": "2026-09-18",
+      "title": "成都银行2026第一次临时股东会法律意见书",
+      "facts": "通过住所变更、章程修订及两位非独立董事选举；无否决议案，律师认为表决合法有效。",
+      "assessment": "公司治理例行事项，无新的实际财务或股利锚；今日除息按公司行动与银行统一股利折现入口处理。",
+      "pages_reviewed": [
+        3,
+        4
+      ],
+      "review_method": "原始扫描PDF第3/4页图像核验",
+      "reviewed_at_utc": "2026-09-18T08:48:21.669371+00:00"
+    },
+    {
+      "art_code": "AN202609171829521080",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829521080_1.pdf",
+      "pdf_sha256": "d6c1c478b714d0dd5d9b1bb881c42b994f6a642545221b31ac39c77dbf438174",
+      "pages": 4,
+      "retrieved_at_utc": "2026-09-18T08:47:18.552267+00:00",
+      "security_code": "601838",
+      "notice_date": "2026-09-18",
+      "title": "成都银行2026第一次临时股东会决议公告",
+      "facts": "通过住所变更、章程修订及两位非独立董事选举；无否决议案，律师认为表决合法有效。",
+      "assessment": "公司治理例行事项，无新的实际财务或股利锚；今日除息按公司行动与银行统一股利折现入口处理。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "review_method": "原始PDF逐页文字核验",
+      "reviewed_at_utc": "2026-09-18T08:48:21.669395+00:00"
+    },
+    {
+      "art_code": "AN202609161829470877",
+      "security_code": "002128",
+      "title": "2026年度调整后财务预算",
+      "notice_date": "2026-09-17",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609161829470877_1.pdf",
+      "pdf_sha256": "5f16455eb9391296325ab350c90c104f78f8800754c74061da30453a65b5e59e",
+      "pages": 3,
+      "pages_reviewed": [
+        1,
+        2,
+        3
+      ],
+      "facts": "收入预算510.28亿元、利润总额153.45亿元；本次与年初合并范围不同，年初未含白音华煤电。",
+      "assessment": "公司明确为预算而非盈利预测，全年未实质结束，利润总额非归母净利润；不符合§6.4叠加输入条件，不用预算覆盖现有财报锚。",
+      "review_method": "下载公司原始PDF，pypdf提取并逐页文本核验",
+      "reviewed_at_utc": "2026-09-17T09:30:47.176343+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-17.json"
+    },
+    {
+      "art_code": "AN202609161829470878",
+      "security_code": "002128",
+      "title": "2026—2028年股东分红规划",
+      "notice_date": "2026-09-17",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609161829470878_1.pdf",
+      "pdf_sha256": "cfbd7022d99a9bede9b3beb8e7876342b7fbe60a0d2b57f550a5762f8999918d",
+      "pages": 5,
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "facts": "拟每年现金分红为当年归母净利润约60%、不低于55%；附盈利、累计可分配利润为正及审计等条件，股东会通过生效。",
+      "assessment": "分红政策待10-13股东会审议，尚非具体每股股息；ROIC/FCFF生产路径不按主观分红比例改估值，不替换历史再投资率。",
+      "review_method": "下载公司原始PDF，pypdf提取并逐页文本核验",
+      "reviewed_at_utc": "2026-09-17T09:30:47.179153+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-17.json"
+    },
+    {
+      "art_code": "AN202609161829470881",
+      "security_code": "002128",
+      "title": "总会计师离任及总经理代行",
+      "notice_date": "2026-09-17",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609161829470881_1.pdf",
+      "pdf_sha256": "f6cd6a806a7caea50b096fd60d8fd5a92fb2b084d9a6e52fbc0b60782b923005",
+      "pages": 2,
+      "pages_reviewed": [
+        1,
+        2
+      ],
+      "facts": "周欣因工作变动辞任总会计师，不再担任其他职务，不持公司股份；李岗暂代至聘任新任总会计师。",
+      "assessment": "公告未披露审计意见异常、违规或其他未履行承诺；不据人员正常工作变动推定治理灾难，跟踪后续聘任。",
+      "review_method": "下载公司原始PDF，pypdf提取并逐页文本核验",
+      "reviewed_at_utc": "2026-09-17T09:30:47.184253+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-17.json"
+    },
+    {
+      "art_code": "AN202609161829470876",
+      "security_code": "002128",
+      "title": "第六次临时股东会通知",
+      "notice_date": "2026-09-17",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609161829470876_1.pdf",
+      "pdf_sha256": "efe4e006629196e50f8b0a711607b51da2c66ac78b95c72726a5fd4bca1b32a7",
+      "pages": 7,
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "facts": "10-13 14:00召开，10-08股权登记，仅审议2026—2028年分红规划，需出席股东表决权三分之二以上通过。",
+      "assessment": "登记研究跟踪日期，非现金分红股权登记日，不调整本账户股份、成本或现金。",
+      "review_method": "下载公司原始PDF，pypdf提取并逐页文本核验",
+      "reviewed_at_utc": "2026-09-17T09:30:47.190359+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-17.json"
+    },
+    {
+      "art_code": "AN202609161829470879",
+      "security_code": "002128",
+      "title": "第八次临时董事会决议",
+      "notice_date": "2026-09-17",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609161829470879_1.pdf",
+      "pdf_sha256": "1ef6dc8757bd00ec40373a3910ea58865ce7fe71a053e68507e63999c924b433",
+      "pages": 5,
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "facts": "年度投资计划由239808万元调整为284832万元，增加45024万元；通过预算、风电项目和拟议分红规划，后者提交股东会。",
+      "assessment": "投资计划为未来支出安排，未把全部计划当作本期已付现金；与单项公告核对一致，不重复计量风电投资，不替换已采纳财报输入。",
+      "review_method": "下载公司原始PDF，pypdf提取并逐页文本核验",
+      "reviewed_at_utc": "2026-09-17T09:30:47.187270+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-17.json"
+    },
+    {
+      "art_code": "AN202609161829470880",
+      "security_code": "002128",
+      "title": "温图高勒10万千瓦风电投资",
+      "notice_date": "2026-09-17",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609161829470880_1.pdf",
+      "pdf_sha256": "1ea5db2479c095997b88c261801905e8c30bfb1082acd81b500058aef78c4b90",
+      "pages": 5,
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "facts": "动态投资40703.21万元，资本金20%、银行贷款80%，建设期12个月；资本金ROE测算7.15%，税后回收期13.74年。",
+      "assessment": "新增投资承诺已登记；可研为未投产项目情景，未产生替换历史财报的实现利润、投入资本或融资余额，跟踪建设/消纳/电价后再按实际财报更新。",
+      "review_method": "下载公司原始PDF，pypdf提取并逐页文本核验",
+      "reviewed_at_utc": "2026-09-17T09:30:47.182289+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-17.json"
+    },
+    {
+      "source_url": "https://file.finance.sina.com.cn/211.154.219.97:9494/MRGG/CNSESZ_STOCK/2026/2026-9/2026-09-17/12607562.PDF",
+      "title": "牧原股份H股翌日披露报表",
+      "security_code": "002714",
+      "notice_date": "2026-09-17",
+      "submitted_on": "2026-09-16",
+      "pages_reviewed": [
+        1,
+        4
+      ],
+      "facts": "09-16回购H股138000股，支付5163070港元，价37–38.38港元，拟持作库存股份；库存累计1851100股，H股总数310223100股不变。",
+      "assessment": "H股库存回购未注销，本账户A股股数不变；不把回购金额加入合理价，无新三表或生产模型输入。",
+      "review_method": "公司原始PDF第1、4页文本核验",
+      "pdf_sha256": "c2349d4a15feb4e533fc279c678377741dc1dd9d1bf8788abe28ad34af7fe5c3",
+      "pages": 6,
+      "art_code": "AN202609161829468716",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-17.json"
+    }
+  ],
+  "announcement_snapshot": "data/interim/daily_announcements_2026-09-18.json",
+  "announcement_title_screening_count": 132,
+  "announcement_cutoff_beijing": "2026-09-18 16:46:39",
+  "industry_review": "data/interim/daily_industry_review_2026-09-18.json",
+  "valuation_review_queue_rows": 0,
+  "valuation_update": "当日无估值更新；银行保险按同日已知利率例行复算，不推进财务证据日",
+  "holding_ex_dividends_today": {},
+  "mandatory_codes": [
+    "000651",
+    "002128",
+    "002648",
+    "002714",
+    "600036",
+    "600970",
+    "601318",
+    "601398",
+    "601838",
+    "603529"
+  ],
+  "eligible_codes": [
+    "000651",
+    "002128",
+    "002648",
+    "600036",
+    "600970",
+    "601318",
+    "601398",
+    "601838",
+    "603529"
+  ],
+  "holdings_codes": [
+    "000651",
+    "002128",
+    "002648",
+    "600036",
+    "600970",
+    "601318",
+    "603529"
+  ],
+  "user_named_codes": [
+    "002714",
+    "600970"
+  ],
+  "relevant_announcement_count": 16,
+  "unreviewed_announcements": [],
+  "coverage": [
+    {
+      "security_code": "000651",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "002128",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609171829540727",
+        "AN202609171829540681",
+        "AN202609161829470877",
+        "AN202609161829470878",
+        "AN202609161829470881",
+        "AN202609161829470876",
+        "AN202609161829470879",
+        "AN202609161829470880"
+      ],
+      "announcement_status": "primary_documents_verified"
+    },
+    {
+      "security_code": "002648",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "002714",
+      "held": false,
+      "eligible": false,
+      "announcement_ids": [
+        "AN202609171829524303",
+        "AN202609161829468716"
+      ],
+      "announcement_status": "primary_documents_verified"
+    },
+    {
+      "security_code": "600036",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "600970",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "601318",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "601398",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "601838",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609171829521135",
+        "AN202609171829521080"
+      ],
+      "announcement_status": "primary_documents_verified"
+    },
+    {
+      "security_code": "603529",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609171829522383",
+        "AN202609171829522386",
+        "AN202609171829522384",
+        "AN202609171829522385"
+      ],
+      "announcement_status": "primary_documents_verified"
+    }
+  ],
+  "limitations": [
+    "公告截至北京时间16:46:39；其后披露未覆盖，执行前复核新增事件。",
+    "行业与竞品巡检部分覆盖：氧化铝完整配对价、乙烷到岸价差、公司级空调排产、两轮车上险和全部海外项目订单未取齐。"
+  ]
+}

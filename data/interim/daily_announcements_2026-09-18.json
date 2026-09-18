@@ -1,0 +1,4338 @@
+{
+  "signal_date": "2026-09-18",
+  "query_start": "2026-09-17",
+  "query_end": "2026-09-21",
+  "retrieved_at_utc": "2026-09-18T08:46:39.189507+00:00",
+  "query_scope": "Public all-market announcements; portfolio and pool codes filtered locally only",
+  "queried_all_market_rows": 2679,
+  "reported_total_hits": 2678,
+  "locally_filtered_codes": [
+    "000333",
+    "000338",
+    "000408",
+    "000423",
+    "000426",
+    "000538",
+    "000568",
+    "000596",
+    "000651",
+    "000725",
+    "000786",
+    "000792",
+    "000858",
+    "000893",
+    "000895",
+    "000933",
+    "000975",
+    "000999",
+    "001232",
+    "002001",
+    "002003",
+    "002027",
+    "002032",
+    "002050",
+    "002128",
+    "002138",
+    "002142",
+    "002179",
+    "002222",
+    "002262",
+    "002270",
+    "002287",
+    "002311",
+    "002352",
+    "002371",
+    "002372",
+    "002379",
+    "002409",
+    "002415",
+    "002463",
+    "002466",
+    "002475",
+    "002532",
+    "002568",
+    "002594",
+    "002595",
+    "002648",
+    "002690",
+    "002714",
+    "002916",
+    "002920",
+    "002938",
+    "300015",
+    "300033",
+    "300054",
+    "300059",
+    "300124",
+    "300274",
+    "300308",
+    "300316",
+    "300357",
+    "300394",
+    "300395",
+    "300408",
+    "300415",
+    "300470",
+    "300487",
+    "300502",
+    "300529",
+    "300604",
+    "300627",
+    "300628",
+    "300661",
+    "300685",
+    "300699",
+    "300750",
+    "300759",
+    "300760",
+    "300776",
+    "300811",
+    "300832",
+    "300866",
+    "300896",
+    "300910",
+    "301589",
+    "600007",
+    "600031",
+    "600036",
+    "600066",
+    "600085",
+    "600132",
+    "600160",
+    "600176",
+    "600183",
+    "600276",
+    "600285",
+    "600298",
+    "600309",
+    "600406",
+    "600415",
+    "600426",
+    "600436",
+    "600486",
+    "600519",
+    "600563",
+    "600570",
+    "600600",
+    "600660",
+    "600690",
+    "600750",
+    "600803",
+    "600809",
+    "600862",
+    "600885",
+    "600887",
+    "600900",
+    "600938",
+    "600970",
+    "600989",
+    "600993",
+    "601088",
+    "601100",
+    "601138",
+    "601225",
+    "601288",
+    "601318",
+    "601398",
+    "601717",
+    "601838",
+    "601899",
+    "601939",
+    "601965",
+    "603067",
+    "603129",
+    "603156",
+    "603195",
+    "603259",
+    "603279",
+    "603288",
+    "603338",
+    "603369",
+    "603501",
+    "603505",
+    "603508",
+    "603529",
+    "603596",
+    "603606",
+    "603806",
+    "603855",
+    "603993",
+    "605117",
+    "605305",
+    "605499",
+    "688008",
+    "688012",
+    "688018",
+    "688019",
+    "688041",
+    "688072",
+    "688082",
+    "688111",
+    "688120",
+    "688122",
+    "688188",
+    "688190",
+    "688200",
+    "688208",
+    "688235",
+    "688271",
+    "688278",
+    "688281",
+    "688300",
+    "688301",
+    "688516",
+    "688617",
+    "688692",
+    "688708",
+    "688777",
+    "688981",
+    "920394",
+    "920599"
+  ],
+  "source_urls": [
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=1&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=2&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=3&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=4&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=5&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=6&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=7&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=8&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=9&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=10&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=11&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=12&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=13&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=14&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=15&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=16&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=17&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=18&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=19&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=20&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=21&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=22&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=23&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=24&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=25&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=26&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21",
+    "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=100&page_index=27&ann_type=A&begin_time=2026-09-17&end_time=2026-09-21"
+  ],
+  "announcements": [
+    {
+      "art_code": "AN202609181829616442",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "23906059421275",
+          "market_code": "1",
+          "short_name": "工业富联",
+          "stock_code": "601138"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002004",
+          "column_name": "股本变动"
+        },
+        {
+          "column_code": "001002007003009004",
+          "column_name": "回购进展情况"
+        },
+        {
+          "column_code": "001002007003009005",
+          "column_name": "回购实施公告"
+        }
+      ],
+      "display_time": "2026-09-18 16:25:17:239",
+      "eiTime": "2026-09-18 16:26:17:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-19 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-19 12:00:00",
+      "source_type": "31",
+      "title": "工业富联:富士康工业互联网股份有限公司关于股份回购实施结果暨股份变动的公告",
+      "title_ch": "工业富联:富士康工业互联网股份有限公司关于股份回购实施结果暨股份变动的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609181829615783",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "32543465341803",
+          "market_code": "1",
+          "short_name": "洛阳钼业",
+          "stock_code": "603993"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-18 16:10:06:670",
+      "eiTime": "2026-09-18 16:09:40:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-19 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-19 12:00:00",
+      "source_type": "31",
+      "title": "洛阳钼业:洛阳钼业第七届董事会第十四次临时会议决议公告",
+      "title_ch": "洛阳钼业:洛阳钼业第七届董事会第十四次临时会议决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609181829615784",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "32543465341803",
+          "market_code": "1",
+          "short_name": "洛阳钼业",
+          "stock_code": "603993"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006011003",
+          "column_name": "提供/对外担保公告"
+        }
+      ],
+      "display_time": "2026-09-18 16:10:06:676",
+      "eiTime": "2026-09-18 16:09:40:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-19 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-19 12:00:00",
+      "source_type": "31",
+      "title": "洛阳钼业:洛阳钼业关于为参股公司提供担保的公告",
+      "title_ch": "洛阳钼业:洛阳钼业关于为参股公司提供担保的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609181829615608",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "11441053119765",
+          "market_code": "1",
+          "short_name": "万华化学",
+          "stock_code": "600309"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-18 16:02:27:219",
+      "eiTime": "2026-09-18 16:03:29:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-19 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-19 12:00:00",
+      "source_type": "31",
+      "title": "万华化学:万华化学2026年半年度业绩说明会公告",
+      "title_ch": "万华化学:万华化学2026年半年度业绩说明会公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609181829615530",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "17913322478395",
+          "market_code": "1",
+          "short_name": "德业股份",
+          "stock_code": "605117"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007003009004",
+          "column_name": "回购进展情况"
+        }
+      ],
+      "display_time": "2026-09-18 16:00:02:304",
+      "eiTime": "2026-09-18 16:01:02:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-19 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-19 12:00:00",
+      "source_type": "31",
+      "title": "德业股份:关于回购股份事项前十大股东和前十大无限售条件股东持股情况的公告",
+      "title_ch": "德业股份:关于回购股份事项前十大股东和前十大无限售条件股东持股情况的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609181829614927",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "29408299664347",
+          "market_code": "1",
+          "short_name": "柏楚电子",
+          "stock_code": "688188"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003001001003",
+          "column_name": "专项说明/独立意见"
+        },
+        {
+          "column_code": "001003002001",
+          "column_name": "保荐/核查意见"
+        }
+      ],
+      "display_time": "2026-09-18 15:39:58:245",
+      "eiTime": "2026-09-18 15:40:59:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-19 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-19 12:00:00",
+      "source_type": "313",
+      "title": "柏楚电子:董事会薪酬与考核委员会关于公司2026年限制性股票激励计划首次授予激励对象名单的公示情况及核查意见",
+      "title_ch": "柏楚电子:董事会薪酬与考核委员会关于公司2026年限制性股票激励计划首次授予激励对象名单的公示情况及核查意见",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609181829614717",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "32529382934555",
+          "market_code": "1",
+          "short_name": "景津装备",
+          "stock_code": "603279"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-18 15:32:25:411",
+      "eiTime": "2026-09-18 15:33:10:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-19 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-19 12:00:00",
+      "source_type": "31",
+      "title": "景津装备:景津装备股份有限公司关于召开2026年半年度业绩说明会的公告",
+      "title_ch": "景津装备:景津装备股份有限公司关于召开2026年半年度业绩说明会的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609181829614420",
+      "codes": [
+        {
+          "ann_type": "INV",
+          "inner_code": "18643515671451",
+          "market_code": "1",
+          "short_name": "惠泰医疗",
+          "stock_code": "688617"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "050003",
+          "column_name": "调研活动"
+        }
+      ],
+      "display_time": "2026-09-18 15:34:27:574",
+      "eiTime": "2026-09-18 15:33:06:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "311",
+      "title": "惠泰医疗:投资者关系活动记录表(2026年9月)",
+      "title_ch": "惠泰医疗:投资者关系活动记录表(2026年9月)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829535522",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "41233819290422",
+          "market_code": "0",
+          "short_name": "藏格矿业",
+          "stock_code": "000408"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006012001003",
+          "column_name": "投资设立公司"
+        },
+        {
+          "column_code": "001002007003004",
+          "column_name": "收购出售资产/股权"
+        }
+      ],
+      "display_time": "2026-09-17 20:50:07:385",
+      "eiTime": "2026-09-17 20:54:28:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "331",
+      "title": "藏格矿业:关于对外投资设立控股公司及收购Kanga Potash 92%股权的公告",
+      "title_ch": "藏格矿业:关于对外投资设立控股公司及收购Kanga Potash 92%股权的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829535514",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "41233819290422",
+          "market_code": "0",
+          "short_name": "藏格矿业",
+          "stock_code": "000408"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-17 20:50:07:383",
+      "eiTime": "2026-09-17 20:54:28:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "331",
+      "title": "藏格矿业:第十届董事会第十三次(临时)会议决议公告",
+      "title_ch": "藏格矿业:第十届董事会第十三次(临时)会议决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829531692",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "34574656580054",
+          "market_code": "0",
+          "short_name": "立讯精密",
+          "stock_code": "002475"
+        },
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "34196161213306",
+          "market_code": "0",
+          "short_name": "立讯转债",
+          "stock_code": "128136"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "003007007001",
+          "column_name": "停牌公告"
+        }
+      ],
+      "display_time": "2026-09-17 20:14:39:528",
+      "eiTime": "2026-09-17 20:14:04:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "331",
+      "title": "立讯精密:关于“立讯转债”停止交易的公告",
+      "title_ch": "立讯精密:关于“立讯转债”停止交易的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829527665",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "29118922153499",
+          "market_code": "1",
+          "short_name": "东鹏饮料",
+          "stock_code": "605499"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-17 19:05:21:468",
+      "eiTime": "2026-09-17 19:04:55:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "东鹏饮料:北京德恒(深圳)律师事务所关于东鹏饮料(集团)股份有限公司2026年半年度差异化分红事项之法律意见",
+      "title_ch": "东鹏饮料:北京德恒(深圳)律师事务所关于东鹏饮料(集团)股份有限公司2026年半年度差异化分红事项之法律意见",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829527666",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "29118922153499",
+          "market_code": "1",
+          "short_name": "东鹏饮料",
+          "stock_code": "605499"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002001005",
+          "column_name": "分配方案实施"
+        }
+      ],
+      "display_time": "2026-09-17 19:05:21:480",
+      "eiTime": "2026-09-17 19:04:55:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "东鹏饮料:东鹏饮料(集团)股份有限公司2026年半年度A股权益分派实施公告",
+      "title_ch": "东鹏饮料:东鹏饮料(集团)股份有限公司2026年半年度A股权益分派实施公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829527668",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "29118922153499",
+          "market_code": "1",
+          "short_name": "东鹏饮料",
+          "stock_code": "605499"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007003009001002",
+          "column_name": "回购方案修订"
+        }
+      ],
+      "display_time": "2026-09-17 19:05:21:496",
+      "eiTime": "2026-09-17 19:04:55:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "东鹏饮料:东鹏饮料(集团)股份有限公司关于2026年半年度权益分派实施后调整回购价格上限的公告",
+      "title_ch": "东鹏饮料:东鹏饮料(集团)股份有限公司关于2026年半年度权益分派实施后调整回购价格上限的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829527667",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "29118922153499",
+          "market_code": "1",
+          "short_name": "东鹏饮料",
+          "stock_code": "605499"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001004003",
+          "column_name": "调研活动"
+        }
+      ],
+      "display_time": "2026-09-17 19:04:51:471",
+      "eiTime": "2026-09-17 19:04:28:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "东鹏饮料:东鹏饮料(集团)股份有限公司关于2026年半年度业绩说明会情况的公告",
+      "title_ch": "东鹏饮料:东鹏饮料(集团)股份有限公司关于2026年半年度业绩说明会情况的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829526264",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "37226172420762",
+          "market_code": "0",
+          "short_name": "帝尔激光",
+          "stock_code": "300776"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007009",
+          "column_name": "员工持股计划"
+        }
+      ],
+      "display_time": "2026-09-17 19:01:10:683",
+      "eiTime": "2026-09-17 19:04:28:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "333",
+      "title": "帝尔激光:2026年员工持股计划(草案)",
+      "title_ch": "帝尔激光:2026年员工持股计划(草案)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829526267",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "37226172420762",
+          "market_code": "0",
+          "short_name": "帝尔激光",
+          "stock_code": "300776"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-17 19:01:10:673",
+      "eiTime": "2026-09-17 19:04:28:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "333",
+      "title": "帝尔激光:第四届董事会第十五次会议决议公告",
+      "title_ch": "帝尔激光:第四届董事会第十五次会议决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829526262",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "37226172420762",
+          "market_code": "0",
+          "short_name": "帝尔激光",
+          "stock_code": "300776"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003001002",
+          "column_name": "召开股东大会通知"
+        }
+      ],
+      "display_time": "2026-09-17 19:01:10:640",
+      "eiTime": "2026-09-17 19:04:28:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "333",
+      "title": "帝尔激光:关于召开2026年第四次临时股东会的通知",
+      "title_ch": "帝尔激光:关于召开2026年第四次临时股东会的通知",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829526261",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "37226172420762",
+          "market_code": "0",
+          "short_name": "帝尔激光",
+          "stock_code": "300776"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003001001003",
+          "column_name": "专项说明/独立意见"
+        }
+      ],
+      "display_time": "2026-09-17 19:01:10:641",
+      "eiTime": "2026-09-17 19:06:24:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "333",
+      "title": "帝尔激光:董事会关于2026年员工持股计划(草案)的合规性说明",
+      "title_ch": "帝尔激光:董事会关于2026年员工持股计划(草案)的合规性说明",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829526265",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "37226172420762",
+          "market_code": "0",
+          "short_name": "帝尔激光",
+          "stock_code": "300776"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006007",
+          "column_name": "委托（受托）事项"
+        },
+        {
+          "column_code": "001002006012003",
+          "column_name": "投资理财"
+        }
+      ],
+      "display_time": "2026-09-17 19:01:10:640",
+      "eiTime": "2026-09-17 19:04:28:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "333",
+      "title": "帝尔激光:关于使用部分闲置募集资金进行现金管理和部分闲置自有资金进行委托理财的公告",
+      "title_ch": "帝尔激光:关于使用部分闲置募集资金进行现金管理和部分闲置自有资金进行委托理财的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829526259",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "37226172420762",
+          "market_code": "0",
+          "short_name": "帝尔激光",
+          "stock_code": "300776"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007009",
+          "column_name": "员工持股计划"
+        }
+      ],
+      "display_time": "2026-09-17 19:01:10:642",
+      "eiTime": "2026-09-17 19:04:28:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "333",
+      "title": "帝尔激光:2026年员工持股计划(草案)摘要",
+      "title_ch": "帝尔激光:2026年员工持股计划(草案)摘要",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829526268",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "37226172420762",
+          "market_code": "0",
+          "short_name": "帝尔激光",
+          "stock_code": "300776"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003001001003",
+          "column_name": "专项说明/独立意见"
+        }
+      ],
+      "display_time": "2026-09-17 19:01:10:545",
+      "eiTime": "2026-09-17 19:06:24:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "333",
+      "title": "帝尔激光:董事会薪酬与考核委员会关于2026年员工持股计划相关事项的核查意见",
+      "title_ch": "帝尔激光:董事会薪酬与考核委员会关于2026年员工持股计划相关事项的核查意见",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829525936",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "37226172420762",
+          "market_code": "0",
+          "short_name": "帝尔激光",
+          "stock_code": "300776"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007009",
+          "column_name": "员工持股计划"
+        },
+        {
+          "column_code": "001003003001",
+          "column_name": "管理办法/制度"
+        }
+      ],
+      "display_time": "2026-09-17 18:59:06:332",
+      "eiTime": "2026-09-17 19:02:27:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "333",
+      "title": "帝尔激光:2026年员工持股计划管理办法",
+      "title_ch": "帝尔激光:2026年员工持股计划管理办法",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829524303",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "21239173693290",
+          "market_code": "0",
+          "short_name": "牧原股份",
+          "stock_code": "002714"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-17 18:44:48:573",
+      "eiTime": "2026-09-17 18:44:29:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "331",
+      "title": "牧原股份:H股公告(翌日披露报表)",
+      "title_ch": "牧原股份:H股公告(翌日披露报表)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829525411",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "16576600447259",
+          "market_code": "1",
+          "short_name": "海天味业",
+          "stock_code": "603288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-17 18:42:54:692",
+      "eiTime": "2026-09-17 18:42:25:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "海天味业:H股公告-翌日披露报表",
+      "title_ch": "海天味业:H股公告-翌日披露报表",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829524060",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "15678744450971",
+          "market_code": "1",
+          "short_name": "特宝生物",
+          "stock_code": "688278"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003004002",
+          "column_name": "股东大会资料"
+        }
+      ],
+      "display_time": "2026-09-17 18:31:22:240",
+      "eiTime": "2026-09-17 18:32:20:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "313",
+      "title": "特宝生物:2026年第四次临时股东会会议资料",
+      "title_ch": "特宝生物:2026年第四次临时股东会会议资料",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829522686",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "18423356452331",
+          "market_code": "1",
+          "short_name": "拓荆科技",
+          "stock_code": "688072"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003003",
+          "column_name": "股东大会决议公告"
+        }
+      ],
+      "display_time": "2026-09-17 18:19:06:249",
+      "eiTime": "2026-09-17 18:19:59:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "313",
+      "title": "拓荆科技:2026年第三次临时股东会决议公告",
+      "title_ch": "拓荆科技:2026年第三次临时股东会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829522678",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "18423356452331",
+          "market_code": "1",
+          "short_name": "拓荆科技",
+          "stock_code": "688072"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-17 18:19:02:266",
+      "eiTime": "2026-09-17 18:19:59:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "313",
+      "title": "拓荆科技:北京市中伦律师事务所关于拓荆科技股份有限公司2026年第三次临时股东会的法律意见书",
+      "title_ch": "拓荆科技:北京市中伦律师事务所关于拓荆科技股份有限公司2026年第三次临时股东会的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829522677",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "18423356452331",
+          "market_code": "1",
+          "short_name": "拓荆科技",
+          "stock_code": "688072"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006018",
+          "column_name": "自查报告"
+        }
+      ],
+      "display_time": "2026-09-17 18:19:02:194",
+      "eiTime": "2026-09-17 18:19:59:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "313",
+      "title": "拓荆科技:关于2026年限制性股票激励计划内幕信息知情人买卖公司股票情况的自查报告",
+      "title_ch": "拓荆科技:关于2026年限制性股票激励计划内幕信息知情人买卖公司股票情况的自查报告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829522383",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "10136265664437",
+          "market_code": "1",
+          "short_name": "爱玛科技",
+          "stock_code": "603529"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-17 18:12:03:429",
+      "eiTime": "2026-09-17 18:12:23:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "爱玛科技:爱玛科技关于因利润分配调整“爱玛转债”转股价格的公告",
+      "title_ch": "爱玛科技:爱玛科技关于因利润分配调整“爱玛转债”转股价格的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829522386",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "10136265664437",
+          "market_code": "1",
+          "short_name": "爱玛科技",
+          "stock_code": "603529"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-17 18:12:03:424",
+      "eiTime": "2026-09-17 18:14:24:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "爱玛科技:北京海润天睿律师事务所关于爱玛科技2026年半年度差异化权益分派特殊除权除息的法律意见书",
+      "title_ch": "爱玛科技:北京海润天睿律师事务所关于爱玛科技2026年半年度差异化权益分派特殊除权除息的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829522384",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "12310774933467",
+          "market_code": "1",
+          "short_name": "爱玛转债",
+          "stock_code": "113666"
+        },
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "10136265664437",
+          "market_code": "1",
+          "short_name": "爱玛科技",
+          "stock_code": "603529"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002001002",
+          "column_name": "分配方案调整"
+        },
+        {
+          "column_code": "003014",
+          "column_name": "其它"
+        }
+      ],
+      "display_time": "2026-09-17 18:12:03:280",
+      "eiTime": "2026-09-17 18:12:23:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "爱玛科技:爱玛科技关于调整公司2026年半年度利润分配现金分红总额的公告",
+      "title_ch": "爱玛科技:爱玛科技关于调整公司2026年半年度利润分配现金分红总额的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829522385",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "12310774933467",
+          "market_code": "1",
+          "short_name": "爱玛转债",
+          "stock_code": "113666"
+        },
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "10136265664437",
+          "market_code": "1",
+          "short_name": "爱玛科技",
+          "stock_code": "603529"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002001005",
+          "column_name": "分配方案实施"
+        },
+        {
+          "column_code": "003014",
+          "column_name": "其它"
+        }
+      ],
+      "display_time": "2026-09-17 18:12:02:189",
+      "eiTime": "2026-09-17 18:12:23:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "爱玛科技:爱玛科技2026年半年度权益分派实施公告",
+      "title_ch": "爱玛科技:爱玛科技2026年半年度权益分派实施公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829521135",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "13130417034837",
+          "market_code": "1",
+          "short_name": "成都银行",
+          "stock_code": "601838"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-17 18:03:32:241",
+      "eiTime": "2026-09-17 18:07:09:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "成都银行:北京市君合律师事务所关于成都银行股份有限公司2026年第一次临时股东会的法律意见书",
+      "title_ch": "成都银行:北京市君合律师事务所关于成都银行股份有限公司2026年第一次临时股东会的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829521080",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "13130417034837",
+          "market_code": "1",
+          "short_name": "成都银行",
+          "stock_code": "601838"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003003",
+          "column_name": "股东大会决议公告"
+        },
+        {
+          "column_code": "001002005002",
+          "column_name": "高管人员任职变动"
+        }
+      ],
+      "display_time": "2026-09-17 18:03:28:282",
+      "eiTime": "2026-09-17 18:03:59:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "成都银行:成都银行股份有限公司2026年第一次临时股东会决议公告",
+      "title_ch": "成都银行:成都银行股份有限公司2026年第一次临时股东会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829521081",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "38725804557589",
+          "market_code": "1",
+          "short_name": "华鲁恒升",
+          "stock_code": "600426"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-17 18:03:28:259",
+      "eiTime": "2026-09-17 18:07:09:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "华鲁恒升:华鲁恒升2021年限制性股票激励计划预留授予的限制性股票第三个限售期符合解除限售条件的法律意见书",
+      "title_ch": "华鲁恒升:华鲁恒升2021年限制性股票激励计划预留授予的限制性股票第三个限售期符合解除限售条件的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829521082",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "38725804557589",
+          "market_code": "1",
+          "short_name": "华鲁恒升",
+          "stock_code": "600426"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002003",
+          "column_name": "限售股份上市流通"
+        },
+        {
+          "column_code": "001002007001007001",
+          "column_name": "股权激励进展公告"
+        }
+      ],
+      "display_time": "2026-09-17 18:03:28:270",
+      "eiTime": "2026-09-17 18:03:59:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "华鲁恒升:华鲁恒升2021年限制性股票激励计划预留授予限制性股票第三个限售期解除限售股票上市公告",
+      "title_ch": "华鲁恒升:华鲁恒升2021年限制性股票激励计划预留授予限制性股票第三个限售期解除限售股票上市公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829520453",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "34908337658923",
+          "market_code": "1",
+          "short_name": "华峰转债",
+          "stock_code": "118071"
+        },
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "44958322126853",
+          "market_code": "1",
+          "short_name": "华峰测控",
+          "stock_code": "688200"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "003014",
+          "column_name": "其它"
+        }
+      ],
+      "display_time": "2026-09-17 17:49:12:386",
+      "eiTime": "2026-09-17 17:49:39:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "313",
+      "title": "华峰测控:华峰测控关于可转债投资者适当性要求的风险提示性公告",
+      "title_ch": "华峰测控:华峰测控关于可转债投资者适当性要求的风险提示性公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829520417",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "31488714178838",
+          "market_code": "0",
+          "short_name": "京东方A",
+          "stock_code": "000725"
+        },
+        {
+          "ann_type": "B,SZB",
+          "inner_code": "39852078989194",
+          "market_code": "0",
+          "short_name": "京东方B",
+          "stock_code": "200725"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-17 17:48:05:365",
+      "eiTime": "2026-09-17 17:48:27:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "331",
+      "title": "京东方Ａ:关于京东方科技集团股份有限公司2026年第一次临时股东会的法律意见书",
+      "title_ch": "京东方Ａ:关于京东方科技集团股份有限公司2026年第一次临时股东会的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829520418",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "34285504586454",
+          "market_code": "0",
+          "short_name": "顺络电子",
+          "stock_code": "002138"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006010",
+          "column_name": "股份质押、冻结"
+        }
+      ],
+      "display_time": "2026-09-17 17:48:05:365",
+      "eiTime": "2026-09-17 17:48:27:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "331",
+      "title": "顺络电子:关于董事长部分股份质押与解除质押的公告",
+      "title_ch": "顺络电子:关于董事长部分股份质押与解除质押的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829520375",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "31488714178838",
+          "market_code": "0",
+          "short_name": "京东方A",
+          "stock_code": "000725"
+        },
+        {
+          "ann_type": "B,SZB",
+          "inner_code": "39852078989194",
+          "market_code": "0",
+          "short_name": "京东方B",
+          "stock_code": "200725"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003003",
+          "column_name": "股东大会决议公告"
+        },
+        {
+          "column_code": "001002005002",
+          "column_name": "高管人员任职变动"
+        }
+      ],
+      "display_time": "2026-09-17 17:47:09:371",
+      "eiTime": "2026-09-17 17:50:22:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "331",
+      "title": "京东方Ａ:2026年第一次临时股东会决议公告",
+      "title_ch": "京东方Ａ:2026年第一次临时股东会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829519497",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "11724613575557",
+          "market_code": "1",
+          "short_name": "佳驰科技",
+          "stock_code": "688708"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002001",
+          "column_name": "保荐/核查意见"
+        }
+      ],
+      "display_time": "2026-09-17 17:46:17:310",
+      "eiTime": "2026-09-17 17:46:46:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "313",
+      "title": "佳驰科技:中信证券股份有限公司关于成都佳驰电子科技股份有限公司2026半年度持续督导跟踪报告",
+      "title_ch": "佳驰科技:中信证券股份有限公司关于成都佳驰电子科技股份有限公司2026半年度持续督导跟踪报告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829519061",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "40615086138571",
+          "market_code": "1",
+          "short_name": "中国巨石",
+          "stock_code": "600176"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002005",
+          "column_name": "权益变动报告书"
+        }
+      ],
+      "display_time": "2026-09-17 17:36:07:195",
+      "eiTime": "2026-09-17 17:40:34:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "中国巨石:中国巨石关于持股5%以上股东权益变动触及1%刻度的提示性公告",
+      "title_ch": "中国巨石:中国巨石关于持股5%以上股东权益变动触及1%刻度的提示性公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829519059",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "40615086138571",
+          "market_code": "1",
+          "short_name": "中国巨石",
+          "stock_code": "600176"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-17 17:36:04:306",
+      "eiTime": "2026-09-17 17:40:34:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "中国巨石:中国巨石关于2026年度第二期科技创新债券发行结果的公告",
+      "title_ch": "中国巨石:中国巨石关于2026年度第二期科技创新债券发行结果的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829517652",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "35843090956459",
+          "market_code": "1",
+          "short_name": "宇通客车",
+          "stock_code": "600066"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003003",
+          "column_name": "股东大会决议公告"
+        },
+        {
+          "column_code": "001002005002",
+          "column_name": "高管人员任职变动"
+        }
+      ],
+      "display_time": "2026-09-17 17:21:42:401",
+      "eiTime": "2026-09-17 17:24:27:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "宇通客车:2026年第一次临时股东会决议公告",
+      "title_ch": "宇通客车:2026年第一次临时股东会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829517653",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "35843090956459",
+          "market_code": "1",
+          "short_name": "宇通客车",
+          "stock_code": "600066"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-17 17:21:42:408",
+      "eiTime": "2026-09-17 17:22:07:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "宇通客车:北京市通商律师事务所关于公司2026年第一次临时股东会法律意见书",
+      "title_ch": "宇通客车:北京市通商律师事务所关于公司2026年第一次临时股东会法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829516416",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "32182482959381",
+          "market_code": "1",
+          "short_name": "韦尔转债",
+          "stock_code": "113616"
+        },
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "40554026388901",
+          "market_code": "1",
+          "short_name": "豪威集团",
+          "stock_code": "603501"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "003014",
+          "column_name": "其它"
+        }
+      ],
+      "display_time": "2026-09-17 17:11:39:743",
+      "eiTime": "2026-09-17 17:11:03:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "豪威集团:关于召开2026年半年度业绩说明会的公告",
+      "title_ch": "豪威集团:关于召开2026年半年度业绩说明会的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829516333",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "33361422937467",
+          "market_code": "1",
+          "short_name": "恒瑞医药",
+          "stock_code": "600276"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007003009005",
+          "column_name": "回购实施公告"
+        }
+      ],
+      "display_time": "2026-09-17 17:08:24:613",
+      "eiTime": "2026-09-17 17:08:10:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "恒瑞医药:恒瑞医药关于首次回购公司A股股份的公告",
+      "title_ch": "恒瑞医药:恒瑞医药关于首次回购公司A股股份的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829516348",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "17088106053307",
+          "market_code": "1",
+          "short_name": "安琪酵母",
+          "stock_code": "600298"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-17 17:07:24:409",
+      "eiTime": "2026-09-17 17:08:26:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "安琪酵母:北京市通商律师事务所关于安琪酵母股份有限公司2026年第三次临时股东会的法律意见书",
+      "title_ch": "安琪酵母:北京市通商律师事务所关于安琪酵母股份有限公司2026年第三次临时股东会的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829516349",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "17088106053307",
+          "market_code": "1",
+          "short_name": "安琪酵母",
+          "stock_code": "600298"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003003",
+          "column_name": "股东大会决议公告"
+        }
+      ],
+      "display_time": "2026-09-17 17:07:24:409",
+      "eiTime": "2026-09-17 17:08:26:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "安琪酵母:安琪酵母股份有限公司2026年第三次临时股东会决议公告",
+      "title_ch": "安琪酵母:安琪酵母股份有限公司2026年第三次临时股东会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829516250",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "48419060468597",
+          "market_code": "1",
+          "short_name": "奥维转债",
+          "stock_code": "118042"
+        },
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "21755975758475",
+          "market_code": "1",
+          "short_name": "奥特维",
+          "stock_code": "688516"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002004009",
+          "column_name": "复牌公告"
+        },
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "003007007003",
+          "column_name": "复牌公告"
+        },
+        {
+          "column_code": "003010001",
+          "column_name": "转股价格调整和修正"
+        },
+        {
+          "column_code": "003010001002",
+          "column_name": "转股价格调整和修正公告"
+        }
+      ],
+      "display_time": "2026-09-17 17:04:35:436",
+      "eiTime": "2026-09-17 17:05:05:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "313",
+      "title": "奥特维:无锡奥特维科技股份有限公司关于实施2026年半年度权益分派调整“奥维转债”转股价格暨转股复牌的公告",
+      "title_ch": "奥特维:无锡奥特维科技股份有限公司关于实施2026年半年度权益分派调整“奥维转债”转股价格暨转股复牌的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829516247",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "48419060468597",
+          "market_code": "1",
+          "short_name": "奥维转债",
+          "stock_code": "118042"
+        },
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "21755975758475",
+          "market_code": "1",
+          "short_name": "奥特维",
+          "stock_code": "688516"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002001005",
+          "column_name": "分配方案实施"
+        },
+        {
+          "column_code": "003014",
+          "column_name": "其它"
+        }
+      ],
+      "display_time": "2026-09-17 17:04:26:208",
+      "eiTime": "2026-09-17 17:05:29:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "313",
+      "title": "奥特维:无锡奥特维科技股份有限公司2026年半年度权益分派实施公告",
+      "title_ch": "奥特维:无锡奥特维科技股份有限公司2026年半年度权益分派实施公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829515412",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "25839547125222",
+          "market_code": "0",
+          "short_name": "奇正藏药",
+          "stock_code": "002287"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006010",
+          "column_name": "股份质押、冻结"
+        }
+      ],
+      "display_time": "2026-09-17 17:01:05:452",
+      "eiTime": "2026-09-17 17:04:28:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "331",
+      "title": "奇正藏药:关于控股股东部分股份质押的公告",
+      "title_ch": "奇正藏药:关于控股股东部分股份质押的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829515275",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "24798878399061",
+          "market_code": "1",
+          "short_name": "中创智领",
+          "stock_code": "601717"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-17 16:59:12:642",
+      "eiTime": "2026-09-17 16:58:44:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "中创智领:中创智领H股公告-翌日披露报表",
+      "title_ch": "中创智领:中创智领H股公告-翌日披露报表",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829514920",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "30958195464010",
+          "market_code": "0",
+          "short_name": "嘉立创",
+          "stock_code": "001232"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002001005",
+          "column_name": "分配方案实施"
+        }
+      ],
+      "display_time": "2026-09-17 16:51:05:330",
+      "eiTime": "2026-09-17 16:54:31:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "331",
+      "title": "嘉立创:2026年半年度权益分派实施公告",
+      "title_ch": "嘉立创:2026年半年度权益分派实施公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829514095",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "21755975758475",
+          "market_code": "1",
+          "short_name": "奥特维",
+          "stock_code": "688516"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003004002",
+          "column_name": "股东大会资料"
+        }
+      ],
+      "display_time": "2026-09-17 16:47:46:386",
+      "eiTime": "2026-09-17 16:48:15:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "313",
+      "title": "奥特维:无锡奥特维科技股份有限公司2026年第四次临时股东会会议资料",
+      "title_ch": "奥特维:无锡奥特维科技股份有限公司2026年第四次临时股东会会议资料",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829513654",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "48478066159739",
+          "market_code": "1",
+          "short_name": "药明康德",
+          "stock_code": "603259"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-17 16:39:49:192",
+      "eiTime": "2026-09-17 16:40:12:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "药明康德:H股公告",
+      "title_ch": "药明康德:H股公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829512693",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "48188914126139",
+          "market_code": "1",
+          "short_name": "伯特利",
+          "stock_code": "603596"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-17 16:34:04:214",
+      "eiTime": "2026-09-17 16:35:06:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "伯特利:伯特利关于召开2026年半年度业绩说明会的公告",
+      "title_ch": "伯特利:伯特利关于召开2026年半年度业绩说明会的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829511694",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "24798878399061",
+          "market_code": "1",
+          "short_name": "中创智领",
+          "stock_code": "601717"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "001002011001002",
+          "column_name": "回复问询函公告"
+        }
+      ],
+      "display_time": "2026-09-17 16:24:09:548",
+      "eiTime": "2026-09-17 16:23:46:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "中创智领:中创智领(郑州)工业技术集团股份有限公司关于向不特定对象发行A股可转换公司债券的审核问询函回复及募集说明书等申请文件更新的提示性公告",
+      "title_ch": "中创智领:中创智领(郑州)工业技术集团股份有限公司关于向不特定对象发行A股可转换公司债券的审核问询函回复及募集说明书等申请文件更新的提示性公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829511696",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "24798878399061",
+          "market_code": "1",
+          "short_name": "中创智领",
+          "stock_code": "601717"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "010002015002002001",
+          "column_name": "沪主板再融资募集说明书申报稿"
+        }
+      ],
+      "display_time": "2026-09-17 16:23:33:577",
+      "eiTime": "2026-09-17 16:23:14:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "中创智领:中创智领(郑州)工业技术集团股份有限公司向不特定对象发行A股可转换公司债券募集说明书(申报稿)",
+      "title_ch": "中创智领:中创智领(郑州)工业技术集团股份有限公司向不特定对象发行A股可转换公司债券募集说明书(申报稿)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829511697",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "24798878399061",
+          "market_code": "1",
+          "short_name": "中创智领",
+          "stock_code": "601717"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "001003002004",
+          "column_name": "上市保荐书"
+        }
+      ],
+      "display_time": "2026-09-17 16:23:21:615",
+      "eiTime": "2026-09-17 16:22:54:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "中创智领:中国国际金融股份有限公司关于中创智领(郑州)工业技术集团股份有限公司向不特定对象发行A股可转换公司债券之上市保荐书",
+      "title_ch": "中创智领:中国国际金融股份有限公司关于中创智领(郑州)工业技术集团股份有限公司向不特定对象发行A股可转换公司债券之上市保荐书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829511698",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "24798878399061",
+          "market_code": "1",
+          "short_name": "中创智领",
+          "stock_code": "601717"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "001002011001002",
+          "column_name": "回复问询函公告"
+        }
+      ],
+      "display_time": "2026-09-17 16:22:57:641",
+      "eiTime": "2026-09-17 16:22:25:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "中创智领:关于中创智领(郑州)工业技术集团股份有限公司向不特定对象发行可转换公司债券申请文件的审核问询函的回复(豁免版)",
+      "title_ch": "中创智领:关于中创智领(郑州)工业技术集团股份有限公司向不特定对象发行可转换公司债券申请文件的审核问询函的回复(豁免版)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829511693",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "24798878399061",
+          "market_code": "1",
+          "short_name": "中创智领",
+          "stock_code": "601717"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "001002011001004001",
+          "column_name": "会计师事务所问询函回复公告"
+        }
+      ],
+      "display_time": "2026-09-17 16:22:57:629",
+      "eiTime": "2026-09-17 16:22:25:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "中创智领:立信会计师事务所(特殊普通合伙)关于《关于中创智领(郑州)工业技术集团股份有限公司向不特定对象发行可转换公司债券申请文件的审核问询函》的回复",
+      "title_ch": "中创智领:立信会计师事务所(特殊普通合伙)关于《关于中创智领(郑州)工业技术集团股份有限公司向不特定对象发行可转换公司债券申请文件的审核问询函》的回复",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829511695",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "24798878399061",
+          "market_code": "1",
+          "short_name": "中创智领",
+          "stock_code": "601717"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "001003002003",
+          "column_name": "发行保荐书"
+        }
+      ],
+      "display_time": "2026-09-17 16:22:48:578",
+      "eiTime": "2026-09-17 16:22:25:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "中创智领:中国国际金融股份有限公司关于中创智领(郑州)工业技术集团股份有限公司向不特定对象发行A股可转换公司债券之发行保荐书",
+      "title_ch": "中创智领:中国国际金融股份有限公司关于中创智领(郑州)工业技术集团股份有限公司向不特定对象发行A股可转换公司债券之发行保荐书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829511667",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "39029038956741",
+          "market_code": "1",
+          "short_name": "新奥股份",
+          "stock_code": "600803"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006011001",
+          "column_name": "担保年度额度预计"
+        }
+      ],
+      "display_time": "2026-09-17 16:21:33:293",
+      "eiTime": "2026-09-17 16:22:05:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "新奥股份:新奥股份关于2026年度预计担保的进展公告",
+      "title_ch": "新奥股份:新奥股份关于2026年度预计担保的进展公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829511079",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "19059519721621",
+          "market_code": "1",
+          "short_name": "福耀玻璃",
+          "stock_code": "600660"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-17 16:18:05:618",
+      "eiTime": "2026-09-17 16:19:07:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "福耀玻璃:福耀玻璃2026年度第四期超短期融资券发行情况公告",
+      "title_ch": "福耀玻璃:福耀玻璃2026年度第四期超短期融资券发行情况公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829507170",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "33059131649445",
+          "market_code": "1",
+          "short_name": "中国汽研",
+          "stock_code": "601965"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001004003",
+          "column_name": "调研活动"
+        }
+      ],
+      "display_time": "2026-09-17 15:32:26:366",
+      "eiTime": "2026-09-17 15:33:32:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 12:00:00",
+      "source_type": "31",
+      "title": "中国汽研:临2026-028中国汽研关于参加“重庆辖区上市公司2026年投资者网上集体接待日活动”的公告",
+      "title_ch": "中国汽研:临2026-028中国汽研关于参加“重庆辖区上市公司2026年投资者网上集体接待日活动”的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829526260",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "37226172420762",
+          "market_code": "0",
+          "short_name": "帝尔激光",
+          "stock_code": "300776"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002001",
+          "column_name": "保荐/核查意见"
+        }
+      ],
+      "display_time": "2026-09-17 19:01:10:651",
+      "eiTime": "2026-09-17 19:06:24:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-18 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-18 11:59:42",
+      "source_type": "333",
+      "title": "帝尔激光:长江证券承销保荐有限公司关于武汉帝尔激光科技股份有限公司使用部分暂时闲置募集资金进行现金管理的核查意见",
+      "title_ch": "帝尔激光:长江证券承销保荐有限公司关于武汉帝尔激光科技股份有限公司使用部分暂时闲置募集资金进行现金管理的核查意见",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829514210",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "31942162353910",
+          "market_code": "0",
+          "short_name": "圣邦股份",
+          "stock_code": "300661"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-17 16:55:03:512",
+      "eiTime": "2026-09-17 16:54:31:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:01:18",
+      "source_type": "333",
+      "title": "圣邦股份:第五届董事会第二十一次会议决议的公告",
+      "title_ch": "圣邦股份:第五届董事会第二十一次会议决议的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829540727",
+      "codes": [
+        {
+          "ann_type": "INV",
+          "inner_code": "46311162981946",
+          "market_code": "0",
+          "short_name": "电投能源",
+          "stock_code": "002128"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "050003",
+          "column_name": "调研活动"
+        }
+      ],
+      "display_time": "2026-09-17 22:01:00:483",
+      "eiTime": "2026-09-17 22:00:23:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "324",
+      "title": "内蒙古电投能源股份有限公司投资者关系活动记录表20260917",
+      "title_ch": "内蒙古电投能源股份有限公司投资者关系活动记录表20260917",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829540681",
+      "codes": [
+        {
+          "ann_type": "INV",
+          "inner_code": "46311162981946",
+          "market_code": "0",
+          "short_name": "电投能源",
+          "stock_code": "002128"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "050003",
+          "column_name": "调研活动"
+        }
+      ],
+      "display_time": "2026-09-17 22:00:09:451",
+      "eiTime": "2026-09-17 21:59:32:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "324",
+      "title": "电投能源:内蒙古电投能源股份有限公司投资者关系活动记录表20260917",
+      "title_ch": "电投能源:内蒙古电投能源股份有限公司投资者关系活动记录表20260917",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829528005",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "23100161211706",
+          "market_code": "0",
+          "short_name": "安克创新",
+          "stock_code": "300866"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-17 19:27:39:488",
+      "eiTime": "2026-09-17 19:27:06:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "333",
+      "title": "安克创新:北京市海问律师事务所关于安克创新科技股份有限公司2026年第三次临时股东会的法律意见书",
+      "title_ch": "安克创新:北京市海问律师事务所关于安克创新科技股份有限公司2026年第三次临时股东会的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829527989",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "43818548097738",
+          "market_code": "0",
+          "short_name": "安克转债",
+          "stock_code": "123257"
+        },
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "23100161211706",
+          "market_code": "0",
+          "short_name": "安克创新",
+          "stock_code": "300866"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002001004",
+          "column_name": "分配方案决议公告"
+        },
+        {
+          "column_code": "001002003003",
+          "column_name": "股东大会决议公告"
+        },
+        {
+          "column_code": "003014",
+          "column_name": "其它"
+        }
+      ],
+      "display_time": "2026-09-17 19:25:00:543",
+      "eiTime": "2026-09-17 19:24:24:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "333",
+      "title": "安克创新:2026年第三次临时股东会决议公告",
+      "title_ch": "安克创新:2026年第三次临时股东会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829525721",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "35942435293078",
+          "market_code": "0",
+          "short_name": "中际旭创",
+          "stock_code": "300308"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-17 18:53:00:526",
+      "eiTime": "2026-09-17 18:52:24:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "333",
+      "title": "中际旭创:H股公告(翌日披露报表)",
+      "title_ch": "中际旭创:H股公告(翌日披露报表)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829522599",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "42343470187450",
+          "market_code": "0",
+          "short_name": "蓝晓转02",
+          "stock_code": "123195"
+        },
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "43762397526186",
+          "market_code": "0",
+          "short_name": "蓝晓科技",
+          "stock_code": "300487"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006010",
+          "column_name": "股份质押、冻结"
+        },
+        {
+          "column_code": "003020008002",
+          "column_name": "展期行使公告"
+        }
+      ],
+      "display_time": "2026-09-17 18:17:06:436",
+      "eiTime": "2026-09-17 18:20:24:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "333",
+      "title": "蓝晓科技:关于持股5%以上股东部分股份解除质押及质押展期的公告",
+      "title_ch": "蓝晓科技:关于持股5%以上股东部分股份解除质押及质押展期的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829522334",
+      "codes": [
+        {
+          "ann_type": "INV",
+          "inner_code": "10022161025429",
+          "market_code": "1",
+          "short_name": "澜起科技",
+          "stock_code": "688008"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "050003",
+          "column_name": "调研活动"
+        }
+      ],
+      "display_time": "2026-09-17 18:13:00:661",
+      "eiTime": "2026-09-17 18:12:23:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "311",
+      "title": "澜起科技:-投资者关系活动记录表(2026-011)",
+      "title_ch": "澜起科技:-投资者关系活动记录表(2026-011)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829518973",
+      "codes": [
+        {
+          "ann_type": "INV",
+          "inner_code": "29948652448811",
+          "market_code": "1",
+          "short_name": "中航高科",
+          "stock_code": "600862"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "050003",
+          "column_name": "调研活动"
+        }
+      ],
+      "display_time": "2026-09-17 17:36:12:469",
+      "eiTime": "2026-09-17 17:35:35:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "311",
+      "title": "中航高科:投资者活动记录表",
+      "title_ch": "中航高科:投资者活动记录表",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829514207",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "31942162353910",
+          "market_code": "0",
+          "short_name": "圣邦股份",
+          "stock_code": "300661"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007001007001",
+          "column_name": "股权激励进展公告"
+        }
+      ],
+      "display_time": "2026-09-17 16:55:03:598",
+      "eiTime": "2026-09-17 16:54:31:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "333",
+      "title": "圣邦股份:关于注销部分股票期权及作废部分限制性股票的公告",
+      "title_ch": "圣邦股份:关于注销部分股票期权及作废部分限制性股票的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829514206",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "31942162353910",
+          "market_code": "0",
+          "short_name": "圣邦股份",
+          "stock_code": "300661"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-17 16:55:03:597",
+      "eiTime": "2026-09-17 16:54:31:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "333",
+      "title": "圣邦股份:北京市君合律师事务所关于圣邦微电子(北京)股份有限公司注销部分股票期权及作废部分限制性股票相关事项的法律意见书",
+      "title_ch": "圣邦股份:北京市君合律师事务所关于圣邦微电子(北京)股份有限公司注销部分股票期权及作废部分限制性股票相关事项的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829507100",
+      "codes": [
+        {
+          "ann_type": "INV",
+          "inner_code": "15678744450971",
+          "market_code": "1",
+          "short_name": "特宝生物",
+          "stock_code": "688278"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "050003",
+          "column_name": "调研活动"
+        }
+      ],
+      "display_time": "2026-09-17 15:34:03:723",
+      "eiTime": "2026-09-17 15:33:24:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "311",
+      "title": "特宝生物:投资者关系活动记录表(科创板2026年半年度创新药行业集体业绩说明会)",
+      "title_ch": "特宝生物:投资者关系活动记录表(科创板2026年半年度创新药行业集体业绩说明会)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829486209",
+      "codes": [
+        {
+          "ann_type": "INV",
+          "inner_code": "24761233215674",
+          "market_code": "0",
+          "short_name": "伟星股份",
+          "stock_code": "002003"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "050003",
+          "column_name": "调研活动"
+        }
+      ],
+      "display_time": "2026-09-17 09:03:54:601",
+      "eiTime": "2026-09-17 09:03:23:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "324",
+      "title": "伟星股份:2026年9月15日投资者关系活动记录表",
+      "title_ch": "伟星股份:2026年9月15日投资者关系活动记录表",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609171829484225",
+      "codes": [
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "48468801057126",
+          "market_code": "0",
+          "short_name": "宁德时代",
+          "stock_code": "300750"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-17 07:56:03:614",
+      "eiTime": "2026-09-17 07:55:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "333",
+      "title": "宁德时代:H股公告(翌日披露报表)",
+      "title_ch": "宁德时代:H股公告(翌日披露报表)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829472321",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "18033944559877",
+          "market_code": "1",
+          "short_name": "紫金矿业",
+          "stock_code": "601899"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-16 22:05:00:587",
+      "eiTime": "2026-09-16 22:04:26:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "紫金矿业:紫金矿业集团股份有限公司第九届董事会独立董事专门会议第一次会议决议",
+      "title_ch": "紫金矿业:紫金矿业集团股份有限公司第九届董事会独立董事专门会议第一次会议决议",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829472322",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "18033944559877",
+          "market_code": "1",
+          "short_name": "紫金矿业",
+          "stock_code": "601899"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-16 22:05:00:642",
+      "eiTime": "2026-09-16 22:04:26:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "紫金矿业:紫金矿业集团股份有限公司第九届董事会临时会议决议公告",
+      "title_ch": "紫金矿业:紫金矿业集团股份有限公司第九届董事会临时会议决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829472318",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "18033944559877",
+          "market_code": "1",
+          "short_name": "紫金矿业",
+          "stock_code": "601899"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006002",
+          "column_name": "获得补贴（资助）"
+        }
+      ],
+      "display_time": "2026-09-16 22:03:12:554",
+      "eiTime": "2026-09-16 22:02:46:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "紫金矿业:紫金矿业集团股份有限公司关于向参股公司提供财务资助的公告",
+      "title_ch": "紫金矿业:紫金矿业集团股份有限公司关于向参股公司提供财务资助的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829472319",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "18033944559877",
+          "market_code": "1",
+          "short_name": "紫金矿业",
+          "stock_code": "601899"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006011003",
+          "column_name": "提供/对外担保公告"
+        }
+      ],
+      "display_time": "2026-09-16 22:03:12:590",
+      "eiTime": "2026-09-16 22:02:46:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "紫金矿业:紫金矿业集团股份有限公司关于为参股公司提供担保的公告",
+      "title_ch": "紫金矿业:紫金矿业集团股份有限公司关于为参股公司提供担保的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829472320",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "18033944559877",
+          "market_code": "1",
+          "short_name": "紫金矿业",
+          "stock_code": "601899"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 22:02:42:565",
+      "eiTime": "2026-09-16 22:02:14:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "紫金矿业:紫金矿业集团股份有限公司关于全资子公司与关联人共同投资的公告",
+      "title_ch": "紫金矿业:紫金矿业集团股份有限公司关于全资子公司与关联人共同投资的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829470865",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "34574656580054",
+          "market_code": "0",
+          "short_name": "立讯精密",
+          "stock_code": "002475"
+        },
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "34196161213306",
+          "market_code": "0",
+          "short_name": "立讯转债",
+          "stock_code": "128136"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003003",
+          "column_name": "股东大会决议公告"
+        },
+        {
+          "column_code": "003014",
+          "column_name": "其它"
+        }
+      ],
+      "display_time": "2026-09-16 20:43:06:638",
+      "eiTime": "2026-09-16 20:42:30:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "立讯精密:2026年第一次临时股东会决议公告",
+      "title_ch": "立讯精密:2026年第一次临时股东会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829470866",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "34574656580054",
+          "market_code": "0",
+          "short_name": "立讯精密",
+          "stock_code": "002475"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-16 20:43:00:613",
+      "eiTime": "2026-09-16 20:42:26:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "立讯精密:北京市汉坤(深圳)律师事务所关于立讯精密工业股份有限公司2026年第一次临时股东会的法律意见书",
+      "title_ch": "立讯精密:北京市汉坤(深圳)律师事务所关于立讯精密工业股份有限公司2026年第一次临时股东会的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829470877",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "46311162981946",
+          "market_code": "0",
+          "short_name": "电投能源",
+          "stock_code": "002128"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 20:40:06:449",
+      "eiTime": "2026-09-16 20:44:23:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "电投能源:公司2026年度调整后财务预算",
+      "title_ch": "电投能源:公司2026年度调整后财务预算",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829470878",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "46311162981946",
+          "market_code": "0",
+          "short_name": "电投能源",
+          "stock_code": "002128"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 20:40:06:471",
+      "eiTime": "2026-09-16 20:44:23:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "电投能源:公司未来三年股东分红回报规划(2026年-2028年)",
+      "title_ch": "电投能源:公司未来三年股东分红回报规划(2026年-2028年)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829470881",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "46311162981946",
+          "market_code": "0",
+          "short_name": "电投能源",
+          "stock_code": "002128"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002005002",
+          "column_name": "高管人员任职变动"
+        }
+      ],
+      "display_time": "2026-09-16 20:40:06:401",
+      "eiTime": "2026-09-16 20:44:23:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "电投能源:公司总会计师离任暨总经理代行总会计师职责的公告",
+      "title_ch": "电投能源:公司总会计师离任暨总经理代行总会计师职责的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829470876",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "46311162981946",
+          "market_code": "0",
+          "short_name": "电投能源",
+          "stock_code": "002128"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003001002",
+          "column_name": "召开股东大会通知"
+        }
+      ],
+      "display_time": "2026-09-16 20:40:06:449",
+      "eiTime": "2026-09-16 20:40:44:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "电投能源:内蒙古电投能源股份有限公司关于召开2026年第六次临时股东会的通知",
+      "title_ch": "电投能源:内蒙古电投能源股份有限公司关于召开2026年第六次临时股东会的通知",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829470879",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "46311162981946",
+          "market_code": "0",
+          "short_name": "电投能源",
+          "stock_code": "002128"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002005002",
+          "column_name": "高管人员任职变动"
+        },
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-16 20:40:06:498",
+      "eiTime": "2026-09-16 20:40:44:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "电投能源:内蒙古电投能源股份有限公司2026年第八次临时董事会决议公告",
+      "title_ch": "电投能源:内蒙古电投能源股份有限公司2026年第八次临时董事会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829470880",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "46311162981946",
+          "market_code": "0",
+          "short_name": "电投能源",
+          "stock_code": "002128"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 20:40:06:401",
+      "eiTime": "2026-09-16 20:40:44:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "电投能源:关于投资国家电投额济纳旗温图高勒10万千瓦风电项目公告",
+      "title_ch": "电投能源:关于投资国家电投额济纳旗温图高勒10万千瓦风电项目公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829469272",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "18775047978603",
+          "market_code": "1",
+          "short_name": "华海清科",
+          "stock_code": "688120"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002004",
+          "column_name": "股本变动"
+        },
+        {
+          "column_code": "001002007003009004",
+          "column_name": "回购进展情况"
+        },
+        {
+          "column_code": "001002007003009005",
+          "column_name": "回购实施公告"
+        }
+      ],
+      "display_time": "2026-09-16 19:13:37:160",
+      "eiTime": "2026-09-16 19:16:21:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "313",
+      "title": "华海清科:关于股份回购实施结果暨股份变动的公告",
+      "title_ch": "华海清科:关于股份回购实施结果暨股份变动的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829468716",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "21239173693290",
+          "market_code": "0",
+          "short_name": "牧原股份",
+          "stock_code": "002714"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 18:57:06:653",
+      "eiTime": "2026-09-16 18:56:24:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "牧原股份:H股公告(翌日披露报表)",
+      "title_ch": "牧原股份:H股公告(翌日披露报表)",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829468539",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "10022161025429",
+          "market_code": "1",
+          "short_name": "澜起科技",
+          "stock_code": "688008"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007001007001",
+          "column_name": "股权激励进展公告"
+        }
+      ],
+      "display_time": "2026-09-16 18:51:33:534",
+      "eiTime": "2026-09-16 18:51:10:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "313",
+      "title": "澜起科技:澜起科技2023年、2024年限制性股票激励计划部分归属结果公告",
+      "title_ch": "澜起科技:澜起科技2023年、2024年限制性股票激励计划部分归属结果公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829468345",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "10022161025429",
+          "market_code": "1",
+          "short_name": "澜起科技",
+          "stock_code": "688008"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 18:45:45:602",
+      "eiTime": "2026-09-16 18:45:22:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "313",
+      "title": "澜起科技:H股公告-翌日披露报表",
+      "title_ch": "澜起科技:H股公告-翌日披露报表",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829468202",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "41237234060763",
+          "market_code": "1",
+          "short_name": "同仁堂",
+          "stock_code": "600085"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003001001003",
+          "column_name": "专项说明/独立意见"
+        }
+      ],
+      "display_time": "2026-09-16 18:38:33:254",
+      "eiTime": "2026-09-16 18:39:26:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "同仁堂:同仁堂独立董事专门会议关于《控股股东关于解决和避免与公司同业竞争承诺函的预案》的审核意见",
+      "title_ch": "同仁堂:同仁堂独立董事专门会议关于《控股股东关于解决和避免与公司同业竞争承诺函的预案》的审核意见",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829468203",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "41237234060763",
+          "market_code": "1",
+          "short_name": "同仁堂",
+          "stock_code": "600085"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 18:38:33:228",
+      "eiTime": "2026-09-16 18:39:26:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "同仁堂:同仁堂控股股东关于解决和避免与公司同业竞争承诺函的公告",
+      "title_ch": "同仁堂:同仁堂控股股东关于解决和避免与公司同业竞争承诺函的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829468204",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "41237234060763",
+          "market_code": "1",
+          "short_name": "同仁堂",
+          "stock_code": "600085"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 18:38:31:240",
+      "eiTime": "2026-09-16 18:39:26:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "同仁堂:中国北京同仁堂(集团)有限责任公司关于解决和避免与北京同仁堂股份有限公司同业竞争的承诺函",
+      "title_ch": "同仁堂:中国北京同仁堂(集团)有限责任公司关于解决和避免与北京同仁堂股份有限公司同业竞争的承诺函",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829468053",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "20745899197483",
+          "market_code": "1",
+          "short_name": "三一重工",
+          "stock_code": "600031"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007003009004",
+          "column_name": "回购进展情况"
+        }
+      ],
+      "display_time": "2026-09-16 18:32:06:501",
+      "eiTime": "2026-09-16 18:31:56:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "三一重工:三一重工股份有限公司关于回购公司A股股份的进展公告",
+      "title_ch": "三一重工:三一重工股份有限公司关于回购公司A股股份的进展公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829468052",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "20745899197483",
+          "market_code": "1",
+          "short_name": "三一重工",
+          "stock_code": "600031"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 18:31:36:578",
+      "eiTime": "2026-09-16 18:31:14:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "三一重工:H股公告-翌日披露报表",
+      "title_ch": "三一重工:H股公告-翌日披露报表",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829467547",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "34285504586454",
+          "market_code": "0",
+          "short_name": "顺络电子",
+          "stock_code": "002138"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006010",
+          "column_name": "股份质押、冻结"
+        }
+      ],
+      "display_time": "2026-09-16 18:13:05:413",
+      "eiTime": "2026-09-16 18:14:02:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "顺络电子:关于股东部分股份质押的公告",
+      "title_ch": "顺络电子:关于股东部分股份质押的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829467111",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "16576600447259",
+          "market_code": "1",
+          "short_name": "海天味业",
+          "stock_code": "603288"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 18:04:33:595",
+      "eiTime": "2026-09-16 18:04:08:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "海天味业:H股公告-翌日披露报表",
+      "title_ch": "海天味业:H股公告-翌日披露报表",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829466922",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "43818548097738",
+          "market_code": "0",
+          "short_name": "安克转债",
+          "stock_code": "123257"
+        },
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "23100161211706",
+          "market_code": "0",
+          "short_name": "安克创新",
+          "stock_code": "300866"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007001007001",
+          "column_name": "股权激励进展公告"
+        },
+        {
+          "column_code": "003014",
+          "column_name": "其它"
+        }
+      ],
+      "display_time": "2026-09-16 18:01:54:616",
+      "eiTime": "2026-09-16 18:01:35:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "333",
+      "title": "安克创新:关于2025年限制性股票激励计划预留权益失效的公告",
+      "title_ch": "安克创新:关于2025年限制性股票激励计划预留权益失效的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829466919",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "43818548097738",
+          "market_code": "0",
+          "short_name": "安克转债",
+          "stock_code": "123257"
+        },
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "23100161211706",
+          "market_code": "0",
+          "short_name": "安克创新",
+          "stock_code": "300866"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002003",
+          "column_name": "限售股份上市流通"
+        },
+        {
+          "column_code": "001002007001007001",
+          "column_name": "股权激励进展公告"
+        },
+        {
+          "column_code": "003014",
+          "column_name": "其它"
+        }
+      ],
+      "display_time": "2026-09-16 18:01:33:614",
+      "eiTime": "2026-09-16 18:01:07:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "333",
+      "title": "安克创新:关于2025年限制性股票激励计划首次授予部分第一个归属期归属结果暨股份上市的公告",
+      "title_ch": "安克创新:关于2025年限制性股票激励计划首次授予部分第一个归属期归属结果暨股份上市的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829466870",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "43818548097738",
+          "market_code": "0",
+          "short_name": "安克转债",
+          "stock_code": "123257"
+        },
+        {
+          "ann_type": "A,CYB",
+          "inner_code": "23100161211706",
+          "market_code": "0",
+          "short_name": "安克创新",
+          "stock_code": "300866"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "003010001",
+          "column_name": "转股价格调整和修正"
+        },
+        {
+          "column_code": "003010001002",
+          "column_name": "转股价格调整和修正公告"
+        }
+      ],
+      "display_time": "2026-09-16 17:59:33:691",
+      "eiTime": "2026-09-16 17:59:14:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "333",
+      "title": "安克创新:关于可转换公司债券转股价格调整的公告",
+      "title_ch": "安克创新:关于可转换公司债券转股价格调整的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829466627",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "15327835747717",
+          "market_code": "1",
+          "short_name": "巨化股份",
+          "stock_code": "600160"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002001005",
+          "column_name": "分配方案实施"
+        }
+      ],
+      "display_time": "2026-09-16 17:53:09:250",
+      "eiTime": "2026-09-16 17:54:08:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "巨化股份:巨化股份2026年半年度权益分派实施公告",
+      "title_ch": "巨化股份:巨化股份2026年半年度权益分派实施公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829466008",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "45385320775429",
+          "market_code": "1",
+          "short_name": "伊利股份",
+          "stock_code": "600887"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007003009002001",
+          "column_name": "回购报告书"
+        }
+      ],
+      "display_time": "2026-09-16 17:36:56:352",
+      "eiTime": "2026-09-16 17:39:19:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "伊利股份:内蒙古伊利实业集团股份有限公司关于以集中竞价交易方式回购公司股份的回购报告书",
+      "title_ch": "伊利股份:内蒙古伊利实业集团股份有限公司关于以集中竞价交易方式回购公司股份的回购报告书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829466010",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "45385320775429",
+          "market_code": "1",
+          "short_name": "伊利股份",
+          "stock_code": "600887"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-16 17:36:55:458",
+      "eiTime": "2026-09-16 17:42:27:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "伊利股份:北京天驰君泰律师事务所关于内蒙古伊利实业集团股份有限公司2026年第一次临时股东会的法律意见书",
+      "title_ch": "伊利股份:北京天驰君泰律师事务所关于内蒙古伊利实业集团股份有限公司2026年第一次临时股东会的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829466009",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "45385320775429",
+          "market_code": "1",
+          "short_name": "伊利股份",
+          "stock_code": "600887"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002005001007",
+          "column_name": "公司注册资本变更"
+        },
+        {
+          "column_code": "001002007001007003",
+          "column_name": "通知债权人公告"
+        }
+      ],
+      "display_time": "2026-09-16 17:36:53:340",
+      "eiTime": "2026-09-16 17:42:27:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "伊利股份:内蒙古伊利实业集团股份有限公司关于回购股份减少注册资本通知债权人的公告",
+      "title_ch": "伊利股份:内蒙古伊利实业集团股份有限公司关于回购股份减少注册资本通知债权人的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829466007",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "45385320775429",
+          "market_code": "1",
+          "short_name": "伊利股份",
+          "stock_code": "600887"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002003003",
+          "column_name": "股东大会决议公告"
+        }
+      ],
+      "display_time": "2026-09-16 17:36:53:288",
+      "eiTime": "2026-09-16 17:42:27:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "伊利股份:内蒙古伊利实业集团股份有限公司2026年第一次临时股东会决议公告",
+      "title_ch": "伊利股份:内蒙古伊利实业集团股份有限公司2026年第一次临时股东会决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829465224",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "18324933386506",
+          "market_code": "0",
+          "short_name": "云南白药",
+          "stock_code": "000538"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002001005",
+          "column_name": "分配方案实施"
+        }
+      ],
+      "display_time": "2026-09-16 17:13:05:263",
+      "eiTime": "2026-09-16 17:18:24:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "云南白药:2026年特别分红权益分派实施公告",
+      "title_ch": "云南白药:2026年特别分红权益分派实施公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829465081",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "24798878399061",
+          "market_code": "1",
+          "short_name": "中创智领",
+          "stock_code": "601717"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 17:09:02:003",
+      "eiTime": "2026-09-16 17:08:40:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "中创智领:中创智领H股公告-翌日披露报表",
+      "title_ch": "中创智领:中创智领H股公告-翌日披露报表",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829464840",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "37094050076389",
+          "market_code": "1",
+          "short_name": "中国神华",
+          "stock_code": "601088"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002005001006",
+          "column_name": "公司办公地址变更"
+        }
+      ],
+      "display_time": "2026-09-16 17:02:45:625",
+      "eiTime": "2026-09-16 17:02:17:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "中国神华:中国神华关于变更办公地址的公告",
+      "title_ch": "中国神华:中国神华关于变更办公地址的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829464873",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "19059519721621",
+          "market_code": "1",
+          "short_name": "福耀玻璃",
+          "stock_code": "600660"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002001005",
+          "column_name": "分配方案实施"
+        }
+      ],
+      "display_time": "2026-09-16 17:02:17:177",
+      "eiTime": "2026-09-16 17:02:41:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "福耀玻璃:福耀玻璃2026年半年度A股权益分派实施公告",
+      "title_ch": "福耀玻璃:福耀玻璃2026年半年度A股权益分派实施公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829464385",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "38870167987477",
+          "market_code": "1",
+          "short_name": "振华股份",
+          "stock_code": "603067"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 16:49:44:272",
+      "eiTime": "2026-09-16 16:50:04:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "振华股份:湖北振华化学股份有限公司相关债券2026年跟踪评级报告",
+      "title_ch": "振华股份:湖北振华化学股份有限公司相关债券2026年跟踪评级报告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829464245",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "47208411426853",
+          "market_code": "1",
+          "short_name": "金石资源",
+          "stock_code": "603505"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 16:46:33:186",
+      "eiTime": "2026-09-16 16:47:35:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "金石资源:金石资源集团股份有限公司关于召开2026年半年度业绩说明会的公告",
+      "title_ch": "金石资源:金石资源集团股份有限公司关于召开2026年半年度业绩说明会的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829464241",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "47208411426853",
+          "market_code": "1",
+          "short_name": "金石资源",
+          "stock_code": "603505"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006010",
+          "column_name": "股份质押、冻结"
+        }
+      ],
+      "display_time": "2026-09-16 16:46:31:166",
+      "eiTime": "2026-09-16 16:47:35:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "金石资源:金石资源集团股份有限公司关于控股股东部分股份质押的公告",
+      "title_ch": "金石资源:金石资源集团股份有限公司关于控股股东部分股份质押的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829464099",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "17913322478395",
+          "market_code": "1",
+          "short_name": "德业股份",
+          "stock_code": "605117"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-16 16:44:37:267",
+      "eiTime": "2026-09-16 16:45:38:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "德业股份:第三届董事会第二十七次会议决议公告",
+      "title_ch": "德业股份:第三届董事会第二十七次会议决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829464098",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "17913322478395",
+          "market_code": "1",
+          "short_name": "德业股份",
+          "stock_code": "605117"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002007003009001001",
+          "column_name": "回购预案"
+        }
+      ],
+      "display_time": "2026-09-16 16:44:37:229",
+      "eiTime": "2026-09-16 16:45:10:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "德业股份:关于以集中竞价方式回购股份的预案",
+      "title_ch": "德业股份:关于以集中竞价方式回购股份的预案",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829464023",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "48478066159739",
+          "market_code": "1",
+          "short_name": "药明康德",
+          "stock_code": "603259"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 16:41:24:515",
+      "eiTime": "2026-09-16 16:41:48:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "药明康德:H股公告",
+      "title_ch": "药明康德:H股公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829463741",
+      "codes": [
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "16635606155499",
+          "market_code": "1",
+          "short_name": "道通转债",
+          "stock_code": "118013"
+        },
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "35514834603979",
+          "market_code": "1",
+          "short_name": "道通科技",
+          "stock_code": "688208"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002004008",
+          "column_name": "停牌公告"
+        },
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        },
+        {
+          "column_code": "003007007002",
+          "column_name": "停牌提示性公告"
+        },
+        {
+          "column_code": "003010001",
+          "column_name": "转股价格调整和修正"
+        }
+      ],
+      "display_time": "2026-09-16 16:33:51:318",
+      "eiTime": "2026-09-16 16:34:53:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "313",
+      "title": "道通科技:道通科技关于实施2026年半年度权益分派时可转债转股价格调整暨转股连续停牌的提示性公告",
+      "title_ch": "道通科技:道通科技关于实施2026年半年度权益分派时可转债转股价格调整暨转股连续停牌的提示性公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829462164",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "27223182198778",
+          "market_code": "0",
+          "short_name": "百润股份",
+          "stock_code": "002568"
+        },
+        {
+          "ann_type": "KZZ,Bond",
+          "inner_code": "35963094834698",
+          "market_code": "0",
+          "short_name": "百润转债",
+          "stock_code": "127046"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006011003",
+          "column_name": "提供/对外担保公告"
+        },
+        {
+          "column_code": "003013005002",
+          "column_name": "对外担保"
+        }
+      ],
+      "display_time": "2026-09-16 15:53:04:502",
+      "eiTime": "2026-09-16 15:56:28:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "百润股份:关于为全资子公司提供担保额度的进展公告",
+      "title_ch": "百润股份:关于为全资子公司提供担保额度的进展公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829462025",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "22247958184538",
+          "market_code": "0",
+          "short_name": "泸州老窖",
+          "stock_code": "000568"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003001001003",
+          "column_name": "专项说明/独立意见"
+        }
+      ],
+      "display_time": "2026-09-16 15:49:06:381",
+      "eiTime": "2026-09-16 15:53:07:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "泸州老窖:董事会薪酬与考核委员会关于2021年限制性股票激励计划预留部分第三个解除限售期解除限售条件成就的核查意见",
+      "title_ch": "泸州老窖:董事会薪酬与考核委员会关于2021年限制性股票激励计划预留部分第三个解除限售期解除限售条件成就的核查意见",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829462021",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "22247958184538",
+          "market_code": "0",
+          "short_name": "泸州老窖",
+          "stock_code": "000568"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002009",
+          "column_name": "董事会决议公告"
+        }
+      ],
+      "display_time": "2026-09-16 15:49:06:422",
+      "eiTime": "2026-09-16 15:52:31:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "泸州老窖:第十一届董事会二十九次会议决议公告",
+      "title_ch": "泸州老窖:第十一届董事会二十九次会议决议公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829462024",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "22247958184538",
+          "market_code": "0",
+          "short_name": "泸州老窖",
+          "stock_code": "000568"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001003002002",
+          "column_name": "法律意见书"
+        }
+      ],
+      "display_time": "2026-09-16 15:49:06:320",
+      "eiTime": "2026-09-16 15:52:31:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "泸州老窖:北京康达(成都)律师事务所关于泸州老窖股份有限公司2021年限制性股票激励计划预留部分第三期解除限售相关事项的法律意见书",
+      "title_ch": "泸州老窖:北京康达(成都)律师事务所关于泸州老窖股份有限公司2021年限制性股票激励计划预留部分第三期解除限售相关事项的法律意见书",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829461977",
+      "codes": [
+        {
+          "ann_type": "A,SZA",
+          "inner_code": "22247958184538",
+          "market_code": "0",
+          "short_name": "泸州老窖",
+          "stock_code": "000568"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002002003",
+          "column_name": "限售股份上市流通"
+        }
+      ],
+      "display_time": "2026-09-16 15:48:04:485",
+      "eiTime": "2026-09-16 15:48:37:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "331",
+      "title": "泸州老窖:关于2021年限制性股票激励计划预留部分第三个解除限售期解除限售条件成就的公告",
+      "title_ch": "泸州老窖:关于2021年限制性股票激励计划预留部分第三个解除限售期解除限售条件成就的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829461216",
+      "codes": [
+        {
+          "ann_type": "A,SHA",
+          "inner_code": "13950569019701",
+          "market_code": "1",
+          "short_name": "小商品城",
+          "stock_code": "600415"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002008",
+          "column_name": "其他"
+        }
+      ],
+      "display_time": "2026-09-16 15:32:28:254",
+      "eiTime": "2026-09-16 15:33:27:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 12:00:00",
+      "source_type": "31",
+      "title": "小商品城:关于召开2026年半年度业绩说明会的公告",
+      "title_ch": "小商品城:关于召开2026年半年度业绩说明会的公告",
+      "title_en": ""
+    },
+    {
+      "art_code": "AN202609161829466924",
+      "codes": [
+        {
+          "ann_type": "A,KCB,SHA",
+          "inner_code": "38954258940821",
+          "market_code": "1",
+          "short_name": "达梦数据",
+          "stock_code": "688692"
+        }
+      ],
+      "columns": [
+        {
+          "column_code": "001002006014",
+          "column_name": "诉讼仲裁"
+        }
+      ],
+      "display_time": "2026-09-16 18:00:05:436",
+      "eiTime": "2026-09-16 18:01:15:000",
+      "language": "0",
+      "listing_state": "0",
+      "notice_date": "2026-09-17 00:00:00",
+      "product_code": "",
+      "sort_date": "2026-09-17 11:59:38",
+      "source_type": "313",
+      "title": "达梦数据:关于公司诉讼进展的公告",
+      "title_ch": "达梦数据:关于公司诉讼进展的公告",
+      "title_en": ""
+    }
+  ]
+}

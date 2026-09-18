@@ -1,0 +1,67 @@
+{
+  "signal_date": "2026-09-18",
+  "checked_at_utc": "2026-09-18T08:56:55.616407+00:00",
+  "status": "passed",
+  "checks": [
+    "confirmed_trades_replayed",
+    "weighted_cost_and_stop_anchor",
+    "exact_account_market_value",
+    "whole_pool_date_and_unique_codes",
+    "same_day_tracking",
+    "swap_trigger_and_sale_size",
+    "buy_budget_and_board_lots",
+    "stop_lines",
+    "cooldown_receipt_uniqueness",
+    "mandatory_event_scope",
+    "empty_review_queue",
+    "pv_top10_order",
+    "equity_bond_state",
+    "publication_hashes",
+    "report_log_match"
+  ],
+  "holdings_market_value_cny": "4512302.00",
+  "cash_gap_cny": "51006.36",
+  "tranche_cny": "133001.3305",
+  "sale_gross_cny": "124470.0",
+  "buy_gross_cny": "73150.0",
+  "residual_funds_before_fees_cny": "313.64",
+  "coverage": {
+    "scanned": 181,
+    "valid_pv": 179,
+    "eligible": 9,
+    "held": 7,
+    "mandatory_companies": 10,
+    "reviewed_announcements": 16
+  },
+  "jobs": [
+    {
+      "id": 26883191,
+      "stage": "evidence",
+      "state": "COMPLETED",
+      "elapsed": "00:09:57",
+      "max_rss_kib": 72004,
+      "cpus": 16
+    },
+    {
+      "id": 26883361,
+      "stage": "preview",
+      "state": "COMPLETED",
+      "elapsed": "00:02:00",
+      "max_rss_kib": 297897,
+      "cpus": 16
+    },
+    {
+      "id": 26883588,
+      "stage": "scan",
+      "state": "COMPLETED",
+      "elapsed": "00:01:02",
+      "max_rss_kib": 281011,
+      "cpus": 16
+    }
+  ],
+  "additional_checks": [
+    "strategy_return_tracker --check passed",
+    "audit_repository_docs: 0 errors",
+    "CRLF-aware git diff --check passed (standard csv.writer CRLF preserved)"
+  ]
+}

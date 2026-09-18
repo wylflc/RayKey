@@ -1,0 +1,86 @@
+{
+  "signal_date": "2026-09-18",
+  "reviewed_at_utc": "2026-09-18T08:45:12.189569+00:00",
+  "checks": [
+    {
+      "topic": "铝与氧化铝",
+      "codes": [
+        "002128",
+        "000651"
+      ],
+      "status": "partial",
+      "source_urls": [
+        "https://www.changjiangyouse.com/c3/",
+        "https://m.smm.cn/hq/lv"
+      ],
+      "observed_on": "2026-09-18",
+      "facts": "有色宝长江铝报价24350–24390元/吨、均价24370、较09-17上升200；SMM氧化铝同日完整报价需登录，未取得同口径配对。",
+      "assessment": "报价只作行业背景，不等于公司铝液售价与氧化铝采购成本；不计算伪精确吨铝利润。"
+    },
+    {
+      "topic": "电投能源产能与经营",
+      "codes": [
+        "002128"
+      ],
+      "status": "primary_source_verified",
+      "source_urls": [
+        "https://pdf.dfcfw.com/pdf/H2_AN202609171829540727_1.pdf",
+        "https://pdf.dfcfw.com/pdf/H2_AN202609171829540681_1.pdf"
+      ],
+      "facts": "原文核验电解铝产能161万吨、收入占比63%、铝液销量超90%；新能源738万千瓦。半年收入239.23亿元、归母52.93亿元与现有财务面板相符。",
+      "assessment": "现有产能规模与新能源投产继续跟踪，不以说明会重复发布推动财务证据日或增加合理价。"
+    },
+    {
+      "topic": "空调排产与竞争",
+      "codes": [
+        "000651"
+      ],
+      "status": "partial",
+      "source_urls": [
+        "https://www.chinaiol.com/",
+        "https://bao.hvacr.cn/202608_2119733.html"
+      ],
+      "facts": "检索到产业在线9月排产报告标题；正文访问超时；未取得公司级排产、渠道价与库存的新一期完整表。",
+      "assessment": "沿用已注明局限的09-17研究记录，不采纳转载中不自洽的总量同比。"
+    },
+    {
+      "topic": "乙烷与聚烯烃",
+      "codes": [
+        "002648",
+        "600989"
+      ],
+      "status": "incomplete",
+      "source_urls": [
+        "https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=EER_EPLLE_PF4_Y44MB_DPG&f=D"
+      ],
+      "facts": "EIA原始日序列页面本轮仍无法读取，最新乙烷到岸成本与国内乙烯/聚乙烯配对价差未取齐。",
+      "assessment": "不替代公司利润锚，不以其他化工产品行情冒充乙烷链价差。"
+    },
+    {
+      "topic": "两轮车与工程订单",
+      "codes": [
+        "603529",
+        "600970"
+      ],
+      "status": "partial",
+      "source_urls": [
+        "https://pdf.dfcfw.com/pdf/H2_AN202609171829522385_1.pdf"
+      ],
+      "facts": "爱玛09-23登记、09-24除息，09-21上午业绩说明会仍需跟踪；公司公告窗口巡检另列。两轮车终端价格、上险量及中材全部海外订单与回款源未完整覆盖。",
+      "assessment": "分红按公司行动处理；行业/竞品巡检不得称全覆盖。"
+    },
+    {
+      "topic": "银行与保险",
+      "codes": [
+        "600036",
+        "601318",
+        "601838",
+        "601398",
+        "601288"
+      ],
+      "status": "partial",
+      "facts": "当日公告与利率由证据/行情阶段核对；信贷质量与NBV等多为季/月度口径，未取得覆盖全部银行保险的新一期经营数据。",
+      "assessment": "同日可得利率供银行保险股利折现入口使用，无主观重估。"
+    }
+  ]
+}
