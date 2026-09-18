@@ -1,0 +1,24 @@
+{
+  "snapshot_hashes_valid": true,
+  "days": 5,
+  "inherited_positions": 8,
+  "shadow_fills": 4,
+  "real_fills": 4,
+  "account_identities": true,
+  "holding_changes_reconciled": true,
+  "independent_cash_ledger": true,
+  "difference_attribution": true,
+  "prefix_invariance": true,
+  "shadow_min_cash": 0.0,
+  "production_inputs_unchanged": true,
+  "production_input_sha256": {
+    "a_share_holdings.csv": "bc7f7745e3a8ef897d37e88f107950693e3002e92e15db166e9c23a99bee0d5c",
+    "portfolio_account_snapshot.csv": "545af2425b0c12c8b991e69db016a26297403bd7f9b363ae4fe279ec7c35bb38",
+    "cooldown_executions.csv": "d6b340f1144f7e67f1c267084ac352ce975005bb1d9d0cc0c02bd3281deb85c5",
+    "daily_cooldown_state.csv": "7c81bf458fb28ecb1f41c05f25e6874f9f440f6228c8b4b863c16f4a189a84a0",
+    "daily_entry_plan.csv": "65a0a75e7d4fcae4b1ac2df77bdb7d20c230959977dd34a2fb3cd6d60e5f6ba3",
+    "daily_sell_plan.csv": "552f9985a0bb60ca7312340910cc075d2cedf4380c780195333408a0d34ca94b",
+    "daily_buy_candidates.csv": "f187b0883406efbb7830f908544726ad49a2056906be23a8c59ccd1a74528a70"
+  },
+  "source_amount_discrepancies": 1
+}

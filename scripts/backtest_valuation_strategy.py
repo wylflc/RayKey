@@ -39,6 +39,7 @@ import argparse
 from fractions import Fraction
 import bisect
 import calendar
+import copy
 import csv
 import math
 import statistics
@@ -119,6 +120,7 @@ STAMP_HISTORY = [                     # (生效日, 税率, 是否双边)
     ("2023-08-28", 0.0005, False),
 ]
 
+USER_FEES = {"commission": 0.0001, "min_fee": 5.0, "stamp": 0.0005, "transfer": 0.00001}
 FEES = {"commission": 0.0, "min_fee": 0.0, "transfer": 0.0,
         "stamp": 0.0, "stamp_mode": "flat", "paid": 0.0}
 
@@ -1540,7 +1542,11 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         vol_addon_min: float = 0.0, vol_addon_max: float = 0.0,
         vol_swap_min: float = 0.0, vol_swap_max: float = 0.0, vol_stop_min: float = 0.0,
         candidate_log=None, buy_top_pct: float = 0.0,
-        equity_bond: EquityBondConstraint | None = None) -> dict:
+        equity_bond: EquityBondConstraint | None = None,
+        initial_portfolio: Portfolio | None = None,
+        buy_blocked: dict[str, set[str]] | None = None,
+        portfolio_snapshots: list | None = None,
+        liquidate_at_end: bool = True) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`。
 
     `tier_buy_scale`／`tier_sell_scale`（研究开关，§12.95「护城河放到决策层」）：按档位给买入线／
@@ -1572,7 +1578,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     signal_uni_idx, signal_members = 0, (set() if universe else None)
     global DIVIDEND_TAX_ON
     DIVIDEND_TAX_ON = dividend_tax
-    portfolio = Portfolio(cash=capital)
+    if initial_portfolio is not None and exec_delay != 1:
+        raise ValueError("A closing portfolio seed requires T+1 execution")
+    portfolio = copy.deepcopy(initial_portfolio) if initial_portfolio is not None else Portfolio(cash=capital)
     fees0 = FEES["paid"]        # 本次 run 的费用 = 结束时累计 − 起始累计
     stats = stats if stats is not None else collections.Counter()
     # 割肉后的「欠账」：被 `trend_exit_ma` 清掉的股数记在此处，等该股重新满足买入条件时
@@ -1580,6 +1588,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     cut_shares: dict[str, float] = {}
     last_buy: dict[str, str] = {}      # 每股最近一次买入日，供「买不起一档就买一手」的冷却期判定
     days = sorted(d for d in states if since <= d <= until)
+    if initial_portfolio is not None and (not days or days[0] != since):
+        raise ValueError("The seed date must be the first complete market snapshot")
     last_price: dict[str, float] = {}   # 停牌日没有行情，须沿用最后成交价盯市
     equity_curve: list[tuple[str, float, float, int]] = []
     # 逐代码「盈亏 ÷ 前一日净资产」累计贡献（§12.1 第 3 款的赢家尺）：日盈亏 = 市值变动 − 当日买入 + 当日卖出与分红，
@@ -1823,7 +1833,44 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             if why:
                 return False, why
         return True, ""
+    def observe_portfolio(day):
+        if portfolio_snapshots is not None:
+            portfolio_snapshots.append(dict(
+                date=day, cash=portfolio.cash, debt=portfolio.debt,
+                interest_paid=portfolio.interest_paid, fees_paid=FEES["paid"] - fees0,
+                dividend_tax_paid=portfolio.dividend_tax_paid,
+                holdings={c: dict(shares=p.shares, cost=p.avg_cost, stop=p.entry_stop,
+                                  stop_ma=p.entry_stop_ma) for c, p in portfolio.lots.items()},
+                buy_counters=dict(lot_counters_buy), sell_counters=dict(lot_counters_sell)))
+
     for day_no, day in enumerate(days):
+        if initial_portfolio is not None and day_no == 0:
+            # Seed is AFTER this day's trading/actions. Mark all inherited positions;
+            # do not execute or charge this day's actions/interest a second time.
+            marks = {c: prices.get(c, {}).get(day) for c in portfolio.lots}
+            if any(p is None or not math.isfinite(p) or p <= 0 for p in marks.values()):
+                raise ValueError("Missing closing price for an inherited position")
+            eq_now = portfolio.equity(marks)
+            if not math.isclose(eq_now, capital, rel_tol=0, abs_tol=.011):
+                raise ValueError(f"Seed equity {eq_now} differs from starting capital {capital}")
+            if portfolio.cash < 0 or portfolio.debt < 0 or eq_now <= 0:
+                raise ValueError("Invalid seed cash, debt or equity")
+            last_price.update(marks)
+            prev_day = day
+            prev_mv.update({c: p.shares * marks[c] for c, p in portfolio.lots.items()})
+            prev_flow.update({c: (p.invested, p.proceeds) for c, p in portfolio.lots.items()})
+            weights = sorted((v / eq_now for v in prev_mv.values()), reverse=True)
+            ratio = portfolio.margin_ratio(marks)
+            equity_curve.append((day, eq_now, portfolio.cash, len(portfolio.lots),
+                                 portfolio.debt, ratio, weights[0] if weights else 0., sum(weights[:3])))
+            min_ratio, min_ratio_day = ratio, day
+            min_cash, min_cash_day = portfolio.cash, day
+            if portfolio.debt > 0:
+                stock = sum(prev_mv.values())
+                min_buf_total, min_buf_stock = liquidation_buffers(stock, portfolio.cash, portfolio.debt, maintenance)
+                min_buf_stock_day = min_buf_total_day = day
+            observe_portfolio(day)
+            continue
         apply_corporate_actions(portfolio, day, actions, adjust_stops=(exright_stop == "adjust"))
 
         # ---- 融资计息（不需要价格，故放在循环头）----
@@ -1845,6 +1892,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         if sig_day is None:
             equity_curve.append((day, portfolio.equity({}), portfolio.cash, 0, portfolio.debt,
                                  portfolio.margin_ratio({})))
+            observe_portfolio(day)
             continue
         today = {code: (close, value, ratio) for code, close, value, ratio in states[sig_day]}
         hold_today = ({**today, **{code: (close, value, ratio) for code, close, value, ratio in hold_states.get(sig_day, [])}}
@@ -2544,6 +2592,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             stats["分位闸·当日合格"] += len(eligible)
         else:
             eligible = sorted((r for r in pool if r[3] <= buy_line(r[0])), key=_key)
+        if buy_blocked is not None:
+            if sig_day not in buy_blocked:
+                raise ValueError(f"Missing point-in-time buy gates for {sig_day}")
+            eligible = [r for r in eligible if r[0] not in buy_blocked[sig_day]]
         # 大盘围栏态：合格集置空 → 换仓、簇内升级、相关性补位、定投买入全部无源可买；
         # 卖出端（止损/减持/出名单）不受影响。只在开关打开时才可能为真。
         if fence_on:
@@ -3672,9 +3724,10 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         equity_curve.append((day, eq_now, portfolio.cash, len(portfolio.lots),
                              portfolio.debt, portfolio.margin_ratio(marks),
                              weights[0] if weights else 0.0, sum(weights[:3])))
+        observe_portfolio(day)
 
     # 收尾：按最后一日收盘价清算未平仓，使逐周期收益可比
-    if days:
+    if days and liquidate_at_end:
         last = days[-1]
         for code in list(portfolio.lots):
             price = prices.get(code, {}).get(last)
@@ -4673,10 +4726,8 @@ def main() -> int:
         sys.exit("--swap-mode pairwise 需要同时给 --swap")
 
     if args.fee_preset == "user":       # 用户 2026-08-12 提供的券商口径
-        args.commission = args.commission or 0.0001
-        args.min_fee = args.min_fee or 5.0
-        args.stamp = args.stamp or 0.0005
-        args.transfer = args.transfer or 0.00001
+        for key, value in USER_FEES.items():
+            setattr(args, key, getattr(args, key) or value)
     FEES.update(commission=args.commission, min_fee=args.min_fee, stamp=args.stamp,
                 transfer=args.transfer, stamp_mode=args.fee_stamp_mode)
     if args.slippage_bp < 0:

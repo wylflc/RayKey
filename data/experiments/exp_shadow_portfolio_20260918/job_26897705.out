@@ -1,0 +1,19 @@
+{
+  "date": "2026-09-18",
+  "shadow_net_assets": 2659483.5637080595,
+  "actual_net_assets": 2660026.61,
+  "shadow_unit_nav": 0.9786572157521618,
+  "actual_unit_nav": 0.9788570501032168,
+  "shadow_return": -0.021342784247838198,
+  "actual_return": -0.021142949896783225,
+  "shadow_daily_return": 0.010403201546706153,
+  "actual_daily_return": 0.010516649276710144,
+  "shadow_minus_actual_cny": -543.0462919403799,
+  "shadow_minus_actual_pp": -0.019983435105495072,
+  "shadow_drawdown": -0.021342784247838198,
+  "actual_drawdown": -0.021142949896783225,
+  "shadow_cash": 0.0,
+  "shadow_debt": 1771198.4362919405,
+  "actual_debt": 1852275.39,
+  "reported_available_margin": -51006.36
+}

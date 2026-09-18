@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "created_at_beijing": "2026-09-18T23:08:00.209794+08:00",
+  "baseline_date": "2026-09-14",
+  "retrospective_through": "2026-09-18",
+  "base": "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 --corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 --swap --swap-partial --sell-trend-ma 20 --lot-size 100 --lot-ratio-cooldown --lot-cooldown-start confirmed --execution-consistency signal --exec-delay 1 --exec-price close --fee-preset user --no-artifacts --capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 --maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay --gain-sell 1.10 --gain-sell-mode ungated --swap-gain-once --swap-source-block -1 --width -0.0454 --swap-margin 0.15 --stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma60_stop --stop-basis exec --residual-clear lot --position-cap 0.6 --net-same-day --fill-missing skip --dividend-tax --swap-repeat skip --addon-trend ma-only --swap-require-weak --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --equity-bond-lower 0.3 --equity-bond-restore-above --equity-bond-release-threshold 0.035 --daily-states data/processed/a_share_daily_states_adopted.csv --hold-states data/processed/a_share_daily_states_hold.csv --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv",
+  "strategy_epoch": "E4",
+  "fees": {
+    "commission": 0.0001,
+    "min_fee": 5.0,
+    "stamp": 0.0005,
+    "transfer": 1e-05,
+    "stamp_mode": "flat"
+  },
+  "code_sha256": {
+    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
+    "backtest_valuation_strategy.py": "7077fbca0ef7866626eb137f132607af878508a2718083075a6b524c7924fc19",
+    "sweep_backtest_configs.py": "17ee4c31eac6d6ccf378259a74b676a89696beb3c42ecf48792f43d5de9bb1ac",
+    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6"
+  },
+  "snapshots": {
+    "2026-09-14": "d67a6fbec500c0a0a10fb57431ad46ddc310500ce2d697b09cfe669ce50d0ff4",
+    "2026-09-15": "9461977b6330c4a4999ce5c384990a3a708e70a059e047c922813f39a80c4856",
+    "2026-09-16": "1ebed6e748303531296feec7137ef44a7ca938b7caaae95fea8b64b37d7dcc4f",
+    "2026-09-17": "76faa2c503c00c5ce6c8556c4b1c6e46a3061abdf2828e6fd3efc4d2a17844d2",
+    "2026-09-18": "c54ed572ba1765c4ab21761334d1fe85e6e4607136e86b1e9927d5c351468380"
+  }
+}

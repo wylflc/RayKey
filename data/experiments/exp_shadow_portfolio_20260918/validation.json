@@ -1,0 +1,26 @@
+{
+  "as_of_beijing": "2026-09-18",
+  "job_id": "26897705",
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed": "00:00:15",
+  "allocated_cpus": 16,
+  "workers": 1,
+  "sacct_batch_maxrss": "1561K",
+  "resource_note": "Short-job accounting did not sample the Python peak; 1561K is not claimed as actual peak memory.",
+  "tests_passed": {
+    "test_shadow_portfolio.py": 14,
+    "test_cash_accounting.py": 6,
+    "test_daily_execution_plan.py": 23,
+    "test_strategy_parameter_sync.py": 4,
+    "test_workflow_execution_consistency.py": 32,
+    "test_t1_judge.py": 10,
+    "test_t1_execution_confirmation.py": 8,
+    "test_lot_cooldown.py": 25
+  },
+  "test_count": 122,
+  "runtime_checks": "data/processed/shadow_portfolio/e4/verification.json",
+  "init_command": "python3 scripts/shadow_portfolio.py init --sources data/experiments/exp_shadow_portfolio_20260918/sources.json",
+  "run_command": "sbatch --account=tes21035 scripts/slurm/shadow_portfolio.sbatch",
+  "protocol_sha256": "1e0fe24a0d3e96b668d77bebf9d98b8efda9cac96003798a3dda99b75b68b7a3"
+}

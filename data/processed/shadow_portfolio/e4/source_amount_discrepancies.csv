@@ -1,0 +1,2 @@
+﻿date,security_code,recorded_amount,shares_times_price,recorded_minus_calculated,source
+2026-09-17,600970,131424.0,131328.0,96.0,data/interim/daily_execution_2026-09-17.json
