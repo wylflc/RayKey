@@ -2065,6 +2065,28 @@
    "review_method": "公司PDF原文文本核验",
    "notice_date": "2026-09-16",
    "reviewed_at_utc": "2026-09-16T08:15:00.846920+00:00"
+  },
+  {
+   "review_id": "moat_comparison_20260919_000651",
+   "recorded_at": "2026-09-19",
+   "reviewed_at_utc": "2026-09-18T16:35:14.562708+00:00",
+   "evidence_type": "targeted_primary_source_moat_comparison",
+   "report": "docs/reports/sinoma_gree_moat_comparison_2026-09-19.zh.md",
+   "scope": "竞争格局、护城河载体与2026H1指标；未全量重新验证Q3/Q4，维持原层级、分数与生产估值。",
+   "source_urls": [
+    "https://disc.static.szse.cn/disc/disk03/finalpage/2026-08-27/72e40036-f971-41ab-ae61-0fb9f1bb818a.PDF"
+   ],
+   "pages_reviewed": {
+    "2026H1": [
+     6,
+     19,
+     20,
+     21,
+     22
+    ]
+   },
+   "facts": "2026H1 ROE8.68%、经营现金流188.0883239亿元、归母132.7759088亿元；经营现金流同比-33.60%。销售门店超2万、服务网点超3万，存在品牌、部件研发制造和服务组织积累。",
+   "assessment": "Q2=75、Q1=72的原评分与中材74/66方向一致，单分差不形成精确排序；治理/资本配置与主业壁垒分开解释。"
   }
  ]
 }

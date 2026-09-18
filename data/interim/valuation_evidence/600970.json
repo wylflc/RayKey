@@ -2116,6 +2116,31 @@
     "candidate_bands_sha256": "12b8afa00c674db44083991bef38d07415a58586861834bd7a423e546abdd949",
     "basis": "已核对公告与现行参数，未有新模型输入；未执行无输入变化的全历史建带链"
    }
+  },
+  {
+   "review_id": "moat_comparison_20260919_600970",
+   "recorded_at": "2026-09-19",
+   "reviewed_at_utc": "2026-09-18T16:35:14.562708+00:00",
+   "evidence_type": "targeted_primary_source_moat_comparison",
+   "report": "docs/reports/sinoma_gree_moat_comparison_2026-09-19.zh.md",
+   "scope": "竞争格局、护城河载体与2026H1指标；未全量重新验证Q3/Q4，维持原层级、分数与生产估值。",
+   "source_urls": [
+    "https://file.finance.sina.com.cn/211.154.219.97:9494/MRGG/CNSESH_STOCK/2026/2026-8/2026-08-26/12534581.PDF",
+    "https://fls.com/en/announcements/2025/flsmidth-closes-the-sale-of-the-cement-business-to-pacific-avenue-capital-partners",
+    "https://www.fuller-technologies.com/hub/posts/pacific-avenues-acquisition-of-flsmidth-cement-closes",
+    "https://www.thyssenkrupp-polysius.com/en/company"
+   ],
+   "pages_reviewed": {
+    "2026H1": [
+     6,
+     7,
+     8,
+     9,
+     10
+    ]
+   },
+   "facts": "FLS水泥业务于2025-10-31出售，Fuller于11-03确认承接完整业务并持续运营；Polysius明确提供EP/EPC与设备服务。2026H1中材ROE4.07%、经营现金流-1.569262亿元、归母9.335639亿元，生产运营服务收入60.52亿元，水泥运维线69条。",
+   "assessment": "不能由较高份额或估值折价推导整体护城河强于格力；纠正独占表述。经营现金流改善但单期为负，不能据单期现金流或跨行业毛利率直接重评分。"
   }
  ]
 }
