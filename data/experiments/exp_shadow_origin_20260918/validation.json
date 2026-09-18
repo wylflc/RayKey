@@ -1,0 +1,54 @@
+{
+  "as_of": "2026-09-18",
+  "valid_job": 26899379,
+  "job_state": "COMPLETED",
+  "elapsed": "00:00:25",
+  "allocated_cpus": 16,
+  "workers": 1,
+  "python_peak_rss_kib": 63212,
+  "superseded_jobs": {
+    "26899080": "Execution-day membership timing; retained for audit, not a valid result."
+  },
+  "tests_passed": {
+    "test_shadow_origin.py": 7,
+    "test_shadow_portfolio.py": 14,
+    "test_cash_accounting.py": 6,
+    "test_lot_cooldown.py": 25,
+    "test_strategy_parameter_sync.py": 4
+  },
+  "test_count": 56,
+  "snapshot_and_code_hashes_verified": true,
+  "production_inputs_unchanged": true,
+  "scenario_validation": {
+    "missing_300_on_0831": {
+      "last": {
+        "date": "2026-09-18",
+        "net_assets": "2645961.8861284535",
+        "unit_nav": "0.9441038733202349",
+        "return_pct": "-5.589612667976507",
+        "debt": "1803004.1138715467",
+        "cash": "0.0",
+        "opening_capital": "2802617.34",
+        "opening_coal_shares": "10100"
+      },
+      "maximum_cash_identity_error": 8.185452315956354e-10,
+      "minimum_cash": 0.0
+    },
+    "missing_300_on_0828": {
+      "last": {
+        "date": "2026-09-18",
+        "net_assets": "2653614.808105385",
+        "unit_nav": "0.9440988406289662",
+        "return_pct": "-5.590115937103379",
+        "debt": "1808323.1918946153",
+        "cash": "0.0",
+        "opening_capital": "2810738.34",
+        "opening_coal_shares": "10400"
+      },
+      "maximum_cash_identity_error": 1.520675141364336e-09,
+      "minimum_cash": 0.0
+    }
+  },
+  "manifest_sha256": "ed7d892f4579bd42198e9c80b44f0d2e10007eb28dce8b00e1d77908c0110267",
+  "original_e4_segment_revision": "4ab77787"
+}

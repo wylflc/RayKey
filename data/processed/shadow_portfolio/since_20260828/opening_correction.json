@@ -1,0 +1,18 @@
+{
+  "logged_at_utc": "2026-09-03T09:30:47+00:00",
+  "workflow_stage": "holdings",
+  "run_id": "fills:2026-09-03",
+  "as_of": "2026-09-03",
+  "security_code": "601225",
+  "security_name": "陕西煤业",
+  "decision_type": "holdings_correction",
+  "decision_result": "shares_15200_to_15500;cost_26.696_to_26.707",
+  "summary_reason": "用户 2026-09-03 回报券商实际持仓 15,500 股、成本 26.707，持仓表由 15,200／26.696 订正为 15,500／26.707，锚 24.12 不变。对账：订正后 11 只持仓按 09-03 收盘核算市值 4,689,589.00，与券商总资产逐元相符；此前记为「券商口径待对账」的差额 09-01 8,016.00＝300×26.72、09-02 7,830.00＝300×26.10、09-03 7,872.00＝300×26.24，均恰为 300 股陕西煤业 × 当日收盘，待对账项闭合。台账成交（08-28 4,600@27.07、08-31 5,100@27.546）合计比实际少 300 股，落在哪一笔无法由日志判定（若落 08-28 加权成本为 26.703、落 08-31 为 26.712），成本按券商口径 26.707 采纳。09-03 扫描结论不受影响：陕西煤业候选侧 P/V 1.2187 越买入线、不在合格集，收盘>MA20 非弱势、不入换仓源，无卖出路径命中。",
+  "input_files": "data/processed/portfolio_account_snapshot.csv;data/processed/daily_holdings_tracking.csv",
+  "source_urls": "",
+  "output_file": "data/processed/a_share_holdings.csv",
+  "operator_or_script": "user+agent",
+  "workflow_version": "a-share-selection-operation-v4.137",
+  "decision_id": "holdings:2026-09-03:601225:correction01",
+  "supersedes_decision_id": ""
+}

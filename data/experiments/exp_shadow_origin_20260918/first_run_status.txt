@@ -1,0 +1,1 @@
+26899080 completed but superseded: execution-day closing membership could affect that same day under legacy engine timing. Corrected by freezing membership to the prior available signal, with a direct counterexample test. No forward observations existed; original price/snapshot evidence is unchanged.

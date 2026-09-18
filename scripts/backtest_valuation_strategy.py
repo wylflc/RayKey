@@ -1546,7 +1546,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         initial_portfolio: Portfolio | None = None,
         buy_blocked: dict[str, set[str]] | None = None,
         portfolio_snapshots: list | None = None,
-        liquidate_at_end: bool = True) -> dict:
+        liquidate_at_end: bool = True,
+        initial_cooldown: dict | None = None,
+        final_portfolio: list | None = None) -> dict:
     """`width` 即带的半宽 w：买入线 `P/V ≤ 1−w`。
 
     `tier_buy_scale`／`tier_sell_scale`（研究开关，§12.95「护城河放到决策层」）：按档位给买入线／
@@ -1712,8 +1714,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
     prev_day = None
     margin_events: list[dict] = []
     # §9.3.3 比例冷却：买入侧与卖出侧各自计数（OI-120）；`lot_cooldown_shared` 为旧口径研究开关（买卖共用一个计数器）。
-    lot_counters_buy: dict[str, int] = {}
-    lot_counters_sell: dict[str, int] = lot_counters_buy if lot_cooldown_shared else {}
+    lot_counters_buy: dict[str, int] = dict((initial_cooldown or {}).get('buy', {}))
+    lot_counters_sell: dict[str, int] = (lot_counters_buy if lot_cooldown_shared else
+                                       dict((initial_cooldown or {}).get('sell', {})))
+    if initial_cooldown and initial_portfolio is None:
+        raise ValueError('Seeded cooldown requires a closing portfolio seed')
+    if lot_cooldown_shared and (initial_cooldown or {}).get('sell', {}) != lot_counters_buy:
+        raise ValueError('Shared cooldown seed must have equal buy/sell counters')
     confirmed_cooldown = lot_ratio_cooldown and lot_cooldown_start == "confirmed"
     if lot_cooldown_start not in ("confirmed", "plan") or (confirmed_cooldown and lot_cooldown_shared):
         raise ValueError("Confirmed-fill cooldown requires separate buy/sell counters")
@@ -3733,6 +3740,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             price = prices.get(code, {}).get(last)
             if price:
                 close_lot(portfolio, code, last, price, "回测截止清算")
+    if final_portfolio is not None:
+        final_portfolio.append(copy.deepcopy(portfolio))
     return {"equity": equity_curve, "closed": portfolio.closed, "fees": FEES["paid"] - fees0,
             "contrib": dict(contrib), "buys": buy_count, "sells": sell_count, "turnover": turnover,
             "margin_events": margin_events, "min_margin_ratio": min_ratio,

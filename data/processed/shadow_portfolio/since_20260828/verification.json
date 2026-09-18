@@ -1,0 +1,29 @@
+{
+  "days": 16,
+  "trading_intervals": 15,
+  "accounting_closed": true,
+  "prefix_invariance": true,
+  "production_unchanged": true,
+  "production_sha256": {
+    "a_share_holdings.csv": "bc7f7745e3a8ef897d37e88f107950693e3002e92e15db166e9c23a99bee0d5c",
+    "portfolio_account_snapshot.csv": "545af2425b0c12c8b991e69db016a26297403bd7f9b363ae4fe279ec7c35bb38",
+    "cooldown_executions.csv": "d6b340f1144f7e67f1c267084ac352ce975005bb1d9d0cc0c02bd3281deb85c5",
+    "daily_cooldown_state.csv": "7c81bf458fb28ecb1f41c05f25e6874f9f440f6228c8b4b863c16f4a189a84a0",
+    "daily_entry_plan.csv": "65a0a75e7d4fcae4b1ac2df77bdb7d20c230959977dd34a2fb3cd6d60e5f6ba3",
+    "daily_sell_plan.csv": "552f9985a0bb60ca7312340910cc075d2cedf4380c780195333408a0d34ca94b",
+    "daily_buy_candidates.csv": "f187b0883406efbb7830f908544726ad49a2056906be23a8c59ccd1a74528a70"
+  },
+  "code_sha256": {
+    "shadow_from_origin.py": "fb9a571ad01fbc208fb736c6fb137075355081982fd7d6b504a0913c7f10e7f9",
+    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
+    "backtest_valuation_strategy.py": "040018a8eef3365d54206858c5b218b06b6bc566d7634ae4b918434071cbb865",
+    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6"
+  },
+  "correlation_calls": {
+    "missing_300_on_0831": 223,
+    "missing_300_on_0828": 223
+  }
+}
