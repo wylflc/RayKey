@@ -6,7 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
-| v4.194 | 2026-09-19 | §9.1 常设调度入口 `daily_postclose.sbatch` 并入 `preview`／`events` 两阶段与可选 `SCAN_ENTRY_CODES`，evidence 阶段先刷新股债利差与 rf/ERP 输入；`rebuild_chain_with_fetch.sbatch` 补 §6.7 第 1 步第六份取数 `fetch_equity_bond_inputs.py --refresh`；逐日包装脚本 `daily_scan_2026091x`／`daily_events_2026091x` 退役 |
+| v4.194 | 2026-09-19 | §9.1 常设调度入口 `daily_postclose.sbatch` 并入 `preview`／`events` 两阶段与可选 `SCAN_ENTRY_CODES`，evidence 阶段先刷新股债利差与 rf/ERP 输入；§6.7 写明常设作业入口 `rebuild_chain_with_fetch.sbatch`（第 1～3 步）并补第 1 步第六份取数 `fetch_equity_bond_inputs.py --refresh`；已结案课题的 141 个一次性 sbatch 与 7 个无引用实验脚本移入 `scripts/archive/`（三个月保留）；逐日包装脚本 `daily_scan_2026091x`／`daily_events_2026091x` 退役 |
 | v4.193 | 2026-09-19 | OI-192：§8.3 增证券代码变更规则——参考表 `data/reference/a_share_code_succession.csv`，事件取数把新码名下不晚于旧码末日的事件复制到旧码，面板装配校验两码区间不跨换码日；判定源除名 `001872`，`000022` 状态重建并拼回；落点 `code_succession.py`、`fetch_ohlcv_history.py`、`build_moat_panel.py`。依据 §12.250 |
 | v4.192 | 2026-09-19 | §10.4追加期初成交日期确认：带来源与指纹选定主路径，排除情景停止更新并保留历史证据；原日快照不覆盖，券商净资产与剩余对账差额分列。落点`shadow_from_origin.py`；依据§12.249 |
 | v4.191 | 2026-09-18 | 影子主比较改从§10.3指定基准日开始，跨规则纪元连续递推；E4短段仅作辅助。期初优先核对后续订正，未定成交日按情景列示，保留券商与收盘重估双口径。依据§12.248 |
