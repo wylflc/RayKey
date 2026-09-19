@@ -42,6 +42,6 @@ A 股上市公司研究、估值、每日执行与持仓跟踪，附港股、美
 
 ## 维护
 
-生产命令链只维护在工作流程中。文档一致性检查运行 `python3 scripts/audit_repository_docs.py`；生产与回测参数同步检查运行 `python3 scripts/test_strategy_parameter_sync.py`。
+生产命令链只维护在工作流程中。文档一致性检查运行 `python3 scripts/audit_repository_docs.py`；生产与回测参数同步检查运行 `python3 scripts/test_strategy_parameter_sync.py`。 回归测试是 `scripts/test_*.py` 各自独立的 `unittest` 脚本，改动某模块时运行同名测试（`python3 scripts/test_<名>.py`）；全量 `python3 -m unittest discover -s scripts -p 'test_*.py'` 在交互会话 15 分钟内跑不完，须经 sbatch。
 
 可重建的大型派生产物不入库。`python3 scripts/clean_derived_artifacts.py closed` 预览已结案实验的清理清单；确认无相关运行作业后加 `--apply`。保留原始证据、配置、摘要与生产输入。
