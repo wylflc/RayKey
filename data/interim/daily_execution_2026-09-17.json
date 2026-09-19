@@ -160,7 +160,7 @@
       "rule": "buy",
       "shares": 17100,
       "price": "7.68",
-      "amount_cny": "131424.00",
+      "amount_cny": "131328.00",
       "remaining_shares": 97400,
       "cost_basis_after": "7.7769",
       "valuation": {
@@ -181,8 +181,33 @@
       }
     }
   ],
-  "net_sale_cny": "928.00",
+  "net_sale_cny": "1024.00",
   "debt_reduction_cny": "750.35",
-  "unattributed_difference_cny": "177.65",
-  "execution_deviation": "牧原卖出股数与09-16计划一致；中材买入比计划10700股多6400股，旧保证金加实际卖出款仅83727.90元，买入额高出47696.10元，执行时券商实时可用资金未回报；按实际成交登记。"
+  "unattributed_difference_cny": "273.65",
+  "execution_deviation": "牧原卖出股数与09-16计划一致；中材买入比计划10700股多6400股，旧保证金加实际卖出款仅83727.90元，买入额高出47600.10元，执行时券商实时可用资金未回报；按实际成交登记。",
+  "corrections": [
+    {
+      "corrected_at_utc": "2026-09-19T16:21:37.077774+00:00",
+      "issue": "OI-190",
+      "fields": {
+        "trades[600970].amount_cny": {
+          "original": "131424.00",
+          "corrected": "131328.00"
+        },
+        "net_sale_cny": {
+          "original": "928.00",
+          "corrected": "1024.00"
+        },
+        "unattributed_difference_cny": {
+          "original": "177.65",
+          "corrected": "273.65"
+        },
+        "execution_deviation.excess_over_old_budget_cny": {
+          "original": "47696.10",
+          "corrected": "47600.10"
+        }
+      },
+      "reason": "17100股×7.68元=131328.00元，原派生金额乘算错误；股数、成交价、持仓、成本、止损锚、冷却凭据与实报资产负债不变。原日记录见Git。"
+    }
+  ]
 }
