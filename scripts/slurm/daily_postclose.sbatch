@@ -13,10 +13,17 @@ cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 : "${SCAN_DATE:?Set SCAN_DATE to the signal date}"
 : "${SCAN_STAGE:?Set SCAN_STAGE to evidence or scan}"
 
+refresh_market_inputs() {
+  # §9.3.1 股债总仓位上限读 equity_bond_csi300.csv（观测过期 45 天扫描报错）；银行/保险股利折现与 --rf 缺省读 cost_of_equity_inputs.csv
+  python3 scripts/fetch_equity_bond_inputs.py --refresh
+  python3 scripts/fetch_cost_of_equity_inputs.py
+}
+
 case "$SCAN_STAGE" in
   evidence)
     : "${SCAN_SINCE:?Set SCAN_SINCE to the previous successful scan date}"
     : "${SCAN_REPORT_DATE:?Set SCAN_REPORT_DATE to the latest reporting period}"
+    refresh_market_inputs
     python3 scripts/fetch_a_share_report_disclosures.py --signal-date "$SCAN_DATE" --report-date "$SCAN_REPORT_DATE" --output data/interim/a_share_report_disclosures.csv
     python3 scripts/fetch_a_share_earnings_forecasts.py --signal-date "$SCAN_DATE" --report-date "$SCAN_REPORT_DATE" --output data/interim/a_share_earnings_forecasts.csv
     python3 scripts/fetch_ohlcv_history.py --signal-date "$SCAN_DATE" --actions-only
@@ -67,5 +74,17 @@ PY
       --hold-bands data/processed/a_share_pool_model_bands_hold.csv \
       --nav "$SCAN_NAV" --funds "$SCAN_FUNDS" --workers 16
     ;;
-  *) printf '%s\n' 'SCAN_STAGE must be evidence or scan' >&2; exit 2 ;;
+  preview)
+    # 行情预览（§8.2 不给 --nav 只写 daily_quote_preview_<日期>.csv，不发布执行计划）
+    refresh_market_inputs
+    python3 scripts/screen_daily_volume_price_signals.py --as-of "$SCAN_DATE" --workers 16 \
+      --output-csv "data/interim/daily_quote_preview_${SCAN_DATE}.csv"
+    ;;
+  events)
+    # 只重取公告、公司行动与市场背景并重做同日证据凭据（evidence 阶段的子集，用于截止时间后的补取）
+    : "${SCAN_SINCE:?Set SCAN_SINCE to the previous successful scan date}"
+    python3 scripts/fetch_daily_market_evidence.py --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
+    python3 scripts/daily_execution_guard.py evidence --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
+    ;;
+  *) printf '%s\n' 'SCAN_STAGE must be evidence, preview, events or scan' >&2; exit 2 ;;
 esac

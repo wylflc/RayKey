@@ -37,6 +37,8 @@ echo "=== [$(date +%H:%M:%S)] 第 1 步：rf/ERP 序列 ==="
 python3 scripts/fetch_cost_of_equity_inputs.py
 echo "=== [$(date +%H:%M:%S)] 第 1 步：股本变动事件 ==="
 python3 scripts/fetch_a_share_share_changes.py --signal-date "$SIGNAL_DATE"
+echo "=== [$(date +%H:%M:%S)] 第 1 步：股债利差输入 ==="
+python3 scripts/fetch_equity_bond_inputs.py --refresh
 
 if [ -s data/interim/statement_coverage_gaps.csv ] && [ "$(wc -l < data/interim/statement_coverage_gaps.csv)" -gt 1 ]; then
   echo "三大报表覆盖缺口非空（data/interim/statement_coverage_gaps.csv），按 §6.7 先补取再继续" >&2
