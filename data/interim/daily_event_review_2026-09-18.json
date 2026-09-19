@@ -331,11 +331,27 @@
       "pages": 6,
       "art_code": "AN202609161829468716",
       "carried_forward_from": "data/interim/daily_event_review_2026-09-17.json"
+    },
+    {
+      "art_code": "AN202609181829623302",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609181829623302_1.pdf",
+      "pdf_sha256": "9e4e4e267a9f05a75f97811318da1f4252f2279cedeea83266073bf745aafb1d",
+      "pages": 6,
+      "retrieved_at_utc": "2026-09-19T17:50:00+00:00",
+      "security_code": "002714",
+      "notice_date": "2026-09-19",
+      "submitted_on": "2026-09-18",
+      "title": "牧原股份H股翌日披露报表（09-18 回购）",
+      "facts": "09-18回购H股65,000股，价37.00–37.58港元、加权37.3245港元，支付2,426,090港元，持作库存；库存累计1,983,900股，H股总数310,223,100股不变。",
+      "assessment": "H股库存回购未注销，不改变A股股数；牧原已于09-18清仓且不在合格集，不影响任何判定。",
+      "review_method": "PDF嵌入字体不可抽文字，改以东财公告正文接口（np-cnotice-stock）全文核验，与PDF哈希同存",
+      "reviewed_at_utc": "2026-09-19T17:55:00+00:00",
+      "added_by": "2026-09-19 证据段重跑"
     }
   ],
   "announcement_snapshot": "data/interim/daily_announcements_2026-09-18.json",
-  "announcement_title_screening_count": 132,
-  "announcement_cutoff_beijing": "2026-09-18 16:46:39",
+  "announcement_title_screening_count": 162,
+  "announcement_cutoff_beijing": "2026-09-20 01:48:16",
   "industry_review": "data/interim/daily_industry_review_2026-09-18.json",
   "valuation_review_queue_rows": 0,
   "valuation_update": "当日无估值更新；银行保险按同日已知利率例行复算，不推进财务证据日",
@@ -376,7 +392,7 @@
     "002714",
     "600970"
   ],
-  "relevant_announcement_count": 16,
+  "relevant_announcement_count": 17,
   "unreviewed_announcements": [],
   "coverage": [
     {
@@ -414,6 +430,7 @@
       "held": false,
       "eligible": false,
       "announcement_ids": [
+        "AN202609181829623302",
         "AN202609171829524303",
         "AN202609161829468716"
       ],
@@ -471,7 +488,18 @@
     }
   ],
   "limitations": [
-    "公告截至北京时间16:46:39；其后披露未覆盖，执行前复核新增事件。",
+    "公告截至北京时间2026-09-20 01:48:16（09-19 重跑重取）；其后披露未覆盖，执行前复核新增事件。",
     "行业与竞品巡检部分覆盖：氧化铝完整配对价、乙烷到岸价差、公司级空调排产、两轮车上险和全部海外项目订单未取齐。"
-  ]
+  ],
+  "rerun": {
+    "rerun_date": "2026-09-19",
+    "reason": "用户要求重跑09-18盘后扫描；证据段以同一信号日重取公告、公司行动与市场背景",
+    "announcements_before": 132,
+    "announcements_after": 162,
+    "new_pool_announcements": 30,
+    "new_in_mandatory_scope": [
+      "AN202609181829623302"
+    ],
+    "note": "30条新增池内公告逐条标题巡检，仅牧原一条进入强制范围（持仓／合格集／当日成交）；其余为非持仓池内公司的常规公告，不进估值或交易判定。市场指数与公司行动事件与原快照一致。"
+  }
 }

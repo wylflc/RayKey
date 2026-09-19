@@ -63,5 +63,104 @@
     "strategy_return_tracker --check passed",
     "audit_repository_docs: 0 errors",
     "CRLF-aware git diff --check passed (standard csv.writer CRLF preserved)"
-  ]
+  ],
+  "rerun_2026-09-19": {
+    "checked_at_utc": "2026-09-19T18:05:00+00:00",
+    "status": "passed",
+    "entry": "scripts/slurm/daily_postclose.sbatch v4.194（evidence→preview→scan，同信号日 2026-09-18）",
+    "account_inputs": {
+      "nav": "2660026.61",
+      "funds": "-51006.36",
+      "cash": "0",
+      "debt": "1852275.39"
+    },
+    "checks": [
+      "entry_plan_identical",
+      "sell_plan_identical_except_gate_margin_text",
+      "cooldown_state_identical",
+      "holdings_tracking_same_actions",
+      "publication_verify_passed",
+      "strategy_return_tracker_check_passed",
+      "audit_repository_docs_0_errors",
+      "event_review_extended_30_new_announcements",
+      "crlf_aware_git_diff_check_passed"
+    ],
+    "input_refresh_differences": {
+      "rf_10y": {
+        "before": "0.016862 (2026-09-17)",
+        "after": "0.016820 (2026-09-18)"
+      },
+      "equity_bond_spread": {
+        "before": "6.24% (obs 2026-09-17)",
+        "after": "6.20% (obs 2026-09-18, PE_TTM 12.68)"
+      },
+      "pv_changes": {
+        "600036": [
+          "0.7560",
+          "0.7552"
+        ],
+        "601318": [
+          "0.7568",
+          "0.7560"
+        ],
+        "601838": [
+          "0.8119",
+          "0.8109"
+        ],
+        "601398": [
+          "0.9783",
+          "0.9772"
+        ],
+        "601288": [
+          "1.0258",
+          "1.0246"
+        ],
+        "601939": [
+          "1.0453",
+          "1.0441"
+        ],
+        "002142": [
+          "1.0947",
+          "1.0934"
+        ]
+      },
+      "swap_gate_margin": [
+        "0.1854",
+        "0.1864"
+      ],
+      "announcements": {
+        "before": 132,
+        "after": 162,
+        "new_in_mandatory_scope": [
+          "AN202609181829623302"
+        ]
+      }
+    },
+    "jobs": [
+      {
+        "id": 26931167,
+        "stage": "evidence",
+        "state": "COMPLETED",
+        "elapsed": "00:08:37",
+        "max_rss_kib": 78019,
+        "cpus": 16
+      },
+      {
+        "id": 26931168,
+        "stage": "preview",
+        "state": "COMPLETED",
+        "elapsed": "00:01:49",
+        "max_rss_kib": 216310,
+        "cpus": 16
+      },
+      {
+        "id": 26932233,
+        "stage": "scan",
+        "state": "COMPLETED",
+        "elapsed": "00:00:52",
+        "max_rss_kib": 133915,
+        "cpus": 16
+      }
+    ]
+  }
 }
