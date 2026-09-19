@@ -209,3 +209,4 @@ security_code,security_name,worth_from,worth_to,rule,reason
 603596,伯特利,2026-08-30,9999,§5.5,原入池记录补接；attention_triage:2026-08-30:603596:upgrade；证据 data/experiments/exp_oi165_panel/entry_evidence.json
 603855,华荣股份,2026-08-30,9999,§5.5,原入池记录补接；attention_triage:2026-08-30:603855:upgrade；证据 data/experiments/exp_oi165_panel/entry_evidence.json
 605117,德业股份,2026-08-23,9999,§5.5,原入池记录补接；quality_screen:2026-08-23:605117:named；证据 data/experiments/exp_oi165_panel/entry_evidence.json
+001872,招商港口,0,0,规则9,与000022深赤湾A为同一上市主体(judgment_log 2002/2004两码同判、财务逐位相同、2018-12-20前日线同价);主体判定由000022承载(2004-2015退出);001872自2018-12-26启用时主体已退出且未另行判定;按judgment_log要求装配去重(OI-192)

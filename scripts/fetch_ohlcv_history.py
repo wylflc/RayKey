@@ -46,6 +46,8 @@ import json
 import time
 import urllib.parse
 import urllib.request
+
+import code_succession
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -313,6 +315,9 @@ def main() -> int:
                   # 本批重取到分红的代码：旧预案行整体清掉，由本次取到的行接替（已实施→带除权日；作废→消失）
                   and not (a["security_code"] in refetched and not (a.get("ex_dividend_date") or ""))}
         merged.update({action_key(a): a for a in actions})
+        # OI-192：换码主体的事件只在新码名下可取，按参考表复制到旧码（唯一实现 code_succession）
+        expanded, _added = code_succession.expand_actions(list(merged.values()))
+        merged = {action_key(a): a for a in expanded}
         with actions_path.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=ACTION_FIELDS)
             writer.writeheader()

@@ -35,6 +35,8 @@ from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import code_succession
+
 ROOT = Path(__file__).resolve().parents[1]
 PIT = ROOT / "data/processed/pit_attention"
 V5 = PIT / "panel_moat_bank_v5.csv"
@@ -151,6 +153,11 @@ def main() -> int:
                   if r["effective_from"] <= TODAY <= (r["effective_to"] or "9999-12-31")}
         return len(rows_out), active
 
+    # OI-192：同一主体换码的两个代码不得跨越换码日在册（规则见工作流 §8.3；违反须先改判定源）
+    assembled = [r for rows in final_nonbank.values() for r in rows] + [r for rows in banks.values() for r in rows]
+    defects = code_succession.check_panel(assembled)
+    if defects:
+        raise SystemExit("代码变更区间冲突，先改判定源再装配：" + "；".join(defects))
     n_b, act_b = write(PIT / "panel_moat_bank_v6b.csv", set(banks))
     n_a, act_a = write(PIT / "panel_moat_bank_v6a.csv", set(banks) & RULE11_BANKS)
 

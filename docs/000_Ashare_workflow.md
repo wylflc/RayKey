@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.192
+# A股选股-估值-量价操作流程 v4.193
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -558,6 +558,8 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 
 均线、跨日价格和成交量折算须遍历完整除权事件日历，纳入两次报价之间的全部事件，不能要求除权日存在该股票报价。历史价到T日的折算窗口为 `(历史报价日, T]`，T之后事件不影响截至T的结果；停牌日不新增均线样本。相邻报价的含权收益按期间事件先后承接现金、送转和配股，停牌期现金在下一可得收盘价再投；不能在无报价日虚构再投价格。实现与边界核验见 `backtest_valuation_strategy.exright_affine`、`quote_action_factors` 和 `test_suspended_actions.py`。
 
+证券代码变更（同一上市主体换码）登记在 `data/reference/a_share_code_succession.csv`（旧码、新码、旧码末个交易日、新码首个交易日），唯一实现 `scripts/code_succession.py`：除权事件取数每次落盘前把新码名下不晚于旧码末个交易日的事件复制到旧码，旧码已有行不覆盖（`--apply-actions` 离线补写既有事件表）；时点面板装配校验旧码区间 `effective_to` 不晚于旧码末个交易日、新码区间 `effective_from` 不早于新码首个交易日，违反即装配失败，须先在判定源对同一主体给出一致处置。新增换码对后按 §6.7 第 2～3 步以 `--codes` 重建旧码两侧逐日状态并拼回，再按 §12.1 轨道 A 复核 `BASE`。
+
 ### 8.4 故障与缺口
 
 `--since auto` 自动检出上次扫描日（读上一份 `daily_buy_candidates.csv` 的 `trade_date`），报告缺口区间的交易日数、区间涨跌与最大放量倍数。扫描为零行或行情失败达到一半时非零退出，当日结果不可用；低于一半按停牌或个别数据缺失逐行标注。扫描写入决策日志的只有结论行：取数异常（`data_error`／`insufficient_price_history`）与 §7.5 复核冻结（`review_frozen`）；正常行情行不写。
@@ -853,7 +855,7 @@ python3 scripts/record_cooldown_execution.py \
 11. 采纳候选报 `scripts/experimental/delta_attribution.py` 的前三只贡献占比（按 trades `contrib` 列，与第 3 款同一把尺）；超过 100% 者不作采纳依据。
 12. 引用正读数时同报本族已试臂数，按 `data/backtest/scan_arms_index.csv` 的臂名计（`clean_derived_artifacts.py` 归并后自动重建）；当前逐路径读数取 `data/backtest/scan_summaries.csv`。
 
-历史面板 `effective_from` 与 `effective_to` 均为有效期边界，结束日包含在内。禁止把区间起点当成完整快照，也禁止手工修改面板 CSV；名单变化先改判定源，再运行装配脚本。
+历史面板 `effective_from` 与 `effective_to` 均为有效期边界，结束日包含在内。禁止把区间起点当成完整快照，也禁止手工修改面板 CSV；名单变化先改判定源，再运行装配脚本。换码主体的双代码区间约束见 §8.3。
 
 换估值口径或换宇宙做 A/B 时，使用 `scripts/experimental/align_buy_line.py` 把买入线重解到同一在册合格面，保留四位小数。**对齐容差**：先在新口径逐日状态上计算原买入线的下侧合格面，它与在册合格面之差的绝对值 < 0.2pp 时保留原线（脚本 `--tolerance-pp 0.2` 缺省判定并打印两侧合格面），在册合格面不随之改写、仍取上次实际重解时的值，避免多次容差内漂移累积；达到或超过容差才取对齐解并重登在册合格面。换仓边际按 0.01 一档重新扫描，不随买入线缩放。
 

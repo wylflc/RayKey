@@ -67,6 +67,34 @@ class MoatPanelDatesTest(unittest.TestCase):
             self.assertEqual([r["effective_from"] for r in restored], ["2023-04-30", "2026-09-07"])
             self.assertEqual([r["screen_year"] for r in restored], ["2023", "2026"])
 
+    def test_succession_conflict_fails_before_writing(self):
+        import code_succession
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            v5, verdicts, pool = root / "base.csv", root / "verdicts.csv", root / "pool.csv"
+            v5.write_text("effective_from,effective_to,screen_year,security_code,security_name\n"
+                          "2009-04-30,,2009,001872,招商港口\n2005-04-30,2016-04-30,2005,000022,深赤湾A\n")
+            verdicts.write_text("security_code,security_name,worth_from,worth_to,rule,reason\n")
+            pool.write_text("security_code,security_name,market_type\n")
+            pair = {"old_code": "000022", "old_name": "深赤湾A", "new_code": "001872", "new_name": "招商港口",
+                    "last_old_trading_date": "2018-12-20", "first_new_trading_date": "2018-12-26", "source": "", "note": ""}
+            with patch.multiple(panel, PIT=root, V5=v5, VERDICTS=verdicts, POOL=pool), \
+                    patch.object(code_succession, "load_succession", return_value=[pair]), \
+                    patch("sys.argv", ["build_moat_panel.py", "--today", "2026-09-19"]), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaises(SystemExit) as ctx:
+                    panel.main()
+            self.assertIn("001872", str(ctx.exception))
+            self.assertFalse((root / "panel_moat_bank_v6b.csv").exists())
+            verdicts.write_text("security_code,security_name,worth_from,worth_to,rule,reason\n001872,招商港口,0,0,r,dedup\n")
+            with patch.multiple(panel, PIT=root, V5=v5, VERDICTS=verdicts, POOL=pool), \
+                    patch.object(code_succession, "load_succession", return_value=[pair]), \
+                    patch("sys.argv", ["build_moat_panel.py", "--today", "2026-09-19"]), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(panel.main(), 0)
+            with (root / "panel_moat_bank_v6b.csv").open() as f:
+                self.assertEqual([r["security_code"] for r in csv.DictReader(f)], ["000022"])
+
 
 if __name__ == "__main__":
     unittest.main()

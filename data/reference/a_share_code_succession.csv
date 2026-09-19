@@ -1,0 +1,2 @@
+old_code,old_name,new_code,new_name,last_old_trading_date,first_new_trading_date,source,note
+000022,深赤湾A,001872,招商港口,2018-12-20,2018-12-26,data/raw/ohlcv/000022.csv 末行与 data/raw/ohlcv/001872.csv 首个独有交易日；判定源 data/processed/pit_attention/judgment_log.csv 2002/2004 两码同判,同一上市主体换码：2018-12-20 前两码日线同价（5872 个重叠交易日仅 5 日供应商差异）；东财分红接口按旧码查询为空，事件全部挂在新码名下

@@ -179,3 +179,9 @@ data/experiments/exp_oi180_189_20260914/daily/
 data/experiments/exp_oi180_189_20260914/ledger_*.csv
 **/.daily_publish_*/
 data/processed/daily_execution_publication.lock
+data/experiments/exp_code_succession_20260919/old_inputs/*.csv
+data/experiments/exp_code_succession_20260919/cache/
+data/experiments/exp_code_succession_20260919/nav/
+data/experiments/exp_code_succession_20260919/stats/
+data/experiments/exp_code_succession_20260919/daily/
+data/experiments/exp_code_succession_20260919/errors/
