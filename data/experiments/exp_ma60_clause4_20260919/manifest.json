@@ -1,0 +1,188 @@
+{
+  "started_beijing": "2026-09-19T16:44:13.116512+08:00",
+  "job_id": "26921933",
+  "base": "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 --corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 --swap --swap-partial --sell-trend-ma 20 --lot-size 100 --lot-ratio-cooldown --lot-cooldown-start confirmed --execution-consistency signal --exec-delay 1 --exec-price close --fee-preset user --no-artifacts --capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 --maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay --gain-sell 1.10 --gain-sell-mode ungated --swap-gain-once --swap-source-block -1 --width -0.0454 --swap-margin 0.15 --stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma60_stop --stop-basis exec --residual-clear lot --position-cap 0.6 --net-same-day --fill-missing skip --dividend-tax --swap-repeat skip --addon-trend ma-only --swap-require-weak --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --equity-bond-lower 0.3 --equity-bond-restore-above --equity-bond-release-threshold 0.035 --daily-states data/processed/a_share_daily_states_adopted.csv --hold-states data/processed/a_share_daily_states_hold.csv --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv",
+  "starts": [
+    "2009-11-01",
+    "2010-05-01",
+    "2010-11-01",
+    "2011-05-01",
+    "2011-11-01",
+    "2012-05-01",
+    "2012-11-01",
+    "2013-05-01",
+    "2013-11-01",
+    "2014-05-01",
+    "2014-11-01",
+    "2015-05-01",
+    "2015-11-01",
+    "2016-05-01"
+  ],
+  "metric": "m3",
+  "inputs": {
+    "data/processed/pit_attention/panel_moat_bank_v6b.csv": {
+      "bytes": 511110,
+      "sha256": "eaf5475f23eebd6100f34513668a87005cfbf4492d03012a6e16d92de4a57eac"
+    },
+    "data/processed/a_share_daily_states_adopted.csv": {
+      "bytes": 2113089648,
+      "sha256": "fa4c823ea4dad7f6d1c12439a50dbd98a4fd093df342208dcbff4ad25ab546e2"
+    },
+    "data/processed/a_share_daily_states_hold.csv": {
+      "bytes": 2190564615,
+      "sha256": "11a7df6eec2bba106aea09951e06e641ffe6588e6c553cf633eda5a1c04fdb21"
+    },
+    "data/raw/corporate_actions/a_share_corporate_actions.csv": {
+      "bytes": 5828458,
+      "sha256": "787dafc7be4a69def72215c77fc31fd0a227c2d2b4dbd912bee909836788c3e0"
+    },
+    "data/reference/equity_bond_csi300.csv": {
+      "bytes": 35310,
+      "sha256": "0d17bb58722500a677a499032ce6dde932f4d443e6a6d913c81732a6964b5952"
+    },
+    "data/reference/cost_of_equity_inputs.csv": {
+      "bytes": 81264,
+      "sha256": "b135f65ad58d74d22c0c121ddf062e2894a15f360b8dc4c5175cd867e10dfd59"
+    },
+    "scripts/backtest_valuation_strategy.py": {
+      "bytes": 354383,
+      "sha256": "040018a8eef3365d54206858c5b218b06b6bc566d7634ae4b918434071cbb865"
+    },
+    "scripts/lot_cooldown.py": {
+      "bytes": 9908,
+      "sha256": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd"
+    },
+    "scripts/sweep_backtest_configs.py": {
+      "bytes": 66464,
+      "sha256": "17ee4c31eac6d6ccf378259a74b676a89696beb3c42ecf48792f43d5de9bb1ac"
+    },
+    "data/experiments/exp_ma60_clause4_20260919/engine.py": {
+      "bytes": 2643,
+      "sha256": "1bebb6aef371486a09b1f501251a0214b6c27759b1684a46393f4f4503dd4e53"
+    },
+    "data/experiments/exp_ma60_clause4_20260919/run.py": {
+      "bytes": 7129,
+      "sha256": "2b8a40094327314f2e1f9edaf155757059ad7d00f954733978c99ad6ade447f6"
+    },
+    "data/experiments/exp_ma60_clause4_20260919/slope.py": {
+      "bytes": 2421,
+      "sha256": "bf28200768920c03c4c63b854cefa8904aa5caae884124ac76fdca8141be721c"
+    },
+    "data/experiments/exp_ma60_clause4_20260919/preregister.md": {
+      "bytes": 1736,
+      "sha256": "cb3532301bd602a7212c0fc3916aa5c5545c1c5b05c159a85535c0dea7acd696"
+    },
+    "data/experiments/exp_ma60_clause4_20260919/grid.json": {
+      "bytes": 1290,
+      "sha256": "bc704c3d378b188e3a99c2dcc721ef2a570294c465e2b08104511e4934d348d1"
+    }
+  },
+  "grid": [
+    {
+      "arm": "BASE",
+      "kind": "control",
+      "lag": 0,
+      "windows": [],
+      "margin": 0.15
+    },
+    {
+      "arm": "MA60_1M10",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.1
+    },
+    {
+      "arm": "MA60_1M11",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.11
+    },
+    {
+      "arm": "MA60_1M12",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.12
+    },
+    {
+      "arm": "MA60_1M13",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.13
+    },
+    {
+      "arm": "MA60_1M14",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.14
+    },
+    {
+      "arm": "MA60_1M15",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.15
+    },
+    {
+      "arm": "MA60_1M16",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.16
+    },
+    {
+      "arm": "MA60_1M17",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.17
+    },
+    {
+      "arm": "MA60_1M18",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.18
+    },
+    {
+      "arm": "MA60_1M19",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.19
+    },
+    {
+      "arm": "MA60_1M20",
+      "kind": "margin_scan",
+      "lag": 1,
+      "windows": [
+        60
+      ],
+      "margin": 0.2
+    }
+  ]
+}

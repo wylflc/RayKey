@@ -1,0 +1,64 @@
+{
+  "arms": 12,
+  "complete_pairing": true,
+  "zero_negative_cash": true,
+  "rows": 630,
+  "executed_paths": 491,
+  "plateau_margins_within_0p15pp_of_best": [
+    0.14
+  ],
+  "best_margin": 0.14,
+  "clause2_pass": [],
+  "clause2_user_ruling": [
+    "MA60_1M13"
+  ],
+  "U_excellent": [],
+  "dose_same_sign": {
+    "P_pp": false,
+    "CAGR_pp": true
+  },
+  "attribution_M15_anchor": {
+    "total_delta": 0.3849236367413762,
+    "top3": [
+      [
+        "002128",
+        -0.35833847030898347
+      ],
+      [
+        "601225",
+        0.20289678293059094
+      ],
+      [
+        "600660",
+        -0.20073430659688873
+      ]
+    ],
+    "top3_net_share": -0.9253159847250171,
+    "top3_momentum_share": 0.3098049244030615,
+    "codes_moved": 72
+  },
+  "family": {
+    "registered_before": [
+      "MSBOTH1",
+      "MSBOTH2",
+      "MSBOTH3",
+      "MSMA20_1",
+      "MSMA60_1"
+    ],
+    "new_this_batch": [
+      "MSMA60_1M10",
+      "MSMA60_1M11",
+      "MSMA60_1M12",
+      "MSMA60_1M13",
+      "MSMA60_1M14",
+      "MSMA60_1M15",
+      "MSMA60_1M16",
+      "MSMA60_1M17",
+      "MSMA60_1M18",
+      "MSMA60_1M19",
+      "MSMA60_1M20"
+    ],
+    "total_after_registration": 16
+  },
+  "production_parameters_changed": false
+}

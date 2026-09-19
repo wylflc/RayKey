@@ -1,0 +1,119 @@
+{
+  "rows": 308,
+  "candidates": 11,
+  "prefix": "MS4C20260919_MS",
+  "arms": [
+    {
+      "臂名": "MSMA60_1M10",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    },
+    {
+      "臂名": "MSMA60_1M11",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    },
+    {
+      "臂名": "MSMA60_1M12",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    },
+    {
+      "臂名": "MSMA60_1M13",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    },
+    {
+      "臂名": "MSMA60_1M14",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    },
+    {
+      "臂名": "MSMA60_1M15",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    },
+    {
+      "臂名": "MSMA60_1M16",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    },
+    {
+      "臂名": "MSMA60_1M17",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    },
+    {
+      "臂名": "MSMA60_1M18",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    },
+    {
+      "臂名": "MSMA60_1M19",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    },
+    {
+      "臂名": "MSMA60_1M20",
+      "台账": "current",
+      "计量版本": "m3",
+      "批次": "MS4C20260919",
+      "起点数": 14,
+      "行数": 28,
+      "剔除赢家行数": 14,
+      "策略示例": "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3"
+    }
+  ],
+  "entry_point": "clean_derived_artifacts.write_ledger",
+  "production_parameters_changed": false
+}

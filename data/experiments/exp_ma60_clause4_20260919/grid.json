@@ -1,0 +1,108 @@
+[
+ {
+  "arm": "BASE",
+  "kind": "control",
+  "lag": 0,
+  "windows": [],
+  "margin": 0.15
+ },
+ {
+  "arm": "MA60_1M10",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.1
+ },
+ {
+  "arm": "MA60_1M11",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.11
+ },
+ {
+  "arm": "MA60_1M12",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.12
+ },
+ {
+  "arm": "MA60_1M13",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.13
+ },
+ {
+  "arm": "MA60_1M14",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.14
+ },
+ {
+  "arm": "MA60_1M15",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.15
+ },
+ {
+  "arm": "MA60_1M16",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.16
+ },
+ {
+  "arm": "MA60_1M17",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.17
+ },
+ {
+  "arm": "MA60_1M18",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.18
+ },
+ {
+  "arm": "MA60_1M19",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.19
+ },
+ {
+  "arm": "MA60_1M20",
+  "kind": "margin_scan",
+  "lag": 1,
+  "windows": [
+   60
+  ],
+  "margin": 0.2
+ }
+]
