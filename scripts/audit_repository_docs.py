@@ -18,6 +18,28 @@ def read_rows(name: str) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+# OI-194：工作流程点名的脚本所读写的 data/processed 产物必须在工作流程出现（按文件名或目录名匹配）。
+# 研究专用输入不在工作流程定义，落点在回测日志与报告：美股移植（OI-159）与宇宙对照臂 U6A。
+RESEARCH_ONLY_PRODUCTS = re.compile(r"^(us_|pit_attention/panel_sp\d+_us\.csv$|pit_attention/panel_moat_bank_v6a\.csv$)")
+
+
+def audit_processed_products(workflow: str) -> list[str]:
+    errors: list[str] = []
+    named = set(re.findall(r"scripts/([A-Za-z0-9_]+\.py)", workflow)) | set(re.findall(r"`([A-Za-z0-9_]+\.py)`", workflow))
+    for script in sorted(named):
+        path = ROOT / "scripts" / script
+        if not path.is_file():
+            continue
+        for rel in sorted(set(re.findall(r"data/processed/([A-Za-z0-9_./-]+)", path.read_text(encoding="utf-8", errors="ignore")))):
+            if "{" in rel or "<" in rel or RESEARCH_ONLY_PRODUCTS.match(rel):
+                continue
+            parts = rel.rstrip("/").split("/")
+            if parts[-1] in workflow or (len(parts) > 1 and f"data/processed/{parts[0]}/" in workflow):
+                continue
+            errors.append(f"product not defined in workflow: data/processed/{rel} (used by scripts/{script})")
+    return errors
+
+
 def audit() -> tuple[list[str], dict[str, int]]:
     errors: list[str] = []
     texts = {name: (ROOT / name).read_text() for name in ACTIVE}
@@ -44,6 +66,7 @@ def audit() -> tuple[list[str], dict[str, int]]:
     for target in set(re.findall(r"scripts/[A-Za-z0-9_./-]+\.(?:py|sbatch)", workflow)):
         if not (ROOT / target).is_file():
             errors.append(f"workflow script missing: {target}")
+    errors.extend(audit_processed_products(workflow))
     for name, text in texts.items():
         for target in re.findall(r"\[[^\]]*\]\(([^)]+)\)", text):
             if "://" in target or target.startswith("#"):

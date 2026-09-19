@@ -159,12 +159,18 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`（收盘 ≥ 均价 × {1 + daily_scan.SEC93_GAIN_SELL:.2f}），减一档，不看走势", workflow)
         self.assertIn(f"至少低 `{daily_scan.SEC93_SWAP_MARGIN:.2f}`", workflow)
-        self.assertIn("授信 = 净资产 × 66.6%，不设金额上限", workflow)
+        # OI-193：授信比例只在 §10.2 成文，§9.3.1.2 引用；回测 BASE 同值
+        self.assertIn("授信额度 = 当日净资产 `N` × 66.6%，不设金额上限", workflow)
+        self.assertEqual(workflow.count("66.6%"), 2)   # §10.2 正文与其可用资金公式，别处只引用
+        self.assertIn("--credit-ratio 0.666", sweep.BASE)
         self.assertIn(f"| 单票机械上限 | 单票市值 ÷ 当日净资产 `N` ≥ {daily_scan.SEC93_POSITION_CAP:.0%} 时不再加仓", workflow)
         self.assertIn(f"| 股债总仓位上限 | 沪深 300 股债利差（`1/PE_TTM − 10 年国债收益率`，信号日已知的最新观测）`< {daily_scan.SEC93_EQUITY_BOND_THRESHOLD:.0%}` 时触发总仓位（持仓市值 ÷ 当日净资产 `N`）上限 `{daily_scan.SEC93_EQUITY_BOND_CAP:.0%}`", workflow)
         self.assertIn(f"触发后须 `≥ {daily_scan.SEC93_EQUITY_BOND_RELEASE_THRESHOLD:.1%}` 才解除", workflow)
         self.assertIn("不随扫描重启或回测起点重置", workflow)
-        self.assertIn("--equity-bond-release-threshold 0.035", workflow)
+        # OI-193：股债三个数值只在 §9.3.1 成文，§12.1 只点名参数；BASE 字面值与 SEC93 常量同值
+        self.assertIn("`--equity-bond-release-threshold`（恢复线），取值只在 §9.3.1 股债总仓位上限行", workflow)
+        self.assertNotIn("--equity-bond-release-threshold 0.035", workflow)
+        self.assertIn(f"--equity-bond-threshold {daily_scan.SEC93_EQUITY_BOND_THRESHOLD} --equity-bond-lower {daily_scan.SEC93_EQUITY_BOND_CAP} --equity-bond-restore-above --equity-bond-release-threshold {daily_scan.SEC93_EQUITY_BOND_RELEASE_THRESHOLD}", sweep.BASE)
         # v4.68/v4.69（OI-092）：§9.3 成文与回测实现同口径的关键句
         self.assertIn("| 新建仓走势 | T 日 `收盘 > MA20 > MA60` |", workflow)
         self.assertIn("现价跌破当日生效线即**当日**整仓清空", workflow)

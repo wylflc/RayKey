@@ -30,10 +30,10 @@
               两者都用 ROE/BVPS/派息率而非只用 DPS，能区分「DPS 相同而 ROE 18% vs 7%」的两家银行。
 
 用法：
-    python3 rebuild_bank_bands.py <模式> <输出文件> [逐日状态文件]
+    python3 rebuild_bank_bands.py <模式> <输出文件> <逐日状态文件> <估值带文件>
     模式 = fixed:0.15 | peer | pbhist | divspread:0.02 | ri:0.12 | ri:peer | ddm:0.12 | ddm:peer | ddm:peer:13（第三段 = fade 年数）
 
-第三个可选参数用于把同一口径施加到**别的逐日状态文件**上（例如护城河池与银行的并集）；
+第三个参数是要施加同一口径的逐日状态文件（例如护城河池与银行的并集）；
 银行/保险名单按全市场证券名单（`data/raw/a_share_securities.csv`）用 `divspread_names` 判定，
 基本面序列取自第四个参数给的估值带——与池子无关。
 """
@@ -41,12 +41,11 @@ import csv, sys, os, bisect, collections, statistics
 from pathlib import Path
 ROOT = str(Path(__file__).resolve().parents[1])
 SECURITIES = f"{ROOT}/data/raw/a_share_securities.csv"
-BANDS = f"{ROOT}/data/processed/a_share_historical_valuation_bands_pit116.csv"
-DAILY = f"{ROOT}/data/processed/a_share_historical_valuation_daily_pit116.csv"
-if len(sys.argv) > 3:
-    DAILY = sys.argv[3]
-if len(sys.argv) > 4:
-    BANDS = sys.argv[4]
+# 四个位置参数全部必填（§6.7 第 3 步只以显式路径调用；旧缺省 *_pit116.csv 已于 §12.41 清理中删除，不再保留缺省）。
+if len(sys.argv) < 5:
+    sys.exit("用法：rebuild_bank_bands.py <模式> <输出> <逐日状态> <估值带>")
+DAILY = sys.argv[3]
+BANDS = sys.argv[4]
 # **两个缺省输入已于 2026-08-14 的 §12.41 清理中被删**（`*_pit116.csv` 命中删除模式）。
 # 缺了 BANDS 时 `fundamentals()` 对每一行都返回 None，于是**每一条银行行都被静默丢弃**——
 # 银行占面板 41/211，丢光了读数照样跑得出来，正是本仓库反复踩的那类静默失效（§13 第 3 条）。
@@ -58,8 +57,8 @@ for _p, _what in ((DAILY, "逐日状态"), (BANDS, "估值带")):
 WINDOW_DAYS = 1095          # 滚动窗口三年
 G_CAP = 0.03                # 终值增长上限，与主模型一致
 
-mode = sys.argv[1] if len(sys.argv) > 1 else "peer"
-OUT = sys.argv[2] if len(sys.argv) > 2 else f"{ROOT}/data/processed/vd_pit116_bkpeer.csv"
+mode = sys.argv[1]
+OUT = sys.argv[2]
 
 name = {}
 for r in csv.DictReader(open(SECURITIES, encoding="utf-8-sig")):

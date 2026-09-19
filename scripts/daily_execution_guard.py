@@ -254,6 +254,18 @@ def finish_evidence(as_of, since):
                      inputs={str(p.resolve()): digest(p) for p in paths}))
 
 
+def verify_strategy_columns(as_of, snapshot=None):
+    """§9.1 第 5 步／§10.3：信号日账户快照行存在，且到信号日为止的策略列已登记并与重算一致。"""
+    import strategy_return_tracker as tracker
+    path = Path(snapshot) if snapshot else tracker.SNAPSHOT
+    _, rows = tracker.load(path)
+    if not any(row.get('as_of') == as_of for row in rows):
+        raise ValueError(f'账户快照缺少 {as_of} 行（§10.3）')
+    problems = tracker.check_rows(rows, upto=as_of, require_filled=True)
+    if problems:
+        raise ValueError('§10.3 策略列未登记或与重算不一致：' + '；'.join(problems[:5]))
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
@@ -264,7 +276,8 @@ def main():
     args = parser.parse_args()
     if args.action == 'verify':
         verify_publication(args.publication, args.as_of)
-        print('执行批次日期与产物摘要均通过')
+        verify_strategy_columns(args.as_of)
+        print('执行批次日期、产物摘要与 §10.3 策略列均通过')
     else:
         if not args.since:
             parser.error('evidence requires --since (previous successful scan date)')

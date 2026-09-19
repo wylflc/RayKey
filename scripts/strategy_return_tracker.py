@@ -109,6 +109,34 @@ def load(path: Path) -> tuple[list[str], list[dict]]:
     return fields, rows
 
 
+def check_rows(rows: list[dict], upto: str | None = None, require_filled: bool = False) -> list[str]:
+    """核对已登记的策略列与重算值；返回不一致描述（空列表即通过）。
+
+    upto 给定时只核对 as_of ≤ upto 的行；require_filled 时空列也算不一致（§9.1 verify 用：漏跑 --write 即失败）。
+    数值列允许 0.005 的登记舍入差。"""
+    order = sorted(range(len(rows)), key=lambda i: rows[i]["as_of"])
+    computed = compute([rows[i] for i in order])
+    problems: list[str] = []
+    for i, values in zip(order, computed):
+        row = rows[i]
+        if values is None or (upto and row["as_of"] > upto):
+            continue
+        for col in STRATEGY_COLUMNS:
+            old = (row.get(col) or "").strip()
+            if not old:
+                if require_filled:
+                    problems.append(f"{row['as_of']} {col}: 未登记（先运行 strategy_return_tracker.py --write）")
+                continue
+            if old != values[col]:
+                try:
+                    same = abs(float(old) - float(values[col])) < 0.005 + 1e-9
+                except ValueError:
+                    same = False
+                if not same:
+                    problems.append(f"{row['as_of']} {col}: 登记 {old} → 重算 {values[col]}")
+    return problems
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="§10.3 策略收益跟踪（时间加权单位净值）")
     ap.add_argument("--snapshot", type=Path, default=SNAPSHOT)
@@ -122,22 +150,15 @@ def main() -> int:
     fields, rows = load(args.snapshot)
     order = sorted(range(len(rows)), key=lambda i: rows[i]["as_of"])
     computed = compute([rows[i] for i in order], (args.epoch, args.epoch_from) if args.epoch else None)
-    mismatches = 0
+    problems = [] if args.epoch else check_rows(rows)
+    for problem in problems:
+        print(f"  ✗ {problem}", file=sys.stderr)
+    mismatches = len(problems)
     print(f"{'as_of':<11}{'净资产':>14}{'现金流':>11}{'单位净值':>10}{'收益%':>8}{'回撤%':>8}  口径      纪元")
     for i, values in zip(order, computed):
         row = rows[i]
         if values is None:
             continue
-        for col in STRATEGY_COLUMNS:
-            old = (row.get(col) or "").strip()
-            if old and old != values[col]:
-                try:
-                    same = abs(float(old) - float(values[col])) < 0.005 + 1e-9
-                except ValueError:
-                    same = False
-                if not same:
-                    mismatches += 1
-                    print(f"  ✗ {row['as_of']} {col}: 登记 {old} → 重算 {values[col]}", file=sys.stderr)
         print(f"{row['as_of']:<11}{float(row['net_assets_cny']):>14,.2f}{_num(row.get('external_cash_flow_cny')) or 0:>11,.2f}"
               f"{values['strategy_unit_nav']:>10}{values['strategy_return_pct']:>8}{values['drawdown_from_peak_pct']:>8}"
               f"  {values['strategy_nav_basis']:<9} {values['strategy_epoch']}")

@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.194
+# A股选股-估值-量价操作流程 v4.195
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -17,7 +17,7 @@
 | 海外单票研究（港股／美股／韩股点名） | §5 → §6.8 | 逐层判断；建档、入清单、重出阅读版三步缺一不可 |
 | 修改估值、交易规则或回测参数 | §12-§13 | `sweep_backtest_configs.py` |
 
-所有可复核结论均按 §2 写入决策日志。买卖机制只认 §9.3；账户级风险只认个人投资体系 §4 的两条外生硬约束（券商授信额度、130% 强平线）。
+所有可复核结论均按 §2 写入决策日志。买卖机制只认 §9.3；账户级风险只认个人投资体系 §4 的两条外生硬约束（券商授信额度、强平线）。
 
 ## 1. 目标与边界
 
@@ -53,6 +53,13 @@
 | 每日阅读日志 | `docs/000_daily_scan_log.md` |
 | 审计日志 | `data/processed/a_share_workflow_decision_log.csv`，只追加不覆盖；核心池重建每次写一行汇总，逐票只在 `pool_layer` 变化时写行；换纪元时把旧纪元行移入 `data/archive/decision_log_<起>_to_<止>.csv`（公司分析索引同读） |
 | 财报更新队列 | `data/interim/a_share_report_update_queue.csv` |
+| 每日行情与两侧 P/V | `data/processed/daily_buy_candidates.csv`（§8.2；`--since auto` 由它检出上次扫描日） |
+| 执行计划发布凭据 | `data/processed/daily_execution_publication.json`（§9.1 第 5 步成功凭据，`daily_execution_guard.py` 发布与 `verify`）；同日证据凭据 `data/interim/daily_evidence_<日期>.json` 及公告、公司行动、市场背景快照 `data/interim/daily_{announcements,corporate_actions,market_context}_<日期>.json` |
+| 逐日估值状态与带（§6.7 第 2～4 步产物） | 候选侧 `data/processed/a_share_daily_states_adopted.csv`、`roic_bands.csv`、`roic_daily_raw.csv`；B2 `a_share_daily_states_b2.csv`、`roic_bands_b2.csv`、`roic_daily_raw_b2.csv`、`a_share_pool_model_bands_b2.csv`；持仓侧 `a_share_daily_states_hold.csv`；回测宇宙 `data/processed/pit_attention/panel_moat_bank_v6b.csv` |
+| 估值表与人工台账 | `data/processed/a_share_focus_watchlist_l1_l2_valuation.csv`（§6.7 第 5 步）；`data/processed/entity_reset_dates.csv`、`share_event_reviews.csv`（§6.5.2.4，人工登记） |
+| 海外关注清单估值 | `data/processed/overseas_watchlist_valuation.csv`（§6.8） |
+| 影子组合 | `data/processed/shadow_portfolio/since_20260828/`（§10.4 主比较；`e4/` 只作分段对照） |
+| 公司分析索引 | `data/processed/a_share_company_analysis_index.csv` 与 `a_share_company_analysis_index.md`（`build_a_share_company_analysis_index.py` 读当前与归档决策日志生成；§6.7 第 2 步的行业口径读它） |
 
 每条质量、估值、名单迁移、规则采纳或成交结论必须写入决策日志，至少包含：时间、阶段、对象、结论、简要理由、输入文件、输出文件、执行者、工作流版本和稳定 `decision_id`。纠错或替代旧结论时填写 `supersedes_decision_id`。
 
@@ -79,7 +86,7 @@ A股证券名单 ∪ 财报中出现的A股证券
   → 对 worth_attention 做 L1-L3 分层
   → §6 建立并校验生产模型带
   → §7 根据披露与事件滚动复核
-  → §8 取得收盘、MA20、MA60、P/V、252日相关性
+  → §8 取得收盘、MA20、MA60、P/V、相关性
   → §9.3 先卖后买，生成 T+1 尾盘执行清单
   → 用户成交后按 §11.5 回写
   → §11 每日跟踪持仓
@@ -290,7 +297,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 **持仓侧带** `data/processed/a_share_pool_model_bands_hold.csv`：§6.7 第 4 步由候选侧生产带与 B2 池带（§6.5.1 B2 口径）逐票取 `intrinsic_value` 较高的一行，两侧各自完成预告叠加与除权归一化后再取，`hold_source` 列标明来源；成员与候选侧生产带相同。§9.3.1 换仓来源读持仓侧带；买入线、候选排序、档案、阅读版与 §6 其余判定只读候选侧生产带。回测同构：候选侧读 `a_share_daily_states_adopted.csv`，持仓侧读 `a_share_daily_states_hold.csv`（§6.7 第 3 步逐 (代码, 日期) 取较高 V，`--hold-states`）。
 
-生产 `P/V` 与回测 `valuation_ratio` 必须逐位一致（§6.4 叠加行除外）。**晚间披露报告的当晚吸收两侧同构**：生产在公告日戳的前一晚即用新带出信号；回测逐日状态里每条带自**可得日之前的最后一个市场交易日**起生效（`build_historical_valuation_bands.py --state-effective prev_trading_day`，缺省；前一交易日按上证指数日历取，行情库在该公告前已断的陈旧序列退回可得日生效）。带的可得日按 §6.3 第 2 条封顶（`--notice-cap statutory`，缺省）。回测的均线与建仓止损锚同样与实盘同构：均线按前复权口径折回当日股本／分红基准（§8.3），除权日止损锚与持有期峰价按 §11.4 同式折算（§9.3.5）。早于 `2025-01-01` 的陈旧模型带不进任何一层：扫描器无 `P/V`、档案层判「无法估值」（§6.5.2.4），两层同一结论。
+生产 `P/V` 与回测 `valuation_ratio` 必须逐位一致（§6.4 叠加行除外）。**晚间披露报告的当晚吸收两侧同构**：生产在公告日戳的前一晚即用新带出信号；回测逐日状态里每条带自**可得日之前的最后一个市场交易日**起生效（`build_historical_valuation_bands.py --state-effective prev_trading_day`，缺省；前一交易日按上证指数日历取，行情库在该公告前已断的陈旧序列退回可得日生效）。带的可得日按 §6.3 第 2 条封顶（`--notice-cap statutory`，缺省）。回测的均线与建仓止损锚同样与实盘同构：均线按前复权口径折回当日股本／分红基准（§8.3），除权日止损锚与持有期峰价按 §11.4 同式折算（§9.3.5）。早于 §6.5.2.4 时点门槛的陈旧模型带不进任何一层：扫描器无 `P/V`、档案层判「无法估值」，两层同一结论。
 
 ##### 6.5.2.4 主体重置与无法估值
 
@@ -334,7 +341,7 @@ python3 scripts/fetch_a_share_financial_statements.py --signal-date YYYY-MM-DD
 python3 scripts/fetch_ohlcv_history.py --signal-date YYYY-MM-DD --actions-only
 python3 scripts/fetch_cost_of_equity_inputs.py   # rf/ERP 序列：银行/保险股利折现（第 3 步、扫描器 --rf 缺省、档案层）与 §6.8 的 r 读它的最新行
 python3 scripts/fetch_a_share_share_changes.py --signal-date YYYY-MM-DD   # 股本变动事件表（第 5.5 步检查⑦读它）
-python3 scripts/fetch_equity_bond_inputs.py --refresh   # 沪深 300 TTM PE 与 10 年国债：§9.3.1 股债总仓位上限读不晚于信号日的最新观测（过期 45 天报错）
+python3 scripts/fetch_equity_bond_inputs.py --refresh   # 沪深 300 TTM PE 与 10 年国债：§9.3.1 股债总仓位上限读不晚于信号日的最新观测（过期门槛见该行）
 
 # 2. 构建 ROIC 带与逐日状态
 python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
@@ -548,7 +555,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 | 收盘 | T 日收盘，不存在盘中版本 |
 | MA20、MA60 | 前复权收盘简单移动平均（回测 `adjusted_moving_averages` 同基：按除权事件折回当日口径） |
 | `P/V` | 未复权现价 ÷ §6.5 当前生产带中值；候选侧读生产带、持仓侧读持仓侧带（§6.5.2.3），两侧各列 |
-| 相关性 | 近 252 个交易日日收益率皮尔逊相关；只对合格候选、在手持仓和已选候选按需计算 |
+| 相关性 | 日收益率皮尔逊相关，窗口与最少重叠数见 §9.3.1 相关性行；只对合格候选、在手持仓和已选候选按需计算 |
 
 除上表判定所需量外不再计算或展示其他量价指标。
 
@@ -575,13 +582,13 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 3. **公司行动与输入核验**：先按 §11.4 处理持仓除权除息并登记台账；完成同日证据阶段证明，再校验队列、分层、持仓、三类表、两侧模型带及账户输入。空持仓可接受，文件缺失不可接受。队列即使为空也须有当日生成凭据；账户现金和负债须来自信号日快照或当日显式输入。
 4. **暂存行情与事件复核**：取当日行情、计算两侧 P/V，以本次行情形成的合格集和持仓做 §7.5.2 复核；复核完成前不发布执行清单，也不回写冷却。随后跟踪持仓。
 5. **校验并发布执行清单**：按 §9.3.2 先卖后买生成买卖计划；整批校验通过后发布行情、清单、冷却及含日期和文件摘要的成功凭据。缺失或摘要不符的成功凭据表示计划不可用。失败返回非零，不推进冷却；四张表即使为空也必须显示。止损行只列候选，T+1 尾盘复核后执行，其卖出款不计入当日买入预算。
-6. **输出与留痕**：回复用户，并将同一内容置顶写入 `docs/000_daily_scan_log.md`；成交后按 §11.5 回写。每月首个扫描日把上月以前的条目移入 `data/archive/daily_scan_log_<起>_to_<止>.md`。
+6. **输出与留痕**：回复用户，并将同一内容置顶写入 `docs/000_daily_scan_log.md`；成交后按 §11.5 回写。每月首个扫描日运行 `python3 scripts/archive_daily_scan_log.py --before <本月 1 日> --apply`，把信号日早于本月 1 日的条目移入 `data/archive/daily_scan_log_<起>_to_<止>.md`（并入既有归档加 `--into <文件>`）。
 
 当日无估值更新时可以省略 §6.7 重建，但必须明确写“当日无估值更新”。队列行 `as_of` 为信号日推导的证据截止，旁置 `.meta.json` 的 `as_of` 为信号日；凭据同时校验输入摘要。估值链改变事件文件后须重新完成 evidence 凭据；新增池或持仓代码未在公告取证范围内时重新取证。
 
 常设调度入口为 `scripts/slurm/daily_postclose.sbatch`，四个阶段按 `SCAN_STAGE` 选择，逐日不另建包装脚本：`evidence` 要给 `SCAN_DATE`、`SCAN_SINCE`（上次成功扫描日）、`SCAN_REPORT_DATE`，可选 `SCAN_ENTRY_CODES`（当日为零股建仓成交日的代码，写 `data/interim/daily_entry_anchors_<日期>.json` 供 §9.3.5 记锚）；`preview` 只要 `SCAN_DATE`，刷新下述两项行情输入后写 §8.2 行情预览；`events` 要给 `SCAN_DATE`、`SCAN_SINCE`，只重取公告、公司行动与市场背景并重做同日证据凭据（截止时间后补取用）；`scan` 要给 `SCAN_DATE`、`SCAN_NAV`、`SCAN_FUNDS`，现金和负债可给 `SCAN_CASH`、`SCAN_DEBT`，否则读当日账户快照。evidence 阶段依次运行 `fetch_equity_bond_inputs.py --refresh` 与 `fetch_cost_of_equity_inputs.py`（§9.3.1 股债总仓位上限与扫描器 `--rf` 缺省的输入）、§7.1 两个取数脚本、`fetch_ohlcv_history.py --actions-only`、`fetch_daily_market_evidence.py --as-of YYYY-MM-DD --since 上次扫描日`、`daily_execution_guard.py evidence --as-of YYYY-MM-DD --since 上次扫描日`、队列重建；随后完成必要的模型与公司行动回写再运行 scan。
 
-使用执行计划前运行 `python3 scripts/daily_execution_guard.py verify --as-of YYYY-MM-DD`；成功凭据必须与行情、买卖计划、跟踪表、冷却、日志和输入摘要一致。扫描采用同一发布锁；暂存或失败批次不可执行，中断安装会在下次扫描读取冷却前恢复。
+使用执行计划前运行 `python3 scripts/daily_execution_guard.py verify --as-of YYYY-MM-DD`；成功凭据必须与行情、买卖计划、跟踪表、冷却、日志和输入摘要一致，且账户快照到信号日为止的 §10.3 策略列已登记并与重算一致（缺行、空列或不一致即失败）。扫描采用同一发布锁；暂存或失败批次不可执行，中断安装会在下次扫描读取冷却前恢复。
 
 ### 9.2 输出格式
 
@@ -654,7 +661,7 @@ python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 
 配置文件只写相对 `BASE` 的变化，不手抄完整基准命令。回测宇宙固定读取 `data/processed/pit_attention/panel_moat_bank_v6b.csv`，估值状态固定读取 `data/processed/a_share_daily_states_adopted.csv`（候选侧）与 `data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`：换仓来源、簇内升级与 T+1 换仓确认读它）。
 
-回测基准的融资口径：本金 300 万；授信 = 净资产 × 66.6%，不设金额上限；强平线 130%；融资年利率 3.5%；资金顺序按 §10.2（授信每日按净资产重定，所有卖出款先偿还超出额度的负债，负债回到额度内才可买入，换仓与买入按现金＋剩余授信判）。实盘与回测同口径。
+回测基准的融资口径：本金 300 万；授信比例与强平线同 §10.2 与个人投资体系 §4；融资年利率 3.5%；资金顺序按 §10.2（授信每日按净资产重定，所有卖出款先偿还超出额度的负债，负债回到额度内才可买入，换仓与买入按现金＋剩余授信判）。实盘与回测同口径。
 
 回测的执行与公司行动口径：T+1 成交日无价（停牌、末日）该笔跳过、不回落信号日成交（与 §9.1 同）；除权按 §11.4 同式折算，配股全额认购、认购款不足部分计融资负债；现金红利按除权日计入现金（不模拟到账日，成文差异）；差别化股息税按卖出时持有期对所卖股份持有期内已收现金红利结算（≤1 个月 20%、≤1 年 10%、>1 年免，FIFO；送股面值部分不计，成文差异）；差异化分派按公告每股派息（成文差异）。
 
@@ -711,7 +718,7 @@ python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 
 ### 10.2 账户级防护
 
-账户级有两条外生硬约束——券商授信额度与 130% 强平线——和一条估值型内生约束——§9.3.1 股债总仓位上限，口径见个人投资体系 §4。授信额度 = 当日净资产 `N` × 66.6%，不设金额上限；融资负债读 §2 的账户快照台账。每日实际可用资金为：
+账户级有两条外生硬约束——券商授信额度与强平线——和一条估值型内生约束——§9.3.1 股债总仓位上限，口径见个人投资体系 §4。授信额度 = 当日净资产 `N` × 66.6%，不设金额上限；融资负债读 §2 的账户快照台账。每日实际可用资金为：
 
 ```text
 现金 + N × 66.6% − 当前融资负债
@@ -768,7 +775,7 @@ security_code, security_name, current_shares, cost_basis, entry_stop_price
 python3 scripts/track_holdings_daily.py --as-of YYYY-MM-DD
 ```
 
-逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示合理价、空间、`P/V`、MA20、MA60、生效止损线与是否命中、涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，涨幅减持命中判定与扫描器同一实现（`holding_trim_signal`）；`P/V` 读持仓侧带，与候选侧不同时并列显示；生产带的证据截止与扫描器同由信号日自动推导。银行与保险的扫描、跟踪、阅读版及成交估值统一调用 `screen_daily_volume_price_signals.resolve_live_band`，国债利率取 `observed_on ≤ 信号日` 的最新行，股利锚与除权处理调用 `bank_dividend_intrinsic`；区间显示为同一 V × [0.90, 1.10]。缺失利率或完整财年分红时，合理价与 `P/V` 留空并注明数据缺失。
+逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示合理价、空间、`P/V`、MA20、MA60、生效止损线与是否命中、涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，涨幅减持命中判定与扫描器同一实现（`holding_trim_signal`）；`P/V` 读持仓侧带，与候选侧不同时并列显示；生产带的证据截止与扫描器同由信号日自动推导。银行与保险的扫描、跟踪、阅读版及成交估值统一调用 `screen_daily_volume_price_signals.resolve_live_band`，国债利率取 `observed_on ≤ 信号日` 的最新行，股利锚与除权处理调用 `bank_dividend_intrinsic`；区间显示按 §6.5.1 的带宽。缺失利率或完整财年分红时，合理价与 `P/V` 留空并注明数据缺失。
 
 ### 11.4 除权除息
 
@@ -863,7 +870,7 @@ python3 scripts/record_cooldown_execution.py \
 
 **横截面比例买入研究**：`--buy-top-pct q`（0关闭，q∈(0,1]）替代固定P/V准入上限。分母为信号日有效面板中候选侧价格、价值、P/V均有限且为正的公司；按P/V升序、同值按代码升序，取前⌊q×N⌋只，再走原走势、持仓及执行约束，不补齐被后续条件挡下的名额。T+1只执行T日选中且成交日仍在册的公司；掉出排名不新增卖出规则。A/U剔除后在剩余信号日宇宙重算排名与分母；换仓仍用原P/V与原边际。必须报告逐日人数、实际比例、隐含P/V门槛分布和逐年读数，按本节预登记、同起点对照和平台标准筛查；生产缺省关闭。
 
-**股债性价比仓位约束**：生产规则见 §9.3.1 股债总仓位上限行，`BASE` 显式带 `--equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --equity-bond-lower 0.3 --equity-bond-restore-above --equity-bond-release-threshold 0.035`；恢复门槛只支持 `cap/spread/restore-above`，须有限且不低于触发门槛。未给恢复门槛时保留同阈值切换的历史研究语义；其他模式与参数为研究开关。输入 `--equity-bond-data` 的股债利差 = 宽基指数整体滚动盈利收益率（1/PE_TTM）− 中国10年国债到期收益率，利率用小数；不用成本输入表里的常数ERP。数据注明指数、来源、观测日与债息观测日，PE须有限且正，债息须有限；禁止未来回填。信号取T日收盘已知观测，T+1执行；分位为当前利差在信号观测日前最多60个有效月观测中的中秩，至少12条，当前观测不参与历史分布。上市前/历史不足时保留原策略并记覆盖；序列开始后的估值观测过期超过45天或债息在估值日已过期超过10天时报错，禁止静默放行。
+**股债性价比仓位约束**：生产规则见 §9.3.1 股债总仓位上限行，`BASE` 显式带 `--equity-bond-mode cap --equity-bond-metric spread --equity-bond-restore-above` 与三个数值参数 `--equity-bond-threshold`（触发线）、`--equity-bond-lower`（上限）、`--equity-bond-release-threshold`（恢复线），取值只在 §9.3.1 股债总仓位上限行；恢复门槛只支持 `cap/spread/restore-above`，须有限且不低于触发门槛。未给恢复门槛时保留同阈值切换的历史研究语义；其他模式与参数为研究开关。输入 `--equity-bond-data` 的股债利差 = 宽基指数整体滚动盈利收益率（1/PE_TTM）− 中国10年国债到期收益率，利率用小数；不用成本输入表里的常数ERP。数据注明指数、来源、观测日与债息观测日，PE须有限且正，债息须有限；禁止未来回填。信号取T日收盘已知观测，T+1执行；分位为当前利差在信号观测日前最多60个有效月观测中的中秩，至少12条，当前观测不参与历史分布。上市前/历史不足时保留原策略并记覆盖；序列开始后的估值观测过期（门槛见 §9.3.1）或债息在估值日已过期超过10天时报错，禁止静默放行。
 
 研究动作分开标记：`credit`低于阈值时授信归零、现金与后续卖出款先偿债，不主动卖券；`cap`按绝对利差或历史分位阈值切换总仓位上限；`ramp`将历史分位在两端点间线性映射到上下仓位上限。总仓位分母为当日净资产，配置范围0～160%；上限只限制买入，不强制补仓。主动约束在常规卖出后按可交易持仓比例减仓、向上取整到一手并先偿债；停牌延后、记录未满足上限，不用陈旧价格成交。买入在整手/兜底及同日对冲前后校验总仓位与费用后的资金余量，禁止绕限；仅在显式启用股债约束时生效，生产BASE已启用。融资利息、交易费税、滑点、强平与股票选择继承BASE。实验须预登记相邻阈值、固定仓位对照、覆盖及触发频率，按本节做全/A/U同起点配对；生产采纳仍走第8款。阈值以上完整恢复的分支即引擎 `--equity-bond-restore-above`（研究批次的 `high_base_engine.py` 与之等价）。
 
