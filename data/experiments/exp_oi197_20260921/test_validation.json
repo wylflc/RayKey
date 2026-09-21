@@ -1,0 +1,23 @@
+{
+  "modules": [
+    "test_exright_terms",
+    "test_corporate_actions",
+    "test_apply_holdings_corporate_action",
+    "test_suspended_actions",
+    "test_corporate_actions_tax",
+    "test_equity_anchor",
+    "test_code_succession",
+    "test_divspread_dividend",
+    "test_shadow_origin",
+    "test_shadow_portfolio",
+    "test_strategy_parameter_sync",
+    "test_daily_execution_plan",
+    "test_forecast_overlay_action_date"
+  ],
+  "tests": 134,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "checked_at_utc": "2026-09-21T12:56:24.514435+00:00",
+  "post_install_reference_events": 625
+}

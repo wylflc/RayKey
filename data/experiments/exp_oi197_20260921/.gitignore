@@ -1,0 +1,14 @@
+old_inputs/
+raw_pages/
+states/
+cache/
+nav/
+stats/
+daily/
+errors/
+ledger*.csv
+actions_corrected.csv
+parser_samples.json
+audit_codes/
+build_*.log
+diff_*.json

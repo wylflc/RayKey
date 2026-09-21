@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.197 | 2026-09-21 | OI-197：§11.4 将实付现金／实际股份与交易所价格参数分离；`a_share_exright_terms.csv` 保存按日价格覆盖及原实施公告证据，`corporate_actions.py` 校验并按用途分流；历史价格、带和持仓锚使用价格参数，收息／税基／实际股数保留实付；§8.3 组件修正表保存实付源错误及公司加权分派总额，权益桥另读公司金额；持仓 CLI 的 `--cash` 改为实付，新增 `--price-*`；依据 §12.254 |
 | v4.196 | 2026-09-21 | OI-196：§8.3 公司行动按独立方案保留报告期及预案日，重复返回去重、冲突报错，同日现金／送转／配股汇总后一次除权；`corporate_actions.py` 为唯一实现，历史及当日取数、换码复制、估值、持仓处理和影子捕获共用；历史明细回填与派生核验依据 §12.253 |
 | v4.195 | 2026-09-19 | OI-193～195 结案。重复阈值改为引用：130% 只在个人体系 §4，66.6% 只在 §10.2，股债三值、45 天、252 日只在 §9.3.1，2025-01-01 只在 §6.5.2.4，带宽只在 §6.5.1（§0／§4／§6.5.2／§6.7／§8.3／§9.3.1.2／§10.2／§11.3／§12.1 同步）；§2 补每日行情、发布凭据、§6.7 状态与带、估值表与人工台账、海外估值、影子组合、公司分析索引七行，`audit_repository_docs.py` 增「点名脚本的 data/processed 产物须在工作流程出现」检查，`rebuild_bank_bands.py` 去掉陈旧缺省路径；§9.1 第 6 步归档口径改为信号日早于本月 1 日、新增 `archive_daily_scan_log.py`（08-31 两条并入 08 月归档），`daily_execution_guard.py verify` 纳入 §10.3 策略列核对（`strategy_return_tracker.check_rows`），`test_strategy_parameter_sync.py` 改核单一落点 |
 | v4.194 | 2026-09-19 | §9.1 常设调度入口 `daily_postclose.sbatch` 并入 `preview`／`events` 两阶段与可选 `SCAN_ENTRY_CODES`，evidence 阶段先刷新股债利差与 rf/ERP 输入；§6.7 写明常设作业入口 `rebuild_chain_with_fetch.sbatch`（第 1～3 步）并补第 1 步第六份取数 `fetch_equity_bond_inputs.py --refresh`；已结案课题的 141 个一次性 sbatch 与 7 个无引用实验脚本移入 `scripts/archive/`（三个月保留）；逐日包装脚本 `daily_scan_2026091x`／`daily_events_2026091x` 退役 |

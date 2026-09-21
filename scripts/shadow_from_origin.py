@@ -16,6 +16,8 @@ import backtest_valuation_strategy as bt
 import shadow_portfolio as sh
 from equity_bond_constraint import EquityBondConstraint
 
+from corporate_actions import event_from_row, with_price_terms, validate_price_overrides, AMOUNTS, PRICE_FIELDS
+
 ROOT = sh.ROOT
 BOOK = ROOT / 'data/processed/shadow_portfolio/since_20260828'
 EXP = ROOT / 'data/experiments/exp_shadow_origin_20260918'
@@ -99,13 +101,13 @@ def snapshot(day, revision, account):
                 cost=float(r['cost_basis']), stop=float(r['entry_stop_price'])) for r in hs}
     action_rows = sh.csv_rows(source.read('data/raw/corporate_actions/a_share_corporate_actions.csv'))
     from corporate_actions import aggregate_actions
+    price_data = source.read('data/reference/a_share_exright_terms.csv', optional=True)
+    overrides = validate_price_overrides(sh.csv_rows(price_data)) if price_data else {}
     actions = {}
     for r in aggregate_actions(action_rows):
         d = r['ex_dividend_date']
         if d and d >= '2024-01-01' and r['security_code'] in set(quotes) | {'600919', '920599'}:
-            actions.setdefault(r['security_code'], {})[d] = dict(cash_per_share=float(r['cash_per_share'] or 0),
-                share_ratio=float(r['share_ratio'] or 0), rights_ratio=float(r.get('rights_ratio') or 0),
-                rights_price=float(r.get('rights_price') or 0))
+            actions.setdefault(r['security_code'], {})[d] = {k: v for k, v in with_price_terms(r, overrides=overrides).items() if k in (*AMOUNTS, *PRICE_FIELDS)}
     today = {c: a[day] for c, a in actions.items() if day in a}
     daily = source.read(f'data/interim/daily_corporate_actions_{day}.json', optional=True)
     if daily:
@@ -186,7 +188,7 @@ class SignalCorrelations:
     def __init__(self, prices, actions, signal_day):
         self.signal_day = signal_day
         self.prices = prices
-        acts = {c: {d: (a['cash_per_share'], a['share_ratio'], a.get('rights_ratio', 0), a.get('rights_price', 0))
+        acts = {c: {d: event_from_row(a)
                     for d, a in by_day.items()} for c, by_day in actions.items()}
         self.returns = bt.daily_returns({c: {d: p for d, p in ps.items() if d <= signal_day} for c, ps in prices.items()}, acts)
         self.calls = 0
@@ -223,7 +225,7 @@ def market(snapshots, supplement):
                 if v and pv and v > 0 and pv > 0:
                     dest[day].append((code, p, v, pv))
         for code, a in s['actions'].items():
-            actions.setdefault(code, {})[day] = (a['cash_per_share'], a['share_ratio'], a.get('rights_ratio', 0), a.get('rights_price', 0))
+            actions.setdefault(code, {})[day] = event_from_row(a)
     for code, rows in supplement.items():
         for s in snapshots:
             day = s['date']
@@ -237,7 +239,7 @@ def market(snapshots, supplement):
                 continue
             prices.setdefault(code, {})[day] = price
             # Supplement only missing marks, never use present-day valuation or membership.
-            events = {d: (a['cash_per_share'], a['share_ratio'], a.get('rights_ratio', 0), a.get('rights_price', 0))
+            events = {d: event_from_row(a)
                       for d, a in s['all_actions'].get(code, {}).items()}
             adjusted = sh.live.rebase_price_rows(relevant, code, day, events=events)
             mas.setdefault(code, {})[day] = {n: mean(r['close'] for r in adjusted[-n:]) for n in (20, 60) if len(adjusted) >= n}
@@ -335,7 +337,13 @@ def corrected_actions(snapshots, correction):
             continue
         for code, events in correction['events'].items():
             for day, event in events.items():
-                if day > correction['known_by'] or day > snapshot['date']:
+                if correction.get('availability') == 'per_event':
+                    notice = correction['notice_dates'][code][day]
+                    if notice > day:
+                        raise ValueError('Historical action correction is not yet available')
+                    if day > snapshot['date'] or notice > snapshot['date']:
+                        continue
+                elif day > correction['known_by'] or day > snapshot['date']:
                     raise ValueError('Historical action correction is not yet available')
                 if code in snapshot['all_actions']:
                     snapshot['all_actions'][code][day] = event

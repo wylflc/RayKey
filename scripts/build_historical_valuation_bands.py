@@ -836,7 +836,7 @@ def exright_adjust(actions: list[dict], since: str, until: str,
     floor_since = min(since, split_since)
     factor, cash_cum = 1.0, 0.0
     vals = list(values)
-    for action in company_events(actions):
+    for action in company_events(actions, price_basis=True):
         ex_date = action.get("ex_dividend_date") or ""
         if floor_since < ex_date <= until:
             cash = (_num(action.get("cash_per_share")) or 0.0) if ex_date > since else 0.0
@@ -978,9 +978,9 @@ def dividends_total(actions: list[dict], since: str, until: str, shares_end: flo
     （不含该笔自身送转）的送转因子。`shares_end` 为 `end_period` 期末股数；不可得返回 None。"""
     if shares_end is None:
         return None
-    from corporate_actions import company_events
+    from corporate_actions import company_events, accounting_cash
     total, f = 0.0, 1.0
-    for action in company_events(actions):
+    for action in company_events([{**a, "cash_per_share": accounting_cash(a)} for a in actions]):
         ex = (action.get("ex_dividend_date") or "")[:10]
         if not ex or ex <= end_period:
             continue
@@ -1047,9 +1047,10 @@ def dividends_booked_since(actions: list[dict], ref_period: str, period: str, ba
       ③中期分配预案公告日在 (年报期末, 本期期末]、除权日晚于期末：不可知（确认是否早于期末因公司而异，样本两向）。
     此前按 (年报公告日, 本期公告日] 的除权日取窗：②（除权晚于本期公告日）与①中年报公告日之前除权的中期分红被漏计并读成回购注销，
     预案晚于期末、除权早于公告日的分红又被多计成增发。"""
+    from corporate_actions import accounting_cash
     sure, ambiguous = 0.0, []
     for action in actions:
-        cash = _num(action.get("cash_per_share")) or 0.0
+        cash = _num(accounting_cash(action)) or 0.0
         ex = (action.get("ex_dividend_date") or "")[:10]
         if cash <= 0 or not ex:
             continue

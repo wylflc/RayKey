@@ -1,0 +1,101 @@
+{
+  "revision": "718783ce",
+  "inputs": {
+    "scripts/backtest_valuation_strategy.py": {
+      "bytes": 353578,
+      "sha256": "7c6393b17fb65656121c3b0e0a8ea728f0ac553ced3eb1c0a7ede08e3365f1c4"
+    },
+    "scripts/build_historical_valuation_bands.py": {
+      "bytes": 216516,
+      "sha256": "b469eecba742b6989e16ee2d056faf5707ad1c36ebda542538dc76a1333a4994"
+    },
+    "scripts/fetch_ohlcv_history.py": {
+      "bytes": 22145,
+      "sha256": "a3d68277cfccfd257f19297274a206ff5a1f725bbffab5394ba08f35a5195f3d"
+    },
+    "scripts/fetch_a_share_dividends.py": {
+      "bytes": 10920,
+      "sha256": "d80d7cd3ec31538efd1f6b880c9e2e12a9e420c0061559165f520892190ce2eb"
+    },
+    "scripts/code_succession.py": {
+      "bytes": 8091,
+      "sha256": "411093dd1e32f1a1df9da8816493ce336013db69fa7a95f5f884bac124a59b1d"
+    },
+    "scripts/divspread_dividend.py": {
+      "bytes": 5892,
+      "sha256": "32b4420e99ad1e26032352a2598c01ef54fb1a833807264ac417d39b20f0aae8"
+    },
+    "scripts/shadow_from_origin.py": {
+      "bytes": 32127,
+      "sha256": "bac4347ebc96e0b88a16890d40dbaefb4de12a6915fb046ad6d24395c7bc2675"
+    },
+    "scripts/apply_holdings_corporate_action.py": {
+      "bytes": 10825,
+      "sha256": "481afaf9d0e4d7cbd80cd45cb6750e38c116a2fd6ab49b7ea434ec3997e4b1d8"
+    },
+    "scripts/sweep_backtest_configs.py": {
+      "bytes": 66464,
+      "sha256": "17ee4c31eac6d6ccf378259a74b676a89696beb3c42ecf48792f43d5de9bb1ac"
+    },
+    "data/raw/corporate_actions/a_share_corporate_actions.csv": {
+      "bytes": 5830186,
+      "sha256": "478b16a909b5e4b0c0a94e40247791d7d6bb5e3448b72869961b551c63d87dca"
+    },
+    "data/processed/a_share_pool_model_bands_adopted.csv": {
+      "bytes": 134261,
+      "sha256": "c62942a1ad759f7805ef733e02ca682cc5d73d3b71a10a02f486326337fb1382"
+    },
+    "data/processed/a_share_pool_model_bands_b2.csv": {
+      "bytes": 134134,
+      "sha256": "909edefb737a41ea1018de2e70784cc9ff5986152d4ca1fc826db5bfc716b209"
+    },
+    "data/processed/a_share_pool_model_bands_hold.csv": {
+      "bytes": 134800,
+      "sha256": "da80bd3a3be75ea80770cc2d47c3bde2f3a8013b040af4bd65a491f67ed0a81e"
+    },
+    "data/processed/daily_buy_candidates.csv": {
+      "bytes": 78174,
+      "sha256": "a5a19a90946b3d31a1e7ec48d4734354fbe112d78bfe1bf8e007b799ea43c7b6"
+    },
+    "data/processed/a_share_holdings.csv": {
+      "bytes": 324,
+      "sha256": "a38eea54710ac72bd4d00bc958db98929dc86cfaa037b80931eb8a0a4f07322f"
+    },
+    "data/processed/portfolio_account_snapshot.csv": {
+      "bytes": 60625,
+      "sha256": "f5eb4a4a8ee9a4204cead2a1e07b20f752c67ea1ad3ce7f07e8954cd0049d4ee"
+    },
+    "data/reference/cost_of_equity_inputs.csv": {
+      "bytes": 81264,
+      "sha256": "4103c0c5b726cc476aebfce1a65d972075c00456607c5ac49990b347caf1ac96"
+    },
+    "data/reference/equity_bond_csi300.csv": {
+      "bytes": 35322,
+      "sha256": "d92a494c98680232dc779ebba5952a1317dc195da32d701d0553bf39182277b6"
+    },
+    "data/processed/pit_attention/panel_moat_bank_v6b.csv": {
+      "bytes": 511110,
+      "sha256": "eaf5475f23eebd6100f34513668a87005cfbf4492d03012a6e16d92de4a57eac"
+    },
+    "scripts/corporate_actions.py": {
+      "bytes": 8724,
+      "sha256": "02d771a38272fbc8173586ba6d0c2fd19f9e1db56a6494de6c55df73c64dae2e"
+    },
+    "scripts/apply_forecast_band_overlay.py": {
+      "bytes": 29448,
+      "sha256": "131e8ed2a3a7ec89af6a0f03ccfef2ae45848149f6ee29fe433404630dfe10a2"
+    },
+    "scripts/shadow_portfolio.py": {
+      "bytes": 35499,
+      "sha256": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd"
+    },
+    "scripts/track_holdings_daily.py": {
+      "bytes": 30237,
+      "sha256": "8448379d15287150ffd05303552e04c1916ae27595be3b5ee31b9fc74795a0bf"
+    },
+    "data/processed/shadow_portfolio/since_20260828/manifest.json": {
+      "bytes": 6165,
+      "sha256": "6e5f8d5b49162f13c772aadaee6037929afec0216694e6433bb695e0c6b71e34"
+    }
+  }
+}

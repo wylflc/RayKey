@@ -1,0 +1,29 @@
+{
+  "issue": "OI-197",
+  "created_at_beijing": "2026-09-21T20:55:49.398252+08:00",
+  "before_code_sha256": {
+    "shadow_from_origin.py": "bac4347ebc96e0b88a16890d40dbaefb4de12a6915fb046ad6d24395c7bc2675",
+    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
+    "backtest_valuation_strategy.py": "7c6393b17fb65656121c3b0e0a8ea728f0ac553ced3eb1c0a7ede08e3365f1c4",
+    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+    "corporate_actions.py": "02d771a38272fbc8173586ba6d0c2fd19f9e1db56a6494de6c55df73c64dae2e"
+  },
+  "after_code_sha256": {
+    "shadow_from_origin.py": "675e2e87a4d203199a7e79a10fa97954f4a569e50022560cc4a68ba0040a6183",
+    "shadow_portfolio.py": "aa30791f37eb0fc7ce92c66e4cc3664ea7f4cdb23d0221df480336ce4c48226b",
+    "backtest_valuation_strategy.py": "3c2ec3c2f8faa9260481f6202a7236c2cefb9cd767eec3ae7f6b062df1aa0980",
+    "screen_daily_volume_price_signals.py": "c3a6bc4a11207ca59a7ae2138deb01f5e4f0f82e07cece639d470784a1ce2e11",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+    "corporate_actions.py": "f59a1d34ce61ba443f1b4abca7b3a2fe905d61787020c3c5f43f8d6f52c3d012"
+  },
+  "before_manifest_sha256": "6e5f8d5b49162f13c772aadaee6037929afec0216694e6433bb695e0c6b71e34",
+  "validation": "data/experiments/exp_oi197_20260921/shadow_validation.json",
+  "validation_sha256": "ab6c4148be0db81e820f2a6c1b4b1487cdf0405951fd15b60d4a532410df8eac",
+  "original_snapshots_unchanged": true,
+  "replay_economics_unchanged": true
+}

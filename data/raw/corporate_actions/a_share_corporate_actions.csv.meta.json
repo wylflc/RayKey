@@ -1,10 +1,12 @@
 {
   "as_of": "2026-09-21",
-  "generated_at_utc": "2026-09-21T11:05:56.374932+00:00",
-  "sha256": "478b16a909b5e4b0c0a94e40247791d7d6bb5e3448b72869961b551c63d87dca",
+  "generated_at_utc": "2026-09-21T12:55:48.838205+00:00",
+  "sha256": "c4bcf7e8c7e49eb0a615e4ababa5f04802e1dceaf0b6f7c33adfadab7c2d6b6a",
   "inputs": {
-    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/experiments/exp_oi196_20260921/source_manifest.json": "838ad499aa529eb8d5d6e5e34af2fea5277df35c9496d432490fc5de0403336f",
-    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/experiments/exp_oi196_20260921/repairs.json": "456a89ddbed9ecf36be8c0496c01a3280083513c9fbfaa73433d56760ed634e4",
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/experiments/exp_oi197_20260921/source_manifest.json": "a926f6db5dcc43d43a22c4099b586c68a375f1f0bc9f02f32c57460f3b54224c",
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/experiments/exp_oi197_20260921/repairs.json": "8da6998c55a2d223167b95b750c9c81b47cf8465022e1d0b8df15b1951168ad3",
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/reference/a_share_exright_terms.csv": "c4a86fcb3d36b152380d86d5d3e7940924f4a9b4dd2e2f76c45132f9fcdd6b2e",
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/reference/a_share_action_component_corrections.csv": "f481bde762ec98e4390b5f3e23399b9150100d923f98604f86a42fce5045894f",
     "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/reference/a_share_action_component_exclusions.csv": "8541a084e13e14492defe4f4e8a59cd4f0dd075020ba8eac8c5c6ec17874356d"
   }
 }

@@ -1,0 +1,1783 @@
+{
+  "scope": "BASE历史面板、当前核心池和持仓，加安集科技送转核验样本；非全市场核验",
+  "audited_codes": 296,
+  "profit_distribution_announcements": 16426,
+  "selected_announcements": 4398,
+  "parser_classifications": {
+    "no_differential_marker": 3514,
+    "source_unavailable": 125,
+    "related_notice_not_implementation": 99,
+    "verified_formula": 624,
+    "needs_review": 30,
+    "ambiguous_or_missing_event": 6
+  },
+  "verified_events": 625,
+  "verified_codes": 161,
+  "price_differs_from_actual": 550,
+  "verified_uniform_without_override": [
+    {
+      "code": "000425",
+      "title": "徐工机械:2022年度中期利润分配实施公告",
+      "notice_date": "2022-09-20",
+      "art_code": "AN202209191578512908",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202209191578512908_1.pdf",
+      "source_sha256": "082fc0b0d68f8e74a48eca6d04070b08d61c811e3c7cc56535a3a7fe93700074",
+      "event": {
+        "security_code": "000425",
+        "ex_dividend_date": "2022-09-28",
+        "cash_per_share": 0.23,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "徐工机械",
+        "plan": "10派2.30元(含税,扣税后2.07元)",
+        "progress": "实施分配"
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "回购股份已于2022-09-14注销，实施基数即注销后总股本",
+      "source_pages": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "code": "000951",
+      "title": "中国重汽:公司2025年年度权益分派实施公告",
+      "notice_date": "2026-06-18",
+      "art_code": "AN202606171823639942",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202606171823639942_1.pdf",
+      "source_sha256": "ce968f63e7b3859143094dd1f037feadc29c04eb537de6b64bbed1d68f9e15dc",
+      "event": {
+        "security_code": "000951",
+        "ex_dividend_date": "2026-06-26",
+        "cash_per_share": 0.512,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "中国重汽",
+        "plan": "10派5.12元(含税,扣税后4.608元)",
+        "progress": "实施分配"
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施前已完成回购注销，实施基数即注销后总股本",
+      "source_pages": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "code": "002179",
+      "title": "中航光电:2024年年度权益分派实施公告",
+      "notice_date": "2025-06-10",
+      "art_code": "AN202506091687795519",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202506091687795519_1.pdf",
+      "source_sha256": "047a3f069edad9978f3860568265601cb1381e30bcbccf87434cf85b7630777f",
+      "event": {
+        "security_code": "002179",
+        "ex_dividend_date": "2025-06-17",
+        "cash_per_share": 0.8,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "中航光电",
+        "plan": "10派8.00元(含税,扣税后7.20元)",
+        "progress": "实施分配"
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施公告明确回购账户为零；排除回购的条件未实际触发",
+      "source_pages": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "code": "002179",
+      "title": "中航光电:2023年年度权益分派实施公告",
+      "notice_date": "2024-05-14",
+      "art_code": "AN202405131632953217",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202405131632953217_1.pdf",
+      "source_sha256": "9c8c1fa08a5deaf09f1a889aa4e804ec33423abd37a94b8aebbe70aa1bec1e03",
+      "event": {
+        "security_code": "002179",
+        "ex_dividend_date": "2024-05-21",
+        "cash_per_share": 0.6,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "中航光电",
+        "plan": "10派6.00元(含税,扣税后5.40元)",
+        "progress": "实施分配"
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施公告明确回购账户为零；排除回购的条件未实际触发",
+      "source_pages": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "code": "002179",
+      "title": "中航光电:2022年年度权益分派实施公告",
+      "notice_date": "2023-05-09",
+      "art_code": "AN202305081586376564",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202305081586376564_1.pdf",
+      "source_sha256": "da07ad8781a142afe030d02c7ae2ef0e2ca16f55c72921690f0a03cab99d6441",
+      "event": {
+        "security_code": "002179",
+        "ex_dividend_date": "2023-05-16",
+        "cash_per_share": 0.55,
+        "share_ratio": 0.3,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "中航光电",
+        "plan": "10转3.00派5.50元(含税,扣税后4.95元)",
+        "progress": "实施分配"
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施公告明确回购账户为零；排除回购的条件未实际触发",
+      "source_pages": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "code": "002179",
+      "title": "中航光电:2021年年度权益分派实施公告",
+      "notice_date": "2022-06-06",
+      "art_code": "AN202206051570174741",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202206051570174741_1.pdf",
+      "source_sha256": "15d7c7b56be7a5037f90fceff78601ff665983a6d5573216f4c1a53712fd8ffe",
+      "event": {
+        "security_code": "002179",
+        "ex_dividend_date": "2022-06-13",
+        "cash_per_share": 0.55,
+        "share_ratio": 0.4,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "中航光电",
+        "plan": "10转4.00派5.50元(含税,扣税后4.95元)",
+        "progress": "实施分配"
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施公告明确回购账户为零；排除回购的条件未实际触发",
+      "source_pages": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "code": "002275",
+      "title": "桂林三金:2025年年度分红派息实施公告",
+      "notice_date": "2026-05-29",
+      "art_code": "AN202605281822950484",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202605281822950484_1.pdf",
+      "source_sha256": "9037ee2f9a52f1423caee841a06078f8d112f4466f107d2b895c75d1d5d4220a",
+      "event": {
+        "security_code": "002275",
+        "ex_dividend_date": "2026-06-04",
+        "cash_per_share": 0.3,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "桂林三金",
+        "plan": "10派3.00元(含税,扣税后2.70元)",
+        "progress": ""
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施公告明确回购账户为零；排除回购的条件未实际触发",
+      "source_pages": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "code": "002275",
+      "title": "桂林三金:2025年前三季度分红派息实施公告",
+      "notice_date": "2025-11-11",
+      "art_code": "AN202511101778732206",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202511101778732206_1.pdf",
+      "source_sha256": "a9004e27373779e9eb2481bde0699f9e45952bfdd8f0c862b1af9876258d232f",
+      "event": {
+        "security_code": "002275",
+        "ex_dividend_date": "2025-11-19",
+        "cash_per_share": 0.2,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "桂林三金",
+        "plan": "10派2.00元(含税,扣税后1.80元)",
+        "progress": ""
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施公告明确回购账户为零；排除回购的条件未实际触发",
+      "source_pages": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "code": "002275",
+      "title": "桂林三金:2024年年度分红派息实施公告",
+      "notice_date": "2025-05-22",
+      "art_code": "AN202505211676630330",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202505211676630330_1.pdf",
+      "source_sha256": "92a543393e6820f845a4cca55fa649f936bf5a1d4614dae649e3d3c442e95224",
+      "event": {
+        "security_code": "002275",
+        "ex_dividend_date": "2025-05-30",
+        "cash_per_share": 0.35,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "桂林三金",
+        "plan": "10派3.50元(含税,扣税后3.15元)",
+        "progress": ""
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施公告明确回购账户为零；排除回购的条件未实际触发",
+      "source_pages": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "code": "002275",
+      "title": "桂林三金:2024年前三季度权益分派实施公告",
+      "notice_date": "2024-11-19",
+      "art_code": "AN202411181640942801",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202411181640942801_1.pdf",
+      "source_sha256": "dcb9bdc85339b912743e7e0f47284487942b24b13db61c11d241909fc6be9f2b",
+      "event": {
+        "security_code": "002275",
+        "ex_dividend_date": "2024-11-26",
+        "cash_per_share": 0.25,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "桂林三金",
+        "plan": "10派2.50元(含税,扣税后2.25元)",
+        "progress": ""
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施公告明确回购账户为零；排除回购的条件未实际触发",
+      "source_pages": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "code": "002275",
+      "title": "桂林三金:2023年年度权益分派实施公告",
+      "notice_date": "2024-05-21",
+      "art_code": "AN202405201633868757",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202405201633868757_1.pdf",
+      "source_sha256": "0f1e02abb174e7a4f246f8a415190a603ee4342cf7d2fda7b20fc5d6c54f6bb3",
+      "event": {
+        "security_code": "002275",
+        "ex_dividend_date": "2024-05-29",
+        "cash_per_share": 0.3,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "桂林三金",
+        "plan": "10派3.00元(含税,扣税后2.70元)",
+        "progress": ""
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施公告明确回购账户为零；排除回购的条件未实际触发",
+      "source_pages": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "code": "002475",
+      "title": "立讯精密:2025年前三季度权益分派实施公告",
+      "notice_date": "2026-02-06",
+      "art_code": "AN202602051819793992",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202602051819793992_1.pdf",
+      "source_sha256": "a576a06ee9944c5e246c1750d8a1992b74f9d96a24697d66646dacf2e026ec6a",
+      "event": {
+        "security_code": "002475",
+        "ex_dividend_date": "2026-02-12",
+        "cash_per_share": 0.159915,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "立讯精密",
+        "plan": "10派1.599147元(含税,扣税后1.439232元)",
+        "progress": "实施分配"
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施时尚未回购且承诺登记前不回购；每股金额仍保留旧库六位精度",
+      "source_pages": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "code": "301498",
+      "title": "乖宝宠物:2025年度权益分派实施公告",
+      "notice_date": "2026-05-26",
+      "art_code": "AN202605261822885322",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202605261822885322_1.pdf",
+      "source_sha256": "a9feb5e2d9dbf953101a51ea7368b8e46998d32486b80c0786540f00df1fd8b9",
+      "event": {
+        "security_code": "301498",
+        "ex_dividend_date": "2026-06-02",
+        "cash_per_share": 0.25,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "乖宝宠物",
+        "plan": "10派2.50元(含税)",
+        "progress": "实施分配"
+      },
+      "status": "no_excluded_treasury_at_implementation",
+      "reason": "实施公告明确回购账户为零；排除回购的条件未实际触发",
+      "source_pages": [
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "unresolved_formula_events": [
+    {
+      "code": "000423",
+      "title": "东阿阿胶:2019年度权益分派实施公告",
+      "notice_date": "2020-07-09",
+      "art_code": "AN202007081390322272",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202007081390322272_1.pdf",
+      "source_sha256": "607b8e8ddc4cce6b32d5185a90a5970a4a0ef2400b479ce22d7d33d52c5f1f00",
+      "event": {
+        "security_code": "000423",
+        "ex_dividend_date": "2020-07-16",
+        "cash_per_share": 0.203119,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "东阿阿胶",
+        "plan": "10派2.031195元(含税,扣税后1.828075元)",
+        "progress": "实施分配"
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+    },
+    {
+      "code": "000423",
+      "title": "东阿阿胶:2018年度权益分派实施公告",
+      "notice_date": "2019-08-08",
+      "art_code": "AN201908071342550327",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201908071342550327_1.pdf",
+      "source_sha256": "a18512434dbc2c28037223b2b21bbb3a6f937d1b7db9c5a4cfeb9980e0ac43fa",
+      "event": {
+        "security_code": "000423",
+        "ex_dividend_date": "2019-08-15",
+        "cash_per_share": 1.00953,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "东阿阿胶",
+        "plan": "10派10.095303元(含税,扣税后9.085773元)",
+        "progress": "实施分配"
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+    },
+    {
+      "code": "000425",
+      "title": "徐工机械：2009年度权益分派实施公告",
+      "notice_date": "2010-04-13",
+      "art_code": "AN201203010004575571",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201203010004575571_1.pdf",
+      "source_sha256": "f86ef9cb5f0d8d6f15d4197687dca671187926843d68c6a2aaf8a6664bd0b315",
+      "event": {
+        "security_code": "000425",
+        "ex_dividend_date": "2010-04-20",
+        "cash_per_share": 0.33405,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "徐工机械",
+        "plan": "10派3.3405元(含税,扣税后3.0065元)",
+        "progress": "实施分配"
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+    },
+    {
+      "code": "000538",
+      "title": "云南白药:2018年年度权益分派实施公告",
+      "notice_date": "2019-05-30",
+      "art_code": "AN201905291332774091",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201905291332774091_1.pdf",
+      "source_sha256": "73c5f626e40899e972616c58892effe0acbec677f8b7b6107f55b73a966cf167",
+      "event": {
+        "security_code": "000538",
+        "ex_dividend_date": "2019-06-05",
+        "cash_per_share": 2.000125,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "云南白药",
+        "plan": "10派20.001254元(含税,扣税后18.001129元)",
+        "progress": "实施分配"
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+    },
+    {
+      "code": "000975",
+      "title": "银泰资源:2018年年度权益分派实施的公告",
+      "notice_date": "2019-06-10",
+      "art_code": "AN201906091334164723",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201906091334164723_1.pdf",
+      "source_sha256": "05f5b5d301b7051366df5976d62bcc3371f4f4f5ac4f67f8a3dd910e99fc6a97",
+      "event": {
+        "security_code": "000975",
+        "ex_dividend_date": "2019-06-14",
+        "cash_per_share": 0.2,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "山金国际",
+        "plan": "10派2.00元(含税,扣税后1.80元)",
+        "progress": "实施分配"
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+    },
+    {
+      "code": "002043",
+      "title": "兔宝宝:2019年度权益分派实施公告",
+      "notice_date": "2020-06-29",
+      "art_code": "AN202006281387993059",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202006281387993059_1.pdf",
+      "source_sha256": "cc3aaf36ee88e6af142ce445f7b319eed933571e2677826f00f9dfe32c8da220",
+      "event": {
+        "security_code": "002043",
+        "ex_dividend_date": "2020-07-07",
+        "cash_per_share": 0.25,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "兔宝宝",
+        "plan": "10派2.50元(含税,扣税后2.25元)",
+        "progress": ""
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "公告每10股金额与最后价格公式的每股单位冲突，未自行纠正"
+    },
+    {
+      "code": "600588",
+      "title": "600588:用友网络2018年年度权益分派实施公告",
+      "notice_date": "2019-04-26",
+      "art_code": "AN201904251322784926",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201904251322784926_1.pdf",
+      "source_sha256": "faf4972cbd0572f167e19e5dd5a798483ef0221d36908777b7c0122f3d85729f",
+      "event": {
+        "security_code": "600588",
+        "ex_dividend_date": "2019-05-07",
+        "cash_per_share": 0.25,
+        "share_ratio": 0.3,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "用友网络",
+        "plan": "10转3.00派2.50元(含税,扣税后2.25元)",
+        "progress": ""
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+    },
+    {
+      "code": "600660",
+      "title": "600660:福耀玻璃2014年度利润分配实施公告",
+      "notice_date": "2015-04-08",
+      "art_code": "AN201504070009112761",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201504070009112761_1.pdf",
+      "source_sha256": "2afad62d3c1a8fbac2c9cbe9b199ca4c12163fde9e3103c29ce4ac08d101b912",
+      "event": {
+        "security_code": "600660",
+        "ex_dividend_date": "2015-04-15",
+        "cash_per_share": 0.75,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "福耀玻璃",
+        "plan": "10派7.50元(含税,扣税后6.75元)",
+        "progress": "实施分配"
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+    },
+    {
+      "code": "600690",
+      "title": "青岛海尔：2006年度分红派息实施公告",
+      "notice_date": "2007-07-13",
+      "art_code": "AN201202270004135940",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202270004135940_1.pdf",
+      "source_sha256": "03c7ab866bc704d86f9c44f61bac91b9c92cf398438f3f7f37f0b977f0a7ff26",
+      "event": {
+        "security_code": "600690",
+        "ex_dividend_date": "2007-07-19",
+        "cash_per_share": 0.15,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "海尔智家",
+        "plan": "10派1.50元(含税,扣税后1.35元)",
+        "progress": "实施分配"
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+    },
+    {
+      "code": "603369",
+      "title": "603369:江苏今世缘酒业股份有限公司2021年度权益分派实施公告",
+      "notice_date": "2022-05-25",
+      "art_code": "AN202205241567605489",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202205241567605489_1.pdf",
+      "source_sha256": "2c288452cc2a74d779d2be1b29056b9c4b16c0db7f870b406b48a25cabba91a4",
+      "event": {
+        "security_code": "603369",
+        "ex_dividend_date": "2022-05-31",
+        "cash_per_share": 0.59,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "今世缘",
+        "plan": "10派5.90元(含税,扣税后5.31元)",
+        "progress": "实施分配"
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+    },
+    {
+      "code": "688018",
+      "title": "乐鑫科技:乐鑫科技2023年年度权益分派实施公告",
+      "notice_date": "2024-05-10",
+      "art_code": "AN202405091632771405",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202405091632771405_1.pdf",
+      "source_sha256": "0214f5384dcd34ef2cbede5c2e3832537408e8d8b637df64aa8d64238323e107",
+      "event": {
+        "security_code": "688018",
+        "ex_dividend_date": "2024-05-16",
+        "cash_per_share": 1.0,
+        "share_ratio": 0.4,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0,
+        "security_name": "乐鑫科技",
+        "plan": "10转4股派10.00元(含税,扣税后9.00元)",
+        "progress": "实施分配"
+      },
+      "status": "unverified_actual_fallback",
+      "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+    }
+  ],
+  "unavailable_sources": [
+    {
+      "code": "000001",
+      "title": "深发展Ａ：2002年度分红派息实施公告",
+      "notice_date": "2003-09-23",
+      "art_code": "AN201202250003708563",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003708563_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000001",
+      "title": "深发展Ａ：2001年度分红派息实施公告",
+      "notice_date": "2002-07-17",
+      "art_code": "AN201202250003570721",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003570721_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000022",
+      "title": "深 赤 湾：2002年度分红派息实施公告",
+      "notice_date": "2003-07-16",
+      "art_code": "AN201202250003643037",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003643037_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000022",
+      "title": "深 赤 湾：2001年度分红派息实施公告",
+      "notice_date": "2002-06-28",
+      "art_code": "AN201202250003596738",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003596738_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000063",
+      "title": "中兴通讯：2001年度分红派息实施公告",
+      "notice_date": "2002-05-15",
+      "art_code": "AN201202250003629076",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003629076_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000063",
+      "title": "中兴通讯：2001年中期利润分配方案实施公告",
+      "notice_date": "2001-10-09",
+      "art_code": "AN201202250003453562",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003453562_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000063",
+      "title": "深圳市中兴通讯股份有限公司1999年度资本公积金转增股本方案实施公告",
+      "notice_date": "2000-06-06",
+      "art_code": "AN201202250003402629",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003402629_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000408",
+      "title": "河北华玉：2001年度分红派息实施公告",
+      "notice_date": "2002-08-21",
+      "art_code": "AN201202250003583158",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003583158_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000423",
+      "title": "东阿阿胶：2002年度分红派息实施公告",
+      "notice_date": "2003-07-02",
+      "art_code": "AN201202250003676261",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003676261_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000423",
+      "title": "东阿阿胶：2001年度分红派息实施公告",
+      "notice_date": "2002-05-24",
+      "art_code": "AN201202250003585662",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003585662_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000538",
+      "title": "云南白药：分红派息实施公告",
+      "notice_date": "2003-05-13",
+      "art_code": "AN201202250003669173",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003669173_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000538",
+      "title": "云南白药：2001年分红派息实施公告",
+      "notice_date": "2002-05-13",
+      "art_code": "AN201202250003628716",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003628716_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000596",
+      "title": "古 井 贡：分红派息实施公告",
+      "notice_date": "2003-06-26",
+      "art_code": "AN201202250003673811",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003673811_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000651",
+      "title": "格力电器：2001年度分红派息实施公告",
+      "notice_date": "2002-06-06",
+      "art_code": "AN201202250003590691",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003590691_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000708",
+      "title": "大冶特钢：2001年度分红派息实施公告",
+      "notice_date": "2002-06-14",
+      "art_code": "AN201202250003589361",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003589361_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000725",
+      "title": "京 东 方：2004年度分红派息实施公告",
+      "notice_date": "2005-06-21",
+      "art_code": "AN201202260003833308",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003833308_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000725",
+      "title": "京 东 方：2001年度分红派息实施公告",
+      "notice_date": "2002-07-12",
+      "art_code": "AN201202250003598541",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003598541_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000733",
+      "title": "振华科技：2001年度分红派息实施公告",
+      "notice_date": "2002-06-13",
+      "art_code": "AN201202250003594072",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003594072_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000778",
+      "title": "新兴铸管：2004年度分红派息实施公告",
+      "notice_date": "2005-04-15",
+      "art_code": "AN201202260003865292",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003865292_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000792",
+      "title": "盐湖钾肥：转增股本实施公告",
+      "notice_date": "2003-05-13",
+      "art_code": "AN201202250003668366",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003668366_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000792",
+      "title": "盐湖钾肥：2001年度分红派息实施公告",
+      "notice_date": "2002-06-18",
+      "art_code": "AN201202250003596994",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003596994_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000933",
+      "title": "神火股份：2003年度分红派息实施公告",
+      "notice_date": "2004-05-11",
+      "art_code": "AN201202260003759659",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003759659_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000933",
+      "title": "神火股份：2003年中期分红派息实施公告",
+      "notice_date": "2003-12-03",
+      "art_code": "AN201202250003699162",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003699162_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000933",
+      "title": "神火股份：2002年度分红派息实施公告",
+      "notice_date": "2003-05-23",
+      "art_code": "AN201202250003670478",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003670478_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000933",
+      "title": "神火股份：分红派息实施公告",
+      "notice_date": "2002-05-14",
+      "art_code": "AN201202250003628977",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003628977_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000933",
+      "title": "神火股份：2001年度中期利润分配实施公告",
+      "notice_date": "2001-12-21",
+      "art_code": "AN201202250003448466",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003448466_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000933",
+      "title": "河南神火煤电股份有限公司2000年度利润分配实施公告",
+      "notice_date": "2001-04-04",
+      "art_code": "AN201202250003483591",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003483591_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000975",
+      "title": "重庆乌江电力股份有限公司2001年中期公积金转增股本实施公告",
+      "notice_date": "2001-09-19",
+      "art_code": "AN201202250003476501",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003476501_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000975",
+      "title": "乌江电力：2000年年度利润分配实施公告                        ",
+      "notice_date": "2001-05-10",
+      "art_code": "AN201202250003446575",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003446575_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000999",
+      "title": "三九医药：2003年度分红派息实施公告",
+      "notice_date": "2004-07-02",
+      "art_code": "AN201202260003748348",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003748348_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "000999",
+      "title": "三九医药：2001年度分红派息实施公告",
+      "notice_date": "2002-05-29",
+      "art_code": "AN201202250003590217",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003590217_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "002001",
+      "title": "新 和 成：2004年度分红派息实施公告",
+      "notice_date": "2005-04-29",
+      "art_code": "AN201202260003853868",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003853868_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "002049",
+      "title": "晶源电子： 2005年度利润分配实施公告",
+      "notice_date": "2006-06-27",
+      "art_code": "AN201202260003942028",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003942028_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600000",
+      "title": "浦发银行：2003年度分红派息实施公告",
+      "notice_date": "2004-05-15",
+      "art_code": "AN201202260003756477",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003756477_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600000",
+      "title": "浦发银行：2002年度分红派息实施公告 ",
+      "notice_date": "2003-06-17",
+      "art_code": "AN201202250003675168",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003675168_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600007",
+      "title": "中国国贸：2003年度分红派息实施公告",
+      "notice_date": "2004-06-07",
+      "art_code": "AN201202260003752394",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003752394_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600007",
+      "title": "中国国贸：2002年度分红派息实施公告",
+      "notice_date": "2003-06-06",
+      "art_code": "AN201202250003672149",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003672149_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600007",
+      "title": "中国国贸：2001年度分红派息实施公告　",
+      "notice_date": "2002-06-13",
+      "art_code": "AN201202250003590145",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003590145_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600009",
+      "title": "上海机场：2003年度分红派息实施公告",
+      "notice_date": "2004-07-16",
+      "art_code": "AN201202260003746478",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003746478_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600009",
+      "title": "上海机场：2003年中期利润分配实施公告",
+      "notice_date": "2003-12-22",
+      "art_code": "AN201202250003697107",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003697107_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600009",
+      "title": "上海机场：2002年度分红派息实施公告",
+      "notice_date": "2003-08-05",
+      "art_code": "AN201202250003656481",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003656481_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600009",
+      "title": "上海机场：2001年度分红派息实施公告",
+      "notice_date": "2002-07-18",
+      "art_code": "AN201202250003570499",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003570499_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600009",
+      "title": "上海国际机场股份有限公司2000年度分红派息实施公告",
+      "notice_date": "2001-06-20",
+      "art_code": "AN201202250003457751",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003457751_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600009",
+      "title": "上海虹桥国际机场股份有限公司资本公积转增股本实施公告",
+      "notice_date": "1998-11-28",
+      "art_code": "AN201202240003319140",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202240003319140_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600015",
+      "title": "华夏银行：利润分配和资本公积金转增股本方案实施公告",
+      "notice_date": "2004-05-17",
+      "art_code": "AN201202260003756762",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003756762_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600015",
+      "title": "华夏银行：2002年度及2003年中期分红派息实施公告",
+      "notice_date": "2003-10-29",
+      "art_code": "AN201202250003702505",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003702505_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600016",
+      "title": "民生银行：2003年度利润分配及资本公积金转增股本实施公告",
+      "notice_date": "2004-04-13",
+      "art_code": "AN201202260003768898",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003768898_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600016",
+      "title": "民生银行：利润分配和资本公积金转增股本方案实施公告",
+      "notice_date": "2003-04-08",
+      "art_code": "AN201202250003682297",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003682297_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600016",
+      "title": "民生银行：利润分配方案实施公告 ",
+      "notice_date": "2002-06-13",
+      "art_code": "AN201202250003591833",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003591833_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600031",
+      "title": "三一重工：2003年度分红派息实施公告",
+      "notice_date": "2004-04-27",
+      "art_code": "AN201202260003757530",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003757530_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600036",
+      "title": "招商银行：2003年度利润分配和资本公积转增股本方案实施公告",
+      "notice_date": "2004-04-28",
+      "art_code": "AN201202260003760674",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003760674_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600036",
+      "title": "招商银行：利润分配方案实施公告",
+      "notice_date": "2003-07-08",
+      "art_code": "AN201202250003674843",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003674843_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600066",
+      "title": "宇通客车：分红派息、转增股本实施公告",
+      "notice_date": "2004-04-09",
+      "art_code": "AN201202260003770178",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003770178_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600085",
+      "title": "同 仁 堂：2003年度分红派息实施公告",
+      "notice_date": "2004-06-07",
+      "art_code": "AN201202260003751843",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003751843_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600085",
+      "title": "同 仁 堂：2002年度分红派息实施公告",
+      "notice_date": "2003-07-07",
+      "art_code": "AN201202250003674681",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003674681_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600085",
+      "title": "同 仁 堂：2001年度分红派息实施公告 ",
+      "notice_date": "2002-07-06",
+      "art_code": "AN201202250003599300",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003599300_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600085",
+      "title": "北京同仁堂股份有限公司2000年度分红派息及转增股本实施公告",
+      "notice_date": "2001-06-03",
+      "art_code": "AN201202250003463020",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003463020_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600132",
+      "title": "重庆啤酒：2003年度利润分配实施公告",
+      "notice_date": "2004-06-16",
+      "art_code": "AN201202260003752478",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003752478_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600132",
+      "title": "重庆啤酒：利润分配及转增股本实施公告",
+      "notice_date": "2003-04-12",
+      "art_code": "AN201202250003681543",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003681543_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600160",
+      "title": "巨化股份：2004年中期资本公积金转增股本方案实施公告",
+      "notice_date": "2004-10-26",
+      "art_code": "AN201202260003722934",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003722934_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600160",
+      "title": "巨化股份：2003年度分红派息实施公告",
+      "notice_date": "2004-05-15",
+      "art_code": "AN201202260003758503",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003758503_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600160",
+      "title": "巨化股份：2002年度分红派息实施公告",
+      "notice_date": "2003-05-16",
+      "art_code": "AN201202250003668882",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003668882_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600160",
+      "title": "巨化股份：2001年度分红派息实施公告",
+      "notice_date": "2002-05-15",
+      "art_code": "AN201202250003627871",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003627871_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600160",
+      "title": "浙江巨化股份有限公司2000年度分红派息实施公告",
+      "notice_date": "2001-04-12",
+      "art_code": "AN201202250003489042",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003489042_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600176",
+      "title": "中国化建：2003年度利润分配和资本公积金转增股本实施公告",
+      "notice_date": "2004-06-24",
+      "art_code": "AN201202260003752442",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003752442_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600176",
+      "title": "中国化建：2003年中期公积金转增股本实施公告",
+      "notice_date": "2003-10-30",
+      "art_code": "AN201202250003702527",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003702527_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600176",
+      "title": "中国化建：2002年度分红派息实施公告",
+      "notice_date": "2003-06-21",
+      "art_code": "AN201202250003672898",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003672898_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600176",
+      "title": "中国化学建材股份有限公司2000年度利润分配方案实施公告",
+      "notice_date": "2001-08-07",
+      "art_code": "AN201202250003453549",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003453549_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600183",
+      "title": "生益科技：利润分配实施公告",
+      "notice_date": "2004-06-09",
+      "art_code": "AN201202260003754411",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003754411_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600183",
+      "title": "生益科技：利润分配实施公告",
+      "notice_date": "2003-05-28",
+      "art_code": "AN201202250003668913",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003668913_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600183",
+      "title": "生益科技：公司利润分配实施公告 ",
+      "notice_date": "2002-07-06",
+      "art_code": "AN201202250003599254",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003599254_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600188",
+      "title": "兖州煤业：2002年度分红派息实施公告",
+      "notice_date": "2003-07-07",
+      "art_code": "AN201202250003674683",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003674683_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600271",
+      "title": "航天信息：2003年度分红派息实施公告",
+      "notice_date": "2004-06-01",
+      "art_code": "AN201202260003753570",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003753570_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600276",
+      "title": "恒瑞医药：2003年度分红派息实施公告",
+      "notice_date": "2004-05-22",
+      "art_code": "AN201202260003755740",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003755740_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600276",
+      "title": "恒瑞医药：2002年度分红派息实施公告",
+      "notice_date": "2003-08-01",
+      "art_code": "AN201202250003656959",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003656959_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600276",
+      "title": "恒瑞医药：公司送股及派发现金红利实施公告",
+      "notice_date": "2002-05-14",
+      "art_code": "AN201202250003628281",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003628281_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600285",
+      "title": "羚锐股份：2003年度分红派息实施公告",
+      "notice_date": "2004-08-06",
+      "art_code": "AN201202260003738050",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003738050_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600285",
+      "title": "羚锐股份：2001年度分红派息实施公告",
+      "notice_date": "2002-06-26",
+      "art_code": "AN201202250003598508",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003598508_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600285",
+      "title": "河南羚锐制药股份有限公司2000年度分红派息实施公告",
+      "notice_date": "2001-05-12",
+      "art_code": "AN201202250003454851",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003454851_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600298",
+      "title": "安琪酵母：2003年度分红派息实施公告",
+      "notice_date": "2004-04-08",
+      "art_code": "AN201202260003770704",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003770704_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600298",
+      "title": "安琪酵母：2002年度分红派息实施公告",
+      "notice_date": "2003-06-16",
+      "art_code": "AN201202250003671608",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003671608_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600298",
+      "title": "安琪酵母：2001年度分红派息实施公告",
+      "notice_date": "2002-06-06",
+      "art_code": "AN201202250003592824",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003592824_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600298",
+      "title": "湖北安琪酵母股份有限公司2000年度分红派息实施公告",
+      "notice_date": "2001-05-11",
+      "art_code": "AN201202250003458460",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003458460_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600309",
+      "title": "烟台万华：2003年度利润分配及转增股本实施公告",
+      "notice_date": "2004-05-11",
+      "art_code": "AN201202260003757423",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003757423_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600309",
+      "title": "烟台万华：公司分配及转增股本实施公告",
+      "notice_date": "2002-04-08",
+      "art_code": "AN201202250003609662",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003609662_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600315",
+      "title": "上海家化：2003年度分红派息实施公告",
+      "notice_date": "2004-07-01",
+      "art_code": "AN201202260003747671",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003747671_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600315",
+      "title": "上海家化：2002年度分红派息实施公告",
+      "notice_date": "2003-06-13",
+      "art_code": "AN201202250003672021",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003672021_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600315",
+      "title": "上海家化：2001年度分红派息实施公告",
+      "notice_date": "2002-07-03",
+      "art_code": "AN201202250003600476",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003600476_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600315",
+      "title": "上海家化联合股份有限公司关于2000年度利润分配的实施公告",
+      "notice_date": "2001-05-22",
+      "art_code": "AN201202250003459305",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003459305_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600406",
+      "title": "国电南瑞：2004年半年度转增股本实施公告",
+      "notice_date": "2004-10-08",
+      "art_code": "AN201202260003725821",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003725821_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600406",
+      "title": "国电南瑞：2003年度分配及转增股本实施公告",
+      "notice_date": "2004-03-29",
+      "art_code": "AN201202260003771792",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003771792_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600415",
+      "title": "小商品城：2002年度分红派息实施公告",
+      "notice_date": "2003-07-02",
+      "art_code": "AN201202250003676688",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003676688_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600436",
+      "title": "片 仔 癀：2003年度分红派息实施公告",
+      "notice_date": "2004-05-21",
+      "art_code": "AN201202260003755846",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003755846_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600486",
+      "title": "扬农化工：2003年度分红派息实施公告",
+      "notice_date": "2004-05-19",
+      "art_code": "AN201202260003758775",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003758775_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600486",
+      "title": "扬农化工：2002年度分红派息实施公告",
+      "notice_date": "2003-05-26",
+      "art_code": "AN201202250003669340",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003669340_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600519",
+      "title": "贵州茅台：2003年度利润分配及资本公积金转增股本实施公告",
+      "notice_date": "2004-06-25",
+      "art_code": "AN201202260003749237",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003749237_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600519",
+      "title": "贵州茅台：2002年度分红派息实施公告",
+      "notice_date": "2003-07-08",
+      "art_code": "AN201202250003675235",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003675235_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600519",
+      "title": "贵州茅台：2001年度分红派息及转增股本实施公告",
+      "notice_date": "2002-07-18",
+      "art_code": "AN201202250003572593",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003572593_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600570",
+      "title": "恒生电子：2003年度分红派息实施公告",
+      "notice_date": "2004-05-31",
+      "art_code": "AN201202260003752745",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003752745_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600585",
+      "title": "海螺水泥：2003年度分红派息实施公告",
+      "notice_date": "2004-06-05",
+      "art_code": "AN201202260003752828",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003752828_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600585",
+      "title": "海螺水泥：2002年度分红派息实施公告",
+      "notice_date": "2003-06-03",
+      "art_code": "AN201202250003671833",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003671833_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600588",
+      "title": "用友软件：2003年度分红派息及资本公积金转增股本实施公告",
+      "notice_date": "2004-05-15",
+      "art_code": "AN201202260003758505",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003758505_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600588",
+      "title": "用友软件：2002年度分红派息及资本公积金转增股本实施公告",
+      "notice_date": "2003-06-30",
+      "art_code": "AN201202250003675944",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003675944_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600588",
+      "title": "用友软件：2001年度分红派息实施公告",
+      "notice_date": "2002-05-14",
+      "art_code": "AN201202250003627832",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003627832_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600660",
+      "title": "福耀玻璃：2003年度利润分配及资本公积金转增股本实施公告",
+      "notice_date": "2004-06-03",
+      "art_code": "AN201202260003753386",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003753386_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600690",
+      "title": "青岛海尔：2003年度利润分配及资本公积金转增股本实施公告",
+      "notice_date": "2004-07-06",
+      "art_code": "AN201202260003747224",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003747224_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600690",
+      "title": "青岛海尔：2002年度分红派息实施公告",
+      "notice_date": "2003-07-04",
+      "art_code": "AN201202250003676423",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003676423_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600690",
+      "title": "青岛海尔：2001年度分红派息实施公告",
+      "notice_date": "2002-06-14",
+      "art_code": "AN201202250003593410",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003593410_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600690",
+      "title": "公司2000年度利润分配方案实施公告",
+      "notice_date": "2001-06-14",
+      "art_code": "AN201202250003455441",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003455441_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600717",
+      "title": "天 津 港：2004年半年度利润分配及资本公积金转增股本实施公告",
+      "notice_date": "2004-09-29",
+      "art_code": "AN201202260003725572",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003725572_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600717",
+      "title": "天 津 港：2002年度分红派息实施公告",
+      "notice_date": "2003-05-21",
+      "art_code": "AN201202250003670658",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003670658_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600717",
+      "title": "天 津 港：2001年度分红派息实施公告 ",
+      "notice_date": "2002-06-08",
+      "art_code": "AN201202250003594484",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003594484_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600750",
+      "title": "江中药业：2003年度分红派息实施公告",
+      "notice_date": "2004-05-26",
+      "art_code": "AN201202260003753398",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003753398_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600750",
+      "title": "江中药业：2002年度分红派息实施公告",
+      "notice_date": "2003-05-30",
+      "art_code": "AN201202250003669893",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003669893_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600750",
+      "title": "江中药业：2001年度分红派息实施公告 ",
+      "notice_date": "2002-05-16",
+      "art_code": "AN201202250003586135",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003586135_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600803",
+      "title": "威远生化：2001年度分红派息实施公告",
+      "notice_date": "2002-08-20",
+      "art_code": "AN201202250003579683",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003579683_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600803",
+      "title": "河北威远生物化工股份有限公司2000年度分红派息实施公告",
+      "notice_date": "2001-06-21",
+      "art_code": "AN201202250003459273",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003459273_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600809",
+      "title": "山西汾酒：2003年度分红派息实施公告",
+      "notice_date": "2004-07-02",
+      "art_code": "AN201202260003748039",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003748039_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600809",
+      "title": "山西汾酒：2002年度分红派息实施公告",
+      "notice_date": "2003-06-28",
+      "art_code": "AN201202250003675258",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003675258_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600862",
+      "title": "南通纵横国际股份有限公司2000年度红利派发及资本公积金转增股本实施公告",
+      "notice_date": "2001-04-30",
+      "art_code": "AN201202250003460257",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003460257_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600887",
+      "title": "伊利股份：2003年度分红派息实施公告",
+      "notice_date": "2004-07-09",
+      "art_code": "AN201202260003745260",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003745260_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600887",
+      "title": "伊利股份：2002年度分红及公积金转增股本实施公告",
+      "notice_date": "2003-07-05",
+      "art_code": "AN201202250003676425",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003676425_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600897",
+      "title": "厦门机场：2003年度分红派息实施公告",
+      "notice_date": "2004-04-05",
+      "art_code": "AN201202260003771226",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003771226_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600897",
+      "title": "厦门机场：2001年度分红派息实施公告",
+      "notice_date": "2002-06-26",
+      "art_code": "AN201202250003596789",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202250003596789_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    },
+    {
+      "code": "600900",
+      "title": "长江电力：2003年度分红派息实施公告",
+      "notice_date": "2004-05-26",
+      "art_code": "AN201202260003752796",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN201202260003752796_1.pdf",
+      "status": "source_unavailable",
+      "error": "PdfStreamError: Stream has ended unexpectedly"
+    }
+  ],
+  "ambiguous_event_mapping": [
+    {
+      "code": "002043",
+      "title": "兔宝宝:2026年半年度权益分派实施公告",
+      "notice_date": "2026-08-26",
+      "art_code": "AN202608251828421788",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202608251828421788_1.pdf",
+      "status": "ambiguous_or_missing_event",
+      "event_dates": []
+    },
+    {
+      "code": "002508",
+      "title": "老板电器:特别分红权益分派实施公告",
+      "notice_date": "2024-01-03",
+      "art_code": "AN202401021615927958",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202401021615927958_1.pdf",
+      "status": "ambiguous_or_missing_event",
+      "event_dates": []
+    },
+    {
+      "code": "300750",
+      "title": "宁德时代:2024年特别分红权益分派实施公告",
+      "notice_date": "2025-01-17",
+      "art_code": "AN202501171642302265",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202501171642302265_1.pdf",
+      "status": "ambiguous_or_missing_event",
+      "event_dates": []
+    },
+    {
+      "code": "301498",
+      "title": "乖宝宠物:2026年半年度权益分派实施公告",
+      "notice_date": "2026-09-08",
+      "art_code": "AN202609081829136837",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202609081829136837_1.pdf",
+      "status": "ambiguous_or_missing_event",
+      "event_dates": []
+    },
+    {
+      "code": "600009",
+      "title": "上海机场:上海机场2026年半年度权益分派实施公告",
+      "notice_date": "2026-09-11",
+      "art_code": "AN202609101829232245",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202609101829232245_1.pdf",
+      "status": "ambiguous_or_missing_event",
+      "event_dates": []
+    },
+    {
+      "code": "603288",
+      "title": "海天味业:海天味业2025年回报股东特别分红权益分派实施公告",
+      "notice_date": "2026-01-31",
+      "art_code": "AN202601301818588839",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202601301818588839_1.pdf",
+      "status": "ambiguous_or_missing_event",
+      "event_dates": []
+    }
+  ],
+  "limitations": [
+    "无差异关键词仅为检索结果，不等于逐页核验为同口径",
+    "625条之外，除明确零回购样本外均保持未核验回退；未推断除权舍入",
+    "行情缓存和财务输入未刷新；旧快照保留观测时点信号，不重述历史行情"
+  ]
+}

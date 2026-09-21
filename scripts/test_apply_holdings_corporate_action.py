@@ -80,7 +80,7 @@ class ApplyCorporateActionTest(unittest.TestCase):
                 w.writerow({"security_code": "600036", "ex_dividend_date": "2026-07-10", "cash_per_share": "0", "share_ratio": "0",
                             "rights_ratio": "0.1", "rights_price": "20"})
             ev = ap.event_from_actions(a, "600036", "2026-07-10")
-            self.assertEqual(ev, {"cash": 2.0, "ratio": 0.0, "rights_ratio": 0.1, "rights_price": 20.0})
+            self.assertEqual(ev, {"cash": 2.0, "ratio": 0.0, "rights_ratio": 0.1, "rights_price": 20.0, "price": (2., 0., .1, 20.)})
             self.assertIsNone(ap.event_from_actions(a, "600036", "2026-07-11"))
 
 

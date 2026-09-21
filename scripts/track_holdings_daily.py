@@ -409,6 +409,10 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
         row = by_code[code]
         cash, ratio = float(event["cash_per_share"]), float(event["share_ratio"])  # type: ignore[arg-type]
         rr, rp = float(event.get("rights_ratio") or 0.0), float(event.get("rights_price") or 0.0)  # type: ignore[arg-type]
+        from corporate_actions import with_price_terms, PRICE_FIELDS
+        priced = with_price_terms(dict(security_code=code, ex_dividend_date=as_of.isoformat(),
+            cash_per_share=cash, share_ratio=ratio, rights_ratio=rr, rights_price=rp))
+        price_cash, price_ratio, price_rr, price_rp = (priced[k] for k in PRICE_FIELDS)
         done = (code, as_of.isoformat()) in applied
         print(f"    - {row['security_name']}（{code}）{event['plan']}"
               + ("｜**已处理**（台账已登记，持仓表为除权后口径，勿再调）" if done else "｜**未处理**"))
@@ -422,8 +426,8 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
             if value is None:
                 print(f"        {label}：未设定，无需调整")
                 continue
-            print(f"        {label} {value:g} → **建议 {adjust_for_ex_dividend(value, cash, ratio, rr, rp):.2f}**"
-                  f"（(原价 − {cash:g}" + (f" + {rr:g}×{rp:g}" if rr else "") + f") ÷ (1 + {ratio + rr:g})）")
+            print(f"        {label} {value:g} → **建议 {adjust_for_ex_dividend(value, price_cash, price_ratio, price_rr, price_rp):.2f}**"
+                  f"（(原价 − {price_cash:g}" + (f" + {price_rr:g}×{price_rp:g}" if price_rr else "") + f") ÷ (1 + {price_ratio + price_rr:g})）")
         if ratio:
             print(f"        送转比例 {ratio:g}/股：`current_shares` 同须按 §11.4 调整")
         if rr:

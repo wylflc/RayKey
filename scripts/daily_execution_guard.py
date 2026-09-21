@@ -240,6 +240,8 @@ def finish_evidence(as_of, since):
         verify_stamp(p, as_of)
         paths.append(p.with_suffix(p.suffix + '.meta.json'))
     paths.append(ROOT / 'data/reference/a_share_action_component_exclusions.csv')
+    paths.append(ROOT / 'data/reference/a_share_exright_terms.csv')
+    paths.append(ROOT / 'data/reference/a_share_action_component_corrections.csv')
     for name in ('announcements', 'corporate_actions', 'market_context'):
         path = ROOT / f'data/interim/daily_{name}_{as_of}.json'
         value = json.loads(path.read_text())

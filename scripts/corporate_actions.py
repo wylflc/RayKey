@@ -1,13 +1,14 @@
 """Independent distribution components and same-day events (workflow §8.3).
 
-Keep fiscal/availability metadata on components. Only price/share/cash consumers
-use the daily aggregate: all ratios on one date refer to the pre-event shares.
+Keep fiscal/availability metadata on components. Daily actual entitlements and
+exchange price terms are separate; both refer to the pre-event share basis.
 """
 from __future__ import annotations
 
 from collections import defaultdict
 import csv
 from decimal import Decimal, InvalidOperation
+from functools import lru_cache
 from pathlib import Path
 from typing import Iterable
 
@@ -16,6 +17,83 @@ ACTION_FIELDS = ["security_code", "security_name", "ex_dividend_date", "cash_per
                  "rights_ratio", "rights_price"]
 AMOUNTS = ("cash_per_share", "share_ratio", "rights_ratio", "rights_price")
 COMPONENT_EXCLUSIONS = Path(__file__).resolve().parents[1] / 'data/reference/a_share_action_component_exclusions.csv'
+PRICE_TERMS_PATH = COMPONENT_EXCLUSIONS.with_name('a_share_exright_terms.csv')
+COMPONENT_CORRECTIONS = COMPONENT_EXCLUSIONS.with_name('a_share_action_component_corrections.csv')
+PRICE_FIELDS = tuple('price_' + k for k in AMOUNTS)
+
+
+class CorporateAction(tuple):
+    """Four actual entitlement amounts, with separate exchange price parameters.
+
+    Iteration retains the cash/share accounting contract. Price consumers must
+    call price_terms. Pickling retains both bases for multiprocessing backtests.
+    """
+    def __new__(cls, actual, price=None):
+        obj = super().__new__(cls, actual)
+        if len(obj) != 4:
+            raise ValueError('Corporate action requires four actual amounts')
+        obj.price = tuple(obj if price is None else price)
+        if len(obj.price) != 4:
+            raise ValueError('Corporate action requires four price amounts')
+        return obj
+
+    def __getnewargs__(self):
+        return tuple(self), self.price
+
+
+def price_terms(event):
+    return getattr(event, 'price', event)
+
+
+def event_from_row(row):
+    actual = tuple(float(amount(row, k)) for k in AMOUNTS)
+    present = [row.get(k) not in (None, '') for k in PRICE_FIELDS]
+    if any(present) and not all(present):
+        raise ValueError('Incomplete exchange price terms')
+    price = tuple(float(number(row[p], share_change=k == 'share_ratio'))
+                  for k, p in zip(AMOUNTS, PRICE_FIELDS)) if all(present) else actual
+    return CorporateAction(actual, price)
+
+
+@lru_cache(maxsize=8)
+def _price_overrides(path, mtime, size):
+    with Path(path).open(newline='', encoding='utf-8-sig') as handle:
+        return validate_price_overrides(csv.DictReader(handle))
+
+
+def validate_price_overrides(rows):
+    rules = {}
+    for row in rows:
+        key = row['security_code'], row['ex_dividend_date']
+        if key in rules or not row.get('source_url') or not row.get('source_pages'):
+            raise ValueError(f'Invalid/duplicate exchange price terms: {key}')
+        if not row.get('notice_date') or row['notice_date'] > key[1]:
+            raise ValueError(f'Exchange terms unavailable at ex date: {key}')
+        event_from_row(row)  # Validate both complete numeric bases.
+        if any(row.get(k) in (None, '') for k in (*AMOUNTS, *PRICE_FIELDS)):
+            raise ValueError(f'Incomplete verified exchange terms: {key}')
+        rules[key] = row
+    return rules
+
+
+def price_overrides():
+    path = PRICE_TERMS_PATH
+    if path is None or not path.exists():
+        return {}
+    stat = path.stat()
+    return _price_overrides(str(path), stat.st_mtime_ns, stat.st_size)
+
+
+def with_price_terms(row, *, overrides=None):
+    """Enrich a daily aggregate; never distribute a daily override over components."""
+    rule = (price_overrides() if overrides is None else overrides).get((row['security_code'], row['ex_dividend_date']))
+    if rule:
+        for k in AMOUNTS:
+            if abs(amount(row, k) - amount(rule, k)) > Decimal('0.0000000001'):
+                raise ValueError(f'Actual distribution changed under verified price terms: '
+                                 f'{row["security_code"]} {row["ex_dividend_date"]} {k}')
+    return {**row, **{p: float(rule[p]) if rule else row[k] for k, p in zip(AMOUNTS, PRICE_FIELDS)},
+            'price_terms_source': rule['source_url'] if rule else 'unverified_actual_fallback'}
 
 
 def number(value, *, share_change: bool = False) -> Decimal:
@@ -88,6 +166,50 @@ def merge_actions(existing: Iterable[dict], fresh: Iterable[dict],
     return [merged[k] for k in sorted(merged)]
 
 
+def correct_components(rows, path=COMPONENT_CORRECTIONS):
+    """Apply issuer-verified source errors; accept already corrected refreshes."""
+    rules = {}
+    if path.exists():
+        with path.open(newline='', encoding='utf-8-sig') as handle:
+            for rule in csv.DictReader(handle):
+                key = action_key(rule)
+                if key in rules or not rule.get('source_url') or not rule.get('reason'):
+                    raise ValueError(f'Invalid component correction: {key}')
+                rules[key] = rule
+    result = []
+    for row in unique_actions(rows):
+        rule = rules.get(action_key(row))
+        if rule:
+            actual = tuple(amount(row, k) for k in AMOUNTS)
+            expected = tuple(number(rule['expected_' + k], share_change=k == 'share_ratio') for k in AMOUNTS)
+            corrected = tuple(amount(rule, k) for k in AMOUNTS)
+            if actual not in (expected, corrected):
+                raise ValueError(f'Corrected source component changed: {action_key(row)}')
+            row = {**row, **{k: rule[k] for k in AMOUNTS}, 'plan': rule['plan']}
+        result.append(row)
+    return result
+
+
+@lru_cache(maxsize=8)
+def _accounting_overrides(path, mtime, size):
+    with Path(path).open(newline='', encoding='utf-8-sig') as handle:
+        return {action_key(r): str(number(r['accounting_cash_per_share']))
+                for r in csv.DictReader(handle) if r.get('accounting_cash_per_share')}
+
+
+def accounting_cash(row):
+    """Company equity bridge: use weighted total for unequal shareholder classes."""
+    if not row.get('security_code'):
+        return row.get('cash_per_share', '')
+    path = COMPONENT_CORRECTIONS
+    if path.exists():
+        stat = path.stat()
+        value = _accounting_overrides(str(path), stat.st_mtime_ns, stat.st_size).get(action_key(row))
+        if value is not None:
+            return value
+    return row.get('cash_per_share', '')
+
+
 def normalize_eastmoney(rows: Iterable[dict], exclusions_path: Path = COMPONENT_EXCLUSIONS) -> list[dict]:
     out = []
     for row in rows:
@@ -124,7 +246,7 @@ def normalize_eastmoney(rows: Iterable[dict], exclusions_path: Path = COMPONENT_
                 raise ValueError(f'Excluded source component changed: {key}')
             continue
         kept.append(row)
-    return kept
+    return correct_components(kept)
 
 
 def aggregate_actions(rows: Iterable[dict], include_rights: bool = True) -> list[dict]:
@@ -155,13 +277,23 @@ def aggregate_actions(rows: Iterable[dict], include_rights: bool = True) -> list
 
 def event_map(rows: Iterable[dict], include_rights: bool = True) -> dict[str, dict[str, tuple]]:
     out: dict[str, dict[str, tuple]] = defaultdict(dict)
-    for row in aggregate_actions(rows, include_rights=include_rights):
-        out[row["security_code"]][row["ex_dividend_date"]] = tuple(row[k] for k in AMOUNTS)
+    overrides = price_overrides()
+    for row in aggregate_actions(rows):
+        row = with_price_terms(row, overrides=overrides)
+        if not include_rights:
+            for k in ('rights_ratio', 'rights_price', 'price_rights_ratio', 'price_rights_price'):
+                row[k] = 0.
+        if not any(row[k] for k in AMOUNTS[:3]):
+            continue
+        out[row["security_code"]][row["ex_dividend_date"]] = event_from_row(row)
     return out
 
 
-def company_events(rows: Iterable[dict]) -> list[dict]:
+def company_events(rows: Iterable[dict], *, price_basis: bool = False) -> list[dict]:
     """Aggregate an already selected company's component list (code may be omitted)."""
     events = aggregate_actions(({**r, "security_code": r.get("security_code") or "_company"} for r in rows))
     # Valuation helpers consume the same textual-number schema as the CSV.
-    return [{**r, **{k: str(r[k]) for k in AMOUNTS}} for r in events]
+    if price_basis:
+        overrides = price_overrides()
+        events = [with_price_terms(r, overrides=overrides) for r in events]
+    return [{**r, **{k: str(r['price_' + k] if price_basis else r[k]) for k in AMOUNTS}} for r in events]

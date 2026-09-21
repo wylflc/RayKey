@@ -27,6 +27,8 @@ import screen_daily_volume_price_signals as live
 import sweep_backtest_configs as sweep
 from equity_bond_constraint import EquityBondConstraint
 
+from corporate_actions import event_from_row
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BOOK = ROOT / 'data/processed/shadow_portfolio/e4'
 PROTECTED = ('shadow_portfolio.py', 'backtest_valuation_strategy.py',
@@ -287,8 +289,7 @@ def simulate(snapshots: list[dict], protocol: dict):
                 if value and pv is not None and pv > 0:
                     dest[day].append((code, close, value, pv))
         for code, event in snapshot['actions'].items():
-            actions.setdefault(code, {})[day] = (float(event['cash_per_share']), float(event['share_ratio']),
-                                                float(event.get('rights_ratio', 0)), float(event.get('rights_price', 0)))
+            actions.setdefault(code, {})[day] = event_from_row(event)
     seed = bt.Portfolio(cash=first['account']['cash_cny'], debt=first['account']['margin_debt_cny'])
     for code, h in first['actual_holdings'].items():
         # entry_date is a synthetic accounting origin; old FIFO dividend history is unavailable.

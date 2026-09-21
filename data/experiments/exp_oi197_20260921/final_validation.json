@@ -1,0 +1,93 @@
+{
+  "status": "passed",
+  "checked_at_utc": "2026-09-21T13:06:03.702225+00:00",
+  "checks": {
+    "a_share_holdings.csv": true,
+    "portfolio_account_snapshot.csv": true,
+    "daily_entry_plan.csv": 0,
+    "daily_sell_plan.csv": 0,
+    "holding_shares_close_anchor_unchanged": true,
+    "tracking_changes": {
+      "002648": {
+        "scanned_at_utc": [
+          "2026-09-21T11:11:47+00:00",
+          "2026-09-21T13:02:09+00:00"
+        ]
+      },
+      "000651": {
+        "ma60": [
+          "38.2587",
+          "38.2588"
+        ],
+        "scanned_at_utc": [
+          "2026-09-21T11:11:47+00:00",
+          "2026-09-21T13:02:09+00:00"
+        ]
+      },
+      "603529": {
+        "scanned_at_utc": [
+          "2026-09-21T11:11:47+00:00",
+          "2026-09-21T13:02:09+00:00"
+        ]
+      },
+      "600036": {
+        "scanned_at_utc": [
+          "2026-09-21T11:11:47+00:00",
+          "2026-09-21T13:02:09+00:00"
+        ]
+      },
+      "601318": {
+        "scanned_at_utc": [
+          "2026-09-21T11:11:47+00:00",
+          "2026-09-21T13:02:09+00:00"
+        ]
+      },
+      "600970": {
+        "scanned_at_utc": [
+          "2026-09-21T11:11:47+00:00",
+          "2026-09-21T13:02:09+00:00"
+        ]
+      }
+    },
+    "verified_price_terms": 625,
+    "candidates": 181,
+    "action_components": 54637,
+    "original_shadow_snapshots_preserved": 17,
+    "valuation_pool_rows": 181,
+    "buy_sell_plan_rows": {
+      "daily_entry_plan.csv": 0,
+      "daily_sell_plan.csv": 0
+    },
+    "mindray": {
+      "close": "158.05",
+      "model_intrinsic_value": "86.3984",
+      "model_pv": "1.8293",
+      "ma20": "162.953",
+      "ma60": "152.8625"
+    },
+    "jobs": {
+      "audit": "26977218",
+      "extract": "26979836",
+      "states": "26981194",
+      "shadow": "26980602",
+      "aborted": [
+        "26979391",
+        "26979836",
+        "26980933",
+        "26980946"
+      ],
+      "backtest": "26981447",
+      "superseded": {
+        "states_before_accounting_review": "26980524",
+        "failed_baseline_guard": "26980656",
+        "failed_rounding_guard": "26981249"
+      },
+      "publish": "26981567",
+      "scan": "26981726"
+    }
+  },
+  "publication": {
+    "bytes": 4923,
+    "sha256": "ca32eb0fb4ce28cd8eb9fdbe2605631306a1419ceb3af0b545e8ac2ad826e899"
+  }
+}

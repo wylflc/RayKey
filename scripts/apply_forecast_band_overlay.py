@@ -59,7 +59,7 @@ def exright_normalize(band: dict, code_actions: list[dict], as_of: str) -> tuple
     factor, cash_cum, hits = 1.0, 0.0, []
     floor_since = min(split_since, cash_since)
     from corporate_actions import company_events
-    for act in company_events(code_actions):
+    for act in company_events(code_actions, price_basis=True):
         ex = (act.get("ex_dividend_date") or "").strip()[:10]
         if not ex or ex <= floor_since or ex > as_of:
             continue

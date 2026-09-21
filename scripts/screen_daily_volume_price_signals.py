@@ -162,13 +162,14 @@ def rebase_price_rows(raw, code, as_of, events=None):
     events = live_actions().get(code, {}) if events is None else events
     basis_days = days if days[-1] == as_of else days + [as_of]
     scales, shifts = exright_affine(basis_days, events)
+    share_scales, _ = exright_affine(basis_days, {d: tuple(e) for d, e in events.items()})
     for i, r in enumerate(rows):
         r["raw_close"] = r["close"]
         for key in ("open", "close", "high", "low"):
             if key in r:
                 r[key] = float(r[key]) * scales[i] + shifts[i]
         if "volume" in r:
-            r["volume"] = float(r["volume"]) / scales[i]
+            r["volume"] = float(r["volume"]) / share_scales[i]
         r["adjustment_basis"] = as_of
     return rows
 

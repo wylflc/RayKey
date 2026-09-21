@@ -1,0 +1,17 @@
+{
+  "file": "roic_daily_raw_b2.csv",
+  "key": [
+    "300360",
+    "2016-09-27"
+  ],
+  "differences": {
+    "valuation_ratio": [
+      "2.1440",
+      "2.1441"
+    ],
+    "pv_equity": [
+      "2.1440",
+      "2.1441"
+    ]
+  }
+}

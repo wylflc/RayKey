@@ -4,14 +4,14 @@
   "retrospective_through": "2026-09-18",
   "status": "opening_shares_confirmed_residual_unreconciled",
   "code_sha256": {
-    "shadow_from_origin.py": "bac4347ebc96e0b88a16890d40dbaefb4de12a6915fb046ad6d24395c7bc2675",
-    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
-    "backtest_valuation_strategy.py": "7c6393b17fb65656121c3b0e0a8ea728f0ac553ced3eb1c0a7ede08e3365f1c4",
-    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
+    "shadow_from_origin.py": "675e2e87a4d203199a7e79a10fa97954f4a569e50022560cc4a68ba0040a6183",
+    "shadow_portfolio.py": "aa30791f37eb0fc7ce92c66e4cc3664ea7f4cdb23d0221df480336ce4c48226b",
+    "backtest_valuation_strategy.py": "3c2ec3c2f8faa9260481f6202a7236c2cefb9cd767eec3ae7f6b062df1aa0980",
+    "screen_daily_volume_price_signals.py": "c3a6bc4a11207ca59a7ae2138deb01f5e4f0f82e07cece639d470784a1ce2e11",
     "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
     "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
     "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
-    "corporate_actions.py": "02d771a38272fbc8173586ba6d0c2fd19f9e1db56a6494de6c55df73c64dae2e"
+    "corporate_actions.py": "f59a1d34ce61ba443f1b4abca7b3a2fe905d61787020c3c5f43f8d6f52c3d012"
   },
   "snapshots": {
     "2026-08-28": "c836d973436d75a40d6ee998fa4cdbbc432ea1f6656d7aa9d15ac6e1766b10f0",
@@ -88,9 +88,11 @@
   "previous_manifest_revision": "c13edc82d99088d03aa07e8130575ae121470511",
   "previous_manifest_sha256": "ed7d892f4579bd42198e9c80b44f0d2e10007eb28dce8b00e1d77908c0110267",
   "code_migrations": {
-    "migrations/oi196_20260921.json": "326a095fa8a055a5f570ca71bf9ccb26b75bb50a5e6fd0f83004cad2c9643d61"
+    "migrations/oi196_20260921.json": "326a095fa8a055a5f570ca71bf9ccb26b75bb50a5e6fd0f83004cad2c9643d61",
+    "migrations/oi197_20260921.json": "9cdf1c1640479a4fba6a037624df58fd30f15e1300bb6da8a12e6cec49be4e86"
   },
   "action_corrections": {
-    "corrections/oi196_actions_20260921.json": "00d522804d3277f97a5e7251a87875520d66e677ef0fd7f21386f3487d44618d"
+    "corrections/oi196_actions_20260921.json": "00d522804d3277f97a5e7251a87875520d66e677ef0fd7f21386f3487d44618d",
+    "corrections/oi197_actions_20260921.json": "49920e28f3d0b7ff8ab50bd174226d6b9db598883ead4f5ccee5a67b9acbdd57"
   }
 }

@@ -1,0 +1,19 @@
+{
+  "audit_pdf_hash_and_pages_verified": 623,
+  "separate_seed_sources": [
+    {
+      "security_code": "002043",
+      "ex_dividend_date": "2026-06-01",
+      "source_url": "https://static.cninfo.com.cn/finalpage/2026-05-26/1225328690.PDF",
+      "source_sha256": "56119c4f332f7ae733bff068a16fd290281efa559006ba2547faafe2bbf21e70"
+    },
+    {
+      "security_code": "688019",
+      "ex_dividend_date": "2025-06-16",
+      "source_url": "https://star.sse.com.cn/disclosure/listedinfo/announcement/c/new/2025-06-06/688019_20250606_W94B.pdf",
+      "source_sha256": "5d7c19f406d7b57858d0ce0d693ff073f0a8200f752425bffe56a52ab03f6299"
+    }
+  ],
+  "separate_seed_hashes_verified": true,
+  "all_625_sources_verified": true
+}

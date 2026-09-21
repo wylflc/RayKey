@@ -336,11 +336,12 @@ def load_research(codes: set[str] | None = None, directory: Path | None = None, 
     则 `aim × C(d)` 在同一只股票内部是**同一把尺子**——发生 10 转 10 时，除权前定的
     目标价 100 与除权后定的 50 都会折成同一个数，不再产生假的 −50% 下修。
     """
+    from corporate_actions import price_terms
     factors: dict[str, list[tuple[str, float]]] = {}
     for code, events in (actions or {}).items():
         cumulative, series = 1.0, []
         for day in sorted(events):
-            cumulative *= (1.0 + events[day][1])
+            cumulative *= (1.0 + price_terms(events[day])[1])
             series.append((day, cumulative))
         if series:
             factors[code] = series
@@ -413,7 +414,7 @@ def volume_ratio_series(series: dict[str, float], events: dict[str, tuple[float,
     if window <= 0 or short >= window:
         return out
     days = sorted(series)
-    scale, _shift = exright_affine(days, events)
+    scale, _shift = exright_affine(days, {d: tuple(e) for d, e in events.items()})
     adj = [series[d] / scale[i] for i, d in enumerate(days)]
     if short:
         total_long = total_short = 0.0
@@ -791,6 +792,7 @@ def exright_affine(days: list[str], events: dict[str, tuple[float, float, float,
     （§11.4 交易所除权参考价公式，与 `apply_corporate_actions` 对持仓锚的折算同式）。自末日向前
     累乘即可得到每一日到末日的复合映射；同一映射反过来用，就能把末日口径的均值折回任意一日的口径。
     """
+    from corporate_actions import price_terms
     n = len(days)
     scale, shift = [1.0] * n, [0.0] * n
     if not days:
@@ -802,7 +804,7 @@ def exright_affine(days: list[str], events: dict[str, tuple[float, float, float,
         # 当日报价已除权，只折算严格晚于该报价日且不晚于末日的全部事件。
         # 事件不要求该股票当天有报价；连续停牌期间的多次事件按倒序复合。
         while cursor >= 0 and event_days[cursor] > days[i]:
-            cash, ratio, rr, rp = events[event_days[cursor]]
+            cash, ratio, rr, rp = price_terms(events[event_days[cursor]])
             a, b = a / (1.0 + ratio + rr), b + a * (rr * rp - cash) / (1.0 + ratio + rr)
             cursor -= 1
         scale[i], shift[i] = a, b
@@ -1019,6 +1021,7 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
     （「除权除息按 §11.4 同因子调整锚」）。`frozen`（`--exright-stop frozen`）只用于复现 v4.31 前的读数。
     股息税（`--dividend-tax`）：现金红利按批记入 `sublots`，卖出时按持有期结算（`sell_dividend_tax`）。
     """
+    from corporate_actions import price_terms
     credited = 0.0
     for code, lot in portfolio.lots.items():
         event = actions.get(code, {}).get(day)
@@ -1035,7 +1038,9 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
         lot.proceeds += cash
         credited += cash
         denom = 1.0 + ratio + rr
-        shift = rr * rp - cash_per_share          # 价格口径的分子平移：−D + rr·rp
+        price_cash, price_ratio, price_rr, price_rp = price_terms(event)
+        price_denom = 1.0 + price_ratio + price_rr
+        shift = price_rr * price_rp - price_cash  # 独立的交易所价格参数
         for sub in lot.sublots:                   # 每批先记红利、再按送转放大股数
             sub[2] += sub[1] * cash_per_share
             sub[1] *= (1 + ratio)
@@ -1052,21 +1057,21 @@ def apply_corporate_actions(portfolio: Portfolio, day: str,
         lot.bought_shares *= denom      # 阶梯分母与已减股数同倍放大，减持比例在除权前后不变
         lot.ladder_sold *= denom
         if lot.trail_peak > 0:          # 上移锚峰值按 §11.4 同式折算
-            lot.trail_peak = max(0.0, (lot.trail_peak + shift) / denom)
+            lot.trail_peak = max(0.0, (lot.trail_peak + shift) / price_denom)
         if lot.lock_level > 0:          # 盈利锁定线与锚同式折算；现金红利高于线价的极端情形只折送转
-            adjusted_lock = (lot.lock_level + shift) / denom
-            lot.lock_level = adjusted_lock if adjusted_lock > 0 else lot.lock_level / denom
+            adjusted_lock = (lot.lock_level + shift) / price_denom
+            lot.lock_level = adjusted_lock if adjusted_lock > 0 else lot.lock_level / price_denom
         if lot.avg_cost > 0:           # 持仓均价与锚同式折算；现金红利高于均价的极端情形只折送转
-            adjusted_cost = (lot.avg_cost + shift) / denom
-            lot.avg_cost = adjusted_cost if adjusted_cost > 0 else lot.avg_cost / denom
+            adjusted_cost = (lot.avg_cost + shift) / price_denom
+            lot.avg_cost = adjusted_cost if adjusted_cost > 0 else lot.avg_cost / price_denom
         if adjust_stops:
             if lot.entry_stop > 0:
-                adjusted = (lot.entry_stop + shift) / denom
+                adjusted = (lot.entry_stop + shift) / price_denom
                 # 锚为 0 表示「无止损」（falsy 短路），折算不得把一条活着的止损线静默折没——
                 # 现金红利高于锚价本身的极端情形只折送转、不扣现金
-                lot.entry_stop = adjusted if adjusted > 0 else lot.entry_stop / denom
+                lot.entry_stop = adjusted if adjusted > 0 else lot.entry_stop / price_denom
             if lot.peak_price > 0:
-                lot.peak_price = max(0.0, (lot.peak_price + shift) / denom)
+                lot.peak_price = max(0.0, (lot.peak_price + shift) / price_denom)
     return credited
 
 

@@ -1,0 +1,233 @@
+[
+  {
+    "code": "000423",
+    "title": "东阿阿胶:2019年度权益分派实施公告",
+    "notice_date": "2020-07-09",
+    "art_code": "AN202007081390322272",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN202007081390322272_1.pdf",
+    "source_sha256": "607b8e8ddc4cce6b32d5185a90a5970a4a0ef2400b479ce22d7d33d52c5f1f00",
+    "event": {
+      "security_code": "000423",
+      "ex_dividend_date": "2020-07-16",
+      "cash_per_share": 0.203119,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "东阿阿胶",
+      "plan": "10派2.031195元(含税,扣税后1.828075元)",
+      "progress": "实施分配"
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+  },
+  {
+    "code": "000423",
+    "title": "东阿阿胶:2018年度权益分派实施公告",
+    "notice_date": "2019-08-08",
+    "art_code": "AN201908071342550327",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN201908071342550327_1.pdf",
+    "source_sha256": "a18512434dbc2c28037223b2b21bbb3a6f937d1b7db9c5a4cfeb9980e0ac43fa",
+    "event": {
+      "security_code": "000423",
+      "ex_dividend_date": "2019-08-15",
+      "cash_per_share": 1.00953,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "东阿阿胶",
+      "plan": "10派10.095303元(含税,扣税后9.085773元)",
+      "progress": "实施分配"
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+  },
+  {
+    "code": "000425",
+    "title": "徐工机械：2009年度权益分派实施公告",
+    "notice_date": "2010-04-13",
+    "art_code": "AN201203010004575571",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN201203010004575571_1.pdf",
+    "source_sha256": "f86ef9cb5f0d8d6f15d4197687dca671187926843d68c6a2aaf8a6664bd0b315",
+    "event": {
+      "security_code": "000425",
+      "ex_dividend_date": "2010-04-20",
+      "cash_per_share": 0.33405,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "徐工机械",
+      "plan": "10派3.3405元(含税,扣税后3.0065元)",
+      "progress": "实施分配"
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+  },
+  {
+    "code": "000538",
+    "title": "云南白药:2018年年度权益分派实施公告",
+    "notice_date": "2019-05-30",
+    "art_code": "AN201905291332774091",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN201905291332774091_1.pdf",
+    "source_sha256": "73c5f626e40899e972616c58892effe0acbec677f8b7b6107f55b73a966cf167",
+    "event": {
+      "security_code": "000538",
+      "ex_dividend_date": "2019-06-05",
+      "cash_per_share": 2.000125,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "云南白药",
+      "plan": "10派20.001254元(含税,扣税后18.001129元)",
+      "progress": "实施分配"
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+  },
+  {
+    "code": "000975",
+    "title": "银泰资源:2018年年度权益分派实施的公告",
+    "notice_date": "2019-06-10",
+    "art_code": "AN201906091334164723",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN201906091334164723_1.pdf",
+    "source_sha256": "05f5b5d301b7051366df5976d62bcc3371f4f4f5ac4f67f8a3dd910e99fc6a97",
+    "event": {
+      "security_code": "000975",
+      "ex_dividend_date": "2019-06-14",
+      "cash_per_share": 0.2,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "山金国际",
+      "plan": "10派2.00元(含税,扣税后1.80元)",
+      "progress": "实施分配"
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+  },
+  {
+    "code": "002043",
+    "title": "兔宝宝:2019年度权益分派实施公告",
+    "notice_date": "2020-06-29",
+    "art_code": "AN202006281387993059",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN202006281387993059_1.pdf",
+    "source_sha256": "cc3aaf36ee88e6af142ce445f7b319eed933571e2677826f00f9dfe32c8da220",
+    "event": {
+      "security_code": "002043",
+      "ex_dividend_date": "2020-07-07",
+      "cash_per_share": 0.25,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "兔宝宝",
+      "plan": "10派2.50元(含税,扣税后2.25元)",
+      "progress": ""
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "公告每10股金额与最后价格公式的每股单位冲突，未自行纠正"
+  },
+  {
+    "code": "600588",
+    "title": "600588:用友网络2018年年度权益分派实施公告",
+    "notice_date": "2019-04-26",
+    "art_code": "AN201904251322784926",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN201904251322784926_1.pdf",
+    "source_sha256": "faf4972cbd0572f167e19e5dd5a798483ef0221d36908777b7c0122f3d85729f",
+    "event": {
+      "security_code": "600588",
+      "ex_dividend_date": "2019-05-07",
+      "cash_per_share": 0.25,
+      "share_ratio": 0.3,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "用友网络",
+      "plan": "10转3.00派2.50元(含税,扣税后2.25元)",
+      "progress": ""
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+  },
+  {
+    "code": "600660",
+    "title": "600660:福耀玻璃2014年度利润分配实施公告",
+    "notice_date": "2015-04-08",
+    "art_code": "AN201504070009112761",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN201504070009112761_1.pdf",
+    "source_sha256": "2afad62d3c1a8fbac2c9cbe9b199ca4c12163fde9e3103c29ce4ac08d101b912",
+    "event": {
+      "security_code": "600660",
+      "ex_dividend_date": "2015-04-15",
+      "cash_per_share": 0.75,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "福耀玻璃",
+      "plan": "10派7.50元(含税,扣税后6.75元)",
+      "progress": "实施分配"
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+  },
+  {
+    "code": "600690",
+    "title": "青岛海尔：2006年度分红派息实施公告",
+    "notice_date": "2007-07-13",
+    "art_code": "AN201202270004135940",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN201202270004135940_1.pdf",
+    "source_sha256": "03c7ab866bc704d86f9c44f61bac91b9c92cf398438f3f7f37f0b977f0a7ff26",
+    "event": {
+      "security_code": "600690",
+      "ex_dividend_date": "2007-07-19",
+      "cash_per_share": 0.15,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "海尔智家",
+      "plan": "10派1.50元(含税,扣税后1.35元)",
+      "progress": "实施分配"
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+  },
+  {
+    "code": "603369",
+    "title": "603369:江苏今世缘酒业股份有限公司2021年度权益分派实施公告",
+    "notice_date": "2022-05-25",
+    "art_code": "AN202205241567605489",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN202205241567605489_1.pdf",
+    "source_sha256": "2c288452cc2a74d779d2be1b29056b9c4b16c0db7f870b406b48a25cabba91a4",
+    "event": {
+      "security_code": "603369",
+      "ex_dividend_date": "2022-05-31",
+      "cash_per_share": 0.59,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "今世缘",
+      "plan": "10派5.90元(含税,扣税后5.31元)",
+      "progress": "实施分配"
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+  },
+  {
+    "code": "688018",
+    "title": "乐鑫科技:乐鑫科技2023年年度权益分派实施公告",
+    "notice_date": "2024-05-10",
+    "art_code": "AN202405091632771405",
+    "url": "https://pdf.dfcfw.com/pdf/H2_AN202405091632771405_1.pdf",
+    "source_sha256": "0214f5384dcd34ef2cbede5c2e3832537408e8d8b637df64aa8d64238323e107",
+    "event": {
+      "security_code": "688018",
+      "ex_dividend_date": "2024-05-16",
+      "cash_per_share": 1.0,
+      "share_ratio": 0.4,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "乐鑫科技",
+      "plan": "10转4股派10.00元(含税,扣税后9.00元)",
+      "progress": "实施分配"
+    },
+    "status": "unverified_actual_fallback",
+    "reason": "实施公告未提供可唯一确定且保留其舍入精度的交易所价格参数"
+  }
+]

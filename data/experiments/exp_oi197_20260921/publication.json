@@ -1,0 +1,72 @@
+{
+  "job_id": "26981567",
+  "installed": {
+    "roic_bands.csv": {
+      "removed": 9683,
+      "inserted": 9683,
+      "other_sha256": "e9d9e4ad97d32fbab16dda04185848ea6ebdf0089cdb284d0f2116fe294501d5",
+      "after": {
+        "bytes": 153804294,
+        "sha256": "5fc8941546e6647fb1c2dcae449f1c34347c642e5e774767a22f970cace2d22e"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "removed": 9683,
+      "inserted": 9683,
+      "other_sha256": "17b04ebb6e38e7c971a2fa90553c051df5a7e819f86c0b807fbff905a9ebdeae",
+      "after": {
+        "bytes": 153781207,
+        "sha256": "810c2a7b047d8720f3899eba7ef6b5f931c7e41f7cc7968f2d81f76b536b82d3"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "removed": 488578,
+      "inserted": 488578,
+      "other_sha256": "110a5e44006865f987e1d1e230a28a44067dbd34e0c37253a361cd5b947fb963",
+      "after": {
+        "bytes": 2114838082,
+        "sha256": "f88ed8b160027863d81e95a905d085fdb4aa38b31a6e17da902f12c6e529c679"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "removed": 488578,
+      "inserted": 488578,
+      "other_sha256": "165911efe9d9c077f787af53bd1844812a3f5f7635878441b3be5fde476f3bfb",
+      "after": {
+        "bytes": 2114844044,
+        "sha256": "abba89db852db3278b1f7e1f3216ea4b14eb9f645dc14fd806d53ae3896fd8b7"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "removed": 487915,
+      "inserted": 487915,
+      "other_sha256": "e35308d55a5fc21a9da179e805d5c5f4150d28811db23c76c1eda467f786b965",
+      "after": {
+        "bytes": 2113089449,
+        "sha256": "ef1de469b22378dc89df07377d08d7c9ff1f3a5165d4da8c35b12e19b1dc9021"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "removed": 487915,
+      "inserted": 487915,
+      "other_sha256": "222dd59075e05d16d6ecc076a165829a819b360c898bd00ca69a473dab901d0b",
+      "after": {
+        "bytes": 2113095411,
+        "sha256": "be29b706bcb8d569d02b33982696e5e4c3db518f941681d60e8b25a51a2ea5eb"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "removed": 487915,
+      "inserted": 487915,
+      "other_sha256": "0a6ebf50f6c24a322abdf68fed9e212b3e2d35477bb0fbbafce93f3442d83998",
+      "after": {
+        "bytes": 2190564493,
+        "sha256": "4b483f6659a320fcb375b164af99774e888a6a761a9bdd8afbc984166cb21103"
+      }
+    },
+    "actions": {
+      "bytes": 5830271,
+      "sha256": "c4bcf7e8c7e49eb0a615e4ababa5f04802e1dceaf0b6f7c33adfadab7c2d6b6a"
+    }
+  }
+}

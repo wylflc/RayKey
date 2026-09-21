@@ -111,9 +111,11 @@ def fetch_ex_dividend_events(as_of: str, timeout: float = 15.0) -> dict[str, dic
         page += 1
     if expected is not None and len(rows) != int(expected):
         raise ValueError(f"Incomplete ex-dividend query: {len(rows)}/{expected}")
-    from corporate_actions import aggregate_actions, normalize_eastmoney
+    from corporate_actions import aggregate_actions, normalize_eastmoney, with_price_terms
     return {r['security_code']: dict(name=r['security_name'], plan=r['plan'],
-                cash_per_share=r['cash_per_share'], share_ratio=r['share_ratio'], progress=r['progress'])
+                cash_per_share=r['cash_per_share'], share_ratio=r['share_ratio'], progress=r['progress'],
+                **{k: v for k, v in with_price_terms(r).items()
+                   if k.startswith('price_')})
             for r in aggregate_actions(normalize_eastmoney(rows))}
 
 
