@@ -1,0 +1,55 @@
+{
+  "as_of": "2026-09-21",
+  "source_url": "https://qt.gtimg.cn/q=sz000651,sz002648,sh603529,sh600036,sh601318,sh600970",
+  "retrieved_at_utc": "2026-09-21T07:23:15.598343+00:00",
+  "rows": [
+    {
+      "code": "000651",
+      "name": "格力电器",
+      "close": "38.00",
+      "quote_time_beijing": "20260921152215",
+      "shares": "45900",
+      "market_value_cny": "1744200.00"
+    },
+    {
+      "code": "002648",
+      "name": "卫星化学",
+      "close": "27.23",
+      "quote_time_beijing": "20260921152245",
+      "shares": "16000",
+      "market_value_cny": "435680.00"
+    },
+    {
+      "code": "603529",
+      "name": "爱玛科技",
+      "close": "21.71",
+      "quote_time_beijing": "20260921152311",
+      "shares": "29200",
+      "market_value_cny": "633932.00"
+    },
+    {
+      "code": "600036",
+      "name": "招商银行",
+      "close": "41.04",
+      "quote_time_beijing": "20260921152310",
+      "shares": "14700",
+      "market_value_cny": "603288.00"
+    },
+    {
+      "code": "601318",
+      "name": "中国平安",
+      "close": "53.98",
+      "quote_time_beijing": "20260921152308",
+      "shares": "4900",
+      "market_value_cny": "264502.00"
+    },
+    {
+      "code": "600970",
+      "name": "中材国际",
+      "close": "7.67",
+      "quote_time_beijing": "20260921152254",
+      "shares": "106500",
+      "market_value_cny": "816855.00"
+    }
+  ]
+}

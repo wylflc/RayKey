@@ -1,17 +1,17 @@
 {
-  "days": 16,
-  "trading_intervals": 15,
+  "days": 17,
+  "trading_intervals": 16,
   "accounting_closed": true,
   "prefix_invariance": true,
   "production_unchanged": true,
   "production_sha256": {
-    "a_share_holdings.csv": "bc7f7745e3a8ef897d37e88f107950693e3002e92e15db166e9c23a99bee0d5c",
-    "portfolio_account_snapshot.csv": "ccde1b8a1b8bc3862afb36602e755d045416a48dca778cc751dec6342a4c5bf8",
-    "cooldown_executions.csv": "d6b340f1144f7e67f1c267084ac352ce975005bb1d9d0cc0c02bd3281deb85c5",
-    "daily_cooldown_state.csv": "7c81bf458fb28ecb1f41c05f25e6874f9f440f6228c8b4b863c16f4a189a84a0",
-    "daily_entry_plan.csv": "65a0a75e7d4fcae4b1ac2df77bdb7d20c230959977dd34a2fb3cd6d60e5f6ba3",
-    "daily_sell_plan.csv": "552f9985a0bb60ca7312340910cc075d2cedf4380c780195333408a0d34ca94b",
-    "daily_buy_candidates.csv": "f187b0883406efbb7830f908544726ad49a2056906be23a8c59ccd1a74528a70"
+    "a_share_holdings.csv": "a38eea54710ac72bd4d00bc958db98929dc86cfaa037b80931eb8a0a4f07322f",
+    "portfolio_account_snapshot.csv": "f5eb4a4a8ee9a4204cead2a1e07b20f752c67ea1ad3ce7f07e8954cd0049d4ee",
+    "cooldown_executions.csv": "84480ef778a814955bf4c289469b7551324a360bf0e39fb2d0ab6c787489e3e1",
+    "daily_cooldown_state.csv": "c026bb695b1f28a4115c8d7df2f1c1d709189048c93ef317c37f56b68bedde23",
+    "daily_entry_plan.csv": "781480d744899ee718c4a41eeea8ea21d7b9898d4066767f49b310f987407520",
+    "daily_sell_plan.csv": "c3bad7d5e1a357f4a5820e01ee254cf773e1b824e8c8bc7936bc72162f780b26",
+    "daily_buy_candidates.csv": "a56cd05938a047b7a4a800f75d39a50548f1691fe51fa2403108c7afe9e91e7e"
   },
   "code_sha256": {
     "shadow_from_origin.py": "5f2f9053b3de3aae7221b8fe42e26d9c556976e3639fc08401f1d609aeebac15",

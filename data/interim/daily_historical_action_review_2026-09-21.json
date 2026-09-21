@@ -1,0 +1,58 @@
+{
+  "issue": "OI-196",
+  "signal_date": "2026-09-21",
+  "verified_at_utc": "2026-09-21T07:43:34.519323+00:00",
+  "security_code": "300760",
+  "security_name": "迈瑞医疗",
+  "ex_dividend_date": "2026-05-28",
+  "source_url": "https://static.cninfo.com.cn/finalpage/2026-05-20/1225320390.PDF",
+  "source_pages": [
+    1,
+    2
+  ],
+  "confirmed_cash_per_share": 1.56,
+  "components": [
+    {
+      "security_code": "300760",
+      "security_name": "迈瑞医疗",
+      "ex_dividend_date": "2026-05-28",
+      "cash_per_share": "1.250000",
+      "share_ratio": "0.000000",
+      "plan": "10派12.50元(含税,扣税后11.25元)",
+      "report_date": "2026-03-31",
+      "plan_notice_date": "2026-04-29",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "300760",
+      "security_name": "迈瑞医疗",
+      "ex_dividend_date": "2026-05-28",
+      "cash_per_share": "0.310000",
+      "share_ratio": "0.000000",
+      "plan": "10派3.10元(含税,扣税后2.79元)",
+      "report_date": "2025-12-31",
+      "plan_notice_date": "2026-03-31",
+      "progress": "实施分配"
+    }
+  ],
+  "current_cache_cash_per_share": 0.31,
+  "previous_commit_cash_per_share": 1.25,
+  "reproduction": "fetch_ohlcv_history.action_key maps both distinct report periods to the same (code, ex_date); dictionary merge keeps the last row.",
+  "quote_source": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300760,day,2020-01-01,2026-09-21,1000,",
+  "latest_60_quote_start": "2026-06-30",
+  "current_indicators": {
+    "close": 158.05,
+    "ma20": 162.95300000000003,
+    "ma60": 152.86250000000004
+  },
+  "published_pv_ratio": "1.7367",
+  "checks": {
+    "same_day_distinct_components_collide": true,
+    "last_60_adjusted_rows_unchanged_after_correcting_only_this_event": true,
+    "current_indicators_match_publication": true,
+    "not_held": true,
+    "not_eligible_under_current_adopted_band": true,
+    "production_publication_unchanged": true
+  },
+  "disposition": "登记历史分红合并缺陷，不在盘后扫描中改写历史事件或重建估值；当前已采纳模型带下今日资格和清单不变。历史每股锚、估值和回测影响待专项审计，不能据本检查推断为零。"
+}

@@ -1,0 +1,109 @@
+{
+  "signal_date": "2026-09-21",
+  "reviewed_at_utc": "2026-09-21T07:25:13.601057+00:00",
+  "checks": [
+    {
+      "topic": "爱玛经营、两轮车竞争与分派",
+      "codes": [
+        "603529"
+      ],
+      "status": "primary_source_verified_with_hf_gaps",
+      "source_urls": [
+        "https://roadshow.sseinfo.com/activityDetails/40607",
+        "https://pdf.dfcfw.com/pdf/H2_AN202609171829522385_1.pdf"
+      ],
+      "facts": "09-21说明会10条公开答复已逐条核验；管理层称Q2单车成本和盈利环比改善、采购付款存在跨期；印尼和越南工厂已投产，江苏产能转至丽水和台州。09-23登记、09-24每股实派0.392元、价格除息口径0.385元。",
+      "assessment": "无Q3新实现财务、盈利预告或量化修复目标。未给鸿蒙/星闪车型量产节点，不把投资者提问当作公司确认。上险量、终端均价、海外利用率和竞品促销未取齐。",
+      "evidence_file": "data/interim/daily_aima_roadshow_2026-09-21.json"
+    },
+    {
+      "topic": "空调排产与原材料",
+      "codes": [
+        "000651"
+      ],
+      "status": "partial",
+      "source_urls": [
+        "https://www.chinaiol.com/",
+        "https://mp.weixin.qq.com/s/IJ0QKNV2sdol30aw7FbXxA",
+        "https://www.changjiangyouse.com/c3/"
+      ],
+      "observed_on": "2026-09-21",
+      "facts": "产业在线官网确认9月排产报告并给出微信原文链接；原文返回环境验证页，未取得正文。长江铝均价24320元/吨，较09-18下降50元，区间24300–24340。",
+      "assessment": "不同转载排产口径不一致，不作为已核验生产输入；未取得格力公司级排产、渠道库存和全套铜铝钢采购成本。铝报价只作外部背景。"
+    },
+    {
+      "topic": "乙烷与聚烯烃价差",
+      "codes": [
+        "002648"
+      ],
+      "status": "incomplete",
+      "source_urls": [
+        "https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=EER_EPLLE_PF4_Y44MB_DPG&f=D"
+      ],
+      "facts": "EIA原始乙烷日序列本轮网页读取失败；乙烷到岸成本与国内乙烯、聚乙烯配对价未取得。",
+      "assessment": "不以二氯乙烷、LNG或其他产品报价代替乙烷；不据缺数据调整生产利润锚。"
+    },
+    {
+      "topic": "水泥工程订单与回款",
+      "codes": [
+        "600970"
+      ],
+      "status": "partial",
+      "source_urls": [],
+      "facts": "公司公告窗口由今日全市场公告快照核验；未获得覆盖所有海外项目的新签订单、履约和回款明细。",
+      "assessment": "不把产业或地产盘面上涨当作公司订单兑现；后续以新订单公告、季度经营数据与回款证据复核。"
+    },
+    {
+      "topic": "银行保险经营与利率",
+      "codes": [
+        "600036",
+        "601318",
+        "601838",
+        "601398",
+        "601288"
+      ],
+      "status": "partial",
+      "source_urls": [],
+      "facts": "利率和股债输入已刷新；今日持仓与合格银行保险公告窗口均已核对，无新公告。",
+      "assessment": "银行保险估值走统一股利折现入口；未取得所有银行保险的新一期资产质量、NBV与续期率数据，不据板块涨跌改带。"
+    },
+    {
+      "topic": "电投能源煤铝与新能源",
+      "codes": [
+        "002128"
+      ],
+      "status": "user_named_followup",
+      "source_urls": [
+        "https://www.changjiangyouse.com/c3/",
+        "https://pdf.dfcfw.com/pdf/H2_AN202609171829540681_1.pdf"
+      ],
+      "facts": "今日已按用户回报清仓；9月17日说明会及预算评估沿用09-18原文核验。09-21长江铝均价24320元/吨。",
+      "assessment": "氧化铝同口径配对价仍缺；不从现货铝价单独推算吨铝利润。今日公告另行覆盖，继续作为用户点名标的核查。"
+    },
+    {
+      "topic": "润滑油添加剂原料、认证与竞品",
+      "codes": [
+        "300910"
+      ],
+      "status": "partial",
+      "source_urls": [
+        "https://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?id=12604289&stockid="
+      ],
+      "facts": "今日公告窗口无新披露；检索到09-15基金期限延长公告，属于窗口前信息。当前API/ACEA认证、海外制裁政策变化、原料和四大竞品价格未得到完整新证据。",
+      "assessment": "没有把媒体误将瑞丰高材收购写为瑞丰新材的文章作为本公司事件；当前只按已验证生产输入判信号。"
+    },
+    {
+      "topic": "白酒终端价格与渠道",
+      "codes": [
+        "000596"
+      ],
+      "status": "partial",
+      "source_urls": [
+        "https://finance.sina.com.cn/chanjing/jync/2026-09-21/doc-inispync2109957.shtml"
+      ],
+      "facts": "新浪酒价内参当日样本零售均价：古20为520元、较前日上升7元；为媒体自有样本，非公司出厂价或全市场批价。公告窗口无新增。",
+      "assessment": "不将单日样本价格变化当作销量、库存或盈利兑现；公司级动销及库存未取得。"
+    }
+  ],
+  "coverage_note": "逐票公告原文核验另见daily_event_review；行业与竞品高频指标部分覆盖，不能称全部完成。"
+}

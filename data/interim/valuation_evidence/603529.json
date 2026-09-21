@@ -1570,6 +1570,22 @@
     "rebuild_performed": false,
     "intrinsic_value": "30.6563"
    }
+  },
+  {
+   "recorded_at": "2026-09-21",
+   "signal_date": "2026-09-21",
+   "security_code": "603529",
+   "evidence_type": "半年度业绩说明会公开问答",
+   "source_urls": [
+    "https://roadshow.sseinfo.com/activityDetails/40607"
+   ],
+   "summary": "09-21上证路演中心10条公开答复核验：管理层称新国标产品规模化后Q2单车成本及盈利环比改善，经营现金流下降涉及收入下滑及采购付款跨期；江苏基地已停产、产能转至丽水和台州，印尼与越南工厂已投产。未给三季度销量、渠道库存、单车利润、海外利用率或全年盈利目标的量化新值；未给鸿蒙/星闪车型量产时间表。H1收入114.40亿元、归母6.65亿元、同比-12.21%/-45.15%、毛利率17.43%与现有2026-06-30财务面板一致，问答未形成新一期财务或预告输入；保持现有模型带与分层，转为三季报核验。",
+   "evidence_file": "data/interim/daily_aima_roadshow_2026-09-21.json",
+   "model_check": {
+    "review_status": "completed_no_model_input_change",
+    "rebuild_performed": false,
+    "intrinsic_value": "30.6563"
+   }
   }
  ]
 }

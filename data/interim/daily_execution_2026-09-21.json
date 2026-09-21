@@ -1,0 +1,281 @@
+{
+  "signal_date": "2026-09-18",
+  "execution_date": "2026-09-21",
+  "reported_at_utc": "2026-09-21T07:16:23.746107+00:00",
+  "source": "user_reported",
+  "holdings_before": [
+    {
+      "security_code": "002648",
+      "security_name": "卫星化学",
+      "current_shares": "16000",
+      "cost_basis": "27.8155",
+      "entry_stop_price": "24.16"
+    },
+    {
+      "security_code": "000651",
+      "security_name": "格力电器",
+      "current_shares": "43000",
+      "cost_basis": "39.1094",
+      "entry_stop_price": "37.24"
+    },
+    {
+      "security_code": "603529",
+      "security_name": "爱玛科技",
+      "current_shares": "29200",
+      "cost_basis": "21.6142",
+      "entry_stop_price": "20.76"
+    },
+    {
+      "security_code": "600036",
+      "security_name": "招商银行",
+      "current_shares": "14700",
+      "cost_basis": "40.4879",
+      "entry_stop_price": "37.93"
+    },
+    {
+      "security_code": "002128",
+      "security_name": "电投能源",
+      "current_shares": "4500",
+      "cost_basis": "29.2831",
+      "entry_stop_price": "26.23"
+    },
+    {
+      "security_code": "601318",
+      "security_name": "中国平安",
+      "current_shares": "4900",
+      "cost_basis": "54.8906",
+      "entry_stop_price": "51.1700"
+    },
+    {
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "current_shares": "106500",
+      "cost_basis": "7.7729",
+      "entry_stop_price": "7.70383333"
+    }
+  ],
+  "holdings_after": [
+    {
+      "security_code": "002648",
+      "security_name": "卫星化学",
+      "current_shares": "16000",
+      "cost_basis": "27.8155",
+      "entry_stop_price": "24.16"
+    },
+    {
+      "security_code": "000651",
+      "security_name": "格力电器",
+      "current_shares": "45900",
+      "cost_basis": "39.0399",
+      "entry_stop_price": "37.24"
+    },
+    {
+      "security_code": "603529",
+      "security_name": "爱玛科技",
+      "current_shares": "29200",
+      "cost_basis": "21.6142",
+      "entry_stop_price": "20.76"
+    },
+    {
+      "security_code": "600036",
+      "security_name": "招商银行",
+      "current_shares": "14700",
+      "cost_basis": "40.4879",
+      "entry_stop_price": "37.93"
+    },
+    {
+      "security_code": "601318",
+      "security_name": "中国平安",
+      "current_shares": "4900",
+      "cost_basis": "54.8906",
+      "entry_stop_price": "51.1700"
+    },
+    {
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "current_shares": "106500",
+      "cost_basis": "7.7729",
+      "entry_stop_price": "7.70383333"
+    }
+  ],
+  "account_before": {
+    "as_of": "2026-09-18",
+    "net_assets_cny": "2660026.61",
+    "total_assets_cny": "4512302.00",
+    "margin_debt_cny": "1852275.39",
+    "credit_line_cny": "",
+    "leverage_ratio": "1.6963",
+    "guarantee_ratio_pct": "243.61",
+    "holdings_market_value_cny": "4512302.00",
+    "cash_cny": "0.00",
+    "position_count": "7",
+    "top_position_weight_pct": "62.33",
+    "account_peak_net_assets_cny": "2811530.99",
+    "drawdown_from_peak_pct": "-5.39",
+    "source": "user_reported_assets_debt_derived",
+    "note": "用户2026-09-18盘后回报：卖出牧原股份1700股@41.54=70618元，清仓；买入中材国际9100股@7.73=70343元，97400→106500股，加权成本7.7729元、止损锚7.70383333不变。总资产4512302、净资产2660026.61，推得负债1852275.39；现金0、券商可用保证金-51006.36，扫描funds=-51006.36。未报告外部出入金按0。净卖出275元，负债减少45.43元，差229.57元待对账，未确认为利息或费用科目、不重复扣款。牧原股数符合09-17清单；中材为清单外实际加仓（原计划无买入），按旧保证金与实际卖出款计算旧预算仅261.27元，实买超出70081.73元，执行时券商实时可用额未报告。7只持仓按09-18收盘市值合计4512302元，与实报总资产完全相符。最大持仓格力市值1658080.00元，占净资产62.33%，暂停加仓；一档133001.3305元。净资产日增27683.43元（+1.05%），累计策略收益及回撤均-5.39%，E4。",
+    "external_cash_flow_cny": "0.00",
+    "strategy_base_net_assets_cny": "",
+    "strategy_return_pct": "-5.39",
+    "net_assets_before_flow_cny": "",
+    "strategy_nav_basis": "exact",
+    "strategy_unit_nav": "0.946113",
+    "strategy_epoch": "E4"
+  },
+  "original_buy_plan": [
+    {
+      "trade_date": "2026-09-18",
+      "security_code": "600970",
+      "security_name": "中材国际",
+      "quality_tier": "L2",
+      "close": "7.7",
+      "model_intrinsic_value": "14.7396",
+      "model_pv": "0.5224",
+      "model_band_source": "模型带·2026-06-30",
+      "lots": "95",
+      "shares": "9500",
+      "amount": "73150.0",
+      "cooldown_skips": "0"
+    }
+  ],
+  "original_sell_plan": [
+    {
+      "trade_date": "2026-09-18",
+      "security_code": "002128",
+      "security_name": "电投能源",
+      "rule": "换仓",
+      "condition": "持仓侧 P/V 0.9973 且弱势｜卖出款去向：中材国际 0.5224（边际 +0.4749）｜触发闸门：成都银行 0.8109（差 0.1864 ≥ 0.1500）",
+      "close": "27.66",
+      "ma20": "28.2025",
+      "ma60": "26.73",
+      "model_pv": "0.9973",
+      "hold_pv": "0.9973",
+      "cost_basis": "29.2831",
+      "gain_pct": "-0.0554",
+      "entry_stop_price": "26.23",
+      "stop_line": "",
+      "current_shares": "4500.0",
+      "sell_shares": "4500.0",
+      "amount": "124470.0",
+      "swap_for": "601838",
+      "cooldown_skips": "0",
+      "note": "余仓不足一手，整笔清空"
+    }
+  ],
+  "original_signal_tranche_cny": "133001.3305",
+  "trades": [
+    {
+      "security_code": "002128",
+      "security_name": "电投能源",
+      "side": "sell",
+      "rule": "swap",
+      "shares": 4500,
+      "price": "27.54",
+      "amount_cny": "123930.00",
+      "remaining_shares": 0,
+      "valuation": {
+        "as_of": "2026-09-21",
+        "security_code": "002128",
+        "security_name": "电投能源",
+        "price": 27.54,
+        "candidate": {
+          "intrinsic_value": "27.7337",
+          "pv": 0.9930157173402756,
+          "source": "模型带·2026-06-30"
+        },
+        "hold": {
+          "intrinsic_value": "27.7337",
+          "pv": 0.9930157173402756,
+          "source": "模型带·2026-06-30"
+        },
+        "hold_fallback_to_candidate": false
+      },
+      "plan_alignment": "matches_sale_plan"
+    },
+    {
+      "security_code": "000651",
+      "security_name": "格力电器",
+      "side": "buy",
+      "rule": "buy",
+      "shares": 2900,
+      "price": "38.01",
+      "amount_cny": "110229.00",
+      "remaining_shares": 45900,
+      "valuation": {
+        "as_of": "2026-09-21",
+        "security_code": "000651",
+        "security_name": "格力电器",
+        "price": 38.01,
+        "candidate": {
+          "intrinsic_value": "66.6102",
+          "pv": 0.570633326427484,
+          "source": "模型带·2026-06-30"
+        },
+        "hold": {
+          "intrinsic_value": "66.6102",
+          "pv": 0.570633326427484,
+          "source": "模型带·2026-06-30"
+        },
+        "hold_fallback_to_candidate": false
+      },
+      "plan_alignment": "user_confirmed_unplanned_addition_above_position_cap"
+    }
+  ],
+  "account": {
+    "as_of": "2026-09-21",
+    "net_assets_cny": "2659258.51",
+    "total_assets_cny": "4498457.00",
+    "margin_debt_cny": "1839198.49",
+    "credit_line_cny": "",
+    "leverage_ratio": "1.6916",
+    "guarantee_ratio_pct": "244.59",
+    "holdings_market_value_cny": "",
+    "cash_cny": "0.00",
+    "position_count": "6",
+    "top_position_weight_pct": "",
+    "account_peak_net_assets_cny": "",
+    "drawdown_from_peak_pct": "",
+    "source": "user_reported",
+    "note": "用户2026-09-21盘后回报：电投能源卖出4500股@27.54=123930.00元，清仓；格力电器买入2900股@38.01=110229.00元，43000→45900股，加权成本39.0399元，止损锚37.24元不变。总资产4498457、总负债1839198.49、净资产2659258.51，三者相符；现金0、券商可用保证金-36205.36，扫描funds=-36205.36。未报告外部出入金按0。净卖出13701.00元，负债减少13076.90元，差624.10元待对账，未确认为利息或费用，不重复扣款。电投清仓与09-18卖出计划一致；格力为清单外实际加仓，09-18已达单票60%上限，原买入计划为中材国际9500股。按旧保证金及实际卖出款的未计费预算仅72923.64元，实买超出37305.36元；执行时券商实时可用额未报告。持仓收盘市值待今日行情核验。",
+    "external_cash_flow_cny": "0.00",
+    "strategy_base_net_assets_cny": "",
+    "strategy_return_pct": "",
+    "net_assets_before_flow_cny": "",
+    "strategy_nav_basis": "",
+    "strategy_unit_nav": "",
+    "strategy_epoch": ""
+  },
+  "broker_available_margin_cny": "-36205.36",
+  "scan_funds_cny": "-36205.36",
+  "net_sale_cny": "13701.00",
+  "debt_reduction_cny": "13076.90",
+  "unattributed_difference_cny": "624.10",
+  "old_budget_before_fees_cny": "72923.64",
+  "excess_over_old_budget_cny": "37305.36",
+  "account_verified": {
+    "as_of": "2026-09-21",
+    "net_assets_cny": "2659258.51",
+    "total_assets_cny": "4498457.00",
+    "margin_debt_cny": "1839198.49",
+    "credit_line_cny": "",
+    "leverage_ratio": "1.6916",
+    "guarantee_ratio_pct": "244.59",
+    "holdings_market_value_cny": "4498457.00",
+    "cash_cny": "0.00",
+    "position_count": "6",
+    "top_position_weight_pct": "65.59",
+    "account_peak_net_assets_cny": "2811530.99",
+    "drawdown_from_peak_pct": "-5.42",
+    "source": "user_reported",
+    "note": "用户2026-09-21盘后回报：电投能源卖出4500股@27.54=123930.00元，清仓；格力电器买入2900股@38.01=110229.00元，43000→45900股，加权成本39.0399元，止损锚37.24元不变。总资产4498457、总负债1839198.49、净资产2659258.51，三者相符；现金0、券商可用保证金-36205.36，扫描funds=-36205.36。未报告外部出入金按0。净卖出13701.00元，负债减少13076.90元，差624.10元待对账，未确认为利息或费用，不重复扣款。电投清仓与09-18卖出计划一致；格力为清单外实际加仓，09-18已达单票60%上限，原买入计划为中材国际9500股。按旧保证金及实际卖出款的未计费预算仅72923.64元，实买超出37305.36元；执行时券商实时可用额未报告。6只持仓股数乘09-21公开收盘价合计4498457.00元，与实报总资产完全相符；格力市值1744200.00元，占净资产65.59%，暂停加仓。一档132962.9255元。",
+    "external_cash_flow_cny": "0.00",
+    "strategy_base_net_assets_cny": "",
+    "strategy_return_pct": "-5.42",
+    "net_assets_before_flow_cny": "",
+    "strategy_nav_basis": "exact",
+    "strategy_unit_nav": "0.945840",
+    "strategy_epoch": "E4"
+  },
+  "market_value_reconciliation_cny": "0.00",
+  "formal_scan_verified": true
+}

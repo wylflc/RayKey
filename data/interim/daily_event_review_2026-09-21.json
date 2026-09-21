@@ -1,0 +1,296 @@
+{
+  "signal_date": "2026-09-21",
+  "status": "complete_with_reported_industry_limitations",
+  "primary_documents": [
+    {
+      "art_code": "AN202609171829522383",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522383_1.pdf",
+      "pdf_sha256": "8f6ade82ee7c1bf17c50d3dd3a3498a03fa25f92e33deeee5352965f9b0070ee",
+      "pages": 2,
+      "retrieved_at_utc": "2026-09-18T08:41:15.336771+00:00",
+      "security_code": "603529",
+      "notice_date": "2026-09-18",
+      "title": "爱玛转债转股价格调整公告",
+      "facts": "09-24转股价格37.06调整至36.68；09-17至09-23暂停转股，09-24恢复。",
+      "assessment": "仅涉及可转债转股安排，A股不因此停牌。",
+      "pages_reviewed": [
+        1,
+        2
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487630+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-18.json",
+      "same_document_listed_on": "2026-09-21"
+    },
+    {
+      "art_code": "AN202609171829522386",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522386_1.pdf",
+      "pdf_sha256": "ce3ac3fe5e8491de405a41a3847731e9dfa03c42e8ee4cdf1aed278b3f84b002",
+      "pages": 6,
+      "retrieved_at_utc": "2026-09-18T08:41:16.787967+00:00",
+      "security_code": "603529",
+      "notice_date": "2026-09-18",
+      "title": "差异化权益分派法律意见书",
+      "facts": "回购专户不参与分配，虚拟分红0.385元；意见书核验差异化除息方案。",
+      "assessment": "与公司实施公告口径一致，无另加公司行动。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487634+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-18.json",
+      "same_document_listed_on": "2026-09-21"
+    },
+    {
+      "art_code": "AN202609171829522384",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522384_1.pdf",
+      "pdf_sha256": "615be1a6c75b09e7eab34d403137619d3cd2a33ddaff3b691a82fc54b7ec291e",
+      "pages": 2,
+      "retrieved_at_utc": "2026-09-18T08:41:17.652147+00:00",
+      "security_code": "603529",
+      "notice_date": "2026-09-18",
+      "title": "爱玛科技分红总额调整公告",
+      "facts": "总股本增至864248384股，扣回购14794934股，参与分配849453450股；总额332985752.40元，每股0.392不变。",
+      "assessment": "由可转债小额转股导致分红总额微调，无需增加主观估值。",
+      "pages_reviewed": [
+        1,
+        2
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487638+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-18.json",
+      "same_document_listed_on": "2026-09-21"
+    },
+    {
+      "art_code": "AN202609171829522385",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522385_1.pdf",
+      "pdf_sha256": "ada0034fd0fa19eac191ab7d83e61a1054a037bb4b1a4d8ccdb59a018d7420f5",
+      "pages": 5,
+      "retrieved_at_utc": "2026-09-18T08:41:18.155057+00:00",
+      "security_code": "603529",
+      "notice_date": "2026-09-18",
+      "title": "爱玛科技2026年半年度权益分派实施公告",
+      "facts": "09-23登记，09-24除息及发放；实派0.392元/股，差异化价格调整用虚拟分派0.385元/股；无送转。",
+      "assessment": "事件发生前不调整账户、成本、止损锚或生产带；除息日按价格口径0.385处理，实际红利按0.392核对券商到账。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487641+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-18.json",
+      "same_document_listed_on": "2026-09-21"
+    },
+    {
+      "art_code": "AN202609171829521135",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829521135_1.pdf",
+      "pdf_sha256": "e342074a6df9353df52ef13ec97c7eae712de13f5687a48b85a28132c74b7cf8",
+      "pages": 4,
+      "retrieved_at_utc": "2026-09-18T08:47:17.455842+00:00",
+      "security_code": "601838",
+      "notice_date": "2026-09-18",
+      "title": "成都银行2026第一次临时股东会法律意见书",
+      "facts": "通过住所变更、章程修订及两位非独立董事选举；无否决议案，律师认为表决合法有效。",
+      "assessment": "公司治理例行事项，无新的实际财务或股利锚；今日除息按公司行动与银行统一股利折现入口处理。",
+      "pages_reviewed": [
+        3,
+        4
+      ],
+      "review_method": "原始扫描PDF第3/4页图像核验",
+      "reviewed_at_utc": "2026-09-18T08:48:21.669371+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-18.json",
+      "same_document_listed_on": "2026-09-21"
+    },
+    {
+      "art_code": "AN202609171829521080",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829521080_1.pdf",
+      "pdf_sha256": "d6c1c478b714d0dd5d9b1bb881c42b994f6a642545221b31ac39c77dbf438174",
+      "pages": 4,
+      "retrieved_at_utc": "2026-09-18T08:47:18.552267+00:00",
+      "security_code": "601838",
+      "notice_date": "2026-09-18",
+      "title": "成都银行2026第一次临时股东会决议公告",
+      "facts": "通过住所变更、章程修订及两位非独立董事选举；无否决议案，律师认为表决合法有效。",
+      "assessment": "公司治理例行事项，无新的实际财务或股利锚；今日除息按公司行动与银行统一股利折现入口处理。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "review_method": "原始PDF逐页文字核验",
+      "reviewed_at_utc": "2026-09-18T08:48:21.669395+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-18.json",
+      "same_document_listed_on": "2026-09-21"
+    }
+  ],
+  "additional_primary_evidence": [
+    "data/interim/daily_aima_roadshow_2026-09-21.json"
+  ],
+  "announcement_snapshot": "data/interim/daily_announcements_2026-09-21.json",
+  "announcement_title_screening_count": 104,
+  "announcement_cutoff_beijing": "2026-09-21 15:24:41",
+  "industry_review": "data/interim/daily_industry_review_2026-09-21.json",
+  "valuation_review_queue_rows": 0,
+  "valuation_update": "当日无估值更新；银行保险按同日已知利率例行复算，不推进财务证据日",
+  "holding_ex_dividends_today": {},
+  "mandatory_codes": [
+    "000596",
+    "000651",
+    "002128",
+    "002648",
+    "300910",
+    "600036",
+    "600970",
+    "601288",
+    "601318",
+    "601398",
+    "601838",
+    "603529"
+  ],
+  "eligible_codes": [
+    "600970",
+    "000651",
+    "603529",
+    "600036",
+    "601318",
+    "601838",
+    "002648",
+    "300910",
+    "601398",
+    "000596",
+    "601288"
+  ],
+  "holdings_codes": [
+    "000651",
+    "002648",
+    "600036",
+    "600970",
+    "601318",
+    "603529"
+  ],
+  "user_named_codes": [
+    "000651",
+    "002128"
+  ],
+  "relevant_announcement_count": 6,
+  "unreviewed_announcements": [],
+  "coverage": [
+    {
+      "security_code": "000596",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window",
+      "additional_review": ""
+    },
+    {
+      "security_code": "000651",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window",
+      "additional_review": ""
+    },
+    {
+      "security_code": "002128",
+      "held": false,
+      "eligible": false,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window",
+      "additional_review": ""
+    },
+    {
+      "security_code": "002648",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window",
+      "additional_review": ""
+    },
+    {
+      "security_code": "300910",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window",
+      "additional_review": ""
+    },
+    {
+      "security_code": "600036",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window",
+      "additional_review": ""
+    },
+    {
+      "security_code": "600970",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window",
+      "additional_review": ""
+    },
+    {
+      "security_code": "601288",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window",
+      "additional_review": ""
+    },
+    {
+      "security_code": "601318",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window",
+      "additional_review": ""
+    },
+    {
+      "security_code": "601398",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window",
+      "additional_review": ""
+    },
+    {
+      "security_code": "601838",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609171829521135",
+        "AN202609171829521080"
+      ],
+      "announcement_status": "prior_primary_review_carried_forward",
+      "additional_review": ""
+    },
+    {
+      "security_code": "603529",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609171829522383",
+        "AN202609171829522386",
+        "AN202609171829522384",
+        "AN202609171829522385"
+      ],
+      "announcement_status": "prior_primary_review_carried_forward",
+      "additional_review": "10条说明会公开答复完整核验"
+    }
+  ],
+  "limitations": [
+    "公告截至北京时间2026-09-21 15:24:41；其后披露未覆盖，执行前复核新增事件。",
+    "行业高频指标部分覆盖：空调排产原文要求验证，乙烷到岸价差、两轮车上险、海外订单回款、添加剂原料及海外认证、白酒渠道库存与银行保险新一期经营指标未完整取得。",
+    "全市场收盘涨跌家数未取得可复核的完整口径；不以盘中或关注池家数代替。"
+  ]
+}

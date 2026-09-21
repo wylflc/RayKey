@@ -1,0 +1,88 @@
+{
+  "as_of": "2026-09-21",
+  "account_verified": {
+    "as_of": "2026-09-21",
+    "net_assets_cny": "2659258.51",
+    "total_assets_cny": "4498457.00",
+    "margin_debt_cny": "1839198.49",
+    "credit_line_cny": "",
+    "leverage_ratio": "1.6916",
+    "guarantee_ratio_pct": "244.59",
+    "holdings_market_value_cny": "4498457.00",
+    "cash_cny": "0.00",
+    "position_count": "6",
+    "top_position_weight_pct": "65.59",
+    "account_peak_net_assets_cny": "2811530.99",
+    "drawdown_from_peak_pct": "-5.42",
+    "source": "user_reported",
+    "note": "用户2026-09-21盘后回报：电投能源卖出4500股@27.54=123930.00元，清仓；格力电器买入2900股@38.01=110229.00元，43000→45900股，加权成本39.0399元，止损锚37.24元不变。总资产4498457、总负债1839198.49、净资产2659258.51，三者相符；现金0、券商可用保证金-36205.36，扫描funds=-36205.36。未报告外部出入金按0。净卖出13701.00元，负债减少13076.90元，差624.10元待对账，未确认为利息或费用，不重复扣款。电投清仓与09-18卖出计划一致；格力为清单外实际加仓，09-18已达单票60%上限，原买入计划为中材国际9500股。按旧保证金及实际卖出款的未计费预算仅72923.64元，实买超出37305.36元；执行时券商实时可用额未报告。6只持仓股数乘09-21公开收盘价合计4498457.00元，与实报总资产完全相符；格力市值1744200.00元，占净资产65.59%，暂停加仓。一档132962.9255元。",
+    "external_cash_flow_cny": "0.00",
+    "strategy_base_net_assets_cny": "",
+    "strategy_return_pct": "-5.42",
+    "net_assets_before_flow_cny": "",
+    "strategy_nav_basis": "exact",
+    "strategy_unit_nav": "0.945840",
+    "strategy_epoch": "E4"
+  },
+  "holdings": [
+    {
+      "code": "000651",
+      "name": "格力电器",
+      "close": "38.00",
+      "quote_time_beijing": "20260921152215",
+      "shares": "45900",
+      "market_value_cny": "1744200.00"
+    },
+    {
+      "code": "002648",
+      "name": "卫星化学",
+      "close": "27.23",
+      "quote_time_beijing": "20260921152245",
+      "shares": "16000",
+      "market_value_cny": "435680.00"
+    },
+    {
+      "code": "603529",
+      "name": "爱玛科技",
+      "close": "21.71",
+      "quote_time_beijing": "20260921152311",
+      "shares": "29200",
+      "market_value_cny": "633932.00"
+    },
+    {
+      "code": "600036",
+      "name": "招商银行",
+      "close": "41.04",
+      "quote_time_beijing": "20260921152310",
+      "shares": "14700",
+      "market_value_cny": "603288.00"
+    },
+    {
+      "code": "601318",
+      "name": "中国平安",
+      "close": "53.98",
+      "quote_time_beijing": "20260921152308",
+      "shares": "4900",
+      "market_value_cny": "264502.00"
+    },
+    {
+      "code": "600970",
+      "name": "中材国际",
+      "close": "7.67",
+      "quote_time_beijing": "20260921152254",
+      "shares": "106500",
+      "market_value_cny": "816855.00"
+    }
+  ],
+  "market_value_reconciliation_cny": "0.00",
+  "tranche_cny": "132962.9255",
+  "net_asset_change_cny": "-768.10",
+  "net_asset_change_pct": "-0.0288756509845591356696991800",
+  "gross_position_pct": "169.1620796956667443361871577",
+  "asset_leverage": "1.691620796956667443361871577",
+  "guarantee_ratio_pct": "244.5879019833253560359328046",
+  "buffer_to_130pct": "46.84937441882850052806995821",
+  "hypothetical_funds_cny": "-68132.32234",
+  "actual_scan_funds_cny": "-36205.36",
+  "unattributed_difference_cny": "624.10"
+}
