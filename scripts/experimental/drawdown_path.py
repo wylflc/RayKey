@@ -14,9 +14,11 @@ import collections
 import csv
 import os
 import statistics
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts'))
 OHLCV = ROOT / "data/raw/ohlcv"
 ACTIONS = ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv"
 NAMES = ROOT / "data/raw/a_share_securities.csv"
@@ -58,14 +60,9 @@ def load_actions():
     if not ACTIONS.exists():
         return out
     with ACTIONS.open(newline="", encoding="utf-8") as fh:
-        for r in csv.DictReader(fh):
-            d = (r.get("ex_dividend_date") or "").strip()
-            if not d:
-                continue
-            cash = fnum(r.get("cash_per_share")) or 0.0
-            ratio = fnum(r.get("share_ratio")) or 0.0
-            oc, orr = out[r["security_code"]].get(d, (0.0, 0.0))
-            out[r["security_code"]][d] = (oc + cash, (1 + orr) * (1 + ratio) - 1)
+        from corporate_actions import aggregate_actions
+        for r in aggregate_actions(csv.DictReader(fh), include_rights=False):
+            out[r['security_code']][r['ex_dividend_date']] = (r['cash_per_share'], r['share_ratio'])
     return out
 
 

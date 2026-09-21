@@ -1,0 +1,72 @@
+{
+  "job_id": "26974754",
+  "installed": {
+    "roic_bands.csv": {
+      "removed": 790,
+      "inserted": 790,
+      "other_sha256": "183513b0337481ab137d35088723f5438e1495abe7a034c76356e7e78ef18249",
+      "after": {
+        "bytes": 153804295,
+        "sha256": "84a45bf89b0de2390ea023e48af214155ad6cc70351c7ffcceee76f027f8dc47"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "removed": 790,
+      "inserted": 790,
+      "other_sha256": "0649ed80eac4e1a3348ea6ebf7fae01381b54d809f2ebefab577efa01ad29293",
+      "after": {
+        "bytes": 153781207,
+        "sha256": "4b72dee6b3e9084b33bc00f2c01db196e0e07c292faeeb67d6f15491254eb4b8"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "removed": 40156,
+      "inserted": 40156,
+      "other_sha256": "2346e53717ffbb9f1cb0b7ea0bb4a78cff819792f1f27897e28ef254a2db09d8",
+      "after": {
+        "bytes": 2114837979,
+        "sha256": "cdad34a998214a78dc467c309429747c4a97d4f6af0da9ef418f6abcf9c41dca"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "removed": 40156,
+      "inserted": 40156,
+      "other_sha256": "425ae97de026784e6d245a441bf5dbc5788a4485e0023830be971d6ad0ae7d53",
+      "after": {
+        "bytes": 2114843929,
+        "sha256": "751b3eb15df39ebfe87be5d92f97364ab18a823fcec52b414b4cea3742e70b46"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "removed": 39259,
+      "inserted": 39259,
+      "other_sha256": "e0b80ef0e1b67ea54610fc63cf923a8637bc3e9a2b608490e1844a0e1cacb7ab",
+      "after": {
+        "bytes": 2113089365,
+        "sha256": "5cadf9cf9977ae689af6ba44b56e6297c906ffdf734951d073f4c005ad5eb6b3"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "removed": 39259,
+      "inserted": 39259,
+      "other_sha256": "6cee6b39e22a7088999ddc8da0fb618bb4457cc3b72f464a8b2808f49b33249d",
+      "after": {
+        "bytes": 2113095315,
+        "sha256": "a5fe17785f064c22b364396f2b553d614c04aca005caf904ef856ee3953d79f3"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "removed": 39259,
+      "inserted": 39259,
+      "other_sha256": "34fd591d08dea3f19eeff2b09e699ede4cfb721bbafb8456ba3d792dab711e84",
+      "after": {
+        "bytes": 2190564322,
+        "sha256": "ef851388cd7f1a9042dbb7c055a66220ea55aaffbf7f971355e53d899f47f7e8"
+      }
+    },
+    "actions": {
+      "bytes": 5830186,
+      "sha256": "478b16a909b5e4b0c0a94e40247791d7d6bb5e3448b72869961b551c63d87dca"
+    }
+  }
+}

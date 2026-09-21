@@ -1,0 +1,28 @@
+{
+  "issue": "OI-196",
+  "created_at_beijing": "2026-09-21T19:05:56.797580+08:00",
+  "before_code_sha256": {
+    "shadow_from_origin.py": "5f2f9053b3de3aae7221b8fe42e26d9c556976e3639fc08401f1d609aeebac15",
+    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
+    "backtest_valuation_strategy.py": "040018a8eef3365d54206858c5b218b06b6bc566d7634ae4b918434071cbb865",
+    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6"
+  },
+  "after_code_sha256": {
+    "shadow_from_origin.py": "bac4347ebc96e0b88a16890d40dbaefb4de12a6915fb046ad6d24395c7bc2675",
+    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
+    "backtest_valuation_strategy.py": "7c6393b17fb65656121c3b0e0a8ea728f0ac553ced3eb1c0a7ede08e3365f1c4",
+    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+    "corporate_actions.py": "02d771a38272fbc8173586ba6d0c2fd19f9e1db56a6494de6c55df73c64dae2e"
+  },
+  "before_manifest_sha256": "786e0425404997747997382f78855df0a803b143e29fa6fc6d1ae6ab5a1de8a4",
+  "validation": "data/experiments/exp_oi196_20260921/shadow_validation.json",
+  "validation_sha256": "b7d386a5eefbf2e73da1b37c43861a07e2d94121e39c463c0b332a6546e79d27",
+  "original_snapshots_unchanged": true,
+  "replay_economics_unchanged": true
+}

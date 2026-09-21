@@ -30,6 +30,7 @@ import bisect
 import csv
 from dataclasses import dataclass
 from pathlib import Path
+from corporate_actions import unique_actions
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIONS_CSV = ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv"
@@ -58,7 +59,7 @@ def load_distributions(path: Path = ACTIONS_CSV,
     if not path.exists():
         return out
     with path.open(newline="", encoding="utf-8") as handle:
-        for row in csv.DictReader(handle):
+        for row in unique_actions(csv.DictReader(handle)):
             code = (row.get("security_code") or "").zfill(6)
             if codes is not None and code not in codes:
                 continue

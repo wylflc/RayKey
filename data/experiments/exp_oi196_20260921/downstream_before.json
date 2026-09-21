@@ -1,0 +1,42 @@
+{
+  "data/processed/a_share_valuation_dossiers.csv": {
+    "bytes": 1197774,
+    "sha256": "87a791d0f6d28fcf1ca03e3589c9f0738e219fb0825ceac988bf29daa05e2a09"
+  },
+  "data/processed/a_share_focus_watchlist_l1_l2_valuation.csv": {
+    "bytes": 716038,
+    "sha256": "ecb0ba8787fa989539b0d252e138ffeecf440abb7fa12fa82b7421637a390760"
+  },
+  "data/processed/a_share_core_valuation_pool.csv": {
+    "bytes": 318618,
+    "sha256": "db6802c6662a7248a87380b59589becc98424bf9223340332c0000ecd46a9618"
+  },
+  "data/processed/daily_execution_publication.json": {
+    "bytes": 4414,
+    "sha256": "7b89eeb142af9897084b8a16c21088b82bd8f94ec48fd05193dda58554ade7d8"
+  },
+  "data/interim/daily_evidence_2026-09-21.json": {
+    "bytes": 4197,
+    "sha256": "dd95e69df9c5d0296e54a1a7e6e0dcc53e3f25a40421183ab23f2af8970197e9"
+  },
+  "data/raw/corporate_actions/a_share_corporate_actions.csv.meta.json": {
+    "bytes": 182,
+    "sha256": "9081c031f2e1fc0f36528de97ab3ae52e5c4a2018d3d116e7e20da79e5761029"
+  },
+  "data/processed/daily_holdings_tracking.csv": {
+    "bytes": 1304,
+    "sha256": "d4d489fba47ba95596984f1c577ab96a08cf27fcd33bc9f5913f1dba006ab7f8"
+  },
+  "data/interim/daily_execution_2026-09-21.json": {
+    "bytes": 10912,
+    "sha256": "3fda6e6a9989322b9e54350b055dec8ea80187d20c117989bd4cedad0dc77a30"
+  },
+  "data/processed/a_share_holdings.csv": {
+    "bytes": 324,
+    "sha256": "a38eea54710ac72bd4d00bc958db98929dc86cfaa037b80931eb8a0a4f07322f"
+  },
+  "data/processed/portfolio_account_snapshot.csv": {
+    "bytes": 60625,
+    "sha256": "f5eb4a4a8ee9a4204cead2a1e07b20f752c67ea1ad3ce7f07e8954cd0049d4ee"
+  }
+}

@@ -1,0 +1,10 @@
+raw_pages/
+old_inputs/
+states/
+cache/
+nav/
+stats/
+daily/
+errors/
+ledger_*.csv
+actions_corrected.csv

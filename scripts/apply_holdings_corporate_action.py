@@ -58,20 +58,16 @@ def event_from_actions(path: Path, code: str, as_of: str) -> dict[str, float] | 
     """事件库当日行（分红送转＋配股合并）；无行返回 None。"""
     if not path.exists():
         return None
-    cash = ratio = rr = rp = 0.0
-    found = False
+    from corporate_actions import aggregate_actions
     with path.open(newline="", encoding="utf-8-sig") as fh:
-        for a in csv.DictReader(fh):
-            if str(a.get("security_code") or "").zfill(6) != code or (a.get("ex_dividend_date") or "")[:10] != as_of:
-                continue
-            found = True
-            cash += _num(a.get("cash_per_share")) or 0.0
-            ratio = (1 + ratio) * (1 + (_num(a.get("share_ratio")) or 0.0)) - 1
-            r = _num(a.get("rights_ratio")) or 0.0
-            if r > 0:
-                rr += r
-                rp = _num(a.get("rights_price")) or rp
-    return {"cash": cash, "ratio": ratio, "rights_ratio": rr, "rights_price": rp} if found else None
+        rows = aggregate_actions(a for a in csv.DictReader(fh)
+                                 if str(a.get("security_code") or "").zfill(6) == code
+                                 and (a.get("ex_dividend_date") or "")[:10] == as_of)
+    if not rows:
+        return None
+    event = rows[0]
+    return dict(cash=event['cash_per_share'], ratio=event['share_ratio'],
+                rights_ratio=event['rights_ratio'], rights_price=event['rights_price'])
 
 
 def event_from_eastmoney(code: str, as_of: str, timeout: float) -> dict[str, float] | None:

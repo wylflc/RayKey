@@ -72,7 +72,7 @@ def fetch_one(code: str, timeout: float = 15.0) -> list[dict]:
 # 带由建带链机械维护，持仓表是人工侧）。
 
 EX_DIV_COLUMNS = (
-    "SECURITY_CODE,SECURITY_NAME_ABBR,EX_DIVIDEND_DATE,IMPL_PLAN_PROFILE,"
+    "SECURITY_CODE,SECURITY_NAME_ABBR,REPORT_DATE,PLAN_NOTICE_DATE,EX_DIVIDEND_DATE,IMPL_PLAN_PROFILE,"
     "PRETAX_BONUS_RMB,BONUS_RATIO,IT_RATIO,ASSIGN_PROGRESS"
 )
 
@@ -80,37 +80,41 @@ EX_DIV_COLUMNS = (
 def fetch_ex_dividend_events(as_of: str, timeout: float = 15.0) -> dict[str, dict[str, object]]:
     """取 `as_of` 当日全市场除权除息事件，返回 {代码: {计划文本, 每股现金, 每股送转}}。
 
-    按日过滤而非逐票查询：一次请求即可拿到当日全市场（实测 2026-08-07 共 15 家），
-    与持仓取交集在本地做，故每日只多一次网络往返。
+    按日过滤而非逐票查询：按 500 行分页取全，核对返回总数后按公司汇总。
+    与持仓取交集在本地做。
     """
-    query = urllib.parse.urlencode({
+    params = {
         "reportName": "RPT_SHAREBONUS_DET",
         "columns": EX_DIV_COLUMNS,
         "pageSize": "500",
-        "sortColumns": "SECURITY_CODE",
-        "sortTypes": "1",
+        "sortColumns": "SECURITY_CODE,REPORT_DATE,PLAN_NOTICE_DATE",
+        "sortTypes": "1,1,1",
         "filter": f"(EX_DIVIDEND_DATE='{as_of}')",
-    })
-    request = urllib.request.Request(f"{API}?{query}", headers=HEADERS)
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        payload = json.loads(response.read().decode("utf-8"))
-    rows = ((payload.get("result") or {}).get("data")) or []
-
-    events: dict[str, dict[str, object]] = {}
-    for row in rows:
-        code = str(row.get("SECURITY_CODE") or "").zfill(6)
-        if not code:
-            continue
-        cash_per_ten = float(row.get("PRETAX_BONUS_RMB") or 0)
-        share_per_ten = float(row.get("BONUS_RATIO") or 0) + float(row.get("IT_RATIO") or 0)
-        events[code] = {
-            "name": row.get("SECURITY_NAME_ABBR", ""),
-            "plan": row.get("IMPL_PLAN_PROFILE", ""),
-            "cash_per_share": cash_per_ten / 10,
-            "share_ratio": share_per_ten / 10,
-            "progress": row.get("ASSIGN_PROGRESS", ""),
-        }
-    return events
+    }
+    rows, expected, page = [], None, 1
+    while True:
+        query = urllib.parse.urlencode({**params, "pageNumber": str(page)})
+        request = urllib.request.Request(f"{API}?{query}", headers=HEADERS)
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        result = payload.get("result")
+        if not result:
+            if page == 1 and payload.get("code") == 9201:
+                return {}
+            raise ValueError(f"Incomplete ex-dividend query: {payload.get('message')}")
+        expected = result.get("count") if expected is None else expected
+        if expected != result.get("count"):
+            raise ValueError("Ex-dividend source changed during pagination")
+        rows.extend(result.get("data") or [])
+        if page >= int(result.get("pages") or 1):
+            break
+        page += 1
+    if expected is not None and len(rows) != int(expected):
+        raise ValueError(f"Incomplete ex-dividend query: {len(rows)}/{expected}")
+    from corporate_actions import aggregate_actions, normalize_eastmoney
+    return {r['security_code']: dict(name=r['security_name'], plan=r['plan'],
+                cash_per_share=r['cash_per_share'], share_ratio=r['share_ratio'], progress=r['progress'])
+            for r in aggregate_actions(normalize_eastmoney(rows))}
 
 
 def adjust_for_ex_dividend(price: float, cash_per_share: float, share_ratio: float,

@@ -20,7 +20,8 @@ ROOT = sh.ROOT
 BOOK = ROOT / 'data/processed/shadow_portfolio/since_20260828'
 EXP = ROOT / 'data/experiments/exp_shadow_origin_20260918'
 CODE = ('shadow_from_origin.py', 'shadow_portfolio.py', 'backtest_valuation_strategy.py',
-        'screen_daily_volume_price_signals.py', 'equity_bond_constraint.py', 'lot_cooldown.py', 'swap_chop_guard.py')
+        'screen_daily_volume_price_signals.py', 'equity_bond_constraint.py', 'lot_cooldown.py', 'swap_chop_guard.py',
+        'corporate_actions.py')
 
 
 def hashes():
@@ -97,8 +98,9 @@ def snapshot(day, revision, account):
     holdings = {r['security_code']: dict(name=r['security_name'], shares=float(r['current_shares']),
                 cost=float(r['cost_basis']), stop=float(r['entry_stop_price'])) for r in hs}
     action_rows = sh.csv_rows(source.read('data/raw/corporate_actions/a_share_corporate_actions.csv'))
+    from corporate_actions import aggregate_actions
     actions = {}
-    for r in action_rows:
+    for r in aggregate_actions(action_rows):
         d = r['ex_dividend_date']
         if d and d >= '2024-01-01' and r['security_code'] in set(quotes) | {'600919', '920599'}:
             actions.setdefault(r['security_code'], {})[d] = dict(cash_per_share=float(r['cash_per_share'] or 0),
@@ -325,6 +327,23 @@ def opening_confirmation(manifest):
     return evidence
 
 
+def corrected_actions(snapshots, correction):
+    """Apply an evidenced event correction to replay copies; archived quotes stay fixed."""
+    result = copy.deepcopy(snapshots)
+    for snapshot in result:
+        if snapshot['date'] > correction['through']:
+            continue
+        for code, events in correction['events'].items():
+            for day, event in events.items():
+                if day > correction['known_by'] or day > snapshot['date']:
+                    raise ValueError('Historical action correction is not yet available')
+                if code in snapshot['all_actions']:
+                    snapshot['all_actions'][code][day] = event
+                if day == snapshot['date']:
+                    snapshot['actions'][code] = event
+    return result
+
+
 def load():
     manifest = json.loads((BOOK/'manifest.json').read_text())
     if manifest['code_sha256'] != hashes():
@@ -350,6 +369,14 @@ def load():
         supplement[update['code']] = merge_prices(supplement.get(update['code'], []), update['rows'])
     if sh.sha((BOOK/'opening_correction.json').read_bytes()) != manifest['correction_sha256']:
         raise ValueError('Opening correction evidence changed')
+    for name, digest in manifest.get('action_corrections', {}).items():
+        path = BOOK/name
+        if sh.sha(path.read_bytes()) != digest:
+            raise ValueError('Historical action correction evidence changed')
+        snapshots = corrected_actions(snapshots, json.loads(path.read_text()))
+    for name, digest in manifest.get('code_migrations', {}).items():
+        if sh.sha((BOOK/name).read_bytes()) != digest:
+            raise ValueError('Replay code migration evidence changed')
     return manifest, snapshots, supplement
 
 

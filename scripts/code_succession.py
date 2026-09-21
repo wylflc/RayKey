@@ -24,6 +24,7 @@ import csv
 import re
 from datetime import date
 from pathlib import Path
+from corporate_actions import AMOUNTS, action_key, amount, unique_actions
 
 ROOT = Path(__file__).resolve().parents[1]
 SUCCESSION = ROOT / "data/reference/a_share_code_succession.csv"
@@ -58,26 +59,18 @@ def load_succession(path: Path = SUCCESSION) -> list[dict[str, str]]:
     return rows
 
 
-def action_key(action: dict[str, str]) -> tuple[str, str]:
-    """与 `fetch_ohlcv_history.action_key` 同义：(代码, 除权日[:rights])；预案行按 plan 键。"""
-    ex = (action.get("ex_dividend_date") or "").strip()
-    code = action.get("security_code", "").zfill(6)
-    if ex:
-        try:
-            rights = float(action.get("rights_ratio") or 0) > 0
-        except ValueError:
-            rights = False
-        return (code, f"{ex}:rights" if rights else ex)
-    return (code, f"plan:{action.get('report_date', '')}:{action.get('plan_notice_date', '')}")
-
-
 def expand_actions(rows: list[dict[str, str]],
                    pairs: list[dict[str, str]] | None = None) -> tuple[list[dict[str, str]], int]:
     """按换码表把新码名下、除权日 ≤ 旧码末个交易日的事件复制到旧码。返回 (全部行, 新增行数)。"""
     pairs = load_succession() if pairs is None else pairs
     if not pairs:
         return list(rows), 0
+    rows = unique_actions(rows)
     existing = {action_key(r) for r in rows}
+    by_period = {}
+    for row in rows:
+        key = action_key(row)
+        by_period.setdefault(key[:4], []).append(row)
     added: list[dict[str, str]] = []
     for pair in pairs:
         cutoff = pair["last_old_trading_date"]
@@ -88,6 +81,16 @@ def expand_actions(rows: list[dict[str, str]],
             clone = {**r, "security_code": pair["old_code"], "security_name": pair["old_name"]}
             key = action_key(clone)
             if key in existing:
+                continue
+            # Earlier archives did not retain announcement dates. A refreshed
+            # new-code history must not clone those same distributions twice.
+            legacy = [a for a in by_period.get(key[:4], []) if not a.get('plan_notice_date')]
+            if key[3] and key[4] and legacy:
+                source_key = action_key(r)[:4]
+                if len(legacy) != 1 or len(by_period[source_key]) != 1:
+                    raise ValueError(f'Ambiguous legacy action during code succession: {key}')
+                if any(amount(legacy[0], k) != amount(clone, k) for k in AMOUNTS):
+                    raise ValueError(f'Conflicting legacy action during code succession: {key}')
                 continue
             existing.add(key)
             added.append(clone)

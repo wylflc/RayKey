@@ -1,0 +1,2 @@
+security_code,ex_dividend_date,report_date,plan_notice_date,cash_per_share,share_ratio,reason,source_url,verified_on
+600080,1997-08-19,1997-06-30,1997-08-14,0,0.6,同一10转6事件被源表同时标成1996年度及1997中期；公司股改说明书证实8000万股仅增至12800万股，保留既有1996年度源行，不把重复标签计为第二次转增,https://static.cninfo.com.cn/finalpage/2006-03-27/16614131.PDF,2026-09-21

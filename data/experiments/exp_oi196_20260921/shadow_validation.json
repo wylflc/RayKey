@@ -1,0 +1,48 @@
+{
+  "outcomes": {
+    "missing_300_on_0828": {
+      "old_reproduces_stored_states": true,
+      "old_new_equal": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "days": 17,
+      "fills": 39,
+      "last_equity": {
+        "date": "2026-09-21",
+        "net_assets": 2661774.605543333,
+        "unit_nav": 0.9470019203364669,
+        "return_pct": -5.29980796635331,
+        "debt": 1808843.3944566671,
+        "cash": 0.0,
+        "opening_capital": 2810738.34,
+        "opening_coal_shares": 10400
+      }
+    }
+  },
+  "original_snapshots": 17,
+  "corrected_copies": 17,
+  "original_snapshots_unchanged": true,
+  "code_before": {
+    "shadow_from_origin.py": "5f2f9053b3de3aae7221b8fe42e26d9c556976e3639fc08401f1d609aeebac15",
+    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
+    "backtest_valuation_strategy.py": "040018a8eef3365d54206858c5b218b06b6bc566d7634ae4b918434071cbb865",
+    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6"
+  },
+  "code_after": {
+    "shadow_from_origin.py": "bac4347ebc96e0b88a16890d40dbaefb4de12a6915fb046ad6d24395c7bc2675",
+    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
+    "backtest_valuation_strategy.py": "7c6393b17fb65656121c3b0e0a8ea728f0ac553ced3eb1c0a7ede08e3365f1c4",
+    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+    "corporate_actions.py": "02d771a38272fbc8173586ba6d0c2fd19f9e1db56a6494de6c55df73c64dae2e"
+  }
+}

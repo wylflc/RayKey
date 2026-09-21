@@ -1,0 +1,19 @@
+{
+  "modules": [
+    "test_corporate_actions",
+    "test_corporate_actions_tax",
+    "test_suspended_actions",
+    "test_shadow_origin",
+    "test_shadow_portfolio",
+    "test_daily_execution_plan",
+    "test_code_succession",
+    "test_divspread_dividend",
+    "test_equity_anchor",
+    "test_forecast_overlay_action_date",
+    "test_apply_holdings_corporate_action"
+  ],
+  "tests": 117,
+  "errors": 0,
+  "failures": 0,
+  "passed": true
+}

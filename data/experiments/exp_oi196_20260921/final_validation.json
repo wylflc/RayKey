@@ -1,0 +1,35 @@
+{
+  "status": "passed",
+  "checked_at_utc": "2026-09-21T11:17:24.410301+00:00",
+  "checks": {
+    "a_share_holdings.csv": true,
+    "portfolio_account_snapshot.csv": true,
+    "daily_entry_plan.csv": 0,
+    "daily_sell_plan.csv": 0,
+    "holding_tracking_unchanged": true,
+    "candidates": 181,
+    "action_components": 54637,
+    "original_shadow_snapshots_preserved": 17,
+    "valuation_pool_rows": 181,
+    "buy_sell_plans_unchanged": true,
+    "mindray": {
+      "close": "158.05",
+      "model_intrinsic_value": "86.3984",
+      "model_pv": "1.8293",
+      "ma20": "162.953",
+      "ma60": "152.8625"
+    },
+    "jobs": {
+      "audit": "26974214",
+      "states": "26974556",
+      "backtest": "26974721",
+      "publish": "26974754",
+      "scan": "26974807",
+      "shadow": "26974980"
+    }
+  },
+  "publication": {
+    "bytes": 4588,
+    "sha256": "206e553ad63911698b43f0fb3395cd7c3f703191a9c652b890e3811f81dd4989"
+  }
+}

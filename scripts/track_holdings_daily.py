@@ -372,8 +372,9 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
     # 配股（§11.4）：东财按日接口不含配股，读事件库（新浪配股表，`fetch_ohlcv_history.py --actions-only` 刷新）当日配股行
     actions_csv = ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv"
     if actions_csv.exists():
+        from corporate_actions import aggregate_actions
         with actions_csv.open(newline="", encoding="utf-8-sig") as fh:
-            for a in csv.DictReader(fh):
+            for a in aggregate_actions(csv.DictReader(fh)):
                 code = str(a.get("security_code") or "").zfill(6)
                 if code not in codes or (a.get("ex_dividend_date") or "")[:10] != as_of.isoformat():
                     continue

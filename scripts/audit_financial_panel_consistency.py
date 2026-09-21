@@ -74,11 +74,12 @@ def load_panel(fin_dir: Path, codes: set[str] | None) -> dict[str, dict[str, dic
 
 def load_share_factors(path: Path) -> dict[str, list[tuple[str, float, float]]]:
     """{代码: [(除权日, 每股送转比例（分数，10 送 8 转 12 记 2.0）, 每股现金分红)]}"""
+    from corporate_actions import aggregate_actions
     out: dict[str, list[tuple[str, float, float]]] = defaultdict(list)
     if not path.exists():
         return out
     with path.open(encoding="utf-8-sig", newline="") as handle:
-        for row in csv.DictReader(handle):
+        for row in aggregate_actions(csv.DictReader(handle)):
             ex = (row.get("ex_dividend_date") or "").strip()[:10]
             if not ex:
                 continue

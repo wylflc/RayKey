@@ -1,0 +1,356 @@
+{
+  "roic_bands.csv": {
+    "changed_rows": 60,
+    "changed_codes": {
+      "000738": 12,
+      "002043": 1,
+      "300315": 12,
+      "300760": 5,
+      "301039": 3,
+      "301308": 3,
+      "600720": 13,
+      "601966": 11
+    },
+    "changed_fields": {
+      "payout": 52,
+      "g_sustainable": 52,
+      "g0": 45,
+      "intrinsic_value": 55,
+      "band_low": 55,
+      "band_high": 55,
+      "max_buy_price": 55,
+      "implied_pe": 50,
+      "pe_on_ttm_eps": 55,
+      "terminal_share": 45,
+      "min_payout": 37,
+      "v_bear": 55,
+      "v_bull": 55,
+      "eps0": 15,
+      "bps_operating": 17,
+      "external_equity_ps": 15,
+      "v_zero_growth": 5,
+      "nopat_ps": 5,
+      "net_debt_ps": 4,
+      "fin_net_debt_ps": 4,
+      "minority_book_ps": 4,
+      "ev_ps": 5,
+      "owner_earnings_true_ps": 4,
+      "roic_nopat_mode": 3,
+      "external_equity_cum_ps": 3,
+      "trough_weight": 3,
+      "valuation_quality_score": 4,
+      "valuation_quality_notes": 4
+    },
+    "old_rebuild_vs_stored": {
+      "eps0": 1,
+      "v_zero_growth": 1,
+      "nopat_ps": 1,
+      "net_debt_ps": 1,
+      "fin_net_debt_ps": 1,
+      "minority_book_ps": 1,
+      "ev_ps": 1,
+      "owner_earnings_true_ps": 1,
+      "intrinsic_value": 1,
+      "band_low": 1,
+      "band_high": 1,
+      "max_buy_price": 1,
+      "implied_pe": 1,
+      "pe_on_ttm_eps": 1,
+      "v_bear": 1,
+      "v_bull": 1,
+      "bps_operating": 1,
+      "external_equity_ps": 1
+    },
+    "splice": {
+      "removed": 136,
+      "inserted": 136,
+      "other_sha256": "746878f6916a45f50c4b4aa2d96cb90e6780470dcdb93fd3e378dc94701fa0a4"
+    },
+    "new_subset": {
+      "bytes": 12286548,
+      "sha256": "24142b3e4ecada7285512ea72cbc879ab13a21265a9488e3942de860236f0065"
+    }
+  },
+  "roic_bands_b2.csv": {
+    "changed_rows": 60,
+    "changed_codes": {
+      "000738": 12,
+      "002043": 1,
+      "300315": 12,
+      "300760": 5,
+      "301039": 3,
+      "301308": 3,
+      "600720": 13,
+      "601966": 11
+    },
+    "changed_fields": {
+      "payout": 52,
+      "g_sustainable": 52,
+      "g0": 45,
+      "intrinsic_value": 55,
+      "band_low": 55,
+      "band_high": 55,
+      "max_buy_price": 55,
+      "implied_pe": 50,
+      "pe_on_ttm_eps": 55,
+      "terminal_share": 45,
+      "min_payout": 37,
+      "v_bear": 55,
+      "v_bull": 55,
+      "eps0": 15,
+      "bps_operating": 17,
+      "external_equity_ps": 15,
+      "v_zero_growth": 5,
+      "nopat_ps": 5,
+      "net_debt_ps": 4,
+      "fin_net_debt_ps": 4,
+      "minority_book_ps": 4,
+      "ev_ps": 5,
+      "owner_earnings_true_ps": 4,
+      "roic_nopat_mode": 3,
+      "external_equity_cum_ps": 3,
+      "trough_weight": 3,
+      "valuation_quality_score": 4,
+      "valuation_quality_notes": 4
+    },
+    "old_rebuild_vs_stored": {
+      "eps0": 1,
+      "v_zero_growth": 1,
+      "nopat_ps": 1,
+      "net_debt_ps": 1,
+      "fin_net_debt_ps": 1,
+      "minority_book_ps": 1,
+      "ev_ps": 1,
+      "owner_earnings_true_ps": 1,
+      "intrinsic_value": 1,
+      "band_low": 1,
+      "band_high": 1,
+      "max_buy_price": 1,
+      "implied_pe": 1,
+      "pe_on_ttm_eps": 1,
+      "v_bear": 1,
+      "v_bull": 1,
+      "bps_operating": 1,
+      "external_equity_ps": 1
+    },
+    "splice": {
+      "removed": 136,
+      "inserted": 136,
+      "other_sha256": "677a048e779372eaf4c6e2a0c3e2847738c2abd7426a180f1edd20d433bd623f"
+    },
+    "new_subset": {
+      "bytes": 12285195,
+      "sha256": "bf3f9c6f6f434ecf4566e89005c40572501beaa6b5445ecd006cf06251ac8b38"
+    }
+  },
+  "roic_daily_raw.csv": {
+    "changed_rows": 3071,
+    "changed_codes": {
+      "000738": 957,
+      "002043": 49,
+      "300315": 342,
+      "300760": 307,
+      "301039": 94,
+      "301308": 48,
+      "600720": 718,
+      "601966": 556
+    },
+    "changed_fields": {
+      "intrinsic_value": 3071,
+      "band_low": 3071,
+      "band_high": 3071,
+      "valuation_ratio": 3071,
+      "upside_to_low": 3071,
+      "pv_equity": 3071,
+      "cash_adjustment": 407,
+      "valuation_label": 81,
+      "ev_ps": 244
+    },
+    "old_rebuild_vs_stored": {
+      "cash_adjustment": 66,
+      "intrinsic_value": 66,
+      "band_low": 66,
+      "band_high": 66,
+      "valuation_ratio": 66,
+      "upside_to_low": 66,
+      "pv_equity": 66
+    },
+    "splice": {
+      "removed": 6675,
+      "inserted": 6675,
+      "other_sha256": "fda065cf6e93cec475655ce9c6dc114550656307c8ff95612d51fe82d09f1e3e"
+    },
+    "new_subset": {
+      "bytes": 139840773,
+      "sha256": "20be0f20fb5956fab737870e8a04975d762c0986c3dfbaea8ae3c0fc3a8c9206"
+    }
+  },
+  "roic_daily_raw_b2.csv": {
+    "changed_rows": 3071,
+    "changed_codes": {
+      "000738": 957,
+      "002043": 49,
+      "300315": 342,
+      "300760": 307,
+      "301039": 94,
+      "301308": 48,
+      "600720": 718,
+      "601966": 556
+    },
+    "changed_fields": {
+      "intrinsic_value": 3071,
+      "band_low": 3071,
+      "band_high": 3071,
+      "valuation_ratio": 3071,
+      "upside_to_low": 3071,
+      "pv_equity": 3071,
+      "cash_adjustment": 407,
+      "valuation_label": 81,
+      "ev_ps": 244
+    },
+    "old_rebuild_vs_stored": {
+      "cash_adjustment": 66,
+      "intrinsic_value": 66,
+      "band_low": 66,
+      "band_high": 66,
+      "valuation_ratio": 66,
+      "upside_to_low": 66,
+      "pv_equity": 66
+    },
+    "splice": {
+      "removed": 6675,
+      "inserted": 6675,
+      "other_sha256": "1eada68024afe01e659851a3291b8b90c45e3e76cd738015134b2f715152af9b"
+    },
+    "new_subset": {
+      "bytes": 139851708,
+      "sha256": "b8f24c3fc1878ddcbe6322d2d710f9633dc8f89195a18a37ab238f7ea567983f"
+    }
+  },
+  "a_share_daily_states_adopted.csv": {
+    "changed_rows": 3071,
+    "changed_codes": {
+      "000738": 957,
+      "002043": 49,
+      "300315": 342,
+      "300760": 307,
+      "301039": 94,
+      "301308": 48,
+      "600720": 718,
+      "601966": 556
+    },
+    "changed_fields": {
+      "intrinsic_value": 3071,
+      "band_low": 3071,
+      "band_high": 3071,
+      "valuation_ratio": 3071,
+      "upside_to_low": 3071,
+      "pv_equity": 3071,
+      "cash_adjustment": 407,
+      "valuation_label": 81,
+      "ev_ps": 244
+    },
+    "old_rebuild_vs_stored": {
+      "cash_adjustment": 66,
+      "intrinsic_value": 66,
+      "band_low": 66,
+      "band_high": 66,
+      "valuation_ratio": 66,
+      "upside_to_low": 66,
+      "pv_equity": 66
+    },
+    "splice": {
+      "removed": 5778,
+      "inserted": 5778,
+      "other_sha256": "67d3a622d0dbe5b390db76f53cf2e584f8340b10fe1748ba8f7ae2d690df520b"
+    },
+    "new_subset": {
+      "bytes": 138224559,
+      "sha256": "1c3e4be6a8cfa3180030387703c0b8541a3d1beb98a0b0efe68cb8e19d32ae63"
+    }
+  },
+  "a_share_daily_states_b2.csv": {
+    "changed_rows": 3071,
+    "changed_codes": {
+      "000738": 957,
+      "002043": 49,
+      "300315": 342,
+      "300760": 307,
+      "301039": 94,
+      "301308": 48,
+      "600720": 718,
+      "601966": 556
+    },
+    "changed_fields": {
+      "intrinsic_value": 3071,
+      "band_low": 3071,
+      "band_high": 3071,
+      "valuation_ratio": 3071,
+      "upside_to_low": 3071,
+      "pv_equity": 3071,
+      "cash_adjustment": 407,
+      "valuation_label": 81,
+      "ev_ps": 244
+    },
+    "old_rebuild_vs_stored": {
+      "cash_adjustment": 66,
+      "intrinsic_value": 66,
+      "band_low": 66,
+      "band_high": 66,
+      "valuation_ratio": 66,
+      "upside_to_low": 66,
+      "pv_equity": 66
+    },
+    "splice": {
+      "removed": 5778,
+      "inserted": 5778,
+      "other_sha256": "2a880e50b4c44d78d849fc9ef444122ddf6e23f0a4936273d949f1a42f7940aa"
+    },
+    "new_subset": {
+      "bytes": 138235494,
+      "sha256": "2eca59cad65d414ca70513017f00e58a6d9712233bc7bb99d36019cab7e490ee"
+    }
+  },
+  "a_share_daily_states_hold.csv": {
+    "changed_rows": 3071,
+    "changed_codes": {
+      "000738": 957,
+      "002043": 49,
+      "300315": 342,
+      "300760": 307,
+      "301039": 94,
+      "301308": 48,
+      "600720": 718,
+      "601966": 556
+    },
+    "changed_fields": {
+      "intrinsic_value": 3071,
+      "band_low": 3071,
+      "band_high": 3071,
+      "valuation_ratio": 3071,
+      "upside_to_low": 3071,
+      "pv_equity": 3071,
+      "cash_adjustment": 407,
+      "valuation_label": 81,
+      "ev_ps": 244
+    },
+    "old_rebuild_vs_stored": {
+      "cash_adjustment": 66,
+      "intrinsic_value": 66,
+      "band_low": 66,
+      "band_high": 66,
+      "valuation_ratio": 66,
+      "upside_to_low": 66,
+      "pv_equity": 66
+    },
+    "splice": {
+      "removed": 5778,
+      "inserted": 5778,
+      "other_sha256": "24d427690336d7a4a149e2beef50771469769c1b8c4b0d6d15a6feeee674cd51"
+    },
+    "new_subset": {
+      "bytes": 142659893,
+      "sha256": "d4d84a437b958244beb18dd63d8a560e76724cb65bb6bc57336f225bb288491b"
+    }
+  }
+}

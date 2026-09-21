@@ -464,26 +464,13 @@ def _load_ohlcv_column(column: str, codes: set[str] | None) -> dict[str, dict[st
 
 
 def load_actions(include_rights: bool = True) -> dict[str, dict[str, tuple[float, float, float, float]]]:
-    """{代码: {除权日: (每股现金红利, 送转比, 每股配股数, 配股价)}}。同日多条：现金相加、送转连乘、配股相加。
+    """{代码: {除权日: (每股现金红利, 送转比, 每股配股数, 配股价)}}，同日按 §8.3 汇总。
     `include_rights=False` 为研究/复现口径：忽略事件库的配股行（`rights_ratio` 列）。"""
-    out: dict[str, dict[str, tuple[float, float, float, float]]] = defaultdict(dict)
+    from corporate_actions import event_map
     if not ACTIONS.exists():
-        return out
+        return defaultdict(dict)
     with ACTIONS.open(newline="", encoding="utf-8") as handle:
-        for row in csv.DictReader(handle):
-            day = (row.get("ex_dividend_date") or "").strip()
-            if not day:
-                continue
-            cash = _num(row.get("cash_per_share")) or 0.0
-            ratio = _num(row.get("share_ratio")) or 0.0
-            rr = (_num(row.get("rights_ratio")) or 0.0) if include_rights else 0.0
-            rp = (_num(row.get("rights_price")) or 0.0) if include_rights else 0.0
-            if cash == 0.0 and ratio == 0.0 and rr == 0.0:
-                continue
-            old_cash, old_ratio, old_rr, old_rp = out[row["security_code"]].get(day, (0.0, 0.0, 0.0, 0.0))
-            out[row["security_code"]][day] = (old_cash + cash, (1 + old_ratio) * (1 + ratio) - 1,
-                                              old_rr + rr, rp if rr > 0 else old_rp)
-    return out
+        return event_map(csv.DictReader(handle), include_rights=include_rights)
 
 
 def load_names() -> dict[str, str]:

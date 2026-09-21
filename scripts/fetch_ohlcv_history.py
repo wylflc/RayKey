@@ -17,7 +17,7 @@
 * ``data/raw/corporate_actions/a_share_corporate_actions.csv``——全部除权除息事件：
   ``security_code,ex_dividend_date,cash_per_share,share_ratio,plan,report_date,plan_notice_date,progress``
 
-两者分开存是有意的：**价格是观测，事件是事实**，前者天天变、后者只在除权日新增一行。
+两者分开存是有意的：**价格是观测，事件是事实**，前者天天变、后者按独立分配方案保存，实施时补充除权日。
 合起来才能算总收益率，任何一份单独都不够。
 
 数据源与边界
@@ -28,7 +28,7 @@
 * 除权除息取东财 `RPT_SHAREBONUS_DET` 的 `EX_DIVIDEND_DATE`／`PRETAX_BONUS_RMB`（每 10 股税前派息）
   ／`BONUS_RATIO`（每 10 股送股）／`IT_RATIO`（每 10 股转增）。**配股不在该表**，改取新浪
   「分红配股」页的配股表（`sharebonus_2`：每 10 股配股数／配股价／除权日／公告日），只落已有除权日的
-  已实施配股，写入同一事件库的 `rights_ratio`（每股配股数）／`rights_price` 两列；两源按 (代码, 除权日, 类别) 去重。
+  已实施配股，写入同一事件库的 `rights_ratio`（每股配股数）／`rights_price` 两列；两源按 `corporate_actions.action_key` 保留独立组件，价格与现金流消费时按日汇总。
 * **幸存者偏差未解决**：universe 取自当前的池与持仓，退市与更名股票不在其中（§12.4 已登记）。
   本模块不假装解决它，只把它写在这里。
 
@@ -48,6 +48,7 @@ import urllib.parse
 import urllib.request
 
 import code_succession
+from corporate_actions import ACTION_FIELDS, action_key, merge_actions, normalize_eastmoney, unique_actions
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -71,9 +72,6 @@ HEADERS = {"User-Agent": "Mozilla/5.0", "Referer": "https://data.eastmoney.com/"
 
 MAX_BARS_PER_CALL = 640          # 实测上限，见模块 docstring
 OHLCV_FIELDS = ["date", "open", "close", "high", "low", "volume"]
-ACTION_FIELDS = ["security_code", "security_name", "ex_dividend_date",
-                 "cash_per_share", "share_ratio", "plan", "report_date",
-                 "plan_notice_date", "progress", "rights_ratio", "rights_price"]
 SINA_RIGHTS_URL = "https://vip.stock.finance.sina.com.cn/corp/go.php/vISSUE_ShareBonus/stockid/{code}.phtml"
 # `plan_notice_date` = 董事会预案公告日（东财 `PLAN_NOTICE_DATE`）——股利折现的分红可得日（`divspread_dividend`）。
 # **预案已公告、尚未除权的分红也落盘**（`ex_dividend_date` 为空、`progress` 记东财进度）：除权侧的
@@ -156,42 +154,38 @@ def fetch_full_history(sid: str, until: date, since: date | None, timeout: float
 
 
 def fetch_actions(code: str, timeout: float) -> list[dict[str, str]]:
-    query = urllib.parse.urlencode({
+    params = {
         "reportName": "RPT_SHAREBONUS_DET",
         "columns": ("SECURITY_CODE,SECURITY_NAME_ABBR,REPORT_DATE,EX_DIVIDEND_DATE,PLAN_NOTICE_DATE,"
                     "PRETAX_BONUS_RMB,BONUS_RATIO,IT_RATIO,IMPL_PLAN_PROFILE,ASSIGN_PROGRESS"),
         "pageSize": "200",
-        "sortColumns": "EX_DIVIDEND_DATE",
-        "sortTypes": "1",
+        "sortColumns": "EX_DIVIDEND_DATE,REPORT_DATE,PLAN_NOTICE_DATE",
+        "sortTypes": "1,1,1",
         "filter": f'(SECURITY_CODE="{code}")',
-    })
-    request = urllib.request.Request(f"{EM_API}?{query}", headers=HEADERS)
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        payload = json.loads(response.read().decode("utf-8"))
-    rows = ((payload.get("result") or {}).get("data")) or []
-
-    out = []
-    for row in rows:
-        ex = (row.get("EX_DIVIDEND_DATE") or "")[:10]
-        plan_notice = (row.get("PLAN_NOTICE_DATE") or "")[:10]
-        cash = float(row.get("PRETAX_BONUS_RMB") or 0) / 10
-        share = (float(row.get("BONUS_RATIO") or 0) + float(row.get("IT_RATIO") or 0)) / 10
-        if not cash and not share:
-            continue                            # 只预披露「拟分红」、无金额：既不是事件也不是分子
-        if not ex and not plan_notice:
-            continue
-        out.append({
-            "security_code": code.zfill(6),
-            "security_name": row.get("SECURITY_NAME_ABBR", ""),
-            "ex_dividend_date": ex,
-            "cash_per_share": f"{cash:.6f}",
-            "share_ratio": f"{share:.6f}",
-            "plan": row.get("IMPL_PLAN_PROFILE", ""),
-            "report_date": (row.get("REPORT_DATE") or "")[:10],
-            "plan_notice_date": plan_notice,
-            "progress": row.get("ASSIGN_PROGRESS", "") or "",
-        })
-    return out
+    }
+    rows, expected, page = [], None, 1
+    while True:
+        query = urllib.parse.urlencode({**params, "pageNumber": str(page)})
+        request = urllib.request.Request(f"{EM_API}?{query}", headers=HEADERS)
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        result = payload.get("result")
+        if not result:
+            if page == 1 and payload.get("code") == 9201:
+                return []  # source explicitly reports no records (e.g. an old code)
+            raise ValueError(f"Incomplete corporate-action query {code} page {page}: {payload.get('message')}")
+        expected = result.get("count") if expected is None else expected
+        if result.get("count") != expected:
+            raise ValueError(f"Corporate-action source changed during pagination: {code}")
+        rows.extend(result.get("data") or [])
+        if page >= int(result.get("pages") or 1):
+            break
+        page += 1
+    if expected is not None and len(rows) != int(expected):
+        raise ValueError(f"Incomplete corporate-action history {code}: {len(rows)}/{expected}")
+    if any(str(r.get("SECURITY_CODE") or "").zfill(6) != code.zfill(6) for r in rows):
+        raise ValueError(f"Unexpected code in corporate-action history {code}")
+    return normalize_eastmoney(rows)
 
 
 def fetch_rights(code: str, timeout: float) -> list[dict[str, str]]:
@@ -229,17 +223,6 @@ def fetch_rights(code: str, timeout: float) -> list[dict[str, str]]:
             "rights_ratio": f"{ratio:.6f}", "rights_price": f"{rights_price:.4f}",
         })
     return out
-
-
-def action_key(action: dict[str, str]) -> tuple[str, str]:
-    """除权事件按 (代码, 除权日[, rights]) 去重；预案行无除权日，按 (代码, plan:报告期:预案日) 去重。
-    同日既分红又配股时两行并存（读者按列相加）。"""
-    ex = action.get("ex_dividend_date") or ""
-    if ex:
-        if float(action.get("rights_ratio") or 0) > 0:
-            return (action["security_code"], f"{ex}:rights")
-        return (action["security_code"], ex)
-    return (action["security_code"], f"plan:{action.get('report_date', '')}:{action.get('plan_notice_date', '')}")
 
 
 # --------------------------------------------------------------- 主流程
@@ -309,19 +292,16 @@ def main() -> int:
         写盘所以一根没丢。同一次运行里两种写法、两种结局，正是 §13 第 3 条那类「丢了数据
         不报警」的成因——故这里改为每批落盘。
         """
-        refetched = {a["security_code"] for a in actions if float(a.get("rights_ratio") or 0) <= 0}
-        merged = {action_key(a): a for a in load_csv(actions_path)
-                  if a.get("security_code")
-                  # 本批重取到分红的代码：旧预案行整体清掉，由本次取到的行接替（已实施→带除权日；作废→消失）
-                  and not (a["security_code"] in refetched and not (a.get("ex_dividend_date") or ""))}
-        merged.update({action_key(a): a for a in actions})
+        merged = merge_actions((a for a in load_csv(actions_path) if a.get("security_code")), actions)
         # OI-192：换码主体的事件只在新码名下可取，按参考表复制到旧码（唯一实现 code_succession）
-        expanded, _added = code_succession.expand_actions(list(merged.values()))
-        merged = {action_key(a): a for a in expanded}
-        with actions_path.open("w", newline="", encoding="utf-8") as handle:
+        expanded, _added = code_succession.expand_actions(merged)
+        merged = unique_actions(expanded)
+        temporary = actions_path.with_name('.' + actions_path.name + '.tmp')
+        with temporary.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=ACTION_FIELDS)
             writer.writeheader()
-            writer.writerows([merged[k] for k in sorted(merged)])
+            writer.writerows(merged)
+        temporary.replace(actions_path)
         return len(merged)
 
     all_actions: list[dict[str, str]] = []

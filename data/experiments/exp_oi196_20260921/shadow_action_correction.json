@@ -1,0 +1,64 @@
+{
+  "issue": "OI-196",
+  "through": "2026-09-21",
+  "known_by": "2026-08-28",
+  "events": {
+    "002043": {
+      "2026-06-01": {
+        "cash_per_share": 0.312,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0
+      }
+    },
+    "300760": {
+      "2025-05-29": {
+        "cash_per_share": 1.97,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0
+      },
+      "2026-05-28": {
+        "cash_per_share": 1.56,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0
+      }
+    },
+    "301039": {
+      "2026-07-06": {
+        "cash_per_share": 0.35,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0
+      }
+    },
+    "301308": {
+      "2026-06-02": {
+        "cash_per_share": 0.990744,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0
+      }
+    },
+    "600720": {
+      "2024-06-13": {
+        "cash_per_share": 0.3674,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0
+      }
+    },
+    "601966": {
+      "2024-06-14": {
+        "cash_per_share": 0.377,
+        "share_ratio": 0.0,
+        "rights_ratio": 0.0,
+        "rights_price": 0.0
+      }
+    }
+  },
+  "evidence": "data/experiments/exp_oi196_20260921/repairs.json",
+  "evidence_sha256": "456a89ddbed9ecf36be8c0496c01a3280083513c9fbfaa73433d56760ed634e4",
+  "scope": "Replay copies of all_actions only; original quotes, valuations, snapshots and real account remain archived unchanged."
+}

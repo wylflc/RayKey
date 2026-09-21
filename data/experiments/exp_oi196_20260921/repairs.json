@@ -1,0 +1,754 @@
+{
+  "codes": [
+    "000601",
+    "000738",
+    "002043",
+    "300315",
+    "300760",
+    "301039",
+    "301308",
+    "600015",
+    "600720",
+    "600745",
+    "601966"
+  ],
+  "groups": [
+    {
+      "security_code": "000601",
+      "ex_dividend_date": "1997-11-03",
+      "source_components": [
+        {
+          "security_code": "000601",
+          "security_name": "韶能股份",
+          "ex_dividend_date": "1997-11-03",
+          "cash_per_share": "0.000000",
+          "share_ratio": "0.400000",
+          "plan": "10送4.00",
+          "report_date": "1996-12-31",
+          "plan_notice_date": "1997-10-28",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "000601",
+          "security_name": "韶能股份",
+          "ex_dividend_date": "1997-11-03",
+          "cash_per_share": "0.000000",
+          "share_ratio": "0.400000",
+          "plan": "10送3.00转1.00",
+          "report_date": "1997-06-30",
+          "plan_notice_date": "1997-10-28",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "000601",
+          "security_name": "韶能股份",
+          "ex_dividend_date": "1997-11-03",
+          "cash_per_share": "0.000000",
+          "share_ratio": "0.400000",
+          "plan": "10送4.00",
+          "report_date": "1996-12-31",
+          "plan_notice_date": "",
+          "progress": "",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.0,
+      "correct_cash": 0.0,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "000738",
+      "ex_dividend_date": "2013-06-14",
+      "source_components": [
+        {
+          "security_code": "000738",
+          "security_name": "航发控制",
+          "ex_dividend_date": "2013-06-14",
+          "cash_per_share": "0.021000",
+          "share_ratio": "0.000000",
+          "plan": "10派0.21元(含税,扣税后0.189元)",
+          "report_date": "2012-12-31",
+          "plan_notice_date": "2013-03-30",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "000738",
+          "security_name": "航发控制",
+          "ex_dividend_date": "2013-06-14",
+          "cash_per_share": "0.041000",
+          "share_ratio": "0.000000",
+          "plan": "10派0.41元(含税,扣税后0.369元)",
+          "report_date": "2013-06-30",
+          "plan_notice_date": "2013-05-17",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "000738",
+          "security_name": "航发控制",
+          "ex_dividend_date": "2013-06-14",
+          "cash_per_share": "0.041000",
+          "share_ratio": "0.000000",
+          "plan": "10派0.41元(含税,扣税后0.369元)",
+          "report_date": "2013-06-30",
+          "plan_notice_date": "",
+          "progress": "",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.041,
+      "correct_cash": 0.062,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "002043",
+      "ex_dividend_date": "2026-06-01",
+      "source_components": [
+        {
+          "security_code": "002043",
+          "security_name": "兔宝宝",
+          "ex_dividend_date": "2026-06-01",
+          "cash_per_share": "0.132000",
+          "share_ratio": "0.000000",
+          "plan": "10派1.32元(含税,扣税后1.188元)",
+          "report_date": "2025-12-31",
+          "plan_notice_date": "2026-04-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "002043",
+          "security_name": "兔宝宝",
+          "ex_dividend_date": "2026-06-01",
+          "cash_per_share": "0.180000",
+          "share_ratio": "0.000000",
+          "plan": "10派1.80元(含税,扣税后1.62元)",
+          "report_date": "2026-03-31",
+          "plan_notice_date": "2026-04-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "002043",
+          "security_name": "兔宝宝",
+          "ex_dividend_date": "2026-06-01",
+          "cash_per_share": "0.132000",
+          "share_ratio": "0.000000",
+          "plan": "10派1.32元(含税)",
+          "report_date": "2025-12-31",
+          "plan_notice_date": "",
+          "progress": "",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.132,
+      "correct_cash": 0.312,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "300315",
+      "ex_dividend_date": "2012-10-22",
+      "source_components": [
+        {
+          "security_code": "300315",
+          "security_name": "掌趣科技",
+          "ex_dividend_date": "2012-10-22",
+          "cash_per_share": "0.100000",
+          "share_ratio": "0.000000",
+          "plan": "10派1.00元(含税,扣税后0.90元)",
+          "report_date": "2011-12-31",
+          "plan_notice_date": "2012-08-15",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "300315",
+          "security_name": "掌趣科技",
+          "ex_dividend_date": "2012-10-22",
+          "cash_per_share": "0.050000",
+          "share_ratio": "0.000000",
+          "plan": "10派0.50元(含税,扣税后0.45元)",
+          "report_date": "2012-06-30",
+          "plan_notice_date": "2012-08-15",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "300315",
+          "security_name": "掌趣科技",
+          "ex_dividend_date": "2012-10-22",
+          "cash_per_share": "0.050000",
+          "share_ratio": "0.000000",
+          "plan": "10派0.50元(含税,扣税后0.45元)",
+          "report_date": "2012-06-30",
+          "plan_notice_date": "",
+          "progress": "",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.05,
+      "correct_cash": 0.15000000000000002,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "300760",
+      "ex_dividend_date": "2025-05-29",
+      "source_components": [
+        {
+          "security_code": "300760",
+          "security_name": "迈瑞医疗",
+          "ex_dividend_date": "2025-05-29",
+          "cash_per_share": "0.560000",
+          "share_ratio": "0.000000",
+          "plan": "10派5.60元(含税,扣税后5.04元)",
+          "report_date": "2024-12-31",
+          "plan_notice_date": "2025-04-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "300760",
+          "security_name": "迈瑞医疗",
+          "ex_dividend_date": "2025-05-29",
+          "cash_per_share": "1.410000",
+          "share_ratio": "0.000000",
+          "plan": "10派14.10元(含税,扣税后12.69元)",
+          "report_date": "2025-03-31",
+          "plan_notice_date": "2025-04-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "300760",
+          "security_name": "迈瑞医疗",
+          "ex_dividend_date": "2025-05-29",
+          "cash_per_share": "0.560000",
+          "share_ratio": "0.000000",
+          "plan": "10派5.60元(含税,扣税后5.04元)",
+          "report_date": "2024-12-31",
+          "plan_notice_date": "2025-04-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.56,
+      "correct_cash": 1.97,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "300760",
+      "ex_dividend_date": "2026-05-28",
+      "source_components": [
+        {
+          "security_code": "300760",
+          "security_name": "迈瑞医疗",
+          "ex_dividend_date": "2026-05-28",
+          "cash_per_share": "0.310000",
+          "share_ratio": "0.000000",
+          "plan": "10派3.10元(含税,扣税后2.79元)",
+          "report_date": "2025-12-31",
+          "plan_notice_date": "2026-03-31",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "300760",
+          "security_name": "迈瑞医疗",
+          "ex_dividend_date": "2026-05-28",
+          "cash_per_share": "1.250000",
+          "share_ratio": "0.000000",
+          "plan": "10派12.50元(含税,扣税后11.25元)",
+          "report_date": "2026-03-31",
+          "plan_notice_date": "2026-04-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "300760",
+          "security_name": "迈瑞医疗",
+          "ex_dividend_date": "2026-05-28",
+          "cash_per_share": "0.310000",
+          "share_ratio": "0.000000",
+          "plan": "10派3.10元(含税,扣税后2.79元)",
+          "report_date": "2025-12-31",
+          "plan_notice_date": "2026-03-31",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.31,
+      "correct_cash": 1.56,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "301039",
+      "ex_dividend_date": "2026-07-06",
+      "source_components": [
+        {
+          "security_code": "301039",
+          "security_name": "中集车辆",
+          "ex_dividend_date": "2026-07-06",
+          "cash_per_share": "0.210000",
+          "share_ratio": "0.000000",
+          "plan": "10派2.10元(含税,扣税后1.89元)",
+          "report_date": "2025-12-31",
+          "plan_notice_date": "2026-03-25",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "301039",
+          "security_name": "中集车辆",
+          "ex_dividend_date": "2026-07-06",
+          "cash_per_share": "0.140000",
+          "share_ratio": "0.000000",
+          "plan": "10派1.40元(含税,扣税后1.26元)",
+          "report_date": "2026-03-31",
+          "plan_notice_date": "2026-04-25",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "301039",
+          "security_name": "中集车辆",
+          "ex_dividend_date": "2026-07-06",
+          "cash_per_share": "0.140000",
+          "share_ratio": "0.000000",
+          "plan": "10派1.40元(含税,扣税后1.26元)",
+          "report_date": "2026-03-31",
+          "plan_notice_date": "",
+          "progress": "",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.14,
+      "correct_cash": 0.35,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "301308",
+      "ex_dividend_date": "2026-06-02",
+      "source_components": [
+        {
+          "security_code": "301308",
+          "security_name": "江波龙",
+          "ex_dividend_date": "2026-06-02",
+          "cash_per_share": "0.346760",
+          "share_ratio": "0.000000",
+          "plan": "10派3.467605元(含税,扣税后3.120845元)",
+          "report_date": "2025-12-31",
+          "plan_notice_date": "2026-04-28",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "301308",
+          "security_name": "江波龙",
+          "ex_dividend_date": "2026-06-02",
+          "cash_per_share": "0.643984",
+          "share_ratio": "0.000000",
+          "plan": "10派6.439837元(含税,扣税后5.795853元)",
+          "report_date": "2026-03-31",
+          "plan_notice_date": "2026-04-28",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "301308",
+          "security_name": "江波龙",
+          "ex_dividend_date": "2026-06-02",
+          "cash_per_share": "0.643984",
+          "share_ratio": "0.000000",
+          "plan": "10派6.439837元(含税,扣税后5.795853元)",
+          "report_date": "2026-03-31",
+          "plan_notice_date": "",
+          "progress": "",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.643984,
+      "correct_cash": 0.9907440000000001,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "600015",
+      "ex_dividend_date": "2003-11-04",
+      "source_components": [
+        {
+          "security_code": "600015",
+          "security_name": "华夏银行",
+          "ex_dividend_date": "2003-11-04",
+          "cash_per_share": "0.223000",
+          "share_ratio": "0.000000",
+          "plan": "10派2.23元(含税,扣税后1.784元)",
+          "report_date": "2002-12-31",
+          "plan_notice_date": "2003-10-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "600015",
+          "security_name": "华夏银行",
+          "ex_dividend_date": "2003-11-04",
+          "cash_per_share": "0.130000",
+          "share_ratio": "0.000000",
+          "plan": "10派1.30元(含税,扣税后1.04元)",
+          "report_date": "2003-06-30",
+          "plan_notice_date": "2003-10-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "600015",
+          "security_name": "华夏银行",
+          "ex_dividend_date": "2003-11-04",
+          "cash_per_share": "0.130000",
+          "share_ratio": "0.000000",
+          "plan": "10派1.30元(含税,扣税后1.04元)",
+          "report_date": "2003-06-30",
+          "plan_notice_date": "2003-10-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.13,
+      "correct_cash": 0.353,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "600720",
+      "ex_dividend_date": "2024-06-13",
+      "source_components": [
+        {
+          "security_code": "600720",
+          "security_name": "中交设计",
+          "ex_dividend_date": "2024-06-13",
+          "cash_per_share": "0.110400",
+          "share_ratio": "0.000000",
+          "plan": "10派1.104元(含税,扣税后0.9936元)",
+          "report_date": "2022-12-31",
+          "plan_notice_date": "2024-03-27",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "600720",
+          "security_name": "中交设计",
+          "ex_dividend_date": "2024-06-13",
+          "cash_per_share": "0.257000",
+          "share_ratio": "0.000000",
+          "plan": "10派2.57元(含税,扣税后2.313元)",
+          "report_date": "2023-12-31",
+          "plan_notice_date": "2024-03-27",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "600720",
+          "security_name": "中交设计",
+          "ex_dividend_date": "2024-06-13",
+          "cash_per_share": "0.110400",
+          "share_ratio": "0.000000",
+          "plan": "10派1.104元(含税,扣税后0.9936元)",
+          "report_date": "2022-12-31",
+          "plan_notice_date": "",
+          "progress": "",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.1104,
+      "correct_cash": 0.3674,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "600745",
+      "ex_dividend_date": "1997-04-03",
+      "source_components": [
+        {
+          "security_code": "600745",
+          "security_name": "*ST闻泰",
+          "ex_dividend_date": "1997-04-03",
+          "cash_per_share": "0.000000",
+          "share_ratio": "0.200000",
+          "plan": "10送2.00",
+          "report_date": "1995-12-31",
+          "plan_notice_date": "1997-03-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "600745",
+          "security_name": "*ST闻泰",
+          "ex_dividend_date": "1997-04-03",
+          "cash_per_share": "0.000000",
+          "share_ratio": "0.800000",
+          "plan": "10送6.00转2.00",
+          "report_date": "1996-12-31",
+          "plan_notice_date": "1997-03-29",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "600745",
+          "security_name": "*ST闻泰",
+          "ex_dividend_date": "1997-04-03",
+          "cash_per_share": "0.000000",
+          "share_ratio": "0.800000",
+          "plan": "10送6.00转2.00",
+          "report_date": "1996-12-31",
+          "plan_notice_date": "",
+          "progress": "",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.0,
+      "correct_cash": 0.0,
+      "in_existing_cache": true
+    },
+    {
+      "security_code": "601966",
+      "ex_dividend_date": "2024-06-14",
+      "source_components": [
+        {
+          "security_code": "601966",
+          "security_name": "玲珑轮胎",
+          "ex_dividend_date": "2024-06-14",
+          "cash_per_share": "0.286000",
+          "share_ratio": "0.000000",
+          "plan": "10派2.86元(含税,扣税后2.574元)",
+          "report_date": "2023-12-31",
+          "plan_notice_date": "2024-04-25",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        },
+        {
+          "security_code": "601966",
+          "security_name": "玲珑轮胎",
+          "ex_dividend_date": "2024-06-14",
+          "cash_per_share": "0.091000",
+          "share_ratio": "0.000000",
+          "plan": "10派0.91元(含税,扣税后0.819元)",
+          "report_date": "2024-03-31",
+          "plan_notice_date": "2024-04-25",
+          "progress": "实施分配",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_components": [
+        {
+          "security_code": "601966",
+          "security_name": "玲珑轮胎",
+          "ex_dividend_date": "2024-06-14",
+          "cash_per_share": "0.091000",
+          "share_ratio": "0.000000",
+          "plan": "10派0.91元(含税,扣税后0.819元)",
+          "report_date": "2024-03-31",
+          "plan_notice_date": "",
+          "progress": "",
+          "rights_ratio": "",
+          "rights_price": ""
+        }
+      ],
+      "old_cash": 0.091,
+      "correct_cash": 0.377,
+      "in_existing_cache": true
+    }
+  ],
+  "old_rows": 54625,
+  "new_rows": 54637,
+  "new_daily_events": [
+    {
+      "security_code": "000601",
+      "ex_dividend_date": "1997-11-03",
+      "cash_per_share": 0.0,
+      "share_ratio": 0.8,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "韶能股份",
+      "plan": "10送3.00转1.00；10送4.00",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "000738",
+      "ex_dividend_date": "2013-06-14",
+      "cash_per_share": 0.062,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "航发控制",
+      "plan": "10派0.21元(含税,扣税后0.189元)；10派0.41元(含税,扣税后0.369元)",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "002043",
+      "ex_dividend_date": "2026-06-01",
+      "cash_per_share": 0.312,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "兔宝宝",
+      "plan": "10派1.32元(含税,扣税后1.188元)；10派1.80元(含税,扣税后1.62元)",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "300315",
+      "ex_dividend_date": "2012-10-22",
+      "cash_per_share": 0.15,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "掌趣科技",
+      "plan": "10派0.50元(含税,扣税后0.45元)；10派1.00元(含税,扣税后0.90元)",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "300760",
+      "ex_dividend_date": "2025-05-29",
+      "cash_per_share": 1.97,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "迈瑞医疗",
+      "plan": "10派14.10元(含税,扣税后12.69元)；10派5.60元(含税,扣税后5.04元)",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "300760",
+      "ex_dividend_date": "2026-05-28",
+      "cash_per_share": 1.56,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "迈瑞医疗",
+      "plan": "10派12.50元(含税,扣税后11.25元)；10派3.10元(含税,扣税后2.79元)",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "301039",
+      "ex_dividend_date": "2026-07-06",
+      "cash_per_share": 0.35,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "中集车辆",
+      "plan": "10派1.40元(含税,扣税后1.26元)；10派2.10元(含税,扣税后1.89元)",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "301308",
+      "ex_dividend_date": "2026-06-02",
+      "cash_per_share": 0.990744,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "江波龙",
+      "plan": "10派3.467605元(含税,扣税后3.120845元)；10派6.439837元(含税,扣税后5.795853元)",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "600015",
+      "ex_dividend_date": "2003-11-04",
+      "cash_per_share": 0.353,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "华夏银行",
+      "plan": "10派1.30元(含税,扣税后1.04元)；10派2.23元(含税,扣税后1.784元)",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "600720",
+      "ex_dividend_date": "2024-06-13",
+      "cash_per_share": 0.3674,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "中交设计",
+      "plan": "10派1.104元(含税,扣税后0.9936元)；10派2.57元(含税,扣税后2.313元)",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "600745",
+      "ex_dividend_date": "1997-04-03",
+      "cash_per_share": 0.0,
+      "share_ratio": 1.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "*ST闻泰",
+      "plan": "10送2.00；10送6.00转2.00",
+      "progress": "实施分配"
+    },
+    {
+      "security_code": "601966",
+      "ex_dividend_date": "2024-06-14",
+      "cash_per_share": 0.377,
+      "share_ratio": 0.0,
+      "rights_ratio": 0.0,
+      "rights_price": 0.0,
+      "security_name": "玲珑轮胎",
+      "plan": "10派0.91元(含税,扣税后0.819元)；10派2.86元(含税,扣税后2.574元)",
+      "progress": "实施分配"
+    }
+  ],
+  "source_exclusion": "600080 1997-08-19: one actual 10-for-6 capitalization; see reference exclusion"
+}

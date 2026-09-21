@@ -1,0 +1,920 @@
+{
+  "started_beijing": "2026-09-21T18:32:12.437093+08:00",
+  "completed_beijing": "2026-09-21T18:33:00.695864+08:00",
+  "job_id": "26974214",
+  "query_rows": 56974,
+  "pages": [
+    {
+      "page": 1,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "24c49388d5e1d89d9769168425d698789b12e5387fea7764431f022d537e430f",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=1&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 2,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "b4eda95c39284aca8903375bf5362dc601bb04f0f13067b6e1c43fa5792a656a",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=2&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 3,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "99234454233ad760117ff62d483c0289be9269ddff8c12f9a488d8101e320f86",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=3&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 4,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "c853e56070f3c0d7e57b9af3b3899105a508adab1dac18efd6a71f9d6f551185",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=4&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 5,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "e06debf114ed2d968883b2e2de3e6f472ca4f13946cfc9dbf1a5873e77182916",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=5&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 6,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "248b1bf71ca876ba7a6253a94a38ef3c0dd4d9a2a8de3a27e1a6fe186c4fb160",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=6&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 7,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "459bcfd984cc38b272a3d09aa23c7e9b32d2284b9391a28b17e22755fdd19878",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=7&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 8,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "df5a854a097ab4871cf5845bec70cccb2ce77b6612920afa3380c2b759cbc3cc",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=8&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 9,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "3beaf0a167529c2765223a66306920600630480eb3441f36326a84e912aaefaa",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=9&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 10,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "34d429f3459569aef2b32b608410d35076c703ba0fd9e8f3c6696cf676a603ab",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=10&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 11,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "147d101beaddd59e32ea3f6f93d58de8c79250a00e229e3b88367484019931de",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=11&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 12,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "db6f52d017e8629648ee9679835f50896a20978248fa1214f29b497ba7fe92bf",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=12&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 13,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "39c1c7dcadbcc27d35d9705426606abcb2ff9fed1ad69f9ddea1cdd2b9879fed",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=13&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 14,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "1b80fb32b9a2e77bfa66a499b65a4cda0ceaeebd2bdfd0f4c9f55f989bdd5aa3",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=14&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 15,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "33a0fda47eea6173d51475dfd882094e94a4ba0b8316f446bdc26bb4615fd87d",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=15&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 16,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "a32525d820b04aa69493d32ca1818add6124c1d4f505d6fe087282bd3138cfb4",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=16&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 17,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "aa4575aaa9fa513d7a3831721002d1554d4ded0df46612805531c26eca62611e",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=17&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 18,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "68fe4b0934aeb445d5ffdb8eb2facabc0f56e6fe6310c33080a6968afd294163",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=18&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 19,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "470bd02c475725f4ea5020f7584dada4707fb2efdb590111d1e0ff36c381e956",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=19&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 20,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "eeb471d07b7701e4694fc92c9fb866540d0796c76c56a5782317b36d6d366a88",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=20&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 21,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "bea96f5ce76802c07681b7bfe3eb2654bfcced80e135923b215e640d273e673b",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=21&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 22,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "259f8a9c62d832de222f49a41fd07153fe1f881eea9a87728459ded473aba46d",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=22&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 23,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "98d7f3294099b12645fef912369b6b5fdc98b111a91d626d394f2fd81a9fa122",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=23&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 24,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "f411b1ae3721addf88a8fa6636afed2f38de0b7e83d97ffa4b61c3b2bcfa413d",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=24&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 25,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "180bddbea07f34662cbca79d7ee0b6fb4588db399a32f17296a69fad771349b4",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=25&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 26,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "d3f6435a0f9dc1bd594d9331777093e267975e5798eee894b07a570d6247c900",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=26&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 27,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "6562439496f707a4d3dd802e215b694b9e823b67893ca3c33005e98ef1161fa0",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=27&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 28,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "fe767fc7bde5c523afb7c8212b609ef6a2cdc5abcea35b845860e5c5a33d8945",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=28&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 29,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "fe3957da601f84afda7fd60b74ad2ce0958779ba88adbcb7123cc2985c2e929b",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=29&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 30,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "f4a30ecf32a762d239b34609c9a0c30ffbc6c6960e724b7c364ab140d468e7ff",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=30&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 31,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "a3a01ffe28ecdd6da09a03483eabe7e813c2b98e04c352a1b0d4ece092d8bfdd",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=31&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 32,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "99193027bb10470a63db5c5808522de1b347ef60285416f460708866c0a416fb",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=32&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 33,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "1d6782e288b5954f9ae70632552ce9b650e89c25d7f37ff8df4be71daa2acd62",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=33&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 34,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "abea2360629d95bacd8902e6f26e32b4e73bf03f8d6ebff0063ed7d55269c633",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=34&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 35,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "59043001b9bf3da54a7f0a69948e44b52458a8565e0ed6333a8b1810e6faa100",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=35&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 36,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "f99d8114aecb3db03cefb5631a318207d7a22331fa2b8f3eae899b2ffde514ed",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=36&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 37,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "81ba8e642ddcee26d3f1bf9e5486f94742f730b6e1c067d4bc9a56512d3d6ff4",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=37&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 38,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "2e710aa622dd49045aa1b61eda0e1ab0a81c480d4a65daada3bee6e8180b5dde",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=38&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 39,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "1716c194e855151d76e73b21ede39da5899825c746be844138cfc658f1f2b923",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=39&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 40,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "7abb9d93a1ab7dfdf822d35b4fc65010c57b3dd48c874260de0cf9dd5b05cd9c",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=40&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 41,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "b20be3d65f0ad1d922942c60ecb549e164ee2acc52664a13293365f048db2b5f",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=41&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 42,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "e764808576fed846bc91acaffd8874e64725c725a2bde7fdfc400a23af053901",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=42&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 43,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "8337d96360c10e64162368766e1222c478f8a13368a9deeafe15acec16e8d16c",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=43&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 44,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "621cfda4b84f9594dd696ea97d9972dbc46ef3d9ce82a068a4bfd890d84a598c",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=44&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 45,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "c484e49ede73efc90af8a7e38dff46e0079a2b3271f5882e476cfe84bc9ace78",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=45&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 46,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "304aa817873a99efa1b3479d60601e0e51cbd083fc455c53a210a44672c4b87e",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=46&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 47,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "dbb42f6eaf1e7ec3b5397caa9ff3a018545e744e3bf15bb9a14474e81437fae5",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=47&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 48,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "f7400884b1d9e14e63845768632e0a7b392edd0464a0573d30de1964f0ec0283",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=48&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 49,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "84525fc1a9eebfe7db27233c147bfaa0204af6f9bce3f6287eaf2436273d31ef",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=49&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 50,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "dc3e00bcbd52852babc0b88fed53b6972de102ee2951b2c2ece19df49b48598f",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=50&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 51,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "e91cb90a09f7f9fa69c16ff28fe2798c00d4022943af0b297dcdf323ddcc6a43",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=51&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 52,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "f63f7e66ba65b2dac4090498770c5d3f5847a6a86619d5e3182fc36f2943614b",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=52&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 53,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "e4c305a66fc8f8a3a5f355c1c01d8404e61f8e177e4f1adf08bcc2531fba435d",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=53&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 54,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "d68e1eeeca8e400dd4a560e2d54354a02b56636052d177e998e25e332daf8246",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=54&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 55,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "754a00c94044e998be1302d9cba08261fc4cb6de779dddba085087fb929e70f5",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=55&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 56,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "3fa72e7b4dfaa454af864b73e0da25e4d2aebd56d43ef5bca1d57646730360ce",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=56&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 57,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "309ced324663d70b93ba6620bcc101e42f2a58a73d88345c077bd8cb32673275",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=57&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 58,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "4722d5191dcb8383dfa9025cf7e96291691c2cbb5a947e6895ab030f60429dbc",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=58&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 59,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "986e81f3baa2eed86357f0a08d4f418f505f4483bcddda74dd7cf6cd9b742316",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=59&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 60,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "f1c79ee489411989f675b4853249cc394621da3e534037c87f68843ee49824d5",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=60&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 61,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "3cbaf441c11263796b64fc90564fe45ff90124beeffa33009d99c6150053e2fc",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=61&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 62,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "4f840018a49c3208c8c037e17758fdd05ffe078b716f6635c307a5522276dd43",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=62&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 63,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "f6357bd3b1b245681eed54ac41a59f2df9f8240d6b9d4d0b4ac3848c419c3d84",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=63&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 64,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "98915b20c8ab7b983e1d2bfdaf50640245a3578a6579261a13e2b0e51e8ce26b",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=64&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 65,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "bda3ea5a8edc17d73df683b314be9d4b7b43b7828d6e7236843e0687a00ba3c8",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=65&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 66,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "9be5b6f038bd02d80f9165aac89328d5a16c4e63986e7bd1ac018e2eb7ad224e",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=66&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 67,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "f111a1c09360b011131b5a987cf28fe469e7e43553b9f9ea74defc693599e4df",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=67&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 68,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "cc5f830de84d8d597a8f173cd5679169befca612932e93dc637175a6f66950a7",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=68&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 69,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "b581e45cf5a25f22c4f47710e23a34699ebcf75b8f1f16b4000a3a7c577f0e77",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=69&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 70,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "3a94dc947a43dd890fdcd4241060d873368d660f0bfdd4575f9c6fb778d9de9e",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=70&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 71,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "94583b29b9fb5189a313d43f62b376d1a23e7e63273644cd88e34c7b65f2d478",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=71&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 72,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "11a5480abcb6a6041dc3f4fc60c0540ef2ce5e2b51e8da9fc11f8d47895e88c0",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=72&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 73,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "24ea2b488b836eb46f4769d5925719137d3ac12accffd0eae235e7292fedd17a",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=73&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 74,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "4d3901f5d37f9c41779778960ccbe63d245e30c735fbf7bbf323346ba8c4c208",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=74&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 75,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "33214e173e7d80a8e04c77c22ef58d01f814466d0c22793509d93313ef32ad71",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=75&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 76,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "18eafd10c70ef5f97b31d875ead0e8ad7e1cc614cc848bbd8d1c5c122b577174",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=76&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 77,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "3dc003403231affc7a1762e3984c5182f241575f11fc4b56224bb00e1dbc57db",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=77&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 78,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "fb5d1a26ed8c836378487eb1a2a1ae0323faa9606f2ac91fb8eacbda13e43cbf",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=78&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 79,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "f9c2d209839e31e2f265b0d9956fc6ecd3bccaa0b41406f1722f46c3485827ef",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=79&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 80,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "17ace4de08e51eaa592fcd384d58ae67dec676c8d28173aa330cf8fb83d18402",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=80&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 81,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "b12e518d9358ee3460537dfd4efa4843a56582c76e9929b82df88038d0612785",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=81&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 82,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "074ed0a2fd48772ee759107661151192e269fba05dc0d367363a7ac7d4d2d02a",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=82&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 83,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "a659a0d5ef140060d745030b51279a96c425f34dbafd543e1dc68d2a6a925f0f",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=83&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 84,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "846814d495f8aab2384616c1f0c40cefda1665baa2b1ca4941a39871031122e6",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=84&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 85,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "02c3cc896b21e96f8e8138aa4186c7a519302216f7fdd48c00791bc4a9ee6202",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=85&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 86,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "dba42ce1ca70a7825e573d53e70518c0bc17e998488e5a255e621d4fbd39a5e7",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=86&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 87,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "b092e0e1708710b28ccf97e069823ccf37a7e9f34730df2ca5309ec5a0b44022",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=87&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 88,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "e02cb713cd86a078f6aa5acf6558cc07d35b429a41eaddd932f8f3a08ab4f493",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=88&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 89,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "3afcbb9fe55d240beb3ad4a56bbfb4f1722236476472a41e8be458e98ab62f64",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=89&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 90,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "2f799c8fd58102565ae36fb4d197f0176dccd40f2070ee38331ea07baa899695",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=90&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 91,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "937a861f3bef5d1d1e1a6b696dcdf641370353b05e18e8ebf2367b554d95a31e",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=91&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 92,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "2eddfcff8fdd916d5f0d8b1cb239886642914e9702dffd5025f54db7b9f34d9a",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=92&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 93,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "ad80a75ca4d9e7f36893306b395dc157a8ad604a31453af4757212e0be998bef",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=93&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 94,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "3896fb01bd8b176827de34ea9672594b391e7d3e7a98e2d4c2e38148c247da8f",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=94&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 95,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "2ab11b383309ad2ae4a9b1c4adcb26096e8ead9f21505acc7a353da2c3a75dce",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=95&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 96,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "047299acea6148ccc41ec5337163cfec9513550b18ccd7949f4e8be7a0aedf5b",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=96&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 97,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "246a50a1bbc7913d467091c9208e097669223a0c5610bb58e53e774af60af315",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=97&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 98,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "c72bceed97df909414aeb9763a1a47f6105435ab49b88f8aef36ad6bc5cccc2d",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=98&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 99,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "c9ab5b17a16d85ae552a3cfcf818b2bd19dba6779965af73b4edba211507d8d4",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=99&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 100,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "16d33a8140d1d18a7ae2e50668575b0f9272cfb8effbb578635a62b9cbecbcdf",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=100&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 101,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "2c456ecf05b3a08604080b49ed84ff416ec5fda1ebe7d4423592fb7696cff76a",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=101&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 102,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "cb864fb112cc586575e6a5535ed3f2a6e0b7d8ff0ce12ae7242bbdb997d840e2",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=102&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 103,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "57476acf7d53421320c961615501647d5ab6b9642b0bf67556547986bc51bcc0",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=103&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 104,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "90ec7c88be3ae72b208915a3bd2f7e971ad077ca9ee70f2ec31774afa446370c",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=104&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 105,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "481c39c759fde121fa27ca702b85483565023d7b5ab8cfbf7dd88aa34c2963d1",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=105&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 106,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "8397e1dc2b45e7d74811fefbd9167ad7344d0ffc4cd4d8bdbd2d6e3d6ebf0d72",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=106&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 107,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "f1ecb37d3688fab95bae5d4e3306b5d617b4ad9c1f2143b7936a35c21cc88748",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=107&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 108,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "1ece70aaa27c652bcfa8f91cf7eab3e1f9668de61c67c060c5538a26efb6be6f",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=108&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 109,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "7736d7eda3a914f4c77865e0545cb482a18ab297db1da05f34059a32db169a1c",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=109&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 110,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "84a97737599c8e47a676e1d551071951932a54efba0ce806b45164328207a6e2",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=110&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 111,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "6273b9aceed8a192c44d715789895fc238b123c53a42562f2db9cce956721c27",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=111&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 112,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "25a1756bfdf4c5c2143cd0995d49dbc6b7be9286048a3459162ac8ef4decb351",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=112&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 113,
+      "pages": 114,
+      "count": 56974,
+      "rows": 500,
+      "sha256": "0280d183139d843b924ea37dcc53cef631f9183055d0d1ce51dca78af82e8822",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=113&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    },
+    {
+      "page": 114,
+      "pages": 114,
+      "count": 56974,
+      "rows": 474,
+      "sha256": "16b094b693868a9b00d0dc9e3c19dff5a39ccc43a14c2d4c2ae0283a028302b0",
+      "source_url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_SHAREBONUS_DET&columns=SECURITY_CODE%2CSECURITY_NAME_ABBR%2CREPORT_DATE%2CEX_DIVIDEND_DATE%2CPLAN_NOTICE_DATE%2CPRETAX_BONUS_RMB%2CBONUS_RATIO%2CIT_RATIO%2CIMPL_PLAN_PROFILE%2CASSIGN_PROGRESS&pageSize=500&pageNumber=114&sortColumns=SECURITY_CODE%2CREPORT_DATE%2CPLAN_NOTICE_DATE%2CEX_DIVIDEND_DATE&sortTypes=1%2C1%2C1%2C1"
+    }
+  ]
+}

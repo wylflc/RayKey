@@ -397,11 +397,12 @@ def entity_reset_for(code: str, as_of: str) -> str | None:
 
 
 def load_actions() -> dict[str, list[dict]]:
+    from corporate_actions import unique_actions
     out: dict[str, list[dict]] = defaultdict(list)
     if not ACTIONS.exists():
         return out
     with ACTIONS.open(newline="", encoding="utf-8") as handle:
-        for row in csv.DictReader(handle):
+        for row in unique_actions(csv.DictReader(handle)):
             out[row["security_code"]].append(row)
     for rows in out.values():
         rows.sort(key=lambda r: r.get("ex_dividend_date") or "")
@@ -830,11 +831,12 @@ def exright_adjust(actions: list[dict], since: str, until: str,
     v4.59（OI-087，§6.5.1 第 5 条）：送转窗口与现金窗口**分开锚**——`split_since` 为带所用 BPS 的股本基准日
     （`row_basis_date`，多为报告期末），现金仍自 `since`（公告日）起；缺省 `split_since = since`（旧口径）。
     """
+    from corporate_actions import company_events
     split_since = since if split_since is None else split_since
     floor_since = min(since, split_since)
     factor, cash_cum = 1.0, 0.0
     vals = list(values)
-    for action in actions:                      # load_actions 已按除权日排序
+    for action in company_events(actions):
         ex_date = action.get("ex_dividend_date") or ""
         if floor_since < ex_date <= until:
             cash = (_num(action.get("cash_per_share")) or 0.0) if ex_date > since else 0.0
@@ -858,8 +860,9 @@ def split_factor(actions: list[dict], since: str, until: str) -> float:
     ——**东财按公告时的股本列示，该期报告本身已是除权后口径**。若按报告期末起算，这一期
     会被再除一次 2.0，内在价值凭空腰斩（首版实测 16.07 → 8.07，即此错）。
     """
+    from corporate_actions import company_events
     factor = 1.0
-    for action in actions:
+    for action in company_events(actions):
         ex_date = action.get("ex_dividend_date") or ""
         if since < ex_date <= until:
             factor *= 1.0 + (_num(action.get("share_ratio")) or 0.0)      # 只计送转；配股属外生权益（§6.5.1 每股锚），不入送转因子
@@ -923,7 +926,8 @@ def bps_restated_factor(series: dict[str, dict], period: str, actions: list[dict
             r = bps_now / (bps_prev / g)
             plain = abs(math.log(r))
             cum, best, best_dist = 1.0, 1.0, plain
-            for action in actions:
+            from corporate_actions import company_events
+            for action in company_events(actions):
                 ex = (action.get("ex_dividend_date") or "")[:10]
                 ratio = _num(action.get("share_ratio")) or 0.0
                 if ex > notice and ratio > 0:
@@ -974,8 +978,9 @@ def dividends_total(actions: list[dict], since: str, until: str, shares_end: flo
     （不含该笔自身送转）的送转因子。`shares_end` 为 `end_period` 期末股数；不可得返回 None。"""
     if shares_end is None:
         return None
+    from corporate_actions import company_events
     total, f = 0.0, 1.0
-    for action in actions:                      # 已按除权日排序
+    for action in company_events(actions):
         ex = (action.get("ex_dividend_date") or "")[:10]
         if not ex or ex <= end_period:
             continue
@@ -1018,8 +1023,9 @@ def ttm_profit_factor(series: dict[str, dict], period: str, latest, reset_date: 
 def _fold_cash_to_basis(actions: list[dict], cash: float, ex: str, basis_now: str) -> float:
     """每股现金（除权日前股本口径）折到 `basis_now` 的股本基准：除权日 ≤ 基准日的按 [除权日, 基准日] 内送转（含同日派转）摊薄，
     晚于基准日的按 (基准日, 除权日) 内送转放大（同日送转不放大）。配股不入送转因子（§6.5.1）。"""
+    from corporate_actions import company_events
     factor = 1.0
-    for action in actions:
+    for action in company_events(actions):
         aex = (action.get("ex_dividend_date") or "")[:10]
         ratio = _num(action.get("share_ratio")) or 0.0
         if ratio <= 0 or not aex:
@@ -1139,7 +1145,8 @@ def external_equity_intra(series: dict[str, dict], actions: list[dict], period: 
         rho = abs(np_row / eps_row) / abs(np_ref / eps_ref)
         candidates = [1.0]
         cum = 1.0
-        for action in actions:
+        from corporate_actions import company_events
+        for action in company_events(actions):
             ex = (action.get("ex_dividend_date") or "")[:10]
             ratio = _num(action.get("share_ratio")) or 0.0            # EPS 重述只按送转；配股不重述 EPS
             if ex > ref_notice and ratio > 0:

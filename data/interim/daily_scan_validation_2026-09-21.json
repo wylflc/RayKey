@@ -112,5 +112,10 @@
       "evidence_file": "data/interim/daily_historical_action_review_2026-09-21.json",
       "current_scan_impact": "仅纠正该历史事件不改变当前60日价格与当日资格；历史估值及回测影响尚未审计。"
     }
-  ]
+  ],
+  "oi196_reissue": {
+    "status": "passed",
+    "validation": "data/experiments/exp_oi196_20260921/final_validation.json",
+    "note": "原checks为初版快照；OI-196历史事件修复、估值更新和同日计划重发的检查另见本条凭据。"
+  }
 }

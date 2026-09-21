@@ -4,13 +4,14 @@
   "retrospective_through": "2026-09-18",
   "status": "opening_shares_confirmed_residual_unreconciled",
   "code_sha256": {
-    "shadow_from_origin.py": "5f2f9053b3de3aae7221b8fe42e26d9c556976e3639fc08401f1d609aeebac15",
+    "shadow_from_origin.py": "bac4347ebc96e0b88a16890d40dbaefb4de12a6915fb046ad6d24395c7bc2675",
     "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
-    "backtest_valuation_strategy.py": "040018a8eef3365d54206858c5b218b06b6bc566d7634ae4b918434071cbb865",
+    "backtest_valuation_strategy.py": "7c6393b17fb65656121c3b0e0a8ea728f0ac553ced3eb1c0a7ede08e3365f1c4",
     "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
     "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
     "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
-    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6"
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+    "corporate_actions.py": "02d771a38272fbc8173586ba6d0c2fd19f9e1db56a6494de6c55df73c64dae2e"
   },
   "snapshots": {
     "2026-08-28": "c836d973436d75a40d6ee998fa4cdbbc432ea1f6656d7aa9d15ac6e1766b10f0",
@@ -85,5 +86,11 @@
   "opening_confirmation_sha256": "8be1f2d6c8acf3223979de9cdf39a48f77b430c2d3e632781c3fe70a629f2511",
   "opening_confirmed_at_beijing": "2026-09-19T00:18:11.008377+08:00",
   "previous_manifest_revision": "c13edc82d99088d03aa07e8130575ae121470511",
-  "previous_manifest_sha256": "ed7d892f4579bd42198e9c80b44f0d2e10007eb28dce8b00e1d77908c0110267"
+  "previous_manifest_sha256": "ed7d892f4579bd42198e9c80b44f0d2e10007eb28dce8b00e1d77908c0110267",
+  "code_migrations": {
+    "migrations/oi196_20260921.json": "326a095fa8a055a5f570ca71bf9ccb26b75bb50a5e6fd0f83004cad2c9643d61"
+  },
+  "action_corrections": {
+    "corrections/oi196_actions_20260921.json": "00d522804d3277f97a5e7251a87875520d66e677ef0fd7f21386f3487d44618d"
+  }
 }

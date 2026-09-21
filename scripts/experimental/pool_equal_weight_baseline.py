@@ -3,13 +3,13 @@ import csv, sys, datetime as dt
 from collections import defaultdict
 from pathlib import Path
 ROOT=Path('/gpfs/scratch1/shared/zwang/mm_quant/RayKey')
+sys.path.insert(0, str(ROOT/'scripts'))
 def load_actions(p):
     a=defaultdict(dict)
-    for r in csv.DictReader(open(p,encoding='utf-8')):
-        d=r['ex_dividend_date']
-        if not d: continue
-        cash=float(r['cash_per_share'] or 0); ratio=float(r['share_ratio'] or 0)
-        c,s=a[r['security_code']].get(d,(0.0,0.0)); a[r['security_code']][d]=(c+cash, s+ratio)
+    from corporate_actions import aggregate_actions
+    with open(p,encoding='utf-8') as f:
+        for r in aggregate_actions(csv.DictReader(f), include_rights=False):
+            a[r['security_code']][r['ex_dividend_date']]=(r['cash_per_share'],r['share_ratio'])
     return a
 def daily_returns(path, acts):
     rows=list(csv.DictReader(open(path)))
