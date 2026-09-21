@@ -166,9 +166,13 @@ def equity_bridge(ev: float, financial_debt: float, minority_book: float,
                   minority_share: float, external_equity: float = 0.0,
                   fixed_claim: float = 0.0, dividend_floor: float = 0.0
                   ) -> tuple[float, float]:
-    """Return total deductions and the fixed component for the thin-equity guard."""
+    """Return deductions and their fixed component (§6.5.1).
+
+    Negative minority book equity is evidence, not a receivable owed to the
+    parent. Keep its signed source value, but floor the ordinary claim at zero.
+    """
     residual_equity = ev - financial_debt
-    floor = max(minority_book, dividend_floor)
+    floor = max(0.0, minority_book, dividend_floor)
     by_profit = minority_share * residual_equity if residual_equity > 0 and minority_share > 0 else 0.0
     minority = max(floor, by_profit)
     deduction = financial_debt + fixed_claim + minority - external_equity

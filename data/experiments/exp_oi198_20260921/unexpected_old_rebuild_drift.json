@@ -1,0 +1,17 @@
+{
+  "file": "roic_daily_raw.csv",
+  "key": [
+    "002607",
+    "2020-04-28"
+  ],
+  "differences": {
+    "valuation_ratio": [
+      "18.1351",
+      "18.1352"
+    ],
+    "pv_equity": [
+      "18.1351",
+      "18.1352"
+    ]
+  }
+}

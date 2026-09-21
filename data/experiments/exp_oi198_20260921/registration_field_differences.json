@@ -1,0 +1,28 @@
+[
+  {
+    "key": [
+      "BASE20120501",
+      "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20120501",
+      "m3"
+    ],
+    "differences": {
+      "前五赢家占正贡献": [
+        "0.6147042604498535",
+        "0.6147042604498534"
+      ]
+    }
+  },
+  {
+    "key": [
+      "BASE20140501ex5",
+      "trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_ex5_lot100_sig1_lrc3_BASE20140501ex5",
+      "m3"
+    ],
+    "differences": {
+      "前五赢家占正贡献": [
+        "0.5210781340846012",
+        "0.5210781340846014"
+      ]
+    }
+  }
+]

@@ -1,0 +1,12 @@
+old_inputs/
+states/
+cache/
+nav/
+stats/
+daily/
+errors/
+ledger*.csv
+build_*.log
+diff_*.json
+signals/
+rebuild_drift.json

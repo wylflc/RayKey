@@ -1,0 +1,17 @@
+{
+  "registered_share": 0.17771,
+  "sides": {
+    "OLD": {
+      "line": 1.0454,
+      "share": 0.178977643361205,
+      "retained": true,
+      "n": 505890
+    },
+    "NEW": {
+      "line": 1.0454,
+      "share": 0.178977643361205,
+      "retained": true,
+      "n": 505890
+    }
+  }
+}

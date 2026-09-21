@@ -1,0 +1,33 @@
+{
+  "26982926": {
+    "stage": "freeze + NEW + LEGACY",
+    "state": "failed_after_freeze_and_rebuild",
+    "reason": "classification Counter.update received diff values; corrected to diff.keys()"
+  },
+  "26983089": {
+    "stage": "OLD report-key control",
+    "state": "completed",
+    "note": "327 report-visible keys per side; daily precision audit followed"
+  },
+  "26983103": {
+    "stage": "initial assembly",
+    "state": "failed_closed",
+    "reason": "Exact daily comparison detected signed-zero P/V changes; no production output installed"
+  },
+  "26983246": {
+    "stage": "OLD control including signed-zero keys",
+    "state": "completed"
+  },
+  "26983249": {
+    "stage": "final assembly + staging + paired backtests + diagnostics",
+    "state": "completed",
+    "elapsed": "00:10:11",
+    "maxrss_kib": 18112802
+  },
+  "26983447": {
+    "stage": "publish + downstream + scan + final verification",
+    "state": "completed",
+    "elapsed": "00:10:48",
+    "maxrss_kib": 1272412
+  }
+}

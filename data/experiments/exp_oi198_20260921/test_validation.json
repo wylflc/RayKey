@@ -1,0 +1,11 @@
+{
+  "tests": {
+    "test_minority_bridge.py": 21,
+    "test_minority_claims.py": 22,
+    "test_overseas_valuation_guards.py": 9,
+    "test_strategy_parameter_sync.py": 4
+  },
+  "total": 56,
+  "status": "passed",
+  "documentation_audit_errors": 0
+}

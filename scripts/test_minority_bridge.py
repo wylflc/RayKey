@@ -79,6 +79,33 @@ class EquityBridge(unittest.TestCase):
     def test_nonpositive_equity_value_falls_back_to_book(self):
         self.assertAlmostEqual(self.nd(10.0, 30.0, 20.0, 0.5), 50.0)
 
+    def test_negative_book_never_becomes_parent_cash(self):
+        for ev, share in ((100.0, 0.0), (10.0, 0.5), (30.0, 0.5)):
+            with self.subTest(ev=ev, share=share):
+                self.assertEqual(self.bridge(ev, 30.0, -20.0, share), (30.0, 30.0))
+
+    def test_negative_book_preserves_positive_earnings_claim(self):
+        self.assertEqual(self.bridge(100.0, 10.0, -20.0, 0.5), (55.0, 10.0))
+
+    def test_negative_book_research_basis_has_same_zero_floor(self):
+        self.assertEqual(self.bridge(100.0, 10.0, -20.0, 0.5, basis="book"), (10.0, 10.0))
+
+    def test_negative_book_does_not_offset_contract_claims(self):
+        self.assertEqual(equity_bridge(100, 10, -20, 0, external_equity=2,
+                                      fixed_claim=25, dividend_floor=3), (36, 36))
+
+    def test_overlay_zero_growth_and_growth_do_not_revive_negative_claim(self):
+        from apply_forecast_band_overlay import recompute
+        for path in ("growth", "zero_growth"):
+            band = dict(roic_path=path, nopat_ps="10", net_debt_ps="8",
+                        intrinsic_value="92", fin_net_debt_ps="10",
+                        minority_book_ps="-20", minority_share="0",
+                        external_equity_ps="2")
+            if path == "growth":
+                band["ev_ps"] = "100"
+            ev, iv, _ = recompute(band, 1.2)
+            self.assertEqual((ev, iv), (120, 112))
+
 
 class ThinEquityGuardInput(unittest.TestCase):
     """薄权益守卫只看**不随 EV 缩放**的那部分扣减：按盈利份额分走的一份与 EV 同比例，

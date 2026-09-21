@@ -1,0 +1,59 @@
+{
+  "job_id": "26983249",
+  "status": "passed",
+  "family_arms_tested": 1,
+  "registered_arm_rows": 1864,
+  "signals": {
+    "表1": {
+      "common_days": 117,
+      "old_days": 117,
+      "new_days": 117,
+      "median_delta": 0.0,
+      "positive_days": 0,
+      "yearly_medians": {
+        "2012": 0.0,
+        "2013": 0.0,
+        "2014": 0.0,
+        "2015": 0.0,
+        "2016": 0.0,
+        "2019": 0.0,
+        "2020": 0.0,
+        "2021": 0.0,
+        "2022": 0.0,
+        "2023": 0.0,
+        "2024": 0.0,
+        "2025": 0.0
+      },
+      "positive_years": 0,
+      "note": "Paired common coverage diagnostic; overlapping days and stock/date rows are not independent samples"
+    },
+    "表3": {
+      "common_days": 162,
+      "old_days": 162,
+      "new_days": 162,
+      "median_delta": 0.0,
+      "positive_days": 0,
+      "yearly_medians": {
+        "2012": 0.0,
+        "2013": 0.0,
+        "2014": 0.0,
+        "2015": 0.0,
+        "2016": 0.0,
+        "2017": 0.0,
+        "2018": 0.0,
+        "2019": 0.0,
+        "2020": 0.0,
+        "2021": 0.0,
+        "2022": 0.0,
+        "2023": 0.0,
+        "2024": 0.0,
+        "2025": 0.0
+      },
+      "positive_years": 0,
+      "note": "Paired common coverage diagnostic; overlapping days and stock/date rows are not independent samples"
+    }
+  },
+  "no_parameter_changes": true,
+  "attribution": "attribution.txt",
+  "scale": "scale_drift.txt"
+}

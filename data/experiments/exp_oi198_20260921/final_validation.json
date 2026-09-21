@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "checked_at_utc": "2026-09-21T13:58:15.133231+00:00",
+  "checks": {
+    "historical_native_files": 7,
+    "old_full_inputs_retained": true,
+    "current_models_match_staging": true,
+    "current_candidates": 181,
+    "unchanged_account_and_holdings": {
+      "a_share_holdings.csv": true,
+      "portfolio_account_snapshot.csv": true
+    },
+    "unchanged_closes": true,
+    "original_shadow_snapshots_preserved": 17,
+    "shadow_manifest_unchanged": true,
+    "buy_sell_rows": {
+      "daily_entry_plan.csv": 0,
+      "daily_sell_plan.csv": 0
+    }
+  },
+  "publication": {
+    "bytes": 4923,
+    "sha256": "651b50a802f51d4031f4f802530bfda1e18703e4a3b38379a9da5a6656721dae"
+  }
+}
