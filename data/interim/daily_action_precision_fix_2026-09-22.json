@@ -1,0 +1,45 @@
+{
+  "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202405301634960739_1.pdf",
+  "source_sha256": "d6d39ccf87efe616a8eac51cb9affa1b35d3edfd2234aab6396a110b7d786b80",
+  "source_pages": "1;2",
+  "old_event": {
+    "security_code": "300015",
+    "security_name": "爱尔眼科",
+    "ex_dividend_date": "2024-06-06",
+    "cash_per_share": "0.150022",
+    "share_ratio": "0.000000",
+    "plan": "10派1.500225元(含税,扣税后1.350202元)",
+    "report_date": "2023-12-31",
+    "plan_notice_date": "2024-04-26",
+    "progress": "实施分配",
+    "rights_ratio": "",
+    "rights_price": ""
+  },
+  "old_terms": {
+    "security_code": "300015",
+    "ex_dividend_date": "2024-06-06",
+    "cash_per_share": "0.150023",
+    "share_ratio": "0.0",
+    "rights_ratio": "0.0",
+    "rights_price": "0.0",
+    "price_cash_per_share": "0.1495419",
+    "price_share_ratio": "0",
+    "price_rights_ratio": "0",
+    "price_rights_price": "0",
+    "notice_date": "2024-05-31",
+    "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202405301634960739_1.pdf",
+    "source_pages": "1",
+    "source_sha256": "d6d39ccf87efe616a8eac51cb9affa1b35d3edfd2234aab6396a110b7d786b80",
+    "note": "实施公告价格公式；实付金额按事件库既有精度核对；按日合计覆盖"
+  },
+  "new_actual_per_share": "0.1500225",
+  "price_per_share_unchanged": "0.1495419",
+  "all_events_validated": 5116,
+  "refresh_roundtrip_verified": true,
+  "original_fetch_stamp": {
+    "as_of": "2026-09-22",
+    "generated_at_utc": "2026-09-22T08:00:09.558766+00:00",
+    "sha256": "729fe1c12c301aed8e375d8c4be321c8084d5223b4ce20c6f34b4d3c13f70eb7",
+    "inputs": {}
+  }
+}

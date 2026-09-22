@@ -1,0 +1,120 @@
+{
+  "signal_date": "2026-09-22",
+  "checked_at_utc": "2026-09-22T08:27:59.201719+00:00",
+  "status": "passed",
+  "checks": [
+    "whole_pool_unique_codes",
+    "same_day_quotes",
+    "known_history_gap_only",
+    "holdings_and_reported_assets_match",
+    "independent_quotes_match_formal",
+    "eligible_event_scope",
+    "mandatory_event_scope",
+    "mandatory_primary_reviews_complete",
+    "empty_buy_plan",
+    "empty_sell_plan",
+    "tracking_scope",
+    "tracking_002648",
+    "effective_stop_002648",
+    "tracking_000651",
+    "effective_stop_000651",
+    "tracking_603529",
+    "effective_stop_603529",
+    "tracking_600036",
+    "effective_stop_600036",
+    "tracking_601318",
+    "effective_stop_601318",
+    "empty_financial_review_queue",
+    "only_today_exdiv_changes_adopted",
+    "only_today_exdiv_changes_b2",
+    "only_today_exdiv_changes_hold",
+    "publication_date_inputs_outputs_and_strategy_columns",
+    "shadow_prefix_accounting_and_production_invariance",
+    "shadow_date",
+    "report_log_match"
+  ],
+  "holdings_market_value_cny": "4467724.000",
+  "tranche_cny": "132450.45",
+  "remaining_funds_cny": "0.00",
+  "coverage": {
+    "scanned": 181,
+    "valid_pv": 179,
+    "eligible": 7,
+    "held": 5,
+    "mandatory_companies": 8,
+    "primary_reviewed_announcements": 1,
+    "exdiv_primary_documents": 2
+  },
+  "model_band_changes": {
+    "adopted": [
+      {
+        "code": "002409",
+        "before": "20.3418",
+        "after": "19.9918",
+        "exright_note": "除权归一化至 2026-09-22 现价口径：2026-09-22 现金0.35/送转0"
+      },
+      {
+        "code": "300395",
+        "before": "9.8157",
+        "after": "9.6457",
+        "exright_note": "除权归一化至 2026-09-22 现价口径：2026-09-22 现金0.169995/送转0"
+      }
+    ],
+    "b2": [
+      {
+        "code": "002409",
+        "before": "20.3418",
+        "after": "19.9918",
+        "exright_note": "除权归一化至 2026-09-22 现价口径：2026-09-22 现金0.35/送转0"
+      },
+      {
+        "code": "300395",
+        "before": "10.5274",
+        "after": "10.3574",
+        "exright_note": "除权归一化至 2026-09-22 现价口径：2026-09-22 现金0.169995/送转0"
+      }
+    ],
+    "hold": [
+      {
+        "code": "002409",
+        "before": "20.3418",
+        "after": "19.9918",
+        "exright_note": "除权归一化至 2026-09-22 现价口径：2026-09-22 现金0.35/送转0"
+      },
+      {
+        "code": "300395",
+        "before": "10.5274",
+        "after": "10.3574",
+        "exright_note": "除权归一化至 2026-09-22 现价口径：2026-09-22 现金0.169995/送转0"
+      }
+    ]
+  },
+  "jobs": {
+    "evidence": 27014425,
+    "preview": 27015269,
+    "band_refresh": 27015299,
+    "formal_scan": 27015504,
+    "shadow": 27015644,
+    "backtest": 27015268
+  },
+  "resource_measurements": {
+    "backtest_elapsed": "00:02:55",
+    "backtest_maxrss_kib": 17233371,
+    "scan_elapsed": "00:01:26",
+    "scan_maxrss_kib": 1307189,
+    "shadow_time_v_elapsed": "00:04.88",
+    "shadow_time_v_maxrss_kib": 65508
+  },
+  "recovered_failures": [
+    "首次预览/原生回测因爱尔2024实付精度不一致停止；原公告按每股七位纠正。",
+    "估值刷新尾步发现修正后的公司行动旧摘要；保留原抓取摘要后以修正证据作输入重新生成凭据，正式扫描通过。"
+  ],
+  "operational_note": "旧日志批量删除被自动审批拒绝，已保留，提交作业未附带删除。",
+  "known_limitations": [
+    "行业高频与竞品数据部分缺失",
+    "嘉立创当日收盘有效、均线历史不足",
+    "京东方A及中芯国际陈旧带不进估值判定",
+    "公告覆盖截至北京时间16:00:46",
+    "未对账差额757.51元未归入具体费用科目"
+  ]
+}

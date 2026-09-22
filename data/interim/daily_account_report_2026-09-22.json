@@ -34,6 +34,72 @@
   "buffer_to_130pct": "47.07977708560331837866439377",
   "hypothetical_funds_cny": "-54475.006",
   "unclassified_difference_cny": "757.51",
-  "market_value_reconciliation_cny": null,
-  "close_price_reconciliation_status": "not_performed"
+  "market_value_reconciliation_cny": "0.00",
+  "close_price_reconciliation_status": "matched",
+  "account_verified": {
+    "as_of": "2026-09-22",
+    "net_assets_cny": "2649009.00",
+    "total_assets_cny": "4467724.00",
+    "margin_debt_cny": "1818715.00",
+    "credit_line_cny": "",
+    "leverage_ratio": "1.6866",
+    "guarantee_ratio_pct": "245.65",
+    "holdings_market_value_cny": "4467724.00",
+    "cash_cny": "0.00",
+    "position_count": "5",
+    "top_position_weight_pct": "71.49",
+    "account_peak_net_assets_cny": "2811530.99",
+    "drawdown_from_peak_pct": "-5.78",
+    "source": "user_reported",
+    "note": "用户2026-09-22盘后回报：中材国际卖出106500股@7.62=811530.00元，清仓；中国平安买入8800股@54.41=478808.00元，4900→13700股，加权成本54.5819元；卫星化学买入6300股@27.03=170289.00元，16000→22300股，加权成本27.5936元；格力电器买入3700股@38.16=141192.00元，45900→49600股，加权成本38.9743元。三笔均为加仓，止损锚不变。总资产4467724、负债1818715、净资产2649009，三者相符；现金0、券商可用保证金0，扫描funds=0。未报告外部出入金按0。买入合计790289.00元，净卖出21241.00元，负债减少20483.49元，差757.51元待对账，未确认为利息或费用，不重复扣款。09-21正式买卖计划均为空，阅读日志提示中材尾盘复核止损；本次未报成交时点与当日MA60，卖出触发原因未独立核验。三笔加仓均为清单外成交，格力原信号日已达单票上限；原信号日一档132962.9255元，三笔金额均超过一档。按旧可用保证金及实际卖出款的未计费预算775324.64元，实际买入超出14964.36元；执行时券商实时可用额未报告。5只持仓股数乘09-22公开收盘价合计4467724.00元，与实报总资产完全相符；格力市值1893728.00元，占净资产71.49%，按现行单票上限暂停加仓。一档132450.45元。",
+    "external_cash_flow_cny": "0.00",
+    "strategy_base_net_assets_cny": "",
+    "strategy_return_pct": "-5.78",
+    "net_assets_before_flow_cny": "",
+    "strategy_nav_basis": "exact",
+    "strategy_unit_nav": "0.942194",
+    "strategy_epoch": "E4"
+  },
+  "holdings_close_valuation": [
+    {
+      "code": "002648",
+      "name": "卫星化学",
+      "close": "26.96",
+      "shares": "22300",
+      "market_value_cny": "601208.00",
+      "quote_time_beijing": "20260922155839"
+    },
+    {
+      "code": "000651",
+      "name": "格力电器",
+      "close": "38.18",
+      "shares": "49600",
+      "market_value_cny": "1893728.00",
+      "quote_time_beijing": "20260922155845"
+    },
+    {
+      "code": "603529",
+      "name": "爱玛科技",
+      "close": "21.46",
+      "shares": "29200",
+      "market_value_cny": "626632.00",
+      "quote_time_beijing": "20260922155839"
+    },
+    {
+      "code": "600036",
+      "name": "招商银行",
+      "close": "40.82",
+      "shares": "14700",
+      "market_value_cny": "600054.00",
+      "quote_time_beijing": "20260922155839"
+    },
+    {
+      "code": "601318",
+      "name": "中国平安",
+      "close": "54.46",
+      "shares": "13700",
+      "market_value_cny": "746102.00",
+      "quote_time_beijing": "20260922155835"
+    }
+  ]
 }

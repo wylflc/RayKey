@@ -1215,6 +1215,9 @@ PL200e20,archive,m1,,23,23,0,trend_x5_w0.0657_x1c_sma20_swap_corr0.7_tranche_slm
 PL300e20,archive,m1,,23,23,0,trend_x5_w0.0657_x1c_sma20_swap_corr0.7_tranche_slmin_pl3.0at2.0_gs1.25_skipma60_sl2.4671_addma_swk20_cap0.6_sp_lot100_lrc
 PL50e10,archive,m1,,23,23,0,trend_x5_w0.0657_x1c_sma20_swap_corr0.7_tranche_slmin_pl0.5at1.0_gs1.25_skipma60_sl2.4671_addma_swk20_cap0.6_sp_lot100_lrc
 PL50e12,archive,m1,,23,23,0,trend_x5_w0.0657_x1c_sma20_swap_corr0.7_tranche_slmin_pl0.5at1.2_gs1.25_skipma60_sl2.4671_addma_swk20_cap0.6_sp_lot100_lrc
+PVC055,current,m3,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_capfreepv0.55_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3
+PVC060,current,m3,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_capfreepv0.6_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3
+PVC065,current,m3,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_capfreepv0.65_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3
 PVDEC,archive,m1,,0,1,0,trend_x1_w-0.5853_x1c_sma20_swap_corr0.85_tranche_sl1.1_sp_lot100_lrc_PVDEC
 PW005A,archive,m1,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_pairall_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2
 PW005W,archive,m1,,14,28,14,trend_x5_w-0.0454_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_pairweak_ma60stop_addma_swk20_cap0.6_sp_lot100_lrc2

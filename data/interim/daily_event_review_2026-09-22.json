@@ -1,0 +1,182 @@
+{
+  "signal_date": "2026-09-22",
+  "status": "reviewed_through_snapshot_cutoff",
+  "reviewed_at_utc": "2026-09-22T08:17:17.037507+00:00",
+  "primary_documents": [
+    {
+      "security_code": "603529",
+      "title": "2026年半年度业绩说明会召开情况",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609211829719672_1.pdf",
+      "pdf_sha256": "5a7aad387c8f2728689b44246c1872aa10c2926b5eb174636526ed329f0b52f7",
+      "pages": 4,
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "review_method": "原始PDF逐页文字核验",
+      "reviewed_at_utc": "2026-09-22T08:17:17.037507+00:00",
+      "facts": "公告整理昨日说明会6项主要问答：现金流受收入下降与采购结算跨期影响；Q2单车成本/盈利环比改善；江苏产能转至丽水和台州并停产；印尼、越南已投产。未给Q3销量、毛利率、海外利用率或盈利的量化新目标。",
+      "assessment": "与09-21已核验路演同源，不重复上调估值或作为新一期财务。"
+    },
+    {
+      "security_code": "002409",
+      "title": "2026年中期权益分派实施",
+      "source_url": "https://static.cninfo.com.cn/finalpage/2026-09-15/1225562438.PDF",
+      "pdf_sha256": "6da2438429a61d0f13dd497b9c34ce27783ac4a30987fcdc20c1e98e4f721113",
+      "pages": 3,
+      "pages_reviewed": [
+        1,
+        2,
+        3
+      ],
+      "review_method": "原始PDF逐页文字核验",
+      "reviewed_at_utc": "2026-09-22T08:17:17.037507+00:00",
+      "facts": "09-21登记，09-22除息/发放，每股0.35元，无送转。",
+      "assessment": "候选及持仓侧V减0.35元。"
+    },
+    {
+      "security_code": "300395",
+      "title": "2026年半年度权益分派实施",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829414459_1.pdf",
+      "pdf_sha256": "1f1554915f6ef1a69dee0a67f8ba091a99b2a3ef02d6d91307bb2bdc9bfc7288",
+      "pages": 5,
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "review_method": "原始PDF逐页文字核验",
+      "reviewed_at_utc": "2026-09-22T08:17:17.037507+00:00",
+      "facts": "09-21登记，09-22除息/发放，实际每股0.17元，除息价格公式减0.1699951元，无送转。",
+      "assessment": "候选及持仓侧按价格口径归一化，不把实派数代入除息价格公式。"
+    }
+  ],
+  "carried_forward_documents": [
+    {
+      "art_code": "AN202609171829522385",
+      "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522385_1.pdf",
+      "pdf_sha256": "ada0034fd0fa19eac191ab7d83e61a1054a037bb4b1a4d8ccdb59a018d7420f5",
+      "pages": 5,
+      "retrieved_at_utc": "2026-09-18T08:41:18.155057+00:00",
+      "security_code": "603529",
+      "notice_date": "2026-09-18",
+      "title": "爱玛科技2026年半年度权益分派实施公告",
+      "facts": "09-23登记，09-24除息及发放；实派0.392元/股，差异化价格调整用虚拟分派0.385元/股；无送转。",
+      "assessment": "事件发生前不调整账户、成本、止损锚或生产带；除息日按价格口径0.385处理，实际红利按0.392核对券商到账。",
+      "pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+      "reviewed_at_utc": "2026-09-18T08:44:16.487641+00:00",
+      "carried_forward_from": "data/interim/daily_event_review_2026-09-21.json",
+      "same_document_listed_on": "2026-09-21"
+    }
+  ],
+  "announcement_snapshot": "data/interim/daily_announcements_2026-09-22.json",
+  "announcement_title_screening_count": 71,
+  "announcement_cutoff_beijing": "2026-09-22 16:00:46",
+  "industry_review": "data/interim/daily_industry_review_2026-09-22.json",
+  "valuation_review_queue_rows": 0,
+  "valuation_update": "无新增财报导致的估值更新；仅雅克、菲利华今日除息按现行公式机械折算；其余带值不变",
+  "holding_ex_dividends_today": {},
+  "mandatory_codes": [
+    "000596",
+    "000651",
+    "002648",
+    "600036",
+    "600970",
+    "601318",
+    "601398",
+    "603529"
+  ],
+  "eligible_codes": [
+    "600036",
+    "000651",
+    "603529",
+    "002648",
+    "000596",
+    "601398",
+    "601318"
+  ],
+  "holdings_codes": [
+    "000651",
+    "002648",
+    "600036",
+    "601318",
+    "603529"
+  ],
+  "user_named_codes": [
+    "600970"
+  ],
+  "relevant_announcement_count": 1,
+  "unreviewed_announcements": [],
+  "coverage": [
+    {
+      "security_code": "000596",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "000651",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "002648",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "600036",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "600970",
+      "held": false,
+      "eligible": false,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "601318",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "601398",
+      "held": false,
+      "eligible": true,
+      "announcement_ids": [],
+      "announcement_status": "no_announcement_in_fetched_window"
+    },
+    {
+      "security_code": "603529",
+      "held": true,
+      "eligible": true,
+      "announcement_ids": [
+        "AN202609211829719672"
+      ],
+      "announcement_status": "primary_reviewed"
+    }
+  ],
+  "coverage_note": "池内71条标题筛查；必查范围的1条公告原文已核验，并补核2份除息原文。行业高频数据未全覆盖，另列缺口；不代表16:00:46之后没有新公告。"
+}

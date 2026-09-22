@@ -1,0 +1,11 @@
+{
+  "paths": 114,
+  "job_id": "27015268",
+  "unchanged_frozen_inputs": true,
+  "u_groups": {
+    "PV055": "A",
+    "PV060": "A",
+    "PV065": "A"
+  },
+  "workers": 24
+}
