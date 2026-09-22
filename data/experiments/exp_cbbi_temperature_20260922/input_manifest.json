@@ -1,0 +1,515 @@
+{
+  "fetched_at_utc": "2026-09-22T12:30:11.213697+00:00",
+  "cutoff": "2026-09-22",
+  "sources": [
+    {
+      "kind": "quote_page",
+      "code": "000300",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh000300%2Cday%2C%2C2026-09-22%2C640%2C",
+      "sha256": "b582a536b6ecc2683b3fd64139678ba0e428f884c057f588ef44d197c1e1a1b9",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000300",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh000300%2Cday%2C%2C2024-01-30%2C640%2C",
+      "sha256": "54d05bcba90d9104271e2089e522fad4b5b005046a9bc94b450db9c35e792126",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000300",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh000300%2Cday%2C%2C2021-06-16%2C640%2C",
+      "sha256": "31f27dd451e12412fb1fd02b47818d321bcd08c217343aefd79361143c5c90f8",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000300",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh000300%2Cday%2C%2C2018-10-28%2C640%2C",
+      "sha256": "13209f0fb9ef987f4682b9d8abfa38879ca0a05ddfc672350f4d21039bf4b7be",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000300",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh000300%2Cday%2C%2C2016-03-14%2C640%2C",
+      "sha256": "3eda23a5fbc2e737b6a9fd764967dccc384fc7cd15785a0b1db672a47aa5368e",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000300",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh000300%2Cday%2C%2C2013-07-28%2C640%2C",
+      "sha256": "8447147fc9673a6ab6342b7d69d353a7aab88c07e9e5661553438d25dd3a58f2",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000300",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh000300%2Cday%2C%2C2010-12-05%2C640%2C",
+      "sha256": "3a962dd0492f062a2661c34317f5ea494b45b376c7995fc26aa507ddb17669fd",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000300",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh000300%2Cday%2C%2C2008-04-20%2C640%2C",
+      "sha256": "a5b136b36670cd0ab83e5a12057b3666aa1ed5b97c9171609ebe97c7440910de",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000300",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh000300%2Cday%2C%2C2005-08-28%2C640%2C",
+      "sha256": "7370313efb107281f2158e007904599dfc094e815d465d826174b6b9b1a793b0",
+      "rows": 157
+    },
+    {
+      "kind": "quote_page",
+      "code": "000300",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh000300%2Cday%2C%2C2005-01-03%2C640%2C",
+      "sha256": "8d0aa13913be920b1a1bb2a207ced7c4c0a6bd3720a16847f8073807abbce179",
+      "rows": 0
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2026-09-22%2C640%2C",
+      "sha256": "7f5c77f0e4a98b7fe760cc060e3f72d68e2cb0645b7f4c8efcfbf3533b2c4e76",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2024-01-30%2C640%2C",
+      "sha256": "b36ba1d758faa9ed30dcf2d69d3a3fa3a03d3963281f1e1316ffd2e3d189a388",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2021-06-16%2C640%2C",
+      "sha256": "770175cdcd33ad8bbe3d1c78c9b50068f0655483f40252c466df8fe5c8f42ffb",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2018-10-28%2C640%2C",
+      "sha256": "58701218dc3c3e830310855bcaab6531336de735e1d4c94c9e11f3b2229e4f0d",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2016-03-14%2C640%2C",
+      "sha256": "c42b286d79b5ae614ac1c12d11b8fee66c9576c1bef9c12ae10ade168c1bafd5",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2013-07-28%2C640%2C",
+      "sha256": "3d5f35570c8f91b1cb860231fa9e2914902c8a688910fb2c85bc47663e6cbc45",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2010-11-29%2C640%2C",
+      "sha256": "d3da66566b0aeb49c5ed5dbc9658221ba0dd91a9724fdbfbb932ddf8f1eb06fb",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2008-04-08%2C640%2C",
+      "sha256": "7d3a21164dd0bf6bcd86f6d115d3875bdb7bbd53b2f206009286060733ac1978",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2005-05-24%2C640%2C",
+      "sha256": "7ad44cf3524ab0c584a3d2591cf774d0b6b606a1890783dc4763ab8941d027a2",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2002-09-15%2C640%2C",
+      "sha256": "5285fd7a4ced3c7a7ada5eb2719ae4e3711b19a6f9a83ee28306c44d6dc5d2de",
+      "rows": 250
+    },
+    {
+      "kind": "quote_page",
+      "code": "600519",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600519%2Cday%2C%2C2001-08-26%2C640%2C",
+      "sha256": "f65fe81a8be8332767eb6cde505888d97458612cf6c64d7853e88a02fbae0209",
+      "rows": 0
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C2026-09-22%2C640%2C",
+      "sha256": "ac9865464228cbe3f351a39b1e3f079a41ae256e7874508727351fbead29ddc7",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C2024-01-30%2C640%2C",
+      "sha256": "bac1d4050e8611d0f1c08b88d3b60f736f1e592359ae540e03891bc668c17723",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C2021-06-16%2C640%2C",
+      "sha256": "ac373e80ff5ac1cef54f2e343e8b9ac9951b80da70c78fa26383e30716c43e34",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C2018-10-18%2C640%2C",
+      "sha256": "24a6a0e020c543f418785936e1e8f6b59cd9c5eb3a6ded82a6a04571c7639b52",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C2015-07-20%2C640%2C",
+      "sha256": "c9b151abcb0152a75b47bf9115299dfa0ca3b2be4627894a24324476279d2398",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C2012-11-26%2C640%2C",
+      "sha256": "22d683aa86ad998ab643c2634b203860cb26d3e45812a00b76514cd3288ce09b",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C2010-03-28%2C640%2C",
+      "sha256": "260881831ec2a15d54a43d2c59a2297936248100e8bd9ac2767eb23b47b787f5",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C2007-07-29%2C640%2C",
+      "sha256": "822427f9325f10a5e04c4188585212b555133ec2bcbed8a06b6b3e8682cbb9d8",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C2004-10-28%2C640%2C",
+      "sha256": "43c936a7beae199aea2e9bd361ad1e91f495d658debc6730258b9c0a2380ed6b",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C2002-02-26%2C640%2C",
+      "sha256": "0e972d588fbe0ba8aa54ecd655d28ffc415ebcda91c47a1240e9c29ec328e764",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C1999-06-13%2C640%2C",
+      "sha256": "ddf78e063f7708ccc7f592573119b862a729d0255a5e3b564d07890f8f6821cc",
+      "rows": 616
+    },
+    {
+      "kind": "quote_page",
+      "code": "000651",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz000651%2Cday%2C%2C1996-11-17%2C640%2C",
+      "sha256": "08f244ccc67715db68f4147e347594f95a63c8742723a7c7308851f12bae7d9c",
+      "rows": 0
+    },
+    {
+      "kind": "quote_page",
+      "code": "300750",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300750%2Cday%2C%2C2026-09-22%2C640%2C",
+      "sha256": "81ba21e189b752769bac9d145622726163d12ec25922f1b970494bdd21bd5e39",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "300750",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300750%2Cday%2C%2C2024-01-30%2C640%2C",
+      "sha256": "9d5f6ec5122ef829734e007cca2c741d7089c256b298960fb7925ba92ef63e9e",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "300750",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300750%2Cday%2C%2C2021-06-16%2C640%2C",
+      "sha256": "3857df96d4ce606e87f6f8208de49ff7fa149933a3e561043fd3ee1f6eb6e5bc",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "300750",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300750%2Cday%2C%2C2018-10-28%2C640%2C",
+      "sha256": "61e24250eed8e082334907fa1794300afbfd59099df41ce8e17e70b8245d6f4c",
+      "rows": 93
+    },
+    {
+      "kind": "quote_page",
+      "code": "300750",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300750%2Cday%2C%2C2018-06-10%2C640%2C",
+      "sha256": "116e81ff8754e4f1483b12f4b81be4b5cb0cb0ae0bdc4183b5b068621f510e32",
+      "rows": 0
+    },
+    {
+      "kind": "quote_page",
+      "code": "300308",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300308%2Cday%2C%2C2026-09-22%2C640%2C",
+      "sha256": "7565ff5dd0b9f62a0771a8e5b8954e83d6c5a863a183a7e428b169dd5b60c73a",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "300308",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300308%2Cday%2C%2C2024-01-30%2C640%2C",
+      "sha256": "c52eeec69c84ed1434b7ef5ee005a29c6f68aefac47d1f89ff335e118c23503c",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "300308",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300308%2Cday%2C%2C2021-06-16%2C640%2C",
+      "sha256": "66fc39eaa17926f7cead2be540b561b254304f68c024b641803daae7cd0ce3a9",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "300308",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300308%2Cday%2C%2C2018-10-28%2C640%2C",
+      "sha256": "999ba7b8c98f32a9f2e8113a51ab42242518583b1d8d9a922c63a06f2c22a890",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "300308",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300308%2Cday%2C%2C2015-08-06%2C640%2C",
+      "sha256": "f2f9109b582f0b8b3af4f5021c107d53f26473a9d71080de2957fe9d15614eb2",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "300308",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300308%2Cday%2C%2C2012-11-11%2C640%2C",
+      "sha256": "c50142947410e93014f3f356734555f4db99b9af44212c03a5742fee3b1a884b",
+      "rows": 146
+    },
+    {
+      "kind": "quote_page",
+      "code": "300308",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sz300308%2Cday%2C%2C2012-04-09%2C640%2C",
+      "sha256": "05507bed7bd7b2d899667d82525e253b519aaafcee80f1a5918349f31667c978",
+      "rows": 0
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2026-09-22%2C640%2C",
+      "sha256": "9d83121ac561f7ad050a1361442ba93c408de5d128bf6ba7743b20cc333f4234",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2024-01-30%2C640%2C",
+      "sha256": "e092d98baf70dec4b44e30151ae3eb8070a4b8b7cbc490f92ec5eb175e68b90f",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2021-06-16%2C640%2C",
+      "sha256": "83f69d3ce87e4b97b6a5182f03afdce6bb7234fc2d7daeed936d47af6450f90d",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2018-10-28%2C640%2C",
+      "sha256": "2d42b20550155ea8366919daf2a9f057b2ef1d853746f2f73b13288474d09fa0",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2016-03-14%2C640%2C",
+      "sha256": "fb1a4f5b6765a571f2e482cecb179c2aca80b3391d050b4c777206f22e52cec0",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2013-07-11%2C640%2C",
+      "sha256": "45dafd99cc2cf35158d513eb68de67e78fa9e14b70ef58b7ee622639c08d5830",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2010-11-15%2C640%2C",
+      "sha256": "113b4849d212a9bbb45f60510ec3f59f8a8ae71618d9d12075dc03df8cd0fdc7",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2008-03-11%2C640%2C",
+      "sha256": "c99ea740c38bfdb4d20037046480caf6abb8ad9cd1c36b54c482ef9c1b9a6d72",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2005-05-24%2C640%2C",
+      "sha256": "c2aa19fe494305cc0abec5dd78d6071f790076a7c4761bccf806c2b195845ad0",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2002-09-12%2C640%2C",
+      "sha256": "8d17f17ea4a4b1e4601e5b39642acbba6da2eb98f02e2987844f88b3c553e8d2",
+      "rows": 107
+    },
+    {
+      "kind": "quote_page",
+      "code": "600036",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh600036%2Cday%2C%2C2002-04-08%2C640%2C",
+      "sha256": "076b0a57a8440cbdbe861d5f4cb8bcd07c807f0a99126b19988ff4bfef95ed1a",
+      "rows": 0
+    },
+    {
+      "kind": "quote_page",
+      "code": "601318",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh601318%2Cday%2C%2C2026-09-22%2C640%2C",
+      "sha256": "1c452a17e2b738f920005bbcc36ad11914bd3997f1356370b04cd574e4a531f5",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "601318",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh601318%2Cday%2C%2C2024-01-30%2C640%2C",
+      "sha256": "3ff7f4d89d9af86a5ec193da768d1057c54e3f4847144330fd4429a10e694463",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "601318",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh601318%2Cday%2C%2C2021-06-16%2C640%2C",
+      "sha256": "da21774d0f17743f7f04f42610cb923ae23d479a959219151f3941f4dc85946f",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "601318",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh601318%2Cday%2C%2C2018-10-28%2C640%2C",
+      "sha256": "a91f51bcdaf4348be65f0409e4873b100d97816b555e4cbd36926368361b5bde",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "601318",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh601318%2Cday%2C%2C2016-03-14%2C640%2C",
+      "sha256": "51be57f2e19bd5202cc2809b9d6a0f0c555a62ca9e015968708495d62fe2060a",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "601318",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh601318%2Cday%2C%2C2013-07-25%2C640%2C",
+      "sha256": "5cbf49cff9f9e0e488d67470c3f2824f92d0d8e64420de03b8f5cae144307ff0",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "601318",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh601318%2Cday%2C%2C2010-11-25%2C640%2C",
+      "sha256": "1b8f9f95f997879cfc3b639e0ecaac4d67347fd52ac03b19f1328a149ad8db84",
+      "rows": 640
+    },
+    {
+      "kind": "quote_page",
+      "code": "601318",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh601318%2Cday%2C%2C2008-01-10%2C640%2C",
+      "sha256": "6e1f3409c5d55c6c8eacc115905cf758d685ef3d39bd276d16e802a7b89458f6",
+      "rows": 212
+    },
+    {
+      "kind": "quote_page",
+      "code": "601318",
+      "url": "https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?param=sh601318%2Cday%2C%2C2007-02-28%2C640%2C",
+      "sha256": "e1f2a75a98f018e088d5b3684df6168d444519619f60720cb8cb5ab61ccadd75",
+      "rows": 0
+    },
+    {
+      "kind": "official_index",
+      "code": "H00300",
+      "url": "https://www.csindex.com.cn/csindex-home/perf/index-perf?indexCode=H00300&startDate=20050101&endDate=20260922",
+      "sha256": "b23264cfb15aad6f76ace2349b9c17f874b52c1724ae29b4cf2e47560652e243",
+      "rows": 5279
+    },
+    {
+      "kind": "official_index",
+      "code": "000300",
+      "url": "https://www.csindex.com.cn/csindex-home/perf/index-perf?indexCode=000300&startDate=20050101&endDate=20260922",
+      "sha256": "88b9e760a9a74c808d2816fd6caffe9e901458774743e36969fabee5c84ea773",
+      "rows": 5277
+    },
+    {
+      "kind": "local_snapshot",
+      "path": "data/reference/equity_bond_csi300.csv",
+      "sha256": "861df14b0a05a68632be399282711d9a48984254ab7e6401589f1eb1d5d98ddc"
+    },
+    {
+      "kind": "local_snapshot",
+      "path": "data/raw/macro/china_10y_yield_daily.csv",
+      "sha256": "5b8605f9e2f3dfd1f41cda31e88bc3fcdd91bce551fe73e9b0da51138413d141"
+    },
+    {
+      "kind": "local_snapshot",
+      "path": "data/reference/a_share_exright_terms.csv",
+      "sha256": "0de0f8f4a4edb15c635856f6bb879037b68da001338de4ac91650d54e8e12de1"
+    },
+    {
+      "kind": "local_snapshot",
+      "path": "data/reference/a_share_action_component_corrections.csv",
+      "sha256": "5453755218419e2f2787078d02b7aeb544786a3ac452f75f4ac7e5334eef1c4d"
+    }
+  ],
+  "limitations": [],
+  "sha256": {
+    "inputs/action_corrections.csv": "8a20727aeb203f8616a3b6f06b8302fa2d67285e6fbbb08b7655ed9339195ecd",
+    "inputs/actions.csv": "32d4960501dee1ef5d0a6fcd741d40e1bd1638281ea7c81e8c839d46ea42c64c",
+    "inputs/bond_yields.csv": "5b8605f9e2f3dfd1f41cda31e88bc3fcdd91bce551fe73e9b0da51138413d141",
+    "inputs/csi_000300.json": "6fde701125a6b0bca2c4ee5d9e9134b89fedab4fc817da220739e61e59ff8db6",
+    "inputs/csi_H00300.json": "6a3eb90b78d7ec0e95be05ec9796fb1fac0630d0245f86f72a1c9fb00349097a",
+    "inputs/equity_bond_csi300.csv": "861df14b0a05a68632be399282711d9a48984254ab7e6401589f1eb1d5d98ddc",
+    "inputs/financials.csv": "18d365c0131dd5ba77b2361656ab57bbc42ccb6de054cea8af23fa9de432d37c",
+    "inputs/price_terms.csv": "9e8eef42ed54c21a6eba0af22013b813948e6b3304a08242eb99aefe094d9b0d",
+    "inputs/quote_cache_differences.csv": "3f90d710aa3f6b450545a50446c08525482040f6eae239817074649d94cceeb8",
+    "inputs/quotes/000300.csv": "eb70206768daaf95335d4773901e5f961148bc3710173bca0056689ed3b83b1d",
+    "inputs/quotes/000651.csv": "3e3717674e43d3416312468bf605b74405e264ad2bb53c8c009219d01e59750e",
+    "inputs/quotes/300308.csv": "d06e5d4963152c90c72d01ce0024c919c3ee4239ddcc882598fae3881bb1ee9c",
+    "inputs/quotes/300750.csv": "e5126de88d602c969c1cd100edbfcaa2f7a24f7e96877a3866ae39b8acf10769",
+    "inputs/quotes/600036.csv": "33f61987c66b296c2f7bfa3fd2e5e82c834cc2a293c0f0ac802ce066a78a4d4d",
+    "inputs/quotes/600519.csv": "e106232afe36d8466bc793d99d712db1fc26fc4ee846a778ad2977e90a20aa5f",
+    "inputs/quotes/601318.csv": "f3293b71344d83de0fbb76693cc22546ec9a3321d8756122aece61b1b1305e1a",
+    "inputs/shares.csv": "1b7e4476ea228e59274fbc1daa3a7edeb8ef18f40b4e96ef8fc988fb5d811461"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "study": "cbbi_temperature_20260922",
+  "track": "B_signal_diagnostic_only",
+  "as_of": "2026-09-22",
+  "assets": {"000300": "沪深300", "600519": "贵州茅台", "000651": "格力电器", "300750": "宁德时代", "300308": "中际旭创", "600036": "招商银行", "601318": "中国平安"},
+  "primary_horizon_months": 12,
+  "secondary_horizons_months": [3, 6],
+  "rank_months": 60,
+  "rank_min_months": 36,
+  "rank_sensitivity_months": [48, 72],
+  "price_windows": [250, 500],
+  "activity_windows": [20, 250],
+  "temperature_groups": ["valuation", "price_extension", "activity"],
+  "group_weights": [0.3333333333333333, 0.3333333333333333, 0.3333333333333333],
+  "bins": [0, 20, 40, 60, 80, 100],
+  "primary_compare": "temperature <= 20 versus temperature >= 80; no threshold retuning",
+  "execution": "next CSI300 trading session close; no price means missing, not delayed execution",
+  "return_basis": "gross dividends reinvested at available close; actual bonus/split shares; rights subscription cash deducted",
+  "samples": ["daily", "month_end", "MA60_episode_first", "MA60_episode_nonoverlap"],
+  "bootstrap": {"replicates": 1000, "month_block": 12, "seed": 20260922},
+  "validation": "forward-return diagnostic; no portfolio optimization or adoption claim"
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "code": "000300",
+    "cutoff": "2025-08-27",
+    "max_heat_change": 0.0,
+    "max_stock_total_return_change": 0.0,
+    "max_volume_change": 0.0,
+    "max_valuation_change": 0.0
+  },
+  {
+    "code": "600519",
+    "cutoff": "2025-08-27",
+    "max_heat_change": 0.0,
+    "max_stock_total_return_change": 0.0,
+    "max_volume_change": 0.0,
+    "max_valuation_change": 0.0
+  },
+  {
+    "code": "000651",
+    "cutoff": "2025-08-27",
+    "max_heat_change": 0.0,
+    "max_stock_total_return_change": 0.0,
+    "max_volume_change": 0.0,
+    "max_valuation_change": 0.0
+  },
+  {
+    "code": "300750",
+    "cutoff": "2025-08-27",
+    "max_heat_change": 0.0,
+    "max_stock_total_return_change": 0.0,
+    "max_volume_change": 0.0,
+    "max_valuation_change": 0.0
+  },
+  {
+    "code": "300308",
+    "cutoff": "2025-08-27",
+    "max_heat_change": 0.0,
+    "max_stock_total_return_change": 0.0,
+    "max_volume_change": 0.0,
+    "max_valuation_change": 0.0
+  },
+  {
+    "code": "600036",
+    "cutoff": "2025-08-27",
+    "max_heat_change": 0.0,
+    "max_stock_total_return_change": 0.0,
+    "max_volume_change": 0.0,
+    "max_valuation_change": 0.0
+  },
+  {
+    "code": "601318",
+    "cutoff": "2025-08-27",
+    "max_heat_change": 0.0,
+    "max_stock_total_return_change": 0.0,
+    "max_volume_change": 0.0,
+    "max_valuation_change": 0.0
+  }
+]

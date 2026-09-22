@@ -1,0 +1,40 @@
+{
+  "as_of_beijing": "2026-09-22",
+  "production_adoption": false,
+  "jobs": [
+    {
+      "job_id": 27021230,
+      "stage": "fetch",
+      "state": "COMPLETED",
+      "elapsed": "00:02:26",
+      "maxrss_kib": 61547,
+      "cpus": 16
+    },
+    {
+      "job_id": 27021500,
+      "stage": "superseded_initial",
+      "state": "COMPLETED",
+      "elapsed": "00:02:24",
+      "maxrss_kib": 212966,
+      "cpus": 16
+    },
+    {
+      "job_id": 27021684,
+      "stage": "final_compute",
+      "state": "COMPLETED",
+      "elapsed": "00:02:44",
+      "maxrss_kib": 274788,
+      "cpus": 16
+    }
+  ],
+  "post_job_steps": [
+    "figure-only readability revision; no data or score changes",
+    "independent output audit and year/sample counts"
+  ],
+  "unit_checks": {
+    "temperature": 14,
+    "existing_suspension_actions": 9,
+    "result": "PASS"
+  },
+  "log_retention": "old logs retained; automatic approval review rejected age-based deletion; calculation submission approved without deletion"
+}

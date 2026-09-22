@@ -1,0 +1,64 @@
+{
+  "frozen_input_hashes_verified": 17,
+  "assets": [
+    {
+      "code": "000300",
+      "daily_rows": 5277,
+      "heat_rows": 4062,
+      "ohlc_envelope_errors": 0
+    },
+    {
+      "code": "600519",
+      "daily_rows": 4781,
+      "heat_rows": 3557,
+      "ohlc_envelope_errors": 0
+    },
+    {
+      "code": "000651",
+      "daily_rows": 4613,
+      "heat_rows": 3401,
+      "ohlc_envelope_errors": 0
+    },
+    {
+      "code": "300750",
+      "daily_rows": 2013,
+      "heat_rows": 785,
+      "ohlc_envelope_errors": 0
+    },
+    {
+      "code": "300308",
+      "daily_rows": 3346,
+      "heat_rows": 2095,
+      "ohlc_envelope_errors": 0
+    },
+    {
+      "code": "600036",
+      "daily_rows": 4765,
+      "heat_rows": 3548,
+      "ohlc_envelope_errors": 0
+    },
+    {
+      "code": "601318",
+      "daily_rows": 4692,
+      "heat_rows": 3498,
+      "ohlc_envelope_errors": 0
+    }
+  ],
+  "nonoverlap_complete_windows_checked": 1157,
+  "csi_price_crosscheck": {
+    "overlap": 5276,
+    "max_absolute_difference": 0.010000000000218279,
+    "qq_dates_not_in_official_price": [
+      "2026-09-21"
+    ]
+  },
+  "action_ledger_rows": 135,
+  "large_adjusted_move_flags": 0,
+  "script_sha256": {
+    "scripts/experimental/cbbi_temperature_audit.py": "6605d5ffac3b8f893231a4f92910a402a12587464c43d05d72b8bf285d83753f",
+    "scripts/experimental/cbbi_temperature.py": "0b204ca25774b0d60f6398bf77b7188f37425ceb7d4e0dbd8bfc310df095f3b6",
+    "scripts/experimental/cbbi_temperature_data.py": "6f6477b39573b8b622d07479361dcbf3a1239ed1341097c595d8ee825f46aa1c",
+    "scripts/corporate_actions.py": "f59a1d34ce61ba443f1b4abca7b3a2fe905d61787020c3c5f43f8d6f52c3d012",
+    "scripts/backtest_valuation_strategy.py": "3c2ec3c2f8faa9260481f6202a7236c2cefb9cd767eec3ae7f6b062df1aa0980"
+  }
+}
