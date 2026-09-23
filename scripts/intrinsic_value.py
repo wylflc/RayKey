@@ -158,6 +158,8 @@ def intrinsic_value(
     max_retention: float | None = 1.0,
     min_retention: float | None = 0.0,
     maintenance_ratio: float = 0.0,
+    roe_lam: float | None = None,
+    horizon: int | None = None,
 ) -> ValuationResult:
     """每股内在价值 P0*（原式第 6 节主公式 + 本模块的留存率修正）。
 
@@ -203,8 +205,17 @@ def intrinsic_value(
     # 加它的理由是用户的观察「很多公司能保持很多年的高 ROE」，而 n1=0 隐含
     # 「竞争侵蚀从第一年就开始」，对宽护城河公司偏严。**它只改路径形状，不改留存率
     # 一致性、护栏与终值口径**，故 n1=0 时须与旧结果逐位相同（见 --self-test）。
-    roe_path = [roe0] * n1 + [_fade(roe0, roe_terminal, t, n, lam) for t in range(1, n + 1)]
-    g_path = [g0] * n1 + [_fade(g0, g_terminal, t, n, lam) for t in range(1, n + 1)]
+    # `roe_lam`／`horizon`（OI-204）：回报路径单独按指数衰减 `ROE_T + (ROE0 − ROE_T)·e^(−λt)`，走满 `horizon` 年
+    # 再接终值，使末年剩余超额可忽略、交接处不出现一次性回报塌陷；增速路径仍按 n 年衰减到 g_T，其后保持 g_T。
+    # 缺省 None 即原行为（回报与增速同在 n 年内衰减，逐位不变）。
+    if roe_lam is None:
+        roe_path = [roe0] * n1 + [_fade(roe0, roe_terminal, t, n, lam) for t in range(1, n + 1)]
+        g_path = [g0] * n1 + [_fade(g0, g_terminal, t, n, lam) for t in range(1, n + 1)]
+    else:
+        span = max(horizon or n, n)
+        roe_path = [roe0] * n1 + [roe_terminal + (roe0 - roe_terminal) * math.exp(-roe_lam * t)
+                                  for t in range(1, span + 1)]
+        g_path = [g0] * n1 + [_fade(g0, g_terminal, t, n, lam) if t <= n else g_terminal for t in range(1, span + 1)]
     if any(x <= 0 for x in roe_path):
         raise ValuationError("fade 路径上出现非正 ROE：请检查 ROE_T 或 λ")
 
@@ -266,8 +277,8 @@ def intrinsic_value(
     if maintenance_ratio:
         payout_terminal -= maintenance_ratio
     terminal_value = eps_path[-1] * (1 + g_terminal) * payout_terminal / (r - g_terminal)
-    # **显式期是 n1 + n 年**，终值须按同一年数折现——只改路径不改这里会把终值高估 (1+r)^n1 倍
-    terminal_pv = terminal_value / (1 + r) ** (n1 + n)
+    # **显式期是 n1 + n 年**（指数回报路径为 n1 + horizon 年），终值须按同一年数折现——只改路径不改这里会把终值高估 (1+r)^n1 倍
+    terminal_pv = terminal_value / (1 + r) ** total
 
     value = explicit_pv + terminal_pv
     peg_growth = g_for_peg if g_for_peg is not None else g0
@@ -490,6 +501,15 @@ def self_test() -> int:
     # 6. 终值占比必须在 (0,1)
     res = intrinsic_value(1.0, 0.25, 0.12, 0.10, roe_terminal=0.13)
     checks.append(("终值占比落在 (0,1)", 0 < res.terminal_share < 1))
+
+    # 8. 指数回报路径（OI-204）：稳态时与闭式解相同；高起点回报不再出现末年派息归零；λ 越大价值越低
+    steady = intrinsic_value(1.0, 0.20, 0.05, 0.10, roe_terminal=0.20, g_terminal=0.05, roe_lam=0.13, horizon=50)
+    checks.append(("指数回报路径·稳态复现闭式 PE_TTM", abs(steady.implied_pe - stable_pe_ttm(0.20, 0.05, 0.10)) < 1e-9))
+    high = intrinsic_value(1.0, 1.60, 0.06, 0.095, roe_terminal=0.115, roe_lam=0.13, horizon=50)
+    checks.append(("指数回报路径·高起点回报无触界年", high.clamped_years == 0 and high.min_payout > 0))
+    lams = [intrinsic_value(1.0, 0.40, 0.08, 0.10, roe_terminal=0.12, roe_lam=lam, horizon=50).intrinsic_value
+            for lam in (0.05, 0.13, 0.30)]
+    checks.append(("指数回报路径·λ 越大价值越低", lams[0] > lams[1] > lams[2]))
 
     for label, ok in checks:
         print(f"  {'✅' if ok else '❌'} {label}")

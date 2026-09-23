@@ -1497,9 +1497,23 @@ def quality_score(history_years: int, return_cv: float | None, terminal_share: f
     return total, notes
 
 
+def fade_kwargs(args) -> dict:
+    """§6.5.1 超额回报衰减（OI-204）交给 `intrinsic_value` 的参数，建带各处共用。
+
+    `--fade-object`：book＝整本资本的回报衰减（生产，`consistent=True`）；new_capital＝存量资本保持起点回报、
+    只有新增资本的回报衰减（`consistent=False`，研究开关，机理检验不支持）。
+    `--fade-shape`：linear＝回报与增速同在 n 年内线性降到终值（生产）；exponential＝回报按
+    `ROE_T + 超额·e^(−λt)` 走 `--fade-horizon` 年、增速仍 n 年线性（`--fade-lambda` 给 λ）。缺省即现行。"""
+    kwargs = dict(consistent=getattr(args, "fade_object", "book") == "book")
+    if getattr(args, "fade_shape", "linear") == "exponential":
+        kwargs.update(roe_lam=args.fade_lambda, horizon=args.fade_horizon)
+    return kwargs
+
+
 def sensitivity_values(eps0: float, roe0: float, g0: float, r: float, roe_t: float,
                        g_terminal: float, n: int, n1: int, g0_cap: float, spread: float,
-                       less: float = 0.0, maintenance_ratio: float = 0.0) -> tuple[float | None, float | None]:
+                       less: float = 0.0, maintenance_ratio: float = 0.0,
+                       fade: dict | None = None) -> tuple[float | None, float | None]:
     """Bear/Bull 敏感度值（OI-074 ②）：同一引擎、五个参数同向扰动；任一护栏拒绝即该侧为 None。
     `less` 是要从企业价值里扣除的每股净负债（ROIC 口径），权益口径为 0。"""
     out = []
@@ -1521,7 +1535,7 @@ def sensitivity_values(eps0: float, roe0: float, g0: float, r: float, roe_t: flo
         try:
             res = intrinsic_value(eps0, roe0, g_adj, r_adj, roe_terminal=t_adj,
                                   g_terminal=gt_adj, n=n_adj, n1=n1,
-                                  maintenance_ratio=maintenance_ratio)
+                                  maintenance_ratio=maintenance_ratio, **(fade or {}))
             value = res.intrinsic_value - less
             out.append(value if value > 0 else None)
         except ValuationError:
@@ -2248,7 +2262,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
             try:
                 res = intrinsic_value(nopat_ps, roic0, g0, w, roe_terminal=roic_t,
                                       g_terminal=g_terminal, n=n_years, n1=n1_years,
-                                      maintenance_ratio=band.maintenance_ratio)
+                                      maintenance_ratio=band.maintenance_ratio, **fade_kwargs(args))
             except ValuationError as exc:
                 band.status, band.reason = "rejected", str(exc)
                 return band
@@ -2278,7 +2292,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
             band.v_bear, band.v_bull = sensitivity_values(
                 nopat_ps, roic0, g0, w, roic_t, g_terminal, n_years, n1_years,
                 args.g0_cap, args.min_terminal_spread, less=net_debt_ps,
-                maintenance_ratio=band.maintenance_ratio)
+                maintenance_ratio=band.maintenance_ratio, fade=fade_kwargs(args))
             ordered_hist = sorted(history, key=lambda x: x.period)
             yearly = [roic_inputs.roic_of(y, prev) for prev, y in zip([None] + ordered_hist[:-1], ordered_hist)]
             # §6.5.3 ⑤：增速腿权重为 0 时不计该腿（OI-202）
@@ -2356,7 +2370,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
         band.roe_terminal = roe_t_ame
         try:
             res = intrinsic_value(oe0, iroe, g0, r, roe_terminal=roe_t_ame,
-                                  g_terminal=g_terminal, n=n_years, n1=n1_years)
+                                  g_terminal=g_terminal, n=n_years, n1=n1_years, **fade_kwargs(args))
         except ValuationError as exc:
             band.status, band.reason = "rejected", str(exc)
             return band
@@ -2456,7 +2470,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
 
     try:
         result = intrinsic_value(eps0, roe0, g0, r, roe_terminal=roe_t,
-                                 g_terminal=g_terminal, n=n_years, n1=n1_years)
+                                 g_terminal=g_terminal, n=n_years, n1=n1_years, **fade_kwargs(args))
     except ValuationError as exc:
         band.status, band.reason = "rejected", str(exc)
         return band
@@ -2480,7 +2494,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
     # OI-074：敏感度带与质量分（输出列，不进判定）
     band.v_bear, band.v_bull = sensitivity_values(
         eps0, roe0, g0, r, roe_t, g_terminal, n_years, n1_years, args.g0_cap, args.min_terminal_spread,
-        less=-x_eq)
+        less=-x_eq, fade=fade_kwargs(args))
     roe_hist = [v for _p, v in annual_roe_series(series, available_at, max(args.roe_years, 10))]
     legs_e = sum(1 for g in (band.g_sustainable, band.g_trailing) if g is not None)
     gap_e = (abs(band.g_sustainable - band.g_trailing)
@@ -3048,6 +3062,13 @@ def main() -> int:
                         help="g0 乘数，1.0=原行为。用于检验「该资本化多少增长」的响应曲线")
     parser.add_argument("--g-terminal", type=float, default=DEFAULT_G_TERMINAL)
     parser.add_argument("--n", type=int, default=10, help="fade 年数（非高增长年数，见文件头）")
+    parser.add_argument("--fade-object", choices=("book", "new_capital"), default="book",
+                        help="OI-204 研究开关：超额回报衰减作用于整本资本（book，现行）或只作用于新增资本（new_capital）")
+    parser.add_argument("--fade-shape", choices=("linear", "exponential"), default="linear",
+                        help="OI-204：回报衰减形状。linear＝n 年线性（现行）；exponential＝ROE_T + 超额·e^(−λt)，走 --fade-horizon 年")
+    parser.add_argument("--fade-lambda", type=float, default=0.12,
+                        help="exponential 形状的 λ（缺省 0.12＝OI-204 按预登记规则由报表名单回报存续拟合）")
+    parser.add_argument("--fade-horizon", type=int, default=50, help="exponential 形状的回报路径年数（缺省 50）")
     parser.add_argument("--n1", type=int, default=0,
                         help="高速期年数：前 n1 年 ROE 与 g 维持起始值不衰减，其后再 fade n 年。"
                              "缺省 0 = 原行为（g 自第 1 年即衰减）")
