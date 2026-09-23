@@ -289,11 +289,26 @@ def event_map(rows: Iterable[dict], include_rights: bool = True) -> dict[str, di
     return out
 
 
+# 建带对同一家公司的同一个组件列表反复求事件（逐带、逐日除权），聚合按 Decimal 逐行解析，全市场重建因此
+# 从约 8 分钟涨到约 2 小时。按列表对象身份缓存：缓存项持有列表本身（id 不会被复用）并核对长度，
+# 每次返回新的浅拷贝；生成器等非列表输入不缓存。
+_COMPANY_EVENTS: dict[tuple[int, bool], tuple[list, int, list[dict]]] = {}
+
+
 def company_events(rows: Iterable[dict], *, price_basis: bool = False) -> list[dict]:
     """Aggregate an already selected company's component list (code may be omitted)."""
+    key = (id(rows), price_basis)
+    hit = _COMPANY_EVENTS.get(key) if isinstance(rows, list) else None
+    if hit is not None and hit[0] is rows and hit[1] == len(rows):
+        return [dict(r) for r in hit[2]]
     events = aggregate_actions(({**r, "security_code": r.get("security_code") or "_company"} for r in rows))
     # Valuation helpers consume the same textual-number schema as the CSV.
     if price_basis:
         overrides = price_overrides()
         events = [with_price_terms(r, overrides=overrides) for r in events]
-    return [{**r, **{k: str(r['price_' + k] if price_basis else r[k]) for k in AMOUNTS}} for r in events]
+    result = [{**r, **{k: str(r['price_' + k] if price_basis else r[k]) for k in AMOUNTS}} for r in events]
+    if isinstance(rows, list):
+        if len(_COMPANY_EVENTS) > 4096:
+            _COMPANY_EVENTS.clear()
+        _COMPANY_EVENTS[key] = (rows, len(rows), result)
+    return [dict(r) for r in result]

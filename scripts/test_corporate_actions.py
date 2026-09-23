@@ -125,6 +125,39 @@ class ActionsTest(unittest.TestCase):
         for ratio in ('-1','-1.01'):
             with self.assertRaises(ValueError): ca.aggregate_actions([dict(reverse,share_ratio=ratio)])
 
+class CompanyEventsCacheTest(unittest.TestCase):
+    """建带反复对同一组件列表求事件；缓存不得改变结果，也不得在列表或返回值被改动后返回陈旧结果。"""
+
+    def rows(self):
+        return [dict(component(report='2024-12-31', cash='.30'), ex_dividend_date='2025-06-10'),
+                dict(component(report='2025-06-30', cash='.12'), ex_dividend_date='2025-09-20')]
+
+    def test_repeated_calls_match_uncached(self):
+        rows = self.rows()
+        first = ca.company_events(rows)
+        again = ca.company_events(rows)
+        fresh = ca.company_events([dict(r) for r in rows])
+        self.assertEqual(first, again)
+        self.assertEqual(first, fresh)
+
+    def test_returned_events_are_copies(self):
+        rows = self.rows()
+        ca.company_events(rows)[0]['cash_per_share'] = '999'
+        self.assertNotEqual(ca.company_events(rows)[0]['cash_per_share'], '999')
+
+    def test_append_invalidates(self):
+        rows = self.rows()
+        before = ca.company_events(rows)
+        rows.append(dict(component(report='2025-12-31', cash='.40'), ex_dividend_date='2026-06-10'))
+        self.assertEqual(len(ca.company_events(rows)), len(before) + 1)
+
+    def test_bases_cached_separately(self):
+        rows = self.rows()
+        with patch.object(ca, 'price_overrides', return_value={}):
+            self.assertEqual(ca.company_events(rows, price_basis=True), ca.company_events([dict(r) for r in rows], price_basis=True))
+            self.assertEqual(ca.company_events(rows), ca.company_events([dict(r) for r in rows]))
+
+
 class FetchTest(unittest.TestCase):
     def responses(self, count=2):
         return [io.BytesIO(json.dumps(dict(success=True,result=dict(count=count,pages=2,data=[r]))).encode())
