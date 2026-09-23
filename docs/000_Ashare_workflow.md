@@ -24,7 +24,7 @@
 执行原则：
 
 1. 业务质量决定是否值得持续研究；价格和题材不进入质量判断。
-2. 合理价区间只由基本面证据与模型改变；价格只改变当日 `P/V`。不得由希望得到的 `P/V` 反推合理价。
+2. 模型价值区间只由基本面证据与模型改变；价格只改变当日 `P/V`。不得由希望得到的 `P/V` 反推模型价值。
 3. `P/V` 与走势条件按 §9.3 机械产生执行清单，不临时加入主观快速通道。
 4. 流程终点是执行清单；实际下单由用户决定。
 5. 原始数据、过程数据、当前结论和历史记录分开保存。
@@ -72,7 +72,7 @@
 | `documented_not_attention` | 用户点名建档、经分析判无护城河的公司：有档案、L4 分层、参考分与估值区间，但不在 `worth_attention`，一律不可买（§10.1 第 1 条） |
 | `garbage` | 仅因坐实治理灾难或结构性绝望行业而永久排除的公司 |
 | L1/L2/L3/L4 | §5.7 的业务质量分层；不直接决定买入资格（不可买由名单归属决定） |
-| 合理价 `V` | §6 当前生产带上下沿的中值 |
+| 模型价值 `V`（排序锚） | §6 当前生产带上下沿的中值。买入线按在册合格面重解（§12.1），`P/V` 表示一只股票在全池估值分布中的位置，`P/V < 1` 不表示低于公允价值（OI-208） |
 | `P/V` | 未复权现价 ÷ `V`，交易规则使用的估值比率（唯一实现 `scripts/pv_ratio.py`，扫描器／跟踪器／阅读版／档案同源）；薄权益带（净负债 ≥ 50% 企业价值）按 §6.5.1 守卫判无法估值、无 `P/V` |
 | 空间 | `V ÷ 现价 − 1`，仅作阅读展示 |
 | 合格集 | 通过 §9.3.1 买入线、走势条件、冻结与 L3 战术闸门的股票，按 `P/V` 升序 |
@@ -231,7 +231,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 ### 6.1 执行范围
 
-对全部 `worth_attention` 公司维护估值带。用户点名的任何公司也建档并给出估值区间（含结论为 L4 者，§6.5.2）。用户点名建档但未进入 `worth_attention` 的公司，在 `docs/000_a_share_core_valuation_pool.md` 的池外档案区列示；名单状态取三类表，质量档取分层表，`boundary_pending` 与 `garbage` 不显示档位或分数；合理价只读逐票档案，不入池 CSV、不落生产带文件、无 `P/V`、不取每日行情、不进扫描与 §9.3 的任何判定。估值只生成合理价 `V`；买卖资格由 §7 的冻结状态和 §9.3 决定。
+对全部 `worth_attention` 公司维护估值带。用户点名的任何公司也建档并给出估值区间（含结论为 L4 者，§6.5.2）。用户点名建档但未进入 `worth_attention` 的公司，在 `docs/000_a_share_core_valuation_pool.md` 的池外档案区列示；名单状态取三类表，质量档取分层表，`boundary_pending` 与 `garbage` 不显示档位或分数；模型价值只读逐票档案，不入池 CSV、不落生产带文件、无 `P/V`、不取每日行情、不进扫描与 §9.3 的任何判定。估值只生成模型价值 `V`；买卖资格由 §7 的冻结状态和 §9.3 决定。
 
 ### 6.3 数据与时点
 
@@ -429,25 +429,25 @@ python3 scripts/build_a_share_core_valuation_pool.py \
 
 港股、美股和韩股只作为观察附表，不写入 A 股核心池，也不进入 §9.3。质量判断沿用 §5，估值遵守价格独立、证据改带和可证伪原则；交易货币不得跨市场直接比较（`P/V` 可以）。
 
-**输入符号与拒绝传播**：SEC 的纯利息费用标签按每个年度／累计期间的费用金额正值统一，再合成 TTM；不得对合成结果取绝对值代替逐期统一，所得税收益及其他有经济含义的正负值保留。零增长与增长路径均在各自企业价值的股权桥之后执行 §6.5.1 薄权益守卫，固定扣减按该节的净金融负债与少数股东账面下界口径计算；拒绝后清空当前带、合理价和 P/V，档案显示原因，不回退历史带。
+**输入符号与拒绝传播**：SEC 的纯利息费用标签按每个年度／累计期间的费用金额正值统一，再合成 TTM；不得对合成结果取绝对值代替逐期统一，所得税收益及其他有经济含义的正负值保留。零增长与增长路径均在各自企业价值的股权桥之后执行 §6.5.1 薄权益守卫，固定扣减按该节的净金融负债与少数股东账面下界口径计算；拒绝后清空当前带、模型价值和 P/V，档案显示原因，不回退历史带。
 
-**海外估值**：合理估值按 §6.5.1 的 ROIC 引擎由三大报表重算，海外输入与折现率按本节处理，最新季报／中报按「最近完整财年＋本期累计−上年同期累计」合成 TTM 作为当前观察点，年度历史仍用于 ROIC0、增量 ROIC 与再投资率。r = 美债 10Y ＋ β×经营地 Damodaran ERP（β 与终值超额回报分别读取海外引擎 `BETA_BY_TIER`、`TERMINAL_EXCESS_BY_TIER`，无质量档者按名单状态读取；终值增长受 `terminal_growth_ceiling` 约束），报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（`FINANCIAL_KEEP`）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」。三表来源：美股 SEC XBRL companyfacts（标签按经济含义组合，唯一实现 `fetch_overseas_statements.compose_sum`／`compose_debt`：合并税前利润取合并标签，缺则境内＋境外、再缺持续经营净利＋所得税，不得由境内单项兜底；有息负债 = 非流动长期债务／票据 + 流动债务（`DebtCurrent` 存在即整体取用）+ 融资租赁负债，同一层级只取一次、含租赁标签不再叠加租赁、经营租赁不计；折旧摊销取合计标签，缺则折旧＋无形资产摊销；年报与季报 TTM 同规，`tags_used` 记所用组合）、港股东财 HK F10；SEC 结构化事实尚未覆盖的已披露季报（包括境外发行人 6-K 和 10-Q 提交前的官方业绩三表）按官方财报维护 `data/reference/overseas_statement_overrides.csv`（原始文件不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。
+**海外估值**：模型价值按 §6.5.1 的 ROIC 引擎由三大报表重算，海外输入与折现率按本节处理，最新季报／中报按「最近完整财年＋本期累计−上年同期累计」合成 TTM 作为当前观察点，年度历史仍用于 ROIC0、增量 ROIC 与再投资率。r = 美债 10Y ＋ β×经营地 Damodaran ERP（β 与终值超额回报分别读取海外引擎 `BETA_BY_TIER`、`TERMINAL_EXCESS_BY_TIER`，无质量档者按名单状态读取；终值增长受 `terminal_growth_ceiling` 约束），报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（`FINANCIAL_KEEP`）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」。三表来源：美股 SEC XBRL companyfacts（标签按经济含义组合，唯一实现 `fetch_overseas_statements.compose_sum`／`compose_debt`：合并税前利润取合并标签，缺则境内＋境外、再缺持续经营净利＋所得税，不得由境内单项兜底；有息负债 = 非流动长期债务／票据 + 流动债务（`DebtCurrent` 存在即整体取用）+ 融资租赁负债，同一层级只取一次、含租赁标签不再叠加租赁、经营租赁不计；折旧摊销取合计标签，缺则折旧＋无形资产摊销；年报与季报 TTM 同规，`tags_used` 记所用组合）、港股东财 HK F10；SEC 结构化事实尚未覆盖的已披露季报（包括境外发行人 6-K 和 10-Q 提交前的官方业绩三表）按官方财报维护 `data/reference/overseas_statement_overrides.csv`（原始文件不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。
 
 ```bash
 python3 scripts/fetch_overseas_earnings_calendar.py --as-of YYYY-MM-DD --apply
 python3 scripts/fetch_overseas_earnings_calendar.py --as-of YYYY-MM-DD --check-only
 python3 scripts/fetch_overseas_statements.py --as-of YYYY-MM-DD [--refresh] # 年报＋最新季报 TTM → overseas_roic_years.csv
-python3 scripts/build_overseas_roic_bands.py --as-of YYYY-MM-DD            # ROIC 口径合理估值 → overseas_watchlist_valuation.csv ＋ README「当前估值」节
+python3 scripts/build_overseas_roic_bands.py --as-of YYYY-MM-DD            # ROIC 口径模型价值 → overseas_watchlist_valuation.csv ＋ README「当前估值」节
 python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --signal-date YYYY-MM-DD
 ```
 
-阅读版 `000_a_share_core_valuation_pool.md` 两表列：代码／名称／质量／参考分／估值／估值路径／现价／**合理估值 V**／**`P/V`**／估值时间／估值事件（合理价区间、空间、策略标签、PE、PB 只在 CSV）。表前只保留字段含义与交易边界；估值路径只显示方法名，不带章节号或口径注记。
+阅读版 `000_a_share_core_valuation_pool.md` 两表列：代码／名称／质量／参考分／估值／估值路径／现价／**模型价值 V**／**`P/V`**／估值时间／估值事件（模型价值区间、空间、策略标签、PE、PB 只在 CSV）。表前只保留字段含义与交易边界；估值路径只显示方法名，不带章节号或口径注记。
 
 **回购与分红的处理**：估值只看「可分配现金 = NOPAT × (1 − 维持增长所需留存)」，分红与回购同属可分配现金、不区分、不另按股数缩减重复计量，未来回购计划不进模型。海外引擎的锚按以下口径计算：年报间外生权益按股本口径第 2 条逐年识别（`X_y = ΔE − (归母综合收益 − 已付股息)`，综合收益缺失用归母净利，已付股息取现金流量表；权益缺失的年份不计、不作断点），比率 = 各年 NOPAT ÷ 当年经营账面 `E_op`，季报观察点当期 = 最新年报比率 × (NOPAT TTM ÷ 最新年报 NOPAT)，λ 与三年／五年／十年中位只取年报，周期守卫坡道与谷底守卫同式；每股 NOPAT 锚 = ratio0 × 经营账面 `BPS_op = 当期 BPS − x − X_cum/股`，`x = 当期 BPS − (最新年报母公司权益 + 其后归母净利 − 其后已付股息) ÷ 申报稀释股数`（年报行 `x = 0`；`x` 封顶 95% BPS；其后归母净利或已付股息不可得时 `x = 0`）；净负债与少数股东取季报资产负债表，`x` 不另进股权桥；增速腿权重 0。`overseas_statement_overrides.csv` 维护行的 `net_income`／`tci`（年报行）与 `net_income_ytd`／`dividends_paid_ytd`（TTM 行）留空时，取数脚本按东财 `RPT_USF10_FN_INCOME`／`RPT_USF10_INFO_DIVIDEND` 补入；港股现金流量表缺「已付股息」行时按 `RPT_HKF10_INFO_DIVIDEND` 分红事件补入（除净日落在期内，每股派 × 最新已发行股数，按 `overseas_valuation_inputs.csv` 汇率折报表币）；补缺来源写入 `tags_used`。A 股分红按 §11.4 除权归一化处理，银行股利折现只计现金股利。
 
 **点名建档**：用户点名的港股／美股／韩股公司，无论初筛结论如何，一律完成以下六步：
 
-1. 写逐票档案 `data/companies/<代码>_<名称>/README.md`（质量档、四维分与旗标、合理价区间与方法、参考分理由、跟踪指标、复核触发）。
+1. 写逐票档案 `data/companies/<代码>_<名称>/README.md`（质量档、四维分与旗标、模型价值区间与方法、参考分理由、跟踪指标、复核触发）。
 2. `data/processed/overseas_watchlist_valuation.csv` 加一行：登记 `attention_class`，`quality_tier` 按 §5.7 定档；`boundary_pending` 与 `garbage` 的档位和分数留空，`buy_eligibility` 恒为 `off_pipeline_watch_only`，`dossier_dir` 指向第 1 步目录。
 3. `data/reference/overseas_report_evidence.csv` 加最新定期报告的证据行。
 4. 港股在 `fetch_overseas_statements.py` 的 `HK_REPORT_CCY` 与 `build_overseas_roic_bands.py` 的 `COMPANY_CFG` 登记；银行／保险／金融控股进 `FINANCIAL_KEEP`，带取档案带。
@@ -602,7 +602,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 ## 每日扫描 YYYY-MM-DD（信号日；执行时点见 §9.3.1）
 
 ### 一、当前持仓
-| 名称 | 层级 | 参考分 | 收盘 | 合理价区间 | 空间 | P/V | 动作 |
+| 名称 | 层级 | 参考分 | 收盘 | 模型价值区间 | 空间 | P/V | 动作 |
 
 ### 二、执行清单（时点见 §9.3.1）
 1. 一档金额
@@ -611,7 +611,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 4. 买入清单
 
 ### 三、P/V 前十（不筛走势）
-| 排名 | 代码 | 名称 | 层级 | 收盘 | 合理价 V | P/V | 走势条件 |
+| 排名 | 代码 | 名称 | 层级 | 收盘 | 模型价值 V | P/V | 走势条件 |
 
 ### 四、需人工处理
 除权除息、待复核、停牌、执行日新增事件和数据缺失
@@ -623,7 +623,7 @@ P/V 前十从当日扫描的 `worth_attention` 中，按候选侧 `model_pv` 升
 
 ### 9.3 唯一交易口径
 
-输入边界：名单只来自 §5，合理价只来自 §6，行情只来自 §8。账户级只剩个人投资体系 §4 的两条外生硬约束，不在本节重复。
+输入边界：名单只来自 §5，模型价值只来自 §6，行情只来自 §8。账户级只剩个人投资体系 §4 的两条外生硬约束，不在本节重复。
 
 #### 9.3.1 当前参数
 
@@ -781,7 +781,7 @@ security_code, security_name, current_shares, cost_basis, entry_stop_price
 python3 scripts/track_holdings_daily.py --as-of YYYY-MM-DD
 ```
 
-逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示合理价、空间、`P/V`、MA20、MA60、生效止损线与是否命中、涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，涨幅减持命中判定与扫描器同一实现（`holding_trim_signal`）；`P/V` 读持仓侧带，与候选侧不同时并列显示；生产带的证据截止与扫描器同由信号日自动推导。银行与保险的扫描、跟踪、阅读版及成交估值统一调用 `screen_daily_volume_price_signals.resolve_live_band`，国债利率取 `observed_on ≤ 信号日` 的最新行，股利锚与除权处理调用 `bank_dividend_intrinsic`；区间显示按 §6.5.1 的带宽。缺失利率或完整财年分红时，合理价与 `P/V` 留空并注明数据缺失。
+逐票检查当日公告、披露、重大事项、产业和竞品信息，并显示模型价值、空间、`P/V`、MA20、MA60、生效止损线与是否命中、涨幅减持是否命中。行情缺失必须标为“数据缺失”，不得显示为“持有”。收盘、MA20 与生效止损线的 MA60 走 §8.3 的同一份取数实现，涨幅减持命中判定与扫描器同一实现（`holding_trim_signal`）；`P/V` 读持仓侧带，与候选侧不同时并列显示；生产带的证据截止与扫描器同由信号日自动推导。银行与保险的扫描、跟踪、阅读版及成交估值统一调用 `screen_daily_volume_price_signals.resolve_live_band`，国债利率取 `observed_on ≤ 信号日` 的最新行，股利锚与除权处理调用 `bank_dividend_intrinsic`；区间显示按 §6.5.1 的带宽。缺失利率或完整财年分红时，模型价值与 `P/V` 留空并注明数据缺失。
 
 ### 11.4 除权除息
 
@@ -811,7 +811,7 @@ python3 scripts/apply_holdings_corporate_action.py --as-of YYYY-MM-DD --code <�
 
 1. 更新持仓股数与成本；清仓删除该行。
 2. 由零股建仓时按 §9.3.5 写入止损价；加仓不改。
-3. 运行 `python3 scripts/resolve_trade_valuation.py --as-of YYYY-MM-DD --code <代码> --price <成交价>`，取输出的合理价、候选侧与持仓侧 `P/V`、估值来源；决策日志追加 `execution_record`，记录方向、股数、成交价、当日 `P/V` 和对应规则。
+3. 运行 `python3 scripts/resolve_trade_valuation.py --as-of YYYY-MM-DD --code <代码> --price <成交价>`，取输出的模型价值、候选侧与持仓侧 `P/V`、估值来源；决策日志追加 `execution_record`，记录方向、股数、成交价、当日 `P/V` 和对应规则。
 4. 对 §9.3.3 适用的实际净成交运行下列命令登记冷却凭据；`--tranche` 使用原信号日档位，`--rule` 为 `buy`／`gain`／`exit`／`swap`。未成交、完全对冲不登记。当天已扫描则登记后重跑当天扫描。
 
 ```bash

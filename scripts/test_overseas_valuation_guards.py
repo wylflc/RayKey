@@ -183,7 +183,7 @@ class ThinEquityTest(unittest.TestCase):
                 self.assertEqual(updated["dossier_status"], "unvaluable_pending_input")
                 readme = (directory / "README.md").read_text()
                 self.assertIn("薄权益", readme)
-                self.assertIn("| 合理价区间 | — ~ — USD |", readme)
+                self.assertIn("| 模型价值区间 | — ~ — USD |", readme)
                 section = pool.build_overseas_section([updated], {})
                 rendered = next(line for line in section if line.startswith("| Test |"))
                 cells = [s.strip() for s in rendered.split("|")][1:-1]

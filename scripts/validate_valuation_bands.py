@@ -351,7 +351,7 @@ def load_codes(path: Path, column: str = "security_code") -> set[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="校验合理价区间是否由策略模型算出（工作流 §6.7 要求 10）")
+    parser = argparse.ArgumentParser(description="校验模型价值区间是否由策略模型算出（工作流 §6.7 要求 10）")
     parser.add_argument("--valuation", type=Path, default=DEFAULT_VALUATION)
     parser.add_argument("--tiers", type=Path, default=DEFAULT_TIERS)
     parser.add_argument("--holdings", type=Path, default=DEFAULT_HOLDINGS)

@@ -35,7 +35,7 @@ HEADER = """# {name}（{code}）估值档案
 | 质量分层 | {tier_line} |
 | 质量证据日 | {quality_evidence_date} |
 | 研究策略标签 | {tag} |
-| 合理价区间 | **{band_display}** |
+| 模型价值区间 | **{band_display}** |
 | 估值方法 | {band_method} |
 | 估值更新日 | **{reviewed_at}** |
 """

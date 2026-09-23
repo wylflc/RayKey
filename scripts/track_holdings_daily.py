@@ -221,7 +221,7 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
         if code not in members:
             notes.append("已移出 worth_attention——按 §9.3.2 第四步逐日清仓")
         if pv is None:
-            notes.append("池内无合理价区间（无法估值）：无 `P/V`，当日不进机械判定")
+            notes.append("池内无模型价值区间（无法估值）：无 `P/V`，当日不进机械判定")
         # §9.3.1 涨幅减持行：唯一判定在扫描器 `holding_trim_signal`（只看涨幅，不看走势）。
         # 无带／无 P/V 的票照判（只要有收盘价与成本）。
         cost = to_float(h.get("cost_basis"))

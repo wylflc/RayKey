@@ -427,7 +427,7 @@ def render_readme(row: dict, previous: str) -> str:
             f"| 项 | 当前值 |\n| --- | --- |\n"
             f"| 名单状态 | {row.get('attention_class') or '未登记'} |\n"
             f"| 质量档 | {tier} |\n| 参考分 | {score} |\n"
-            f"| 合理价区间 | {row.get('fair_price_low') or '—'} ~ {row.get('fair_price_high') or '—'} {row.get('currency','')} |\n"
+            f"| 模型价值区间 | {row.get('fair_price_low') or '—'} ~ {row.get('fair_price_high') or '—'} {row.get('currency','')} |\n"
             f"| 估值证据日 | {row.get('valuation_reviewed_at') or '—'} |\n"
             f"| 估值事件 | {row.get('valuation_evidence_event') or '—'} |\n\n"
             f"## 当前估值\n\n{(row.get('band_method') or '—').split('（', 1)[0]}\n\n"
@@ -473,7 +473,7 @@ def main() -> int:
             v_trade = (lo + hi) / 2 if lo and hi else None
             status = "keep"
         elif code in NO_SOURCE or code not in years:
-            method, text, lo, hi, v_trade, status = "无法估值", f"{NO_SOURCE.get(code, '无三表数据')}；旧档案带 {old_band} 仅供参考，不再作为合理估值。", None, None, None, "unavailable"
+            method, text, lo, hi, v_trade, status = "无法估值", f"{NO_SOURCE.get(code, '无三表数据')}；旧档案带 {old_band} 仅供参考，不再作为模型价值。", None, None, None, "unavailable"
         else:
             model_current = current.get(code)
             r = value_company(code, tier, years[code], inp, model_current)
@@ -492,7 +492,7 @@ def main() -> int:
                 v_trade, lo, hi, method, status = None, None, None, "无法估值", "rejected"
             text = derivation_text(code, r, model_meta, cfg, fx, v_trade, ccy_report)
             if status == "rejected":
-                text += f"；旧档案带 {old_band} 仅供参考，不再作为合理估值。"
+                text += f"；旧档案带 {old_band} 仅供参考，不再作为模型价值。"
         pv = (price / v_trade) if (price and v_trade) else None
         print(f"{code:<8}{name:<14}{tier:<4}{status:<12}{(format(r['value'], '.2f') if status in ('ok',) else '—'):>12}{(format(v_trade, ',.2f') if v_trade else '—'):>12}{(f'{price:,.2f}' if price else '—'):>10}{(f'{pv:.3f}' if pv else '—'):>7}  {method}{'' if status=='ok' else '：' + text[:90]}")
         if args.check:

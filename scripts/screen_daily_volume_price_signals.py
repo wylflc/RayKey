@@ -314,7 +314,7 @@ def scan_one(pool_row: dict[str, str], as_of: str, timeout: float, since: str = 
     snapshot = {**pool_row, **snapshot}
     snapshot["security_code"] = code
 
-    # 带内位置：现价相对合理价区间的落点（展示列，不进任何判定）。
+    # 带内位置：现价相对模型价值区间的落点（展示列，不进任何判定）。
     close = to_float(snapshot.get("close"))
     fair_low = to_float(pool_row.get("fair_price_low"))
     fair_high = to_float(pool_row.get("fair_price_high"))
@@ -820,7 +820,7 @@ def report_pv_top10(rows: list[dict[str, object]], as_of: str) -> None:
     """打印可直接放入每日阅读日志的观察表。"""
     print(f"\n### P/V 前十（不筛走势；{as_of} 收盘）\n")
     print("候选侧 P/V 从低到高；仅作观察，买卖动作见执行清单。\n")
-    print("| 排名 | 代码 | 名称 | 层级 | 收盘 | 合理价 V | P/V | 走势条件 |")
+    print("| 排名 | 代码 | 名称 | 层级 | 收盘 | 模型价值 V | P/V | 走势条件 |")
     print("| ---: | --- | --- | --- | ---: | ---: | ---: | --- |")
     for row in rows:
         intrinsic = to_float(row.get("model_intrinsic_value"))
