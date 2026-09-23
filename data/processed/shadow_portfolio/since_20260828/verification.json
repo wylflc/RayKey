@@ -1,27 +1,27 @@
 {
-  "days": 17,
-  "trading_intervals": 16,
+  "days": 18,
+  "trading_intervals": 17,
   "accounting_closed": true,
   "prefix_invariance": true,
   "production_unchanged": true,
   "production_sha256": {
-    "a_share_holdings.csv": "a38eea54710ac72bd4d00bc958db98929dc86cfaa037b80931eb8a0a4f07322f",
-    "portfolio_account_snapshot.csv": "f5eb4a4a8ee9a4204cead2a1e07b20f752c67ea1ad3ce7f07e8954cd0049d4ee",
-    "cooldown_executions.csv": "84480ef778a814955bf4c289469b7551324a360bf0e39fb2d0ab6c787489e3e1",
-    "daily_cooldown_state.csv": "c026bb695b1f28a4115c8d7df2f1c1d709189048c93ef317c37f56b68bedde23",
+    "a_share_holdings.csv": "4d17dcb51bc54144bf58d544d9bd9b3fecec71a9e2f916eba1588bff2c59f80d",
+    "portfolio_account_snapshot.csv": "2c70c3295ecd363b7e49ca2acf199689a29eec97d9cd6fdd4b313ec2273d287b",
+    "cooldown_executions.csv": "dc0b742c6df13dc94b0d13eaec6a2d2f9c12c336b7e7aaad26c161444b258fd7",
+    "daily_cooldown_state.csv": "1e75f6fbee2bcec1e5aa7b64aa8b669a3feb7dae372208ebd463ed3e5a65ea7e",
     "daily_entry_plan.csv": "781480d744899ee718c4a41eeea8ea21d7b9898d4066767f49b310f987407520",
     "daily_sell_plan.csv": "c3bad7d5e1a357f4a5820e01ee254cf773e1b824e8c8bc7936bc72162f780b26",
-    "daily_buy_candidates.csv": "a5a19a90946b3d31a1e7ec48d4734354fbe112d78bfe1bf8e007b799ea43c7b6"
+    "daily_buy_candidates.csv": "1ab57f49e7a746a2538cdf00dce1c2e131aeaf035a4cd61a77480076e9baff65"
   },
   "code_sha256": {
-    "shadow_from_origin.py": "bac4347ebc96e0b88a16890d40dbaefb4de12a6915fb046ad6d24395c7bc2675",
-    "shadow_portfolio.py": "7cf799e427a5ab43d39aa8c6c75b911ee0ab28f949b207e97d8d3b7f4bc880bd",
-    "backtest_valuation_strategy.py": "7c6393b17fb65656121c3b0e0a8ea728f0ac553ced3eb1c0a7ede08e3365f1c4",
-    "screen_daily_volume_price_signals.py": "bb05199e8fc33c107f7b4080a32aaf67149ab0ccbddc23c9189ca9e5dab898b3",
+    "shadow_from_origin.py": "675e2e87a4d203199a7e79a10fa97954f4a569e50022560cc4a68ba0040a6183",
+    "shadow_portfolio.py": "aa30791f37eb0fc7ce92c66e4cc3664ea7f4cdb23d0221df480336ce4c48226b",
+    "backtest_valuation_strategy.py": "3c2ec3c2f8faa9260481f6202a7236c2cefb9cd767eec3ae7f6b062df1aa0980",
+    "screen_daily_volume_price_signals.py": "c3a6bc4a11207ca59a7ae2138deb01f5e4f0f82e07cece639d470784a1ce2e11",
     "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
     "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
     "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
-    "corporate_actions.py": "02d771a38272fbc8173586ba6d0c2fd19f9e1db56a6494de6c55df73c64dae2e"
+    "corporate_actions.py": "f59a1d34ce61ba443f1b4abca7b3a2fe905d61787020c3c5f43f8d6f52c3d012"
   },
   "correlation_calls": {
     "missing_300_on_0828": 223
