@@ -1,0 +1,678 @@
+{
+  "roic_bands.csv": {
+    "file": "roic_bands.csv",
+    "rows": 319176,
+    "changed_rows": 319117,
+    "only_allowed_rows": 5,
+    "changed_fields": {
+      "minority_dividend_floor_ps": 319112,
+      "minority_fixed_claim_ps": 319112
+    },
+    "allowed_fields": {
+      "valuation_quality_score": 9313,
+      "valuation_quality_notes": 9313,
+      "roic_g_source": 2199
+    },
+    "changed_codes": 5565,
+    "value_changed_codes": {},
+    "only_in_left": 0,
+    "only_in_right": 0,
+    "unmatched_left_codes": [],
+    "unmatched_right_codes": [],
+    "sample_only_left": [],
+    "sample_only_right": [],
+    "arm": "CONTROL"
+  },
+  "roic_bands_b2.csv": {
+    "file": "roic_bands_b2.csv",
+    "rows": 319176,
+    "changed_rows": 319117,
+    "only_allowed_rows": 5,
+    "changed_fields": {
+      "minority_dividend_floor_ps": 319112,
+      "minority_fixed_claim_ps": 319112,
+      "net_debt_ps": 113,
+      "wc_first_period": 113,
+      "minority_share": 113,
+      "minority_share_basis": 113,
+      "external_equity_cum_ps": 113,
+      "wacc": 113,
+      "wc_financing_start": 113,
+      "cost_of_debt": 113,
+      "wc_last_period": 113,
+      "owner_earnings_true_ps": 113,
+      "shares_est": 113,
+      "nopat_ps": 113,
+      "wc_start": 113,
+      "v_zero_growth": 113,
+      "wc_end": 113,
+      "wc_financing_end": 113,
+      "roic_path": 113,
+      "minority_book_ps": 113,
+      "fin_net_debt_ps": 113,
+      "roic_nopat_mode": 113,
+      "tax_rate": 113,
+      "wc_change": 113,
+      "roic0": 113,
+      "roe_terminal": 113,
+      "g0": 109,
+      "ev_ps": 109,
+      "reinvestment_rate": 105,
+      "intrinsic_value": 101,
+      "max_buy_price": 101,
+      "terminal_share": 101,
+      "band_low": 101,
+      "v_bull": 101,
+      "implied_pe": 101,
+      "v_bear": 101,
+      "band_high": 101,
+      "pe_on_ttm_eps": 98,
+      "incremental_roic": 97,
+      "min_payout": 93,
+      "bps_operating": 92,
+      "g_sustainable": 91,
+      "payout": 91,
+      "growth_trust": 85,
+      "ttm_factor": 80,
+      "equity_anchor_mode": 74,
+      "external_equity_ps": 72,
+      "reason": 29,
+      "growth_damp": 27,
+      "peak_weight": 24,
+      "trough_weight": 19,
+      "status": 17,
+      "eps0": 1,
+      "g0_capped": 1
+    },
+    "allowed_fields": {
+      "valuation_quality_score": 9377,
+      "valuation_quality_notes": 9381,
+      "roic_g_source": 2300
+    },
+    "changed_codes": 5565,
+    "value_changed_codes": {
+      "000938": 87,
+      "300919": 26
+    },
+    "only_in_left": 0,
+    "only_in_right": 0,
+    "unmatched_left_codes": [],
+    "unmatched_right_codes": [],
+    "sample_only_left": [],
+    "sample_only_right": [],
+    "arm": "CONTROL"
+  },
+  "roic_daily_raw.csv": {
+    "file": "roic_daily_raw.csv",
+    "rows": 15616391,
+    "changed_rows": 6008,
+    "only_allowed_rows": 0,
+    "changed_fields": {
+      "valuation_ratio": 6006,
+      "pv_equity": 6006,
+      "upside_to_low": 6005,
+      "intrinsic_value": 6003,
+      "band_high": 6003,
+      "band_low": 6003,
+      "ev_ps": 6003,
+      "band_available_at": 757,
+      "band_report_date": 757,
+      "valuation_label": 515,
+      "cash_adjustment": 193
+    },
+    "allowed_fields": {},
+    "changed_codes": 5,
+    "value_changed_codes": {
+      "000938": 4709,
+      "300919": 1294,
+      "300274": 2,
+      "300015": 1
+    },
+    "only_in_left": 0,
+    "only_in_right": 240,
+    "unmatched_left_codes": [],
+    "unmatched_right_codes": [],
+    "sample_only_left": [],
+    "sample_only_right": [
+      [
+        "000938",
+        "2004-02-09"
+      ],
+      [
+        "000938",
+        "2003-12-03"
+      ],
+      [
+        "000938",
+        "2004-04-14"
+      ],
+      [
+        "000938",
+        "2003-08-05"
+      ],
+      [
+        "000938",
+        "2003-07-15"
+      ],
+      [
+        "000938",
+        "2003-12-08"
+      ],
+      [
+        "000938",
+        "2003-07-17"
+      ],
+      [
+        "000938",
+        "2003-09-02"
+      ],
+      [
+        "000938",
+        "2003-05-21"
+      ],
+      [
+        "000938",
+        "2003-11-13"
+      ],
+      [
+        "000938",
+        "2003-11-04"
+      ],
+      [
+        "000938",
+        "2004-04-07"
+      ],
+      [
+        "000938",
+        "2003-12-24"
+      ],
+      [
+        "000938",
+        "2004-03-04"
+      ],
+      [
+        "000938",
+        "2003-05-12"
+      ],
+      [
+        "000938",
+        "2004-02-24"
+      ],
+      [
+        "000938",
+        "2003-07-09"
+      ],
+      [
+        "000938",
+        "2003-06-13"
+      ],
+      [
+        "000938",
+        "2004-01-05"
+      ],
+      [
+        "000938",
+        "2003-07-07"
+      ]
+    ],
+    "arm": "CONTROL"
+  },
+  "roic_daily_raw_b2.csv": {
+    "file": "roic_daily_raw_b2.csv",
+    "rows": 15616829,
+    "changed_rows": 6006,
+    "only_allowed_rows": 0,
+    "changed_fields": {
+      "valuation_ratio": 6005,
+      "pv_equity": 6005,
+      "upside_to_low": 6004,
+      "intrinsic_value": 6003,
+      "band_high": 6003,
+      "band_low": 6003,
+      "ev_ps": 6003,
+      "band_available_at": 827,
+      "band_report_date": 827,
+      "valuation_label": 515,
+      "cash_adjustment": 193
+    },
+    "allowed_fields": {},
+    "changed_codes": 3,
+    "value_changed_codes": {
+      "000938": 4709,
+      "300919": 1294,
+      "300274": 2
+    },
+    "only_in_left": 0,
+    "only_in_right": 240,
+    "unmatched_left_codes": [],
+    "unmatched_right_codes": [],
+    "sample_only_left": [],
+    "sample_only_right": [
+      [
+        "000938",
+        "2004-02-09"
+      ],
+      [
+        "000938",
+        "2003-12-03"
+      ],
+      [
+        "000938",
+        "2004-04-14"
+      ],
+      [
+        "000938",
+        "2003-08-05"
+      ],
+      [
+        "000938",
+        "2003-07-15"
+      ],
+      [
+        "000938",
+        "2003-12-08"
+      ],
+      [
+        "000938",
+        "2003-07-17"
+      ],
+      [
+        "000938",
+        "2003-09-02"
+      ],
+      [
+        "000938",
+        "2003-05-21"
+      ],
+      [
+        "000938",
+        "2003-11-13"
+      ],
+      [
+        "000938",
+        "2003-11-04"
+      ],
+      [
+        "000938",
+        "2004-04-07"
+      ],
+      [
+        "000938",
+        "2003-12-24"
+      ],
+      [
+        "000938",
+        "2004-03-04"
+      ],
+      [
+        "000938",
+        "2003-05-12"
+      ],
+      [
+        "000938",
+        "2004-02-24"
+      ],
+      [
+        "000938",
+        "2003-07-09"
+      ],
+      [
+        "000938",
+        "2003-06-13"
+      ],
+      [
+        "000938",
+        "2004-01-05"
+      ],
+      [
+        "000938",
+        "2003-07-07"
+      ]
+    ],
+    "arm": "CONTROL"
+  },
+  "a_share_daily_states_adopted.csv": {
+    "file": "a_share_daily_states_adopted.csv",
+    "rows": 15600594,
+    "changed_rows": 6008,
+    "only_allowed_rows": 0,
+    "changed_fields": {
+      "valuation_ratio": 6006,
+      "pv_equity": 6006,
+      "upside_to_low": 6005,
+      "intrinsic_value": 6003,
+      "band_high": 6003,
+      "band_low": 6003,
+      "ev_ps": 6003,
+      "band_available_at": 757,
+      "band_report_date": 757,
+      "valuation_label": 515,
+      "cash_adjustment": 193
+    },
+    "allowed_fields": {},
+    "changed_codes": 5,
+    "value_changed_codes": {
+      "000938": 4709,
+      "300919": 1294,
+      "300274": 2,
+      "300015": 1
+    },
+    "only_in_left": 0,
+    "only_in_right": 240,
+    "unmatched_left_codes": [],
+    "unmatched_right_codes": [],
+    "sample_only_left": [],
+    "sample_only_right": [
+      [
+        "000938",
+        "2004-02-09"
+      ],
+      [
+        "000938",
+        "2003-12-03"
+      ],
+      [
+        "000938",
+        "2004-04-14"
+      ],
+      [
+        "000938",
+        "2003-08-05"
+      ],
+      [
+        "000938",
+        "2003-07-15"
+      ],
+      [
+        "000938",
+        "2003-12-08"
+      ],
+      [
+        "000938",
+        "2003-07-17"
+      ],
+      [
+        "000938",
+        "2003-09-02"
+      ],
+      [
+        "000938",
+        "2003-05-21"
+      ],
+      [
+        "000938",
+        "2003-11-13"
+      ],
+      [
+        "000938",
+        "2003-11-04"
+      ],
+      [
+        "000938",
+        "2004-04-07"
+      ],
+      [
+        "000938",
+        "2003-12-24"
+      ],
+      [
+        "000938",
+        "2004-03-04"
+      ],
+      [
+        "000938",
+        "2003-05-12"
+      ],
+      [
+        "000938",
+        "2004-02-24"
+      ],
+      [
+        "000938",
+        "2003-07-09"
+      ],
+      [
+        "000938",
+        "2003-06-13"
+      ],
+      [
+        "000938",
+        "2004-01-05"
+      ],
+      [
+        "000938",
+        "2003-07-07"
+      ]
+    ],
+    "arm": "CONTROL"
+  },
+  "a_share_daily_states_b2.csv": {
+    "file": "a_share_daily_states_b2.csv",
+    "rows": 15601032,
+    "changed_rows": 6006,
+    "only_allowed_rows": 0,
+    "changed_fields": {
+      "valuation_ratio": 6005,
+      "pv_equity": 6005,
+      "upside_to_low": 6004,
+      "intrinsic_value": 6003,
+      "band_high": 6003,
+      "band_low": 6003,
+      "ev_ps": 6003,
+      "band_available_at": 827,
+      "band_report_date": 827,
+      "valuation_label": 515,
+      "cash_adjustment": 193
+    },
+    "allowed_fields": {},
+    "changed_codes": 3,
+    "value_changed_codes": {
+      "000938": 4709,
+      "300919": 1294,
+      "300274": 2
+    },
+    "only_in_left": 0,
+    "only_in_right": 240,
+    "unmatched_left_codes": [],
+    "unmatched_right_codes": [],
+    "sample_only_left": [],
+    "sample_only_right": [
+      [
+        "000938",
+        "2004-02-09"
+      ],
+      [
+        "000938",
+        "2003-12-03"
+      ],
+      [
+        "000938",
+        "2004-04-14"
+      ],
+      [
+        "000938",
+        "2003-08-05"
+      ],
+      [
+        "000938",
+        "2003-07-15"
+      ],
+      [
+        "000938",
+        "2003-12-08"
+      ],
+      [
+        "000938",
+        "2003-07-17"
+      ],
+      [
+        "000938",
+        "2003-09-02"
+      ],
+      [
+        "000938",
+        "2003-05-21"
+      ],
+      [
+        "000938",
+        "2003-11-13"
+      ],
+      [
+        "000938",
+        "2003-11-04"
+      ],
+      [
+        "000938",
+        "2004-04-07"
+      ],
+      [
+        "000938",
+        "2003-12-24"
+      ],
+      [
+        "000938",
+        "2004-03-04"
+      ],
+      [
+        "000938",
+        "2003-05-12"
+      ],
+      [
+        "000938",
+        "2004-02-24"
+      ],
+      [
+        "000938",
+        "2003-07-09"
+      ],
+      [
+        "000938",
+        "2003-06-13"
+      ],
+      [
+        "000938",
+        "2004-01-05"
+      ],
+      [
+        "000938",
+        "2003-07-07"
+      ]
+    ],
+    "arm": "CONTROL"
+  },
+  "a_share_daily_states_hold.csv": {
+    "file": "a_share_daily_states_hold.csv",
+    "rows": 15601032,
+    "changed_rows": 6006,
+    "only_allowed_rows": 0,
+    "changed_fields": {
+      "valuation_ratio": 6005,
+      "pv_equity": 6005,
+      "upside_to_low": 6004,
+      "intrinsic_value": 6003,
+      "band_high": 6003,
+      "band_low": 6003,
+      "ev_ps": 6003,
+      "hold_source": 901,
+      "band_available_at": 757,
+      "band_report_date": 757,
+      "valuation_label": 515,
+      "cash_adjustment": 193
+    },
+    "allowed_fields": {},
+    "changed_codes": 3,
+    "value_changed_codes": {
+      "000938": 4709,
+      "300919": 1294,
+      "300274": 2
+    },
+    "only_in_left": 0,
+    "only_in_right": 240,
+    "unmatched_left_codes": [],
+    "unmatched_right_codes": [],
+    "sample_only_left": [],
+    "sample_only_right": [
+      [
+        "000938",
+        "2004-02-09"
+      ],
+      [
+        "000938",
+        "2003-12-03"
+      ],
+      [
+        "000938",
+        "2004-04-14"
+      ],
+      [
+        "000938",
+        "2003-08-05"
+      ],
+      [
+        "000938",
+        "2003-07-15"
+      ],
+      [
+        "000938",
+        "2003-12-08"
+      ],
+      [
+        "000938",
+        "2003-07-17"
+      ],
+      [
+        "000938",
+        "2003-09-02"
+      ],
+      [
+        "000938",
+        "2003-05-21"
+      ],
+      [
+        "000938",
+        "2003-11-13"
+      ],
+      [
+        "000938",
+        "2003-11-04"
+      ],
+      [
+        "000938",
+        "2004-04-07"
+      ],
+      [
+        "000938",
+        "2003-12-24"
+      ],
+      [
+        "000938",
+        "2004-03-04"
+      ],
+      [
+        "000938",
+        "2003-05-12"
+      ],
+      [
+        "000938",
+        "2004-02-24"
+      ],
+      [
+        "000938",
+        "2003-07-09"
+      ],
+      [
+        "000938",
+        "2003-06-13"
+      ],
+      [
+        "000938",
+        "2004-01-05"
+      ],
+      [
+        "000938",
+        "2003-07-07"
+      ]
+    ],
+    "arm": "CONTROL"
+  }
+}

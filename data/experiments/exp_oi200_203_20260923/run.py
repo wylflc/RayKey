@@ -1,6 +1,6 @@
 """OLD（现存状态）/ CONTROL / MID / NEW (/ NEW_ALIGNED) 同 BASE、14 起点、全／A／U、0bp。
 
-臂集由环境变量 EXP_RUN_ARMS 给出（缺省 OLD,MID,NEW；CONTROL 与 OLD 面板子集不同时加入）；
+臂集由环境变量 EXP_RUN_ARMS 给出（以 + 分隔，缺省 OLD+MID+NEW；CONTROL 与 OLD 面板子集不同时加入）；
 NEW_ALIGNED 由 EXP_ALIGNED_WIDTH 给出重解买入线对应的 --width。"""
 import csv
 import json
@@ -67,7 +67,7 @@ def batch(arms, group, excluded):
 def main():
     for name in ('cache', 'nav', 'stats', 'errors', 'daily'):
         (EXP / name).mkdir(exist_ok=True)
-    arms = os.environ.get('EXP_RUN_ARMS', 'OLD,MID,NEW').split(',')
+    arms = os.environ.get('EXP_RUN_ARMS', 'OLD+MID+NEW').replace(',', '+').split('+')   # sbatch --export 以逗号分隔变量，臂名用 +
     before = load('before_manifest.json')
     inputs = {p: digest(ROOT / p) for p in ('scripts/backtest_valuation_strategy.py', 'scripts/sweep_backtest_configs.py',
                                             'scripts/corporate_actions.py')}

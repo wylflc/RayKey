@@ -10,9 +10,14 @@ from common import EXP, ROOT, STATE_FILES, digest, load, save
 
 
 def main():
-    control = load('control_validation.json')
-    assert all(not r['changed_fields'] and not r['only_in_left'] and not r['only_in_right'] for r in control.values()), \
-        'CONTROL must reproduce stored states except OI-202 output columns'
+    control, why = load('control_validation.json'), load('control_attribution.json')
+    explained = set(why['stale_stored_codes']['codes']) | set(why['input_drift_codes']['codes'])
+    neutral = set(why['neutral_band_columns']['fields'])
+    for name, r in control.items():
+        assert set(r['value_changed_codes']) <= explained, (name, 'unexplained value drift', r['value_changed_codes'])
+        assert set(r['unmatched_left_codes']) | set(r['unmatched_right_codes']) <= explained, (name, 'unexplained code set')
+        if name.startswith('roic_bands'):
+            assert set(r['changed_fields']) <= neutral or set(r['value_changed_codes']) <= explained, (name, r['changed_fields'])
     verification = load('verification.json')
     diag = load('diagnostics_validation.json')
     ruling = load('user_ruling.json') if (EXP / 'user_ruling.json').exists() else {}

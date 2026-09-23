@@ -1,0 +1,32 @@
+{
+  "neutral_band_columns": {
+    "fields": [
+      "minority_dividend_floor_ps",
+      "minority_fixed_claim_ps"
+    ],
+    "reason": "stored '' vs rebuilt '0.0000' for non-event bands; introduced by an earlier minority-claims repair (OI-198 treats as neutral)"
+  },
+  "new_state_column": {
+    "field": "minority_claim_event",
+    "reason": "rebuilt daily states carry the empty column added by the minority-claims work; stored states predate it because later repairs spliced blocks under the old header"
+  },
+  "oi202_output_columns": [
+    "roic_g_source",
+    "valuation_quality_score",
+    "valuation_quality_notes"
+  ],
+  "stale_stored_codes": {
+    "codes": [
+      "000938",
+      "300919"
+    ],
+    "evidence": "pre-batch code (4dd93f61) rebuilt on current inputs reproduces CONTROL line-for-line for both sides (13,687/13,687 rows); stored rows come from an older build. Neither code is in the BASE panel."
+  },
+  "input_drift_codes": {
+    "codes": [
+      "300274",
+      "300015"
+    ],
+    "evidence": "0.0001-level P/V differences on 3 panel rows; corporate-actions cash precision updated after the 2026-09-21 build (e.g. 300015 2024-06-06 cash 0.150023 -> 0.1500225)."
+  }
+}
