@@ -28,6 +28,7 @@ case "$SCAN_STAGE" in
     python3 scripts/fetch_a_share_earnings_forecasts.py --signal-date "$SCAN_DATE" --report-date "$SCAN_REPORT_DATE" --output data/interim/a_share_earnings_forecasts.csv
     python3 scripts/fetch_ohlcv_history.py --signal-date "$SCAN_DATE" --actions-only
     python3 scripts/fetch_daily_market_evidence.py --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
+    python3 scripts/scan_restatement_announcements.py --snapshot "data/interim/daily_announcements_${SCAN_DATE}.json"
     python3 scripts/daily_execution_guard.py evidence --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
     python3 scripts/build_report_update_queue.py --market A_SHARE --signal-date "$SCAN_DATE"
     python3 - <<'PY'
@@ -84,6 +85,7 @@ PY
     # 只重取公告、公司行动与市场背景并重做同日证据凭据（evidence 阶段的子集，用于截止时间后的补取）
     : "${SCAN_SINCE:?Set SCAN_SINCE to the previous successful scan date}"
     python3 scripts/fetch_daily_market_evidence.py --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
+    python3 scripts/scan_restatement_announcements.py --snapshot "data/interim/daily_announcements_${SCAN_DATE}.json"
     python3 scripts/daily_execution_guard.py evidence --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
     ;;
   *) printf '%s\n' 'SCAN_STAGE must be evidence, preview, events or scan' >&2; exit 2 ;;

@@ -95,6 +95,11 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn(f"| 买入线 | `P/V ≤ {daily_scan.SEC93_BUY_LINE:.4f}` |", workflow)
         # v4.169（OI-168）：§6.7 两条建带命令显式给出生产营运资金口径 operating；§12.1 对齐容差 0.2pp
         self.assertEqual(workflow.count("--minority-basis earnings --wc-aggregation operating \\"), 2)
+        # OI-200／OI-201：两条建带命令显式给出现金口径 nonop 与权益口径锚 guarded，常设重建作业同参
+        self.assertEqual(workflow.count("  --cash-caliber nonop --equity-anchor guarded \\"), 2)
+        chain = (ROOT / "scripts/slurm/rebuild_chain_with_fetch.sbatch").read_text(encoding="utf-8")
+        self.assertIn("--wc-aggregation operating", chain)
+        self.assertIn("--cash-caliber nonop --equity-anchor guarded", chain)
         self.assertIn("绝对值 < 0.2pp 时保留原线", workflow)
         self.assertNotIn("| 减持 |", workflow)                # v4.109（OI-110）：估值减持行已删
         # v4.110（OI-116）：止盈行不得退回「无」——涨幅减持即按盈利触发的减仓

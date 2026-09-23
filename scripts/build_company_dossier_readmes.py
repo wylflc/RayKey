@@ -104,14 +104,16 @@ def model_assumptions(band: dict, mid: float, pv: float | None) -> str:
         # g0 的来源按带文件 `roic_g_source` 如实写：hybrid 两腿取大，多数带由利润增速腿给出
         # （§12.99.1：生产池 202 只 growth 带里 116 只），写成「增量 ROIC × 再投资率」是错的归因（OI-069 判例）。
         src = (band.get("roic_g_source") or "").strip()
+        if not (_num(band.get("g0")) or 0.0) > 0:
+            src = "none"            # OI-202：增速腿权重为 0 时旧带把 g0 = 0 记成 trailing
         capital_leg = (f"资本腿 增量 ROIC {_pct(band.get('incremental_roic'))} × "
                        f"再投资率 {_pct(band.get('reinvestment_rate'))}")
         if src == "trailing":
-            g_note = f"利润增速腿＝NOPAT 五年 CAGR，高于{capital_leg}"
+            g_note = f"利润增速腿＝NOPAT 五年 CAGR × 增速腿权重，高于{capital_leg}"
         elif src == "capital":
             g_note = capital_leg
         elif src == "none":
-            g_note = "两腿皆不可算，按 0 增长"
+            g_note = f"两腿均未给出正增长：{capital_leg}，增速腿权重见 §6.5.1；按 0 增长"
         else:
             g_note = capital_leg
         params = (f"g0 {_pct(band.get('g0'))}（{g_note}）、WACC {_pct(band.get('wacc'))}、"

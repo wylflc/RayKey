@@ -1,0 +1,16 @@
+*.log
+__pycache__/
+build_*.log
+cache/
+daily/
+diff_*.json
+errors/
+ledger*.csv
+nav/
+old_inputs/
+rebuild_drift.json
+rescan_cache/
+rescan_daily/
+signals/
+states/
+stats/

@@ -309,7 +309,8 @@ def load_financials(codes: set[str] | None, notice_cap: bool = True) -> dict[str
 
 def attach_panel_versions(out: dict[str, dict[str, dict]], codes: set[str] | None, notice_cap: bool) -> None:
     """OI-130：给被追溯重述的面板行挂上重述前版本 `row["_superseded"] = [(superseded_at, 旧行)]`（升序）。
-    来源两处：①面板存档 `data/raw/financials/superseded/<报告期>.csv`（取数重写前的原行）；
+    来源三处：①面板存档 `data/raw/financials/superseded/<报告期>.csv`（取数重写前的原行）；
+    ①′原文核定表 `data/reference/panel_restatement_originals.csv`（OI-203，同日与①并存时以原文为准）；
     ②三大报表存档推得的版本——`bps = 重述前归母权益 ÷ 股本`，EPS／归母净利／营收取重述前利润表——
     只在面板现行值已是重述后口径且①无同日版本时生成。重述日志有重述日、却无版本覆盖该日的行，
     `notice_date` 延后到重述日（现行值在该日之前不可用）。"""
@@ -329,6 +330,23 @@ def attach_panel_versions(out: dict[str, dict[str, dict]], codes: set[str] | Non
             if notice_cap:
                 old["notice_date"] = statutory_available_at(period, notice)
             versions[(code, period)][sa] = old
+    # OI-203：原文核定的重述前版本（入库的参考表）与存档同规；同日两源并存时以原文为准
+    for ref in restatement_archive.load_filing_originals():
+        code = (ref.get("security_code") or "").strip().zfill(6)
+        period = (ref.get("report_date") or "")[:10]
+        sa = ref["superseded_at"][:10]
+        row = out.get(code, {}).get(period)
+        if row is None or (codes is not None and code not in codes):
+            continue
+        old = dict(row)
+        old.pop("_superseded", None)
+        old.update({k: v for k, v in ref.items() if k in row and k not in restatement_archive.FILING_META})
+        old["notice_date_raw"] = (ref.get("notice_date") or row["notice_date_raw"]).strip()
+        old["notice_date"] = (statutory_available_at(period, old["notice_date_raw"]) if notice_cap
+                              else old["notice_date_raw"])
+        old["source"] = "filing " + ref["original_url"]
+        versions[(code, period)][sa] = old
+        roic_inputs.CAP_STATS["financials_filing_versions"] += 1
     stmt_versions = roic_inputs.load_superseded_raw(codes)
     for (code, period), items in stmt_versions.items():
         row = out.get(code, {}).get(period)
@@ -721,6 +739,51 @@ def pick_roe0(mode: str, normalized: float, roe_ttm_value: float | None,
     if mode == "onesided_min" and roe_ttm_value < normalized:
         return roe_ttm_value, "ttm(孰低)"
     return normalized, "normalized"
+
+
+def guarded_equity_roe(series: dict[str, dict], period: str, available_at: str, args) -> tuple[float | None, dict]:
+    """§6.5.1 第 3 条（OI-200）：权益口径的 ROE 锚与 ROIC 路径 `ratio0` 同式，比率换成年报加权 ROE。
+
+    λ = 近两次年度变动中上行次数 ÷ 2；非周期锚 = 三年中位 + λ × (当期 − 三年中位)，季报行当期 = 最新年报 ROE × TTM 因子；
+    峰／谷坡道按当期 ÷ 十年中位（K = `--roic-peak-k`、坡宽 `--roic-peak-ramp`），混合权重 max(w, v) 混向五年中位；
+    B2 口径（`--ttm-trust`）的 λ 前滚同 ROIC 路径。旧口径（五年锚 × 单边 λ=2 上抬、无守卫）留作 `--equity-anchor legacy`。"""
+    obs = annual_roe_series(series, available_at, args.roe_years)
+    ratios = [v for _p, v in obs]
+    if not ratios:
+        return None, {"years": 0}
+    longs = [v for _p, v in annual_roe_series(series, available_at, max(args.roe_years, 10))]
+    latest_period = obs[-1][0]
+    latest = type("AnnualRow", (), {"period": latest_period,
+                                    "parent_netprofit": _num(series[latest_period].get("parent_netprofit"))})()
+    f_ttm = ttm_profit_factor(series, period, latest) if getattr(args, "ttm_current", "on") == "on" else 1.0
+    trust = (sum(1 for i in (-1, -2) if ratios[i] > ratios[i - 1]) / 2.0) if len(ratios) >= 3 else 0.0
+    base = statistics.median(ratios[-3:]) if len(ratios) >= 3 else statistics.median(ratios)
+    current = ratios[-1] * f_ttm
+    if len(ratios) >= 3 and f_ttm != 1.0 and getattr(args, "ttm_trust", "off") in ("on", "up"):
+        delta = getattr(args, "ttm_trust_delta", 0.02)
+        if f_ttm >= 1.0 + delta or f_ttm <= 1.0 - delta:
+            trust_q = ((1 if ratios[-1] > ratios[-2] else 0) + (1 if f_ttm >= 1.0 + delta else 0)) / 2.0
+            if getattr(args, "ttm_trust", "off") == "up" and not (trust_q > trust and current > base):
+                trust_q = trust
+            trust = trust_q
+    noncyc = base + trust * (current - base) if len(ratios) >= 3 else statistics.median(ratios)
+    peak_w = trough_w = 0.0
+    median_long = statistics.median(longs) if len(longs) >= 4 else None
+    ramp, k = getattr(args, "roic_peak_ramp", 0.3), args.roic_peak_k
+    if median_long is not None and median_long > 0:
+        if current > 0:
+            s_cur = current / median_long
+            if ramp > 0:
+                peak_w = min(1.0, max(0.0, (s_cur - (k - ramp)) / (2 * ramp)))
+                trough_w = min(1.0, max(0.0, (1.0 / s_cur - (k - ramp)) / (2 * ramp)))
+            else:
+                peak_w, trough_w = float(s_cur > k), float(1.0 / s_cur > k)
+        elif f_ttm != 1.0:
+            trough_w = 1.0
+    w_any = max(peak_w, trough_w)
+    roe0 = (1.0 - w_any) * noncyc + w_any * statistics.median(ratios)
+    return roe0, {"years": len(ratios), "trust": trust, "peak_w": peak_w, "trough_w": trough_w, "ttm_factor": f_ttm,
+                  "anchor": statistics.median(ratios)}
 
 
 def incremental_roe(series: dict[str, dict], actions: list[dict], available_at: str,
@@ -1658,9 +1721,10 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
             return band
         # **金融企业退回权益口径**（框架 §6）：银行/券商/保险的「有息负债」是经营性负债，
         # 投入资本与 FCFF 没有经济含义。不是降级处理，是框架本身的规定。
+        # OI-200：一般企业模板里金融中介负债 ≥ 总资产 20% 者（东方财富）同判（`roic_inputs._year_from_parts`）。
         elif latest.is_financial:
             band.roic_path = "equity_fallback"
-            ROIC_STATS["金融企业退回权益口径"] += 1
+            ROIC_STATS[f"金融企业退回权益口径·{latest.financial_basis or 'template'}"] += 1
         elif latest.parent_equity is None or not latest.parent_equity > 0 or bps is None or bps <= 0:
             band.status, band.reason = "rejected", "母公司权益或 BPS 不可用，股数无法反推"
             return band
@@ -2156,9 +2220,10 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                     g_trail = cagr * args.roic_trail_weight * (1.0 - band.peak_weight) * damp
                 candidates = [g for g in (g_capital, g_trail) if g is not None]
                 g0_raw = max(candidates) if candidates else 0.0
-                band.roic_g_source = ("trailing" if g_trail is not None
-                                      and (g_capital is None or g_trail >= g_capital)
-                                      else "capital" if g_capital is not None else "none")
+                # OI-202：g0 = 0 一律记 none（增速腿权重为 0 时 g_trail 恒为 0，不能记成 trailing）
+                band.roic_g_source = ("none" if g0_raw <= 0
+                                      else "trailing" if g_trail is not None and (g_capital is None or g_trail >= g_capital)
+                                      else "capital")
                 ROIC_STATS[f"g 来源·{band.roic_g_source}"] += 1
             else:
                 g0_raw = g_capital if g_capital is not None else 0.0
@@ -2216,9 +2281,10 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                 maintenance_ratio=band.maintenance_ratio)
             ordered_hist = sorted(history, key=lambda x: x.period)
             yearly = [roic_inputs.roic_of(y, prev) for prev, y in zip([None] + ordered_hist[:-1], ordered_hist)]
-            legs = sum(1 for g in (g_capital, g_trail if growth_mode == "hybrid" else None) if g is not None)
-            gap = (abs(g_capital - g_trail) if growth_mode == "hybrid" and g_capital is not None
-                   and g_trail is not None else None)
+            # §6.5.3 ⑤：增速腿权重为 0 时不计该腿（OI-202）
+            leg_trail = g_trail if growth_mode == "hybrid" and args.roic_trail_weight > 0 else None
+            legs = sum(1 for g in (g_capital, leg_trail) if g is not None)
+            gap = abs(g_capital - leg_trail) if g_capital is not None and leg_trail is not None else None
             band.valuation_quality_score, band.valuation_quality_notes = quality_score(
                 len(history), _cv([v for v in yearly if v is not None]), res.terminal_share,
                 "growth_guarded" if band.peak_weight >= 0.5 else "growth", gap, legs)
@@ -2309,6 +2375,20 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
     # 模型据此算出隐含 PE **391**，价值全部来自那个没有证据的复苏假设。
     # 压到 `min(ROE_T, ROE0)` 后，这类公司多半会被下面的 `ROE_T > g_T` 护栏拦掉，
     # **按 §6.5.2.4 判无法估值**——低谷反转本就不该由批量模型定价。
+    # §6.5.1 第 3 条（OI-200）：权益口径的 ROE 锚带 ROIC 路径同式的 λ 锚与峰谷守卫；只作用于权益口径的行
+    if (getattr(args, "equity_anchor", "guarded") == "guarded" and args.roe_source in ONESIDED_SOURCES
+            and band.roe0_mode not in ("external",)):
+        g_roe0, g_meta = guarded_equity_roe(series, period, available_at, args)
+        if g_roe0 is None or g_meta["years"] < args.min_roe_years:
+            band.status, band.reason = "unavailable", f"已披露年报 ROE 仅 {g_meta['years']} 年 < 要求 {args.min_roe_years} 年"
+            return band
+        roe0 = g_roe0
+        eps0 = roe0 * bps_op_eq if bps_op_eq is not None else eps0
+        band.roe0, band.eps0, band.roe_anchor = roe0, eps0, g_meta["anchor"]
+        band.growth_trust, band.peak_weight, band.trough_weight = g_meta["trust"], g_meta["peak_w"], g_meta["trough_w"]
+        band.ttm_factor = g_meta["ttm_factor"]
+        band.roe0_mode = f"guarded(λ={g_meta['trust']:.1f},w={g_meta['peak_w']:.2f},v={g_meta['trough_w']:.2f})"
+        ROIC_STATS["权益口径·λ锚与峰谷守卫"] += 1
     roe_t = min(roe_t, roe0) if roe0 > 0 else roe_t
 
     # **公司特定的终值 ROE**（`--roe-terminal-ratio K`，2026-08-15 用户指令）：`ROE_T = K × roe0`，
@@ -3036,6 +3116,12 @@ def main() -> int:
     parser.add_argument("--trough-guard", choices=("on", "off"), default="on",
                         help="研究开关（§12.171 GUARDEFF 拆解）：off=只关 v4.62 的谷底对称守卫（trough_w 恒 0），"
                              "峰守卫与坡道不变；on=缺省＝生产。`--roic-cycle-guard efficiency` 分支本就无谷守卫，不受本开关影响")
+    parser.add_argument("--cash-caliber", choices=roic_inputs.CASH_CALIBERS, default="nonop",
+                        help="§6.5.1 超额现金与 EBIT 口径（OI-201）：nonop=非经营金融资产按账面计入、其收益不进 EBIT、金融负债计入"
+                             "有息负债、附注核定存款计入现金（缺省，生产）；legacy=货币资金 + 交易性金融资产、EBIT = 利润总额 + 利息费用（只作复现）")
+    parser.add_argument("--equity-anchor", choices=("guarded", "legacy"), default="guarded",
+                        help="§6.5.1 第 3 条权益口径的 ROE 锚（OI-200）：guarded=与 ROIC 路径 ratio0 同式的 λ 锚、TTM 当期化与峰谷坡道"
+                             "（缺省，生产）；legacy=五年锚 × 单边 λ 上抬、无周期守卫（只作复现）")
     parser.add_argument("--dcf-peak-guard", type=float, default=0.0, metavar="K",
                         help="DCF 臂的 peak 守卫：当期 TTM ROE > K×十年年度 ROE 中位时不做单边上抬"
                              "（周期利润顶不外推）。缺省 0 = 关（现行生产行为）")
@@ -3163,7 +3249,7 @@ def main() -> int:
                   "请去掉后重跑，避免读成「测过了」")
             return 1
         ROIC_YEARS.update(roic_inputs.load_statements(set(codes), args.statements_dir,
-                                                      ic_floor=args.roic_ic_floor,
+                                                      ic_floor=args.roic_ic_floor, caliber=args.cash_caliber,
                                                       notice_cap=(args.notice_cap == "statutory")))
         if not ROIC_YEARS:
             print(f"**{args.statements_dir} 无三大报表**，roic 口径无法建带。"

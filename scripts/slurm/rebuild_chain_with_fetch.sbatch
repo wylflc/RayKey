@@ -6,7 +6,7 @@
 #SBATCH -o logs/%x_%j.out
 #SBATCH -e logs/%x_%j.err
 
-# §6.7 估值重建链的第 1 步（刷新财务输入与除权事件）＋第 2 / 2b / 3 步（重建逐日估值状态）。
+# §6.7 估值重建链的第 1 步（刷新财务输入、除权事件、附注现金类与重述公告）＋第 2 / 2b / 3 步（重建逐日估值状态）。
 # 计算节点可访问外网，抓取与建带放同一作业串行完成；第 4 步起在交互节点按 §6.7 继续。
 #
 # 用法：
@@ -39,6 +39,10 @@ echo "=== [$(date +%H:%M:%S)] 第 1 步：股本变动事件 ==="
 python3 scripts/fetch_a_share_share_changes.py --signal-date "$SIGNAL_DATE"
 echo "=== [$(date +%H:%M:%S)] 第 1 步：股债利差输入 ==="
 python3 scripts/fetch_equity_bond_inputs.py --refresh
+echo "=== [$(date +%H:%M:%S)] 第 1 步：年报附注现金类（§6.5.1，OI-201）==="
+python3 scripts/fetch_cash_note_items.py --workers 16
+echo "=== [$(date +%H:%M:%S)] 第 1 步：重述公告（§6.3 第 2 条，OI-203）==="
+python3 scripts/scan_restatement_announcements.py --history --since "$(( ${SIGNAL_DATE:0:4} - 1 ))-01-01" --until "$SIGNAL_DATE"
 
 if [ -s data/interim/statement_coverage_gaps.csv ] && [ "$(wc -l < data/interim/statement_coverage_gaps.csv)" -gt 1 ]; then
   echo "三大报表覆盖缺口非空（data/interim/statement_coverage_gaps.csv），按 §6.7 先补取再继续" >&2
@@ -49,7 +53,8 @@ fi
 COMMON="--all --value-model roic --roe-source onesided_max --roe-lift 2.0 --uniform-tier L2 \
   --since 2002-01-01 --roic-nopat-source conditional3 --roic-growth hybrid --roic-cycle-guard peak \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
-  --roic-trail-weight 0 --minority-basis earnings"
+  --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
+  --cash-caliber nonop --equity-anchor guarded"
 
 echo "=== [$(date +%H:%M:%S)] 第 2 步：候选侧建带 ==="
 # shellcheck disable=SC2086

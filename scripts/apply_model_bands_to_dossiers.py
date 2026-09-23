@@ -230,9 +230,14 @@ def main() -> int:
             # g0 的来源按带文件 `roic_g_source` 如实写（hybrid 两腿取大；生产池多数 growth 带由利润增速腿给出，
             # 一律写成「增量ROIC × 再投资率」是 OI-069/OI-076 判例里的错误归因，v4.31 改）
             g_src = (band.get("roic_g_source") or "").strip()
-            g_note = {"trailing": "利润增速腿（NOPAT 五年 CAGR）",
+            try:
+                if not float(band.get("g0") or 0) > 0:
+                    g_src = "none"      # OI-202：增速腿权重为 0 时旧带把 g0 = 0 记成 trailing
+            except ValueError:
+                pass
+            g_note = {"trailing": "利润增速腿（NOPAT 五年 CAGR × 增速腿权重）",
                       "capital": "资本腿 min(增量ROIC, 40%) × 再投资率",
-                      "none": "两腿皆不可算，按 0"}.get(g_src, "min(增量ROIC, 40%) × 再投资率")
+                      "none": "两腿均未给出正增长（增速腿权重见 §6.5.1），按 0"}.get(g_src, "min(增量ROIC, 40%) × 再投资率")
             row["band_derivation"] = (common_head
                 + f"每股 NOPAT {band.get('nopat_ps', '—')}｜ROIC0 {_f('roic0')}｜"
                 + f"增量 ROIC {_f('incremental_roic')}｜再投资率 {_f('reinvestment_rate')}｜"

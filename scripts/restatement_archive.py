@@ -97,3 +97,19 @@ def archive_rows(path: Path, batch: list[tuple[dict, str]], source: str,
         writer.writeheader()
         writer.writerows(existing + added)
     return len(added)
+
+
+# OI-203：取数存档之外的第二个版本来源——按原定期报告与更正公告逐字段核定的重述前数值。
+# 存档目录随 `data/raw/financials/` 不入库；本表入库，建带侧与存档同规按 `superseded_at` 选版本。
+FILING_ORIGINALS = Path(__file__).resolve().parents[1] / "data/reference/panel_restatement_originals.csv"
+FILING_META = ("superseded_at", "original_url", "correction_url", "reviewed_at", "note")
+
+
+def load_filing_originals(path: Path | None = None) -> list[dict]:
+    """`[(行)]`：面板列 + `superseded_at`/`original_url`/`correction_url`/`reviewed_at`/`note`；缺 `superseded_at` 的行报错。"""
+    path = path or FILING_ORIGINALS
+    rows = load_archive(path)
+    for row in rows:
+        if not (row.get("superseded_at") or "").strip() or not (row.get("original_url") or "").strip():
+            raise ValueError(f"{path.name}: 行缺 superseded_at 或 original_url：{row.get('security_code')} {row.get('report_date')}")
+    return rows
