@@ -54,7 +54,7 @@
   **`g_T ≤ R_f` 必须与降 r 同时生效**：实测只降 r 不动 g_T 会使 P0* +109%，捆绑后 +75%。
   利率序列见 §12.4.4（200 行月末观测，2010-2026）。**某期无当时可观测的利率即拒绝该带，
   不外推、不借用后来的利率**——用今天的利率回测七年前属 §12.4 前视。
-* `g_T` 缺省 3%（market 模式下再取 `min(3%, R_f)`），`N` = 10 年线性 fade。
+* `g_T` 缺省 3%（market 模式下再取 `min(3%, R_f)`），`N` = 10 年 fade（增速线性；回报衰减形状见 `--fade-shape`，生产为指数）。
 * **`N=10` 是衰减期不是高增长期**：§6.5.2.1 v1.56 硬规则限制的 `n1` 是「增速维持不变的
   年数」，本模型 g 自第 1 年即开始衰减，`n1` 实为 0，故不与该规则冲突。
 * `roe0` 缺省走「长期锚 + 趋势识别 + 近期读数」（`trend_aware_roe`），不是纯中位。
@@ -1502,8 +1502,8 @@ def fade_kwargs(args) -> dict:
 
     `--fade-object`：book＝整本资本的回报衰减（生产，`consistent=True`）；new_capital＝存量资本保持起点回报、
     只有新增资本的回报衰减（`consistent=False`，研究开关，机理检验不支持）。
-    `--fade-shape`：linear＝回报与增速同在 n 年内线性降到终值（生产）；exponential＝回报按
-    `ROE_T + 超额·e^(−λt)` 走 `--fade-horizon` 年、增速仍 n 年线性（`--fade-lambda` 给 λ）。缺省即现行。"""
+    `--fade-shape`：linear＝回报与增速同在 n 年内线性降到终值（缺省，v4.199 及以前的生产口径）；exponential＝回报按
+    `ROE_T + 超额·e^(−λt)` 走 `--fade-horizon` 年、增速仍 n 年线性（`--fade-lambda` 给 λ；v4.200 起由 §6.7 命令给出，为生产）。"""
     kwargs = dict(consistent=getattr(args, "fade_object", "book") == "book")
     if getattr(args, "fade_shape", "linear") == "exponential":
         kwargs.update(roe_lam=args.fade_lambda, horizon=args.fade_horizon)
@@ -1532,10 +1532,13 @@ def sensitivity_values(eps0: float, roe0: float, g0: float, r: float, roe_t: flo
             out.append(None)
             continue
         n_adj = max(3, n + (-3 if sign < 0 else 3))
+        fade_adj = dict(fade or {})
+        if fade_adj.get("roe_lam") is not None:
+            fade_adj["roe_lam"] *= n / n_adj      # 指数回报路径：fade 年数的扰动同比例改回报衰减速度（§6.5.3）
         try:
             res = intrinsic_value(eps0, roe0, g_adj, r_adj, roe_terminal=t_adj,
                                   g_terminal=gt_adj, n=n_adj, n1=n1,
-                                  maintenance_ratio=maintenance_ratio, **(fade or {}))
+                                  maintenance_ratio=maintenance_ratio, **fade_adj)
             value = res.intrinsic_value - less
             out.append(value if value > 0 else None)
         except ValuationError:
@@ -3065,7 +3068,7 @@ def main() -> int:
     parser.add_argument("--fade-object", choices=("book", "new_capital"), default="book",
                         help="OI-204 研究开关：超额回报衰减作用于整本资本（book，现行）或只作用于新增资本（new_capital）")
     parser.add_argument("--fade-shape", choices=("linear", "exponential"), default="linear",
-                        help="OI-204：回报衰减形状。linear＝n 年线性（现行）；exponential＝ROE_T + 超额·e^(−λt)，走 --fade-horizon 年")
+                        help="OI-204：回报衰减形状。linear＝n 年线性（缺省）；exponential＝ROE_T + 超额·e^(−λt)，走 --fade-horizon 年（生产，§6.7 命令给出）")
     parser.add_argument("--fade-lambda", type=float, default=0.12,
                         help="exponential 形状的 λ（缺省 0.12＝OI-204 按预登记规则由报表名单回报存续拟合）")
     parser.add_argument("--fade-horizon", type=int, default=50, help="exponential 形状的回报路径年数（缺省 50）")

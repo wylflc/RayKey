@@ -1,0 +1,91 @@
+{
+  "job_id": "27073299",
+  "arm": "EFL",
+  "installed": {
+    "roic_bands.csv": {
+      "before": {
+        "bytes": 163023600,
+        "sha256": "f0b62f2ac4e4917351e2022f44c899469d3f86391ecba2cf9f33ccff07b6578e"
+      },
+      "after": {
+        "bytes": 163107063,
+        "sha256": "1d7fc0fb1d20963823d00aaf6963d2bc53b1f9172d5f012c4ba73034ec945531"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "before": {
+        "bytes": 163011942,
+        "sha256": "8994a9e1ec0de07401e12123b03f51a01303435bc6fc6345e2d0267ae39b96d4"
+      },
+      "after": {
+        "bytes": 163096536,
+        "sha256": "13017da9e7c894bc039bd6ce3cb9575b0647c92d43022a5c090350102bdc9cbd"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "before": {
+        "bytes": 2100464292,
+        "sha256": "fe28f4d24c7714625f2b0359bfdf69b68e912a745e553fe10c8b233307ee524d"
+      },
+      "after": {
+        "bytes": 1997631750,
+        "sha256": "ba7d24a64292cde1d3686ea1281230bab194eb53c366c90e87dd4f8727931a3f"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "before": {
+        "bytes": 2104464343,
+        "sha256": "14eb62bae0d5a1d840d58c1b0dc86e82dfeee4ad8f7910b524cde2bd57d190ed"
+      },
+      "after": {
+        "bytes": 2001979893,
+        "sha256": "f0d9accebf6cf98fef86c0bf8a6881445286b67bdc0f621649e882994724dfc7"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "before": {
+        "bytes": 2098700433,
+        "sha256": "bdce4b2e1a06c191d96b705e2efdaf1daa7e6f199487e8934dc55997eac0b7e7"
+      },
+      "after": {
+        "bytes": 1995186720,
+        "sha256": "03c1ff14f427bbaed569a5726c75b14f28e2d4003a46e21c9c35598a71a717ab"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "before": {
+        "bytes": 2102696140,
+        "sha256": "6c2f1eeafb5572dc55fe6e456d7c561f72baab94d8d2fb18c90d70bea600a557"
+      },
+      "after": {
+        "bytes": 1999528415,
+        "sha256": "4589c68393e8c8b95238af5ce26c5ad13889feccbbea229681eb1527e2829f20"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "before": {
+        "bytes": 2173638707,
+        "sha256": "6afb08424304b9e876a68f26c4b02d1bcb295441b4af5e190f6e17d0ef131261"
+      },
+      "after": {
+        "bytes": 2071179931,
+        "sha256": "cab999c39afc9169eb333d1b532d8dfad7028cf8cd2969a371fe5fb1bd56273d"
+      }
+    }
+  },
+  "old_full_inputs_retained": true,
+  "ruling": {
+    "ruled_at_beijing": "2026-09-24",
+    "decision": "adopt EF (exponential whole-book fade λ 0.12, horizon 50; invested-capital floor 0.1 × total equity)",
+    "tested_arm": "EF",
+    "state_arm": "EFL",
+    "registered_arm": "EF_ALIGNED",
+    "buy_line": 0.9524,
+    "width": 0.0476,
+    "registered_share_pct": 17.774,
+    "swap_margin": 0.15,
+    "swap_margin_rescan": false,
+    "swap_margin_reason": "scale drift -0.0004 within ±0.01",
+    "output_columns": "terminal_share = value beyond year n1+n; v_bear/v_bull scale λ by 10/7 and 10/13 (§6.5.3)"
+  }
+}

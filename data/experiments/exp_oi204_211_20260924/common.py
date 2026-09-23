@@ -13,6 +13,9 @@ ARMS = ('CONTROL', 'E', 'F', 'EF')
 EXPONENTIAL = ['--fade-shape', 'exponential', '--fade-lambda', '0.12', '--fade-horizon', '50']
 IC_FLOOR = ['--roic-ic-floor', '0.1']
 FLAGS = {'CONTROL': [], 'E': EXPONENTIAL, 'F': IC_FLOOR, 'EF': EXPONENTIAL + IC_FLOOR}
+# 落地臂：EF 同参，按用户裁定重定义的 §6.5.3 输出列（终值占比、Bear／Bull 的回报衰减速度）重建；与 EF 只许这几列不同
+FLAGS['EFL'] = FLAGS['EF']
+OUTPUT_COLUMNS = {'terminal_share', 'v_bear', 'v_bull', 'valuation_quality_score', 'valuation_quality_notes'}
 # §6.7 第 2 步命令（v4.199 生产口径）
 PRODUCTION = ['--all', '--value-model', 'roic', '--roe-source', 'onesided_max', '--roe-lift', '2.0', '--uniform-tier', 'L2',
               '--since', '2002-01-01', '--roic-nopat-source', 'conditional3', '--roic-growth', 'hybrid',

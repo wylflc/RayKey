@@ -101,8 +101,8 @@ class ValuationError(ValueError):
 @dataclass
 class ValuationResult:
     intrinsic_value: float          # P0*：每股内在价值
-    explicit_pv: float              # 显式预测期现值
-    terminal_pv: float              # 终值现值
+    explicit_pv: float              # 显式预测期（前 n1 + n 年）现值
+    terminal_pv: float              # 终值现值（指数回报路径含第 n1 + n 年之后各年）
     implied_pe: float               # P0*/EPS0
     implied_peg: float | None       # implied_pe / (100 g)
     terminal_share: float           # 终值占比——终值占太高说明结论几乎全靠 g_T/ROE_T
@@ -224,6 +224,7 @@ def intrinsic_value(
     realized_g: list[float] = []
     clamped_years = 0
     explicit_pv = 0.0
+    tail_pv = 0.0          # 指数回报路径在增速 fade 期末（第 n1 + n 年）之后各年的现值，计入终值侧（§6.5.3 终值占比）
     total = len(roe_path)
 
     def _clamped(b: float, roe_now: float, roe_next: float,
@@ -265,7 +266,10 @@ def intrinsic_value(
         b_t, g_incoming, hit = _clamped(b_t, roe_t, roe_next, g_target)
         clamped_years += hit
         payout = 1 - b_t
-        explicit_pv += eps_t * payout / (1 + r) ** index
+        if index <= n1 + n:
+            explicit_pv += eps_t * payout / (1 + r) ** index
+        else:
+            tail_pv += eps_t * payout / (1 + r) ** index
         eps_path.append(eps_t)
         payout_path.append(payout)
         realized_g.append(g_t)
@@ -278,7 +282,7 @@ def intrinsic_value(
         payout_terminal -= maintenance_ratio
     terminal_value = eps_path[-1] * (1 + g_terminal) * payout_terminal / (r - g_terminal)
     # **显式期是 n1 + n 年**（指数回报路径为 n1 + horizon 年），终值须按同一年数折现——只改路径不改这里会把终值高估 (1+r)^n1 倍
-    terminal_pv = terminal_value / (1 + r) ** total
+    terminal_pv = tail_pv + terminal_value / (1 + r) ** total
 
     value = explicit_pv + terminal_pv
     peg_growth = g_for_peg if g_for_peg is not None else g0

@@ -1,0 +1,14 @@
+{
+  "ruled_at_beijing": "2026-09-24",
+  "decision": "adopt EF (exponential whole-book fade λ 0.12, horizon 50; invested-capital floor 0.1 × total equity)",
+  "tested_arm": "EF",
+  "state_arm": "EFL",
+  "registered_arm": "EF_ALIGNED",
+  "buy_line": 0.9524,
+  "width": 0.0476,
+  "registered_share_pct": 17.774,
+  "swap_margin": 0.15,
+  "swap_margin_rescan": false,
+  "swap_margin_reason": "scale drift -0.0004 within ±0.01",
+  "output_columns": "terminal_share = value beyond year n1+n; v_bear/v_bull scale λ by 10/7 and 10/13 (§6.5.3)"
+}

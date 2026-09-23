@@ -3,10 +3,12 @@
 
 Run: ``python3 scripts/test_fade_shape.py``
 
-锁住三件事：
-1. 缺省参数与生产一致（整本线性衰减），建带传给引擎的参数不含指数路径；
+锁住五件事：
+1. 缺省参数不含指数路径（生产由 §6.7 命令开启），建带传给引擎的参数与命令一致；
 2. 指数形状只改回报路径：增速仍 n 年线性到 g_T、其后保持，终值按 n1 + horizon 年折现；
-3. 高起点回报时线性整本衰减在期末触界、指数路径不触界（茅台 2026 中报量级的判例）。
+3. 终值占比按增速 fade 期末之后的现值计（§6.5.3）；
+4. Bear／Bull 的 fade 年数扰动同比例改回报衰减速度（§6.5.3）；
+5. 高起点回报时线性整本衰减在期末触界、指数路径不触界（茅台 2026 中报量级的判例）。
 """
 from __future__ import annotations
 
@@ -35,6 +37,21 @@ class FadeShapeTest(unittest.TestCase):
         self.assertTrue(all(abs(g - 0.03) < 1e-12 for g in res.g_path[10:]))
         linear = intrinsic_value(1.0, 0.40, 0.08, 0.10, roe_terminal=0.12)
         self.assertEqual(len(linear.roe_path), 10)
+
+    def test_terminal_share_counts_years_after_growth_fade(self) -> None:
+        res = intrinsic_value(1.0, 0.40, 0.08, 0.10, roe_terminal=0.12, roe_lam=0.12, horizon=50)
+        head = sum(e * p / 1.10 ** t for t, (e, p) in enumerate(zip(res.eps_path, res.payout_path), start=1) if t <= 10)
+        self.assertAlmostEqual(res.explicit_pv, head, places=12)
+        self.assertAlmostEqual(res.terminal_share, 1 - head / res.intrinsic_value, places=12)
+        self.assertGreater(res.terminal_share, 0.5)
+
+    def test_sensitivity_scales_return_fade_with_fade_years(self) -> None:
+        fade = dict(consistent=True, roe_lam=0.12, horizon=50)
+        bear, bull = bands.sensitivity_values(1.0, 0.40, 0.08, 0.10, 0.12, 0.03, 10, 0, 0.25, 0.01, fade=fade)
+        slow = intrinsic_value(1.0, 0.40, 0.10, 0.09, roe_terminal=0.13, g_terminal=0.035, n=13,
+                               roe_lam=0.12 * 10 / 13, horizon=50)
+        self.assertAlmostEqual(bull, slow.intrinsic_value, places=12)
+        self.assertLess(bear, bull)
 
     def test_linear_cliff_and_exponential_smooth(self) -> None:
         linear = intrinsic_value(1.0, 1.63, 0.059, 0.094, roe_terminal=0.114)

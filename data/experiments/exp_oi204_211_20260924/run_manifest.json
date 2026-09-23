@@ -1,0 +1,104 @@
+{
+  "job_id": "27070880",
+  "base": "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 --corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 --swap --swap-partial --sell-trend-ma 20 --lot-size 100 --lot-ratio-cooldown --lot-cooldown-start confirmed --execution-consistency signal --exec-delay 1 --exec-price close --fee-preset user --no-artifacts --capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 --maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay --gain-sell 1.10 --gain-sell-mode ungated --swap-gain-once --swap-source-block -1 --width -0.0562 --swap-margin 0.15 --stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma60_stop --stop-basis exec --residual-clear lot --position-cap 0.6 --net-same-day --fill-missing skip --dividend-tax --swap-repeat skip --addon-trend ma-only --swap-require-weak --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --equity-bond-lower 0.3 --equity-bond-restore-above --equity-bond-release-threshold 0.035 --daily-states data/processed/a_share_daily_states_adopted.csv --hold-states data/processed/a_share_daily_states_hold.csv --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv",
+  "starts": [
+    "2009-11-01",
+    "2010-05-01",
+    "2010-11-01",
+    "2011-05-01",
+    "2011-11-01",
+    "2012-05-01",
+    "2012-11-01",
+    "2013-05-01",
+    "2013-11-01",
+    "2014-05-01",
+    "2014-11-01",
+    "2015-05-01",
+    "2015-11-01",
+    "2016-05-01"
+  ],
+  "arms": [
+    "OLD",
+    "CONTROL",
+    "E",
+    "F",
+    "EF",
+    "E_ALIGNED",
+    "EF_ALIGNED"
+  ],
+  "aligned": {
+    "E_ALIGNED": 0.0462,
+    "EF_ALIGNED": 0.0476
+  },
+  "metric": "m3",
+  "inputs": {
+    "scripts/backtest_valuation_strategy.py": {
+      "bytes": 353935,
+      "sha256": "3c2ec3c2f8faa9260481f6202a7236c2cefb9cd767eec3ae7f6b062df1aa0980"
+    },
+    "scripts/sweep_backtest_configs.py": {
+      "bytes": 66770,
+      "sha256": "8c3f918f6e878a25e76bcfd56b0c94dbed97118091b2f7e1da137868c2305c8c"
+    },
+    "scripts/corporate_actions.py": {
+      "bytes": 15379,
+      "sha256": "9f7c9c5f0c2ed24a00df5e25cf4ff531205c397e8a1b00abf58056d7c6102f27"
+    },
+    "states/OLD/a_share_daily_states_adopted.csv": {
+      "bytes": 139228804,
+      "sha256": "d7cad54421b4e516a66028ae3fab7e4a1487038a732e1152917a8110f20543ec"
+    },
+    "states/OLD/a_share_daily_states_hold.csv": {
+      "bytes": 143691059,
+      "sha256": "7dd82a2457038944922b744e113d94d9d241baeab3ddff0c0d1ad71fc58beaf3"
+    },
+    "states/CONTROL/a_share_daily_states_adopted.csv": {
+      "bytes": 132681832,
+      "sha256": "2ebb59011f00a40e22229585549eefd940ec30011a1210bb3cc2edc7d7f82e75"
+    },
+    "states/CONTROL/a_share_daily_states_hold.csv": {
+      "bytes": 137247218,
+      "sha256": "7b9b78cfefbca1dfc31d236bb844e63910f1fbc77a4c26635b69c27224f47ef2"
+    },
+    "states/E/a_share_daily_states_adopted.csv": {
+      "bytes": 132901001,
+      "sha256": "d8df257f64acffbf9467a50fc9ccbb3aebc17e9b8c22ee4a507c979cb3826521"
+    },
+    "states/E/a_share_daily_states_hold.csv": {
+      "bytes": 137467979,
+      "sha256": "22cdb9bcceb6439adb3bddeb119acd42d24c6e6998c7d5470af5c03dd1ca2792"
+    },
+    "states/F/a_share_daily_states_adopted.csv": {
+      "bytes": 132681253,
+      "sha256": "bfd6ccda2cef8e3c3fb1b5590ea0c4672b7f92e99b98999a11be508dd985a1f0"
+    },
+    "states/F/a_share_daily_states_hold.csv": {
+      "bytes": 137246775,
+      "sha256": "33c7589a2e3a0d70b7fc12599281449d3a6a1659ce2ad47874914325396f641e"
+    },
+    "states/EF/a_share_daily_states_adopted.csv": {
+      "bytes": 132907492,
+      "sha256": "9d354aa949cd61cf1d1cdb55cc69191daed66347fdb34e8b9265f633da312ce1"
+    },
+    "states/EF/a_share_daily_states_hold.csv": {
+      "bytes": 137474508,
+      "sha256": "5d3f630d91c05eedebe28b12d670502926ea0fe2530987b574cced7af9d991c5"
+    },
+    "states/E_ALIGNED/a_share_daily_states_adopted.csv": {
+      "bytes": 132901001,
+      "sha256": "d8df257f64acffbf9467a50fc9ccbb3aebc17e9b8c22ee4a507c979cb3826521"
+    },
+    "states/E_ALIGNED/a_share_daily_states_hold.csv": {
+      "bytes": 137467979,
+      "sha256": "22cdb9bcceb6439adb3bddeb119acd42d24c6e6998c7d5470af5c03dd1ca2792"
+    },
+    "states/EF_ALIGNED/a_share_daily_states_adopted.csv": {
+      "bytes": 132907492,
+      "sha256": "9d354aa949cd61cf1d1cdb55cc69191daed66347fdb34e8b9265f633da312ce1"
+    },
+    "states/EF_ALIGNED/a_share_daily_states_hold.csv": {
+      "bytes": 137474508,
+      "sha256": "5d3f630d91c05eedebe28b12d670502926ea0fe2530987b574cced7af9d991c5"
+    }
+  }
+}
