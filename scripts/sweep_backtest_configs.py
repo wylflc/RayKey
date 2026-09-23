@@ -111,7 +111,9 @@ BASE = (
     # **v4.169 营运资金口径 operating（OI-168，用户 2026-09-09 裁定按原则采纳，§12.216／§12.217）**：逐日状态由 §6.7
     # `--wc-aggregation operating` 重建；原线 1.0454 在新口径上的合格面 17.928% 与在册 17.771% 之差 0.157pp 落在 §12.1 对齐容差
     # 0.2pp 内，买入线保留、在册合格面不改写；换仓边际按 0.01 一档在新状态上重扫（`data/experiments/exp_oi168_land_20260909/`）。
-    "--width -0.0454 --swap-margin 0.15 "
+    # **v4.199 买入线 1.0562（OI-200～203，用户 2026-09-24 裁定依原则采纳）**：非经营金融资产口径上原线合格面 17.387%，
+    # 与在册 17.771% 差 0.384pp 超出容差，重解到 17.772%；换仓边际 0.10～0.20 重扫锯齿、无平台移动，保留 0.15（§12.258）。
+    "--width -0.0562 --swap-margin 0.15 "
     # **止损线 = min(建仓日锚, 当日同周期均线)**（v4.25 用户裁定采纳，§12.88.2/§12.89：
     # 滚5 +0.59pp、16/23、逐年中性；均线上移不抬线，非 v2.56 那条双向滚动割肉）。
     # **建仓不设放弃规则、锚恒取成交日 MA60**（v4.69/v4.70 用户裁定，§12.126 追问检验：
@@ -146,7 +148,7 @@ BASE = (
 DEFAULT_STARTS = [f"{y}-{m}-01" for y in range(2009, 2017) for m in ("05", "11")][1:-1]
 
 # **美股基准 `BASE_US`（OI-159，预登记 docs/reports/us_sp500_backtest_prereg.zh.md §4）**：与 `BASE` 逐项同式，只改市场项——
-# 1 股为单位、无费税、现金账户（授信 0）、现金红利固定预提 15%、50 万美元、`--market us` 数据落点；两条线沿用 1.0454／0.15。
+# 1 股为单位、无费税、现金账户（授信 0）、现金红利固定预提 15%、50 万美元、`--market us` 数据落点；两条线与 BASE 同值。
 EQUITY_BOND_FLAGS = ("--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread "
                      "--equity-bond-threshold 0.03 --equity-bond-lower 0.3 --equity-bond-restore-above --equity-bond-release-threshold 0.035 ")
 assert EQUITY_BOND_FLAGS in BASE

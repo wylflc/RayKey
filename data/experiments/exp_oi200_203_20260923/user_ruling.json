@@ -1,0 +1,10 @@
+{
+  "ruled_at_beijing": "2026-09-24",
+  "adopt_despite_guardrail": true,
+  "basis": "依原则采纳（OI-128／OI-168 先例）：OI-200～203 为会计口径修正，轨道 A 护栏不通过与前三只占净差 121% 一并记录",
+  "buy_line": 1.0562,
+  "registered_share_pct": 17.772,
+  "swap_margin": 0.15,
+  "registered_arm": "NEW_ALIGNED",
+  "oi210": "统一为 A 股参数并移植 OI-200／201"
+}

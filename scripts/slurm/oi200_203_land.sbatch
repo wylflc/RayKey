@@ -13,6 +13,8 @@ cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 E=data/experiments/exp_oi200_203_20260923
 D=2026-09-23
+# STAGE=tail 只重跑重发与终检（前段已完成时用）
+if [ "${STAGE:-all}" != tail ]; then
 (cd $E && /usr/bin/time -v python3 publish.py && python3 register.py)
 python3 scripts/build_pool_model_bands.py --signal-date $D
 python3 scripts/apply_forecast_band_overlay.py --signal-date $D
@@ -29,4 +31,5 @@ python3 scripts/build_company_dossier_readmes.py --check
 python3 scripts/check_swap_margin_scale_drift.py || echo "DRIFT_GUARD_NONZERO"
 python3 scripts/build_report_update_queue.py --market A_SHARE --signal-date $D
 python3 scripts/daily_execution_guard.py evidence --as-of $D --since 2026-09-22
+fi
 (cd $E && python3 scan.py && python3 finish.py)

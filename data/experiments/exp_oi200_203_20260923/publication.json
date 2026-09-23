@@ -1,0 +1,86 @@
+{
+  "job_id": "27068898",
+  "installed": {
+    "roic_bands.csv": {
+      "before": {
+        "bytes": 153804288,
+        "sha256": "89fdd06d2226436a21e9422753f5da80f0b8c4c1ead56bb7c78e0545b1a4d291"
+      },
+      "after": {
+        "bytes": 163023600,
+        "sha256": "f0b62f2ac4e4917351e2022f44c899469d3f86391ecba2cf9f33ccff07b6578e"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "before": {
+        "bytes": 153781202,
+        "sha256": "584c7a3d10e5c94edf8bde409cdb37ae7a4f73466bf15886adf6bc08cfa32115"
+      },
+      "after": {
+        "bytes": 163011942,
+        "sha256": "8994a9e1ec0de07401e12123b03f51a01303435bc6fc6345e2d0267ae39b96d4"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "before": {
+        "bytes": 2114838185,
+        "sha256": "f79f7d054841cce07aca8bfca712e9df6b43f6a676216051d4262608ad075094"
+      },
+      "after": {
+        "bytes": 2100464292,
+        "sha256": "fe28f4d24c7714625f2b0359bfdf69b68e912a745e553fe10c8b233307ee524d"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "before": {
+        "bytes": 2114844110,
+        "sha256": "02a6cab8ff73bc03eed660db8cf1abe028d7a3e1126e9788b4345a0ecb2d15eb"
+      },
+      "after": {
+        "bytes": 2104464343,
+        "sha256": "14eb62bae0d5a1d840d58c1b0dc86e82dfeee4ad8f7910b524cde2bd57d190ed"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "before": {
+        "bytes": 2113089552,
+        "sha256": "9bebd8f2d1a5fe8341937754a872d00176519c9402d8cf9f5fc1e34bfaa5d3f0"
+      },
+      "after": {
+        "bytes": 2098700433,
+        "sha256": "bdce4b2e1a06c191d96b705e2efdaf1daa7e6f199487e8934dc55997eac0b7e7"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "before": {
+        "bytes": 2113095477,
+        "sha256": "1a09697123b5bd6aa6b5bdce048ae69a5048dd527d1752046888e06820d184eb"
+      },
+      "after": {
+        "bytes": 2102696140,
+        "sha256": "6c2f1eeafb5572dc55fe6e456d7c561f72baab94d8d2fb18c90d70bea600a557"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "before": {
+        "bytes": 2190564568,
+        "sha256": "e554298d323687e6ae691c6fb3b4f8de30c89612da475852c5228d7be5e848f9"
+      },
+      "after": {
+        "bytes": 2173638707,
+        "sha256": "6afb08424304b9e876a68f26c4b02d1bcb295441b4af5e190f6e17d0ef131261"
+      }
+    }
+  },
+  "old_full_inputs_retained": true,
+  "ruling": {
+    "ruled_at_beijing": "2026-09-24",
+    "adopt_despite_guardrail": true,
+    "basis": "依原则采纳（OI-128／OI-168 先例）：OI-200～203 为会计口径修正，轨道 A 护栏不通过与前三只占净差 121% 一并记录",
+    "buy_line": 1.0562,
+    "registered_share_pct": 17.772,
+    "swap_margin": 0.15,
+    "registered_arm": "NEW_ALIGNED",
+    "oi210": "统一为 A 股参数并移植 OI-200／201"
+  }
+}

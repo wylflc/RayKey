@@ -34,7 +34,7 @@ from corporate_actions import unique_actions
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIONS_CSV = ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv"
-RISK_PREMIUM = 0.02                 # §12.31：股息率要比十年国债高出 2pp 才算合理价
+RISK_PREMIUM = 0.02                 # §12.31：股息率比十年国债高出 2pp 时股价等于模型价值
 ANNUAL_REPORT_DEADLINE_MD = "04-30"  # 年报法定截止（次年）
 
 

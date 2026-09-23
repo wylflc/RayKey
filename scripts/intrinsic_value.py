@@ -362,15 +362,16 @@ def stable_peg(roe: float, g: float, r: float) -> float:
 
 
 def valuation_label(market_price: float, intrinsic: float) -> str:
-    """原式第 11 节的四档标签。**只作模型标签，不是机械买卖标准**（原文即如此声明）。"""
+    """`P/V` 相对模型价值的四档位置标签（OI-208）。V 是排序锚、不是公允价值，买入线为分位门槛（工作流 §3、§12.1）；
+    标签只作描述，不是买卖标准。"""
     ratio = market_price / intrinsic
     if ratio < 0.7:
-        return "较大安全边际"
+        return "远低于模型价值"
     if ratio < 0.9:
-        return "偏低估"
+        return "低于模型价值"
     if ratio <= 1.1:
-        return "接近合理价值"
-    return "需更乐观假设才支撑"
+        return "接近模型价值"
+    return "高于模型价值"
 
 
 def sensitivity(eps0: float, roe0: float, g0: float, roe_terminal: float | None = None,

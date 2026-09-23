@@ -25,8 +25,8 @@ class StrategyParameterSyncTest(unittest.TestCase):
         # v4.132（OI-136）：相关性只计算列报告、不过滤（上限 1.0 = 无一被跳过）
         self.assertEqual(daily_scan.SEC93_MAX_CORR, 1.0)
         self.assertEqual(daily_scan.SEC93_TRANCHE_PCT, 0.05)
-        # 候选侧买入线 1.0454（OI-132 购买法收购当年分子年化后重解）；换仓边际 0.15（v4.133，§12.174 表 R／§12.176）
-        self.assertEqual(daily_scan.SEC93_BUY_LINE, 1.0454)
+        # 候选侧买入线 1.0562（v4.199 OI-201 非经营金融资产口径重解，§12.258）；换仓边际 0.15（v4.133，§12.174 表 R／§12.176）
+        self.assertEqual(daily_scan.SEC93_BUY_LINE, 1.0562)
         self.assertEqual(daily_scan.SEC93_SWAP_MARGIN, 0.15)
         self.assertEqual(daily_scan.SEC93_SWAP_SOURCE_BLOCK, -1.0)  # 换仓接收方守卫关（v4.137 回退 v4.135）
         # v4.109（OI-110）：估值减持线已删除，生产侧不得再有该常量

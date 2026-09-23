@@ -36,6 +36,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "scripts/experimental"))
 import build_overseas_roic_bands as bor  # noqa: E402
+from intrinsic_value import valuation_label  # noqa: E402
 import fetch_overseas_statements as fos  # noqa: E402
 from overseas_pv_forward import PitFacts  # noqa: E402
 
@@ -57,13 +58,7 @@ XBRL_FROM = "2009-06-01"
 
 
 def label(ratio: float) -> str:
-    if ratio <= 0.8:
-        return "较大安全边际"
-    if ratio <= 1.0:
-        return "偏低估"
-    if ratio <= 1.2:
-        return "接近合理价值"
-    return "需更乐观假设才支撑"
+    return valuation_label(ratio, 1.0)      # 与 A 股同一标签（OI-208）
 
 
 def load_rates() -> tuple[list[str], list[float]]:

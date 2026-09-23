@@ -2,6 +2,7 @@
 import csv
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 EXP = Path(__file__).resolve().parent
@@ -22,6 +23,13 @@ B2 = ['--ttm-trust', 'on', '--ttm-trust-delta', '0.02']
 OI202_OUTPUT_COLUMNS = {'roic_g_source', 'valuation_quality_score', 'valuation_quality_notes'}
 FROZEN_ACTIONS = EXP / 'old_inputs/data/raw/corporate_actions/a_share_corporate_actions.csv'
 PANEL = ROOT / 'data/processed/pit_attention/panel_moat_bank_v6b.csv'
+
+
+def unchanged_since_freeze(rel: str) -> bool:
+    """Account files were not copied into old_inputs; compare the live file with the freeze revision's blob."""
+    rev = json.loads((EXP / 'before_manifest.json').read_text())['revision']
+    blob = subprocess.check_output(['git', 'show', f'{rev}:{rel}'], cwd=ROOT)
+    return (ROOT / rel).read_bytes() == blob
 
 
 def digest(path: Path) -> dict:
