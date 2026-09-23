@@ -1,0 +1,191 @@
+{
+ "signal_date": "2026-09-23",
+ "status": "reviewed_through_snapshot_cutoff",
+ "reviewed_at_utc": "2026-09-23T10:00:24.167457+00:00",
+ "primary_documents": [
+  {
+   "security_code": "600036",
+   "title": "关于董事任职资格核准及董事会专门委员会成员调整的公告",
+   "art_code": "AN202609221829763391",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609221829763391_1.pdf",
+   "pdf_sha256": "6e5f17d485a2300e65826f6316a295f15a2ff9ab2caa6cef96baf5ac1e6966ba",
+   "pages": 1,
+   "pages_reviewed": [
+    1
+   ],
+   "review_method": "原始PDF逐页文字核验",
+   "reviewed_at_utc": "2026-09-23T09:35:05.366917+00:00",
+   "facts": "国家金融监督管理总局核准李云贵、霍达的非执行董事任职资格，任期自2026-09-22起至第十三届董事会届满；李云贵任战略与可持续发展委员会委员，霍达任风险与资本管理委员会主任委员，江朝阳不再任该委员会主任委员。",
+   "assessment": "常规董事任职与委员会调整，不涉及经营、资本、分红或资产质量数据；不触发§7.4事件复核，不改变股利折现带。"
+  },
+  {
+   "security_code": "300033",
+   "title": "2026年半年度分红派息实施公告",
+   "art_code": "AN202609151829424023",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829424023_1.pdf",
+   "pdf_sha256": "f101c95283d40edbd3eba54d530aa6c693e376ffd8d77c32e4cd2c7933063b52",
+   "pages": 3,
+   "pages_reviewed": [
+    1,
+    2,
+    3
+   ],
+   "review_method": "原始PDF逐页文字核验",
+   "reviewed_at_utc": "2026-09-23T09:35:05.366917+00:00",
+   "facts": "以2026-06-30总股本752,640,000股为基数向全体股东每10股派2.00元（含税）；09-22登记、09-23除息；未列回购专户不参与分派，价格口径与实派同为每股0.20元，无送转。",
+   "assessment": "非差异化分派，无需登记交易所价格参数；候选及持仓侧V按现金0.20元归一化。"
+  },
+  {
+   "security_code": "603156",
+   "title": "2026年半年度权益分派实施公告",
+   "art_code": "AN202609141829370652",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609141829370652_1.pdf",
+   "pdf_sha256": "63ccf66361d470cdc3635a688cdf928a1982e2ed267dc1770c847f9321d88188",
+   "pages": 3,
+   "pages_reviewed": [
+    1,
+    2,
+    3
+   ],
+   "review_method": "原始PDF逐页文字核验",
+   "reviewed_at_utc": "2026-09-23T09:35:05.366917+00:00",
+   "facts": "差异化分红送转：否；以总股本1,260,277,566股为基数每股派0.50元（含税）；09-22登记、09-23除息并发放，无送转。",
+   "assessment": "非差异化分派；候选及持仓侧V按现金0.50元归一化。"
+  },
+  {
+   "security_code": "002287",
+   "title": "2026年半年度权益分派实施公告",
+   "art_code": "AN202609151829414665",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609151829414665_1.pdf",
+   "pdf_sha256": "602c96262cc36c722a936cc64be11b0441040c3d28268f486c87fba29838333a",
+   "pages": 3,
+   "pages_reviewed": [
+    1,
+    2,
+    3
+   ],
+   "review_method": "原始PDF逐页文字核验；文件摘要与已登记价格参数来源一致",
+   "reviewed_at_utc": "2026-09-23T09:35:05.366917+00:00",
+   "facts": "回购专户5,239,895股不参与分派；实派每10股2.30元（含税），按总股本折算的除权除息价格公式减0.2278934元/股；09-22登记、09-23除息，无送转。",
+   "assessment": "差异化分派，按已登记价格口径0.2278934元归一化，不把实派数代入价格公式。"
+  }
+ ],
+ "carried_forward_documents": [
+  {
+   "art_code": "AN202609171829522385",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522385_1.pdf",
+   "pdf_sha256": "ada0034fd0fa19eac191ab7d83e61a1054a037bb4b1a4d8ccdb59a018d7420f5",
+   "pages": 5,
+   "retrieved_at_utc": "2026-09-18T08:41:18.155057+00:00",
+   "security_code": "603529",
+   "notice_date": "2026-09-18",
+   "title": "爱玛科技2026年半年度权益分派实施公告",
+   "facts": "09-23登记，09-24除息及发放；实派0.392元/股，差异化价格调整用虚拟分派0.385元/股；无送转。",
+   "assessment": "事件发生前不调整账户、成本、止损锚或生产带；除息日按价格口径0.385处理，实际红利按0.392核对券商到账。",
+   "pages_reviewed": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+   "reviewed_at_utc": "2026-09-18T08:44:16.487641+00:00",
+   "carried_forward_from": "data/interim/daily_event_review_2026-09-22.json",
+   "same_document_listed_on": "2026-09-21"
+  }
+ ],
+ "announcement_snapshot": "data/interim/daily_announcements_2026-09-23.json",
+ "announcement_title_screening_count": 133,
+ "announcement_retrieved_at_utc": "2026-09-23T09:52:25.718251+00:00",
+ "latest_announcement_display_time_beijing": "2026-09-23 17:47:57",
+ "industry_review": "data/interim/daily_industry_review_2026-09-23.json",
+ "valuation_review_queue_rows": 0,
+ "valuation_update": "无新增财报导致的估值更新；仅奇正藏药、同花顺、养元饮品今日除息按现行公式机械折算；其余带值不变",
+ "holding_ex_dividends_today": {},
+ "mandatory_codes": [
+  "000596",
+  "000651",
+  "002648",
+  "600036",
+  "601318",
+  "601398",
+  "603529"
+ ],
+ "eligible_codes": [
+  "000651",
+  "603529",
+  "600036",
+  "601318",
+  "002648",
+  "601398",
+  "000596"
+ ],
+ "holdings_codes": [
+  "002648",
+  "000651",
+  "603529",
+  "600036",
+  "601318"
+ ],
+ "user_named_codes": [],
+ "relevant_announcement_count": 2,
+ "unreviewed_announcements": [],
+ "coverage": [
+  {
+   "security_code": "000596",
+   "held": false,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "000651",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "002648",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "600036",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609221829763391"
+   ],
+   "announcement_status": "primary_reviewed"
+  },
+  {
+   "security_code": "601318",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "601398",
+   "held": false,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "603529",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609211829719672"
+   ],
+   "announcement_status": "reviewed_on_prior_day"
+  }
+ ],
+ "report_day_divergence_check": "check_report_day_price_divergence.py --universe pool：10日内有披露且有带0只，无命中",
+ "coverage_note": "池内133条标题筛查；必查范围公告原文已核验（招行董事任职），并核验3份池内今日除息原文。行业高频数据未全覆盖，缺口另列；不代表快照截止之后没有新公告。"
+}

@@ -1,0 +1,475 @@
+{
+ "signal_date": "2026-09-23",
+ "checked_at_utc": "2026-09-23T10:07:21.112614+00:00",
+ "status": "passed",
+ "checks": [
+  "whole_pool_unique_codes",
+  "trade_date",
+  "same_day_quotes",
+  "tracking_002648",
+  "tracking_close_matches_scan_002648",
+  "effective_stop_002648",
+  "tracking_000651",
+  "tracking_close_matches_scan_000651",
+  "effective_stop_000651",
+  "tracking_603529",
+  "tracking_close_matches_scan_603529",
+  "effective_stop_603529",
+  "tracking_600036",
+  "tracking_close_matches_scan_600036",
+  "effective_stop_600036",
+  "tracking_601318",
+  "tracking_close_matches_scan_601318",
+  "effective_stop_601318",
+  "tracking_scope",
+  "holdings_and_reported_assets_match",
+  "independent_quote_000651",
+  "independent_quote_002648",
+  "independent_quote_603529",
+  "independent_quote_600036",
+  "independent_quote_601318",
+  "empty_financial_review_queue",
+  "exdiv_v_drop_adopted_002287",
+  "exdiv_v_drop_adopted_300033",
+  "exdiv_v_drop_adopted_603156",
+  "only_today_exdiv_changes_adopted",
+  "exdiv_v_drop_b2_002287",
+  "exdiv_v_drop_b2_300033",
+  "exdiv_v_drop_b2_603156",
+  "only_today_exdiv_changes_b2",
+  "exdiv_v_drop_hold_002287",
+  "exdiv_v_drop_hold_300033",
+  "exdiv_v_drop_hold_603156",
+  "only_today_exdiv_changes_hold",
+  "publication_date_inputs_outputs_and_strategy_columns",
+  "shadow_capture_and_run",
+  "event_scope_reviewed_before_publication"
+ ],
+ "holdings_market_value_cny": "4468053.00",
+ "tranche_cny": "132458.06",
+ "remaining_funds_cny": "0.00",
+ "coverage": {
+  "scanned": 181,
+  "valid_pv": 179,
+  "below_buy_line": 34,
+  "eligible": 7,
+  "held": 5,
+  "mandatory_companies": 7,
+  "primary_reviewed_announcements": 1,
+  "exdiv_primary_documents": 3,
+  "announcement_title_screening": 133
+ },
+ "data_issue_rows": [
+  [
+   "001232",
+   "insufficient_price_history"
+  ]
+ ],
+ "stops": {
+  "002648": {
+   "name": "卫星化学",
+   "close": "26.82",
+   "stop_line": "24.16",
+   "anchor": "24.16",
+   "ma20": "27.4155",
+   "ma60": "25.7468",
+   "hit": "否",
+   "gap_pct": 11.01,
+   "action": "持有",
+   "pv": "0.82"
+  },
+  "000651": {
+   "name": "格力电器",
+   "close": "38.36",
+   "stop_line": "37.24",
+   "anchor": "37.24",
+   "ma20": "38.5955",
+   "ma60": "38.3518",
+   "hit": "否",
+   "gap_pct": 3.01,
+   "action": "持有",
+   "pv": "0.58"
+  },
+  "603529": {
+   "name": "爱玛科技",
+   "close": "21.66",
+   "stop_line": "20.76",
+   "anchor": "20.76",
+   "ma20": "21.6260",
+   "ma60": "21.1720",
+   "hit": "否",
+   "gap_pct": 4.34,
+   "action": "持有",
+   "pv": "0.71"
+  },
+  "600036": {
+   "name": "招商银行",
+   "close": "40.6",
+   "stop_line": "37.93",
+   "anchor": "37.93",
+   "ma20": "40.8465",
+   "ma60": "39.2405",
+   "hit": "否",
+   "gap_pct": 7.04,
+   "action": "持有",
+   "pv": "0.75"
+  },
+  "601318": {
+   "name": "中国平安",
+   "close": "53.87",
+   "stop_line": "51.17",
+   "anchor": "51.1700",
+   "ma20": "54.8840",
+   "ma60": "52.6165",
+   "hit": "否",
+   "gap_pct": 5.28,
+   "action": "持有",
+   "pv": "0.76"
+  }
+ },
+ "model_band_changes": {
+  "adopted": [
+   {
+    "code": "002287",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "16.5609",
+     "16.3330"
+    ],
+    "band_low": [
+     "14.9048",
+     "14.6769"
+    ],
+    "band_high": [
+     "18.2170",
+     "17.9891"
+    ],
+    "exright_cash": [
+     "",
+     "0.2279"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-23 现价口径：2026-09-23 现金0.227893/送转0"
+    ],
+    "v_drop": 0.2279
+   },
+   {
+    "code": "300033",
+    "cols": [
+     "net_debt_ps",
+     "ev_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "44.6249",
+     "44.4249"
+    ],
+    "band_low": [
+     "40.1624",
+     "39.9624"
+    ],
+    "band_high": [
+     "49.0874",
+     "48.8874"
+    ],
+    "exright_cash": [
+     "",
+     "0.2000"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-23 现价口径：2026-09-23 现金0.2/送转0"
+    ],
+    "v_drop": 0.2
+   },
+   {
+    "code": "603156",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "11.8122",
+     "11.3122"
+    ],
+    "band_low": [
+     "10.6310",
+     "10.1310"
+    ],
+    "band_high": [
+     "12.9935",
+     "12.4935"
+    ],
+    "exright_cash": [
+     "",
+     "0.5000"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-23 现价口径：2026-09-23 现金0.5/送转0"
+    ],
+    "v_drop": 0.5
+   }
+  ],
+  "b2": [
+   {
+    "code": "002287",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "16.5609",
+     "16.3330"
+    ],
+    "band_low": [
+     "14.9048",
+     "14.6769"
+    ],
+    "band_high": [
+     "18.2170",
+     "17.9891"
+    ],
+    "exright_cash": [
+     "",
+     "0.2279"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-23 现价口径：2026-09-23 现金0.227893/送转0"
+    ],
+    "v_drop": 0.2279
+   },
+   {
+    "code": "300033",
+    "cols": [
+     "net_debt_ps",
+     "ev_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "44.6249",
+     "44.4249"
+    ],
+    "band_low": [
+     "40.1624",
+     "39.9624"
+    ],
+    "band_high": [
+     "49.0874",
+     "48.8874"
+    ],
+    "exright_cash": [
+     "",
+     "0.2000"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-23 现价口径：2026-09-23 现金0.2/送转0"
+    ],
+    "v_drop": 0.2
+   },
+   {
+    "code": "603156",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "11.8122",
+     "11.3122"
+    ],
+    "band_low": [
+     "10.6310",
+     "10.1310"
+    ],
+    "band_high": [
+     "12.9935",
+     "12.4935"
+    ],
+    "exright_cash": [
+     "",
+     "0.5000"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-23 现价口径：2026-09-23 现金0.5/送转0"
+    ],
+    "v_drop": 0.5
+   }
+  ],
+  "hold": [
+   {
+    "code": "002287",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "16.5609",
+     "16.3330"
+    ],
+    "band_low": [
+     "14.9048",
+     "14.6769"
+    ],
+    "band_high": [
+     "18.2170",
+     "17.9891"
+    ],
+    "exright_cash": [
+     "",
+     "0.2279"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-23 现价口径：2026-09-23 现金0.227893/送转0"
+    ],
+    "v_drop": 0.2279
+   },
+   {
+    "code": "300033",
+    "cols": [
+     "net_debt_ps",
+     "ev_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "44.6249",
+     "44.4249"
+    ],
+    "band_low": [
+     "40.1624",
+     "39.9624"
+    ],
+    "band_high": [
+     "49.0874",
+     "48.8874"
+    ],
+    "exright_cash": [
+     "",
+     "0.2000"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-23 现价口径：2026-09-23 现金0.2/送转0"
+    ],
+    "v_drop": 0.2
+   },
+   {
+    "code": "603156",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "11.8122",
+     "11.3122"
+    ],
+    "band_low": [
+     "10.6310",
+     "10.1310"
+    ],
+    "band_high": [
+     "12.9935",
+     "12.4935"
+    ],
+    "exright_cash": [
+     "",
+     "0.5000"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-23 现价口径：2026-09-23 现金0.5/送转0"
+    ],
+    "v_drop": 0.5
+   }
+  ]
+ },
+ "note_only_date_changes": {
+  "adopted": 26,
+  "b2": 26,
+  "hold": 26
+ },
+ "jobs": {
+  "evidence_failed": 27047345,
+  "evidence": 27048281,
+  "band_refresh": 27048282,
+  "preview": 27048283,
+  "formal_scan": 27048774,
+  "formal_scan_republish": 27048843,
+  "shadow": 27048892
+ },
+ "resource_measurements": {
+  "evidence_elapsed": "00:10:33",
+  "evidence_maxrss_kib": 130291,
+  "band_refresh_elapsed": "00:03:18",
+  "preview_elapsed": "00:03:13",
+  "preview_maxrss_kib": 1239157,
+  "scan_elapsed": "00:01:28",
+  "scan_maxrss_kib": 1264645,
+  "shadow_time_v_elapsed": "00:04.29",
+  "shadow_time_v_maxrss_kib": 67092
+ },
+ "recovered_failures": [
+  "首个证据作业在新浪配股页17只URLError后退出（事件库未盖章）；网络恢复后同参数重跑完成，队列与凭据同日重建。",
+  "首次正式扫描后补写当日复核决策日志，按发布锁重跑正式扫描；两次买卖清单均为空、合格集一致。"
+ ],
+ "known_limitations": [
+  "行业高频与竞品数据部分缺失（乙烷、空调排产、两轮车上险）",
+  "嘉立创当日收盘有效、均线历史不足",
+  "京东方A及中芯国际陈旧带不进估值判定",
+  "公告快照截至北京时间17:52",
+  "09-22成交与负债差757.51元及今日负债增加176.77元未归入具体科目",
+  "全市场收盘涨跌家数未取得"
+ ]
+}

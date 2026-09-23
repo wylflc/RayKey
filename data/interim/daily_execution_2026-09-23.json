@@ -1,0 +1,14 @@
+{
+ "execution_date": "2026-09-23",
+ "signal_date": "2026-09-22",
+ "confirmation_source": "user",
+ "user_confirmation": "今天没有执行任何操作, 总资产 4468053, 净资产 2649161.23, 总负债 1818891.77, 现金和可用保证金都是 0.",
+ "status": "no_trades",
+ "trades": [],
+ "holdings_unchanged": true,
+ "holdings_sha256": "4d17dcb51bc54144bf58d544d9bd9b3fecec71a9e2f916eba1588bff2c59f80d",
+ "cooldown_executions_added": 0,
+ "original_buy_plan": [],
+ "original_sell_plan": [],
+ "recorded_at_utc": "2026-09-23T09:25:57.895098+00:00"
+}

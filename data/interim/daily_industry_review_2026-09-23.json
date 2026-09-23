@@ -1,0 +1,57 @@
+{
+ "signal_date": "2026-09-23",
+ "reviewed_at_utc": "2026-09-23T10:00:24.167457+00:00",
+ "checks": [
+  {
+   "topic": "爱玛分派与两轮车经营",
+   "codes": [
+    "603529"
+   ],
+   "status": "primary_verified_hf_incomplete",
+   "source_urls": [
+    "https://pdf.dfcfw.com/pdf/H2_AN202609171829522385_1.pdf"
+   ],
+   "facts": "今日为股权登记日，09-24除息及发放；实派0.392元/股，除息价格口径0.385元/股（已登记于a_share_exright_terms.csv）。今日池内公告窗口无爱玛新增公告。",
+   "assessment": "今日不调整持仓、成本、止损锚或生产带；09-24扫描按§11.4以价格口径0.385折算成本与锚，实派29,200×0.392=11,446.40元（含税）待券商到账核对。上险量、终端均价、竞品价格战仍未取得。"
+  },
+  {
+   "topic": "空调原材料",
+   "codes": [
+    "000651"
+   ],
+   "status": "partial",
+   "source_urls": [
+    "https://www.shfe.com.cn/data/tradedata/future/dailydata/kx20260923.dat"
+   ],
+   "facts": "上期所09-23日行情：铜2611（持仓最大）结算价110,780元/吨，前结算110,710元/吨；铝2611结算价24,225元/吨，前结算24,240元/吨。",
+   "assessment": "铜铝单日变动均在±0.1%内，未见重大原料价格变化；档案未设数值触发线。空调排产、库存与均价月度数据未取得。"
+  },
+  {
+   "topic": "乙烷与聚烯烃价差",
+   "codes": [
+    "002648"
+   ],
+   "status": "incomplete",
+   "source_urls": [
+    "https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=EER_EPLLE_PF4_Y44MB_DPG&f=D"
+   ],
+   "facts": "EIA原始乙烷页本轮仍只返回168字节，未取得同日Mont Belvieu乙烷价；华东乙烯与聚乙烯报价未取得。",
+   "assessment": "不以丙烷或其他化工品报价替代乙烷；乙烷出口政策无新增公告线索。"
+  },
+  {
+   "topic": "银行保险与利率",
+   "codes": [
+    "600036",
+    "601318"
+   ],
+   "status": "partial",
+   "source_urls": [
+    "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPTA_WEB_RATE",
+    "https://pdf.dfcfw.com/pdf/H2_AN202609221829763391_1.pdf"
+   ],
+   "facts": "09-20公布LPR一年期3.00%、五年期以上3.50%，与6-8月相同；10年国债最新观测09-22为1.6791%。招行公告两名非执行董事任职获批及委员会调整。",
+   "assessment": "LPR未调整，无新一期净息差、不良率、NBV或续期率证据；沿用现行股利折现带。"
+  }
+ ],
+ "coverage_note": "持仓与合格集公告范围已覆盖；行业高频与竞品数据仅部分核验，缺口未用盘面表现补齐。"
+}
