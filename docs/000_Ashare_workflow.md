@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.201
+# A股选股-估值-量价操作流程 v4.202
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -291,6 +291,8 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 模型计算统一由 §6.7 命令完成；档案不得覆盖模型参数或为希望得到的 `P/V` 反推输入。
 
+**研究正常化盈利（OI-209）**：档案 `a_share_valuation_dossiers.csv` 可登记研究估计的正常化盈利 `research_nopat_yi`（亿元，与模型同口径：税后经营利润，剔除金融收益，含权益法损益与少数股东份额），同时填 `research_evidence_date`（所依据证据的公开可得日）、`research_falsifier`（可证伪条件）、`research_source`（出处；研究原文为归母净利时按近五个年报 NOPAT ÷ 归母净利的中位换算并注明比例）。研究数不进模型、不改带。模型盈利锚 = 生产带每股 NOPAT × `shares_est`（亿元，ROIC 路径）；差距 = 两数较大者 ÷ 较小者 − 1，超过 30% 按 §7.3 入队。
+
 ##### 6.5.2.3 生产带落地
 
 `data/processed/a_share_pool_model_bands_adopted.csv` 是生产模型带唯一来源，**只含池成员**（分层表 worth_attention L1-L3；池外档案的带由 `apply_model_bands_to_dossiers.py` 直接取自全市场模型带、只落档案），**其带值恒为现价口径**：§6.7 第 4 步的叠加脚本末段按除权事件（现金自带公告日起、送转自 `bps_basis_date` 起，§6.5.1 第 5 条）归一化，`exright_note` 列非空即已折算。池外原始模型带也由档案写入脚本调用相同除权实现，事件截止取信号日；池外银行与保险的利率和股利按 §11.3 的信号日口径读取。逐票档案只承载研究结论和当前带；`apply_model_bands_to_dossiers.py` 只覆盖带相关字段，保留 `key_metrics`、`review_triggers`、高频指标和研究备注。README 第八节「现价隐含了什么」的首段由 `build_company_dossier_readmes.py` 按生产带与池内现价机械生成（`现价 ÷ 中值 = P/V`、路径与增长/折现假设、归一化盈利倍数），`implied_growth_years` 的新增研究只记录可证伪命题与方法分歧；已有原文在折叠区标明证据须复核，不作为当前估值或交易依据。带变更历史留在 CSV 的 `notes`，不重复铺陈于 README；页面分别标注估值更新日与质量证据日。
@@ -324,7 +326,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 ### 6.6 人工复核职责
 
-人工只处理：模型不可估原因；主体不可比（重置日与 `growth_mode`）；新证据是否触发重算；校验失败行。正常公司不逐票选择模型、倍数或带宽。
+人工只处理：模型不可估原因；主体不可比（重置日与 `growth_mode`）；新证据是否触发重算；校验失败行；研究正常化盈利与模型盈利锚的差距复核（§7.3）——核对研究数的证据与可证伪条件是否仍成立，结论只能是维持模型或修订研究数，不改模型参数或带。正常公司不逐票选择模型、倍数或带宽。
 
 档案必须保留证据事件、证据可得日、关键指标、高频指标、下一复核点和可证伪触发。带变动后重渲染逐票 README。
 
@@ -515,6 +517,8 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 预告、快报或正式定期报告的公告日晚于 `max(valuation_reviewed_at, evidence_available_at)`，即进入估值复核，不先判断幅度是否重大。披露文件缺失时才用报告期末兜底。
 
 `valuation_reviewed_at` 取生产带文件 `model_evaluated_at`（模型最近评估过的报告期可得日，含护栏拒绝行）与采纳带可得日的较大者；`evidence_available_at` 取采纳带可得日。
+
+**研究与模型差距（OI-209）**：估值范围内 ROIC 路径的池成员，档案研究正常化盈利与模型盈利锚差距超过 30%（§6.5.2.2）即入队并按 §7.5 冻结。复核在档案记 `divergence_reviewed_at`、`divergence_review_note`（维持模型或修订研究数，写明理由）与复核时两数 `divergence_reviewed_model_yi`／`divergence_reviewed_research_yi` 后解除；此后任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队。
 
 ### 7.4 事件复核触发
 

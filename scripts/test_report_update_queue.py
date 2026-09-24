@@ -76,5 +76,45 @@ class ReportUpdateQueueAsOfTest(unittest.TestCase):
         self.assertEqual(rows, [])
 
 
+
+def _band(code: str, nopat_ps: float, path: str = "growth") -> dict[str, str]:
+    return {"security_code": code, "roic_path": path, "nopat_ps": str(nopat_ps), "shares_est": "1e9"}   # 锚 = nopat_ps × 10 亿元
+
+
+def _dossier(code: str, research: float, **review) -> dict[str, str]:
+    return {"security_code": code, "research_nopat_yi": str(research), **{k: str(v) for k, v in review.items()}}
+
+
+class ResearchDivergenceTest(unittest.TestCase):
+    """§7.3（OI-209）：研究正常化盈利与模型盈利锚差距超过 30% 入队冻结；复核记录解除，任一数变动超过 10% 重新入队。"""
+
+    def queue(self, dossier, band, tier=None):
+        return q.build_queue([], [tier or _tier("000858")], [_pool("000858", "2026-09-01")], [], [], [], "2026-09-24",
+                             [dossier], [band])
+
+    def test_gap_above_threshold_blocks_buying(self) -> None:
+        rows = self.queue(_dossier("000858", 186.5), _band("000858", 27.52))      # 275.2 ÷ 186.5 − 1 = 48%
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["buy_blocked"], "review_pending")
+        self.assertIn("research_model_divergence", rows[0]["queue_reasons"])
+        self.assertEqual(rows[0]["research_model_gap"], f"{275.2 / 186.5 - 1:.4f}")
+
+    def test_gap_at_or_below_threshold_is_not_queued(self) -> None:
+        self.assertEqual(self.queue(_dossier("000858", 100.0), _band("000858", 13.0)), [])   # 30% 整不入队
+        self.assertEqual(self.queue(_dossier("000858", 100.0), _band("000858", 7.7)), [])    # 100 ÷ 77 − 1 < 30%
+
+    def test_review_clears_until_either_figure_moves_ten_percent(self) -> None:
+        reviewed = dict(divergence_reviewed_at="2026-09-20", divergence_reviewed_model_yi=275.2,
+                        divergence_reviewed_research_yi=186.5)
+        self.assertEqual(self.queue(_dossier("000858", 186.5, **reviewed), _band("000858", 29.0)), [])   # 模型 +5%
+        self.assertEqual(len(self.queue(_dossier("000858", 186.5, **reviewed), _band("000858", 31.0))), 1)   # 模型 +12.6%
+        self.assertEqual(len(self.queue(_dossier("000858", 160.0, **reviewed), _band("000858", 27.52))), 1)  # 研究 −14%
+
+    def test_non_roic_path_and_out_of_scope_are_skipped(self) -> None:
+        self.assertEqual(self.queue(_dossier("000858", 50.0), _band("000858", 27.52, "equity_fallback")), [])
+        tier = dict(_tier("000858"), quality_tier="L4")
+        self.assertEqual(self.queue(_dossier("000858", 50.0), _band("000858", 27.52), tier), [])
+        self.assertEqual(q.build_queue([], [_tier("000858")], [_pool("000858", "2026-09-01")], [], [], [], "2026-09-24"), [])
+
 if __name__ == "__main__":
     unittest.main()

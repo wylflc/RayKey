@@ -31,6 +31,42 @@ DEFAULT_FINANCIALS = ROOT / "data/raw/financials"
 DEFAULT_FORECASTS = ROOT / "data/interim/a_share_earnings_forecasts.csv"
 DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_OUTPUT = ROOT / "data/interim/a_share_report_update_queue.csv"
+DEFAULT_DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
+DEFAULT_MODEL_BANDS = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
+# §7.3（OI-209）：档案研究正常化盈利与模型盈利锚（生产带每股 NOPAT × shares_est，ROIC 路径）差距超过 30% 入队冻结；
+# 复核后任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队。
+RESEARCH_GAP_MAX = 0.30
+RESEARCH_RETRIGGER = 0.10
+ROIC_PATHS = {"growth", "zero_growth"}
+
+
+def _num(value) -> float | None:
+    try:
+        return float(value) if value not in (None, "", "None") else None
+    except (TypeError, ValueError):
+        return None
+
+
+def research_divergence(dossier: dict[str, str] | None, band: dict[str, str] | None) -> dict[str, object] | None:
+    """研究正常化盈利对模型盈利锚（亿元）；任一侧不可比时返回 None。`triggered` = 差距超限且未被复核覆盖。"""
+    if not dossier or not band or band.get("roic_path") not in ROIC_PATHS:
+        return None
+    research = _num(dossier.get("research_nopat_yi"))
+    nopat_ps, shares = _num(band.get("nopat_ps")), _num(band.get("shares_est"))
+    if not research or research <= 0 or not nopat_ps or not shares or nopat_ps <= 0:
+        return None
+    model = nopat_ps * shares / 1e8
+    gap = max(model, research) / min(model, research) - 1
+    exceeds = gap > RESEARCH_GAP_MAX + 1e-9          # 「超过」30%：恰为 30% 不入队，浮点末位不算超过
+    triggered = exceeds
+    if triggered and dossier.get("divergence_reviewed_at"):
+        seen_model = _num(dossier.get("divergence_reviewed_model_yi"))
+        seen_research = _num(dossier.get("divergence_reviewed_research_yi"))
+        moved = (not seen_model or not seen_research
+                 or abs(model / seen_model - 1) > RESEARCH_RETRIGGER
+                 or abs(research / seen_research - 1) > RESEARCH_RETRIGGER)
+        triggered = moved
+    return {"research": research, "model": model, "gap": gap, "exceeds": exceeds, "triggered": triggered}
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -141,7 +177,11 @@ def build_queue(
     forecast_rows: list[dict[str, str]],
     disclosure_rows: list[dict[str, str]],
     as_of: str,
+    dossier_rows: list[dict[str, str]] | None = None,
+    band_rows: list[dict[str, str]] | None = None,
 ) -> list[dict[str, object]]:
+    dossiers_by_code = {row["security_code"].zfill(6): row for row in dossier_rows or [] if row.get("security_code")}
+    bands_by_code = {row["security_code"].zfill(6): row for row in band_rows or [] if row.get("security_code")}
     attention_by_code = {row["security_code"].zfill(6): row for row in attention_rows if row.get("security_code")}
     financials_by_code = {row["security_code"].zfill(6): row for row in financial_rows if row.get("security_code")}
     valuation_by_code = {row["security_code"].zfill(6): row for row in valuation_rows if row.get("security_code")}
@@ -228,11 +268,14 @@ def build_queue(
             and periodic_notice_date
             and (review_cutoff is None or periodic_notice_date > review_cutoff)
         )
+        divergence = research_divergence(dossiers_by_code.get(code), bands_by_code.get(code)) if in_valuation_scope else None
+        divergence_trigger = bool(divergence and divergence["triggered"])
         valuation_review_needed = (
             report_valuation_trigger
             or forecast_valuation_trigger
             or express_valuation_trigger
             or periodic_valuation_trigger
+            or divergence_trigger
         )
 
         event_reasons: list[str] = []
@@ -246,6 +289,8 @@ def build_queue(
             event_reasons.append("forecast_after_last_valuation_review")
         if report_valuation_trigger and not periodic_valuation_trigger:
             event_reasons.append("latest_report_after_last_valuation_review")
+        if divergence_trigger:
+            event_reasons.append("research_model_divergence")
 
         if not event_reasons:
             continue
@@ -294,6 +339,9 @@ def build_queue(
                 "update_scope": update_scope,
                 "queue_priority": priority,
                 "queue_reasons": ";".join(event_reasons),
+                "research_nopat_yi": f"{divergence['research']:.2f}" if divergence else "",
+                "model_nopat_yi": f"{divergence['model']:.2f}" if divergence else "",
+                "research_model_gap": f"{divergence['gap']:.4f}" if divergence else "",
                 "as_of": as_of_date.isoformat(),
                 "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             }
@@ -312,6 +360,8 @@ def build_queue_for_signal(
     forecast_rows: list[dict[str, str]],
     disclosure_rows: list[dict[str, str]],
     signal_date: str,
+    dossier_rows: list[dict[str, str]] | None = None,
+    band_rows: list[dict[str, str]] | None = None,
 ) -> list[dict[str, object]]:
     """Production entry: derive the evidence cutoff from one signal date."""
     return build_queue(
@@ -322,6 +372,8 @@ def build_queue_for_signal(
         forecast_rows,
         disclosure_rows,
         evidence_iso_for_signal(signal_date),
+        dossier_rows,
+        band_rows,
     )
 
 
@@ -346,6 +398,8 @@ def parse_args() -> argparse.Namespace:
         help="定期报告/业绩快报披露物化文件（§7.1，每日经 §9.1 步骤 0 重抓）；缺失时退回报告期末比较口径。",
     )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--dossiers", type=Path, default=DEFAULT_DOSSIERS, help="档案（研究正常化盈利与差距复核记录，§7.3 OI-209）")
+    parser.add_argument("--model-bands", type=Path, default=DEFAULT_MODEL_BANDS, help="候选侧生产带（模型盈利锚）")
     return parser.parse_args()
 
 
@@ -367,6 +421,8 @@ def main() -> None:
         load_csv(args.forecasts),
         load_csv(args.report_disclosures),
         args.signal_date,
+        load_csv(args.dossiers),
+        load_csv(args.model_bands),
     )
     fieldnames = [
         "market_type",
@@ -396,19 +452,24 @@ def main() -> None:
         "update_scope",
         "queue_priority",
         "queue_reasons",
+        "research_nopat_yi",
+        "model_nopat_yi",
+        "research_model_gap",
         "as_of",
         "generated_at_utc",
     ]
     write_csv(args.output, rows, fieldnames)
     from daily_execution_guard import stamp
     stamp(args.output, args.signal_date, (args.forecasts, args.report_disclosures,
-                                         args.attention_triage, args.tiers, args.valuation_pool))
+                                         args.attention_triage, args.tiers, args.valuation_pool, args.dossiers, args.model_bands))
     forecast_hits = sum(1 for row in rows if "forecast_after_last_valuation_review" in str(row["queue_reasons"]))
     express_hits = sum(1 for row in rows if "express_report_after_last_valuation_review" in str(row["queue_reasons"]))
     periodic_hits = sum(1 for row in rows if "report_disclosure_after_last_valuation_review" in str(row["queue_reasons"]))
+    divergence_hits = [str(row["security_name"]) for row in rows if "research_model_divergence" in str(row["queue_reasons"])]
     print(
         f"wrote {len(rows)} rows to {args.output}; "
-        f"forecast-triggered {forecast_hits}, express-triggered {express_hits}, periodic-triggered {periodic_hits}"
+        f"forecast-triggered {forecast_hits}, express-triggered {express_hits}, periodic-triggered {periodic_hits}, "
+        f"research-model divergence {len(divergence_hits)}{('（' + '、'.join(divergence_hits) + '）') if divergence_hits else ''}"
     )
 
 

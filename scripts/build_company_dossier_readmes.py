@@ -180,6 +180,26 @@ def implied_lead(row: dict, meta: dict, band: dict | None) -> tuple[str, bool]:
     return text, skipped
 
 
+def research_line(row: dict, band: dict | None) -> str:
+    """§6.5.2.2（OI-209）研究正常化盈利对模型盈利锚；差距规则与复核解除见 `build_report_update_queue.research_divergence`。"""
+    from build_report_update_queue import RESEARCH_GAP_MAX, research_divergence
+    research = _num(row.get("research_nopat_yi"))
+    if not research:
+        return ""
+    text = (f"**研究正常化盈利**（§6.5.2.2，NOPAT 口径）：{research:.2f} 亿（证据日 {row.get('research_evidence_date') or '—'}；"
+            f"可证伪：{row.get('research_falsifier') or '—'}）。")
+    div = research_divergence(row, band)
+    if div is None:
+        return text + "模型盈利锚不可比（非 ROIC 路径或无生产带）。"
+    text += f"模型盈利锚 {div['model']:.2f} 亿（每股 NOPAT × 股数），差距 {div['gap']:.0%}"
+    if not div["exceeds"]:
+        return text + f"，未超过 {RESEARCH_GAP_MAX:.0%}。"
+    if div["triggered"]:
+        return text + f"，超过 {RESEARCH_GAP_MAX:.0%}：按 §7.3 入队、冻结新增买入，待复核。"
+    return text + (f"，超过 {RESEARCH_GAP_MAX:.0%}；已于 {row.get('divergence_reviewed_at')} 复核："
+                   f"{row.get('divergence_review_note') or '—'}。")
+
+
 def render(row: dict, pool: dict, bands: dict, tiers: dict | None = None) -> tuple[str, bool]:
     code = row["security_code"]
     meta = pool.get(code, {})
@@ -217,6 +237,9 @@ def render(row: dict, pool: dict, bands: dict, tiers: dict | None = None) -> tup
     derivation = derivation.replace("故 `P/V` = 现价 ÷ V（`scripts/pv_ratio.py` 唯一实现）与回测的 `valuation_ratio` 逐位一致。",
                                     "池内 `P/V` 按现价 ÷ V 计算；交易资格按工作流程判定。")
     parts.append(f"\n## 二、模型推导\n\n{derivation}\n")
+    research = research_line(row, bands.get(code))
+    if research:
+        parts.append(f"\n{research}\n")
     parts.append("\n> 以下为留存研究记录；本次估值更新未重新核验这些指标与复核时点。\n")
 
     sections = [
