@@ -1,2 +1,4 @@
 faces/raw/
 __pycache__/
+us/old_states_adopted.csv
+us/*.log

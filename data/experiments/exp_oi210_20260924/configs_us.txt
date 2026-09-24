@@ -1,0 +1,5 @@
+# OI-210 美股臂（sweep --market us，基准 BASE_US＝现行 BASE 线 0.9524／边际 0.15）：新口径状态；OLDLINE 为 OI-159 原线 1.0454；对齐臂的线与边际由 align_buy_line.py 解出后在作业内填入
+BASE|
+OLDLINE|--width -0.0454
+SP100|--universe-file data/processed/pit_attention/panel_sp100_us.csv
+ALIGNED|--width 0.1605 --swap-margin 0.1322
