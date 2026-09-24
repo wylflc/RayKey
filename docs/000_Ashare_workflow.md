@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.202
+# A股选股-估值-量价操作流程 v4.203
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -291,7 +291,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 模型计算统一由 §6.7 命令完成；档案不得覆盖模型参数或为希望得到的 `P/V` 反推输入。
 
-**研究正常化盈利（OI-209）**：档案 `a_share_valuation_dossiers.csv` 可登记研究估计的正常化盈利 `research_nopat_yi`（亿元，与模型同口径：税后经营利润，剔除金融收益，含权益法损益与少数股东份额），同时填 `research_evidence_date`（所依据证据的公开可得日）、`research_falsifier`（可证伪条件）、`research_source`（出处；研究原文为归母净利时按近五个年报 NOPAT ÷ 归母净利的中位换算并注明比例）。研究数不进模型、不改带。模型盈利锚 = 生产带每股 NOPAT × `shares_est`（亿元，ROIC 路径）；差距 = 两数较大者 ÷ 较小者 − 1，超过 30% 按 §7.3 入队。
+**研究正常化盈利（OI-209）**：档案 `a_share_valuation_dossiers.csv` 可登记研究估计的正常化盈利 `research_nopat_yi`（亿元，与模型同口径：税后经营利润，剔除金融收益，含权益法损益与少数股东份额），同时填 `research_evidence_date`（所依据证据的公开可得日）、`research_falsifier`（可证伪条件）、`research_source`（出处；研究原文为归母净利时按模型股权桥反解：`归母 ÷ (1 − 生产带 minority_share) + (最新年报 NOPAT − 合并净利)`，注明两项取值；唯一实现 `build_report_update_queue.research_nopat_from_parent`）。研究数须与模型锚同一产能口径：以未来产量或未建成产能为基础的盈利按现有已投产产能重述，扩产由模型增速腿计价。研究数不进模型、不改带。模型盈利锚 = 生产带每股 NOPAT × `shares_est`（亿元，ROIC 路径）；差距 = 两数较大者 ÷ 较小者 − 1，超过 30% 按 §7.3 入队。
 
 ##### 6.5.2.3 生产带落地
 
@@ -518,7 +518,7 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 
 `valuation_reviewed_at` 取生产带文件 `model_evaluated_at`（模型最近评估过的报告期可得日，含护栏拒绝行）与采纳带可得日的较大者；`evidence_available_at` 取采纳带可得日。
 
-**研究与模型差距（OI-209）**：估值范围内 ROIC 路径的池成员，档案研究正常化盈利与模型盈利锚差距超过 30%（§6.5.2.2）即入队并按 §7.5 冻结。复核在档案记 `divergence_reviewed_at`、`divergence_review_note`（维持模型或修订研究数，写明理由）与复核时两数 `divergence_reviewed_model_yi`／`divergence_reviewed_research_yi` 后解除；此后任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队。
+**研究与模型差距（OI-209）**：估值范围内 ROIC 路径的池成员，档案研究正常化盈利与模型盈利锚差距超过 30%（§6.5.2.2）即入队；研究数低于模型锚时同时按 §7.5 冻结新增买入，研究数高于模型锚时只入队复核、不冻结。复核在档案记 `divergence_reviewed_at`、`divergence_review_note`（维持模型或修订研究数，写明理由）与复核时两数 `divergence_reviewed_model_yi`／`divergence_reviewed_research_yi` 后解除；此后任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队。
 
 ### 7.4 事件复核触发
 
@@ -530,7 +530,7 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 
 ### 7.5 复核期冻结
 
-估值或事件复核触发后，将 `buy_blocked` 设为 `review_pending`，冻结新增买入但继续持仓跟踪。完成复核、更新证据与复核日期并重建队列后自动解除。
+估值或事件复核触发后（§7.3 研究数高于模型锚的差距复核除外），将 `buy_blocked` 设为 `review_pending`，冻结新增买入但继续持仓跟踪。完成复核、更新证据与复核日期并重建队列后自动解除。
 
 **预告与快报触发的估值复核由 §6.4 的叠加机械完成**：叠加把带与 `valuation_reviewed_at` 一并推进到公告日，队列重建后冻结自动解除。叠加覆盖不到的行（银行与保险、`zero_growth` 路径输入不全、股本多期倒推不一致；脚本逐行打印跳过原因）走人工复核。
 

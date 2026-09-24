@@ -33,8 +33,8 @@ DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_OUTPUT = ROOT / "data/interim/a_share_report_update_queue.csv"
 DEFAULT_DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 DEFAULT_MODEL_BANDS = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
-# §7.3（OI-209）：档案研究正常化盈利与模型盈利锚（生产带每股 NOPAT × shares_est，ROIC 路径）差距超过 30% 入队冻结；
-# 复核后任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队。
+# §7.3（OI-209）：档案研究正常化盈利与模型盈利锚（生产带每股 NOPAT × shares_est，ROIC 路径）差距超过 30% 入队，
+# 研究数低于模型锚时同时冻结新增买入；复核后任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队。
 RESEARCH_GAP_MAX = 0.30
 RESEARCH_RETRIGGER = 0.10
 ROIC_PATHS = {"growth", "zero_growth"}
@@ -47,8 +47,18 @@ def _num(value) -> float | None:
         return None
 
 
+def research_nopat_from_parent(parent_yi: float, minority_share: float, nopat_yi: float, net_profit_yi: float) -> float:
+    """§6.5.2.2：归母口径的研究数按模型股权桥反解为 NOPAT（亿元）。
+
+    `minority_share` 取生产带同名列（模型分给少数股东的盈利份额），`nopat_yi − net_profit_yi` 取最新年报
+    NOPAT 与合并净利之差（税后净利息与金融收益，随资产负债表而非经营盈利变化，按额不按比例）。"""
+    return parent_yi / (1.0 - min(max(minority_share, 0.0), 0.95)) + (nopat_yi - net_profit_yi)
+
+
 def research_divergence(dossier: dict[str, str] | None, band: dict[str, str] | None) -> dict[str, object] | None:
-    """研究正常化盈利对模型盈利锚（亿元）；任一侧不可比时返回 None。`triggered` = 差距超限且未被复核覆盖。"""
+    """研究正常化盈利对模型盈利锚（亿元）；任一侧不可比时返回 None。
+
+    `triggered` = 差距超限且未被复核覆盖（入队）；`freeze` = 入队且研究数低于模型锚（模型较乐观，§7.5 冻结新增买入）。"""
     if not dossier or not band or band.get("roic_path") not in ROIC_PATHS:
         return None
     research = _num(dossier.get("research_nopat_yi"))
@@ -66,7 +76,8 @@ def research_divergence(dossier: dict[str, str] | None, band: dict[str, str] | N
                  or abs(model / seen_model - 1) > RESEARCH_RETRIGGER
                  or abs(research / seen_research - 1) > RESEARCH_RETRIGGER)
         triggered = moved
-    return {"research": research, "model": model, "gap": gap, "exceeds": exceeds, "triggered": triggered}
+    return {"research": research, "model": model, "gap": gap, "exceeds": exceeds, "triggered": triggered,
+            "freeze": triggered and research < model}
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -270,13 +281,14 @@ def build_queue(
         )
         divergence = research_divergence(dossiers_by_code.get(code), bands_by_code.get(code)) if in_valuation_scope else None
         divergence_trigger = bool(divergence and divergence["triggered"])
-        valuation_review_needed = (
+        report_driven_review = (
             report_valuation_trigger
             or forecast_valuation_trigger
             or express_valuation_trigger
             or periodic_valuation_trigger
-            or divergence_trigger
         )
+        valuation_review_needed = report_driven_review or divergence_trigger
+        buy_blocked = report_driven_review or bool(divergence and divergence["freeze"])
 
         event_reasons: list[str] = []
         if quality_review_needed:
@@ -334,8 +346,8 @@ def build_queue(
                 "valuation_date_basis": valuation_date_basis,
                 "quality_review_needed": quality_review_needed,
                 "valuation_review_needed": valuation_review_needed,
-                # §7.5：估值复核未完成前冻结新增买入；每日扫描读取本列执行冻结。
-                "buy_blocked": "review_pending" if valuation_review_needed else "",
+                # §7.5：估值复核未完成前冻结新增买入（研究数高于模型锚的差距复核除外）；每日扫描读取本列执行冻结。
+                "buy_blocked": "review_pending" if buy_blocked else "",
                 "update_scope": update_scope,
                 "queue_priority": priority,
                 "queue_reasons": ";".join(event_reasons),

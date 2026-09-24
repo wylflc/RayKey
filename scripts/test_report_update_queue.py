@@ -86,7 +86,7 @@ def _dossier(code: str, research: float, **review) -> dict[str, str]:
 
 
 class ResearchDivergenceTest(unittest.TestCase):
-    """§7.3（OI-209）：研究正常化盈利与模型盈利锚差距超过 30% 入队冻结；复核记录解除，任一数变动超过 10% 重新入队。"""
+    """§7.3（OI-209）：研究正常化盈利与模型盈利锚差距超过 30% 入队，研究数低于模型锚时冻结；复核记录解除，任一数变动超过 10% 重新入队。"""
 
     def queue(self, dossier, band, tier=None):
         return q.build_queue([], [tier or _tier("000858")], [_pool("000858", "2026-09-01")], [], [], [], "2026-09-24",
@@ -98,6 +98,19 @@ class ResearchDivergenceTest(unittest.TestCase):
         self.assertEqual(rows[0]["buy_blocked"], "review_pending")
         self.assertIn("research_model_divergence", rows[0]["queue_reasons"])
         self.assertEqual(rows[0]["research_model_gap"], f"{275.2 / 186.5 - 1:.4f}")
+
+    def test_research_above_model_is_queued_without_freeze(self) -> None:
+        rows = self.queue(_dossier("000858", 247.0), _band("000858", 16.14))       # 247 ÷ 161.4 − 1 = 53%，研究数较高
+        self.assertEqual(len(rows), 1)
+        self.assertIn("research_model_divergence", rows[0]["queue_reasons"])
+        self.assertTrue(rows[0]["valuation_review_needed"])
+        self.assertEqual(rows[0]["buy_blocked"], "")
+
+    def test_parent_profit_converts_through_the_equity_bridge(self) -> None:
+        # 天齐锂业：62.5 ÷ (1 − 0.4701) + (29.0 − 30.0) = 116.9；五粮液：190 ÷ (1 − 0.0416) − 20.3 = 177.9
+        self.assertAlmostEqual(q.research_nopat_from_parent(62.5, 0.4701, 29.0, 30.0), 116.95, places=2)
+        self.assertAlmostEqual(q.research_nopat_from_parent(190.0, 0.0416, 72.8, 93.1), 177.95, places=2)
+        self.assertAlmostEqual(q.research_nopat_from_parent(10.0, 1.2, 0.0, 0.0), 200.0)             # 份额封顶 0.95
 
     def test_gap_at_or_below_threshold_is_not_queued(self) -> None:
         self.assertEqual(self.queue(_dossier("000858", 100.0), _band("000858", 13.0)), [])   # 30% 整不入队

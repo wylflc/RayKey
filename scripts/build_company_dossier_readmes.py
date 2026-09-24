@@ -195,7 +195,8 @@ def research_line(row: dict, band: dict | None) -> str:
     if not div["exceeds"]:
         return text + f"，未超过 {RESEARCH_GAP_MAX:.0%}。"
     if div["triggered"]:
-        return text + f"，超过 {RESEARCH_GAP_MAX:.0%}：按 §7.3 入队、冻结新增买入，待复核。"
+        action = "研究数低于模型锚，按 §7.3 入队、冻结新增买入" if div["freeze"] else "研究数高于模型锚，按 §7.3 入队复核、不冻结"
+        return text + f"，超过 {RESEARCH_GAP_MAX:.0%}：{action}，待复核。"
     return text + (f"，超过 {RESEARCH_GAP_MAX:.0%}；已于 {row.get('divergence_reviewed_at')} 复核："
                    f"{row.get('divergence_review_note') or '—'}。")
 

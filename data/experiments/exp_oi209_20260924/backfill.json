@@ -2,111 +2,135 @@
  "000858": {
   "name": "五粮液",
   "parent_mid": 190.0,
-  "ratios": [
+  "minority_share": 0.0416,
+  "nopat_less_net_profit_yi": -20.3287,
+  "research_nopat_yi": 177.92,
+  "evidence_date": "2026-07-15",
+  "ratios_v4202": [
    0.9924090703378872,
    0.9907184511159336,
    0.9818018732688257,
    0.9752171180970368,
    0.8134946844030798
   ],
-  "ratio": 0.9818018732688257,
-  "research_nopat_yi": 186.54,
-  "evidence_date": "2026-07-15"
+  "ratio_v4202": 0.9818018732688257,
+  "research_nopat_v4202": 186.54
  },
  "000893": {
   "name": "亚钾国际",
   "parent_mid": 34.0,
-  "ratios": [
+  "minority_share": 0.0,
+  "nopat_less_net_profit_yi": 0.7568,
+  "research_nopat_yi": 34.76,
+  "evidence_date": "2026-07-15",
+  "ratios_v4202": [
    1.0140402589396786,
    0.9796890054117362,
    0.9884226864533779,
    0.9966725769238144,
    1.0428730682903433
   ],
-  "ratio": 0.9966725769238144,
-  "research_nopat_yi": 33.89,
-  "evidence_date": "2026-07-15"
+  "ratio_v4202": 0.9966725769238144,
+  "research_nopat_v4202": 33.89
  },
  "002128": {
   "name": "电投能源",
   "parent_mid": 60.0,
-  "ratios": [
+  "minority_share": 0.1701,
+  "nopat_less_net_profit_yi": 1.2653,
+  "research_nopat_yi": 73.56,
+  "evidence_date": "2026-07-15",
+  "ratios_v4202": [
    1.431113376604457,
    1.2451888116863086,
    1.118530972222652,
    1.1342764020884828,
    1.2283376228828644
   ],
-  "ratio": 1.2283376228828644,
-  "research_nopat_yi": 73.7,
-  "evidence_date": "2026-07-15"
+  "ratio_v4202": 1.2283376228828644,
+  "research_nopat_v4202": 73.7
  },
  "002466": {
   "name": "天齐锂业",
   "parent_mid": 62.5,
-  "ratios": [
+  "minority_share": 0.4701,
+  "nopat_less_net_profit_yi": -1.0106,
+  "research_nopat_yi": 116.94,
+  "evidence_date": "2026-07-15",
+  "ratios_v4202": [
    1.5429844535232018,
    1.2773497835941645,
    3.519042093910155,
    6.27197124964131
   ],
-  "ratio": 2.5310132737166784,
-  "research_nopat_yi": 158.19,
-  "evidence_date": "2026-07-15"
+  "ratio_v4202": 2.5310132737166784,
+  "research_nopat_v4202": 158.19
  },
  "002714": {
   "name": "牧原股份",
   "parent_mid": 192.5,
-  "ratios": [
+  "minority_share": 0.0757,
+  "nopat_less_net_profit_yi": 24.0332,
+  "research_nopat_yi": 232.3,
+  "evidence_date": "2026-07-11",
+  "ratios_v4202": [
    1.4170571834750447,
    1.344548293576293,
    1.2216362535580028,
    1.176164616154859
   ],
-  "ratio": 1.283092273567148,
-  "research_nopat_yi": 247.0,
-  "evidence_date": "2026-07-11"
+  "ratio_v4202": 1.283092273567148,
+  "research_nopat_v4202": 247.0
  },
  "600176": {
   "name": "中国巨石",
   "parent_mid": 50.0,
-  "ratios": [
+  "minority_share": 0.0334,
+  "nopat_less_net_profit_yi": 3.0803,
+  "research_nopat_yi": 54.81,
+  "evidence_date": "2026-07-15",
+  "ratios_v4202": [
    1.0872110307274012,
    1.0809214288111149,
    1.0493582199354656,
    1.1144098295063785,
    1.1332769616196778
   ],
-  "ratio": 1.0872110307274012,
-  "research_nopat_yi": 54.36,
-  "evidence_date": "2026-07-15"
+  "ratio_v4202": 1.0872110307274012,
+  "research_nopat_v4202": 54.36
  },
  "600989": {
   "name": "宝丰能源",
   "parent_mid": 140.0,
-  "ratios": [
+  "minority_share": 0.0,
+  "nopat_less_net_profit_yi": 6.8314,
+  "research_nopat_yi": 146.83,
+  "evidence_date": "2026-07-14",
+  "ratios_v4202": [
    1.031862840377207,
    1.0320106406969782,
    1.0445328237522704,
    1.099954960159954,
    1.0601874063850563
   ],
-  "ratio": 1.0445328237522704,
-  "research_nopat_yi": 146.23,
-  "evidence_date": "2026-07-14"
+  "ratio_v4202": 1.0445328237522704,
+  "research_nopat_v4202": 146.23
  },
  "603806": {
   "name": "福斯特",
   "parent_mid": 20.0,
-  "ratios": [
+  "minority_share": 0.0,
+  "nopat_less_net_profit_yi": -0.4773,
+  "research_nopat_yi": 19.52,
+  "evidence_date": "2026-07-14",
+  "ratios_v4202": [
    0.9727694586752529,
    0.9040080167418177,
    0.9727407464584098,
    0.9710243018456052,
    0.9044916931753568
   ],
-  "ratio": 0.9710243018456052,
-  "research_nopat_yi": 19.42,
-  "evidence_date": "2026-07-14"
+  "ratio_v4202": 0.9710243018456052,
+  "research_nopat_v4202": 19.42
  }
 }
