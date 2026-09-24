@@ -22,6 +22,7 @@ Treat the latest user request and current project standards as the source of tru
 - Never store credentials, tokens, cookies, account identifiers or paid-data access details in the repository.
 - Run the most targeted useful checks. State network, credential and data limitations; do not claim validation beyond reproducible evidence.
 - Commit each completed change batch before the final response. Use one short sentence, without a body or attribution. Do not push unless asked.
+- Write the final response to the user in Chinese.
 
 ## Dates
 
