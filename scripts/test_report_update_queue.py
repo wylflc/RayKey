@@ -88,9 +88,9 @@ def _dossier(code: str, research: float, **review) -> dict[str, str]:
 class ResearchDivergenceTest(unittest.TestCase):
     """§7.3（OI-209）：研究正常化盈利与模型盈利锚差距超过 30% 入队，研究数低于模型锚时冻结；复核记录解除，任一数变动超过 10% 重新入队。"""
 
-    def queue(self, dossier, band, tier=None):
+    def queue(self, dossier, band, tier=None, annual_notice=None):
         return q.build_queue([], [tier or _tier("000858")], [_pool("000858", "2026-09-01")], [], [], [], "2026-09-24",
-                             [dossier], [band])
+                             [dossier], [band], {"000858": annual_notice} if annual_notice else None)
 
     def test_gap_above_threshold_blocks_buying(self) -> None:
         rows = self.queue(_dossier("000858", 186.5), _band("000858", 27.52))      # 275.2 ÷ 186.5 − 1 = 48%
@@ -122,6 +122,34 @@ class ResearchDivergenceTest(unittest.TestCase):
         self.assertEqual(self.queue(_dossier("000858", 186.5, **reviewed), _band("000858", 29.0)), [])   # 模型 +5%
         self.assertEqual(len(self.queue(_dossier("000858", 186.5, **reviewed), _band("000858", 31.0))), 1)   # 模型 +12.6%
         self.assertEqual(len(self.queue(_dossier("000858", 160.0, **reviewed), _band("000858", 27.52))), 1)  # 研究 −14%
+
+    def test_adopted_research_reads_the_mechanical_anchor(self) -> None:
+        adopted = dict(divergence_reviewed_at="2026-09-24", divergence_review_conclusion="采用研究数",
+                       divergence_reviewed_model_yi=275.2, divergence_reviewed_research_yi=177.9)
+        band = dict(_band("000858", 17.79), research_overlay="2026-09-24", model_nopat_ps="27.52")   # 生产带已换成研究数
+        self.assertEqual(self.queue(_dossier("000858", 177.9, **adopted), band), [])
+        div = q.research_divergence(_dossier("000858", 177.9, **adopted), band)
+        self.assertAlmostEqual(div["model"], 275.2)
+        self.assertTrue(div["adopted"])
+
+    def test_adopted_research_requeues_on_any_ten_percent_move_or_new_annual_report(self) -> None:
+        adopted = dict(divergence_reviewed_at="2026-09-24", divergence_review_conclusion="采用研究数",
+                       divergence_reviewed_model_yi=275.2, divergence_reviewed_research_yi=177.9)
+        dossier = _dossier("000858", 177.9, **adopted)
+        band = lambda model_ps: dict(_band("000858", 17.79), research_overlay="2026-09-24", model_nopat_ps=str(model_ps))
+        rows = self.queue(dossier, band(21.0))              # 模型锚降到 210 亿：差距 18% 不超过 30%，但较复核时 −24%
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["buy_blocked"], "")         # 生产用研究数、研究数较低：只入队
+        self.assertEqual(self.queue(dossier, band(27.52), annual_notice="2026-09-24"), [])
+        self.assertEqual(len(self.queue(dossier, band(27.52), annual_notice="2027-04-28")), 1)   # 复核后公告新年报
+
+    def test_adopted_research_freezes_when_research_is_the_higher_anchor(self) -> None:
+        adopted = dict(divergence_reviewed_at="2026-09-24", divergence_review_conclusion="采用研究数",
+                       divergence_reviewed_model_yi=161.4, divergence_reviewed_research_yi=232.3)
+        band = dict(_band("000858", 23.23), research_overlay="2026-09-24", model_nopat_ps="14.0")    # 模型锚 −13%
+        rows = self.queue(_dossier("000858", 232.3, **adopted), band)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["buy_blocked"], "review_pending")
 
     def test_non_roic_path_and_out_of_scope_are_skipped(self) -> None:
         self.assertEqual(self.queue(_dossier("000858", 50.0), _band("000858", 27.52, "equity_fallback")), [])

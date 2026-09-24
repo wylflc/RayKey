@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""按工作流程叠加已公告的预告或快报，并归一化除权事件。
+"""按工作流程叠加已公告的预告或快报，套用采用研究数的复核结论，并归一化除权事件。
 
 叠加通过经营 BPS 调整盈利分子，保持归一化比率；净金融负债与账面少数股东不变，
-盈利份额扣减随 EV 重算。仅写生产带，同一份证据不重复叠加。
+盈利份额扣减随 EV 重算。采用研究数（§6.5.2.2）把每股 NOPAT 换成研究数、投入资本不变。
+仅写生产带，同一份证据不重复叠加。
 """
 from __future__ import annotations
 
@@ -13,6 +14,8 @@ from pathlib import Path
 import minority_claims
 
 from a_share_signal_dates import evidence_iso_for_signal
+from build_report_update_queue import research_adopted
+from intrinsic_value import intrinsic_value
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from financials_corrections import apply_corrections as _apply_corr, report as _corr_report  # noqa: E402
@@ -26,6 +29,13 @@ OVERLAY_COLS = ["forecast_overlay", "forecast_notice_date", "forecast_report_dat
                 # v4.20 除权归一化（OI-052/OI-039）：本文件的带值恒为**现价口径**，
                 # 三列记录归一化的量；`exright_note` 非空即已归一化（幂等标记）。
                 "exright_factor", "exright_cash", "exright_note"]
+# §6.5.2.2 采用研究数：`research_overlay` 非空（采用日）即本行盈利锚取研究数，机械值留在 model_* 与 pre_research_iv。
+RESEARCH_COLS = ["research_overlay", "research_nopat_yi", "model_nopat_ps", "model_roic0", "pre_research_iv",
+                 "research_overlay_note"]
+# 重算企业价值比例所用的生产参数（§6.5.1 统一参数、§6.7 第 2 步 `--fade-shape exponential --fade-lambda 0.12
+# --fade-horizon 50`；增速 10 年线性 fade，`ROIC_T = min(WACC + 2pp, ROIC0)`）
+FADE = dict(n=10, n1=0, consistent=True, roe_lam=0.12, horizon=50)
+TERMINAL_EXCESS = 0.02
 
 
 def exright_normalize(band: dict, code_actions: list[dict], as_of: str) -> tuple[float, float] | None:
@@ -246,20 +256,105 @@ def recompute(band: dict, scale: float) -> tuple[float | None, float, str] | Non
         if nopat is None or ev_ps is None or net_debt is None or nopat <= 0:
             return None
         ev_new = ev_ps * scale
-        # §6.5.1 第 3 条股权桥（OI-128）：净金融负债与账面少数股东不随利润缩放，按盈利份额分走的
-        # 少数股东权益价值 m×(EV − fin_nd) 与 EV 同比例变——扣减取两者较大者，再加回外生权益 x。
-        # 旧带文件无 fin_net_debt_ps／minority_book_ps 两列时退回「净负债整体不动」。
-        fin_nd, minority_book = num(band.get("fin_net_debt_ps")), num(band.get("minority_book_ps"))
-        if fin_nd is not None and minority_book is not None:
-            m_share = num(band.get("minority_share")) or 0.0
-            x_ps = num(band.get("external_equity_ps")) or 0.0
-            debt, _ = minority_claims.equity_bridge(
-                ev_new, fin_nd, minority_book, m_share, x_ps,
-                num(band.get("minority_fixed_claim_ps")) or 0.0,
-                num(band.get("minority_dividend_floor_ps")) or 0.0)
-            return ev_new, ev_new - debt, "nopat_ps"
-        return ev_new, ev_new - net_debt, "nopat_ps"
+        return ev_new, equity_from_ev(band, ev_new, net_debt), "nopat_ps"
     return None
+
+
+def equity_from_ev(band: dict, ev_new: float, net_debt: float) -> float:
+    """§6.5.1 第 3 条股权桥（OI-128）：净金融负债与账面少数股东不随利润缩放，按盈利份额分走的
+    少数股东权益价值 m×(EV − fin_nd) 与 EV 同比例变——扣减取两者较大者，再加回外生权益 x。
+    旧带文件无 fin_net_debt_ps／minority_book_ps 两列时退回「净负债整体不动」。"""
+    fin_nd, minority_book = num(band.get("fin_net_debt_ps")), num(band.get("minority_book_ps"))
+    if fin_nd is not None and minority_book is not None:
+        debt, _ = minority_claims.equity_bridge(
+            ev_new, fin_nd, minority_book, num(band.get("minority_share")) or 0.0,
+            num(band.get("external_equity_ps")) or 0.0,
+            num(band.get("minority_fixed_claim_ps")) or 0.0,
+            num(band.get("minority_dividend_floor_ps")) or 0.0)
+        return ev_new - debt
+    return ev_new - net_debt
+
+
+def load_research_adoptions(path: Path) -> dict[str, dict]:
+    """{代码: 档案行}：差距复核结论为「采用研究数」且登记了研究数的档案（§6.5.2.2）。"""
+    if not path.exists():
+        return {}
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        return {(r.get("security_code") or "").strip(): r for r in csv.DictReader(handle)
+                if research_adopted(r) and (num(r.get("research_nopat_yi")) or 0.0) > 0}
+
+
+def apply_research_overlay(band: dict, dossier: dict) -> tuple[float, float] | str:
+    """§6.5.2.2 采用研究数：每股 NOPAT 换成研究数，投入资本不变（ROIC0 同比例），其余参数与股权桥照带。
+
+    企业价值 = 带 `ev_ps` × EV(研究) ÷ EV(机械)：同一引擎算两次取比例，k = 1 时逐位回到带值、不受四位小数舍入影响；
+    `zero_growth` 路径 EV 与 NOPAT 同比例。须在除权归一化之前调用。返回 (原 IV, 新 IV)，不适用时返回原因。"""
+    path = (band.get("roic_path") or "").strip()
+    if path not in ("growth", "zero_growth"):
+        return f"估值路径 {path or '未知'} 无 NOPAT 锚"
+    if (band.get("exright_note") or "").strip():
+        return "带已除权归一化，须从 §6.7 第 4 步重建池带后再套用"
+    research = num(dossier.get("research_nopat_yi"))
+    nopat, roic0, shares = num(band.get("nopat_ps")), num(band.get("roic0")), num(band.get("shares_est"))
+    iv, net_debt, ev_ps = num(band.get("intrinsic_value")), num(band.get("net_debt_ps")), num(band.get("ev_ps"))
+    if ev_ps is None and iv is not None and net_debt is not None:
+        ev_ps = iv + net_debt
+    if not research or not nopat or nopat <= 0 or not shares or iv is None or net_debt is None or not ev_ps:
+        return "输入不全（研究数、每股 NOPAT、shares_est、IV 或净负债）"
+    research_ps = research * 1e8 / shares
+    k = research_ps / nopat
+    terminal_share = None
+    if path == "zero_growth":
+        factor = k
+    else:
+        wacc, g0, g_t = num(band.get("wacc")), num(band.get("g0")) or 0.0, num(band.get("g_terminal"))
+        if wacc is None or g_t is None or roic0 is None:
+            return "输入不全（wacc、g_terminal 或 roic0）"
+        def ev(scale: float):
+            r0 = roic0 * scale
+            return intrinsic_value(nopat * scale, r0, g0, wacc, roe_terminal=min(wacc + TERMINAL_EXCESS, r0),
+                                   g_terminal=g_t, **FADE)
+        try:
+            base, res_k = ev(1.0).intrinsic_value, ev(k)
+            factor = res_k.intrinsic_value / base if base > 0 else None
+            terminal_share = res_k.terminal_share
+        except (ValueError, ZeroDivisionError) as exc:
+            return f"研究口径企业价值不可算：{exc}"
+        if factor is None or factor <= 0:
+            return "研究口径企业价值非正"
+    ev_new = ev_ps * factor
+    iv_new = equity_from_ev(band, ev_new, net_debt)
+    if iv_new <= 0:
+        return f"研究口径股权价值 {iv_new:.2f} ≤ 0"
+    band.update({
+        "research_overlay": (dossier.get("divergence_reviewed_at") or "")[:10],
+        "research_nopat_yi": f"{research:.2f}",
+        "model_nopat_ps": band.get("nopat_ps", ""),
+        "model_roic0": band.get("roic0", ""),
+        "pre_research_iv": f"{iv:.4f}",
+        "research_overlay_note": (
+            f"§6.5.2.2 采用研究数（复核 {dossier.get('divergence_reviewed_at') or '—'}）：NOPAT {research:.2f} 亿 ÷ 股数 "
+            f"{shares / 1e8:.2f} 亿 = 每股 {research_ps:.4f}（机械 {nopat:.4f}，×{k:.4f}），投入资本不变、ROIC0 同比例；"
+            f"EV ×{factor:.4f}，IV {iv:.2f} → {iv_new:.2f}"),
+        "nopat_ps": f"{research_ps:.4f}",
+        "intrinsic_value": f"{iv_new:.4f}",
+        "band_low": f"{BAND_LOW_COEF * iv_new:.4f}",
+        "band_high": f"{BAND_HIGH_COEF * iv_new:.4f}",
+        "ev_ps": f"{ev_new:.4f}",
+        "net_debt_ps": f"{ev_new - iv_new:.4f}",
+    })
+    if roic0 is not None:
+        band["roic0"] = f"{roic0 * k:.4f}"
+    # 派生列随研究口径重写；敏感度列 v_bear／v_bull／v_zero_growth 保留机械模型的值
+    band["implied_pe"] = f"{iv_new / research_ps:.2f}"
+    eps_ttm, mos = num(band.get("eps_ttm")), num(band.get("mos"))
+    if eps_ttm and eps_ttm > 0:
+        band["pe_on_ttm_eps"] = f"{iv_new / eps_ttm:.2f}"
+    if mos is not None:
+        band["max_buy_price"] = f"{iv_new * (1 - mos):.4f}"
+    if terminal_share is not None:
+        band["terminal_share"] = f"{terminal_share:.4f}"
+    return iv, iv_new
 
 
 def main() -> int:
@@ -273,6 +368,8 @@ def main() -> int:
                     default=ROOT / "data/raw/corporate_actions/a_share_corporate_actions.csv")
     ap.add_argument("--pool", type=Path, default=ROOT / "data/processed/a_share_core_valuation_pool.csv",
                     help="只用于按 总市值÷现价 交叉校验股本；缺失则跳过校验")
+    ap.add_argument("--dossiers", type=Path, default=ROOT / "data/processed/a_share_valuation_dossiers.csv",
+                    help="差距复核结论为「采用研究数」的档案（§6.5.2.2）")
     ap.add_argument("--out", type=Path, default=None, help="缺省原地覆盖 --bands")
     args = ap.parse_args()
     args.as_of = evidence_iso_for_signal(args.signal_date)
@@ -324,13 +421,13 @@ def main() -> int:
                 if cap and price and price > 0:
                     market_shares[(row.get("security_code") or "").strip()] = cap * 1e9 / price
 
-    out_header = header + [c for c in (*OVERLAY_COLS, *minority_claims.ROW_FIELDS) if c not in header]
+    out_header = header + [c for c in (*OVERLAY_COLS, *RESEARCH_COLS, *minority_claims.ROW_FIELDS) if c not in header]
     applied, skipped, unchanged = [], [], 0
     bank_cleared: list[tuple[str, str, str]] = []
 
     for band in rows:
         band.update(minority_claims.invalidate_row(band, args.as_of))
-        for col in OVERLAY_COLS:
+        for col in (*OVERLAY_COLS, *RESEARCH_COLS):
             band.setdefault(col, "")
         code = (band.get("security_code") or "").strip()
         name = band.get("security_name") or code
@@ -350,6 +447,9 @@ def main() -> int:
             continue
         if band.get("forecast_overlay") and band.get("forecast_notice_date") == ev["notice_date"]:
             unchanged += 1  # 幂等：同一份证据不重复叠加
+            continue
+        if band.get("research_overlay"):
+            skipped.append((name, "本行已采用研究数，新预告须从 §6.7 第 4 步重建池带后按序叠加"))
             continue
 
         path = (band.get("roic_path") or "").strip()
@@ -481,6 +581,26 @@ def main() -> int:
             band["bps_operating"] = f"{new_bps_op:.4f}"
         applied.append((name, old_iv, iv_new, ev["label"], ev["notice_date"], delta_profit / 1e8))
 
+    # ---- §6.5.2.2 采用研究数：§6.4 叠加之后、除权归一化之前 ----
+    adoptions = load_research_adoptions(args.dossiers)
+    research_hits: list[tuple[str, float, float]] = []
+    for band in rows:
+        code = (band.get("security_code") or "").strip()
+        name = band.get("security_name") or code
+        dossier = adoptions.get(code)
+        applied_at = (band.get("research_overlay") or "").strip()
+        if applied_at:
+            if dossier is None or num(dossier.get("research_nopat_yi")) != num(band.get("research_nopat_yi")):
+                skipped.append((name, "已套用的研究数与档案不符（结论或研究数已改），须从 §6.7 第 4 步重建池带"))
+            continue
+        if dossier is None or (band.get("status") or "").strip() not in ("", "ok"):
+            continue
+        res = apply_research_overlay(band, dossier)
+        if isinstance(res, str):
+            skipped.append((name, f"采用研究数未套用：{res}"))
+        else:
+            research_hits.append((name, res[0], res[1]))
+
     # ---- v4.20 除权归一化（OI-052/OI-039）：本文件写出的带值恒为现价口径 ----
     exright_hits: list[tuple[str, float, float]] = []
     for band in rows:
@@ -512,6 +632,8 @@ def main() -> int:
         for name, old, new, label, notice, dprofit in applied:
             chg = f"{new / old - 1:+.1%}" if old else "—"
             print(f"  {name:<10}{old or 0:>10.2f}{new:>10.2f}{chg:>9}  {dprofit:>12.2f}  {label} {notice}")
+    for name, old, new in research_hits:
+        print(f"  采用研究数（§6.5.2.2）：{name} IV {old:.2f} → {new:.2f}（{new / old - 1:+.1%}）")
     for name, label, notice in bank_cleared:
         print(f"  · 银行只推进证据日、带值不变：{name}（{label} {notice}）")
     for name, why in skipped:

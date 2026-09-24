@@ -214,6 +214,10 @@ def main() -> int:
                 f"（报告期 {band.get('pre_overlay_report_date') or '—'}）｜")
         else:
             common_head = (archive_tag + f"报告期 {band['report_date'][:10]}、生效日 {band['available_at'][:10]}｜")
+        if (band.get("research_overlay") or "").strip():
+            common_head += (f"**采用研究数（§6.5.2.2，复核 {band['research_overlay']}）**：盈利锚取研究 NOPAT "
+                            f"{band.get('research_nopat_yi') or '—'} 亿，机械每股 NOPAT {band.get('model_nopat_ps') or '—'}、"
+                            f"机械 IV {band.get('pre_research_iv') or '—'}；**本行与回测 `valuation_ratio` 不同口径**｜")
         common_tail = (f"**内在价值 {iv:.2f} 元**。带 = IV × [0.90, 1.10]，**中值恰为 IV**，"
                        f"池内 `P/V` 按现价 ÷ V 计算（`scripts/pv_ratio.py`）。")
         def _f(key, fmt="{:.2%}"):

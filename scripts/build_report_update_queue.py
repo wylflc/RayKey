@@ -33,10 +33,12 @@ DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_OUTPUT = ROOT / "data/interim/a_share_report_update_queue.csv"
 DEFAULT_DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 DEFAULT_MODEL_BANDS = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
-# §7.3（OI-209）：档案研究正常化盈利与模型盈利锚（生产带每股 NOPAT × shares_est，ROIC 路径）差距超过 30% 入队，
-# 研究数低于模型锚时同时冻结新增买入；复核后任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队。
+# §7.3（OI-209）：档案研究正常化盈利与模型盈利锚（生产带机械每股 NOPAT × shares_est，ROIC 路径）差距超过 30% 入队，
+# 生产所用的锚较高时同时冻结新增买入；维持模型的行复核后任一数变动超过 10% 且差距仍超过 30% 时重新入队，
+# 采用研究数的行任一数变动超过 10% 或复核日后公告新年报即重新入队。
 RESEARCH_GAP_MAX = 0.30
 RESEARCH_RETRIGGER = 0.10
+ADOPT_RESEARCH = "采用研究数"
 ROIC_PATHS = {"growth", "zero_growth"}
 
 
@@ -55,29 +57,53 @@ def research_nopat_from_parent(parent_yi: float, minority_share: float, nopat_yi
     return parent_yi / (1.0 - min(max(minority_share, 0.0), 0.95)) + (nopat_yi - net_profit_yi)
 
 
-def research_divergence(dossier: dict[str, str] | None, band: dict[str, str] | None) -> dict[str, object] | None:
+def research_adopted(dossier: dict[str, str] | None) -> bool:
+    """§6.5.2.2：差距复核结论为「采用研究数」，生产带的盈利锚取研究数。"""
+    return bool(dossier) and (dossier.get("divergence_review_conclusion") or "").strip() == ADOPT_RESEARCH
+
+
+def research_divergence(dossier: dict[str, str] | None, band: dict[str, str] | None,
+                        annual_notice: str | None = None) -> dict[str, object] | None:
     """研究正常化盈利对模型盈利锚（亿元）；任一侧不可比时返回 None。
 
-    `triggered` = 差距超限且未被复核覆盖（入队）；`freeze` = 入队且研究数低于模型锚（模型较乐观，§7.5 冻结新增买入）。"""
+    模型锚取机械值：带已采用研究数时读 `model_nopat_ps`。`triggered` = 入队；`freeze` = 入队且生产所用的锚较高
+    （维持模型：研究数低于模型锚；采用研究数：研究数高于模型锚），§7.5 冻结新增买入。
+    `annual_notice` = 最新年报公告日（信号日可见），采用研究数的行在复核日之后公告新年报即入队。"""
     if not dossier or not band or band.get("roic_path") not in ROIC_PATHS:
         return None
     research = _num(dossier.get("research_nopat_yi"))
-    nopat_ps, shares = _num(band.get("nopat_ps")), _num(band.get("shares_est"))
+    nopat_ps = _num(band.get("model_nopat_ps")) if (band.get("research_overlay") or "").strip() else _num(band.get("nopat_ps"))
+    shares = _num(band.get("shares_est"))
     if not research or research <= 0 or not nopat_ps or not shares or nopat_ps <= 0:
         return None
     model = nopat_ps * shares / 1e8
     gap = max(model, research) / min(model, research) - 1
     exceeds = gap > RESEARCH_GAP_MAX + 1e-9          # 「超过」30%：恰为 30% 不入队，浮点末位不算超过
+    adopted = research_adopted(dossier)
+    reviewed_at = (dossier.get("divergence_reviewed_at") or "").strip()
     triggered = exceeds
-    if triggered and dossier.get("divergence_reviewed_at"):
+    if reviewed_at and (exceeds or adopted):
         seen_model = _num(dossier.get("divergence_reviewed_model_yi"))
         seen_research = _num(dossier.get("divergence_reviewed_research_yi"))
         moved = (not seen_model or not seen_research
                  or abs(model / seen_model - 1) > RESEARCH_RETRIGGER
                  or abs(research / seen_research - 1) > RESEARCH_RETRIGGER)
-        triggered = moved
-    return {"research": research, "model": model, "gap": gap, "exceeds": exceeds, "triggered": triggered,
-            "freeze": triggered and research < model}
+        triggered = moved if not adopted else bool(moved or (annual_notice and annual_notice[:10] > reviewed_at[:10]))
+    production_higher = research > model if adopted else research < model
+    return {"research": research, "model": model, "gap": gap, "exceeds": exceeds, "adopted": adopted,
+            "triggered": triggered, "freeze": triggered and production_higher}
+
+
+def latest_annual_notices(financials_dir: Path, as_of: str) -> dict[str, str]:
+    """{代码: 信号日可见的最新年报公告日}，读逐季面板的年报期文件（最近两期）。"""
+    out: dict[str, str] = {}
+    for path in sorted(financials_dir.glob("*-12-31.csv"))[-2:]:
+        for row in load_csv(path):
+            code = (row.get("security_code") or "").zfill(6)
+            notice = (row.get("notice_date") or "")[:10]
+            if code and notice and notice <= as_of and notice > out.get(code, ""):
+                out[code] = notice
+    return out
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
@@ -190,6 +216,7 @@ def build_queue(
     as_of: str,
     dossier_rows: list[dict[str, str]] | None = None,
     band_rows: list[dict[str, str]] | None = None,
+    annual_notices: dict[str, str] | None = None,
 ) -> list[dict[str, object]]:
     dossiers_by_code = {row["security_code"].zfill(6): row for row in dossier_rows or [] if row.get("security_code")}
     bands_by_code = {row["security_code"].zfill(6): row for row in band_rows or [] if row.get("security_code")}
@@ -279,7 +306,8 @@ def build_queue(
             and periodic_notice_date
             and (review_cutoff is None or periodic_notice_date > review_cutoff)
         )
-        divergence = research_divergence(dossiers_by_code.get(code), bands_by_code.get(code)) if in_valuation_scope else None
+        divergence = (research_divergence(dossiers_by_code.get(code), bands_by_code.get(code), (annual_notices or {}).get(code))
+                      if in_valuation_scope else None)
         divergence_trigger = bool(divergence and divergence["triggered"])
         report_driven_review = (
             report_valuation_trigger
@@ -374,6 +402,7 @@ def build_queue_for_signal(
     signal_date: str,
     dossier_rows: list[dict[str, str]] | None = None,
     band_rows: list[dict[str, str]] | None = None,
+    annual_notices: dict[str, str] | None = None,
 ) -> list[dict[str, object]]:
     """Production entry: derive the evidence cutoff from one signal date."""
     return build_queue(
@@ -386,6 +415,7 @@ def build_queue_for_signal(
         evidence_iso_for_signal(signal_date),
         dossier_rows,
         band_rows,
+        annual_notices,
     )
 
 
@@ -420,9 +450,11 @@ def main() -> None:
     args.as_of = evidence_iso_for_signal(args.signal_date)
     if args.market != "A_SHARE":
         raise SystemExit("Only --market A_SHARE is supported.")
+    annual_notices: dict[str, str] = {}
     if args.financials.is_dir():
         from quarterly_panel_indicators import load_latest_indicators
         financial_rows = list(load_latest_indicators(args.financials, args.as_of).values())
+        annual_notices = latest_annual_notices(args.financials, args.as_of)
     else:
         financial_rows = load_csv(args.financials)
     rows = build_queue_for_signal(
@@ -435,6 +467,7 @@ def main() -> None:
         args.signal_date,
         load_csv(args.dossiers),
         load_csv(args.model_bands),
+        annual_notices,
     )
     fieldnames = [
         "market_type",

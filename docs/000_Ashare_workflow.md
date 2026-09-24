@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.203
+# A股选股-估值-量价操作流程 v4.204
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -283,15 +283,17 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 ##### 6.5.2.1 P/V 与带宽
 
-正常生产带的中值必须等于模型内在价值。生产 `P/V` 与回测 `valuation_ratio` 在未叠加预告的行上使用同一分母（`scripts/pv_ratio.py` 与逐日状态同式）；被 §6.4 叠加过的行是成文例外，生产分母比回测分母新。
+正常生产带的中值必须等于模型内在价值。生产 `P/V` 与回测 `valuation_ratio` 在未叠加的行上使用同一分母（`scripts/pv_ratio.py` 与逐日状态同式）；被 §6.4 叠加过的行与采用研究数的行（§6.5.2.2）是成文例外，前者生产分母比回测分母新，后者按研究盈利计。
 
-叠加只写生产带 `a_share_pool_model_bands_adopted.csv`，**回测输入 `roic_bands.csv`／`roic_daily_raw.csv`／`a_share_daily_states_adopted.csv` 一律不碰**。带文件的 `forecast_overlay` 列非空即表示该行已叠加；引用回测读数论证生产行为时先看这一列。
+叠加只写生产带 `a_share_pool_model_bands_adopted.csv`，**回测输入 `roic_bands.csv`／`roic_daily_raw.csv`／`a_share_daily_states_adopted.csv` 一律不碰**。带文件的 `forecast_overlay` 列非空即表示该行已叠加预告或快报，`research_overlay` 列非空即表示该行采用研究数；引用回测读数论证生产行为时先看这两列。
 
 ##### 6.5.2.2 模型计算
 
 模型计算统一由 §6.7 命令完成；档案不得覆盖模型参数或为希望得到的 `P/V` 反推输入。
 
-**研究正常化盈利（OI-209）**：档案 `a_share_valuation_dossiers.csv` 可登记研究估计的正常化盈利 `research_nopat_yi`（亿元，与模型同口径：税后经营利润，剔除金融收益，含权益法损益与少数股东份额），同时填 `research_evidence_date`（所依据证据的公开可得日）、`research_falsifier`（可证伪条件）、`research_source`（出处；研究原文为归母净利时按模型股权桥反解：`归母 ÷ (1 − 生产带 minority_share) + (最新年报 NOPAT − 合并净利)`，注明两项取值；唯一实现 `build_report_update_queue.research_nopat_from_parent`）。研究数须与模型锚同一产能口径：以未来产量或未建成产能为基础的盈利按现有已投产产能重述，扩产由模型增速腿计价。研究数不进模型、不改带。模型盈利锚 = 生产带每股 NOPAT × `shares_est`（亿元，ROIC 路径）；差距 = 两数较大者 ÷ 较小者 − 1，超过 30% 按 §7.3 入队。
+**研究正常化盈利（OI-209）**：档案 `a_share_valuation_dossiers.csv` 可登记研究估计的正常化盈利 `research_nopat_yi`（亿元，与模型同口径：税后经营利润，剔除金融收益，含权益法损益与少数股东份额），同时填 `research_evidence_date`（所依据证据的公开可得日）、`research_falsifier`（可证伪条件）、`research_source`（出处；研究原文为归母净利时按模型股权桥反解：`归母 ÷ (1 − 生产带 minority_share) + (最新年报 NOPAT − 合并净利)`，注明两项取值；唯一实现 `build_report_update_queue.research_nopat_from_parent`）。研究数须与模型锚同一产能口径：以未来产量或未建成产能为基础的盈利按现有已投产产能重述，扩产由模型增速腿计价。模型盈利锚 = 生产带机械每股 NOPAT × `shares_est`（亿元，ROIC 路径；采用研究数的行取 `model_nopat_ps`）；差距 = 两数较大者 ÷ 较小者 − 1，超过 30% 按 §7.3 入队。
+
+**采用研究数**：差距复核结论（档案 `divergence_review_conclusion`）为「采用研究数」时，§6.7 第 4 步的叠加脚本在 §6.4 叠加之后、除权归一化之前改写候选侧与 B2 池带：每股 NOPAT 换成 `research_nopat_yi × 1e8 ÷ shares_est`，投入资本不变（`roic0` 同比例），其余参数与股权桥照带，企业价值按 `ev_ps × EV(研究) ÷ EV(机械)` 重算（`zero_growth` 路径 EV 与 NOPAT 同比例），再重算 V 与区间；机械值留在 `model_nopat_ps`／`model_roic0`／`pre_research_iv`，`research_overlay` 记采用日。唯一实现 `apply_forecast_band_overlay.apply_research_overlay`。只改生产带，回测输入不动；结论为「维持模型」时研究数不进模型、不改带。采用一直有效到复核把结论改回「维持模型」。
 
 ##### 6.5.2.3 生产带落地
 
@@ -299,7 +301,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 **持仓侧带** `data/processed/a_share_pool_model_bands_hold.csv`：§6.7 第 4 步由候选侧生产带与 B2 池带（§6.5.1 B2 口径）逐票取 `intrinsic_value` 较高的一行，两侧各自完成预告叠加与除权归一化后再取，`hold_source` 列标明来源；成员与候选侧生产带相同。§9.3.1 换仓来源读持仓侧带；买入线、候选排序、档案、阅读版与 §6 其余判定只读候选侧生产带。回测同构：候选侧读 `a_share_daily_states_adopted.csv`，持仓侧读 `a_share_daily_states_hold.csv`（§6.7 第 3 步逐 (代码, 日期) 取较高 V，`--hold-states`）。
 
-生产 `P/V` 与回测 `valuation_ratio` 必须逐位一致（§6.4 叠加行除外）。**晚间披露报告的当晚吸收两侧同构**：生产在公告日戳的前一晚即用新带出信号；回测逐日状态里每条带自**可得日之前的最后一个市场交易日**起生效（`build_historical_valuation_bands.py --state-effective prev_trading_day`，缺省；前一交易日按上证指数日历取，行情库在该公告前已断的陈旧序列退回可得日生效）。带的可得日按 §6.3 第 2 条封顶（`--notice-cap statutory`，缺省）。回测的均线与建仓止损锚同样与实盘同构：均线按前复权口径折回当日股本／分红基准（§8.3），除权日止损锚与持有期峰价按 §11.4 同式折算（§9.3.5）。早于 §6.5.2.4 时点门槛的陈旧模型带不进任何一层：扫描器无 `P/V`、档案层判「无法估值」，两层同一结论。
+生产 `P/V` 与回测 `valuation_ratio` 必须逐位一致（§6.4 叠加行与采用研究数的行除外，§6.5.2.1）。**晚间披露报告的当晚吸收两侧同构**：生产在公告日戳的前一晚即用新带出信号；回测逐日状态里每条带自**可得日之前的最后一个市场交易日**起生效（`build_historical_valuation_bands.py --state-effective prev_trading_day`，缺省；前一交易日按上证指数日历取，行情库在该公告前已断的陈旧序列退回可得日生效）。带的可得日按 §6.3 第 2 条封顶（`--notice-cap statutory`，缺省）。回测的均线与建仓止损锚同样与实盘同构：均线按前复权口径折回当日股本／分红基准（§8.3），除权日止损锚与持有期峰价按 §11.4 同式折算（§9.3.5）。早于 §6.5.2.4 时点门槛的陈旧模型带不进任何一层：扫描器无 `P/V`、档案层判「无法估值」，两层同一结论。
 
 ##### 6.5.2.4 主体重置与无法估值
 
@@ -326,7 +328,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 ### 6.6 人工复核职责
 
-人工只处理：模型不可估原因；主体不可比（重置日与 `growth_mode`）；新证据是否触发重算；校验失败行；研究正常化盈利与模型盈利锚的差距复核（§7.3）——核对研究数的证据与可证伪条件是否仍成立，结论只能是维持模型或修订研究数，不改模型参数或带。正常公司不逐票选择模型、倍数或带宽。
+人工只处理：模型不可估原因；主体不可比（重置日与 `growth_mode`）；新证据是否触发重算；校验失败行；研究正常化盈利与模型盈利锚的差距复核（§7.3）——核对研究数的证据与可证伪条件是否仍成立，结论只能是维持模型或采用研究数（§6.5.2.2），两者均可同时修订研究数，不改模型参数。正常公司不逐票选择模型、倍数或带宽。
 
 档案必须保留证据事件、证据可得日、关键指标、高频指标、下一复核点和可证伪触发。带变动后重渲染逐票 README。
 
@@ -382,7 +384,7 @@ python3 scripts/build_hold_daily_states.py   # 持仓侧逐日状态 = 逐 (代�
 
 # 4. 生成池模型带 → 叠加预告/快报 →（B2 池带同两步 → 持仓侧池带）→ 写入逐票档案
 python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD
-python3 scripts/apply_forecast_band_overlay.py --signal-date YYYY-MM-DD
+python3 scripts/apply_forecast_band_overlay.py --signal-date YYYY-MM-DD   # 预告/快报叠加（§6.4）→ 采用研究数（§6.5.2.2）→ 除权归一化
 python3 scripts/build_pool_model_bands.py --signal-date YYYY-MM-DD \
   --bands data/processed/roic_bands_b2.csv --states data/processed/a_share_daily_states_b2.csv \
   --out data/processed/a_share_pool_model_bands_b2.csv
@@ -518,7 +520,7 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 
 `valuation_reviewed_at` 取生产带文件 `model_evaluated_at`（模型最近评估过的报告期可得日，含护栏拒绝行）与采纳带可得日的较大者；`evidence_available_at` 取采纳带可得日。
 
-**研究与模型差距（OI-209）**：估值范围内 ROIC 路径的池成员，档案研究正常化盈利与模型盈利锚差距超过 30%（§6.5.2.2）即入队；研究数低于模型锚时同时按 §7.5 冻结新增买入，研究数高于模型锚时只入队复核、不冻结。复核在档案记 `divergence_reviewed_at`、`divergence_review_note`（维持模型或修订研究数，写明理由）与复核时两数 `divergence_reviewed_model_yi`／`divergence_reviewed_research_yi` 后解除；此后任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队。
+**研究与模型差距（OI-209）**：估值范围内 ROIC 路径的池成员，档案研究正常化盈利与模型盈利锚差距超过 30%（§6.5.2.2）即入队；生产所用的锚高于另一数时（维持模型：研究数低于模型锚；采用研究数：研究数高于模型锚）同时按 §7.5 冻结新增买入，否则只入队复核、不冻结。复核在档案记 `divergence_reviewed_at`、`divergence_review_conclusion`（维持模型或采用研究数）、`divergence_review_note`（理由，修订研究数时写明）与复核时两数 `divergence_reviewed_model_yi`／`divergence_reviewed_research_yi` 后解除；此后维持模型的行在任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队，采用研究数的行在任一数变动超过 10% 或复核日之后公告新年报时重新入队。
 
 ### 7.4 事件复核触发
 
@@ -530,7 +532,7 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 
 ### 7.5 复核期冻结
 
-估值或事件复核触发后（§7.3 研究数高于模型锚的差距复核除外），将 `buy_blocked` 设为 `review_pending`，冻结新增买入但继续持仓跟踪。完成复核、更新证据与复核日期并重建队列后自动解除。
+估值或事件复核触发后（§7.3 生产所用锚较低的差距复核除外），将 `buy_blocked` 设为 `review_pending`，冻结新增买入但继续持仓跟踪。完成复核、更新证据与复核日期并重建队列后自动解除。
 
 **预告与快报触发的估值复核由 §6.4 的叠加机械完成**：叠加把带与 `valuation_reviewed_at` 一并推进到公告日，队列重建后冻结自动解除。叠加覆盖不到的行（银行与保险、`zero_growth` 路径输入不全、股本多期倒推不一致；脚本逐行打印跳过原因）走人工复核。
 

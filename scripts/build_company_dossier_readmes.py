@@ -95,6 +95,9 @@ def model_assumptions(band: dict, mid: float, pv: float | None) -> str:
     head = f"生产带按 §6.5.1 唯一口径由{PATH_LABEL.get(path, path or '—')}给出"
     if overlay in ("forecast", "express"):
         head += "（§6.4 预告/快报叠加行，正式报告披露后由机械带取代）"
+    if (band.get("research_overlay") or "").strip():
+        head += (f"，盈利锚按差距复核结论采用研究数 {band.get('research_nopat_yi') or '—'} 亿"
+                 f"（§6.5.2.2，机械 IV {band.get('pre_research_iv') or '—'}）")
     if path == "bank_divspread":
         tail = "：V = 最近已知完整财年每股现金分红 ÷（十年国债 + 2%）"
         if pv:
@@ -191,14 +194,19 @@ def research_line(row: dict, band: dict | None) -> str:
     div = research_divergence(row, band)
     if div is None:
         return text + "模型盈利锚不可比（非 ROIC 路径或无生产带）。"
-    text += f"模型盈利锚 {div['model']:.2f} 亿（每股 NOPAT × 股数），差距 {div['gap']:.0%}"
-    if not div["exceeds"]:
+    text += f"模型盈利锚 {div['model']:.2f} 亿（机械每股 NOPAT × 股数），差距 {div['gap']:.0%}"
+    if div["exceeds"]:
+        text += f"，超过 {RESEARCH_GAP_MAX:.0%}"
+    elif not div["adopted"]:
         return text + f"，未超过 {RESEARCH_GAP_MAX:.0%}。"
     if div["triggered"]:
-        action = "研究数低于模型锚，按 §7.3 入队、冻结新增买入" if div["freeze"] else "研究数高于模型锚，按 §7.3 入队复核、不冻结"
-        return text + f"，超过 {RESEARCH_GAP_MAX:.0%}：{action}，待复核。"
-    return text + (f"，超过 {RESEARCH_GAP_MAX:.0%}；已于 {row.get('divergence_reviewed_at')} 复核："
-                   f"{row.get('divergence_review_note') or '—'}。")
+        side = "生产所用锚较高" if div["freeze"] else "生产所用锚较低"
+        action = f"{side}，按 §7.3 入队" + ("、冻结新增买入" if div["freeze"] else "复核、不冻结")
+        return text + f"：{action}，待复核。"
+    conclusion = row.get("divergence_review_conclusion") or "—"
+    if div["adopted"]:
+        conclusion += "，**生产带按研究数估值**（§6.5.2.2）"
+    return text + (f"；已于 {row.get('divergence_reviewed_at')} 复核（{conclusion}）：{row.get('divergence_review_note') or '—'}。")
 
 
 def render(row: dict, pool: dict, bands: dict, tiers: dict | None = None) -> tuple[str, bool]:
