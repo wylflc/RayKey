@@ -1,0 +1,10 @@
+{
+ "paths": 127,
+ "job_id": "27123975",
+ "unchanged_inputs": true,
+ "hash_changed_inputs": [
+  "data/reference/cost_of_equity_inputs.csv",
+  "data/reference/equity_bond_csi300.csv"
+ ],
+ "note": "摘要变化只在回测末日之后，见 input_change_audit.json"
+}

@@ -1,0 +1,16 @@
+{
+ "job_id": "27123975",
+ "guard": "run.py 收尾比对 before_manifest.json（建带作业开始时 14:30 CEST）的输入摘要",
+ "hash_changed": [
+  "data/reference/cost_of_equity_inputs.csv",
+  "data/reference/equity_bond_csi300.csv"
+ ],
+ "cause": "当晚日常证据与预览作业（27125261、27125592）运行 fetch_cost_of_equity_inputs.py 与 fetch_equity_bond_inputs.py --refresh",
+ "backtest_last_nav_date": [
+  "2026-08-28"
+ ],
+ "cost_of_equity_inputs": "201行中200行只有 source 列抓取日期文字变化（2026-09-23→2026-09-24），observed_on/risk_free_rate/equity_risk_premium 逐行相同；末行 2026-09-22 换为 2026-09-24",
+ "equity_bond_csi300": "257行相同；末行 2026-09-23 换为 2026-09-24",
+ "conclusion": "变化只在回测末次净值日 2026-08-28 之后，不影响任何路径与读数；按有效输入不变处理",
+ "audited_at_beijing": "2026-09-24"
+}
