@@ -3157,6 +3157,9 @@ def main() -> int:
     parser.add_argument("--cash-caliber", choices=roic_inputs.CASH_CALIBERS, default="nonop",
                         help="§6.5.1 超额现金与 EBIT 口径（OI-201）：nonop=非经营金融资产按账面计入、其收益不进 EBIT、金融负债计入"
                              "有息负债、附注核定存款计入现金（缺省，生产）；legacy=货币资金 + 交易性金融资产、EBIT = 利润总额 + 利息费用（只作复现）")
+    parser.add_argument("--restricted-cash", choices=roic_inputs.RESTRICTED_CASH_MODES, default="off",
+                        help="研究开关（OI-219）：notes=年报受限资产附注中为应付票据、信用证、保函质押的现金类不计超额现金、"
+                             "按经营资产进投入资本（以应付票据为限），其利息并回 EBIT；off=缺省＝生产")
     parser.add_argument("--equity-anchor", choices=("guarded", "legacy"), default="guarded",
                         help="§6.5.1 第 3 条权益口径的 ROE 锚（OI-200）：guarded=与 ROIC 路径 ratio0 同式的 λ 锚、TTM 当期化与峰谷坡道"
                              "（缺省，生产）；legacy=五年锚 × 单边 λ 上抬、无周期守卫（只作复现）")
@@ -3293,7 +3296,8 @@ def main() -> int:
             return 1
         ROIC_YEARS.update(roic_inputs.load_statements(set(codes), args.statements_dir,
                                                       ic_floor=args.roic_ic_floor, caliber=args.cash_caliber,
-                                                      notice_cap=(args.notice_cap == "statutory")))
+                                                      notice_cap=(args.notice_cap == "statutory"),
+                                                      restricted_cash=args.restricted_cash))
         if not ROIC_YEARS:
             print(f"**{args.statements_dir} 无三大报表**，roic 口径无法建带。"
                   f"先跑 scripts/fetch_a_share_financial_statements.py")
