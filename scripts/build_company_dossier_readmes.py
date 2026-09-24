@@ -119,6 +119,8 @@ def model_assumptions(band: dict, mid: float, pv: float | None) -> str:
             g_note = f"两腿均未给出正增长：{capital_leg}，增速腿权重见 §6.5.1；按 0 增长"
         else:
             g_note = capital_leg
+        if (band.get("model_g0") or "").strip():
+            g_note = f"研究增长（§6.5.2.2），机械 g0 {_pct(band.get('model_g0'))}：{capital_leg}"
         params = (f"g0 {_pct(band.get('g0'))}（{g_note}）、WACC {_pct(band.get('wacc'))}、"
                   f"终值占比 {_pct(band.get('terminal_share'), 1)}")
     elif path == "zero_growth":
@@ -191,6 +193,8 @@ def research_line(row: dict, band: dict | None) -> str:
         return ""
     text = (f"**研究正常化盈利**（§6.5.2.2，NOPAT 口径）：{research:.2f} 亿（证据日 {row.get('research_evidence_date') or '—'}；"
             f"可证伪：{row.get('research_falsifier') or '—'}）。")
+    if _num(row.get("research_g0")) is not None:
+        text += f"**研究增长** g0 {_num(row.get('research_g0')):.2%}：{row.get('research_g0_basis') or '—'}。"
     div = research_divergence(row, band)
     if div is None:
         return text + "模型盈利锚不可比（非 ROIC 路径或无生产带）。"

@@ -242,6 +242,8 @@ def main() -> int:
             g_note = {"trailing": "利润增速腿（NOPAT 五年 CAGR × 增速腿权重）",
                       "capital": "资本腿 min(增量ROIC, 40%) × 再投资率",
                       "none": "两腿均未给出正增长（增速腿权重见 §6.5.1），按 0"}.get(g_src, "min(增量ROIC, 40%) × 再投资率")
+            if (band.get("model_g0") or "").strip():
+                g_note = f"研究增长（§6.5.2.2，机械 g0 {_f('model_g0')}，增量 ROIC 与再投资率为机械值）"
             row["band_derivation"] = (common_head
                 + f"每股 NOPAT {band.get('nopat_ps', '—')}｜ROIC0 {_f('roic0')}｜"
                 + f"增量 ROIC {_f('incremental_roic')}｜再投资率 {_f('reinvestment_rate')}｜"

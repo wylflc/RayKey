@@ -49,6 +49,24 @@ class ResearchOverlayTest(unittest.TestCase):
         self.assertEqual(band["research_overlay"], "2026-09-24")
         self.assertLess(new, old)
 
+    def test_research_growth_replaces_g0_in_the_research_ev(self) -> None:
+        band = _band(g0="0.1482")
+        dossier = dict(_dossier(177.92), research_g0="0.036")
+        old, new = o.apply_research_overlay(band, dossier)
+        k = 177.92e8 / 3881608005 / 7.0896
+        nopat, roic0 = 7.0896 * k, 1.1182 * k
+        base = intrinsic_value(7.0896, 1.1182, 0.1482, 0.0998, roe_terminal=0.1198, g_terminal=0.03, **o.FADE).intrinsic_value
+        ev = intrinsic_value(nopat, roic0, 0.036, 0.0998, roe_terminal=0.1198, g_terminal=0.03, **o.FADE).intrinsic_value
+        self.assertAlmostEqual(float(band["ev_ps"]), float(_band(g0="0.1482")["ev_ps"]) * ev / base, places=3)
+        self.assertEqual((band["g0"], band["model_g0"]), ("0.0360", "0.1482"))
+        self.assertIn("研究增长", band["research_overlay_note"])
+
+    def test_research_growth_is_ignored_without_growth_path(self) -> None:
+        band = _band(roic_path="zero_growth", ev_ps="", intrinsic_value="60.0", net_debt_ps="-30.0")
+        o.apply_research_overlay(band, dict(_dossier(7.0896 * 3881608005 / 1e8 / 2), research_g0="0.05"))
+        self.assertNotIn("model_g0", band)
+        self.assertAlmostEqual(float(band["ev_ps"]), 15.0, places=3)
+
     def test_zero_growth_scales_ev_with_nopat(self) -> None:
         band = _band(roic_path="zero_growth", ev_ps="", intrinsic_value="60.0", net_debt_ps="-30.0")
         o.apply_research_overlay(band, _dossier(7.0896 * 3881608005 / 1e8 / 2))

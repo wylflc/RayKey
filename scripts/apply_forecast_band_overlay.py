@@ -31,7 +31,7 @@ OVERLAY_COLS = ["forecast_overlay", "forecast_notice_date", "forecast_report_dat
                 "exright_factor", "exright_cash", "exright_note"]
 # §6.5.2.2 采用研究数：`research_overlay` 非空（采用日）即本行盈利锚取研究数，机械值留在 model_* 与 pre_research_iv。
 RESEARCH_COLS = ["research_overlay", "research_nopat_yi", "model_nopat_ps", "model_roic0", "pre_research_iv",
-                 "research_overlay_note"]
+                 "research_overlay_note", "model_g0"]
 # 重算企业价值比例所用的生产参数（§6.5.1 统一参数、§6.7 第 2 步 `--fade-shape exponential --fade-lambda 0.12
 # --fade-horizon 50`；增速 10 年线性 fade，`ROIC_T = min(WACC + 2pp, ROIC0)`）
 FADE = dict(n=10, n1=0, consistent=True, roe_lam=0.12, horizon=50)
@@ -288,13 +288,15 @@ def apply_research_overlay(band: dict, dossier: dict) -> tuple[float, float] | s
     """§6.5.2.2 采用研究数：每股 NOPAT 换成研究数，投入资本不变（ROIC0 同比例），其余参数与股权桥照带。
 
     企业价值 = 带 `ev_ps` × EV(研究) ÷ EV(机械)：同一引擎算两次取比例，k = 1 时逐位回到带值、不受四位小数舍入影响；
-    `zero_growth` 路径 EV 与 NOPAT 同比例。须在除权归一化之前调用。返回 (原 IV, 新 IV)，不适用时返回原因。"""
+    `zero_growth` 路径 EV 与 NOPAT 同比例。档案登记了研究增长 `research_g0` 的 `growth` 行，EV(研究) 以研究 g0 计，
+    机械 g0 留在 `model_g0`。须在除权归一化之前调用。返回 (原 IV, 新 IV)，不适用时返回原因。"""
     path = (band.get("roic_path") or "").strip()
     if path not in ("growth", "zero_growth"):
         return f"估值路径 {path or '未知'} 无 NOPAT 锚"
     if (band.get("exright_note") or "").strip():
         return "带已除权归一化，须从 §6.7 第 4 步重建池带后再套用"
     research = num(dossier.get("research_nopat_yi"))
+    research_g = num(dossier.get("research_g0")) if path == "growth" else None
     nopat, roic0, shares = num(band.get("nopat_ps")), num(band.get("roic0")), num(band.get("shares_est"))
     iv, net_debt, ev_ps = num(band.get("intrinsic_value")), num(band.get("net_debt_ps")), num(band.get("ev_ps"))
     if ev_ps is None and iv is not None and net_debt is not None:
@@ -310,12 +312,12 @@ def apply_research_overlay(band: dict, dossier: dict) -> tuple[float, float] | s
         wacc, g0, g_t = num(band.get("wacc")), num(band.get("g0")) or 0.0, num(band.get("g_terminal"))
         if wacc is None or g_t is None or roic0 is None:
             return "输入不全（wacc、g_terminal 或 roic0）"
-        def ev(scale: float):
+        def ev(scale: float, g: float):
             r0 = roic0 * scale
-            return intrinsic_value(nopat * scale, r0, g0, wacc, roe_terminal=min(wacc + TERMINAL_EXCESS, r0),
+            return intrinsic_value(nopat * scale, r0, g, wacc, roe_terminal=min(wacc + TERMINAL_EXCESS, r0),
                                    g_terminal=g_t, **FADE)
         try:
-            base, res_k = ev(1.0).intrinsic_value, ev(k)
+            base, res_k = ev(1.0, g0).intrinsic_value, ev(k, g0 if research_g is None else research_g)
             factor = res_k.intrinsic_value / base if base > 0 else None
             terminal_share = res_k.terminal_share
         except (ValueError, ZeroDivisionError) as exc:
@@ -335,7 +337,8 @@ def apply_research_overlay(band: dict, dossier: dict) -> tuple[float, float] | s
         "research_overlay_note": (
             f"§6.5.2.2 采用研究数（复核 {dossier.get('divergence_reviewed_at') or '—'}）：NOPAT {research:.2f} 亿 ÷ 股数 "
             f"{shares / 1e8:.2f} 亿 = 每股 {research_ps:.4f}（机械 {nopat:.4f}，×{k:.4f}），投入资本不变、ROIC0 同比例；"
-            f"EV ×{factor:.4f}，IV {iv:.2f} → {iv_new:.2f}"),
+            + (f"研究增长 g0 {num(band.get('g0')) or 0.0:.2%} → {research_g:.2%}；" if research_g is not None else "")
+            + f"EV ×{factor:.4f}，IV {iv:.2f} → {iv_new:.2f}"),
         "nopat_ps": f"{research_ps:.4f}",
         "intrinsic_value": f"{iv_new:.4f}",
         "band_low": f"{BAND_LOW_COEF * iv_new:.4f}",
@@ -345,6 +348,8 @@ def apply_research_overlay(band: dict, dossier: dict) -> tuple[float, float] | s
     })
     if roic0 is not None:
         band["roic0"] = f"{roic0 * k:.4f}"
+    if research_g is not None:
+        band["model_g0"], band["g0"] = band.get("g0", ""), f"{research_g:.4f}"
     # 派生列随研究口径重写；敏感度列 v_bear／v_bull／v_zero_growth 保留机械模型的值
     band["implied_pe"] = f"{iv_new / research_ps:.2f}"
     eps_ttm, mos = num(band.get("eps_ttm")), num(band.get("mos"))
