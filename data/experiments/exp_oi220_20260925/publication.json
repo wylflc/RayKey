@@ -1,0 +1,91 @@
+{
+  "job_id": "27154542",
+  "arm": "P",
+  "installed": {
+    "roic_bands.csv": {
+      "before": {
+        "bytes": 163107289,
+        "sha256": "e1c532558afd0ce605c16b35ea37dce6148368992313c3ccbd743ae259a0031c"
+      },
+      "after": {
+        "bytes": 163107205,
+        "sha256": "37812a1b4e79cf644ce0663d95af6e6f7e9a4acf1cbb0744adb28c7a8aa1c3e0"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "before": {
+        "bytes": 163096674,
+        "sha256": "bce777b9bfcb2f1471568d20d16751645f66a90c6eef657eb74173e29d92c577"
+      },
+      "after": {
+        "bytes": 163096600,
+        "sha256": "8c614e1cae6e6366079d9720de1598ca582d4982ae78478b4a800b639e8a3635"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "before": {
+        "bytes": 1997624098,
+        "sha256": "a2aa5b23e5a6122e3e21e63bde6b5b5053df3eb595364145986f75779f6ec5f7"
+      },
+      "after": {
+        "bytes": 1997628831,
+        "sha256": "57e60ddd73912c458e850adb650bffd6602b23cd418b72be4ba5f7a7a142a773"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "before": {
+        "bytes": 2001973613,
+        "sha256": "5ce70093ef43c710affae5a4d79a55e67a6860760c622951922262741398fdc0"
+      },
+      "after": {
+        "bytes": 2001978256,
+        "sha256": "4444c56a7a37f571611c2bfd9ca9d20152eac0ff32cca1d5ee08a67e7f40415f"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "before": {
+        "bytes": 1995179068,
+        "sha256": "eaf4a22a36f529d3778ab7ece2bd937009b082b377098c6178a3de264697a889"
+      },
+      "after": {
+        "bytes": 1995183801,
+        "sha256": "74ea3b311d087f59a7491d223be20641cd0e0940a921cd483f1edf31e680891a"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "before": {
+        "bytes": 1999522135,
+        "sha256": "83322a36b5097ee5bdf0de8262e6646ae568e77b5d2ed1adabb6ab8f88141fc9"
+      },
+      "after": {
+        "bytes": 1999526778,
+        "sha256": "5a1541c604ada3755bb74e8dcd3799ea14fdc129ece369789a1e37eacf8718f2"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "before": {
+        "bytes": 2071173915,
+        "sha256": "dda1c6f7ed205e08eef1d781fb7a7c424b04db5b74ecbec14b54842328860024"
+      },
+      "after": {
+        "bytes": 2071178340,
+        "sha256": "cff4404b5bc3dcda68f1cfb85a2e795b2a96e9905974fe4192f85b6dd28ff4c4"
+      }
+    }
+  },
+  "old_full_inputs_retained": true,
+  "ruling": {
+    "ruled_at_beijing": "2026-09-25",
+    "decision": "adopt P on principle (pledged-for-notes cash-like items also in operating working capital); dual table reads 不采纳 (ex-winner main -0.78pp), Track A guardrail passes",
+    "tested_arm": "P",
+    "state_arm": "P",
+    "registered_arm": "P",
+    "buy_line": 0.9524,
+    "width": 0.0476,
+    "registered_share_pct": 17.774,
+    "old_line_share_pct": 17.695,
+    "swap_margin": 0.15,
+    "swap_margin_rescan": false,
+    "swap_margin_reason": "scale drift -0.0003 within ±0.01"
+  }
+}
