@@ -185,6 +185,12 @@ def load_statement_roster(paths) -> set[str]:
 
 # `--value-model roic` 的三大报表输入，`main()` 里一次性装载（{代码: {财年: RoicYear}}）
 ROIC_YEARS: dict[str, dict[str, "roic_inputs.RoicYear"]] = {}
+# OI-205 研究开关 `--guard-scope cyclical_tags`：峰谷守卫只对该集合（策略标签 H／F，`cycle_guard_scope`）生效；None = 全体（现行）
+GUARD_CODES: set[str] | None = None
+
+
+def guard_applies(code: str) -> bool:
+    return GUARD_CODES is None or code in GUARD_CODES
 # 三大报表名册（＝取数脚本的取数名单）与其中无报表的代码：名册内退回权益口径是数据缺口，须告警
 STMT_ROSTER_FILES = (ROOT / "data/processed/pit_attention/panel_moat_bank_v6b.csv",
                      ROOT / "data/processed/a_share_watchlist_quality_tiers.csv")
@@ -741,12 +747,14 @@ def pick_roe0(mode: str, normalized: float, roe_ttm_value: float | None,
     return normalized, "normalized"
 
 
-def guarded_equity_roe(series: dict[str, dict], period: str, available_at: str, args) -> tuple[float | None, dict]:
+def guarded_equity_roe(series: dict[str, dict], period: str, available_at: str, args,
+                       guard: bool = True) -> tuple[float | None, dict]:
     """§6.5.1 第 3 条（OI-200）：权益口径的 ROE 锚与 ROIC 路径 `ratio0` 同式，比率换成年报加权 ROE。
 
     λ = 近两次年度变动中上行次数 ÷ 2；非周期锚 = 三年中位 + λ × (当期 − 三年中位)，季报行当期 = 最新年报 ROE × TTM 因子；
     峰／谷坡道按当期 ÷ 十年中位（K = `--roic-peak-k`、坡宽 `--roic-peak-ramp`），混合权重 max(w, v) 混向五年中位；
-    B2 口径（`--ttm-trust`）的 λ 前滚同 ROIC 路径。旧口径（五年锚 × 单边 λ=2 上抬、无守卫）留作 `--equity-anchor legacy`。"""
+    B2 口径（`--ttm-trust`）的 λ 前滚同 ROIC 路径。旧口径（五年锚 × 单边 λ=2 上抬、无守卫）留作 `--equity-anchor legacy`。
+    `guard=False`（OI-205 `--guard-scope cyclical_tags` 下的非 H／F 标签）不设峰谷守卫。"""
     obs = annual_roe_series(series, available_at, args.roe_years)
     ratios = [v for _p, v in obs]
     if not ratios:
@@ -770,7 +778,7 @@ def guarded_equity_roe(series: dict[str, dict], period: str, available_at: str, 
     peak_w = trough_w = 0.0
     median_long = statistics.median(longs) if len(longs) >= 4 else None
     ramp, k = getattr(args, "roic_peak_ramp", 0.3), args.roic_peak_k
-    if median_long is not None and median_long > 0:
+    if guard and median_long is not None and median_long > 0:
         if current > 0:
             s_cur = current / median_long
             if ramp > 0:
@@ -1943,6 +1951,9 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                                   and trend_efficiency(ratios) < getattr(args, "roic_eff_threshold", 0.35))
                 peak_w = 1.0 if nopat_cyclical else 0.0
                 trough_w = 0.0
+            if not guard_applies(code):
+                peak_w = trough_w = 0.0          # OI-205：非 H／F 标签不设峰谷守卫
+                nopat_cyclical = False
             band.peak_weight, band.trough_weight = peak_w, trough_w
             ratio0 = statistics.median(ratios)
             ratio_cyc = ratio0                         # 周期态锚：窗口内比率中位（峰与谷同用）
@@ -2018,7 +2029,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                 if len(ratios) >= 3 and f_ttm != 1.0:
                     r_cur = ratios[-1] * f_ttm
                     trough_annual = trough_w
-                    if peak_s is not None and statistics.median(long_ratios) > 0:
+                    if peak_s is not None and statistics.median(long_ratios) > 0 and guard_applies(code):
                         s_cur = r_cur / statistics.median(long_ratios)
                         if ramp <= 0:
                             peak_w = 1.0 if s_cur > args.roic_peak_k else 0.0
@@ -2395,7 +2406,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
     # §6.5.1 第 3 条（OI-200）：权益口径的 ROE 锚带 ROIC 路径同式的 λ 锚与峰谷守卫；只作用于权益口径的行
     if (getattr(args, "equity_anchor", "guarded") == "guarded" and args.roe_source in ONESIDED_SOURCES
             and band.roe0_mode not in ("external",)):
-        g_roe0, g_meta = guarded_equity_roe(series, period, available_at, args)
+        g_roe0, g_meta = guarded_equity_roe(series, period, available_at, args, guard=guard_applies(code))
         if g_roe0 is None or g_meta["years"] < args.min_roe_years:
             band.status, band.reason = "unavailable", f"已披露年报 ROE 仅 {g_meta['years']} 年 < 要求 {args.min_roe_years} 年"
             return band
@@ -3140,6 +3151,9 @@ def main() -> int:
     parser.add_argument("--trough-guard", choices=("on", "off"), default="on",
                         help="研究开关（§12.171 GUARDEFF 拆解）：off=只关 v4.62 的谷底对称守卫（trough_w 恒 0），"
                              "峰守卫与坡道不变；on=缺省＝生产。`--roic-cycle-guard efficiency` 分支本就无谷守卫，不受本开关影响")
+    parser.add_argument("--guard-scope", choices=("all", "cyclical_tags"), default="all",
+                        help="研究开关（OI-205）：cyclical_tags=峰谷守卫（ROIC 路径与权益口径）只对策略标签 H／F 生效，标签取 "
+                             "strategy_tag_map.csv 与 data/reference/cycle_guard_supplement.csv（`cycle_guard_scope`）；all=缺省＝生产")
     parser.add_argument("--cash-caliber", choices=roic_inputs.CASH_CALIBERS, default="nonop",
                         help="§6.5.1 超额现金与 EBIT 口径（OI-201）：nonop=非经营金融资产按账面计入、其收益不进 EBIT、金融负债计入"
                              "有息负债、附注核定存款计入现金（缺省，生产）；legacy=货币资金 + 交易性金融资产、EBIT = 利润总额 + 利息费用（只作复现）")
@@ -3203,6 +3217,11 @@ def main() -> int:
     PV_BASIS = getattr(args, "pv_basis", "ev")
     global STATE_EFFECTIVE
     STATE_EFFECTIVE = args.state_effective
+    global GUARD_CODES
+    if args.guard_scope == "cyclical_tags":
+        import cycle_guard_scope
+        GUARD_CODES = cycle_guard_scope.cyclical_codes()
+        print(f"峰谷守卫范围（OI-205）：只对策略标签 H／F 生效，{len(GUARD_CODES)} 个代码")
     if STATE_EFFECTIVE == "prev_trading_day":
         MARKET_DAYS[:] = load_market_days()
         if MARKET_DAYS:
