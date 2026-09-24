@@ -1,0 +1,12 @@
+__pycache__/
+old_inputs/
+states/
+cache/
+nav/
+stats/
+errors/
+daily/
+*.log
+contrib_*_trades.csv
+ledger_*.csv
+candidates_*.csv
