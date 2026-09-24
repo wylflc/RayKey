@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.205
+# A股选股-估值-量价操作流程 v4.206
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -263,7 +263,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 1. **经营账面 `BPS_op` = 当期 BPS − 外生权益/股 `x`**；`x = BPS_当期 − (最新年报母公司权益 + 其后归母净利 − 其后现金分红) ÷ 当期股数`；「其后现金分红」= 除权日在 (年报期末, 本期期末] 的现金分红，加上已结束财年的年度分配中预案公告日 ≤ 本期期末、除权日晚于本期期末者（仅本期为 06-30 或 09-30 行）；预案公告日 ≤ 年报期末而除权日在其后的中期分红、预案在本期内而除权日晚于期末的中期分红，逐笔按使 `|x|` 更小的解释决定是否计入；每股现金按同日及其后的送转折到本行 BPS 的股本基准；股数 = 年报期末股数（年报权益 ÷ 年报 BPS）× 期间送转因子；「归母净利 ÷ EPS」隐含股数的**相对年报行的倍数**承接稀释／注销的股数变化，采用前先除掉本行之后各次送转的累计因子，且须同时满足三道守卫：EPS 小数位精度（舍入误差 ≤2%）、账面先动（`|x_假定| ≥ 3% BPS`）、方向一致（增发 x>0 且股数增／注销 x<0 且股数减）。合理性边界：`x ≤ 95% BPS`（封顶）、`x < −25% BPS` 视为主体重述／数据错位不调整（记 `x_implausible_negative`）。年报行 `x = 0`；年报行 BPS 被按后来的送转折到之后股本的，由 `bps_restated_factor` 按上一行核对并乘回当时口径。
 2. **年报之间的外生权益逐年识别**：`X_y = ΔE − (归母综合收益 − 现金分红)`（无综合收益时用归母净利），只计 `|X_y| ≥ 5%` 上年母公司权益的年份。比率窗口与十年守卫窗口内各年比率一律按**经营账面** `E_op = E − 未花的募资 − 累计注销` 计，增长态／中位／周期守卫同式。「未花的募资」按先进先出判：每笔募资只在「超额现金较募资前一年持续高出的部分」内算未花，一旦回落即视为已投入经营、此后积累的现金是经营所得（与 ROIC 路径「投入资本剔除超额现金」同一口径）；注销的现金已流出，经营账面按注销前计。**结构断点**：某年 `E_op < 20% × E`（或权益 ≤ 0）时，比率窗口与十年守卫窗口一律从该年重起。权益退路（无三大报表）只做第 1 条。
-3. **外生权益按面值进每股净现金，少数股东按盈利份额扣减**：ROIC 路径 `每股净金融负债 fin_nd = (有息负债 − 超额现金) ÷ E_op × BPS_op`，非经营金融资产与金融收益口径（OI-201，唯一实现 `roic_inputs._year_from_parts`，建带 `--cash-caliber nonop`；`legacy` 只作复现）：超额现金 = `max(0, 现金类 − 客户资金 − 2% × 营收) + 其他金融资产`，现金类 = 货币资金、交易性金融资产、拆出资金、买入返售金融资产、债权投资、其他债权投资、持有至到期投资，以及年报附注核定的其他流动资产、一年内到期的非流动资产、其他非流动资产中的存款、存单、理财（`data/reference/cash_note_items.csv`，由 §6.7 第 1 步 `fetch_cash_note_items.py` 按原年报抽取，附注合计与报表行相符才计入）；其他金融资产 = 发放贷款及垫款、其他权益工具投资、其他非流动金融资产、可供出售金融资产、衍生金融资产，按账面计；客户资金 = 代理买卖证券款 + 代理承销证券款（属客户所有，不是公司现金；OI-200）；有息负债另计应付短期融资款、吸收存款、同业存放、拆入资金、卖出回购、向中央银行借款、交易性与衍生金融负债；`EBIT = 利润总额 + 财务费用净额 − (投资收益 − 权益法投资收益) − 公允价值变动收益 − (财务公司利息收入 − 利息支出)`，即上述资产的收益不进 NOPAT、只按账面计入股权桥；`少数股东扣减 = max(0, 少数股东权益 ÷ E_op × BPS_op, m × max(EV − fin_nd, 0))`，`m` = 比率窗口内合并净利为正财年的 `少数股东损益 ÷ 合并净利` 中位、夹 `[0, 0.95]`，无可用财年取最新财年 `少数股东权益 ÷ 权益合计`；`V = EV − fin_nd − 少数股东扣减 + x`；带文件 `net_debt_ps = fin_nd + 少数股东扣减 − x`，另落 `fin_net_debt_ps`／`minority_book_ps`／`minority_share`／`minority_share_basis`；薄权益守卫的放大倍数只按不随 EV 缩放的扣减计（`fin_nd`，账面下界生效时再加账面额）；§6.4 叠加重算 `IV = (EV × scale − fin_nd) − max(0, 账面, m × max(EV × scale − fin_nd, 0)) + x`。权益路径 `V = V(eps0 = roe0 × BPS_op) + x`；零增长锚与敏感度带同式。§6.8 海外链同式，`m` 取 `少数股东权益 ÷ 权益合计`。建带命令 `--minority-basis earnings`（缺省）；`book` 为研究开关，同样保留零下界。`minority_book_ps` 保留有符号的原始账面值；负账面不形成母公司可收取的现金请求权，普通少数股东扣减与薄权益守卫的账面部分均不得低于零。历史状态须与本条公式同步，同步前输入只保存在冻结的实验对照目录中。
+3. **外生权益按面值进每股净现金，少数股东按盈利份额扣减**：ROIC 路径 `每股净金融负债 fin_nd = (有息负债 − 超额现金) ÷ E_op × BPS_op`，非经营金融资产与金融收益口径（OI-201，唯一实现 `roic_inputs._year_from_parts`，建带 `--cash-caliber nonop`；`legacy` 只作复现）：超额现金 = `max(0, 现金类 − 客户资金 − 2% × 营收) + 其他金融资产`，现金类 = 货币资金、交易性金融资产、拆出资金、买入返售金融资产、债权投资、其他债权投资、持有至到期投资，以及年报附注核定的其他流动资产、一年内到期的非流动资产、其他非流动资产中的存款、存单、理财（`data/reference/cash_note_items.csv`，由 §6.7 第 1 步 `fetch_cash_note_items.py` 按原年报抽取，附注合计与报表行相符才计入）；年报受限资产附注中受限原因写票据、承兑汇票、信用证或保函的现金类（同一行混写借款的整行计入；只写借款，或只写笼统的质押、保证金、冻结、存款准备金的不计）按经营资产计入投入资本、不计超额现金，扣除额 = min(计入额, 当期应付票据, 现金类)，其利息 = 扣除额 × 利息收入 ÷ (货币资金 + 附注核定存款)（夹 `[0, 5%]`；2018 年前未单列利息收入时取当年末一年期存款基准利率）并回 EBIT，应付票据仍为经营负债、不进 WACC（OI-219，`data/reference/restricted_cash_items.csv`，由 §6.7 第 1 步 `fetch_restricted_cash_items.py` 抽取，逐行期末值之和与合计相符才计；建带 `--restricted-cash notes`）；其他金融资产 = 发放贷款及垫款、其他权益工具投资、其他非流动金融资产、可供出售金融资产、衍生金融资产，按账面计；客户资金 = 代理买卖证券款 + 代理承销证券款（属客户所有，不是公司现金；OI-200）；有息负债另计应付短期融资款、吸收存款、同业存放、拆入资金、卖出回购、向中央银行借款、交易性与衍生金融负债；`EBIT = 利润总额 + 财务费用净额 − (投资收益 − 权益法投资收益) − 公允价值变动收益 − (财务公司利息收入 − 利息支出)`，即上述资产的收益不进 NOPAT、只按账面计入股权桥；`少数股东扣减 = max(0, 少数股东权益 ÷ E_op × BPS_op, m × max(EV − fin_nd, 0))`，`m` = 比率窗口内合并净利为正财年的 `少数股东损益 ÷ 合并净利` 中位、夹 `[0, 0.95]`，无可用财年取最新财年 `少数股东权益 ÷ 权益合计`；`V = EV − fin_nd − 少数股东扣减 + x`；带文件 `net_debt_ps = fin_nd + 少数股东扣减 − x`，另落 `fin_net_debt_ps`／`minority_book_ps`／`minority_share`／`minority_share_basis`；薄权益守卫的放大倍数只按不随 EV 缩放的扣减计（`fin_nd`，账面下界生效时再加账面额）；§6.4 叠加重算 `IV = (EV × scale − fin_nd) − max(0, 账面, m × max(EV × scale − fin_nd, 0)) + x`。权益路径 `V = V(eps0 = roe0 × BPS_op) + x`；零增长锚与敏感度带同式。§6.8 海外链同式，`m` 取 `少数股东权益 ÷ 权益合计`。建带命令 `--minority-basis earnings`（缺省）；`book` 为研究开关，同样保留零下界。`minority_book_ps` 保留有符号的原始账面值；负账面不形成母公司可收取的现金请求权，普通少数股东扣减与薄权益守卫的账面部分均不得低于零。历史状态须与本条公式同步，同步前输入只保存在冻结的实验对照目录中。
 4. 带文件写 `bps_operating`／`external_equity_ps`／`external_equity_cum_ps`／`shares_est`／`bps_basis_date`／`equity_anchor_mode` 列；建带结尾打印 `|x|/BPS` 分布、超过 10% 的最新带名单与各退化模式计数（§13 第 3 条）。
 5. **BPS 的股本基准按数据判定**：`bps_basis_date` 由本行与上一行 BPS 之比对照送转因子按对数距离判定；回测逐日展开、生产带除权归一化、档案折算三处的**送转**窗口一律自 `bps_basis_date` 起算，**现金分红**窗口自公告日起算。
 
@@ -336,10 +336,10 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 以下顺序是当前唯一生产路径。重建全历史模型带属于重作业，必须独占运行。
 
-本链需要日期的 A 股命令使用 `--signal-date`；无日期参数的构建工具读取上游产物。常设作业入口 `scripts/slurm/rebuild_chain_with_fetch.sbatch`（`SIGNAL_DATE`、`SINCE`，可选 `EXTRA_CODES` 点名补取三大报表）串行执行第 1 步六份取数、第 2／2b 步两侧建带与第 3 步银行保险覆盖及持仓侧逐日状态合成；第 4 步起按下文命令执行。证据日由 `scripts/a_share_signal_dates.py` 唯一推导为信号日之后的首个工作日（周一至周五）；调用方不得另行指定证据日。
+本链需要日期的 A 股命令使用 `--signal-date`；无日期参数的构建工具读取上游产物。常设作业入口 `scripts/slurm/rebuild_chain_with_fetch.sbatch`（`SIGNAL_DATE`、`SINCE`，可选 `EXTRA_CODES` 点名补取三大报表）串行执行第 1 步九份取数、第 2／2b 步两侧建带与第 3 步银行保险覆盖及持仓侧逐日状态合成；第 4 步起按下文命令执行。证据日由 `scripts/a_share_signal_dates.py` 唯一推导为信号日之后的首个工作日（周一至周五）；调用方不得另行指定证据日。
 
 ```bash
-# 1. 刷新财务输入与除权事件（逐季财务、三大报表、除权事件、rf/ERP 序列、股本变动事件、股债利差、附注现金类、重述公告八份缺一不可）
+# 1. 刷新财务输入与除权事件（逐季财务、三大报表、除权事件、rf/ERP 序列、股本变动事件、股债利差、附注现金类、受限资产、重述公告九份缺一不可）
 python3 scripts/fetch_a_share_quarterly_financials.py --signal-date YYYY-MM-DD --since <当前报告期末>
 python3 scripts/fetch_a_share_financial_statements.py --signal-date YYYY-MM-DD
 python3 scripts/fetch_ohlcv_history.py --signal-date YYYY-MM-DD --actions-only
@@ -347,6 +347,7 @@ python3 scripts/fetch_cost_of_equity_inputs.py   # rf/ERP 序列：银行/保险
 python3 scripts/fetch_a_share_share_changes.py --signal-date YYYY-MM-DD   # 股本变动事件表（第 5.5 步检查⑦读它）
 python3 scripts/fetch_equity_bond_inputs.py --refresh   # 沪深 300 TTM PE 与 10 年国债：§9.3.1 股债总仓位上限读不晚于信号日的最新观测（过期门槛见该行）
 python3 scripts/fetch_cash_note_items.py --workers 16   # 年报附注的现金类明细（§6.5.1，只取新增年报；原文缓存不入库）
+python3 scripts/fetch_restricted_cash_items.py --workers 16   # 年报受限资产与受限原因（§6.5.1 第 3 条，读附注现金类的核定额，须在其后）
 python3 scripts/scan_restatement_announcements.py --history --since <上年 01-01>   # 更正公告与定期报告更新版（§6.3 第 2 条）
 
 # 2. 构建 ROIC 带与逐日状态
@@ -356,6 +357,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
   --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
   --cash-caliber nonop --equity-anchor guarded \
+  --restricted-cash notes \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1 \
   --out-bands data/processed/roic_bands.csv \
   --out-daily data/processed/roic_daily_raw.csv
@@ -366,6 +368,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
   --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
   --cash-caliber nonop --equity-anchor guarded \
+  --restricted-cash notes \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1 \
   --ttm-trust on --ttm-trust-delta 0.02 \
   --out-bands data/processed/roic_bands_b2.csv \
@@ -446,6 +449,8 @@ python3 scripts/build_a_share_core_valuation_pool.py \
 | SEC us-gaap | 现金及等价物（含受限现金）＋流动证券 | 非流动债券与持有至到期投资＋max(非权益法股权投资，长期投资合计 − 权益法投资 − 非流动债券) | 经营利润＋权益法投资损益；经营利润超出税前利润的部分大于已识别的营业外费用（利息、营业外净损失、投资损失）时，改为税前利润 − 净利息 − 投资损益 |
 | SEC ifrs-full | 现金及等价物＋以摊余成本、公允价值计量的流动金融资产与其他流动金融资产 | 以摊余成本、公允价值计量的非流动金融资产 | 经营利润＋权益法投资份额 |
 | 港股 F10 | 现金及等价物＋受限制存款及现金＋短期存款＋短期投资＋以公允价值记账与其他的流动金融资产 | 非流动现金及等价物＋中长期存款＋证券投资＋以公允价值记账与其他的非流动金融资产 | 经营溢利 − 其他收益＋应占联营／合营公司溢利；无经营溢利时为除税前溢利＋融资成本 − 利息收入 − 其他收益 |
+
+受限现金（§6.5.1 第 3 条 OI-219）：港股 F10「应付票据」计入有息负债，担保它的受限制存款照计现金类、与之相抵，不重复计；SEC 与港股的受限现金无受限原因的结构化来源，照计现金类，与 A 股未核定的年报同。
 
 金融中介负债（客户存款、应付客户款、同业存放、拆入、卖出回购、向中央银行借款）≥ 总资产 20% 的公司按类金融处理：不在 `FINANCIAL_KEEP` 者判「无法估值」；受监管隔离的客户资金不计超额现金。利息收入并在「其他收入」而 F10 未单列的港股，EBIT 未剔除该部分（OI-216）。
 

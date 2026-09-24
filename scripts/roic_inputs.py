@@ -35,7 +35,7 @@
   公允价值变动、财务公司净利息）不进 EBIT，财务公司吸收存款、拆入、回购、短融与交易性金融负债计入有息负债。
   2% 是营运现金的通行经验值；客户资金（代理买卖证券款、代理承销证券款）属客户所有，不是公司现金（OI-200）。
   `legacy` 口径（改前：货币资金 + 交易性金融资产，EBIT = 利润总额 + 利息费用）只作复现。
-* **质押开票的现金类（OI-219，研究开关 `restricted_cash = "notes"`）**：年报受限资产附注中原因写票据、承兑汇票、
+* **质押开票的现金类（OI-219，v4.206 生产口径 `restricted_cash = "notes"`）**：年报受限资产附注中原因写票据、承兑汇票、
   信用证或保函的现金类（`restricted_cash_items.csv`）不计超额现金、按经营资产进投入资本，以当期应付票据与现金类为限；
   其利息并回 EBIT。应付票据仍是经营负债，WACC 不变。
 * **类金融识别**：一般企业模板里金融中介负债（客户资金、卖出回购、拆入、吸收存款、同业存放、央行借款）
@@ -104,7 +104,7 @@ FIN_LIAB_FIELDS = ("SHORT_FIN_PAYABLE", "ACCEPT_DEPOSIT", "ACCEPT_DEPOSIT_INTERB
                    "SELL_REPO_FINASSET", "LOAN_PBC", "TRADE_FINLIAB", "TRADE_FINLIAB_NOTFVTPL", "DERIVE_FINLIAB")
 CASH_CALIBERS = ("nonop", "legacy")
 NOTE_CASH_FILE = ROOT / "data/reference/cash_note_items.csv"
-# OI-219（研究开关 `restricted_cash = "notes"`）：为应付票据质押的现金类按经营资产（`fetch_restricted_cash_items.py`）
+# OI-219（v4.206 生产口径 `restricted_cash = "notes"`）：为应付票据质押的现金类按经营资产（`fetch_restricted_cash_items.py`）
 RESTRICTED_CASH_FILE = ROOT / "data/reference/restricted_cash_items.csv"
 RESTRICTED_CASH_MODES = ("off", "notes", "notes_generic")   # notes_generic：笼统原因（只写质押、保证金等）也计入，只作敏感性
 RESTRICTED_YIELD_CAP = 0.05
