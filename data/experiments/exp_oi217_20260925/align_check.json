@@ -1,0 +1,30 @@
+{
+  "registered_share": 0.17774,
+  "current_line": 0.9524,
+  "arms": {
+    "OLD": {
+      "line": 0.9524,
+      "width": 0.0476,
+      "share": 0.17621419676214198,
+      "old_line_share": 0.17621419676214198,
+      "retained": true,
+      "n": 505890
+    },
+    "CONTROL": {
+      "line": 0.9524,
+      "width": 0.0476,
+      "share": 0.17621419676214198,
+      "old_line_share": 0.17621419676214198,
+      "retained": true,
+      "n": 505890
+    },
+    "W": {
+      "line": 1.0113,
+      "width": -0.0113,
+      "share": 0.17775801063472296,
+      "old_line_share": 0.15475498626183556,
+      "retained": false,
+      "n": 505890
+    }
+  }
+}
