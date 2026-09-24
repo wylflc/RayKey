@@ -104,9 +104,9 @@ class StrategyParameterSyncTest(unittest.TestCase):
         fade = "--fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1"
         self.assertEqual(workflow.count(f"  {fade} \\"), 2)
         self.assertIn(fade, chain)
-        # OI-219（v4.206）：为应付票据质押的现金类按经营资产，两条建带命令与常设重建作业同参、抽取在附注现金类之后
-        self.assertEqual(workflow.count("  --restricted-cash notes \\"), 2)
-        self.assertIn("--restricted-cash notes", chain)
+        # OI-219／OI-220（v4.206／v4.208）：为应付票据质押的现金类按经营资产、计入营运资金，两条建带命令与常设重建作业同参、抽取在附注现金类之后
+        self.assertEqual(workflow.count("  --restricted-cash notes_wc \\"), 2)
+        self.assertIn("--restricted-cash notes_wc \\", chain)
         self.assertLess(chain.index("fetch_cash_note_items.py"), chain.index("fetch_restricted_cash_items.py"))
         self.assertIn("绝对值 < 0.2pp 时保留原线", workflow)
         self.assertNotIn("| 减持 |", workflow)                # v4.109（OI-110）：估值减持行已删

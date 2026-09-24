@@ -3162,7 +3162,7 @@ def main() -> int:
                         help="§6.5.1 超额现金与 EBIT 口径（OI-201）：nonop=非经营金融资产按账面计入、其收益不进 EBIT、金融负债计入"
                              "有息负债、附注核定存款计入现金（缺省，生产）；legacy=货币资金 + 交易性金融资产、EBIT = 利润总额 + 利息费用（只作复现）")
     parser.add_argument("--restricted-cash", choices=roic_inputs.RESTRICTED_CASH_MODES, default="off",
-                        help="OI-219：notes=生产口径（v4.206，§6.7 第 2 步显式给出），年报受限资产附注中为应付票据、信用证、保函质押的现金类不计超额现金、"
+                        help="OI-219／OI-220：notes_wc=生产口径（v4.208，§6.7 第 2 步显式给出，扣除额另计入营运资金）；notes=v4.206 复现，年报受限资产附注中为应付票据、信用证、保函质押的现金类不计超额现金、"
                              "按经营资产进投入资本（以应付票据为限），其利息并回 EBIT；notes_generic=另加笼统原因（只写质押、保证金等）"
                              "的现金类，只作敏感性；off=改前口径，只作复现")
     parser.add_argument("--equity-anchor", choices=("guarded", "legacy"), default="guarded",

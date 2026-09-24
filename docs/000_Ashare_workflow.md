@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.207
+# A股选股-估值-量价操作流程 v4.208
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -240,7 +240,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 3. 季报财务为累计口径；单季值用同年累计差分，TTM 用最近四个单季求和。
 4. 一致预期使用逐份研报归母净利润中位数，覆盖少于三家时不得采用；禁止混用送转前后的研报 EPS。
 5. 跨字段比率必须使用同一披露口径；字段缺失时整体退回上一套已披露口径，不拼接半新半旧的数据。
-6. **经营营运资金的科目归并（OI-168）**：应收/应付组有合计时取合计，合计缺失才取同一报表行的明细和，不叠加二者；合计与明细冲突时保留合计及冲突诊断，不以混入次年期初、旧主体或旧分类的明细强行补齐。经营性应收款项融资 `FINANCE_RECE` 独立计入资产侧；旧票据字段被归入新融资应收且合计已排除它时，只承接新分类一次。存货、预付、合同资产及经营负债沿用现有范围。唯一实现 `roic_inputs.working_capital_inputs`；同一已披露三表版本内归并，再依第2条选择历史版本。生产口径 = `--wc-aggregation operating`（`RoicYear.working_capital` 与建带缺省即此口径，§6.7 命令显式给出）；`reported`（仅去重）与 `legacy`（合计与明细相加，`RoicYear.working_capital_legacy`）只作研究复现开关，不得用于生产带与 `BASE`。核验设计与采纳证据见 `data/experiments/exp_oi168_wc_20260909/preregister.md`、`data/experiments/exp_oi168_land_20260909/preregister.md` 及回测日志 12.216～12.217 节。
+6. **经营营运资金的科目归并（OI-168）**：应收/应付组有合计时取合计，合计缺失才取同一报表行的明细和，不叠加二者；合计与明细冲突时保留合计及冲突诊断，不以混入次年期初、旧主体或旧分类的明细强行补齐。经营性应收款项融资 `FINANCE_RECE` 独立计入资产侧；旧票据字段被归入新融资应收且合计已排除它时，只承接新分类一次。存货、预付、合同资产及经营负债沿用现有范围；为应付票据质押、按经营资产计入投入资本的现金类（§6.5.1 第 3 条）计入资产侧，与其担保的应付票据相抵（OI-220）。唯一实现 `roic_inputs.working_capital_inputs`；同一已披露三表版本内归并，再依第2条选择历史版本。生产口径 = `--wc-aggregation operating`（`RoicYear.working_capital` 与建带缺省即此口径，§6.7 命令显式给出）；`reported`（仅去重）与 `legacy`（合计与明细相加，`RoicYear.working_capital_legacy`）只作研究复现开关，不得用于生产带与 `BASE`。核验设计与采纳证据见 `data/experiments/exp_oi168_wc_20260909/preregister.md`、`data/experiments/exp_oi168_land_20260909/preregister.md` 及回测日志 12.216～12.217 节。
 
 ### 6.4 预告与快报的叠加
 
@@ -263,7 +263,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 1. **经营账面 `BPS_op` = 当期 BPS − 外生权益/股 `x`**；`x = BPS_当期 − (最新年报母公司权益 + 其后归母净利 − 其后现金分红) ÷ 当期股数`；「其后现金分红」= 除权日在 (年报期末, 本期期末] 的现金分红，加上已结束财年的年度分配中预案公告日 ≤ 本期期末、除权日晚于本期期末者（仅本期为 06-30 或 09-30 行）；预案公告日 ≤ 年报期末而除权日在其后的中期分红、预案在本期内而除权日晚于期末的中期分红，逐笔按使 `|x|` 更小的解释决定是否计入；每股现金按同日及其后的送转折到本行 BPS 的股本基准；股数 = 年报期末股数（年报权益 ÷ 年报 BPS）× 期间送转因子；「归母净利 ÷ EPS」隐含股数的**相对年报行的倍数**承接稀释／注销的股数变化，采用前先除掉本行之后各次送转的累计因子，且须同时满足三道守卫：EPS 小数位精度（舍入误差 ≤2%）、账面先动（`|x_假定| ≥ 3% BPS`）、方向一致（增发 x>0 且股数增／注销 x<0 且股数减）。合理性边界：`x ≤ 95% BPS`（封顶）、`x < −25% BPS` 视为主体重述／数据错位不调整（记 `x_implausible_negative`）。年报行 `x = 0`；年报行 BPS 被按后来的送转折到之后股本的，由 `bps_restated_factor` 按上一行核对并乘回当时口径。
 2. **年报之间的外生权益逐年识别**：`X_y = ΔE − (归母综合收益 − 现金分红)`（无综合收益时用归母净利），只计 `|X_y| ≥ 5%` 上年母公司权益的年份。比率窗口与十年守卫窗口内各年比率一律按**经营账面** `E_op = E − 未花的募资 − 累计注销` 计，增长态／中位／周期守卫同式。「未花的募资」按先进先出判：每笔募资只在「超额现金较募资前一年持续高出的部分」内算未花，一旦回落即视为已投入经营、此后积累的现金是经营所得（与 ROIC 路径「投入资本剔除超额现金」同一口径）；注销的现金已流出，经营账面按注销前计。**结构断点**：某年 `E_op < 20% × E`（或权益 ≤ 0）时，比率窗口与十年守卫窗口一律从该年重起。权益退路（无三大报表）只做第 1 条。
-3. **外生权益按面值进每股净现金，少数股东按盈利份额扣减**：ROIC 路径 `每股净金融负债 fin_nd = (有息负债 − 超额现金) ÷ E_op × BPS_op`，非经营金融资产与金融收益口径（OI-201，唯一实现 `roic_inputs._year_from_parts`，建带 `--cash-caliber nonop`；`legacy` 只作复现）：超额现金 = `max(0, 现金类 − 客户资金 − 2% × 营收) + 其他金融资产`，现金类 = 货币资金、交易性金融资产、拆出资金、买入返售金融资产、债权投资、其他债权投资、持有至到期投资，以及年报附注核定的其他流动资产、一年内到期的非流动资产、其他非流动资产中的存款、存单、理财（`data/reference/cash_note_items.csv`，由 §6.7 第 1 步 `fetch_cash_note_items.py` 按原年报抽取，附注合计与报表行相符才计入）；年报受限资产附注中受限原因写票据、承兑汇票、信用证或保函的现金类（同一行混写借款的整行计入；只写借款，或只写笼统的质押、保证金、冻结、存款准备金的不计）按经营资产计入投入资本、不计超额现金，扣除额 = min(计入额, 当期应付票据, 现金类)，其利息 = 扣除额 × 利息收入 ÷ (货币资金 + 附注核定存款)（夹 `[0, 5%]`；2018 年前未单列利息收入时取当年末一年期存款基准利率）并回 EBIT，应付票据仍为经营负债、不进 WACC（OI-219，`data/reference/restricted_cash_items.csv`，由 §6.7 第 1 步 `fetch_restricted_cash_items.py` 抽取，逐行期末值之和与合计相符才计；建带 `--restricted-cash notes`）；其他金融资产 = 发放贷款及垫款、其他权益工具投资、其他非流动金融资产、可供出售金融资产、衍生金融资产，按账面计；客户资金 = 代理买卖证券款 + 代理承销证券款（属客户所有，不是公司现金；OI-200）；有息负债另计应付短期融资款、吸收存款、同业存放、拆入资金、卖出回购、向中央银行借款、交易性与衍生金融负债；`EBIT = 利润总额 + 财务费用净额 − (投资收益 − 权益法投资收益) − 公允价值变动收益 − (财务公司利息收入 − 利息支出)`，即上述资产的收益不进 NOPAT、只按账面计入股权桥；`少数股东扣减 = max(0, 少数股东权益 ÷ E_op × BPS_op, m × max(EV − fin_nd, 0))`，`m` = 比率窗口内合并净利为正财年的 `少数股东损益 ÷ 合并净利` 中位、夹 `[0, 0.95]`，无可用财年取最新财年 `少数股东权益 ÷ 权益合计`；`V = EV − fin_nd − 少数股东扣减 + x`；带文件 `net_debt_ps = fin_nd + 少数股东扣减 − x`，另落 `fin_net_debt_ps`／`minority_book_ps`／`minority_share`／`minority_share_basis`；薄权益守卫的放大倍数只按不随 EV 缩放的扣减计（`fin_nd`，账面下界生效时再加账面额）；§6.4 叠加重算 `IV = (EV × scale − fin_nd) − max(0, 账面, m × max(EV × scale − fin_nd, 0)) + x`。权益路径 `V = V(eps0 = roe0 × BPS_op) + x`；零增长锚与敏感度带同式。§6.8 海外链同式，`m` 取 `少数股东权益 ÷ 权益合计`。建带命令 `--minority-basis earnings`（缺省）；`book` 为研究开关，同样保留零下界。`minority_book_ps` 保留有符号的原始账面值；负账面不形成母公司可收取的现金请求权，普通少数股东扣减与薄权益守卫的账面部分均不得低于零。历史状态须与本条公式同步，同步前输入只保存在冻结的实验对照目录中。
+3. **外生权益按面值进每股净现金，少数股东按盈利份额扣减**：ROIC 路径 `每股净金融负债 fin_nd = (有息负债 − 超额现金) ÷ E_op × BPS_op`，非经营金融资产与金融收益口径（OI-201，唯一实现 `roic_inputs._year_from_parts`，建带 `--cash-caliber nonop`；`legacy` 只作复现）：超额现金 = `max(0, 现金类 − 客户资金 − 2% × 营收) + 其他金融资产`，现金类 = 货币资金、交易性金融资产、拆出资金、买入返售金融资产、债权投资、其他债权投资、持有至到期投资，以及年报附注核定的其他流动资产、一年内到期的非流动资产、其他非流动资产中的存款、存单、理财（`data/reference/cash_note_items.csv`，由 §6.7 第 1 步 `fetch_cash_note_items.py` 按原年报抽取，附注合计与报表行相符才计入）；年报受限资产附注中受限原因写票据、承兑汇票、信用证或保函的现金类（同一行混写借款的整行计入；只写借款，或只写笼统的质押、保证金、冻结、存款准备金的不计）按经营资产计入投入资本、不计超额现金，扣除额 = min(计入额, 当期应付票据, 现金类)，其利息 = 扣除额 × 利息收入 ÷ (货币资金 + 附注核定存款)（夹 `[0, 5%]`；2018 年前未单列利息收入时取当年末一年期存款基准利率）并回 EBIT，应付票据仍为经营负债、不进 WACC扣除额同时计入经营营运资金（§6.3 第 6 条），再投资率计入其变动（OI-219／OI-220，`data/reference/restricted_cash_items.csv`，由 §6.7 第 1 步 `fetch_restricted_cash_items.py` 抽取，逐行期末值之和与合计相符才计；建带 `--restricted-cash notes_wc`，`notes` 不计营运资金，只作复现）；其他金融资产 = 发放贷款及垫款、其他权益工具投资、其他非流动金融资产、可供出售金融资产、衍生金融资产，按账面计；客户资金 = 代理买卖证券款 + 代理承销证券款（属客户所有，不是公司现金；OI-200）；有息负债另计应付短期融资款、吸收存款、同业存放、拆入资金、卖出回购、向中央银行借款、交易性与衍生金融负债；`EBIT = 利润总额 + 财务费用净额 − (投资收益 − 权益法投资收益) − 公允价值变动收益 − (财务公司利息收入 − 利息支出)`，即上述资产的收益不进 NOPAT、只按账面计入股权桥；`少数股东扣减 = max(0, 少数股东权益 ÷ E_op × BPS_op, m × max(EV − fin_nd, 0))`，`m` = 比率窗口内合并净利为正财年的 `少数股东损益 ÷ 合并净利` 中位、夹 `[0, 0.95]`，无可用财年取最新财年 `少数股东权益 ÷ 权益合计`；`V = EV − fin_nd − 少数股东扣减 + x`；带文件 `net_debt_ps = fin_nd + 少数股东扣减 − x`，另落 `fin_net_debt_ps`／`minority_book_ps`／`minority_share`／`minority_share_basis`；薄权益守卫的放大倍数只按不随 EV 缩放的扣减计（`fin_nd`，账面下界生效时再加账面额）；§6.4 叠加重算 `IV = (EV × scale − fin_nd) − max(0, 账面, m × max(EV × scale − fin_nd, 0)) + x`。权益路径 `V = V(eps0 = roe0 × BPS_op) + x`；零增长锚与敏感度带同式。§6.8 海外链同式，`m` 取 `少数股东权益 ÷ 权益合计`。建带命令 `--minority-basis earnings`（缺省）；`book` 为研究开关，同样保留零下界。`minority_book_ps` 保留有符号的原始账面值；负账面不形成母公司可收取的现金请求权，普通少数股东扣减与薄权益守卫的账面部分均不得低于零。历史状态须与本条公式同步，同步前输入只保存在冻结的实验对照目录中。
 4. 带文件写 `bps_operating`／`external_equity_ps`／`external_equity_cum_ps`／`shares_est`／`bps_basis_date`／`equity_anchor_mode` 列；建带结尾打印 `|x|/BPS` 分布、超过 10% 的最新带名单与各退化模式计数（§13 第 3 条）。
 5. **BPS 的股本基准按数据判定**：`bps_basis_date` 由本行与上一行 BPS 之比对照送转因子按对数距离判定；回测逐日展开、生产带除权归一化、档案折算三处的**送转**窗口一律自 `bps_basis_date` 起算，**现金分红**窗口自公告日起算。
 
@@ -359,7 +359,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
   --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
   --cash-caliber nonop --equity-anchor guarded \
-  --restricted-cash notes \
+  --restricted-cash notes_wc \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1 \
   --out-bands data/processed/roic_bands.csv \
   --out-daily data/processed/roic_daily_raw.csv
@@ -370,7 +370,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
   --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
   --cash-caliber nonop --equity-anchor guarded \
-  --restricted-cash notes \
+  --restricted-cash notes_wc \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1 \
   --ttm-trust on --ttm-trust-delta 0.02 \
   --out-bands data/processed/roic_bands_b2.csv \

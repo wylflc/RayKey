@@ -1,0 +1,14 @@
+{
+  "ruled_at_beijing": "2026-09-25",
+  "decision": "adopt P on principle (pledged-for-notes cash-like items also in operating working capital); dual table reads 不采纳 (ex-winner main -0.78pp), Track A guardrail passes",
+  "tested_arm": "P",
+  "state_arm": "P",
+  "registered_arm": "P",
+  "buy_line": 0.9524,
+  "width": 0.0476,
+  "registered_share_pct": 17.774,
+  "old_line_share_pct": 17.695,
+  "swap_margin": 0.15,
+  "swap_margin_rescan": false,
+  "swap_margin_reason": "scale drift -0.0003 within ±0.01"
+}

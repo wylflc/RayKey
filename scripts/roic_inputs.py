@@ -107,7 +107,7 @@ NOTE_CASH_FILE = ROOT / "data/reference/cash_note_items.csv"
 # OI-219（v4.206 生产口径 `restricted_cash = "notes"`）：为应付票据质押的现金类按经营资产（`fetch_restricted_cash_items.py`）
 RESTRICTED_CASH_FILE = ROOT / "data/reference/restricted_cash_items.csv"
 RESTRICTED_CASH_MODES = ("off", "notes", "notes_generic", "notes_wc")   # notes_generic：笼统原因（只写质押、保证金等）也计入，只作敏感性
-# notes_wc（OI-220 研究开关）：同 notes，另把扣除额计入营运资金（经营资产，与其担保的应付票据同在营运资金），再投资率随之计入其变动
+# notes_wc（OI-220，v4.208 生产口径）：同 notes，另把扣除额计入营运资金（经营资产，与其担保的应付票据同在营运资金），再投资率随之计入其变动；notes 只作 v4.206 复现
 RESTRICTED_YIELD_CAP = 0.05
 # 利润表未单列利息收入（2018 年前）时，质押存款利息按当年末一年期存款基准利率估计
 DEPOSIT_BENCHMARK = {2007: 0.0414, 2008: 0.0225, 2009: 0.0225, 2010: 0.0275, 2011: 0.0350, 2012: 0.0300,
