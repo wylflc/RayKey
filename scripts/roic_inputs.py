@@ -106,7 +106,8 @@ CASH_CALIBERS = ("nonop", "legacy")
 NOTE_CASH_FILE = ROOT / "data/reference/cash_note_items.csv"
 # OI-219（v4.206 生产口径 `restricted_cash = "notes"`）：为应付票据质押的现金类按经营资产（`fetch_restricted_cash_items.py`）
 RESTRICTED_CASH_FILE = ROOT / "data/reference/restricted_cash_items.csv"
-RESTRICTED_CASH_MODES = ("off", "notes", "notes_generic")   # notes_generic：笼统原因（只写质押、保证金等）也计入，只作敏感性
+RESTRICTED_CASH_MODES = ("off", "notes", "notes_generic", "notes_wc")   # notes_generic：笼统原因（只写质押、保证金等）也计入，只作敏感性
+# notes_wc（OI-220 研究开关）：同 notes，另把扣除额计入营运资金（经营资产，与其担保的应付票据同在营运资金），再投资率随之计入其变动
 RESTRICTED_YIELD_CAP = 0.05
 # 利润表未单列利息收入（2018 年前）时，质押存款利息按当年末一年期存款基准利率估计
 DEPOSIT_BENCHMARK = {2007: 0.0414, 2008: 0.0225, 2009: 0.0225, 2010: 0.0275, 2011: 0.0350, 2012: 0.0300,
@@ -216,7 +217,7 @@ class RoicYear:
 
 def _year_from_parts(code: str, period: str, parts: dict[str, dict], notice_cap: bool,
                      ic_floor: float = 0.0, caliber: str = "nonop", note_cash: float = 0.0,
-                     restricted: float = 0.0) -> RoicYear | None:
+                     restricted: float = 0.0, pledged_wc: bool = False) -> RoicYear | None:
     """三表同一财年的三行 → `RoicYear`；缺资产负债表或利润表、或无公告日时返回 None。"""
     bal, inc, cfl = parts.get("balance"), parts.get("income"), parts.get("cashflow")
     if not (bal and inc):
@@ -308,7 +309,8 @@ def _year_from_parts(code: str, period: str, parts: dict[str, dict], notice_cap:
     wc = working_capital_inputs(bal)
     year.working_capital_reported = wc.reported
     year.working_capital_operating = wc.operating
-    year.working_capital = wc.operating
+    year.working_capital = (wc.operating + year.restricted_cash if pledged_wc and wc.operating is not None
+                            else wc.operating)
     year.financing_receivables = wc.financing_receivables
     year.wc_receivable_basis = wc.receivable_basis
     year.wc_payable_basis = wc.payable_basis
@@ -404,10 +406,11 @@ def load_statements(codes: set[str] | None = None,
     for code, periods in raw.items():
         for period, parts in periods.items():
             year = _year_from_parts(code, period, parts, notice_cap, ic_floor, caliber, note_cash.get((code, period), 0.0),
-                                    restricted.get((code, period), 0.0))
+                                    restricted.get((code, period), 0.0), restricted_cash == "notes_wc")
             if year is not None:
                 out.setdefault(code, {})[period] = year
-    attach_superseded_versions(out, raw, codes, stmt_dir, notice_cap, ic_floor, caliber, note_cash, restricted)
+    attach_superseded_versions(out, raw, codes, stmt_dir, notice_cap, ic_floor, caliber, note_cash, restricted,
+                               restricted_cash == "notes_wc")
     annualize_consolidation(out, load_consolidation_events(codes=codes))
     return out
 
@@ -460,7 +463,7 @@ def load_restatement_dates(codes: set[str] | None = None, path: Path | None = No
 
 def attach_superseded_versions(out: dict[str, dict[str, RoicYear]], raw: dict, codes: set[str] | None,
                                stmt_dir: Path, notice_cap: bool, ic_floor: float = 0.0, caliber: str = "nonop",
-                               note_cash: dict | None = None, restricted: dict | None = None) -> None:
+                               note_cash: dict | None = None, restricted: dict | None = None, pledged_wc: bool = False) -> None:
     """给被追溯重述的财年挂上「重述前版本」（`RoicYear.superseded`，按 superseded_at 升序），
     版本 = 该日之前在用的三行（某表无存档即沿用现行）。重述日志有重述日、却无存档版本覆盖该日的，
     记 `delayed_until` = 重述日：现行值在该日之前不可用（不假装当时已知）。"""
@@ -477,7 +480,7 @@ def attach_superseded_versions(out: dict[str, dict[str, RoicYear]], raw: dict, c
                 if cands:
                     parts[kind] = min(cands, key=lambda c: c[0])[1]
             old = _year_from_parts(code, period, parts, notice_cap, ic_floor, caliber,
-                                   (note_cash or {}).get((code, period), 0.0), (restricted or {}).get((code, period), 0.0))
+                                   (note_cash or {}).get((code, period), 0.0), (restricted or {}).get((code, period), 0.0), pledged_wc)
             if old is not None:
                 versions.append((sa, old))
         year.superseded = versions
