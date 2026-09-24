@@ -1,6 +1,6 @@
 {
  "signal_date": "2026-09-24",
- "checked_at_utc": "2026-09-24T13:12:52.988823+00:00",
+ "checked_at_utc": "2026-09-24T13:23:35.954096+00:00",
  "status": "passed",
  "checks": [
   "whole_pool_unique_codes",
@@ -22,7 +22,6 @@
   "tracking_close_matches_scan_601318",
   "effective_stop_601318",
   "tracking_scope",
-  "holdings_vs_reported_assets_gap_as_registered",
   "independent_quote_000651",
   "independent_quote_002648",
   "independent_quote_603529",
@@ -50,11 +49,14 @@
   "publication_date_inputs_outputs_and_strategy_columns",
   "shadow_code_migration_validated",
   "shadow_capture_and_run",
-  "event_scope_reviewed_before_publication"
+  "event_scope_reviewed_before_publication",
+  "holdings_and_reported_assets_match",
+  "rerun_after_same_day_trade",
+  "publication_verified_after_rerun"
  ],
- "holdings_market_value_cny": "4441036.00",
+ "holdings_market_value_cny": "4444886.00",
  "reported_total_assets_cny": "4444886.00",
- "registered_total_assets_gap_cny": "3850.00",
+ "registered_total_assets_gap_cny": "0.00",
  "tranche_cny": "131670.45",
  "remaining_funds_cny": "0.00",
  "coverage": {
@@ -672,7 +674,8 @@
   "preview": 27125592,
   "formal_scan": 27128105,
   "shadow_failed_fingerprint": 27128420,
-  "shadow": 27128851
+  "shadow": 27128851,
+  "formal_scan_rerun_after_trade": 27129822
  },
  "resource_measurements": {
   "evidence_elapsed": "00:13:53",
@@ -689,7 +692,17 @@
   "嘉立创当日收盘有效、均线历史不足",
   "京东方A及中芯国际陈旧带不进估值判定",
   "公告快照取于北京时间20:56",
-  "实报总资产比持仓收盘市值多3850.00元（同时计入负债），科目待对账；09-22的757.51元、09-23的176.77元及今日181.72元计提未归入具体科目",
+  "09-24佣金与计提合计181.72元未拆分；09-22的757.51元、09-23的176.77元未归入具体科目",
   "全市场收盘涨跌家数未取得"
- ]
+ ],
+ "same_day_trade_correction": {
+  "code": "000651",
+  "side": "buy",
+  "shares": 100,
+  "price": "38.50",
+  "confirmed": "用户盘后补报，成交价用户确认",
+  "effect": "初版总资产与持仓市值差3850.00元即此100股；补登后持仓市值4444886.00元与实报总资产相符；重跑扫描买卖清单仍为空",
+  "cooldown_execution": "actual-20260924-000651-buy（一手未超一档，不跳过合格机会）",
+  "shadow_snapshot_note": "09-24影子快照（初版捕获）的实盘持仓字段仍为49600股；该字段只在08-28～09-01相关性过滤期及首日播种时读取，不影响影子路径，按§10.4不覆盖原快照"
+ }
 }
