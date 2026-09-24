@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "checked_at_utc": "2026-09-24T19:39:04.031311+00:00",
+  "aima_iv": 32.412,
+  "unchanged": {
+    "a_share_holdings.csv": true,
+    "portfolio_account_snapshot.csv": true
+  },
+  "bands_checked": 172,
+  "pool_unvaluable": [
+    "000725",
+    "688981"
+  ],
+  "off_pool_unvaluable_changes": {
+    "entered": [
+      "002460"
+    ],
+    "left": []
+  },
+  "plans": {
+    "daily_entry_plan.csv": 0,
+    "daily_sell_plan.csv": 0
+  },
+  "publication": {
+    "bytes": 4923,
+    "sha256": "dc2386102f96424f515095ba138d8094c8696ece0ab1311444a4e8654a0bdb37"
+  }
+}
