@@ -1,0 +1,17 @@
+{
+ "parent_2026e": 17.0,
+ "h1_2026": 6.6507,
+ "h2_2024": 10.373,
+ "minority_share": 0.008,
+ "nopat_less_net_profit_yi": -2.3322,
+ "research_nopat_yi": 14.8,
+ "divergence": {
+  "research": 14.8,
+  "model": 19.937989101777,
+  "gap": 0.34716142579574316,
+  "exceeds": true,
+  "adopted": false,
+  "triggered": true,
+  "freeze": true
+ }
+}
