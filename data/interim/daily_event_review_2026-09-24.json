@@ -1,0 +1,253 @@
+{
+ "signal_date": "2026-09-24",
+ "status": "reviewed_through_snapshot_cutoff",
+ "reviewed_at_utc": "2026-09-24T13:04:44.700361+00:00",
+ "primary_documents": [
+  {
+   "security_code": "603529",
+   "title": "关于参与设立的投资基金存续期届满进入清算期的公告",
+   "art_code": "AN202609241829862921",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609241829862921_1.pdf",
+   "pdf_sha256": "f4811e60dd458b78382ebe866472702d6a300f58d89887d9b81659c6671120f4",
+   "pages": 3,
+   "pages_reviewed": [
+    1,
+    2,
+    3
+   ],
+   "review_method": "原始PDF逐页文字核验",
+   "reviewed_at_utc": "2026-09-24T12:59:15.907103+00:00",
+   "facts": "锦福创投（公司认缴9,000万元、占55.90%份额，唯一投资标的爱德邦21.0526%股权）合伙期限2026-09-25届满进入清算，基金管理人任清算人；公司按权益法核算，2021～2023年已全额确认投资损失，账面价值已减记至零；另一只基金倚樟望潮3,240万元运营中。",
+   "assessment": "历史投资的程序性清算，账面价值为零，不影响经营资产、NOPAT或投入资本；不触发§7.4事件复核，不改变估值带。"
+  },
+  {
+   "security_code": "688516",
+   "title": "向不特定对象发行可转换公司债券第四次临时受托管理事务报告(2026年度)",
+   "art_code": "AN202609231829800041",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609231829800041_1.pdf",
+   "pdf_sha256": "45fd33294fd2b2bc5562e354b7828a32fd507cdb4443dd79f9917cf771802c36",
+   "pages": 16,
+   "pages_reviewed": [
+    1,
+    2,
+    3,
+    14
+   ],
+   "review_method": "扫描版PDF无文字层，抽取页面图像逐页目视核验（第1～3、14页）",
+   "reviewed_at_utc": "2026-09-24T12:59:15.907103+00:00",
+   "facts": "受托管理人平安证券就公司公告2026-080（实施2026年半年度权益分派调整奥维转债转股价格暨转股复牌）出具临时报告；列示历次转股价调整（2026-06权益分派84.42→83.62、2026-07回购注销→83.69）及本次半年度每股派0.3元（含税）的调整。",
+   "assessment": "可转债条款内的例行转股价调整，与已核验的09-24除息同源；不触发§7.4事件复核。"
+  },
+  {
+   "security_code": "601318",
+   "title": "中国平安H股公告（董事会召开日期）",
+   "art_code": "AN202609241829865904",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609241829865904_1.pdf",
+   "pdf_sha256": "a6bbf1fa85687b2fabf5ca8671c2ceac7028229866e05507a2ed505c747a58ce",
+   "pages": 1,
+   "pages_reviewed": [
+    1
+   ],
+   "review_method": "原始PDF逐页文字核验",
+   "reviewed_at_utc": "2026-09-24T12:59:15.907103+00:00",
+   "facts": "董事会定于2026-10-28召开，审议截至2026-09-30止九个月第三季度业绩。",
+   "assessment": "例行预告；三季报披露日前后按§7.1入队复核，今日不触发。"
+  },
+  {
+   "security_code": "601318",
+   "title": "中国平安H股公告（没收未领取的2018年度末期股息及2019年度中期股息）",
+   "art_code": "AN202609241829865905",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609241829865905_1.pdf",
+   "pdf_sha256": "697c31e947cb48878f0ec20b66cae631675651f4f2255f0548ca4fee98de8500",
+   "pages": 1,
+   "pages_reviewed": [
+    1
+   ],
+   "review_method": "原始PDF逐页文字核验",
+   "reviewed_at_utc": "2026-09-24T12:59:15.907103+00:00",
+   "facts": "按公司章程，六年未领取的2018年度末期股息（每股1.10元）与2019年度中期股息（每股0.75元）于2026-10-31没收并复归公司。",
+   "assessment": "H股股东未领股息的例行处置，金额不重大，不影响股利锚；不触发事件复核。"
+  },
+  {
+   "security_code": "600160",
+   "title": "巨化股份2026年半年度权益分派实施公告",
+   "art_code": "AN202609161829466627",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609161829466627_1.pdf",
+   "pdf_sha256": "cd846405629c92b603729356c805975bec725beca1b210135a484894e243cb55",
+   "pages": 3,
+   "pages_reviewed": [
+    1,
+    2
+   ],
+   "review_method": "原始PDF文字核验（分配方案与相关日期）",
+   "reviewed_at_utc": "2026-09-24T12:59:15.907103+00:00",
+   "facts": "差异化分红送转：否；以总股本2,699,746,081股为基数每股派0.22元（含税），09-23登记、09-24除息并发放，无送转。",
+   "assessment": "非差异化分派，无需登记交易所价格参数；候选及持仓侧V按现金0.22元归一化。"
+  },
+  {
+   "security_code": "600660",
+   "title": "福耀玻璃2026年半年度A股权益分派实施公告",
+   "art_code": "AN202609161829464873",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609161829464873_1.pdf",
+   "pdf_sha256": "cafbae9dac078c86043419851db99e0a778e7710960144f7de406a809b0cc47a",
+   "pages": 5,
+   "pages_reviewed": [
+    1,
+    2
+   ],
+   "review_method": "原始PDF文字核验（分配方案与相关日期）",
+   "reviewed_at_utc": "2026-09-24T12:59:15.907103+00:00",
+   "facts": "差异化分红送转：否；以A+H总股数2,609,743,532股为基数每股派1.00元（含税），A股2,002,986,332股；09-23登记、09-24除息并发放。",
+   "assessment": "非差异化分派；候选及持仓侧V按现金1.00元归一化。"
+  },
+  {
+   "security_code": "688516",
+   "title": "奥特维2026年半年度权益分派实施公告",
+   "art_code": "AN202609171829516247",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829516247_1.pdf",
+   "pdf_sha256": "3e98a6e1740366547bc0778d7fac852efef4df184c5ee0b6bdb4a294dc9f61b7",
+   "pages": 4,
+   "pages_reviewed": [
+    1,
+    2
+   ],
+   "review_method": "原始PDF文字核验（分配方案与相关日期）",
+   "reviewed_at_utc": "2026-09-24T12:59:15.907103+00:00",
+   "facts": "是否涉及差异化分红送转：否；以总股本314,760,458股为基数每股派0.3元（含税），09-23登记、09-24除息并发放。",
+   "assessment": "非差异化分派；候选及持仓侧V按现金0.30元归一化。"
+  }
+ ],
+ "carried_forward_documents": [
+  {
+   "art_code": "AN202609171829522385",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829522385_1.pdf",
+   "pdf_sha256": "ada0034fd0fa19eac191ab7d83e61a1054a037bb4b1a4d8ccdb59a018d7420f5",
+   "pages": 5,
+   "retrieved_at_utc": "2026-09-18T08:41:18.155057+00:00",
+   "security_code": "603529",
+   "notice_date": "2026-09-18",
+   "title": "爱玛科技2026年半年度权益分派实施公告",
+   "facts": "09-23登记，09-24除息及发放；实派0.392元/股，差异化价格调整用虚拟分派0.385元/股；无送转。",
+   "assessment": "事件发生前不调整账户、成本、止损锚或生产带；除息日按价格口径0.385处理，实际红利按0.392核对券商到账。",
+   "pages_reviewed": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "review_method": "原始PDF文字提取核验；牧原第1/4页与电投演示第8/10页另以图像核验",
+   "reviewed_at_utc": "2026-09-18T08:44:16.487641+00:00",
+   "carried_forward_from": "data/interim/daily_event_review_2026-09-23.json",
+   "same_document_listed_on": "2026-09-21"
+  }
+ ],
+ "announcement_snapshot": "data/interim/daily_announcements_2026-09-24.json",
+ "announcement_title_screening_count": 170,
+ "announcement_retrieved_at_utc": "2026-09-24T12:56:42.773270+00:00",
+ "latest_announcement_display_time_beijing": "2026-09-24 20:24:36",
+ "industry_review": "data/interim/daily_industry_review_2026-09-24.json",
+ "valuation_review_queue_rows": 0,
+ "valuation_update": "无新增财报导致的估值更新；仅巨化股份、福耀玻璃、爱玛科技、东鹏饮料、奥特维今日除息按现行公式机械折算（爱玛0.385、东鹏2.97按已登记价格口径）；五粮液维持采用研究数；其余带值不变",
+ "holding_ex_dividends_today": {
+  "603529": {
+   "name": "爱玛科技",
+   "ex_dividend_date": "2026-09-24",
+   "cash_paid_per_share": 0.392,
+   "price_cash_per_share": 0.385,
+   "shares": 29200,
+   "dividend_cny": 11446.4,
+   "cost_basis": [
+    21.6142,
+    21.2292
+   ],
+   "entry_stop_price": [
+    20.76,
+    20.375
+   ],
+   "ledger": "data/processed/holdings_corporate_actions_applied.csv",
+   "note": "用户确认红利已到账并偿还融资"
+  }
+ },
+ "mandatory_codes": [
+  "000651",
+  "002648",
+  "600036",
+  "601318",
+  "603529",
+  "688516"
+ ],
+ "eligible_codes": [
+  "603529",
+  "000651",
+  "601318",
+  "600036",
+  "688516",
+  "002648"
+ ],
+ "holdings_codes": [
+  "002648",
+  "000651",
+  "603529",
+  "600036",
+  "601318"
+ ],
+ "user_named_codes": [],
+ "relevant_announcement_count": 5,
+ "unreviewed_announcements": [],
+ "coverage": [
+  {
+   "security_code": "000651",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "002648",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "600036",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609221829763391"
+   ],
+   "announcement_status": "reviewed_on_prior_day"
+  },
+  {
+   "security_code": "601318",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609241829865905",
+    "AN202609241829865904"
+   ],
+   "announcement_status": "primary_reviewed"
+  },
+  {
+   "security_code": "603529",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609241829862921"
+   ],
+   "announcement_status": "primary_reviewed"
+  },
+  {
+   "security_code": "688516",
+   "held": false,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609231829800041"
+   ],
+   "announcement_status": "primary_reviewed"
+  }
+ ],
+ "report_day_divergence_check": "check_report_day_price_divergence.py --as-of 2026-09-24 --universe pool：10日内有披露且有带0只，无命中",
+ "coverage_note": "池内170条标题筛查（快照取于北京时间20:56）；持仓5只及暂定合格集6只的必查公告已核验原文：爱玛投资基金清算、奥特维可转债受托管理临时报告（扫描版，页面图像核验）、平安H股公告2份；招行09-22公告已于09-23核验。另核验3份今日除息实施公告（巨化、福耀、奥特维）。行业高频数据未全覆盖，缺口另列；不代表快照截止之后没有新公告。"
+}

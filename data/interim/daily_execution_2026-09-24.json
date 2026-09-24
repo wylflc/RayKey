@@ -1,0 +1,15 @@
+{
+ "execution_date": "2026-09-24",
+ "signal_date": "2026-09-23",
+ "confirmation_source": "user",
+ "user_confirmation": "今天没有任何操作, 然后总资产 4444886, 净资产 2633408.91, 爱玛科技分红已经收到了, 用于还融资了, 现金和可用融资都是 0.",
+ "status": "no_trades",
+ "trades": [],
+ "holdings_unchanged": false,
+ "holdings_change": "爱玛科技09-24除息按§11.4调整成本与止损锚（股数不变），非成交",
+ "holdings_sha256": "fb03f97ae977383e0df940b9db8e80fbdd11f84801a48f13c9d834423757e359",
+ "cooldown_executions_added": 0,
+ "original_buy_plan": [],
+ "original_sell_plan": [],
+ "recorded_at_utc": "2026-09-24T12:44:31.798939+00:00"
+}

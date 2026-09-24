@@ -1,0 +1,86 @@
+{
+ "as_of": "2026-09-24",
+ "account_reported": {
+  "as_of": "2026-09-24",
+  "net_assets_cny": "2633408.91",
+  "total_assets_cny": "4444886.00",
+  "margin_debt_cny": "1811477.09",
+  "credit_line_cny": "",
+  "leverage_ratio": "1.6879",
+  "guarantee_ratio_pct": "245.37",
+  "holdings_market_value_cny": "4441036.00",
+  "cash_cny": "0.00",
+  "position_count": "5",
+  "top_position_weight_pct": "72.51",
+  "account_peak_net_assets_cny": "",
+  "drawdown_from_peak_pct": "",
+  "source": "user_reported",
+  "note": "用户2026-09-24盘后回报：今日无任何操作，5只持仓股数延续；爱玛科技09-24除息（10派3.92元，价格减项0.385），按§11.4成本21.6142→21.2292、止损锚20.76→20.375，红利29200股×0.392=11446.40元已到账并用于偿还融资。总资产4444886、净资产2633408.91，负债按差额1811477.09；现金0、券商可用保证金0，扫描funds=0。未报告外部出入金按0。5只持仓股数乘09-24公开收盘价合计4441036.00元，比实报总资产少3850.00元；净资产较09-23变动-15752.32元，等于收盘市值变动-27017.00元加红利11446.40元再减181.72元计提（09-23为176.77元），即净资产与收盘价闭合，3850.00元同时计在总资产与负债两侧，科目待对账，不重复扣款。负债较09-23变动-7414.68元。格力市值1909600.00元，占净资产72.51%，按现行单票上限暂停加仓。一档131670.45元。",
+  "external_cash_flow_cny": "0.00",
+  "strategy_base_net_assets_cny": "",
+  "strategy_return_pct": "",
+  "net_assets_before_flow_cny": "",
+  "strategy_nav_basis": "",
+  "strategy_unit_nav": "",
+  "strategy_epoch": ""
+ },
+ "available_margin_cny": "0.00",
+ "actual_scan_funds_cny": "0.00",
+ "net_asset_change_cny": "-15752.32",
+ "net_asset_change_pct": "-0.5946153756749641093003614582",
+ "debt_change_cny": "-7414.68",
+ "market_value_change_cny": "-27017.00",
+ "dividend_received_cny": "11446.40",
+ "implied_accrual_cny": "181.72",
+ "tranche_cny": "131670.45",
+ "asset_leverage": "1.687882950164393573043694152",
+ "guarantee_ratio_pct": "245.3735696983062590098779555",
+ "buffer_to_130pct": "47.01955872434073674780410566",
+ "hypothetical_funds_cny": "-57626.756",
+ "unclassified_difference_cny": "3850.00",
+ "market_value_reconciliation_cny": "3850.00",
+ "close_price_reconciliation_status": "net_assets_matched_total_assets_gap",
+ "holdings_close_valuation": [
+  {
+   "code": "002648",
+   "name": "卫星化学",
+   "close": "26.64",
+   "shares": "22300",
+   "market_value_cny": "594072.00",
+   "quote_time_beijing": "20260924161451"
+  },
+  {
+   "code": "000651",
+   "name": "格力电器",
+   "close": "38.50",
+   "shares": "49600",
+   "market_value_cny": "1909600.00",
+   "quote_time_beijing": "20260924161439"
+  },
+  {
+   "code": "603529",
+   "name": "爱玛科技",
+   "close": "20.88",
+   "shares": "29200",
+   "market_value_cny": "609696.00",
+   "quote_time_beijing": "20260924161446"
+  },
+  {
+   "code": "600036",
+   "name": "招商银行",
+   "close": "40.69",
+   "shares": "14700",
+   "market_value_cny": "598143.00",
+   "quote_time_beijing": "20260924161447"
+  },
+  {
+   "code": "601318",
+   "name": "中国平安",
+   "close": "53.25",
+   "shares": "13700",
+   "market_value_cny": "729525.00",
+   "quote_time_beijing": "20260924161454"
+  }
+ ],
+ "quote_evidence": "data/interim/daily_account_quotes_2026-09-24.json"
+}

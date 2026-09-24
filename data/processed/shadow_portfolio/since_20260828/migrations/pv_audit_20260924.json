@@ -1,0 +1,29 @@
+{
+  "issue": "OI-199～211 生产代码变更（v4.199～v4.204）",
+  "created_at_beijing": "2026-09-24T21:10:52.057090+08:00",
+  "before_code_sha256": {
+    "shadow_from_origin.py": "675e2e87a4d203199a7e79a10fa97954f4a569e50022560cc4a68ba0040a6183",
+    "shadow_portfolio.py": "aa30791f37eb0fc7ce92c66e4cc3664ea7f4cdb23d0221df480336ce4c48226b",
+    "backtest_valuation_strategy.py": "3c2ec3c2f8faa9260481f6202a7236c2cefb9cd767eec3ae7f6b062df1aa0980",
+    "screen_daily_volume_price_signals.py": "c3a6bc4a11207ca59a7ae2138deb01f5e4f0f82e07cece639d470784a1ce2e11",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+    "corporate_actions.py": "f59a1d34ce61ba443f1b4abca7b3a2fe905d61787020c3c5f43f8d6f52c3d012"
+  },
+  "after_code_sha256": {
+    "shadow_from_origin.py": "675e2e87a4d203199a7e79a10fa97954f4a569e50022560cc4a68ba0040a6183",
+    "shadow_portfolio.py": "aa30791f37eb0fc7ce92c66e4cc3664ea7f4cdb23d0221df480336ce4c48226b",
+    "backtest_valuation_strategy.py": "3c2ec3c2f8faa9260481f6202a7236c2cefb9cd767eec3ae7f6b062df1aa0980",
+    "screen_daily_volume_price_signals.py": "3f8eefebb4eef21353ccfe629e70bca503c661ff99ecbb846ce7d7426d058f08",
+    "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+    "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+    "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+    "corporate_actions.py": "9f7c9c5f0c2ed24a00df5e25cf4ff531205c397e8a1b00abf58056d7c6102f27"
+  },
+  "before_manifest_sha256": "8d269c55302e7f546cfee2f1b66c92ce6fcb3a218d85373771a64b1d03ab00eb",
+  "validation": "data/experiments/shadow_migration_20260924/validation.json",
+  "validation_sha256": "7e5add942deb31b00d1e33dee02fb1bc1b9bf71220acd3bd6a88c0ffbba4c139",
+  "original_snapshots_unchanged": true,
+  "replay_economics_unchanged": true
+}
