@@ -3159,7 +3159,8 @@ def main() -> int:
                              "有息负债、附注核定存款计入现金（缺省，生产）；legacy=货币资金 + 交易性金融资产、EBIT = 利润总额 + 利息费用（只作复现）")
     parser.add_argument("--restricted-cash", choices=roic_inputs.RESTRICTED_CASH_MODES, default="off",
                         help="研究开关（OI-219）：notes=年报受限资产附注中为应付票据、信用证、保函质押的现金类不计超额现金、"
-                             "按经营资产进投入资本（以应付票据为限），其利息并回 EBIT；off=缺省＝生产")
+                             "按经营资产进投入资本（以应付票据为限），其利息并回 EBIT；notes_generic=另加笼统原因（只写质押、保证金等）"
+                             "的现金类，只作敏感性；off=缺省＝生产")
     parser.add_argument("--equity-anchor", choices=("guarded", "legacy"), default="guarded",
                         help="§6.5.1 第 3 条权益口径的 ROE 锚（OI-200）：guarded=与 ROIC 路径 ratio0 同式的 λ 锚、TTM 当期化与峰谷坡道"
                              "（缺省，生产）；legacy=五年锚 × 单边 λ 上抬、无周期守卫（只作复现）")

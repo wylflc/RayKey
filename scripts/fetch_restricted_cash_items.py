@@ -103,7 +103,34 @@ def load_note_cash() -> dict[tuple[str, int, str], float]:
     return out
 
 
-CASH_TABLE = re.compile(r"受\s*限\s*制\s*的\s*货\s*币\s*资\s*金\s*(?:的)?\s*(?:明\s*细|情\s*况|列\s*示)?\s*(?:如\s*下)?\s*[:：]?")
+CASH_TABLE = re.compile(r"(?:(?:受\s*限\s*制|有\s*限\s*制|受\s*到\s*限\s*制)\s*的|不\s*属\s*于\s*现\s*金\s*及\s*现\s*金\s*等\s*价\s*物\s*的)\s*货\s*币\s*资\s*金\s*(?:的)?\s*(?:明\s*细|情\s*况|列\s*示)?\s*(?:如\s*下)?\s*[:：]?")
+
+
+# 货币资金附注正文里写明金额的开票类保证金（2016 年前常见的散文式披露）：「票据保证金 15,000,000.00 元」
+PROSE = re.compile(r"((?:银行)?(?:承兑)?(?:汇票|票据|承兑|信用证|保函)(?:及信用证|、信用证)?保证金)[^\d。；;]{0,16}?"
+                   r"(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)\s*(万元|元)")
+
+
+PROSE_AFTER = re.compile(r"(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)\s*(万元|元)[^\d。；;]{0,4}?(?:系|为|是)"
+                         r"((?:银行)?(?:承兑)?(?:汇票|票据|承兑|信用证|保函)(?:及信用证|、信用证)?保证金)")
+
+
+def prose_margins(text: str) -> dict | None:
+    """货币资金附注（至下一附注标题）里的开票类保证金逐项求和；同一金额重复出现只计一次。"""
+    body = cn.section(text, "货币资金", cn.notes_start(text)) or ""
+    stop = re.search(r"\n[ \t]*(?:\d{1,3}\s*[、．.]|[（(][一二三四五六七八九十\d]+[)）])\s*(?:交易性|以公允|应收票据|衍生)", body)
+    body = body[:stop.start()] if stop else body
+    flat = re.sub(r"\s+", "", body)
+    seen, rows = set(), []
+    hits = [(m.group(1), m.group(2), m.group(3)) for m in PROSE.finditer(flat)]
+    hits += [(m.group(3), m.group(1), m.group(2)) for m in PROSE_AFTER.finditer(flat)]
+    for label, amount, unit in hits:
+        value = float(amount.replace(",", "")) * (1e4 if unit == "万元" else 1.0)
+        if value <= 0 or amount in seen:
+            continue
+        seen.add(amount)
+        rows.append(dict(label="货币资金", value=value, reason=label))
+    return dict(status="ok", total=sum(r["value"] for r in rows), rows=rows) if rows else None
 
 
 def find_section(text: str) -> tuple[str, str] | None:
@@ -185,7 +212,7 @@ def parse_section(body: str, cash_note: bool = False) -> dict:
     rows = []
     if cash_note:
         # 行 = 中文行名（即受限原因）+ 金额；首个金额为期末
-        for m in re.finditer(r"([\u4e00-\u9fa5（）()、及和与/]{2,40}?)((?:⟦\d+⟧)+)", table):
+        for m in re.finditer(r"((?:[\u4e00-\u9fa5、及和与/]|[（(][^（()）⟦]{0,6}[)）]){2,40}?)((?:⟦\d+⟧)+)", table):
             label = m.group(1)
             if re.search(r"项目|期末|年末|年初|期初|余额", label) and not re.search(r"保证金|存款|存单|冻结|质押", label):
                 continue
@@ -257,6 +284,9 @@ def parse_section(body: str, cash_note: bool = False) -> dict:
         reason = r["reason"]
         for ref in re.findall(r"注(\d+)", reason):
             reason += "｜" + footnotes.get(ref, "")
+        if not re.search(r"[\u4e00-\u9fa5]", reason):
+            # 表内无原因列（原因只写在表后「其他说明」里）：以表后说明为原因
+            reason = re.sub(r"⟦\d+⟧", " ", after)[:800]
         out_rows.append(dict(label=r["label"], value=v * unit, reason=reason))
     return dict(status="ok", total=target * unit, rows=out_rows, rescued=rescued)
 
@@ -295,6 +325,12 @@ def parse_task(task: dict, meta: dict, note_cash: dict) -> dict:
     text = gzip.decompress((cn.CACHE / task["code"] / f"{task['year']}.txt.gz").read_bytes()).decode("utf-8")
     found = find_section(text)
     if found is None:
+        prose = prose_margins(text)
+        if prose is not None:
+            c = classify(prose["rows"], task, note_cash)
+            return dict(row, source="cash_prose", status="ok", restricted_total=f"{prose['total']:.2f}",
+                        cash_like_yuan=f"{c['cash_like']:.2f}", counted_yuan=f"{c['counted']:.2f}",
+                        generic_yuan=f"{c['generic']:.2f}", loan_only_yuan=f"{c['loan']:.2f}", items=c["items"])
         return dict(row, status="none_stated" if NONE_STATED.search(re.sub(r"\s+", "", text)) else "section_not_found")
     body, source = found
     if re.match(r"[:：]?(?:□适用)?√?不适用|[:：]?无[。；;]?(?:$|[^\u4e00-\u9fa5])", re.sub(r"\s+", "", body)):

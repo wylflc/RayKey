@@ -106,7 +106,7 @@ CASH_CALIBERS = ("nonop", "legacy")
 NOTE_CASH_FILE = ROOT / "data/reference/cash_note_items.csv"
 # OI-219（研究开关 `restricted_cash = "notes"`）：为应付票据质押的现金类按经营资产（`fetch_restricted_cash_items.py`）
 RESTRICTED_CASH_FILE = ROOT / "data/reference/restricted_cash_items.csv"
-RESTRICTED_CASH_MODES = ("off", "notes")
+RESTRICTED_CASH_MODES = ("off", "notes", "notes_generic")   # notes_generic：笼统原因（只写质押、保证金等）也计入，只作敏感性
 RESTRICTED_YIELD_CAP = 0.05
 # 利润表未单列利息收入（2018 年前）时，质押存款利息按当年末一年期存款基准利率估计
 DEPOSIT_BENCHMARK = {2007: 0.0414, 2008: 0.0225, 2009: 0.0225, 2010: 0.0275, 2011: 0.0350, 2012: 0.0300,
@@ -340,8 +340,10 @@ def load_cash_note_items(codes: set[str] | None = None, path: Path | None = None
     return out
 
 
-def load_restricted_cash_items(codes: set[str] | None = None, path: Path | None = None) -> dict[tuple[str, str], float]:
-    """`restricted_cash_items.csv` → `{(代码, 年报期): 为应付票据质押的现金类（元）}`，只取 `status = ok`（OI-219）。"""
+def load_restricted_cash_items(codes: set[str] | None = None, path: Path | None = None,
+                               mode: str = "notes") -> dict[tuple[str, str], float]:
+    """`restricted_cash_items.csv` → `{(代码, 年报期): 为应付票据质押的现金类（元）}`，只取 `status = ok`（OI-219）；
+    `mode = "notes_generic"` 另加笼统原因的现金类（敏感性）。"""
     path = path or RESTRICTED_CASH_FILE
     out: dict[tuple[str, str], float] = {}
     if not path.exists():
@@ -351,7 +353,10 @@ def load_restricted_cash_items(codes: set[str] | None = None, path: Path | None 
             code = (row.get("security_code") or "").zfill(6)
             if row.get("status") != "ok" or (codes is not None and code not in codes):
                 continue
-            out[(code, (row.get("report_date") or "")[:10])] = _num(row.get("counted_yuan")) or 0.0
+            value = _num(row.get("counted_yuan")) or 0.0
+            if mode == "notes_generic":
+                value += _num(row.get("generic_yuan")) or 0.0
+            out[(code, (row.get("report_date") or "")[:10])] = value
     return out
 
 
@@ -393,7 +398,8 @@ def load_statements(codes: set[str] | None = None,
     if restricted_cash not in RESTRICTED_CASH_MODES:
         raise ValueError(f"restricted_cash {restricted_cash!r} 不在 {RESTRICTED_CASH_MODES}")
     note_cash = load_cash_note_items(codes) if caliber == "nonop" else {}
-    restricted = load_restricted_cash_items(codes) if caliber == "nonop" and restricted_cash == "notes" else {}
+    restricted = (load_restricted_cash_items(codes, mode=restricted_cash)
+                  if caliber == "nonop" and restricted_cash != "off" else {})
     out: dict[str, dict[str, RoicYear]] = {}
     for code, periods in raw.items():
         for period, parts in periods.items():

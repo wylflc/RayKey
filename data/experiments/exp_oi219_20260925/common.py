@@ -9,9 +9,10 @@ EXP = Path(__file__).resolve().parent
 ROOT = EXP.parents[2]
 STATE_FILES = ('roic_bands.csv', 'roic_bands_b2.csv', 'roic_daily_raw.csv', 'roic_daily_raw_b2.csv',
                'a_share_daily_states_adopted.csv', 'a_share_daily_states_b2.csv', 'a_share_daily_states_hold.csv')
-ARMS = ('CONTROL', 'R')
+ARMS = ('CONTROL', 'R', 'R2')
 # R（OI-219）：为应付票据、信用证、保函质押的现金类按经营资产（以应付票据为限），其利息并回 EBIT
-FLAGS = {'CONTROL': [], 'R': ['--restricted-cash', 'notes']}
+# R2（敏感性，不作候选）：另加笼统原因（只写质押、保证金等）的现金类，同样以应付票据为限
+FLAGS = {'CONTROL': [], 'R': ['--restricted-cash', 'notes'], 'R2': ['--restricted-cash', 'notes_generic']}
 # §6.7 第 2 步命令（v4.200 起生产口径）
 PRODUCTION = ['--all', '--value-model', 'roic', '--roe-source', 'onesided_max', '--roe-lift', '2.0', '--uniform-tier', 'L2',
               '--since', '2002-01-01', '--roic-nopat-source', 'conditional3', '--roic-growth', 'hybrid',
