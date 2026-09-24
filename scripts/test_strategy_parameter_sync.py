@@ -205,5 +205,24 @@ class StrategyParameterSyncTest(unittest.TestCase):
             self.assertEqual(daily_scan.load_tactical_gate_codes(path), {"000001", "000002", "000003"})
 
 
+    def test_overseas_engine_matches_a_share_production(self) -> None:
+        """§6.8（OI-210）：海外估值参数与 §6.7 第 2 步生产命令、§6.5.1 L2 参数同值。"""
+        import build_historical_valuation_bands as a_share
+        import build_overseas_roic_bands as overseas
+        import fetch_overseas_statements as statements
+        from intrinsic_value import DEFAULT_G_TERMINAL
+        command = shlex.split(WORKFLOW.read_text(encoding="utf-8").split("# 2. 构建 ROIC 带与逐日状态", 1)[1]
+                              .split("# 2b.", 1)[0].replace("\\\n", " "))
+        l2 = a_share.TIER_PARAMS["L2"]
+        self.assertIn("L2", option_value(command, "--uniform-tier"))
+        self.assertEqual(overseas.REQUIRED_RETURN, l2["r"])
+        self.assertAlmostEqual(overseas.TERMINAL_EXCESS, l2["roe_terminal"] - l2["r"])
+        self.assertEqual(overseas.FADE, dict(consistent=True, roe_lam=float(option_value(command, "--fade-lambda")),
+                                             horizon=int(option_value(command, "--fade-horizon"))))
+        self.assertEqual(option_value(command, "--fade-shape"), "exponential")
+        self.assertEqual(statements.IC_FLOOR, float(option_value(command, "--roic-ic-floor")))
+        self.assertNotIn("--g-terminal", command)            # A 股生产 g_T 取引擎缺省，海外同一常数
+        self.assertEqual(DEFAULT_G_TERMINAL, 0.03)
+
 if __name__ == "__main__":
     unittest.main()

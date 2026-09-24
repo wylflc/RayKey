@@ -1,0 +1,419 @@
+{
+ "symbol": "UBER",
+ "cik": 1543151,
+ "accn": "0001543151-26-000015",
+ "filed": "2026-02-13",
+ "period": "2025-12-31",
+ "statements": {
+  "balance": {
+   "report": "R3.htm",
+   "title": "CONSOLIDATED BALANCE SHEETS",
+   "scale": "CONSOLIDATED BALANCE SHEETS - USD ($)  $ in Millions",
+   "rows": [
+    {
+     "ns": "us-gaap",
+     "element": "AssetsAbstract",
+     "label": "Assets",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CashAndCashEquivalentsAtCarryingValue",
+     "label": "Cash and cash equivalents",
+     "value": 7105.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "MarketableSecuritiesCurrent",
+     "label": "Short-term investments",
+     "value": 528.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RestrictedCashAndCashEquivalentsAtCarryingValue",
+     "label": "Restricted cash and cash equivalents",
+     "value": 631.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccountsReceivableNetCurrent",
+     "label": "Accounts receivable, net of allowance of $95 and $91, respectively",
+     "value": 3827.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "PrepaidExpenseAndOtherAssetsCurrent",
+     "label": "Prepaid expenses and other current assets",
+     "value": 1902.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AssetsCurrent",
+     "label": "Total current assets",
+     "value": 13993.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RestrictedCashAndCashEquivalentsNoncurrent",
+     "label": "Restricted cash and cash equivalents",
+     "value": 1911.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RestrictedInvestments",
+     "label": "Restricted investments",
+     "value": 8874.0
+    },
+    {
+     "ns": "uber",
+     "element": "MarketableAndNonMarketableInvestments",
+     "label": "Investments",
+     "value": 9178.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EquityMethodInvestments",
+     "label": "Equity method investments",
+     "value": 287.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "PropertyPlantAndEquipmentAndFinanceLeaseRightOfUseAssetAfterAccumulatedDepreciationAndAmortization",
+     "label": "Property and equipment, net",
+     "value": 1897.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingLeaseRightOfUseAsset",
+     "label": "Operating lease right-of-use assets",
+     "value": 1114.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IntangibleAssetsNetExcludingGoodwill",
+     "label": "Intangible assets, net",
+     "value": 1048.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Goodwill",
+     "label": "Goodwill",
+     "value": 8931.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DeferredIncomeTaxAssetsNet",
+     "label": "Deferred tax assets",
+     "value": 10951.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherAssetsNoncurrent",
+     "label": "Other assets",
+     "value": 3618.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Assets",
+     "label": "Total assets",
+     "value": 61802.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesAndStockholdersEquityAbstract",
+     "label": "Liabilities, redeemable non-controlling interests and equity",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccountsPayableCurrent",
+     "label": "Accounts payable",
+     "value": 1013.0
+    },
+    {
+     "ns": "uber",
+     "element": "InsuranceReserveCurrent",
+     "label": "Short-term insurance reserves",
+     "value": 3387.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingLeaseLiabilityCurrent",
+     "label": "Operating lease liabilities, current",
+     "value": 169.0
+    },
+    {
+     "ns": "uber",
+     "element": "AccruedLiabilitiesAndOtherLiabilitiesCurrent",
+     "label": "Accrued and other current liabilities",
+     "value": 7751.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesCurrent",
+     "label": "Total current liabilities",
+     "value": 12320.0
+    },
+    {
+     "ns": "uber",
+     "element": "InsuranceReserveNoncurrent",
+     "label": "Long-term insurance reserves",
+     "value": 9076.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LongTermDebtNoncurrent",
+     "label": "Long-term debt, net of current portion",
+     "value": 10521.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingLeaseLiabilityNoncurrent",
+     "label": "Operating lease liabilities, non-current",
+     "value": 1390.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherLiabilitiesNoncurrent",
+     "label": "Other long-term liabilities",
+     "value": 412.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Liabilities",
+     "label": "Total liabilities",
+     "value": 33719.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CommitmentsAndContingencies",
+     "label": "Commitments and contingencies (Note 14)",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RedeemableNoncontrollingInterestEquityCarryingAmount",
+     "label": "Redeemable non-controlling interests",
+     "value": 165.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquityAbstract",
+     "label": "Equity",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CommonStockValue",
+     "label": "Common stock, $0.00001 par value, 5,000,000 shares authorized for both periods, 2,107,953 and 2,067,905 shares issued and outstanding, respectively",
+     "value": 0.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AdditionalPaidInCapital",
+     "label": "Additional paid-in capital",
+     "value": 38101.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccumulatedOtherComprehensiveIncomeLossNetOfTax",
+     "label": "Accumulated other comprehensive loss",
+     "value": -432.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RetainedEarningsAccumulatedDeficit",
+     "label": "Accumulated deficit",
+     "value": -10628.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquity",
+     "label": "Total Uber Technologies, Inc. stockholders' equity",
+     "value": 27041.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NonredeemableNoncontrollingInterest",
+     "label": "Non-redeemable non-controlling interests",
+     "value": 877.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "label": "Total equity",
+     "value": 27918.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesAndStockholdersEquity",
+     "label": "Total liabilities, redeemable non-controlling interests and equity",
+     "value": 61802.0
+    }
+   ]
+  },
+  "income": {
+   "report": "R5.htm",
+   "title": "CONSOLIDATED STATEMENTS OF OPERATIONS",
+   "scale": "CONSOLIDATED STATEMENTS OF OPERATIONS - USD ($)  shares in Thousands, $ in Millions",
+   "rows": [
+    {
+     "ns": "us-gaap",
+     "element": "IncomeStatementAbstract",
+     "label": "Income Statement [Abstract]",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Revenues",
+     "label": "Revenue",
+     "value": 52017.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostOfRevenueAbstract",
+     "label": "Costs and expenses",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization",
+     "label": "Cost of revenue, exclusive of depreciation and amortization shown separately below",
+     "value": 31338.0
+    },
+    {
+     "ns": "uber",
+     "element": "OperationsAndSupportExpense",
+     "label": "Operations and support",
+     "value": 2854.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "SellingAndMarketingExpense",
+     "label": "Sales and marketing",
+     "value": 4898.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ResearchAndDevelopmentExpense",
+     "label": "Research and development",
+     "value": 3402.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "GeneralAndAdministrativeExpense",
+     "label": "General and administrative",
+     "value": 3241.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DepreciationDepletionAndAmortization",
+     "label": "Depreciation and amortization",
+     "value": 719.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostsAndExpenses",
+     "label": "Total costs and expenses",
+     "value": 46452.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingIncomeLoss",
+     "label": "Income from operations",
+     "value": 5565.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "InterestExpenseNonoperating",
+     "label": "Interest expense",
+     "value": -440.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "InvestmentIncomeInterest",
+     "label": "Interest income",
+     "value": 743.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherNonoperatingIncomeExpense",
+     "label": "Other income (expense), net",
+     "value": -68.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+     "label": "Income before income taxes and income (loss) from equity method investments",
+     "value": 5800.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeTaxExpenseBenefit",
+     "label": "Provision for (benefit from) income taxes",
+     "value": -4346.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeLossFromEquityMethodInvestments",
+     "label": "Income (loss) from equity method investments",
+     "value": -53.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ProfitLoss",
+     "label": "Net income including non-controlling interests",
+     "value": 10093.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NetIncomeLossAttributableToNoncontrollingInterest",
+     "label": "Less: net income (loss) attributable to non-controlling interests, net of tax",
+     "value": 40.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NetIncomeLoss",
+     "label": "Net income attributable to Uber Technologies, Inc.",
+     "value": 10053.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareAbstract",
+     "label": "Net income per share attributable to Uber Technologies, Inc. common stockholders:",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareBasic",
+     "label": "Basic (in dollars per share)",
+     "value": 4.82
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareDiluted",
+     "label": "Diluted (in dollars per share)",
+     "value": 4.73
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareDilutedOtherDisclosuresAbstract",
+     "label": "Weighted-average shares used to compute net income per share attributable to common stockholders:",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfSharesOutstandingBasic",
+     "label": "Basic (in shares)",
+     "value": 2085253.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfDilutedSharesOutstanding",
+     "label": "Diluted (in shares)",
+     "value": 2119689.0
+    }
+   ]
+  }
+ }
+}

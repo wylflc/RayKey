@@ -1,0 +1,701 @@
+{
+ "symbol": "TSM",
+ "cik": 1046179,
+ "accn": "0001193125-25-083423",
+ "filed": "2025-04-17",
+ "period": "2024-12-31",
+ "statements": {
+  "balance": {
+   "report": "R2.htm",
+   "title": "Consolidated Statements of Financial Position",
+   "scale": "Consolidated Statements of Financial Position  $ in Millions, $ in Millions",
+   "rows": [
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentAssetsAbstract",
+     "label": "CURRENT ASSETS",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CashAndCashEquivalents",
+     "label": "Cash and cash equivalents",
+     "value": 2127627.0
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentFinancialAssetsAtFairValueThroughProfitOrLoss",
+     "label": "Financial assets at fair value through profit or loss",
+     "value": 207.7
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentFinancialAssetsAtFairValueThroughOtherComprehensiveIncome",
+     "label": "Financial assets at fair value through other comprehensive income",
+     "value": 192202.7
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentFinancialAssetsAtAmortisedCost",
+     "label": "Financial assets at amortized cost",
+     "value": 101971.3
+    },
+    {
+     "ns": "tsm",
+     "element": "FinancialAssetsHeldForHedging",
+     "label": "Hedging financial assets",
+     "value": 11.0
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentTradeReceivables",
+     "label": "Notes and accounts receivable, net",
+     "value": 270683.2
+    },
+    {
+     "ns": "tsm",
+     "element": "CurrentReceivablesFromRelatedPartiesRelatedToCoreBusiness",
+     "label": "Receivables from related parties",
+     "value": 1404.5
+    },
+    {
+     "ns": "tsm",
+     "element": "OtherCurrentReceivablesFromRelatedParties",
+     "label": "Other receivables from related parties",
+     "value": 0.2
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "Inventories",
+     "label": "Inventories",
+     "value": 287868.8
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherCurrentFinancialAssets",
+     "label": "Other financial assets",
+     "value": 63138.3
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherCurrentAssets",
+     "label": "Other current assets",
+     "value": 43237.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentAssets",
+     "label": "Total current assets",
+     "value": 3088352.1
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncurrentAssetsAbstract",
+     "label": "NONCURRENT ASSETS",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncurrentFinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue",
+     "label": "Financial assets at fair value through profit or loss",
+     "value": 15199.8
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncurrentFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome",
+     "label": "Financial assets at fair value through other comprehensive income",
+     "value": 7822.9
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncurrentFinancialAssetsAtAmortisedCost",
+     "label": "Financial assets at amortized cost",
+     "value": 88596.5
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "InvestmentAccountedForUsingEquityMethod",
+     "label": "Investments accounted for using equity method",
+     "value": 37247.8
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "PropertyPlantAndEquipment",
+     "label": "Property, plant and equipment",
+     "value": 3234980.1
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "RightofuseAssets",
+     "label": "Right-of-use assets",
+     "value": 40128.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "IntangibleAssetsAndGoodwill",
+     "label": "Intangible assets",
+     "value": 26282.5
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "DeferredTaxAssets",
+     "label": "Deferred income tax assets",
+     "value": 65943.3
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "LongtermDeposits",
+     "label": "Refundable deposits",
+     "value": 5495.9
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherNoncurrentAssets",
+     "label": "Other noncurrent assets",
+     "value": 81715.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncurrentAssets",
+     "label": "Total noncurrent assets",
+     "value": 3603412.6
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "Assets",
+     "label": "TOTAL",
+     "value": 6691764.7
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentLiabilitiesAbstract",
+     "label": "CURRENT LIABILITIES",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss",
+     "label": "Financial liabilities at fair value through profit or loss",
+     "value": 466.5
+    },
+    {
+     "ns": "tsm",
+     "element": "FinancialLiabilitiesHeldForHedging",
+     "label": "Hedging financial liabilities",
+     "value": 0.0
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "TradeAndOtherCurrentPayablesToTradeSuppliers",
+     "label": "Accounts payable",
+     "value": 72800.6
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "TradeAndOtherCurrentPayablesToRelatedParties",
+     "label": "Payables to related parties",
+     "value": 1426.0
+    },
+    {
+     "ns": "tsm",
+     "element": "SalaryAndBonusPayableEmployeeBenefitsAccruals",
+     "label": "Salary and bonus payable",
+     "value": 47451.5
+    },
+    {
+     "ns": "tsm",
+     "element": "AccruedProfitSharingBonusToEmployeesAndCompensationToDirectorsAndSupervisors",
+     "label": "Accrued profit sharing bonus to employees and compensation to directors",
+     "value": 70871.2
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentPayablesForPurchaseOfNoncurrentAssets",
+     "label": "Payables to contractors and equipment suppliers",
+     "value": 192635.2
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentDividendPayables",
+     "label": "Cash dividends payable",
+     "value": 220418.8
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentTaxLiabilitiesCurrent",
+     "label": "Income tax payable",
+     "value": 191569.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentPortionOfLongtermBorrowings",
+     "label": "Long-term liabilities - current portion",
+     "value": 59857.9
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentAccruedExpensesAndOtherCurrentLiabilities",
+     "label": "Accrued expenses and other current liabilities",
+     "value": 451158.8
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CurrentLiabilities",
+     "label": "Total current liabilities",
+     "value": 1308655.9
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncurrentLiabilitiesAbstract",
+     "label": "NONCURRENT LIABILITIES",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncurrentPortionOfNoncurrentBondsIssued",
+     "label": "Bonds payable",
+     "value": 926604.5
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "LongtermBorrowings",
+     "label": "Long-term bank loans",
+     "value": 31824.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "DeferredTaxLiabilities",
+     "label": "Deferred income tax liabilities",
+     "value": 3988.5
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncurrentLeaseLiabilities",
+     "label": "Lease liabilities",
+     "value": 28755.3
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncurrentRecognisedLiabilitiesDefinedBenefitPlan",
+     "label": "Net defined benefit liability",
+     "value": 7580.7
+    },
+    {
+     "ns": "tsm",
+     "element": "NoncurrentGuaranteeDeposits",
+     "label": "Guarantee deposits",
+     "value": 845.6
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherNoncurrentLiabilities",
+     "label": "Others",
+     "value": 104238.2
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncurrentLiabilities",
+     "label": "Total noncurrent liabilities",
+     "value": 1103837.2
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "Liabilities",
+     "label": "Total liabilities",
+     "value": 2412493.1
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "EquityAbstract",
+     "label": "EQUITY ATTRIBUTABLE TO SHAREHOLDERS OF THE PARENT",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "IssuedCapital",
+     "label": "Capital stock",
+     "value": 259327.3
+    },
+    {
+     "ns": "tsm",
+     "element": "CapitalSurplus",
+     "label": "Capital surplus",
+     "value": 73260.8
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "RetainedEarningsAbstract",
+     "label": "Retained earnings",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CapitalReserve",
+     "label": "Appropriated as legal capital reserve",
+     "value": 311147.0
+    },
+    {
+     "ns": "tsm",
+     "element": "UnappropriatedEarnings",
+     "label": "Unappropriated earnings",
+     "value": 3561826.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "RetainedEarnings",
+     "label": "Total retained earnings",
+     "value": 3872973.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherReserves",
+     "label": "Others",
+     "value": 38705.0
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "EquityAttributableToOwnersOfParent",
+     "label": "Equity attributable to shareholders of the parent",
+     "value": 4244266.5
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "NoncontrollingInterests",
+     "label": "NON - CONTROLLING INTERESTS",
+     "value": 35005.1
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "Equity",
+     "label": "Total equity",
+     "value": 4279271.6
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "EquityAndLiabilities",
+     "label": "TOTAL",
+     "value": 6691764.7
+    }
+   ]
+  },
+  "income": {
+   "report": "R3.htm",
+   "title": "Consolidated Statements of Profit or Loss and Other Comprehensive Income",
+   "scale": "Consolidated Statements of Profit or Loss and Other Comprehensive Income  $ in Millions, $ in Millions",
+   "rows": [
+    {
+     "ns": "tsm",
+     "element": "StatementsLineItems",
+     "label": "Statement [LineItems]",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "Revenue",
+     "label": "NET REVENUE",
+     "value": 2894307.7
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "CostOfSales",
+     "label": "COST OF REVENUE",
+     "value": 1269954.1
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "GrossProfit",
+     "label": "GROSS PROFIT",
+     "value": 1624353.6
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ExpenseByNatureAbstract",
+     "label": "OPERATING EXPENSES",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ResearchAndDevelopmentExpense",
+     "label": "Research and development",
+     "value": 204181.8
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "GeneralAndAdministrativeExpense",
+     "label": "General and administrative",
+     "value": 83745.0
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "SalesAndMarketingExpense",
+     "label": "Marketing",
+     "value": 13143.6
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OperatingExpenseExcludingCostOfSales",
+     "label": "Total operating expenses",
+     "value": 301070.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherOperatingIncomeExpense",
+     "label": "OTHER OPERATING INCOME AND EXPENSES, NET",
+     "value": -1230.2
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ProfitLossFromOperatingActivities",
+     "label": "INCOME FROM OPERATIONS",
+     "value": 1322053.0
+    },
+    {
+     "ns": "tsm",
+     "element": "NonOperatingIncomeExpenseAbstract",
+     "label": "NON-OPERATING INCOME AND EXPENSES",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod",
+     "label": "Share of profits of associates",
+     "value": 4880.7
+    },
+    {
+     "ns": "tsm",
+     "element": "InvestmentsIncomeInterest",
+     "label": "Interest Income",
+     "value": 87213.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "FinanceIncome",
+     "label": "Other income",
+     "value": 566.9
+    },
+    {
+     "ns": "tsm",
+     "element": "NetForeignExchangeGainLoss",
+     "label": "Foreign exchange gain (loss), net",
+     "value": 10000.8
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "FinanceCosts",
+     "label": "Finance costs",
+     "value": -10495.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherGainsLosses",
+     "label": "Other gains and losses, net",
+     "value": -8379.4
+    },
+    {
+     "ns": "tsm",
+     "element": "NonOperatingIncomeExpense1",
+     "label": "Total non-operating income and expenses",
+     "value": 83787.0
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ProfitLossBeforeTax",
+     "label": "INCOME BEFORE INCOME TAX",
+     "value": 1405840.0
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "IncomeTaxExpenseContinuingOperations",
+     "label": "INCOME TAX EXPENSE",
+     "value": 248316.1
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ProfitLoss",
+     "label": "NET INCOME",
+     "value": 1157523.9
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ComponentsOfOtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossNetOfTaxAbstract",
+     "label": "OTHER COMPREHENSIVE INCOME (LOSS) - Items that will not be reclassified subsequently to profit or loss:",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherComprehensiveIncomeBeforeTaxGainsLossesOnRemeasurementsOfDefinedBenefitPlans",
+     "label": "Remeasurement of defined benefit obligation",
+     "value": 144.4
+    },
+    {
+     "ns": "tsm",
+     "element": "UnrealizedGainsOrLossesOnInvestmentsInEquityInstrumentsAtFairValueThroughOtherComprehensiveIncomeWillNotBeReclassifiedToProfitOrLossBeforeTax",
+     "label": "Unrealized gain (loss) on investments in equity instruments at fair value through other comprehensive income",
+     "value": 5091.9
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "GainLossOnHedgeIneffectivenessRecognisedInOtherComprehensiveIncome",
+     "label": "Gain on hedging instruments",
+     "value": 5.0
+    },
+    {
+     "ns": "tsm",
+     "element": "ShareOfOtherComprehensiveIncomeOfAssociatesAccountedForUsingEquityMethodThatWillNotBeReclassifiedToProfitOrLossBeforeTax",
+     "label": "Share of other comprehensive income (loss) of associates",
+     "value": -69.4
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "IncomeTaxRelatingToComponentsOfOtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLoss",
+     "label": "Income tax benefit (expense) related to items that will not be reclassified subsequently",
+     "value": -38.9
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherComprehensiveIncomeThatWillNotBeReclassifiedToProfitOrLossNetOfTax",
+     "label": "Total items that will not be reclassified subsequently to profit or loss",
+     "value": 5133.0
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTaxAbstract",
+     "label": "OTHER COMPREHENSIVE INCOME (LOSS) - Items that may be reclassified subsequently to profit or loss:",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherComprehensiveIncomeBeforeTaxExchangeDifferencesOnTranslation",
+     "label": "Exchange differences arising on translation of foreign operations",
+     "value": 64299.7
+    },
+    {
+     "ns": "tsm",
+     "element": "UnrealizedGainsOrLossesOnInvestmentsInDebtInstrumentsAtFairValueThroughOtherComprehensiveIncomeWillBeReclassifiedToProfitOrLossBeforeTax",
+     "label": "Unrealized gain (loss) on investments in debt instruments at fair value through other comprehensive income",
+     "value": 1949.9
+    },
+    {
+     "ns": "tsm",
+     "element": "GainOnHedgingInstrumentsThatWillBeReclassifiedToProfitOrLossBeforeTax",
+     "label": "Gain (loss) on hedging instruments",
+     "value": -80.2
+    },
+    {
+     "ns": "tsm",
+     "element": "ShareOfOtherComprehensiveIncomeOfAssociatesAccountedForUsingEquityMethodThatWillBeReclassifiedToProfitOrLossBeforeTax",
+     "label": "Share of other comprehensive income of associates",
+     "value": 283.3
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "IncomeTaxRelatingToComponentsOfOtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLoss",
+     "label": "Income tax benefit related to items that may be reclassified subsequently",
+     "value": 0.0
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherComprehensiveIncomeThatWillBeReclassifiedToProfitOrLossNetOfTax",
+     "label": "Total items that may be reclassified subsequently to profit or loss",
+     "value": 66452.7
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "OtherComprehensiveIncome",
+     "label": "Other comprehensive income (loss) , net of income tax",
+     "value": 71585.7
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ComprehensiveIncome",
+     "label": "TOTAL COMPREHENSIVE INCOME",
+     "value": 1229109.6
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ProfitLossAttributableToAbstract",
+     "label": "NET INCOME (LOSS) ATTRIBUTABLE TO:",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ProfitLossAttributableToOwnersOfParent",
+     "label": "Shareholders of the parent",
+     "value": 1158380.2
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ProfitLossAttributableToNoncontrollingInterests",
+     "label": "Non-controlling interests",
+     "value": -856.3
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ProfitLoss",
+     "label": "NET INCOME",
+     "value": 1157523.9
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ComprehensiveIncomeAttributableToAbstract",
+     "label": "TOTAL COMPREHENSIVE INCOME (LOSS) ATTRIBUTABLE TO:",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ComprehensiveIncomeAttributableToOwnersOfParent",
+     "label": "Shareholders of the parent",
+     "value": 1230949.1
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ComprehensiveIncomeAttributableToNoncontrollingInterests",
+     "label": "Non-controlling interests",
+     "value": -1839.5
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "ComprehensiveIncome",
+     "label": "TOTAL COMPREHENSIVE INCOME",
+     "value": 1229109.6
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "EarningsPerShareAbstract",
+     "label": "EARNINGS PER SHARE",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "BasicEarningsLossPerShare",
+     "label": "Basic earnings per share | (per share)",
+     "value": 44.68
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "DilutedEarningsLossPerShare",
+     "label": "Diluted earnings per share | (per share)",
+     "value": 44.67
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "EarningsPerShareAbstract",
+     "label": "EARNINGS PER SHARE",
+     "value": null
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "BasicEarningsLossPerShare",
+     "label": "Basic earnings per share | (per share)",
+     "value": 223.39
+    },
+    {
+     "ns": "ifrs-full",
+     "element": "DilutedEarningsLossPerShare",
+     "label": "Diluted earnings per share | (per share)",
+     "value": 223.37
+    }
+   ]
+  }
+ }
+}

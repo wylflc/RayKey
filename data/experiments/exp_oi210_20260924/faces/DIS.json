@@ -1,0 +1,389 @@
+{
+ "symbol": "DIS",
+ "cik": 1744489,
+ "accn": "0001744489-25-000155",
+ "filed": "2025-11-13",
+ "period": "2025-09-27",
+ "statements": {
+  "income": {
+   "report": "R3.htm",
+   "title": "CONSOLIDATED STATEMENTS OF INCOME",
+   "scale": "CONSOLIDATED STATEMENTS OF INCOME - USD ($)  shares in Millions, $ in Millions",
+   "rows": [
+    {
+     "ns": "us-gaap",
+     "element": "Revenues",
+     "label": "Revenues",
+     "value": 94425.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "SellingGeneralAndAdministrativeExpense",
+     "label": "Selling, general, administrative and other",
+     "value": -16501.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DepreciationDepletionAndAmortization",
+     "label": "Depreciation and amortization",
+     "value": -5326.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostsAndExpenses",
+     "label": "Total costs and expenses",
+     "value": -80593.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RestructuringSettlementAndImpairmentProvisions",
+     "label": "Restructuring and impairment charges",
+     "value": -819.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NonoperatingIncomeExpense",
+     "label": "Other income (expense), net",
+     "value": 0.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "InterestIncomeExpenseNonoperatingNet",
+     "label": "Interest expense, net",
+     "value": -1305.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeLossFromEquityMethodInvestments",
+     "label": "Equity in the income of investees",
+     "value": 295.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "label": "Income before income taxes",
+     "value": 12003.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeTaxExpenseBenefit",
+     "label": "Income taxes",
+     "value": 1428.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ProfitLoss",
+     "label": "Net income",
+     "value": 13431.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeLossFromContinuingOperationsAttributableToNoncontrollingEntity",
+     "label": "Net income attributable to noncontrolling and redeemable noncontrolling interests",
+     "value": -1027.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NetIncomeLoss",
+     "label": "Net income attributable to The Walt Disney Company (Disney)",
+     "value": 12404.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareAbstract",
+     "label": "Earnings per share attributable to Disney",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareDiluted",
+     "label": "Diluted",
+     "value": 6.85
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareBasic",
+     "label": "Basic",
+     "value": 6.88
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfSharesOutstandingAbstract",
+     "label": "Weighted average number of common and common equivalent shares outstanding:",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfDilutedSharesOutstanding",
+     "label": "Diluted (shares)",
+     "value": 1811.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfSharesOutstandingBasic",
+     "label": "Basic (shares)",
+     "value": 1804.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Revenues",
+     "label": "Revenues",
+     "value": 84588.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostOfGoodsAndServicesSold",
+     "label": "Cost of Product and Service Sold",
+     "value": -52677.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Revenues",
+     "label": "Revenues",
+     "value": 9837.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostOfGoodsAndServicesSold",
+     "label": "Cost of Product and Service Sold",
+     "value": -6089.0
+    }
+   ]
+  },
+  "balance": {
+   "report": "R5.htm",
+   "title": "CONSOLIDATED BALANCE SHEETS",
+   "scale": "CONSOLIDATED BALANCE SHEETS - USD ($)  $ in Millions",
+   "rows": [
+    {
+     "ns": "us-gaap",
+     "element": "AssetsCurrentAbstract",
+     "label": "Current assets",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CashAndCashEquivalentsAtCarryingValue",
+     "label": "Cash and cash equivalents",
+     "value": 5695.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ReceivablesNetCurrent",
+     "label": "Receivables, net",
+     "value": 13217.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "InventoryNet",
+     "label": "Inventories",
+     "value": 2134.0
+    },
+    {
+     "ns": "dis",
+     "element": "LicensedContentCostsAndAdvances",
+     "label": "Content advances",
+     "value": 2063.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherAssetsCurrent",
+     "label": "Other current assets",
+     "value": 1158.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AssetsCurrent",
+     "label": "Total current assets",
+     "value": 24267.0
+    },
+    {
+     "ns": "dis",
+     "element": "ProducedAndLicensedContentCosts",
+     "label": "Produced and licensed content costs",
+     "value": 31327.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LongTermInvestments",
+     "label": "Investments",
+     "value": 8097.0
+    },
+    {
+     "ns": "dis",
+     "element": "ParksResortsAndOtherPropertyGrossExcludingProjectsAndLand",
+     "label": "Attractions, buildings and equipment",
+     "value": 82041.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccumulatedDepreciationDepletionAndAmortizationPropertyPlantAndEquipment",
+     "label": "Accumulated depreciation",
+     "value": -48889.0
+    },
+    {
+     "ns": "dis",
+     "element": "ParksResortsAndOtherPropertyAtCostExcludingProjectsAndLand",
+     "label": "Parks, resorts and other property, before projects in progress and land, Total",
+     "value": 33152.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ConstructionInProgressGross",
+     "label": "Projects in progress",
+     "value": 6911.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Land",
+     "label": "Land",
+     "value": 1192.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "PropertyPlantAndEquipmentNet",
+     "label": "Parks, resorts and other property",
+     "value": 41255.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IntangibleAssetsNetExcludingGoodwill",
+     "label": "Intangible assets, net",
+     "value": 9272.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Goodwill",
+     "label": "Goodwill",
+     "value": 73294.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherAssetsNoncurrent",
+     "label": "Other assets",
+     "value": 10002.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Assets",
+     "label": "Total assets",
+     "value": 197514.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesCurrentAbstract",
+     "label": "Current liabilities",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccountsPayableAndAccruedLiabilitiesCurrent",
+     "label": "Accounts payable and other accrued liabilities",
+     "value": 21203.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LongTermDebtCurrent",
+     "label": "Current portion of borrowings",
+     "value": 6711.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DeferredRevenueCurrent",
+     "label": "Deferred revenue and other",
+     "value": 6248.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesCurrent",
+     "label": "Total current liabilities",
+     "value": 34162.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LongTermDebtNoncurrent",
+     "label": "Borrowings",
+     "value": 35315.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DeferredTaxAndOtherLiabilitiesNoncurrent",
+     "label": "Deferred income taxes",
+     "value": 3524.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherLiabilitiesNoncurrent",
+     "label": "Other long-term liabilities",
+     "value": 9901.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CommitmentsAndContingencies",
+     "label": "Commitments and contingencies",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquityAbstract",
+     "label": "Equity",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "PreferredStockValue",
+     "label": "Preferred stock",
+     "value": 0.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CommonStocksIncludingAdditionalPaidInCapital",
+     "label": "Common stock, $0.01 par value, Authorized – 4.6 billion shares, Issued – 1.9 billion shares",
+     "value": 59814.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RetainedEarningsAccumulatedDeficit",
+     "label": "Retained earnings",
+     "value": 60410.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccumulatedOtherComprehensiveIncomeLossNetOfTax",
+     "label": "Accumulated other comprehensive loss",
+     "value": -2914.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "TreasuryStockValue",
+     "label": "Treasury stock, at cost, 79 million shares at September 27, 2025 and 47 million shares at September 28, 2024",
+     "value": -7441.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquity",
+     "label": "Total Disney Shareholders’ equity",
+     "value": 109869.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "MinorityInterest",
+     "label": "Noncontrolling interests",
+     "value": 4743.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "label": "Total equity",
+     "value": 114612.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesAndStockholdersEquity",
+     "label": "Total liabilities and equity",
+     "value": 197514.0
+    }
+   ]
+  }
+ }
+}

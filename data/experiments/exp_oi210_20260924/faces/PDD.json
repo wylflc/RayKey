@@ -1,0 +1,425 @@
+{
+ "symbol": "PDD",
+ "cik": 1737806,
+ "accn": "0001104659-26-050727",
+ "filed": "2026-04-29",
+ "period": "2025-12-31",
+ "statements": {
+  "balance": {
+   "report": "R2.htm",
+   "title": "CONSOLIDATED BALANCE SHEETS",
+   "scale": "CONSOLIDATED BALANCE SHEETS  ¥ in Thousands, $ in Thousands",
+   "rows": [
+    {
+     "ns": "us-gaap",
+     "element": "AssetsCurrentAbstract",
+     "label": "Current assets",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CashAndCashEquivalentsAtCarryingValue",
+     "label": "Cash and cash equivalents",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RestrictedCashCurrent",
+     "label": "Restricted cash",
+     "value": 73830824.0
+    },
+    {
+     "ns": "pdd",
+     "element": "ReceivablesFromOnlinePaymentPlatformsCurrent",
+     "label": "Receivables from online payment platforms",
+     "value": 5109129.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ShortTermInvestments",
+     "label": "Short-term investments",
+     "value": 313407682.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherReceivablesNetCurrent",
+     "label": "Amounts due from related parties",
+     "value": 10205128.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "PrepaidExpenseAndOtherAssetsCurrent",
+     "label": "Prepayments and other current assets",
+     "value": 7526542.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AssetsCurrent",
+     "label": "Total current assets",
+     "value": 518979892.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AssetsNoncurrentAbstract",
+     "label": "Non-current assets",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "PropertyPlantAndEquipmentNet",
+     "label": "Property, equipment and software, net",
+     "value": 1306044.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IntangibleAssetsNetExcludingGoodwill",
+     "label": "Intangible assets",
+     "value": 15387.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingLeaseRightOfUseAsset",
+     "label": "Right-of-use assets",
+     "value": 4863332.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DeferredIncomeTaxAssetsNet",
+     "label": "Deferred tax assets",
+     "value": 171959.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherAssetsNoncurrent",
+     "label": "Other non-current assets",
+     "value": 104707713.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AssetsNoncurrent",
+     "label": "Total non-current assets",
+     "value": 111064435.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Assets",
+     "label": "Total Assets",
+     "value": 630044327.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesCurrentAbstract",
+     "label": "Current liabilities (including amounts of the VIE and its subsidiaries without recourse to the primary beneficiary of RMB99,001,888 and RMB106,971,278 (US$15,296,690) as of December 31, 2024 and 2025, respectively)",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherLiabilitiesCurrent",
+     "label": "Amounts due to related parties",
+     "value": 1086540.0
+    },
+    {
+     "ns": "pdd",
+     "element": "AdvancesToCustomerAndDeferredRevenueCurrent",
+     "label": "Customer advances and deferred revenues",
+     "value": 3378789.0
+    },
+    {
+     "ns": "pdd",
+     "element": "PayableToMerchantsCurrent",
+     "label": "Payable to merchants",
+     "value": 107407160.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccountsPayableAndAccruedLiabilitiesCurrent",
+     "label": "Accrued expenses and other liabilities",
+     "value": 81657839.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DepositLiabilityCurrent",
+     "label": "Merchant deposits",
+     "value": 17708197.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ConvertibleDebtCurrent",
+     "label": "Convertible bonds, current portion",
+     "value": 5309597.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingLeaseLiabilityCurrent",
+     "label": "Lease liabilities",
+     "value": 2498643.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesCurrent",
+     "label": "Total current liabilities",
+     "value": 213737168.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesNoncurrentAbstract",
+     "label": "Non-current liabilities (including amounts of the VIE and its subsidiaries without recourse to the primary beneficiary of RMB443,132 and RMB520,081 (US$74,371) as of December 31, 2024 and 2025, respectively)",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingLeaseLiabilityNoncurrent",
+     "label": "Lease liabilities",
+     "value": 2880152.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DeferredIncomeTaxLiabilitiesNet",
+     "label": "Deferred tax liabilities",
+     "value": 41851.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesNoncurrent",
+     "label": "Total non-current liabilities",
+     "value": 2922003.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Liabilities",
+     "label": "Total liabilities",
+     "value": 216659171.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CommitmentsAndContingencies",
+     "label": "Commitments and contingencies",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquityAbstract",
+     "label": "Shareholders' equity",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CommonStockValue",
+     "label": "Class A ordinary shares (US$0.000005 par value; 77,300,000,000 shares authorized, 5,568,585,848 and 5,693,585,848 shares issued and outstanding as of December 31, 2024 and 2025, respectively)",
+     "value": 182.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AdditionalPaidInCapital",
+     "label": "Additional paid-in capital",
+     "value": 125767661.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StatutoryAccountingPracticesStatutoryCapitalAndSurplusBalance",
+     "label": "Statutory reserves",
+     "value": 1338261.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccumulatedOtherComprehensiveIncomeLossNetOfTax",
+     "label": "Accumulated other comprehensive income",
+     "value": 2115683.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RetainedEarningsAccumulatedDeficit",
+     "label": "Retained earnings",
+     "value": 284163369.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquity",
+     "label": "Total shareholders' equity",
+     "value": 413385156.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesAndStockholdersEquity",
+     "label": "Total liabilities and shareholders' equity",
+     "value": null
+    }
+   ]
+  },
+  "income": {
+   "report": "R4.htm",
+   "title": "CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME",
+   "scale": "CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME  ¥ in Thousands, shares in Thousands, $ in Thousands",
+   "rows": [
+    {
+     "ns": "us-gaap",
+     "element": "StatementOfIncomeAndComprehensiveIncomeAbstract",
+     "label": "CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "label": "Revenues (including services provided to a related party of RMB4,272, nil and nil for the years ended December 31, 2023, 2024 and 2025, respectively)",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostOfRevenue",
+     "label": "Costs of revenues (including services received from related parties of RMB6,031,719, RMB6,292,953 and RMB6,118,953 (US$874,999) for the years ended December 31, 2023, 2024 and 2025, respectively)",
+     "value": -188801753.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "SellingAndMarketingExpense",
+     "label": "Sales and marketing expenses (including services received from related parties of RMB1,795,959, RMB1,302,234 and RMB1,005,637 (US$143,804) for the years ended December 31, 2023, 2024 and 2025, respectively)",
+     "value": -125287932.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "GeneralAndAdministrativeExpense",
+     "label": "General and administrative expenses",
+     "value": -8157733.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ResearchAndDevelopmentExpense",
+     "label": "Research and development expenses (including services received from related parties of RMB194,803, RMB79,242 and RMB162,606 (US$23,252) for the years ended December 31, 2023, 2024 and 2025, respectively)",
+     "value": -16496164.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingExpenses",
+     "label": "Total operating expenses",
+     "value": -149941829.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingIncomeLoss",
+     "label": "Operating profit",
+     "value": 93102131.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "InvestmentIncomeInterest",
+     "label": "Interest and investment income, net",
+     "value": 25583848.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "InterestExpenseNonoperating",
+     "label": "Interest expenses | ¥",
+     "value": -43987.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ForeignCurrencyTransactionGainLossBeforeTax",
+     "label": "Foreign exchange gain/(loss)",
+     "value": -1966622.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherNonoperatingIncomeExpense",
+     "label": "Other income, net",
+     "value": 2726933.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+     "label": "Profit before income tax and share of results of equity investees",
+     "value": 119446290.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeTaxExpenseBenefit",
+     "label": "Income tax expenses",
+     "value": -21732756.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeLossFromEquityMethodInvestments",
+     "label": "Share of results of equity investees",
+     "value": 129005.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NetIncomeLoss",
+     "label": "Net income",
+     "value": 97842539.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NetIncomeLossAvailableToCommonStockholdersBasic",
+     "label": "Net income attributable to ordinary shareholders",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareAbstract",
+     "label": "Earnings per share:",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareBasic",
+     "label": "Basic (in dollars per share) | (per share)",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareDiluted",
+     "label": "Diluted (in dollars per share) | (per share)",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfSharesOutstandingAbstract",
+     "label": "Shares used in earnings per share computation (in thousands):",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfSharesOutstandingBasic",
+     "label": "Basic (in shares)",
+     "value": 5590930.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfDilutedSharesOutstanding",
+     "label": "Diluted (in shares)",
+     "value": 5929576.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherComprehensiveIncomeLossNetOfTaxPortionAttributableToParentAbstract",
+     "label": "Other comprehensive income",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherComprehensiveIncomeForeignCurrencyTransactionAndTranslationAdjustmentNetOfTaxPortionAttributableToParent",
+     "label": "Foreign currency translation difference, net of tax of nil",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherComprehensiveIncomeUnrealizedHoldingGainLossOnSecuritiesArisingDuringPeriodNetOfTax",
+     "label": "Unrealized gains/(losses) on available-for-sale debt securities, net of tax",
+     "value": -232319.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherComprehensiveIncomeLossNetOfTaxPortionAttributableToParent",
+     "label": "Total other comprehensive income/(loss)",
+     "value": -5708862.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ComprehensiveIncomeNetOfTax",
+     "label": "Comprehensive income",
+     "value": null
+    }
+   ]
+  }
+ }
+}

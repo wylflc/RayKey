@@ -1,0 +1,407 @@
+{
+ "symbol": "ASML",
+ "cik": 937966,
+ "accn": "0001628280-26-011378",
+ "filed": "2026-02-25",
+ "period": "2025-12-31",
+ "statements": {
+  "income": {
+   "report": "R3.htm",
+   "title": "Consolidated Statements of Operations",
+   "scale": "Consolidated Statements of Operations - EUR (€)  € in Millions, shares in Millions",
+   "rows": [
+    {
+     "ns": "us-gaap",
+     "element": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "label": "Total net sales",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostOfGoodsAndServicesSold",
+     "label": "Total cost of sales",
+     "value": -15409.3
+    },
+    {
+     "ns": "us-gaap",
+     "element": "GrossProfit",
+     "label": "Gross profit",
+     "value": 17258.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ResearchAndDevelopmentExpense",
+     "label": "Research and development (R&D) costs",
+     "value": -4698.8
+    },
+    {
+     "ns": "us-gaap",
+     "element": "SellingGeneralAndAdministrativeExpense",
+     "label": "Selling, general and administrative (SG&A) costs",
+     "value": -1257.8
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingIncomeLoss",
+     "label": "Income from operations",
+     "value": 11301.4
+    },
+    {
+     "ns": "asml",
+     "element": "InterestAndOtherNet",
+     "label": "Interest and other, net",
+     "value": 104.7
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+     "label": "Income before income taxes",
+     "value": 11406.1
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeTaxExpenseBenefit",
+     "label": "Income tax expense",
+     "value": -2013.4
+    },
+    {
+     "ns": "asml",
+     "element": "IncomeLossfromContinuingOperationsAfterTaxbeforeEquityMethodInvestmentsNoncontrollingInterest",
+     "label": "Income after income taxes",
+     "value": 9392.7
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeLossFromEquityMethodInvestments",
+     "label": "Profit from equity method investments",
+     "value": 216.7
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NetIncomeLoss",
+     "label": "Net income",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareBasic",
+     "label": "Basic net income per ordinary share (in EUR per share)",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareDiluted",
+     "label": "Diluted net income per ordinary share (in EUR per share)",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfSharesOutstandingAbstract",
+     "label": "Number of ordinary shares used in computing per share amounts:",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfSharesOutstandingBasic",
+     "label": "Basic (in shares)",
+     "value": 388.5
+    },
+    {
+     "ns": "us-gaap",
+     "element": "WeightedAverageNumberOfDilutedSharesOutstanding",
+     "label": "Diluted (in shares)",
+     "value": 388.9
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "label": "Total net sales",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostOfGoodsAndServicesSold",
+     "label": "Total cost of sales",
+     "value": -11384.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "label": "Total net sales",
+     "value": 8193.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostOfGoodsAndServicesSold",
+     "label": "Total cost of sales",
+     "value": null
+    }
+   ]
+  },
+  "balance": {
+   "report": "R6.htm",
+   "title": "Consolidated Balance Sheets",
+   "scale": "Consolidated Balance Sheets - EUR (€)  € in Millions",
+   "rows": [
+    {
+     "ns": "us-gaap",
+     "element": "AssetsAbstract",
+     "label": "Assets",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+     "label": "Cash and cash equivalents",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AvailableForSaleSecuritiesDebtSecuritiesCurrent",
+     "label": "Short-term investments",
+     "value": 405.9
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccountsReceivableNetCurrent",
+     "label": "Accounts receivable, net",
+     "value": 3023.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NotesAndLoansReceivableNetCurrent",
+     "label": "Finance receivables, net",
+     "value": 613.5
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeTaxesReceivable",
+     "label": "Current tax assets",
+     "value": 88.9
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ContractWithCustomerAssetNetCurrent",
+     "label": "Contract assets",
+     "value": 440.6
+    },
+    {
+     "ns": "us-gaap",
+     "element": "InventoryNet",
+     "label": "Inventories, net",
+     "value": 11429.3
+    },
+    {
+     "ns": "asml",
+     "element": "LoansReceivableCurrent",
+     "label": "Loans receivable",
+     "value": 266.1
+    },
+    {
+     "ns": "us-gaap",
+     "element": "PrepaidExpenseAndOtherAssetsCurrent",
+     "label": "Other assets",
+     "value": 1432.8
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AssetsCurrent",
+     "label": "Total current assets",
+     "value": 30616.1
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NotesAndLoansReceivableNetNoncurrent",
+     "label": "Finance receivables, net",
+     "value": 13.3
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DeferredIncomeTaxAssetsNet",
+     "label": "Deferred tax assets",
+     "value": 1719.4
+    },
+    {
+     "ns": "asml",
+     "element": "LoansReceivableNoncurrent",
+     "label": "Loans receivable",
+     "value": 1653.9
+    },
+    {
+     "ns": "us-gaap",
+     "element": "PrepaidExpenseAndOtherAssetsNoncurrent",
+     "label": "Other assets",
+     "value": 1057.1
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EquitySecuritiesWithoutReadilyDeterminableFairValueAmount",
+     "label": "Equity investments",
+     "value": 1320.7
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EquityMethodInvestments",
+     "label": "Equity method investments",
+     "value": 822.6
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Goodwill",
+     "label": "Goodwill",
+     "value": 4588.6
+    },
+    {
+     "ns": "us-gaap",
+     "element": "FiniteLivedIntangibleAssetsNet",
+     "label": "Other intangible assets, net",
+     "value": 540.1
+    },
+    {
+     "ns": "us-gaap",
+     "element": "PropertyPlantAndEquipmentNet",
+     "label": "Property, plant and equipment, net",
+     "value": 7893.8
+    },
+    {
+     "ns": "asml",
+     "element": "RightOfUseAssets",
+     "label": "Right-of-use assets",
+     "value": 341.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AssetsNoncurrent",
+     "label": "Total non-current assets",
+     "value": 19950.5
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Assets",
+     "label": "Total assets",
+     "value": 50566.6
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesAndStockholdersEquityAbstract",
+     "label": "Liabilities and shareholders’ equity",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccountsPayableCurrent",
+     "label": "Accounts payable",
+     "value": 3521.8
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherLiabilitiesCurrent",
+     "label": "Accrued and other liabilities",
+     "value": 2567.3
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccruedIncomeTaxesCurrent",
+     "label": "Current tax liabilities",
+     "value": 486.6
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LongTermDebtCurrent",
+     "label": "Short-term borrowings and current portion of long-term debt",
+     "value": 1681.9
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ContractWithCustomerLiabilityCurrent",
+     "label": "Contract liabilities",
+     "value": 16006.3
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesCurrent",
+     "label": "Total current liabilities",
+     "value": 24263.9
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LongTermDebtNoncurrent",
+     "label": "Long-term debt",
+     "value": 2709.0
+    },
+    {
+     "ns": "asml",
+     "element": "DeferredIncomeTaxLiabilitiesIncludingUnrecognizedTaxBenefits",
+     "label": "Deferred and other income tax liabilities",
+     "value": 183.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ContractWithCustomerLiabilityNoncurrent",
+     "label": "Contract liabilities",
+     "value": 3366.3
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherLiabilitiesNoncurrent",
+     "label": "Accrued and other liabilities",
+     "value": 432.2
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesNoncurrent",
+     "label": "Total non-current liabilities",
+     "value": 6690.5
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Liabilities",
+     "label": "Total liabilities",
+     "value": 30954.4
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CommonStockValueOutstanding",
+     "label": "Issued and outstanding shares",
+     "value": 34.9
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AdditionalPaidInCapitalCommonStock",
+     "label": "Share premium",
+     "value": 4107.1
+    },
+    {
+     "ns": "us-gaap",
+     "element": "TreasuryStockValue",
+     "label": "Treasury shares at cost",
+     "value": -2252.9
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RetainedEarningsAccumulatedDeficit",
+     "label": "Retained earnings",
+     "value": 17587.3
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccumulatedOtherComprehensiveIncomeLossNetOfTax",
+     "label": "Accumulated other comprehensive income",
+     "value": 135.8
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquity",
+     "label": "Total shareholders’ equity",
+     "value": 19612.2
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesAndStockholdersEquity",
+     "label": "Total liabilities and shareholders’ equity",
+     "value": null
+    }
+   ]
+  }
+ }
+}

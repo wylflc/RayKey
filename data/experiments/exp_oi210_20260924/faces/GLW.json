@@ -1,0 +1,341 @@
+{
+ "symbol": "GLW",
+ "cik": 24741,
+ "accn": "0000024741-26-000124",
+ "filed": "2026-02-12",
+ "period": "2025-12-31",
+ "statements": {
+  "income": {
+   "report": "R3.htm",
+   "title": "Consolidated Statements of Income",
+   "scale": "Consolidated Statements of Income - USD ($)  $ in Millions",
+   "rows": [
+    {
+     "ns": "us-gaap",
+     "element": "IncomeStatementAbstract",
+     "label": "Income Statement [Abstract]",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Revenues",
+     "label": "Net sales",
+     "value": 15629.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CostOfRevenue",
+     "label": "Cost of sales",
+     "value": 10008.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "GrossProfit",
+     "label": "Gross margin",
+     "value": 5621.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingExpensesAbstract",
+     "label": "Operating expenses:",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "SellingGeneralAndAdministrativeExpense",
+     "label": "Selling, general and administrative expenses",
+     "value": 2122.0
+    },
+    {
+     "ns": "glw",
+     "element": "ResearchDevelopmentAndEngineeringExpenses",
+     "label": "Research, development and engineering expenses",
+     "value": 1110.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AmortizationOfIntangibleAssets",
+     "label": "Amortization of purchased intangibles",
+     "value": 110.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OperatingIncomeLoss",
+     "label": "Operating income",
+     "value": 2279.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "InvestmentIncomeInterest",
+     "label": "Interest income",
+     "value": 38.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "InterestExpenseNonoperating",
+     "label": "Interest expense",
+     "value": -336.0
+    },
+    {
+     "ns": "glw",
+     "element": "TranslatedEarningsContractGainNet",
+     "label": "Translated earnings contract gain, net (Note 13)",
+     "value": 150.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherNonoperatingIncomeExpense",
+     "label": "Other (expense) income, net",
+     "value": -79.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+     "label": "Income before income taxes",
+     "value": 2052.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IncomeTaxExpenseBenefit",
+     "label": "Provision for income taxes (Note 15)",
+     "value": -310.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "ProfitLoss",
+     "label": "Net income",
+     "value": 1742.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NetIncomeLossAttributableToNoncontrollingInterest",
+     "label": "Net income attributable to non-controlling interest",
+     "value": -146.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "NetIncomeLoss",
+     "label": "Net income attributable to Corning Incorporated",
+     "value": 1596.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareAbstract",
+     "label": "Earnings per common share available to common shareholders:",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareBasic",
+     "label": "Basic (Note 17) (in dollars per share)",
+     "value": 1.87
+    },
+    {
+     "ns": "us-gaap",
+     "element": "EarningsPerShareDiluted",
+     "label": "Diluted (Note 17) (in dollars per share)",
+     "value": 1.83
+    }
+   ]
+  },
+  "balance": {
+   "report": "R5.htm",
+   "title": "Consolidated Balance Sheets",
+   "scale": "Consolidated Balance Sheets - USD ($)  $ in Millions",
+   "rows": [
+    {
+     "ns": "us-gaap",
+     "element": "AssetsCurrentAbstract",
+     "label": "Current assets:",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CashAndCashEquivalentsAtCarryingValue",
+     "label": "Cash and cash equivalents",
+     "value": 1526.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccountsReceivableNetCurrent",
+     "label": "Trade accounts receivable, net of doubtful accounts - $27 and $33",
+     "value": 2779.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "InventoryNet",
+     "label": "Inventories (Note 5)",
+     "value": 3077.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherAssetsCurrent",
+     "label": "Other current assets (Note 9)",
+     "value": 1554.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AssetsCurrent",
+     "label": "Total current assets",
+     "value": 8936.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "PropertyPlantAndEquipmentNet",
+     "label": "Property, plant and equipment, net of accumulated depreciation - $15,229 and $14,492 (Note 6)",
+     "value": 14825.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Goodwill",
+     "label": "Goodwill (Note 7)",
+     "value": 2489.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "IntangibleAssetsNetExcludingGoodwill",
+     "label": "Other intangible assets, net (Note 7)",
+     "value": 657.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DeferredIncomeTaxAssetsNet",
+     "label": "Deferred income taxes (Note 15)",
+     "value": 1515.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherAssetsNoncurrent",
+     "label": "Other assets (Note 9)",
+     "value": 2554.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Assets",
+     "label": "Total Assets",
+     "value": 30976.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesCurrentAbstract",
+     "label": "Current liabilities:",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "DebtCurrent",
+     "label": "Current portion of long-term debt and short-term borrowings (Note 10)",
+     "value": 804.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccountsPayableCurrent",
+     "label": "Accounts payable",
+     "value": 1979.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccruedLiabilitiesCurrent",
+     "label": "Other accrued liabilities (Notes 9 and 12)",
+     "value": 2845.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesCurrent",
+     "label": "Total current liabilities",
+     "value": 5628.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LongTermDebtAndCapitalLeaseObligations",
+     "label": "Long-term debt (Note 10)",
+     "value": 7630.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherPostretirementDefinedBenefitPlanLiabilitiesNoncurrent",
+     "label": "Postretirement benefits other than pensions (Note 11)",
+     "value": 314.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "OtherLiabilitiesNoncurrent",
+     "label": "Other liabilities (Notes 9 and 12)",
+     "value": 5097.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "Liabilities",
+     "label": "Total liabilities",
+     "value": 18669.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CommitmentsAndContingencies",
+     "label": "Commitments and contingencies (Note 12)",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterestAbstract",
+     "label": "Shareholders’ equity: (Note 16)",
+     "value": null
+    },
+    {
+     "ns": "us-gaap",
+     "element": "CommonStockValue",
+     "label": "Common stock – Par value $0.50 per share; Shares authorized 3.8 billion; Shares issued: 1.8 billion and 1.8 billion",
+     "value": 924.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AdditionalPaidInCapitalCommonStock",
+     "label": "Additional paid-in capital – common stock",
+     "value": 17580.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "RetainedEarningsAccumulatedDeficit",
+     "label": "Retained earnings",
+     "value": 16551.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "TreasuryStockCommonValue",
+     "label": "Treasury stock, at cost; Shares held: 992 million and 987 million",
+     "value": -21143.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "AccumulatedOtherComprehensiveIncomeLossNetOfTax",
+     "label": "Accumulated other comprehensive loss",
+     "value": -2105.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquity",
+     "label": "Total Corning Incorporated shareholders’ equity",
+     "value": 11807.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "MinorityInterest",
+     "label": "Non-controlling interest",
+     "value": 500.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+     "label": "Total equity",
+     "value": 12307.0
+    },
+    {
+     "ns": "us-gaap",
+     "element": "LiabilitiesAndStockholdersEquity",
+     "label": "Total Liabilities and Equity",
+     "value": 30976.0
+    }
+   ]
+  }
+ }
+}

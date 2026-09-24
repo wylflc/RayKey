@@ -17,8 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import roic_inputs  # noqa: E402
 from minority_claims import equity_bridge  # noqa: E402
-from intrinsic_value import (ValuationError, cost_of_equity, intrinsic_value,  # noqa: E402
-                             terminal_growth_ceiling, DEFAULT_G_TERMINAL)
+from intrinsic_value import ValuationError, intrinsic_value, DEFAULT_G_TERMINAL  # noqa: E402
 
 WATCHLIST = ROOT / "data/processed/overseas_watchlist_valuation.csv"
 YEARS_CSV = ROOT / "data/interim/overseas_roic_years.csv"
@@ -26,28 +25,30 @@ INPUTS_CSV = ROOT / "data/reference/overseas_valuation_inputs.csv"
 REPORT_EVIDENCE = ROOT / "data/reference/overseas_report_evidence.csv"
 BAND_LOW_COEF, BAND_HIGH_COEF = 0.90, 1.10
 THIN_EQUITY_MAX = 0.50  # §6.5.1；与 A 股生产薄权益守卫同口径
-BETA_BY_TIER = {"L1": 0.9, "L2": 1.0, "L3": 1.3, "L4": 1.3, "boundary_pending": 1.3}
-TERMINAL_EXCESS_BY_TIER = {"L1": 0.06, "L2": 0.03, "L3": 0.0, "L4": 0.0, "boundary_pending": 0.0}
+# §6.8（OI-210）：与 A 股 §6.5.1／§6.7 第 2 步生产参数相同，不按市场、国家或质量档调整（test_strategy_parameter_sync 核对同值）
+REQUIRED_RETURN, TERMINAL_EXCESS = 0.10, 0.02          # r；ROIC_T = min(WACC + 2pp, ROIC0)
+FADE = dict(consistent=True, roe_lam=0.12, horizon=50)  # 整本回报指数衰减（§6.7 `--fade-shape exponential --fade-lambda 0.12 --fade-horizon 50`）
+FINANCIAL_INTERMEDIATION_MIN = roic_inputs.FINANCIAL_INTERMEDIATION_MIN   # §6.5.1 类金融识别（OI-200）
 ROE_YEARS, MIN_YEARS, IROE_CAP, G0_CAP, G0_FLOOR = 5, 3, 0.40, 0.25, 0.0
 N_FADE, N1, MIN_TERMINAL_SPREAD, PEAK_K, PEAK_RAMP, TRAIL_WEIGHT = 10, 0, 0.02, 1.6, 0.3, 0.0
 # §6.5.2.3 股本口径（与 build_historical_valuation_bands 同值）：|X_y| ≥ 5% 上年母公司权益才计；经营账面 < 20% 账面判结构断点；x 封顶 95% BPS
 EXTERNAL_EQUITY_MIN_FRACTION, OPERATING_BOOK_MIN_FRACTION, X_CAP_FRACTION, LONG_YEARS = 0.05, 0.20, 0.95, 10
-# 经营地 ERP 键、交易货币、每 ADR/港股对应普通股数、报表币→交易币汇率键
+# 交易货币、每 ADR/港股对应普通股数、报表币→交易币汇率键
 COMPANY_CFG = {
     # US 上市
-    "TSM": dict(erp="erp_tw", ccy="USD", adr=5, fx="fx_usd_twd", fx_inv=True),
-    "ASML": dict(erp="erp_nl", ccy="USD", adr=1, fx="fx_usd_eur", fx_inv=True),
-    "PDD": dict(erp="erp_cn", ccy="USD", adr=4, fx="fx_usd_cny", fx_inv=True),
+    "TSM": dict(ccy="USD", adr=5, fx="fx_usd_twd", fx_inv=True),
+    "ASML": dict(ccy="USD", adr=1, fx="fx_usd_eur", fx_inv=True),
+    "PDD": dict(ccy="USD", adr=4, fx="fx_usd_cny", fx_inv=True),
     # HK 上市（人民币报表 → 港币）
-    "00700": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
-    "09992": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
-    "09618": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
-    "09988": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
-    "03690": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
-    "06862": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
-    "03888": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
-    "00316": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
-    "00267": dict(erp="erp_hk", ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "00700": dict(ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "09992": dict(ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "09618": dict(ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "09988": dict(ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "03690": dict(ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "06862": dict(ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "03888": dict(ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "00316": dict(ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
+    "00267": dict(ccy="HKD", adr=1, fx="fx_cny_hkd", fx_inv=False),
 }
 FINANCIAL_KEEP = {"BRK.B": "金融资本型（保险浮存金＋控股）：按工作流程海外金融企业口径读取经核验的档案隐含 PB 带，不按 ROIC 重算",
                   "00267": "金融资本型（银行并表）：按工作流程海外金融企业口径读取经核验的档案隐含 PB 带，不按 ROIC 重算"}
@@ -83,6 +84,7 @@ def year_from_row(r: dict) -> roic_inputs.RoicYear:
     y.buybacks = _f(r.get("buybacks")) or 0.0  # type: ignore[attr-defined]
     y.dividends_paid = _f(r.get("dividends_paid")) or 0.0  # type: ignore[attr-defined]
     y.parent_netprofit, y.parent_tci = _f(r.get("net_income")), _f(r.get("tci"))
+    y.intermediation_share = _f(r.get("intermediation_share"))  # type: ignore[attr-defined]
     y.netprofit_ytd = _f(r.get("net_income_ytd"))  # type: ignore[attr-defined]
     y.dividends_ytd = _f(r.get("dividends_paid_ytd"))  # type: ignore[attr-defined]
     return y
@@ -184,9 +186,10 @@ def operating_equity(year: roic_inputs.RoicYear, deduct: dict[str, float]) -> fl
 
 def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: dict[str, float],
                   current: roic_inputs.RoicYear | None = None) -> dict:
-    """复刻 ROIC 路径，返回 {status, value_report_ccy, path, text, ...}。"""
+    """复刻 ROIC 路径，返回 {status, value_report_ccy, path, text, ...}。
+
+    §6.8（OI-210）：r、终值回报、g_T、回报衰减与投入资本下限取 A 股生产参数，`tier` 与 `inp` 不再进估值（保留参数供调用方沿用）。"""
     res: dict = {"status": "rejected", "reason": "", "path": "", "text": ""}
-    cfg = COMPANY_CFG.get(code, dict(erp="erp_us", ccy="USD", adr=1, fx=None, fx_inv=False))
     history = years[-ROE_YEARS:]
     if len(history) < MIN_YEARS:
         res["reason"] = f"三大报表年份仅 {len(history)} < 要求 {MIN_YEARS} 年"; return res
@@ -205,11 +208,12 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     def e_op(y: roic_inputs.RoicYear) -> float | None:
         return operating_equity(y, deduct)
     latest = current if current and current.period > annual_latest.period else annual_latest
-    rf, erp = inp["rf_usd"], inp[cfg["erp"]]
-    beta = BETA_BY_TIER.get(tier, 1.0)
-    r = cost_of_equity(rf, erp, beta)
-    g_terminal = min(DEFAULT_G_TERMINAL, terminal_growth_ceiling(rf))
-    excess_t = TERMINAL_EXCESS_BY_TIER.get(tier, 0.0)
+    share = getattr(latest, "intermediation_share", None)
+    if share is not None and share >= FINANCIAL_INTERMEDIATION_MIN and code not in FINANCIAL_KEEP:
+        res["reason"] = (f"类金融：金融中介负债占总资产 {share:.0%} ≥ {FINANCIAL_INTERMEDIATION_MIN:.0%}（§6.5.1 OI-200），"
+                         "海外引擎无权益口径，按 §6.8 判无法估值"); return res
+    r = REQUIRED_RETURN
+    g_terminal = DEFAULT_G_TERMINAL
     roic0 = roic_inputs.normalized_roic(history)
     iroic = roic_inputs.incremental_roic(history)
     rr = roic_inputs.reinvestment_rate(history)
@@ -315,7 +319,7 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     net_debt_ps, nd_zero_fixed = bridge(zero_ev_ps)
     v_zero = zero_ev_ps - net_debt_ps
     roic_ok = roic0 is not None and roic0 > g_terminal + MIN_TERMINAL_SPREAD
-    common = dict(r=r, rf=rf, erp=erp, beta=beta, rd=rd, tax=tax, wacc=w, roic0=roic0, iroic=iroic, rr=rr,
+    common = dict(r=r, rd=rd, tax=tax, wacc=w, roic0=roic0, iroic=iroic, rr=rr,
                   ratio0=ratio0, mode=mode, nopat_ps=nopat_ps, net_debt_ps=net_debt_ps, bps=bps, shares=shares,
                   g_terminal=g_terminal, cyclical=nopat_cyclical, years=[y.period[:4] for y in history], v_zero=v_zero,
                   ratios=ratios, ratio_cur=r_cur, f_ttm=f_ttm,
@@ -350,11 +354,11 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     cands = [g for g in (g_capital, g_trail) if g is not None]
     g0 = max(min(max(cands) if cands else 0.0, G0_CAP), G0_FLOOR)
     g_src = ("trailing" if g_trail is not None and (g_capital is None or g_trail >= g_capital) else "capital" if g_capital is not None else "none")
-    roic_t = min(w + excess_t, roic0)
+    roic_t = min(w + TERMINAL_EXCESS, roic0)
     if roic_t <= g_terminal + MIN_TERMINAL_SPREAD:
         res["reason"] = f"终值 ROIC={roic_t:.2%} 距 g_T={g_terminal:.2%} 不足 {MIN_TERMINAL_SPREAD:.1%}"; res.update(common); return res
     try:
-        iv = intrinsic_value(nopat_ps, roic0, g0, w, roe_terminal=roic_t, g_terminal=g_terminal, n=N_FADE, n1=N1)
+        iv = intrinsic_value(nopat_ps, roic0, g0, w, roe_terminal=roic_t, g_terminal=g_terminal, n=N_FADE, n1=N1, **FADE)
     except ValuationError as exc:
         res["reason"] = str(exc); res.update(common); return res
     net_debt_ps, nd_fixed = bridge(iv.intrinsic_value)
@@ -376,11 +380,11 @@ def derivation_text(code: str, r: dict, meta: dict, cfg: dict, fx: float, value_
     if r["status"] != "ok":
         base = f"ROIC 口径（工作流程海外估值口径）不可算：{r['reason']}"
         if r.get("wacc"):
-            base += f"；已算到 WACC {r['wacc']:.2%}（r={r['r']:.2%}=rf {r['rf']:.2%}+β{r['beta']}×ERP {r['erp']:.2%}，rd {r['rd']:.2%}，t {r['tax']:.0%}）"
+            base += f"；已算到 WACC {r['wacc']:.2%}（r {r['r']:.0%}，rd {r['rd']:.2%}，t {r['tax']:.0%}）"
         return base
     g_line = ("零增长：V = NOPAT/股 ÷ WACC − 净负债/股" if r["path"] == "zero_growth" else
               f"增长 g0={r['g0']:.1%}（来源 {r['g_src']}：资本腿 {('%.1f%%' % (r['g_capital']*100)) if r.get('g_capital') is not None else '—'}=min(增量ROIC {('%.1f%%' % (r['iroic']*100)) if r['iroic'] is not None else '—'},40%)×再投资率 {('%.0f%%' % (r['rr']*100)) if r['rr'] is not None else '—'}，增速腿 {('%.1f%%' % (r['g_trail']*100)) if r.get('g_trail') is not None else '—'}"
-              f"{('=CAGR %.1f%%×(1−w %.2f)×d %.2f' % (r['cagr']*100, r['peak_w'], r['damp'])) if r.get('g_trail') is not None else ''}），ROIC_T=min(WACC+档位超额, ROIC0)={r['roic_t']:.1%}，g_T={r['g_terminal']:.1%}，fade {N_FADE} 年，终值占比 {r['terminal_share']:.0%}")
+              f"{('=CAGR %.1f%%×(1−w %.2f)×d %.2f' % (r['cagr']*100, r['peak_w'], r['damp'])) if r.get('g_trail') is not None else ''}），ROIC_T=min(WACC+2pp, ROIC0)={r['roic_t']:.1%}，g_T={r['g_terminal']:.1%}，增速 fade {N_FADE} 年、回报指数衰减 λ {FADE['roe_lam']}，终值占比 {r['terminal_share']:.0%}")
     fx_line = (f"；报表币 {ccy_report} → 交易币 {cfg['ccy']} 汇率 {fx:.4f}" + (f"，每 ADR {cfg['adr']} 股" if cfg['adr'] != 1 else "")) if (ccy_report != cfg["ccy"] or cfg["adr"] != 1) else ""
     ratio_txt = "／".join(f"{v:.3f}" for v in r["ratios"])
     guard_txt = (f"周期守卫 NOPAT/经营账面：当期 {r['ratio_cur']:.3f}（最新年报 {r['ratios'][-1]:.3f} × f {r['f_ttm']:.2f}）vs 十年中位 {r['long_median']:.3f}"
@@ -403,7 +407,7 @@ def derivation_text(code: str, r: dict, meta: dict, cfg: dict, fx: float, value_
     return (f"ROIC·{'增长' if r['path']=='growth' else '零增长'}（工作流程海外估值口径，{period_text}，{meta.get('source','')}）："
             f"NOPAT/经营账面财年序列 {ratio_txt} → ratio0 **{r['ratio0']:.3f}**（{r['mode']}）× 经营账面 BPS_op {r['bps_op']:.2f}（稀释股数 {r['shares']/1e6:,.0f}m）= 每股 NOPAT 锚 **{r['nopat_ps']:.3f}**；{x_txt}；{guard_txt}；{anchor_txt}；"
             f"最新观察点回购 {r['buyback_latest']/1e9:.1f}b；"
-            f"ROIC0 {r['roic0']:.1%}；WACC {r['wacc']:.2%}（r {r['r']:.2%} = rf {r['rf']:.2%} + β{r['beta']}×ERP {r['erp']:.2%}；rd {r['rd']:.2%}；t {r['tax']:.0%}；账面权重）；{g_line}；"
+            f"ROIC0 {r['roic0']:.1%}；WACC {r['wacc']:.2%}（r {r['r']:.0%}；rd {r['rd']:.2%}；t {r['tax']:.0%}；账面权重）；{g_line}；"
             f"净负债/股 {r['net_debt_ps']:.3f}（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = {r['value']:.3f} {ccy_report}/普通股**{fx_line}"
             + (f" → **{value_trade:,.2f} {cfg['ccy']}**" if value_trade else "") + f"；带 = V×[0.90,1.10]。标签：{meta.get('tags','')[:400]}")
 
@@ -463,7 +467,7 @@ def main() -> int:
         report = evidence.get(code) or {}
         evidence_date = report.get("evidence_date") or row.get("evidence_available_at") or ""
         evidence_event = report.get("report_event") or row.get("valuation_evidence_event") or ""
-        cfg = COMPANY_CFG.get(code, dict(erp="erp_us", ccy=row.get("currency") or "USD", adr=1, fx=None, fx_inv=False))
+        cfg = COMPANY_CFG.get(code, dict(ccy=row.get("currency") or "USD", adr=1, fx=None, fx_inv=False))
         q = quotes.get(f"{row['market_type'].upper()}:{code}") or {}
         price = _f(q.get("price")) or _f(row.get("valuation_price"))
         price_as_of = (str(q.get("quote_time") or "")[:10] if q else row.get("valuation_price_as_of")) or row.get("valuation_price_as_of")

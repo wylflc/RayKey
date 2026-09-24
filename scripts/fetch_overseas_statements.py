@@ -14,9 +14,10 @@
 * 韩股：无免密钥三表源——不出行，清单上保持「无法估值」并写明缺口（§6.5.2.4）。
 原始 JSON 落 `data/raw/overseas_statements/`（不入库，≈4 MB/家）；提取结果落 `data/interim/overseas_roic_years.csv`（入库）。
 
-字段口径与 `roic_inputs.load_statements` 逐项对齐：
-  ebit = 除税前溢利 + 利息费用；tax_rate = 所得税/除税前溢利（利润非正回退市场法定税率，夹 [0,40%]）；
-  nopat = ebit×(1−t)；excess_cash = max(0, 现金类 − 2%×营收)；invested_capital = 有息负债 + 总权益 − 超额现金。
+字段口径与 `roic_inputs.load_statements`（`caliber = "nonop"`）逐项对齐，海外取数规则见工作流程 §6.8「非经营金融资产与 EBIT」（OI-210）：
+  ebit 剔除金融资产收益（`nonop_ebit`／`hk_ebit`，`ebit_source` 记来源）；tax_rate = 所得税/除税前溢利（利润非正回退市场法定税率，夹 [0,40%]）；
+  nopat = ebit×(1−t)；excess_cash = max(0, 现金类 − 2%×营收) + 其他金融资产；有息负债另加金融负债；
+  invested_capital = 有息负债 + 总权益 − 超额现金，下限 `IC_FLOOR` × 总权益（§6.5.1）。
   §6.5.2.3 股本口径用的留存项：net_income = 归母净利、tci = 归母综合收益（年度与 TTM 均为区间值）；
   TTM 行另给 net_income_ytd／dividends_paid_ytd = 最新年报期末之后的本财年累计值（年报行留空；季报现金流量表无已付股息行时，
   上一财年未付股息的公司记 0，付过股息的公司改由分红事件表折算——见下）。
@@ -58,12 +59,116 @@ HK_API = "https://datacenter.eastmoney.com/securities/api/data/v1/get"
 HK_REPORT_CCY = {"00700": "CNY", "09992": "CNY", "09618": "CNY", "09988": "CNY", "03690": "CNY", "06862": "CNY",
                  "03888": "CNY", "00316": "CNY", "00267": "CNY"}
 TAX_DEFAULT = {"US": 0.21, "HK": 0.165}
+IC_FLOOR = 0.1          # §6.5.1 投入资本下限（§6.7 第 2 步 `--roic-ic-floor 0.1`，test_strategy_parameter_sync 核对同值）
+CARRY_MAX_DAYS = 460    # 维护行沿用的年报须在 15 个月内（上一财年年报）
+RECONCILE_TOL = 0.02    # 经营利润超出税前利润的部分，在已识别营业外费用之外再容差 2%
+# §6.8 非经营金融资产与 EBIT（OI-210）：每个元组是同一报表项目的候选标签，逐期取最大者（正表合计行 ≥ 附注子项）；
+# 不同元组是不同报表项目，相加。现金类 = 流动项目（扣 2% 营收营运现金），其他金融资产 = 非流动项目（全额）。
+# 权益法投资与其损益留在投入资本与 EBIT（与 A 股 §6.5.1 同口径）。
+US_CASH = ("CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents")
+US_SECURITIES_CURRENT = ("MarketableSecuritiesCurrent", "ShortTermInvestments", "AvailableForSaleSecuritiesDebtSecuritiesCurrent",
+                         "DebtSecuritiesCurrent", "HeldToMaturitySecuritiesCurrent", "OtherShortTermInvestments",
+                         "DebtSecuritiesHeldToMaturityAmortizedCostAfterAllowanceForCreditLossCurrent")
+US_DEBT_NONCURRENT = ("MarketableSecuritiesNoncurrent", "AvailableForSaleSecuritiesDebtSecuritiesNoncurrent", "HeldToMaturitySecuritiesNoncurrent",
+                      "DebtSecuritiesHeldToMaturityAmortizedCostAfterAllowanceForCreditLossNoncurrent")
+US_EQUITY_NONCURRENT = ("EquitySecuritiesFVNINoncurrent", "EquitySecuritiesWithoutReadilyDeterminableFairValueAmount")
+US_INVESTMENTS_TOTAL = ("LongTermInvestments", "OtherLongTermInvestments")   # 可能含权益法投资与非流动债券，扣除后与股权投资取大
+US_EQUITY_METHOD = ("EquityMethodInvestments",)
+US_INTERMEDIATION = (("Deposits", "InterestBearingDepositLiabilities"), ("PayablesToCustomers",),
+                     ("FederalFundsPurchasedAndSecuritiesSoldUnderAgreementsToRepurchase", "SecuritiesSoldUnderAgreementsToRepurchase"))
+IFRS_CASH_LIKE = (("CashAndCashEquivalents",), ("CurrentFinancialAssetsAtFairValueThroughProfitOrLoss",),
+                  ("CurrentFinancialAssetsAtFairValueThroughOtherComprehensiveIncome",
+                   "CurrentFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome"),
+                  ("CurrentFinancialAssetsAtAmortisedCost",), ("OtherCurrentFinancialAssets",))
+IFRS_OTHER_FIN = (("NoncurrentFinancialAssetsAtAmortisedCost",), ("NoncurrentFinancialAssetsAtFairValueThroughProfitOrLoss",
+                   "NoncurrentFinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue"),
+                  ("NoncurrentFinancialAssetsAtFairValueThroughOtherComprehensiveIncome",
+                   "NoncurrentFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome"))
+IFRS_FIN_LIAB = (("CurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss",), ("NoncurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss",))
+IFRS_INTERMEDIATION = (("DepositsFromCustomers",), ("DepositsFromBanks",))
+SEC_FIN_CONCEPTS = sorted({c for g in (US_CASH, US_SECURITIES_CURRENT, US_DEBT_NONCURRENT, US_EQUITY_NONCURRENT, US_INVESTMENTS_TOTAL,
+                                       US_EQUITY_METHOD, *US_INTERMEDIATION, *IFRS_CASH_LIKE, *IFRS_OTHER_FIN, *IFRS_FIN_LIAB,
+                                       *IFRS_INTERMEDIATION, ("Assets",)) for c in g})
+EBIT_PART_KEYS = ("nonop_total", "other_nonop", "equity_method_income", "net_interest", "interest_income", "investment_gains")
+
+
+def _group(value_of, concepts) -> tuple[float | None, str]:
+    """同一报表项目的候选标签取最大者，返回 (值, 标签)；全缺返回 (None, "")。"""
+    best: tuple[float | None, str] = (None, "")
+    for concept in concepts:
+        value = value_of(concept)
+        if value is not None and (best[0] is None or value > best[0]):
+            best = (value, concept)
+    return best
+
+
+def sec_financial_assets(framework: str, value_of) -> dict:
+    """§6.8（OI-210）SEC 时点项：现金类、其他金融资产、金融负债、金融中介负债占总资产比例；`value_of(标签)` 给该期末值。"""
+    tags: dict[str, str] = {}
+
+    def pick(name: str, concepts) -> float | None:
+        value, concept = _group(value_of, concepts)
+        if concept:
+            tags[name] = concept
+        return value
+
+    if framework == "ifrs-full":
+        cash = sum(pick(f"cash_like{i}", g) or 0.0 for i, g in enumerate(IFRS_CASH_LIKE))
+        other = sum(pick(f"other_fin{i}", g) or 0.0 for i, g in enumerate(IFRS_OTHER_FIN))
+        liab = sum(pick(f"fin_liab{i}", g) or 0.0 for i, g in enumerate(IFRS_FIN_LIAB))
+        intermediation_groups = IFRS_INTERMEDIATION
+    else:
+        debt_nc = pick("debt_noncurrent", US_DEBT_NONCURRENT) or 0.0
+        cash = (pick("cash", US_CASH) or 0.0) + (pick("securities_current", US_SECURITIES_CURRENT) or 0.0)
+        equity_nc = pick("equity_noncurrent", US_EQUITY_NONCURRENT) or 0.0
+        total = pick("investments_total", US_INVESTMENTS_TOTAL)
+        umbrella = (max(0.0, total - (pick("equity_method", US_EQUITY_METHOD) or 0.0) - debt_nc) if total is not None else 0.0)
+        other, liab = debt_nc + max(equity_nc, umbrella), 0.0
+        intermediation_groups = US_INTERMEDIATION
+    intermediation = sum(pick(f"intermediation{i}", g) or 0.0 for i, g in enumerate(intermediation_groups))
+    assets = value_of("Assets")
+    share = intermediation / assets if assets and assets > 0 else None
+    return dict(cash=cash, other=other, liab=liab, share=share, tags=tags)
+
+
+def nonop_ebit(get, pretax: float | None, interest_expense: float) -> tuple[float | None, str]:
+    """§6.8（OI-210）SEC 口径 EBIT：经营利润 + 权益法损益。经营利润超出税前利润的部分大于已识别的营业外费用
+    （利息费用、营业外净损失、投资损失、净利息支出、权益法亏损）时，该标签不是合并经营利润（分部经营利润合计
+    无维度申报，迪士尼），改为税前利润 − 净利息 − 投资损益。`get(键)` 给该期（或 TTM）利润表项。返回 (EBIT, 来源)。"""
+    op, em = get("operating_income"), get("equity_method_income") or 0.0
+    if op is not None:
+        if pretax is None:
+            return op + em, "operating"
+        charges = interest_expense + sum(max(0.0, -(get(k) or 0.0))
+                                         for k in ("nonop_total", "other_nonop", "investment_gains", "net_interest", "equity_method_income"))
+        if op - pretax <= charges + RECONCILE_TOL * max(abs(op), abs(pretax), 1.0):
+            return op + em, "operating"
+    if pretax is None:
+        return None, "none"
+    net_interest = get("net_interest")
+    base = pretax - net_interest if net_interest is not None else pretax + interest_expense - (get("interest_income") or 0.0)
+    return base - (get("investment_gains") or 0.0), "pretax_strip"
+
+
+def hk_ebit(get) -> tuple[float | None, str]:
+    """§6.8（OI-210）港股 F10 口径 EBIT：经营溢利 − 其他收益 + 应占联营／合营公司溢利；无经营溢利时
+    除税前溢利 + 融资成本 − 利息收入 − 其他收益。"""
+    gains = get("investment_gains") or 0.0
+    op = get("operating_income")
+    if op is not None:
+        return op - gains + (get("equity_method_income") or 0.0), "operating"
+    pretax = get("pretax")
+    if pretax is None:
+        return None, "none"
+    return pretax + (get("interest_expense") or 0.0) - (get("interest_income") or 0.0) - gains, "pretax_strip"
 
 FIELDS = ["market", "security_code", "security_name", "period", "fiscal_year", "notice_date", "report_currency",
           "revenue", "operating_income", "pretax", "income_tax", "interest_expense", "ebit", "tax_rate", "tax_rate_observed",
           "nopat", "total_equity", "parent_equity", "minority_equity", "interest_debt", "cash_like", "excess_cash",
           "invested_capital", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid",
-          "net_income", "tci", "net_income_ytd", "dividends_paid_ytd", "tags_used", "source"]
+          "net_income", "tci", "net_income_ytd", "dividends_paid_ytd",
+          "ebit_source", *EBIT_PART_KEYS, "other_financial_assets", "financial_liabilities", "intermediation_share",
+          "tags_used", "source"]
 
 PERIOD_META_FIELDS = ["period_type", "report_label", "evidence_url"]
 FIELDS += PERIOD_META_FIELDS
@@ -101,9 +206,13 @@ GAAP = {
     "fin_lease_noncurrent": ["FinanceLeaseLiabilityNoncurrent", "CapitalLeaseObligationsNoncurrent"],
     "fin_lease_current": ["FinanceLeaseLiabilityCurrent", "CapitalLeaseObligationsCurrent"],
     "fin_lease_total": ["FinanceLeaseLiability", "CapitalLeaseObligations"],
-    "cash": ["CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"],
-    "cash_invest": ["MarketableSecuritiesCurrent", "ShortTermInvestments", "AvailableForSaleSecuritiesDebtSecuritiesCurrent",
-                    "DebtSecuritiesCurrent"],
+    # OI-210（§6.8）：EBIT 剔除金融资产收益所需的利润表项（`nonop_ebit`）；现金与金融资产改由 `sec_financial_assets` 按标签组取
+    "nonop_total": ["NonoperatingIncomeExpense"],
+    "other_nonop": ["OtherNonoperatingIncomeExpense"],
+    "equity_method_income": ["IncomeLossFromEquityMethodInvestments"],
+    "net_interest": ["InterestIncomeExpenseNonoperatingNet"],
+    "interest_income": ["InvestmentIncomeInterest", "InvestmentIncomeInterestAndDividend", "InterestIncomeOther", "InvestmentIncomeNet"],
+    "investment_gains": ["GainLossOnInvestments", "EquitySecuritiesFvNiGainLoss", "DebtAndEquitySecuritiesGainLoss"],
     "capex": ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets"],
     # OI-178：折旧＋摊销取合计标签；只有拆分标签时折旧＋无形资产摊销（`DEP_AMORT_RULES`），单独折旧只作最后兜底并记标签
     "dep_amort": ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization",
@@ -134,8 +243,8 @@ IFRS = {
     "lt_debt_current": ["CurrentPortionOfLongtermBorrowings", "CurrentPortionOfNoncurrentBondsIssued"],
     "lt_debt_total": ["Borrowings", "BondsIssued"],
     "st_debt": ["ShorttermBorrowings", "CurrentBorrowingsAndCurrentPortionOfNoncurrentBorrowings"],
-    "cash": ["CashAndCashEquivalents"],
-    "cash_invest": ["CurrentFinancialAssetsAtFairValueThroughProfitOrLoss", "OtherCurrentFinancialAssets"],
+    "equity_method_income": ["ShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod",
+                             "ShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod"],
     "capex": ["PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities"],
     "dep_amort": ["DepreciationAndAmortisationExpense", "DepreciationPropertyPlantAndEquipment"],
     "cfo": ["CashFlowsFromUsedInOperatingActivities"],
@@ -147,7 +256,8 @@ IFRS = {
     "tci": ["ComprehensiveIncomeAttributableToOwnersOfParent", "ComprehensiveIncome"],
 }
 DURATION = {"revenue", "operating_income", "pretax", "income_tax", "interest_expense", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid",
-            "net_income", "tci", "pretax_domestic", "pretax_foreign", "continuing_income", "profit_loss", "depreciation", "amort_intangible"}
+            "net_income", "tci", "pretax_domestic", "pretax_foreign", "continuing_income", "profit_loss", "depreciation", "amort_intangible",
+            *EBIT_PART_KEYS}
 # OI-178（§6.8）：按顺序取第一条各分量齐全的组合式
 PRETAX_RULES = (("pretax",), ("pretax_domestic", "pretax_foreign"), ("continuing_income", "income_tax"), ("profit_loss", "income_tax"))
 DEP_AMORT_RULES = (("dep_amort",), ("depreciation", "amort_intangible"), ("depreciation",))
@@ -263,7 +373,45 @@ HK_ITEMS = {
     "dividends_paid": ("cashflow", ["已付股息(融资)", "已付股息"]),
     "net_income": ("income", ["股东应占溢利"]),
     "tci": ("income", ["本公司拥有人应占全面收益总额"]),
+    # OI-210（§6.8）：EBIT 剔除金融资产收益、金融资产按账面计入超额现金、金融负债计入有息负债、类金融识别
+    "interest_income": ("income", ["利息收入"]),
+    "investment_gains": ("income", ["其他收益"]),
+    "assoc": ("income", ["应占联营公司溢利"]),
+    "jv": ("income", ["应占合营公司溢利"]),
+    "cash_nc": ("balance", ["现金及等价物(非流动)"]),
+    "restricted_cash": ("balance", ["受限制存款及现金"]),
+    "deposits_lt": ("balance", ["中长期存款"]),
+    "st_invest": ("balance", ["短期投资"]),
+    "sec_invest": ("balance", ["证券投资"]),
+    "fvtpl": ("balance", ["指定以公允价值记账之金融资产"]),
+    "fvtpl_c": ("balance", ["指定以公允价值记账之金融资产(流动)"]),
+    "other_fin_c": ("balance", ["其他金融资产(流动)"]),
+    "other_fin_nc": ("balance", ["其他金融资产(非流动)"]),
+    "fvl": ("balance", ["指定以公允价值记账之金融负债"]),
+    "fvl_c": ("balance", ["指定以公允价值记账之金融负债(流动)"]),
+    "other_fin_liab_c": ("balance", ["其他金融负债(流动)"]),
+    "other_fin_liab_nc": ("balance", ["其他金融负债(非流动)"]),
+    "total_assets": ("balance", ["总资产"]),
+    "cust_deposits": ("balance", ["客户存款"]),
+    "bank_deposits": ("balance", ["银行同业及其他金融机构存款(负债)"]),
+    "repo": ("balance", ["卖出回购金融资产"]),
+    "borrow_fund": ("balance", ["拆入资金"]),
+    "pbc_loan": ("balance", ["向中央银行借款"]),
 }
+# §6.8（OI-210）港股 F10：现金类、其他金融资产（均按账面）、金融负债、金融中介负债；联营、合营公司权益与「其他投资」「长期投资」留在投入资本
+HK_CASH_LIKE_KEYS = ("cash", "restricted_cash", "deposits", "st_invest", "fvtpl_c", "other_fin_c")
+HK_OTHER_FIN_KEYS = ("cash_nc", "deposits_lt", "sec_invest", "fvtpl", "other_fin_nc")
+HK_FIN_LIAB_KEYS = ("fvl", "fvl_c", "other_fin_liab_c", "other_fin_liab_nc")
+HK_INTERMEDIATION_KEYS = ("cust_deposits", "bank_deposits", "repo", "borrow_fund", "pbc_loan")
+
+
+def hk_financial_assets(value) -> dict:
+    """§6.8（OI-210）港股时点项：`value(键)` 给该期 F10 金额。"""
+    total = lambda keys: sum(value(k) or 0.0 for k in keys)  # noqa: E731
+    assets = value("total_assets")
+    intermediation = total(HK_INTERMEDIATION_KEYS)
+    return dict(cash=total(HK_CASH_LIKE_KEYS), other=total(HK_OTHER_FIN_KEYS), liab=total(HK_FIN_LIAB_KEYS),
+                share=intermediation / assets if assets and assets > 0 else None, tags={})
 # 有息负债 = 贷款 + 应付票据 + 应付债券 + 可转换票据及债券 + 租赁负债（流动＋非流动），与 A 股 `roic_inputs.DEBT_FIELDS` 同口径
 HK_DEBT_KEYS = ("lt_loan", "st_loan", "notes_nc", "notes_c", "bonds", "convertibles", "lease_nc", "lease_c")
 # 东财数据中心补缺源：美股利润表（报表币）、美股分红事件（每 ADR 美元）、港股分红事件（每股港币／人民币／美元）
@@ -446,6 +594,9 @@ def load_statement_overrides(as_of: str) -> list[dict]:
     for raw in csv.DictReader(STATEMENT_OVERRIDES.open(encoding="utf-8-sig")):
         if raw.get("notice_date", "") > as_of:
             continue
+        # OI-210（§6.8）：维护行的 EBIT = 经营利润 + 权益法损益（无经营利润时由 `_build_row` 退回旧式并留痕）；
+        # `cash_like` 为现金类，`other_financial_assets`／`financial_liabilities` 按官方报表的非流动金融资产与金融负债填写
+        opinc, em = _num(raw.get("operating_income")), _num(raw.get("equity_method_income"))
         rows.append(_build_row(
             raw["market"], raw["security_code"], raw["security_name"], raw["period"], raw["notice_date"],
             raw["report_currency"], *[_num(raw.get(key)) for key in
@@ -461,8 +612,34 @@ def load_statement_overrides(as_of: str) -> list[dict]:
             period_type=raw.get("period_type") or "ttm",
             report_label=raw.get("report_label") or "",
             evidence_url=raw.get("evidence_url") or "",
+            ebit=None if opinc is None else opinc + (em or 0.0), ebit_source="" if opinc is None else "override_operating",
+            other_given=_num(raw.get("other_financial_assets")) is not None,
+            ebit_parts={"equity_method_income": em},
+            financial={"other": _num(raw.get("other_financial_assets")),
+                       "liab": _num(raw.get("financial_liabilities")) or 0.0},
         ))
     return rows
+
+
+def carry_other_financial_assets(overrides: list[dict], extracted: list[dict]) -> None:
+    """§6.8（OI-210）：官方业绩稿未列示非流动金融资产的维护行，沿用该期之前最近一份年报的金额（与 A 股按年报附注计入同源），
+    重算超额现金与投入资本并在 `tags_used` 记来源。"""
+    for row in overrides:
+        if row.get("_other_given"):
+            continue
+        prior = max((a for a in extracted + overrides if a["period_type"] == "annual" and a["period"] < row["period"]
+                     and a.get("_other_given", True)
+                     and (date.fromisoformat(row["period"]) - date.fromisoformat(a["period"])).days <= CARRY_MAX_DAYS),
+                    key=lambda a: a["period"], default=None)
+        if prior is None or not prior.get("other_financial_assets"):
+            continue
+        other = float(prior["other_financial_assets"])
+        row["other_financial_assets"] = other
+        row["excess_cash"] += other
+        if row.get("total_equity") is not None:
+            ic = max(row["interest_debt"] + row["total_equity"] - row["excess_cash"], IC_FLOOR * row["total_equity"])
+            row["invested_capital"] = ic if ic > 0 else None
+        row["tags_used"] = (row["tags_used"] + ";" if row["tags_used"] else "") + f"other_financial_assets=carried:{prior['period']}"
 
 
 def apply_evidence(rows: list[dict], evidence: dict[str, dict[str, str]]) -> list[dict]:
@@ -698,6 +875,8 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
     tags: dict[str, str] = {}
 
     def ttm(key: str) -> float | None:
+        if key not in maps:
+            return None
         cur, old, concept = _duration_pair(tax, maps[key], end, filed)
         tags[key] = concept
         base = _num(annual.get(key))
@@ -738,7 +917,11 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
         parent_eq = total_eq - minority
         tags["parent_equity"] = f"{tags.get('total_equity', 'total_equity')}-minority"
     debt, debt_parts = compose_debt(inst)
-    cash = (inst("cash") or 0.0) + (inst("cash_invest") or 0.0)
+    framework = "ifrs-full" if maps is IFRS else "us-gaap"
+    fin = sec_financial_assets(framework, lambda c: _instant_value(tax, [c], end, filed)[0] if c in tax else None)
+    tags.update({f"fin.{k}": c for k, c in fin["tags"].items()})
+    parts = {k: ttm(k) for k in EBIT_PART_KEYS if k in maps}
+    ebit, ebit_source = nonop_ebit(lambda k: opinc if k == "operating_income" else parts.get(k), pretax, interest)
     dep, dep_parts = ttm_composed("dep_amort", DEP_AMORT_RULES)
     shares, share_tag = _shares_value(tax, maps["shares"], end, filed, maps.get("shares_instant"), dei)
     tags["shares"] = share_tag
@@ -748,23 +931,26 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
     label = {"Q1": "一季报", "Q2": "二季报", "Q3": "三季报"}[fp]
     row_tags = _composed_tags(tags, {"pretax": pretax_parts, "interest_debt": debt_parts, "dep_amort": dep_parts})
     return _build_row("US", symbol, name, end, evidence_date or filed, annual["report_currency"], revenue,
-                      opinc, pretax, taxv, interest, total_eq, parent_eq, minority, debt, cash,
+                      opinc, pretax, taxv, interest, total_eq, parent_eq, minority, debt, fin["cash"],
                       abs(ttm("capex") or 0.0), dep or 0.0, ttm("cfo"), shares, row_tags,
                       "SEC companyfacts 10-Q TTM", TAX_DEFAULT["US"],
                       buybacks=abs(ttm("buybacks") or 0.0), dividends=abs(ttm("dividends_paid") or 0.0),
                       net_income=ttm("net_income"), tci=ttm("tci"), net_income_ytd=ytd("net_income"),
                       dividends_ytd=_ytd_dividends(ytd("dividends_paid"), _num(annual.get("dividends_paid"))),
-                      period_type="ttm", report_label=f"{label}（FY{fy} {fp}，截至 {end}）")
+                      period_type="ttm", report_label=f"{label}（FY{fy} {fp}，截至 {end}）",
+                      ebit=ebit, ebit_source=ebit_source, ebit_parts=parts, financial=fin)
 
 
 def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
     facts = data.get("facts", {})
     if "ifrs-full" in facts and "ProfitLossBeforeTax" in facts["ifrs-full"]:
-        tax, maps = facts["ifrs-full"], IFRS
+        tax, maps, framework = facts["ifrs-full"], IFRS, "ifrs-full"
         src = "SEC companyfacts ifrs-full"
     else:
-        tax, maps = facts.get("us-gaap", {}), GAAP
+        tax, maps, framework = facts.get("us-gaap", {}), GAAP, "us-gaap"
         src = "SEC companyfacts us-gaap"
+    # OI-210：金融资产标签组逐个标签取期末值（组内取最大，见 `sec_financial_assets`）
+    each = {c: _sec_series(tax, [c], False)[0] for c in SEC_FIN_CONCEPTS if c in tax}
     series: dict[str, dict[str, float]] = {}
     tags: dict[str, str] = {}
     ccy = ""
@@ -789,7 +975,9 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
         intexp = v("interest_expense") or 0.0
         debt, debt_parts = compose_debt(v)                       # OI-178：票据、流动合计与融资租赁按层级只取一次
         dep, dep_parts = compose_sum(v, DEP_AMORT_RULES)          # OI-178：折旧＋无形资产摊销
-        cash = (v("cash") or 0.0) + (v("cash_invest") or 0.0)
+        fin = sec_financial_assets(framework, lambda c, end=end: each.get(c, {}).get(end))
+        parts = {k: v(k) for k in EBIT_PART_KEYS if k in maps}
+        ebit, ebit_source = nonop_ebit(lambda k: opinc if k == "operating_income" else parts.get(k), pretax, intexp)
         total_eq, parent_eq, minority = v("total_equity"), v("parent_equity"), v("minority_equity") or 0.0
         if total_eq is not None and parent_eq is not None and abs(total_eq - parent_eq) < 1e-6 and minority:
             total_eq = parent_eq + minority
@@ -801,12 +989,14 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
         if shares and "shares" not in tags and "shares_instant" not in tags:
             row_tags["shares"] = "dei:EntityCommonStockSharesOutstanding"
         row_tags = _composed_tags(row_tags, {"pretax": pretax_parts, "interest_debt": debt_parts, "dep_amort": dep_parts})
+        row_tags.update({f"fin.{k}": c for k, c in fin["tags"].items()})
         rows.append(_build_row("US", symbol, name, end, notice, ccy or "USD", rev, opinc, pretax, taxv, intexp,
-                               total_eq, parent_eq, minority, debt, cash, v("capex") or 0.0, dep or 0.0,
+                               total_eq, parent_eq, minority, debt, fin["cash"], v("capex") or 0.0, dep or 0.0,
                                v("cfo"), shares, row_tags, src, TAX_DEFAULT["US"],
                                buybacks=abs(v("buybacks") or 0.0), dividends=abs(v("dividends_paid") or 0.0),
                                net_income=v("net_income"), tci=v("tci"),
-                               period_type="annual", report_label=f"年报（FY{end[:4]}，截至 {end}）"))
+                               period_type="annual", report_label=f"年报（FY{end[:4]}，截至 {end}）",
+                               ebit=ebit, ebit_source=ebit_source, ebit_parts=parts, financial=fin))
     return rows
 
 
@@ -876,7 +1066,10 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
             continue
         intexp = pick(period, "interest_expense") or 0.0
         debt = sum(pick(period, k) or 0.0 for k in HK_DEBT_KEYS)
-        cash = (pick(period, "cash") or 0.0) + (pick(period, "deposits") or 0.0)
+        fin = hk_financial_assets(lambda k: pick(period, k))
+        parts = {"interest_income": pick(period, "interest_income"), "investment_gains": pick(period, "investment_gains"),
+                 "equity_method_income": (pick(period, "assoc") or 0.0) + (pick(period, "jv") or 0.0)}
+        ebit, ebit_source = hk_ebit(lambda k: {"operating_income": opinc, "pretax": pretax, "interest_expense": intexp}.get(k, parts.get(k)))
         dividends = pick(period, "dividends_paid")
         if dividends is None and events and prev_period:
             # 现金流量表无「已付股息」行：按分红事件（除净日落在上一财年末与本期末之间）× 最新已发行股数折报表币
@@ -886,12 +1079,13 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
         prev_period = period
         rows.append(_build_row("HK", code, name, period, period, HK_REPORT_CCY.get(code, "CNY"), rev, opinc, pretax,
                                None if taxv is None else abs(taxv), intexp, pick(period, "total_equity"), pick(period, "parent_equity"),
-                               pick(period, "minority_equity") or 0.0, debt, cash, abs(pick(period, "capex") or 0.0),
+                               pick(period, "minority_equity") or 0.0, debt, fin["cash"], abs(pick(period, "capex") or 0.0),
                                pick(period, "dep_amort") or 0.0, pick(period, "cfo"), shares, tags,
                                "eastmoney HK F10 (RPT_HKF10_FN_*_PC, DATE_TYPE_CODE=001)", TAX_DEFAULT["HK"],
                                buybacks=abs(pick(period, "buybacks") or 0.0), dividends=abs(dividends or 0.0),
                                net_income=pick(period, "net_income"), tci=pick(period, "tci"),
-                               period_type="annual", report_label=f"年报（FY{period[:4]}，截至 {period}）"))
+                               period_type="annual", report_label=f"年报（FY{period[:4]}，截至 {period}）",
+                               ebit=ebit, ebit_source=ebit_source, ebit_parts=parts, financial=fin))
     return rows
 
 
@@ -948,7 +1142,18 @@ def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shar
     total_eq, parent_eq = pick("current", "total_equity"), pick("current", "parent_equity")
     minority = pick("current", "minority_equity") or 0.0
     debt = sum(pick("current", key) or 0.0 for key in HK_DEBT_KEYS)
-    cash = (pick("current", "cash") or 0.0) + (pick("current", "deposits") or 0.0)
+    fin = hk_financial_assets(lambda k: pick("current", k))
+
+    def ttm_f10(key: str) -> float | None:
+        """OI-210 新增利润表项的 TTM：基数取 F10 最新年报期，缺项按 0（该公司不单列即为 0）。"""
+        cur, old, base = pick("current", key), pick("previous", key), pick("annual", key)
+        if cur is None and old is None and base is None:
+            return None
+        return (base or 0.0) + (cur or 0.0) - (old or 0.0)
+    parts = {"interest_income": ttm_f10("interest_income"), "investment_gains": ttm_f10("investment_gains"),
+             "equity_method_income": (ttm_f10("assoc") or 0.0) + (ttm_f10("jv") or 0.0)}
+    ebit, ebit_source = hk_ebit(lambda k: {"operating_income": opinc, "pretax": pretax, "interest_expense": abs(interest)}.get(k, parts.get(k)))
+    cash = fin["cash"]
     if revenue is None or (pretax is None and opinc is None) or parent_eq is None or not shares:
         return None
     dividends_ytd = _ytd_dividends(pick("current", "dividends_paid"), annual_values["dividends_paid"])
@@ -967,23 +1172,34 @@ def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shar
                       buybacks=abs(ttm("buybacks") or 0.0), dividends=abs(ttm("dividends_paid") or 0.0),
                       net_income=ttm("net_income"), tci=ttm("tci"), net_income_ytd=pick("current", "net_income"),
                       dividends_ytd=dividends_ytd,
-                      period_type="ttm", report_label=f"{label}（FY{fiscal_year}，截至 {period}）")
+                      period_type="ttm", report_label=f"{label}（FY{fiscal_year}，截至 {period}）",
+                      ebit=ebit, ebit_source=ebit_source, ebit_parts=parts, financial=fin)
 
 
 def _build_row(market, code, name, period, notice, ccy, rev, opinc, pretax, taxv, intexp, total_eq, parent_eq, minority,
                debt, cash, capex, dep, cfo, shares, tags, src, tax_default, buybacks=0.0, dividends=0.0,
                net_income=None, tci=None, net_income_ytd=None, dividends_ytd=None,
-               period_type="annual", report_label="", evidence_url="") -> dict:
-    # 与 roic_inputs.load_statements 同式
-    ebit = (pretax + intexp) if pretax is not None else opinc
+               period_type="annual", report_label="", evidence_url="",
+               ebit=None, ebit_source="", ebit_parts=None, financial=None, other_given=True) -> dict:
+    # 与 roic_inputs.load_statements（caliber = "nonop"）同式；`ebit` 由 `nonop_ebit`／`hk_ebit` 给出（OI-210）。
+    # 未给出者（官方维护行无经营利润）退回税前利润 + 利息费用并记 `ebit_source = legacy`。
+    if ebit is None:
+        ebit, ebit_source = ((pretax + intexp) if pretax is not None else opinc), "legacy"
+    fin = financial or {}
+    other_fin, fin_liab = fin.get("other"), fin.get("liab") or 0.0
+    if other_fin is None:      # 维护行未列示：由 `carry_other_financial_assets` 按最近年报补，补前按 0
+        other_fin = 0.0
     if pretax is not None and pretax > 0 and taxv is not None:
         lo, hi = roic_inputs.TAX_RATE_BOUNDS
         rate, observed = min(max(taxv / pretax, lo), hi), True
     else:
         rate, observed = tax_default, False
     nopat = ebit * (1 - rate) if ebit is not None else None
-    excess = max(0.0, cash - roic_inputs.OPERATING_CASH_RATIO * (rev or 0.0))
+    excess = max(0.0, cash - roic_inputs.OPERATING_CASH_RATIO * (rev or 0.0)) + max(0.0, other_fin)
+    debt += fin_liab
     ic = (debt + total_eq - excess) if total_eq is not None else None
+    if ic is not None:
+        ic = max(ic, IC_FLOOR * total_eq)
     return {
         "market": market, "security_code": code, "security_name": name, "period": period,
         "fiscal_year": period[:4], "notice_date": notice, "report_currency": ccy,
@@ -995,7 +1211,10 @@ def _build_row(market, code, name, period, notice, ccy, rev, opinc, pretax, taxv
         "capex": capex, "dep_amort": dep, "cfo": cfo, "shares": shares,
         "buybacks": buybacks, "dividends_paid": dividends,
         "net_income": net_income, "tci": tci, "net_income_ytd": net_income_ytd, "dividends_paid_ytd": dividends_ytd,
-        "tags_used": ";".join(f"{k}={v}" for k, v in sorted(tags.items())), "source": src,
+        "ebit_source": ebit_source, **{k: (ebit_parts or {}).get(k) for k in EBIT_PART_KEYS},
+        "other_financial_assets": other_fin, "financial_liabilities": fin_liab,
+        "intermediation_share": None if fin.get("share") is None else round(fin["share"], 6),
+        "tags_used": ";".join(f"{k}={v}" for k, v in sorted(tags.items())), "source": src, "_other_given": other_given,
         "period_type": period_type, "report_label": report_label, "evidence_url": evidence_url,
     }
 
@@ -1061,6 +1280,7 @@ def main() -> int:
                 done = fill_override_from_eastmoney(g, annual_ref, income, events, adr, fx)
                 if done:
                     fills.append(f"{code} {g['period']} {g['period_type']}: 东财补 {'/'.join(done)}")
+        carry_other_financial_assets(own_overrides, got)
         got += own_overrides
         got = apply_evidence(got, evidence)
         got.sort(key=lambda g: (g["period"], 0 if g["period_type"] == "annual" else 1))

@@ -1,0 +1,258 @@
+{
+ "00700": {
+  "2021-12-31": {
+   "other_income": null,
+   "interest_income": 6.65,
+   "ebit_op": 264.97,
+   "below_op_other": null
+  },
+  "2022-12-31": {
+   "other_income": null,
+   "interest_income": 8.592,
+   "ebit_op": 110.827,
+   "below_op_other": 116.287
+  },
+  "2023-12-31": {
+   "other_income": null,
+   "interest_income": 13.808,
+   "ebit_op": 160.074,
+   "below_op_other": -6.09
+  },
+  "2024-12-31": {
+   "other_income": null,
+   "interest_income": 16.004,
+   "ebit_op": 208.099,
+   "below_op_other": 4.187
+  },
+  "2025-12-31": {
+   "other_income": null,
+   "interest_income": 16.909,
+   "ebit_op": 241.562,
+   "below_op_other": 10.168
+  }
+ },
+ "09988": {
+  "2022-03-31": {
+   "other_income": null,
+   "interest_income": -15.702,
+   "ebit_op": 69.638,
+   "below_op_other": 24.867
+  },
+  "2023-03-31": {
+   "other_income": null,
+   "interest_income": -11.071,
+   "ebit_op": 100.351,
+   "below_op_other": -2.24
+  },
+  "2024-03-31": {
+   "other_income": null,
+   "interest_income": -9.964,
+   "ebit_op": 113.35,
+   "below_op_other": -1.578
+  },
+  "2025-03-31": {
+   "other_income": null,
+   "interest_income": 20.759,
+   "ebit_op": 140.905,
+   "below_op_other": 9.353
+  },
+  "2026-03-31": {
+   "other_income": null,
+   "interest_income": 87.512,
+   "ebit_op": 50.15,
+   "below_op_other": 4.303
+  }
+ },
+ "09618": {
+  "2021-12-31": {
+   "other_income": null,
+   "interest_income": null,
+   "ebit_op": 4.141,
+   "below_op_other": -5.508
+  },
+  "2022-12-31": {
+   "other_income": null,
+   "interest_income": null,
+   "ebit_op": 19.723,
+   "below_op_other": -3.75
+  },
+  "2023-12-31": {
+   "other_income": null,
+   "interest_income": null,
+   "ebit_op": 26.025,
+   "below_op_other": 8.506
+  },
+  "2024-12-31": {
+   "other_income": null,
+   "interest_income": null,
+   "ebit_op": 38.736,
+   "below_op_other": 15.698
+  },
+  "2025-12-31": {
+   "other_income": null,
+   "interest_income": null,
+   "ebit_op": 2.774,
+   "below_op_other": 25.352
+  }
+ },
+ "03690": {
+  "2021-12-31": {
+   "other_income": null,
+   "interest_income": 0.546037,
+   "ebit_op": -23.127199,
+   "below_op_other": 0.14562
+  },
+  "2022-12-31": {
+   "other_income": null,
+   "interest_income": 0.657908,
+   "ebit_op": -5.820448,
+   "below_op_other": 0.035848
+  },
+  "2023-12-31": {
+   "other_income": null,
+   "interest_income": 0.818986,
+   "ebit_op": 13.415387,
+   "below_op_other": 1.212652
+  },
+  "2024-12-31": {
+   "other_income": null,
+   "interest_income": 1.291807,
+   "ebit_op": 36.844956,
+   "below_op_other": 1.185704
+  },
+  "2025-12-31": {
+   "other_income": null,
+   "interest_income": 2.011535,
+   "ebit_op": -25.041137,
+   "below_op_other": 0.078892
+  }
+ },
+ "03888": {
+  "2021-12-31": {
+   "other_income": 0.391203,
+   "interest_income": 0.41625,
+   "ebit_op": 1.360583,
+   "below_op_other": 0.842402
+  },
+  "2022-12-31": {
+   "other_income": 0.395156,
+   "interest_income": 0.449005,
+   "ebit_op": 1.868682,
+   "below_op_other": -6.499855
+  },
+  "2023-12-31": {
+   "other_income": 0.374586,
+   "interest_income": 0.629199,
+   "ebit_op": 2.226882,
+   "below_op_other": -0.03216
+  },
+  "2024-12-31": {
+   "other_income": 0.379843,
+   "interest_income": 0.72058,
+   "ebit_op": 3.646623,
+   "below_op_other": -0.15377
+  },
+  "2025-12-31": {
+   "other_income": 0.269552,
+   "interest_income": 0.660257,
+   "ebit_op": 1.775097,
+   "below_op_other": 1.252473
+  }
+ },
+ "09992": {
+  "2021-12-31": {
+   "other_income": 0.054425,
+   "interest_income": 0.028609,
+   "ebit_op": 1.149812,
+   "below_op_other": 0.014016
+  },
+  "2022-12-31": {
+   "other_income": 0.045572,
+   "interest_income": 0.067682,
+   "ebit_op": 0.58338,
+   "below_op_other": 0.027046
+  },
+  "2023-12-31": {
+   "other_income": 0.0749,
+   "interest_income": 0.184217,
+   "ebit_op": 1.230646,
+   "below_op_other": 0.033229
+  },
+  "2024-12-31": {
+   "other_income": 0.084288,
+   "interest_income": 0.212335,
+   "ebit_op": 4.154272,
+   "below_op_other": 0.048188
+  },
+  "2025-12-31": {
+   "other_income": 0.149921,
+   "interest_income": 0.158966,
+   "ebit_op": 16.890474,
+   "below_op_other": 0.069653
+  }
+ },
+ "06862": {
+  "2021-12-31": {
+   "other_income": 0.357794,
+   "interest_income": null,
+   "ebit_op": -2.568512,
+   "below_op_other": null
+  },
+  "2022-12-31": {
+   "other_income": 0.49604,
+   "interest_income": null,
+   "ebit_op": 2.526096,
+   "below_op_other": null
+  },
+  "2023-12-31": {
+   "other_income": 0.940781,
+   "interest_income": null,
+   "ebit_op": 6.138639,
+   "below_op_other": null
+  },
+  "2024-12-31": {
+   "other_income": 0.635651,
+   "interest_income": null,
+   "ebit_op": 6.846958,
+   "below_op_other": null
+  },
+  "2025-12-31": {
+   "other_income": 0.580505,
+   "interest_income": null,
+   "ebit_op": 6.000552,
+   "below_op_other": null
+  }
+ },
+ "00316": {
+  "2021-12-31": {
+   "other_income": 0.32501405889999996,
+   "interest_income": null,
+   "ebit_op": 47.0543938147,
+   "below_op_other": null
+  },
+  "2022-12-31": {
+   "other_income": 1.7553856424,
+   "interest_income": null,
+   "ebit_op": 70.1969068246,
+   "below_op_other": null
+  },
+  "2023-12-31": {
+   "other_income": 3.5410808574,
+   "interest_income": null,
+   "ebit_op": 9.955981405200001,
+   "below_op_other": null
+  },
+  "2024-12-31": {
+   "other_income": 2.8553834364,
+   "interest_income": null,
+   "ebit_op": 18.8684286096,
+   "below_op_other": null
+  },
+  "2025-12-31": {
+   "other_income": 2.2652205776,
+   "interest_income": null,
+   "ebit_op": 10.7924834208,
+   "below_op_other": null
+  }
+ }
+}

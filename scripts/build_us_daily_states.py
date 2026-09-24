@@ -2,7 +2,7 @@
 """OI-159：美股逐次申报的时点估值 → 逐日状态（与 `a_share_daily_states_adopted.csv` 同列）。
 
 预登记：`docs/reports/us_sp500_backtest_prereg.zh.md` §3。
-估值 = `build_overseas_roic_bands.value_company`（§6.8／§6.5.2.3 同式，全部 L2，r = rf + ERP，rf 取 FRED DGS10 在申报日前最新值）；
+估值 = `build_overseas_roic_bands.value_company`（§6.8／§6.5.2.3 同式；OI-210 起 r = 10%、终值超额 2pp、g_T = 3%，与 A 股生产同参，rf 只记录不进估值）；
 事实按 `filed ≤ F` 截断（`overseas_pv_forward.PitFacts`），F 取 companyfacts 里 10-K／10-Q（含 /A、20-F、40-F）的申报日。
 
 带与逐日规则：

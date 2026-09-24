@@ -1,0 +1,277 @@
+{
+ "AAPL": {
+  "period": "2025-09-27",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 0.04",
+   "Marketable securities [MarketableSecuritiesCurrent] 0.02",
+   "Marketable securities [MarketableSecuritiesNoncurrent] 0.08"
+  ],
+  "face_financial": 0.13,
+  "face_operating": 0.13,
+  "rule_cash_like": 54.7,
+  "rule_other": 77.72,
+  "rule_total": 132.42,
+  "rule_ebit": 133.05,
+  "ebit_source": "operating",
+  "gap": 132.29
+ },
+ "ADBE": {
+  "period": "2025-11-28",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 5.43",
+   "Short-term investments [ShortTermInvestments] 1.16"
+  ],
+  "face_financial": 6.59,
+  "face_operating": 8.71,
+  "rule_cash_like": 6.59,
+  "rule_other": 0.0,
+  "rule_total": 6.59,
+  "rule_ebit": 8.71,
+  "ebit_source": "operating",
+  "gap": 0.0
+ },
+ "AMD": {
+  "period": "2025-12-27",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 5.54",
+   "Short-term investments [ShortTermInvestments] 5.01"
+  ],
+  "face_financial": 10.55,
+  "face_operating": 3.69,
+  "rule_cash_like": 10.57,
+  "rule_other": 1.1,
+  "rule_total": 11.67,
+  "rule_ebit": 3.72,
+  "ebit_source": "operating",
+  "gap": 1.12
+ },
+ "ASML": {
+  "period": "2025-12-31",
+  "face_lines": [
+   "Short-term investments [AvailableForSaleSecuritiesDebtSecuritiesCurrent] 0.41",
+   "Equity investments [EquitySecuritiesWithoutReadilyDeterminableFairValueAmount] 1.32"
+  ],
+  "face_financial": 1.73,
+  "face_operating": 11.3,
+  "rule_cash_like": 13.32,
+  "rule_other": 1.32,
+  "rule_total": 14.64,
+  "rule_ebit": 11.52,
+  "ebit_source": "operating",
+  "gap": 12.92
+ },
+ "DIS": {
+  "period": "2025-09-27",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 5.70",
+   "Investments [LongTermInvestments] 8.10"
+  ],
+  "face_financial": 13.79,
+  "face_operating": null,
+  "rule_cash_like": 5.8,
+  "rule_other": 1.78,
+  "rule_total": 7.58,
+  "rule_ebit": 13.31,
+  "ebit_source": "pretax_strip",
+  "gap": -6.21
+ },
+ "GLW": {
+  "period": "2025-12-31",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 1.53"
+  ],
+  "face_financial": 1.53,
+  "face_operating": 2.28,
+  "rule_cash_like": 1.57,
+  "rule_other": 0.0,
+  "rule_total": 1.57,
+  "rule_ebit": 2.28,
+  "ebit_source": "operating",
+  "gap": 0.04
+ },
+ "GOOGL": {
+  "period": "2025-12-31",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 30.71",
+   "Marketable securities [MarketableSecuritiesCurrent] 96.14",
+   "Non-marketable securities [OtherLongTermInvestments] 68.69"
+  ],
+  "face_financial": 195.53,
+  "face_operating": 129.04,
+  "rule_cash_like": 126.84,
+  "rule_other": 68.69,
+  "rule_total": 195.53,
+  "rule_ebit": 129.04,
+  "ebit_source": "operating",
+  "gap": 0.0
+ },
+ "INTC": {
+  "period": "2025-12-27",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 14.27",
+   "Short-term investments [AvailableForSaleSecuritiesDebtSecuritiesCurrent] 23.15",
+   "Equity investments [EquityInvestments] 8.51"
+  ],
+  "face_financial": 45.93,
+  "face_operating": -2.21,
+  "rule_cash_like": 37.86,
+  "rule_other": 8.03,
+  "rule_total": 45.89,
+  "rule_ebit": -2.21,
+  "ebit_source": "operating",
+  "gap": -0.04
+ },
+ "META": {
+  "period": "2025-12-31",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 35.87",
+   "Marketable securities [MarketableSecuritiesCurrent] 45.72",
+   "Non-marketable equity investments [NonmarketableEquitySecuritiesCarryingValue] 27.52"
+  ],
+  "face_financial": 109.12,
+  "face_operating": 83.28,
+  "rule_cash_like": 84.82,
+  "rule_other": 20.08,
+  "rule_total": 104.9,
+  "rule_ebit": 83.28,
+  "ebit_source": "operating",
+  "gap": -4.22
+ },
+ "MSFT": {
+  "period": "2026-06-30",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 20.93",
+   "Short-term investments [ShortTermInvestments] 55.91",
+   "Equity and other investments [LongTermInvestments] 36.35"
+  ],
+  "face_financial": 113.19,
+  "face_operating": 155.24,
+  "rule_cash_like": 76.84,
+  "rule_other": 24.35,
+  "rule_total": 101.19,
+  "rule_ebit": 155.24,
+  "ebit_source": "operating",
+  "gap": -12.0
+ },
+ "MU": {
+  "period": "2025-08-28",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 9.64",
+   "Short-term investments [AvailableForSaleSecuritiesDebtSecuritiesCurrent] 0.67",
+   "Long-term marketable investments [AvailableForSaleSecuritiesDebtSecuritiesNoncurrent] 1.63"
+  ],
+  "face_financial": 11.94,
+  "face_operating": 9.77,
+  "rule_cash_like": 10.31,
+  "rule_other": 1.82,
+  "rule_total": 12.13,
+  "rule_ebit": 9.78,
+  "ebit_source": "operating",
+  "gap": 0.2
+ },
+ "NVDA": {
+  "period": "2026-01-25",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 10.61",
+   "Marketable securities [MarketableSecuritiesAndEquitySecuritiesFVNI] 51.95",
+   "Non-marketable equity securities [EquitySecuritiesFVNINoncurrent] 22.25"
+  ],
+  "face_financial": 84.81,
+  "face_operating": 130.39,
+  "rule_cash_like": 49.67,
+  "rule_other": 22.25,
+  "rule_total": 71.92,
+  "rule_ebit": 130.39,
+  "ebit_source": "operating",
+  "gap": -12.89
+ },
+ "ORCL": {
+  "period": "2026-05-31",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 31.29",
+   "Marketable securities [AvailableForSaleSecuritiesDebtSecuritiesCurrent] 0.60"
+  ],
+  "face_financial": 31.89,
+  "face_operating": 20.61,
+  "rule_cash_like": 31.89,
+  "rule_other": 0.0,
+  "rule_total": 31.89,
+  "rule_ebit": 20.61,
+  "ebit_source": "override_operating",
+  "gap": -0.0
+ },
+ "PDD": {
+  "period": "2025-12-31",
+  "face_lines": [
+   "Restricted cash [RestrictedCashCurrent] 73.83",
+   "Short-term investments [ShortTermInvestments] 313.41",
+   "Merchant deposits [DepositLiabilityCurrent] 17.71"
+  ],
+  "face_financial": 404.95,
+  "face_operating": 93.1,
+  "rule_cash_like": 496.14,
+  "rule_other": 70.3,
+  "rule_total": 566.44,
+  "rule_ebit": 93.23,
+  "ebit_source": "operating",
+  "gap": 161.49
+ },
+ "TSLA": {
+  "period": "2025-12-31",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 16.51",
+   "Short-term investments [ShortTermInvestments] 27.55"
+  ],
+  "face_financial": 44.06,
+  "face_operating": 4.36,
+  "rule_cash_like": 44.06,
+  "rule_other": 0.0,
+  "rule_total": 44.06,
+  "rule_ebit": 4.36,
+  "ebit_source": "operating",
+  "gap": 0.0
+ },
+ "TSM": {
+  "period": "2024-12-31",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalents] 2127.63",
+   "Financial assets at fair value through profit or loss [CurrentFinancialAssetsAtFairValueThroughProfitOrLoss] 0.21",
+   "Financial assets at fair value through other comprehensive income [CurrentFinancialAssetsAtFairValueThroughOtherComprehensiveIncome] 192.20",
+   "Financial assets at amortized cost [CurrentFinancialAssetsAtAmortisedCost] 101.97",
+   "Hedging financial assets [FinancialAssetsHeldForHedging] 0.01",
+   "Other financial assets [OtherCurrentFinancialAssets] 63.14",
+   "Financial assets at fair value through profit or loss [NoncurrentFinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue] 15.20",
+   "Financial assets at fair value through other comprehensive income [NoncurrentFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome] 7.82",
+   "Financial assets at amortized cost [NoncurrentFinancialAssetsAtAmortisedCost] 88.60",
+   "Refundable deposits [LongtermDeposits] 5.50",
+   "Cash dividends payable [CurrentDividendPayables] 220.42",
+   "Guarantee deposits [NoncurrentGuaranteeDeposits] 0.85"
+  ],
+  "face_financial": 2823.54,
+  "face_operating": 1322.05,
+  "rule_cash_like": 2485.15,
+  "rule_other": 111.62,
+  "rule_total": 2596.77,
+  "rule_ebit": 1326.93,
+  "ebit_source": "operating",
+  "gap": -226.77
+ },
+ "UBER": {
+  "period": "2025-12-31",
+  "face_lines": [
+   "Cash and cash equivalents [CashAndCashEquivalentsAtCarryingValue] 7.11",
+   "Short-term investments [MarketableSecuritiesCurrent] 0.53",
+   "Restricted cash and cash equivalents [RestrictedCashAndCashEquivalentsAtCarryingValue] 0.63",
+   "Restricted cash and cash equivalents [RestrictedCashAndCashEquivalentsNoncurrent] 1.91",
+   "Investments [MarketableAndNonMarketableInvestments] 9.18"
+  ],
+  "face_financial": 19.35,
+  "face_operating": 0.01,
+  "rule_cash_like": 10.18,
+  "rule_other": 4.4,
+  "rule_total": 14.57,
+  "rule_ebit": 5.51,
+  "ebit_source": "operating",
+  "gap": -4.78
+ }
+}

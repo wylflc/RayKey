@@ -234,9 +234,9 @@ class ExecutionPlanTest(unittest.TestCase):
     def test_swap_source_block_guards_buy_queue(self) -> None:
         # 研究开关（生产关，K=-1）：临时置 K=1 时当日换仓卖出源不进买入队列；候选侧 P/V 高于「最低换仓源持仓侧 P/V − 0.15」的候选一并剔除
         trig = row("000010", "X", close=10.0, ma20=9.0, ma60=8.0, pv=0.60)        # 未持仓触发者
-        src = row("000012", "H2", close=10.0, ma20=12.0, ma60=9.0, pv=1.00)       # 弱势卖出源，自身也过买入线
-        near = row("000015", "N", close=10.0, ma20=9.0, ma60=8.0, pv=0.90)        # 0.90 > 1.00 − 0.15 → 剔除
-        ok = row("000014", "A", close=10.0, ma20=9.0, ma60=8.0, pv=0.80)          # 0.80 ≤ 0.85 → 可买
+        src = row("000012", "H2", close=10.0, ma20=12.0, ma60=9.0, pv=0.95)       # 弱势卖出源，自身也过买入线（v4.200 线 0.9524）
+        near = row("000015", "N", close=10.0, ma20=9.0, ma60=8.0, pv=0.90)        # 0.90 > 0.95 − 0.15 → 剔除
+        ok = row("000014", "A", close=10.0, ma20=9.0, ma60=8.0, pv=0.78)          # 0.78 ≤ 0.80 → 可买
         holdings = {"000012": hold("H2", 50000, 5.0, None)}
         saved = scan.SEC93_SWAP_SOURCE_BLOCK
         scan.SEC93_SWAP_SOURCE_BLOCK = 1.0

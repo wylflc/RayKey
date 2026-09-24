@@ -7,7 +7,7 @@
 | 名单状态 | worth_attention |
 | 质量档 | L2 |
 | 参考分 | 67.80 |
-| 合理价区间 | 19.53 ~ 23.87 USD |
+| 模型价值区间 | 9.43 ~ 11.52 USD |
 | 估值证据日 | 2026-07-28 |
 | 估值事件 | 二季报（2026Q2） |
 
@@ -15,7 +15,7 @@
 
 ROIC·增长
 
-ROIC·增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-06-30 TTM，Corning official Q2 2026 release TTM plus latest filed Q1 balance）：NOPAT/经营账面财年序列 0.114／0.087／0.050／0.048／0.111 → ratio0 **0.085**（blend(λ=0.5,w=0.69,v=0.00)）× 经营账面 BPS_op 21.49（稀释股数 871m）= 每股 NOPAT 锚 **1.835**；股本口径：十年窗 |X_y|≥5% 年份 FY2017 -1.9b／FY2018 -2.1b／FY2019 -0.9b／FY2021 -1.5b；年报已计累计外生权益 -6.5b（最新年报经营账面 E_op 18.3b，母公司权益 11.8b）；年报后 x -0.50/股（ttm_x；其后归母净利 0.93b、已付股息 0.49b）；BPS_op = 当期 BPS 13.56 − x − X_cum/股 -7.42 = 21.49；周期守卫 NOPAT/经营账面：当期 0.112（最新年报 0.111 × f 1.01）vs 十年中位 0.066 = 1.71×，坡道 w=0.69／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.050 + λ×(当期 − 三年中位) = 0.081，五年中位 0.087，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 0.0b；ROIC0 9.1%；WACC 6.80%（r 9.25% = rf 4.79% + β1.0×ERP 4.46%；rd 4.33%；t 21%；账面权重）；增长 g0=0.0%（来源 none：资本腿 —=min(增量ROIC -6.5%,40%)×再投资率 -103%，增速腿 —），ROIC_T=min(WACC+档位超额, ROIC0)=9.1%，g_T=3.0%，fade 10 年，终值占比 65%；净负债/股 9.663（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 21.699 USD/普通股** → **21.70 USD**；带 = V×[0.90,1.10]。标签：dividends_paid_ytd=eastmoney:RPT_USF10_INFO_DIVIDEND;net_income=eastmoney:RPT_USF10_FN_INCOME:TTM;net_income_ytd=eastmoney:RPT_USF10_FN_INCOME:累计季报
+ROIC·增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-06-30 TTM，Corning official Q2 2026 release TTM plus latest filed Q1 balance）：NOPAT/经营账面财年序列 0.091／0.060／0.039／0.048／0.106 → ratio0 **0.073**（blend(λ=1.0,w=0.76,v=0.00)）× 经营账面 BPS_op 21.49（稀释股数 871m）= 每股 NOPAT 锚 **1.561**；股本口径：十年窗 |X_y|≥5% 年份 FY2017 -1.9b／FY2018 -2.1b／FY2019 -0.9b／FY2021 -1.5b；年报已计累计外生权益 -6.5b（最新年报经营账面 E_op 18.3b，母公司权益 11.8b）；年报后 x -0.50/股（ttm_x；其后归母净利 0.93b、已付股息 0.49b）；BPS_op = 当期 BPS 13.56 − x − X_cum/股 -7.42 = 21.49；周期守卫 NOPAT/经营账面：当期 0.112（最新年报 0.106 × f 1.06）vs 十年中位 0.064 = 1.76×，坡道 w=0.76／谷 v=0.00；信任度 λ=1.0，非周期锚 = 三年中位 0.048 + λ×(当期 − 三年中位) = 0.112，五年中位 0.060，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 0.0b；ROIC0 6.3%；WACC 7.23%（r 10%；rd 4.33%；t 21%；账面权重）；增长 g0=0.0%（来源 none：资本腿 —=min(增量ROIC 12.4%,40%)×再投资率 -121%，增速腿 —），ROIC_T=min(WACC+2pp, ROIC0)=6.3%，g_T=3.0%，增速 fade 10 年、回报指数衰减 λ 0.12，终值占比 59%；净负债/股 9.293（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 10.475 USD/普通股** → **10.47 USD**；带 = V×[0.90,1.10]。标签：dividends_paid_ytd=eastmoney:RPT_USF10_INFO_DIVIDEND;net_income=eastmoney:RPT_USF10_FN_INCOME:TTM;net_income_ytd=eastmoney:RPT_USF10_FN_INCOME:累计季报
 
 <details>
 <summary>历史研究原文（非现行估值、评级或交易依据）</summary>
