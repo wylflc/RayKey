@@ -1,0 +1,11 @@
+{
+  "note": "爱玛研究数按 OI-219 新口径重算（R 状态、2026-09-24 信号日、收盘 20.88）：质押开票存单的税后利息并回 NOPAT",
+  "pledged_interest_after_tax_yi": {"2021": 1.479, "2022": 1.412, "2023": 1.684, "2024": 1.653, "2025": 1.601},
+  "research_nopat_yi": {"current": 14.80, "new_basis": 16.40},
+  "model_iv": {"CONTROL": 68.07, "R": 43.79},
+  "research_iv": {"CONTROL_14.80": 51.72, "R_14.80": 29.31, "R_16.40": 32.41},
+  "pv": {"CONTROL_14.80": 0.404, "R_14.80": 0.712, "R_16.40": 0.644},
+  "R_engine": {"roic0_model": 0.5502, "incremental_roic": 0.2999, "reinvestment_rate": 0.4942, "g0": 0.1482, "fin_net_debt_ps": -4.5904},
+  "CONTROL_engine": {"roic0_model": 2.0489, "incremental_roic": 2.8052, "reinvestment_rate": 0.5412, "g0": 0.2165, "fin_net_debt_ps": -13.0968},
+  "method": "build_pool_model_bands.py on states/R_build + apply_forecast_band_overlay.py with a dossier copy research_nopat_yi=16.40"
+}
