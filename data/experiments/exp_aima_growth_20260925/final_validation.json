@@ -1,0 +1,26 @@
+{
+ "checked_at_utc": "2026-09-24T20:31:24.536094+00:00",
+ "sides": {
+  "adopted": {
+   "iv": 24.6407,
+   "g0": "0.0360",
+   "model_g0": "0.1482"
+  },
+  "b2": {
+   "iv": 24.6407,
+   "g0": "0.0360",
+   "model_g0": "0.1482"
+  },
+  "hold": {
+   "iv": 24.6407,
+   "g0": "0.0360",
+   "model_g0": "0.1482"
+  }
+ },
+ "scenario_v": 24.64,
+ "queue_rows": 0,
+ "plans": {
+  "daily_entry_plan.csv": 0,
+  "daily_sell_plan.csv": 0
+ }
+}

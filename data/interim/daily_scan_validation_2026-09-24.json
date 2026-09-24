@@ -1,6 +1,6 @@
 {
   "signal_date": "2026-09-24",
-  "checked_at_utc": "2026-09-24T19:39:04.031311+00:00",
+  "checked_at_utc": "2026-09-24T20:31:24.536094+00:00",
   "status": "passed",
   "checks": [
     "whole_pool_unique_codes",
@@ -68,7 +68,13 @@
     "scan_pv_603529_v4206",
     "daily_entry_plan_empty_after_v4206",
     "daily_sell_plan_empty_after_v4206",
-    "publication_verify_after_v4206"
+    "publication_verify_after_v4206",
+    "v4207_research_g0_603529",
+    "v4207_three_sides_g0",
+    "v4207_queue_empty",
+    "daily_entry_plan_empty_after_v4207",
+    "daily_sell_plan_empty_after_v4207",
+    "publication_verify_after_v4207"
   ],
   "holdings_market_value_cny": "4444886.00",
   "reported_total_assets_cny": "4444886.00",
@@ -694,7 +700,8 @@
     "formal_scan_rerun_after_trade": 27129822,
     "band_refresh_after_research": 27136427,
     "formal_scan_rerun_after_research": 27136552,
-    "v4206_landing": 27147920
+    "v4206_landing": 27147920,
+    "v4207_research_growth": 27151861
   },
   "resource_measurements": {
     "evidence_elapsed": "00:13:53",
