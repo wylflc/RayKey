@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.204
+# A股选股-估值-量价操作流程 v4.205
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -520,7 +520,7 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 
 `valuation_reviewed_at` 取生产带文件 `model_evaluated_at`（模型最近评估过的报告期可得日，含护栏拒绝行）与采纳带可得日的较大者；`evidence_available_at` 取采纳带可得日。
 
-**研究与模型差距（OI-209）**：估值范围内 ROIC 路径的池成员，档案研究正常化盈利与模型盈利锚差距超过 30%（§6.5.2.2）即入队；生产所用的锚高于另一数时（维持模型：研究数低于模型锚；采用研究数：研究数高于模型锚）同时按 §7.5 冻结新增买入，否则只入队复核、不冻结。复核在档案记 `divergence_reviewed_at`、`divergence_review_conclusion`（维持模型或采用研究数）、`divergence_review_note`（理由，修订研究数时写明）与复核时两数 `divergence_reviewed_model_yi`／`divergence_reviewed_research_yi` 后解除；此后维持模型的行在任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队，采用研究数的行在任一数变动超过 10% 或复核日之后公告新年报时重新入队。
+**研究与模型差距（OI-209）**：估值范围内 ROIC 路径的池成员，档案研究正常化盈利与模型盈利锚差距超过 30%（§6.5.2.2）即入队；生产所用的锚高于另一数时（维持模型：研究数低于模型锚；采用研究数：研究数高于模型锚）同时按 §7.5 冻结新增买入，否则只入队复核、不冻结。复核在档案记 `divergence_reviewed_at`、`divergence_review_conclusion`（维持模型或采用研究数）、`divergence_review_note`（理由，修订研究数时写明）与复核时两数 `divergence_reviewed_model_yi`／`divergence_reviewed_research_yi` 后解除；此后维持模型的行在任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队，采用研究数的行在任一数变动超过 10% 或复核日之后公告新年报时重新入队。档案研究数或复核结论在当日执行清单发布之后才登记或改变的，**当晚以同一信号日生效，不等下一次扫描**：先把登记与复核行追加到决策日志，再跑 §6.7 第 4～6 步（`scripts/slurm/refresh_pool_from_bands.sbatch`，含队列重建与证据凭据），然后重跑当日扫描并重新发布（§9.1 第 5 步）。
 
 ### 7.4 事件复核触发
 

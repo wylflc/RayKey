@@ -3,8 +3,7 @@
 2026E 归母 = 2026 年上半年实际 + 2024 年下半年（2024 年报 − 2024 中报），即首个新国标完整年、下半年回到补贴与提前备货之前的水平。
     python3 data/experiments/exp_oi218_20260924/research_aima.py [--dry-run]
 
-决策日志在 09-24 执行计划的发布摘要内，登记行已从日志撤回、存于 `pending_decision_log_row.csv`，
-须在 09-25 正式扫描之前原样追加到 `a_share_workflow_decision_log.csv`（§9.1：评审行先于发布）。
+决策日志在 09-24 执行计划的发布摘要内，登记行当时先撤回，随后由 review_aima.py 在当晚重跑扫描之前追加（v4.205）。
 """
 import csv
 import json

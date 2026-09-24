@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.205 | 2026-09-24 | §7.3 研究与模型差距段增时效：档案研究数或差距复核结论在当日执行清单发布后登记或改变的，当晚以同一信号日生效——决策日志行先追加，再跑 §6.7 第 4～6 步（`refresh_pool_from_bands.sbatch`，含队列重建与证据凭据），重跑当日扫描并重新发布；依据用户 2026-09-24 裁定 |
 | v4.204 | 2026-09-24 | OI-209 增结论「采用研究数」：§6.5.2.2 结论为采用研究数时，§6.7 第 4 步叠加脚本在 §6.4 之后、除权归一化之前把候选侧与 B2 池带的每股 NOPAT 换成 `research_nopat_yi × 1e8 ÷ shares_est`、投入资本不变（`roic0` 同比例），EV 按同一引擎比例重算、股权桥照带（`apply_forecast_band_overlay.apply_research_overlay`，带增 `research_overlay`／`model_nopat_ps`／`model_roic0`／`pre_research_iv` 等列，回测输入不动）；§6.5.2.1 P/V 同口径例外加采用研究数行；§6.6 结论改为维持模型或采用研究数（均可修订研究数，档案增 `divergence_review_conclusion`）；§7.3／§7.5 冻结改按生产所用锚较高的一侧，采用研究数的行任一数变动超过 10% 或复核后公告新年报即入队（`research_divergence(annual_notice)`、`latest_annual_notices`）；五粮液采用研究数，V 96.50 → 71.39。依据：[OI-209 报告](reports/oi209_research_model_divergence_2026-09-24.zh.md)。 |
 | v4.203 | 2026-09-24 | OI-209 复核后修订：§6.5.2.2 研究数由归母换算改按模型股权桥反解 `归母 ÷ (1 − minority_share) + (最新年报 NOPAT − 合并净利)`（`build_report_update_queue.research_nopat_from_parent`），研究数须按现有已投产产能计；§7.3／§7.5 研究数低于模型锚才冻结新增买入，高于模型锚只入队复核（队列 `buy_blocked` 按方向，`research_divergence` 增 `freeze`）；池内 8 家按新换算重算，五粮液、亚钾国际、天齐锂业、牧原股份复核记录入档案；依据 OI-209 复核用户裁定 |
 | v4.202 | 2026-09-24 | OI-209：§6.5.2.2 档案可登记研究正常化盈利 `research_nopat_yi`（NOPAT 口径，附证据日、可证伪条件与出处），模型盈利锚 = 生产带每股 NOPAT × `shares_est`；§7.3 两数差距超过 30% 入队并按 §7.5 冻结，复核记录（`divergence_reviewed_*`）后解除，任一数较复核时变动超过 10% 重新入队（`build_report_update_queue.research_divergence`，队列增三列、输入戳含档案与生产带）；§6.6 增差距复核职责；档案 README 第二节写出两数与复核状态；从 fundamentals.md 回填池内 8 家；依据 OI-209 用户裁定 |
