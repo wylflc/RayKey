@@ -1,1 +1,2 @@
 trade_date,security_code,security_name,rule,condition,close,ma20,ma60,model_pv,hold_pv,cost_basis,gain_pct,entry_stop_price,stop_line,current_shares,sell_shares,amount,swap_for,cooldown_skips,note
+2026-09-24,002648,卫星化学,换仓,持仓侧 P/V 1.2293 且弱势｜卖出款去向：中国平安 0.7525（边际 +0.4768）、爱玛科技 0.9505（边际 +0.2788）｜触发闸门：工商银行 0.9822（差 0.2471 ≥ 0.1500）,26.64,27.378,25.7787,1.2293,1.2293,27.5936,-0.0346,24.16,,22300.0,4900,130536.0,601398,0,

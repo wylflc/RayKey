@@ -7,15 +7,15 @@
 | 名单状态 | worth_attention |
 | 质量档 | L2 |
 | 参考分 | 70.70 |
-| 模型价值区间 | 30.64 ~ 37.44 USD |
+| 模型价值区间 | — ~ — USD |
 | 估值证据日 | 2026-08-05 |
 | 估值事件 | 三季报（FY2026Q3） |
 
 ## 当前估值
 
-ROIC·零增长
+无法估值
 
-ROIC·零增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-06-27 TTM，SEC companyfacts 10-Q TTM）：NOPAT/经营账面财年序列 0.045／0.048／0.043／0.068／0.123 → ratio0 **0.070**（blend(λ=1.0,w=0.49,v=0.00)）× 经营账面 BPS_op 65.72（稀释股数 1,743m）= 每股 NOPAT 锚 **4.628**；股本口径：十年窗 |X_y|≥5% 年份 FY2019 +34.8b；结构断点 2017-09-30 起重切窗口；年报已计累计外生权益 +1.3b（最新年报经营账面 E_op 108.6b，母公司权益 109.9b）；年报后 x -3.32/股（ttm_x|equity_gap；其后归母净利 7.29b、已付股息 1.34b）；BPS_op = 当期 BPS 63.13 − x − X_cum/股 +0.73 = 65.72；周期守卫 NOPAT/经营账面：当期 0.092（最新年报 0.123 × f 0.75）vs 十年中位 0.058 = 1.60×，坡道 w=0.49／谷 v=0.00；信任度 λ=1.0，非周期锚 = 三年中位 0.068 + λ×(当期 − 三年中位) = 0.092，五年中位 0.048，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 8.2b；ROIC0 3.3%；WACC 7.97%（r 10%；rd 3.89%；t 28%；账面权重）；零增长：V = NOPAT/股 ÷ WACC − 净负债/股；净负债/股 24.040（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 34.040 USD/普通股** → **34.04 USD**；带 = V×[0.90,1.10]。标签：dep_amort=DepreciationDepletionAndAmortization;equity_method_income=IncomeLossFromEquityMethodInvestments;fin.cash=CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents;fin.investments_total=LongTermInvestments;fin_lease_current=FinanceLeaseLiabilityCurrent;fin_lease_noncurrent=FinanceLeaseLiabilityNoncurrent;fin_lease_total=FinanceLeaseLiability;income_tax=IncomeTaxExpenseBenefit;interest
+ROIC 口径（工作流程海外估值口径）不可算：薄权益：每股固定扣减 24.04 ≥ 50% × 每股企业价值 46.28，股权价值为两大数之差不可估；已算到 WACC 10.00%（r 10%，rd 3.89%，t 28%）；旧档案带 30.64~37.44（ROIC·零增长） 仅供参考，不再作为模型价值。
 
 <details>
 <summary>历史研究原文（非现行估值、评级或交易依据）</summary>

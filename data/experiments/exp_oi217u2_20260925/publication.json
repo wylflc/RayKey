@@ -1,0 +1,92 @@
+{
+  "job_id": "27178869",
+  "arm": "WU",
+  "installed": {
+    "roic_bands.csv": {
+      "before": {
+        "bytes": 163107123,
+        "sha256": "3a32bb11886b6294238460f6df500e70efca008ad2168f82b36607fca68b6201"
+      },
+      "after": {
+        "bytes": 163105527,
+        "sha256": "3b37c0a83f5c3954170820f3831eb890924ba9026e112e0799b2f7dac7f1cf63"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "before": {
+        "bytes": 163096547,
+        "sha256": "b77dff0e16c0fd2c71b5e23dce89ac03595084c4d70a8a6d888db80a970c77d6"
+      },
+      "after": {
+        "bytes": 163095194,
+        "sha256": "06a870aa6242c978eb0b61a5c47fac5634f9eb66ccfd4fde1f767b439c39c0ab"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "before": {
+        "bytes": 1997628962,
+        "sha256": "46c93ef5c2ceb3f5b0a50825ec8a05707cabc1c4be3b4a87e10271c28de0ee95"
+      },
+      "after": {
+        "bytes": 1995642237,
+        "sha256": "34b23b19e37751a9f7e564f57f59c3e31f5a47855d21763fe52465f2a91da3bf"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "before": {
+        "bytes": 2001978335,
+        "sha256": "2f0e820843b652825c444447ade36e9baae47655b066813e6f368c58a0e365b8"
+      },
+      "after": {
+        "bytes": 2000089959,
+        "sha256": "03e9f358cade52e96d1b390b63b925b7b7179327e7608cb531c8b1d41107ce64"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "before": {
+        "bytes": 1995183932,
+        "sha256": "259420fc0ec5937a55aed71dfe10ba945a078a78f40ec6e34b9eb676c6871e46"
+      },
+      "after": {
+        "bytes": 1993197207,
+        "sha256": "465f50c37263822c958ab6bb5e5d97ce205239f315201c3387687f5b98008fed"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "before": {
+        "bytes": 1999526857,
+        "sha256": "ecd616ff998cdd30e198c7adec2e2e01728d2d5c6234a8c4cab815e20c1b9e7c"
+      },
+      "after": {
+        "bytes": 1997638481,
+        "sha256": "1a0a1f2b96ad8f2edd8744dd294ee34948a10ec21368d0c9f515c1a4a002f8c2"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "before": {
+        "bytes": 2071178419,
+        "sha256": "8304c5f67ac62aaa06812011f60b8cffaae149cd705ac5c1f6a05f2a416f4e3a"
+      },
+      "after": {
+        "bytes": 2069261283,
+        "sha256": "d5b2a550313a23c1ee872197ee05d7f1c954507804a4151f5ddf221e448df60a"
+      }
+    }
+  },
+  "old_full_inputs_retained": true,
+  "ruling": {
+    "ruled_at_beijing": "2026-09-25",
+    "decision": "adopt WU on principle (user: 按原则采纳第二候选): WACC = r for all; Track A guardrail fails (WU_ALIGNED full -11.73/-7.76), fairness test least biased for net-debt firms",
+    "tested_arm": "WU",
+    "state_arm": "WU",
+    "registered_arm": "WU_ALIGNED",
+    "adopt_despite_guardrail": true,
+    "buy_line": 1.067,
+    "width": -0.067,
+    "registered_share_pct": 17.777,
+    "old_line_share_pct": 13.712,
+    "swap_margin": 0.15,
+    "swap_margin_rescan": false,
+    "swap_margin_reason": "scale drift -0.0053 within ±0.01"
+  }
+}
