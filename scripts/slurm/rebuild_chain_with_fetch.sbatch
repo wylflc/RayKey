@@ -57,6 +57,7 @@ COMMON="--all --value-model roic --roe-source onesided_max --roe-lift 2.0 --unif
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
   --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
   --cash-caliber nonop --equity-anchor guarded --restricted-cash notes_wc \
+  --wacc-weights unlevered \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1"
 
 echo "=== [$(date +%H:%M:%S)] 第 2 步：候选侧建带 ==="

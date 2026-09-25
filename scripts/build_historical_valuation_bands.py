@@ -1883,10 +1883,10 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                     ROIC_STATS["WACC·市值不可得退账面"] += 1
             debt_weight = claim_snapshot.capital_debt if claim_snapshot else latest.interest_debt
             if getattr(args, "wacc_weights", "book") == "net":
-                # OI-217（研究开关）：债务权重取净有息负债，与股权桥扣净负债同口径；净现金即 WACC = r
+                # OI-217 第一候选（研究开关，未采纳）：债务权重取净有息负债，与股权桥扣净负债同口径；净现金即 WACC = r
                 debt_weight = max(0.0, debt_weight - latest.excess_cash)
             elif getattr(args, "wacc_weights", "book") == "unlevered":
-                # OI-217 第二候选（研究开关）：r 作资产要求回报、不随资本结构变，一律 WACC = r（不计债务税盾）
+                # OI-217（v4.210 生产口径，§6.5.1 统一参数）：r 作资产要求回报、不随资本结构变，一律 WACC = r（不计债务税盾）
                 debt_weight = 0.0
             w = roic_inputs.wacc(r, rd, tax,
                                 claim_snapshot.total_equity if claim_snapshot else equity_weight,
@@ -3197,9 +3197,9 @@ def main() -> int:
     parser.add_argument("--ext-equity-min-frac", type=float, default=EXTERNAL_EQUITY_MIN_FRACTION,
                         help="§6.5.1 第 2 条：年度外生权益 |X_y| 低于该比例×上年母公司权益即视为非事件残差不计（缺省 0.05＝生产）")
     parser.add_argument("--wacc-weights", choices=("book", "market", "net", "unlevered"), default="book",
-                        help="WACC 权重（OI-071 ①，研究开关）：book=账面（缺省，生产）；market=可得日市值×(1+可得日前送转)"
-                             "作股权权重（按带期报告的 BPS 反推股本），市值不可得退账面；net（OI-217）=账面权益、"
-                             "债务取 max(0, 有息负债 − 超额现金)；unlevered（OI-217 第二候选）=一律 WACC = r")
+                        help="WACC 权重：unlevered=生产口径（v4.210，OI-217，§6.7 第 2 步显式给出）一律 WACC = r；book=账面权益与毛有息负债加权"
+                             "（缺省，只作 v4.209 前复现）；market（OI-071 ①，研究开关）=可得日市值×(1+可得日前送转)作股权权重"
+                             "（按带期报告的 BPS 反推股本），市值不可得退账面；net（OI-217 第一候选，未采纳）=账面权益、债务取 max(0, 有息负债 − 超额现金)")
     parser.add_argument("--rd-mode", choices=("historical", "spread"), default="historical",
                         help="债务成本（OI-071 ②，研究开关）：historical=利息/平均有息负债夹 2~12%%（缺省，生产）；"
                              "spread=可得日十年国债 + 按利息覆盖倍数查表的信用利差（无当时利率观测退 historical）")

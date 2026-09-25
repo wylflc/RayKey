@@ -219,7 +219,8 @@ def value_company(code: str, tier: str, years: list[roic_inputs.RoicYear], inp: 
     rr = roic_inputs.reinvestment_rate(history)
     rd = roic_inputs.cost_of_debt(history)
     tax = latest.tax_rate if latest.tax_rate is not None else 0.25
-    w = roic_inputs.wacc(r, rd, tax, latest.total_equity or 0.0, latest.interest_debt)
+    # §6.5.1 统一参数（OI-217，v4.210）：一律 WACC = r，债务只经股权桥扣减（与 A 股 `--wacc-weights unlevered` 同式）
+    w = roic_inputs.wacc(r, rd, tax, latest.total_equity or 0.0, 0.0)
     shares = getattr(latest, "shares", None)
     if not shares or shares <= 0:
         res["reason"] = "股数不可得（无稀释加权股数/期末股数标签）"; return res

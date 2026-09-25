@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.210 | 2026-09-25 | OI-217：§6.5.1 统一参数写明 r 为资产要求回报，企业价值与零增长锚一律按 r 折现（WACC = r，不按资本结构加权、不计债务税盾，债务只经股权桥扣减）；§6.7 两条建带命令与 `rebuild_chain_with_fetch.sbatch` 增 `--wacc-weights unlevered`（`book` 只作 v4.209 前复现）；§6.8 海外引擎同式（`build_overseas_roic_bands.py`）；§9.3.1 买入线 0.9524 → 1.0670（`SEC93_BUY_LINE`、`sweep_backtest_configs.BASE --width -0.0670`，在册合格面 17.777%），换仓边际 0.15 不变；依据 §12.266 |
 | v4.209 | 2026-09-25 | OI-215：§6.5.1 第 3 条附注现金类增人工核定——原文无法抽取的（文本层无字符映射、上市前只有招股说明书）按原文核定，登记 `data/reference/cash_note_manual.csv`（逐行记来源、页码与依据，抽取时并入、状态 `manual`，报表行值变动超出抽取容差即失效），按规定只能用于弃置等经营义务的专户存款按经营资产；`fetch_cash_note_items.section` 补认只写两个年份或「账面余额」的表头与丢了序号的标题，`VERIFIED = (ok, manual)` 由 `roic_inputs` 与受限资产抽取共读；附注表与受限资产表重解析、历史状态重建；§6.7 第 1 步注释同步；买入线 0.9524、换仓边际 0.15 不变；依据 §12.265 |
 | v4.208 | 2026-09-25 | OI-220：§6.5.1 第 3 条为应付票据质押、按经营资产计入投入资本的现金类同时计入经营营运资金，§6.3 第 6 条资产侧增该项、与其担保的应付票据相抵，资本腿再投资率计入其变动（`roic_inputs._year_from_parts(pledged_wc)`、`--restricted-cash notes_wc`，`notes` 只作 v4.206 复现）；§6.7 两条建带命令与 `rebuild_chain_with_fetch.sbatch` 同参；买入线 0.9524、换仓边际 0.15 不变；依据 §12.264 |
 | v4.207 | 2026-09-25 | §6.5.2.2 增研究增长：采用研究数的 `growth` 路径行可在档案登记 `research_g0`／`research_g0_basis`，只取本公司已实现的资本腿 `min(增量 ROIC, 40%) × 再投资率`（增量 ROIC 起点移到结构性变化之后的年报，再投资率照带），叠加时 EV(研究) 以研究 NOPAT 与研究增长同算，机械 g0 留 `model_g0`（`apply_forecast_band_overlay.apply_research_overlay`）；§6.6、§7.3 同步；爱玛登记研究增长 3.60%（2022→2025）；依据用户 2026-09-25 裁定 |

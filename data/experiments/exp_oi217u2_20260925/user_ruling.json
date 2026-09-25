@@ -1,0 +1,15 @@
+{
+  "ruled_at_beijing": "2026-09-25",
+  "decision": "adopt WU on principle (user: 按原则采纳第二候选): WACC = r for all; Track A guardrail fails (WU_ALIGNED full -11.73/-7.76), fairness test least biased for net-debt firms",
+  "tested_arm": "WU",
+  "state_arm": "WU",
+  "registered_arm": "WU_ALIGNED",
+  "adopt_despite_guardrail": true,
+  "buy_line": 1.067,
+  "width": -0.067,
+  "registered_share_pct": 17.777,
+  "old_line_share_pct": 13.712,
+  "swap_margin": 0.15,
+  "swap_margin_rescan": false,
+  "swap_margin_reason": "scale drift -0.0053 within ±0.01"
+}

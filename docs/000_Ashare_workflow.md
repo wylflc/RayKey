@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.209
+# A股选股-估值-量价操作流程 v4.210
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -275,7 +275,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 - 事件期间的经营分子按合并 NOPAT 总额归一化后除以快照股数；历史分子折到同一股数，沿用增长信任、峰谷守卫、增长与折现参数。季报当期化只用合并净利 TTM／年报合并净利，禁止将买入少数股权带来的归母增厚当作合并经营增长；无合并 TTM 则使用年报锚并注明。债务与权益权重取同一快照，现金已含交割付款，不再叠加外生权益残差。需同口径完整快照而尚未补齐时判不可估。
 - 候选、B2、零增长及敏感度共用 `scripts/minority_claims.py` 的股权桥；预告仅披露归母利润时不对事件带作比例叠加。新拒绝必须阻断旧带回退，档案／阅读页显示具体原因；事实更新后重算恢复，禁止手填估值带。事件表只登记财报事实和合同权利，不接受 `m`、EV、IV、估值倍数或目标价。
 
-统一参数：折现率 `r = 10%`（统一要求回报率，不逐公司调整）；`g_T = 3%`；增速 10 年线性 fade `g0 → g_T`，其后保持 `g_T`；**整本资本**的回报按指数衰减 `ROIC_t = ROIC_T + (ROIC0 − ROIC_T)·e^(−0.12t)`（ROE 同式），走满 50 年再接终值；每年留存按清洁盈余取维持该增速所需的比例、夹 `[0, 1]`（`intrinsic_value(consistent=True, roe_lam=0.12, horizon=50)`）。护栏拒绝（亏损、`ROE_T/ROIC_T` 贴 `g_T`、零增长股权价值 ≤ 0、**薄权益**——每股净负债 ≥ 50% 每股企业价值）统一判「无法估值」（§6.5.2.4）。生产参数由 §6.7 的建带命令唯一给出，不在逐票档案临时改写。
+统一参数：折现率 `r = 10%`（统一要求回报率，不逐公司调整）；r 是资产要求回报、不随资本结构变，企业价值与零增长锚一律按 r 折现，即 WACC = r，不按账面或市值加权、不计债务税盾，债务只经股权桥按净额扣减（OI-217，建带 `--wacc-weights unlevered`；`book` 只作改前状态复现）；`g_T = 3%`；增速 10 年线性 fade `g0 → g_T`，其后保持 `g_T`；**整本资本**的回报按指数衰减 `ROIC_t = ROIC_T + (ROIC0 − ROIC_T)·e^(−0.12t)`（ROE 同式），走满 50 年再接终值；每年留存按清洁盈余取维持该增速所需的比例、夹 `[0, 1]`（`intrinsic_value(consistent=True, roe_lam=0.12, horizon=50)`）。护栏拒绝（亏损、`ROE_T/ROIC_T` 贴 `g_T`、零增长股权价值 ≤ 0、**薄权益**——每股净负债 ≥ 50% 每股企业价值）统一判「无法估值」（§6.5.2.4）。生产参数由 §6.7 的建带命令唯一给出，不在逐票档案临时改写。
 
 所有正常模型带均为 `[0.90×V, 1.10×V]`，中值即 `V`；带宽只作区间展示，不代表统计置信区间。
 
@@ -360,6 +360,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
   --cash-caliber nonop --equity-anchor guarded \
   --restricted-cash notes_wc \
+  --wacc-weights unlevered \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1 \
   --out-bands data/processed/roic_bands.csv \
   --out-daily data/processed/roic_daily_raw.csv
@@ -371,6 +372,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
   --cash-caliber nonop --equity-anchor guarded \
   --restricted-cash notes_wc \
+  --wacc-weights unlevered \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1 \
   --ttm-trust on --ttm-trust-delta 0.02 \
   --out-bands data/processed/roic_bands_b2.csv \
@@ -656,7 +658,7 @@ P/V 前十从当日扫描的 `worth_attention` 中，按候选侧 `model_pv` 升
 | --- | --- |
 | 候选池 | 当日 `worth_attention` |
 | 估值 | 候选侧（买入线、排序、换仓触发候选）读 §6.5 当前生产模型带；持仓侧（换仓来源）读 §6.5.2.3 持仓侧带；`P/V = 收盘 ÷ V` |
-| 买入线 | `P/V ≤ 0.9524` |
+| 买入线 | `P/V ≤ 1.0670` |
 | 新建仓走势 | T 日 `收盘 > MA20 > MA60` |
 | 已有持仓加仓走势 | `MA20 > MA60`，不要求收盘高于 MA20 |
 | 排序 | `P/V` 升序，资金用尽即停 |
