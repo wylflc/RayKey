@@ -12,6 +12,7 @@
 | `panel_tier_forward.py` | 面板估值分档与前向回报 |
 | `swap_regime_control.py` | 换仓方向的面板、合成、估值匹配与样本独立性对照 |
 | `delta_attribution.py` | 配对差的个股贡献归因 |
+| `opportunity_trap_labels.py`、`opportunity_trap_audit.py` | §12.1 第 13 款：答案卷生成（只用价格与财报）与机会／陷阱读数（估值层、具名案例、策略层） |
 | `oi148_slippage_report.py` | 执行成本压力报告 |
 | `startup_horizon_returns.py`、`render_startup_returns.py` | 每月独立空仓启动后的 1／3／6／12／36 个月累计收益；运行入口 `scripts/slurm/startup_horizon_returns_20260915.sbatch`，含共同起点和互不重叠窗口检查 |
 | `summarize_startup_quarters.py` | 按自然季度筛选已验证的独立启动路径，汇总收益并输出全部季度明细 |

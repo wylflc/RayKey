@@ -1,0 +1,2 @@
+465f50c37263822c958ab6bb5e5d97ce205239f315201c3387687f5b98008fed  data/processed/a_share_daily_states_adopted.csv
+d5b2a550313a23c1ee872197ee05d7f1c954507804a4151f5ddf221e448df60a  data/processed/a_share_daily_states_hold.csv
