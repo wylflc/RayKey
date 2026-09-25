@@ -13,7 +13,10 @@
         "PV_old": 1.0093953764440216,
         "PV_new": 1.0093953764440216,
         "hold_PV_old": 1.0093953764440216,
-        "hold_PV_new": 1.0093953764440216
+        "hold_PV_new": 1.0093953764440216,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000338",
@@ -26,7 +29,10 @@
         "PV_old": 1.1744281045751634,
         "PV_new": 1.1744281045751634,
         "hold_PV_old": 1.1744281045751634,
-        "hold_PV_new": 1.1744281045751634
+        "hold_PV_new": 1.1744281045751634,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000408",
@@ -39,7 +45,10 @@
         "PV_old": 2.9811270378961066,
         "PV_new": 2.9811270378961066,
         "hold_PV_old": 2.9811270378961066,
-        "hold_PV_new": 2.9811270378961066
+        "hold_PV_new": 2.9811270378961066,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000423",
@@ -52,7 +61,10 @@
         "PV_old": 1.3388488568632684,
         "PV_new": 1.3388488568632684,
         "hold_PV_old": 1.3388488568632684,
-        "hold_PV_new": 1.3388488568632684
+        "hold_PV_new": 1.3388488568632684,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000426",
@@ -65,7 +77,10 @@
         "PV_old": 3.2090641127334334,
         "PV_new": 3.2090641127334334,
         "hold_PV_old": 3.2090641127334334,
-        "hold_PV_new": 3.2090641127334334
+        "hold_PV_new": 3.2090641127334334,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000538",
@@ -78,7 +93,10 @@
         "PV_old": 1.4304030197078386,
         "PV_new": 1.4304030197078386,
         "hold_PV_old": 1.4304030197078386,
-        "hold_PV_new": 1.4304030197078386
+        "hold_PV_new": 1.4304030197078386,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000568",
@@ -91,7 +109,10 @@
         "PV_old": 0.6217630260013993,
         "PV_new": 0.6217630260013993,
         "hold_PV_old": 0.6217630260013993,
-        "hold_PV_new": 0.6217630260013993
+        "hold_PV_new": 0.6217630260013993,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000596",
@@ -104,7 +125,10 @@
         "PV_old": 0.7790190105795644,
         "PV_new": 0.7790190105795644,
         "hold_PV_old": 0.7790190105795644,
-        "hold_PV_new": 0.7790190105795644
+        "hold_PV_new": 0.7790190105795644,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000651",
@@ -117,7 +141,10 @@
         "PV_old": 0.3874377583756999,
         "PV_new": 0.3874377583756999,
         "hold_PV_old": 0.3619380324484497,
-        "hold_PV_new": 0.3619380324484497
+        "hold_PV_new": 0.3619380324484497,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000725",
@@ -127,10 +154,13 @@
         "V_old": 0.2119,
         "V_new": 0.2119,
         "dV": 0.0,
-        "PV_old": 27.607361963190183,
-        "PV_new": 27.607361963190183,
-        "hold_PV_old": 27.607361963190183,
-        "hold_PV_new": 27.607361963190183
+        "PV_old": null,
+        "PV_new": null,
+        "hold_PV_old": null,
+        "hold_PV_new": null,
+        "band_new": "2016-12-31",
+        "usable_old": false,
+        "usable_new": false
       },
       {
         "security_code": "000786",
@@ -143,7 +173,10 @@
         "PV_old": 0.6223327896233537,
         "PV_new": 0.6223327896233537,
         "hold_PV_old": 0.6223327896233537,
-        "hold_PV_new": 0.6223327896233537
+        "hold_PV_new": 0.6223327896233537,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000792",
@@ -156,7 +189,10 @@
         "PV_old": 0.9199953417957377,
         "PV_new": 0.9199953417957377,
         "hold_PV_old": 0.9004182955879503,
-        "hold_PV_new": 0.9004182955879503
+        "hold_PV_new": 0.9004182955879503,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000858",
@@ -169,7 +205,10 @@
         "PV_old": 0.9758536793759691,
         "PV_new": 0.9758536793759691,
         "hold_PV_old": 0.9758536793759691,
-        "hold_PV_new": 0.9758536793759691
+        "hold_PV_new": 0.9758536793759691,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000893",
@@ -182,7 +221,10 @@
         "PV_old": 1.4029129876990416,
         "PV_new": 1.4029129876990416,
         "hold_PV_old": 1.4029129876990416,
-        "hold_PV_new": 1.4029129876990416
+        "hold_PV_new": 1.4029129876990416,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000895",
@@ -195,7 +237,10 @@
         "PV_old": 1.2258518295230387,
         "PV_new": 1.2258518295230387,
         "hold_PV_old": 1.2258518295230387,
-        "hold_PV_new": 1.2258518295230387
+        "hold_PV_new": 1.2258518295230387,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000933",
@@ -208,7 +253,10 @@
         "PV_old": 0.8026714102924195,
         "PV_new": 0.8026714102924195,
         "hold_PV_old": 0.701838642602588,
-        "hold_PV_new": 0.701838642602588
+        "hold_PV_new": 0.701838642602588,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000975",
@@ -221,7 +269,10 @@
         "PV_old": 2.648968765720035,
         "PV_new": 2.648968765720035,
         "hold_PV_old": 2.648968765720035,
-        "hold_PV_new": 2.648968765720035
+        "hold_PV_new": 2.648968765720035,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000999",
@@ -234,7 +285,10 @@
         "PV_old": 1.2558996139410765,
         "PV_new": 1.2558996139410765,
         "hold_PV_old": 1.2180578772776745,
-        "hold_PV_new": 1.2180578772776745
+        "hold_PV_new": 1.2180578772776745,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "001232",
@@ -247,7 +301,10 @@
         "PV_old": 4.127576631642547,
         "PV_new": 4.127576631642547,
         "hold_PV_old": 4.127576631642547,
-        "hold_PV_new": 4.127576631642547
+        "hold_PV_new": 4.127576631642547,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002001",
@@ -260,7 +317,10 @@
         "PV_old": 0.7343864301389905,
         "PV_new": 0.7343864301389905,
         "hold_PV_old": 0.7343864301389905,
-        "hold_PV_new": 0.7343864301389905
+        "hold_PV_new": 0.7343864301389905,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002003",
@@ -273,7 +333,10 @@
         "PV_old": 1.436795870762817,
         "PV_new": 1.436795870762817,
         "hold_PV_old": 1.436795870762817,
-        "hold_PV_new": 1.436795870762817
+        "hold_PV_new": 1.436795870762817,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002027",
@@ -286,7 +349,10 @@
         "PV_old": 1.5464259640273446,
         "PV_new": 1.5464259640273446,
         "hold_PV_old": 1.5464259640273446,
-        "hold_PV_new": 1.5464259640273446
+        "hold_PV_new": 1.5464259640273446,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002032",
@@ -299,7 +365,10 @@
         "PV_old": 1.5892757310344268,
         "PV_new": 1.5892757310344268,
         "hold_PV_old": 1.5578649744459314,
-        "hold_PV_new": 1.5578649744459314
+        "hold_PV_new": 1.5578649744459314,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002050",
@@ -312,7 +381,10 @@
         "PV_old": 2.1371242410780393,
         "PV_new": 2.1371242410780393,
         "hold_PV_old": 2.1371242410780393,
-        "hold_PV_new": 2.1371242410780393
+        "hold_PV_new": 2.1371242410780393,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002128",
@@ -325,7 +397,10 @@
         "PV_old": 0.9963255570756305,
         "PV_new": 0.9963255570756305,
         "hold_PV_old": 0.9963255570756305,
-        "hold_PV_new": 0.9963255570756305
+        "hold_PV_new": 0.9963255570756305,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002138",
@@ -338,7 +413,10 @@
         "PV_old": 3.010316053845341,
         "PV_new": 3.010316053845341,
         "hold_PV_old": 3.010316053845341,
-        "hold_PV_new": 3.010316053845341
+        "hold_PV_new": 3.010316053845341,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002142",
@@ -351,7 +429,10 @@
         "PV_old": 1.1114542508110654,
         "PV_new": 1.1114542508110654,
         "hold_PV_old": 1.1114542508110654,
-        "hold_PV_new": 1.1114542508110654
+        "hold_PV_new": 1.1114542508110654,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002179",
@@ -364,7 +445,10 @@
         "PV_old": 1.6508205889726728,
         "PV_new": 1.6508205889726728,
         "hold_PV_old": 1.6508205889726728,
-        "hold_PV_new": 1.6508205889726728
+        "hold_PV_new": 1.6508205889726728,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002222",
@@ -377,7 +461,10 @@
         "PV_old": 6.2882797993514945,
         "PV_new": 6.2882797993514945,
         "hold_PV_old": 6.2882797993514945,
-        "hold_PV_new": 6.2882797993514945
+        "hold_PV_new": 6.2882797993514945,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002262",
@@ -390,7 +477,10 @@
         "PV_old": 1.2848147765843114,
         "PV_new": 1.2848147765843114,
         "hold_PV_old": 1.2848147765843114,
-        "hold_PV_new": 1.2848147765843114
+        "hold_PV_new": 1.2848147765843114,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002270",
@@ -403,7 +493,10 @@
         "PV_old": 2.3838942759676596,
         "PV_new": 2.3838942759676596,
         "hold_PV_old": 2.3838942759676596,
-        "hold_PV_new": 2.3838942759676596
+        "hold_PV_new": 2.3838942759676596,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002287",
@@ -416,7 +509,10 @@
         "PV_old": 1.2161678788601407,
         "PV_new": 1.2161678788601407,
         "hold_PV_old": 1.2161678788601407,
-        "hold_PV_new": 1.2161678788601407
+        "hold_PV_new": 1.2161678788601407,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002311",
@@ -429,7 +525,10 @@
         "PV_old": 1.5096030588745193,
         "PV_new": 1.5096030588745193,
         "hold_PV_old": 1.3229940223846726,
-        "hold_PV_new": 1.3229940223846726
+        "hold_PV_new": 1.3229940223846726,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002352",
@@ -442,7 +541,10 @@
         "PV_old": 1.1333105731122621,
         "PV_new": 1.1333105731122621,
         "hold_PV_old": 1.1196656401231853,
-        "hold_PV_new": 1.1196656401231853
+        "hold_PV_new": 1.1196656401231853,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002371",
@@ -455,7 +557,10 @@
         "PV_old": 4.663638317730981,
         "PV_new": 4.663638317730981,
         "hold_PV_old": 4.663638317730981,
-        "hold_PV_new": 4.663638317730981
+        "hold_PV_new": 4.663638317730981,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002372",
@@ -468,7 +573,10 @@
         "PV_old": 1.2748295286095466,
         "PV_new": 1.2748295286095466,
         "hold_PV_old": 1.2748295286095466,
-        "hold_PV_new": 1.2748295286095466
+        "hold_PV_new": 1.2748295286095466,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002379",
@@ -481,7 +589,10 @@
         "PV_old": 0.5383044912170493,
         "PV_new": 0.5383044912170493,
         "hold_PV_old": 0.5383044912170493,
-        "hold_PV_new": 0.5383044912170493
+        "hold_PV_new": 0.5383044912170493,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002409",
@@ -494,7 +605,10 @@
         "PV_old": 7.289176161502906,
         "PV_new": 7.289176161502906,
         "hold_PV_old": 7.289176161502906,
-        "hold_PV_new": 7.289176161502906
+        "hold_PV_new": 7.289176161502906,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002415",
@@ -507,7 +621,10 @@
         "PV_old": 1.7175040134747481,
         "PV_new": 1.7175040134747481,
         "hold_PV_old": 1.6194753951907093,
-        "hold_PV_new": 1.6194753951907093
+        "hold_PV_new": 1.6194753951907093,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002463",
@@ -520,7 +637,10 @@
         "PV_old": 6.110205348215209,
         "PV_new": 6.110205348215209,
         "hold_PV_old": 6.110205348215209,
-        "hold_PV_new": 6.110205348215209
+        "hold_PV_new": 6.110205348215209,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002466",
@@ -533,7 +653,10 @@
         "PV_old": 1.027997215107789,
         "PV_new": 1.027997215107789,
         "hold_PV_old": 1.027997215107789,
-        "hold_PV_new": 1.027997215107789
+        "hold_PV_new": 1.027997215107789,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002475",
@@ -546,7 +669,10 @@
         "PV_old": 1.250754662067738,
         "PV_new": 1.250754662067738,
         "hold_PV_old": 1.2090605134786996,
-        "hold_PV_new": 1.2090605134786996
+        "hold_PV_new": 1.2090605134786996,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002532",
@@ -559,7 +685,10 @@
         "PV_old": 0.8200440155747418,
         "PV_new": 0.8200440155747418,
         "hold_PV_old": 0.8200440155747418,
-        "hold_PV_new": 0.8200440155747418
+        "hold_PV_new": 0.8200440155747418,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002568",
@@ -572,7 +701,10 @@
         "PV_old": 2.0984814625053145,
         "PV_new": 2.0984814625053145,
         "hold_PV_old": 2.0984814625053145,
-        "hold_PV_new": 2.0984814625053145
+        "hold_PV_new": 2.0984814625053145,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002594",
@@ -585,7 +717,10 @@
         "PV_old": 1.1174872040162762,
         "PV_new": 1.1174872040162762,
         "hold_PV_old": 0.8425364001898055,
-        "hold_PV_new": 0.8425364001898055
+        "hold_PV_new": 0.8425364001898055,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002595",
@@ -598,7 +733,10 @@
         "PV_old": 1.4847124942331082,
         "PV_new": 1.4847124942331082,
         "hold_PV_old": 1.466158619235519,
-        "hold_PV_new": 1.466158619235519
+        "hold_PV_new": 1.466158619235519,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002648",
@@ -611,7 +749,10 @@
         "PV_old": 0.8274551096284839,
         "PV_new": 0.8274551096284839,
         "hold_PV_old": 0.8274551096284839,
-        "hold_PV_new": 0.8274551096284839
+        "hold_PV_new": 0.8274551096284839,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002690",
@@ -624,7 +765,10 @@
         "PV_old": 1.6398367414589679,
         "PV_new": 1.6398367414589679,
         "hold_PV_old": 1.6398367414589679,
-        "hold_PV_new": 1.6398367414589679
+        "hold_PV_new": 1.6398367414589679,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002714",
@@ -637,7 +781,10 @@
         "PV_old": 0.9894189852100437,
         "PV_new": 0.9894189852100437,
         "hold_PV_old": 0.9894189852100437,
-        "hold_PV_new": 0.9894189852100437
+        "hold_PV_new": 0.9894189852100437,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002916",
@@ -650,7 +797,10 @@
         "PV_old": 4.2080538630894475,
         "PV_new": 4.2080538630894475,
         "hold_PV_old": 4.2080538630894475,
-        "hold_PV_new": 4.2080538630894475
+        "hold_PV_new": 4.2080538630894475,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002920",
@@ -663,7 +813,10 @@
         "PV_old": 1.1249268756811928,
         "PV_new": 1.1249268756811928,
         "hold_PV_old": 1.1249268756811928,
-        "hold_PV_new": 1.1249268756811928
+        "hold_PV_new": 1.1249268756811928,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002938",
@@ -676,7 +829,10 @@
         "PV_old": 3.8702753149790015,
         "PV_new": 3.8702753149790015,
         "hold_PV_old": 3.8702753149790015,
-        "hold_PV_new": 3.8702753149790015
+        "hold_PV_new": 3.8702753149790015,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300015",
@@ -689,7 +845,10 @@
         "PV_old": 1.63345379452762,
         "PV_new": 1.63345379452762,
         "hold_PV_old": 1.63345379452762,
-        "hold_PV_new": 1.63345379452762
+        "hold_PV_new": 1.63345379452762,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300033",
@@ -702,7 +861,10 @@
         "PV_old": 5.166238467087694,
         "PV_new": 5.166238467087694,
         "hold_PV_old": 5.166238467087694,
-        "hold_PV_new": 5.166238467087694
+        "hold_PV_new": 5.166238467087694,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300054",
@@ -715,7 +877,10 @@
         "PV_old": 7.610146862483311,
         "PV_new": 7.610146862483311,
         "hold_PV_old": 7.610146862483311,
-        "hold_PV_new": 7.610146862483311
+        "hold_PV_new": 7.610146862483311,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300059",
@@ -728,7 +893,10 @@
         "PV_old": 1.4092107494719315,
         "PV_new": 1.4092107494719315,
         "hold_PV_old": 1.4092107494719315,
-        "hold_PV_new": 1.4092107494719315
+        "hold_PV_new": 1.4092107494719315,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300124",
@@ -741,7 +909,10 @@
         "PV_old": 1.8798599888396903,
         "PV_new": 1.8798599888396903,
         "hold_PV_old": 1.8798599888396903,
-        "hold_PV_new": 1.8798599888396903
+        "hold_PV_new": 1.8798599888396903,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300274",
@@ -754,7 +925,10 @@
         "PV_old": 0.7733314966595495,
         "PV_new": 0.7733314966595495,
         "hold_PV_old": 0.7733314966595495,
-        "hold_PV_new": 0.7733314966595495
+        "hold_PV_new": 0.7733314966595495,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300308",
@@ -767,7 +941,10 @@
         "PV_old": 9.545291816190321,
         "PV_new": 9.545291816190321,
         "hold_PV_old": 9.545291816190321,
-        "hold_PV_new": 9.545291816190321
+        "hold_PV_new": 9.545291816190321,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300316",
@@ -780,7 +957,10 @@
         "PV_old": 1.3578479944218138,
         "PV_new": 1.3578479944218138,
         "hold_PV_old": 1.3578479944218138,
-        "hold_PV_new": 1.3578479944218138
+        "hold_PV_new": 1.3578479944218138,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300357",
@@ -793,7 +973,10 @@
         "PV_old": 2.0977476814367733,
         "PV_new": 2.0977476814367733,
         "hold_PV_old": 1.9852129004010228,
-        "hold_PV_new": 1.9852129004010228
+        "hold_PV_new": 1.9852129004010228,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300394",
@@ -806,7 +989,10 @@
         "PV_old": 13.576111961247303,
         "PV_new": 13.576111961247303,
         "hold_PV_old": 13.576111961247303,
-        "hold_PV_new": 13.576111961247303
+        "hold_PV_new": 13.576111961247303,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300395",
@@ -819,7 +1005,10 @@
         "PV_old": 9.556000000000001,
         "PV_new": 9.556000000000001,
         "hold_PV_old": 8.918255545911844,
-        "hold_PV_new": 8.918255545911844
+        "hold_PV_new": 8.918255545911844,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300408",
@@ -832,7 +1021,10 @@
         "PV_old": 5.2525760241266655,
         "PV_new": 5.2525760241266655,
         "hold_PV_old": 5.2525760241266655,
-        "hold_PV_new": 5.2525760241266655
+        "hold_PV_new": 5.2525760241266655,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300415",
@@ -845,7 +1037,10 @@
         "PV_old": 0.9166058014617323,
         "PV_new": 0.9166058014617323,
         "hold_PV_old": 0.8983810178491004,
-        "hold_PV_new": 0.8983810178491004
+        "hold_PV_new": 0.8983810178491004,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300470",
@@ -858,7 +1053,10 @@
         "PV_old": 1.2368401019206399,
         "PV_new": 1.2368401019206399,
         "hold_PV_old": 1.1728387198138406,
-        "hold_PV_new": 1.1728387198138406
+        "hold_PV_new": 1.1728387198138406,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300487",
@@ -871,7 +1069,10 @@
         "PV_old": 2.9169284586255495,
         "PV_new": 2.9169284586255495,
         "hold_PV_old": 2.9169284586255495,
-        "hold_PV_new": 2.9169284586255495
+        "hold_PV_new": 2.9169284586255495,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300502",
@@ -884,7 +1085,10 @@
         "PV_old": 6.954825609746348,
         "PV_new": 6.954825609746348,
         "hold_PV_old": 6.954825609746348,
-        "hold_PV_new": 6.954825609746348
+        "hold_PV_new": 6.954825609746348,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300529",
@@ -897,7 +1101,10 @@
         "PV_old": 1.4185742191204083,
         "PV_new": 1.4185742191204083,
         "hold_PV_old": 1.4185742191204083,
-        "hold_PV_new": 1.4185742191204083
+        "hold_PV_new": 1.4185742191204083,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300604",
@@ -910,7 +1117,10 @@
         "PV_old": 11.869949018341574,
         "PV_new": 11.869949018341574,
         "hold_PV_old": 11.869949018341574,
-        "hold_PV_new": 11.869949018341574
+        "hold_PV_new": 11.869949018341574,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300627",
@@ -923,7 +1133,10 @@
         "PV_old": 1.8819552856590425,
         "PV_new": 1.8819552856590425,
         "hold_PV_old": 1.8819552856590425,
-        "hold_PV_new": 1.8819552856590425
+        "hold_PV_new": 1.8819552856590425,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300628",
@@ -936,7 +1149,10 @@
         "PV_old": 1.4626377471950636,
         "PV_new": 1.4626377471950636,
         "hold_PV_old": 1.4626377471950636,
-        "hold_PV_new": 1.4626377471950636
+        "hold_PV_new": 1.4626377471950636,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300661",
@@ -949,7 +1165,10 @@
         "PV_old": 6.269372386678039,
         "PV_new": 6.269372386678039,
         "hold_PV_old": 6.269372386678039,
-        "hold_PV_new": 6.269372386678039
+        "hold_PV_new": 6.269372386678039,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300685",
@@ -962,7 +1181,10 @@
         "PV_old": 1.7942439344036143,
         "PV_new": 1.7942439344036143,
         "hold_PV_old": 1.7942439344036143,
-        "hold_PV_new": 1.7942439344036143
+        "hold_PV_new": 1.7942439344036143,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300699",
@@ -975,7 +1197,10 @@
         "PV_old": 2.3525686208411223,
         "PV_new": 2.3525686208411223,
         "hold_PV_old": 2.3525686208411223,
-        "hold_PV_new": 2.3525686208411223
+        "hold_PV_new": 2.3525686208411223,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300750",
@@ -988,7 +1213,10 @@
         "PV_old": 1.1988375156492206,
         "PV_new": 1.1988375156492206,
         "hold_PV_old": 1.163840602611682,
-        "hold_PV_new": 1.163840602611682
+        "hold_PV_new": 1.163840602611682,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300759",
@@ -1001,7 +1229,10 @@
         "PV_old": 3.802813207563664,
         "PV_new": 3.802813207563664,
         "hold_PV_old": 3.7365676834139343,
-        "hold_PV_new": 3.7365676834139343
+        "hold_PV_new": 3.7365676834139343,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300760",
@@ -1014,7 +1245,10 @@
         "PV_old": 1.3765436461676241,
         "PV_new": 1.3765436461676241,
         "hold_PV_old": 1.3765436461676241,
-        "hold_PV_new": 1.3765436461676241
+        "hold_PV_new": 1.3765436461676241,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300776",
@@ -1027,7 +1261,10 @@
         "PV_old": 3.453516890267072,
         "PV_new": 3.453516890267072,
         "hold_PV_old": 3.453516890267072,
-        "hold_PV_new": 3.453516890267072
+        "hold_PV_new": 3.453516890267072,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300811",
@@ -1040,7 +1277,10 @@
         "PV_old": 5.096040288579804,
         "PV_new": 5.096040288579804,
         "hold_PV_old": 5.096040288579804,
-        "hold_PV_new": 5.096040288579804
+        "hold_PV_new": 5.096040288579804,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300832",
@@ -1053,7 +1293,10 @@
         "PV_old": 1.5262659725508754,
         "PV_new": 1.5262659725508754,
         "hold_PV_old": 1.5262659725508754,
-        "hold_PV_new": 1.5262659725508754
+        "hold_PV_new": 1.5262659725508754,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300866",
@@ -1066,7 +1309,10 @@
         "PV_old": 1.4571593949341721,
         "PV_new": 1.4571593949341721,
         "hold_PV_old": 1.4571593949341721,
-        "hold_PV_new": 1.4571593949341721
+        "hold_PV_new": 1.4571593949341721,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300896",
@@ -1079,7 +1325,10 @@
         "PV_old": 1.1187654533570845,
         "PV_new": 1.1187654533570845,
         "hold_PV_old": 1.1187654533570845,
-        "hold_PV_new": 1.1187654533570845
+        "hold_PV_new": 1.1187654533570845,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300910",
@@ -1092,7 +1341,10 @@
         "PV_old": 0.7661150969739698,
         "PV_new": 0.7661150969739698,
         "hold_PV_old": 0.7661150969739698,
-        "hold_PV_new": 0.7661150969739698
+        "hold_PV_new": 0.7661150969739698,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "301589",
@@ -1105,7 +1357,10 @@
         "PV_old": 1.2080623545446607,
         "PV_new": 1.2080623545446607,
         "hold_PV_old": 1.2080623545446607,
-        "hold_PV_new": 1.2080623545446607
+        "hold_PV_new": 1.2080623545446607,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600007",
@@ -1118,7 +1373,10 @@
         "PV_old": 1.3345015838781427,
         "PV_new": 1.3345015838781427,
         "hold_PV_old": 1.3345015838781427,
-        "hold_PV_new": 1.3345015838781427
+        "hold_PV_new": 1.3345015838781427,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600031",
@@ -1131,7 +1389,10 @@
         "PV_old": 1.174791167209666,
         "PV_new": 1.174791167209666,
         "hold_PV_old": 1.174791167209666,
-        "hold_PV_new": 1.174791167209666
+        "hold_PV_new": 1.174791167209666,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600036",
@@ -1144,7 +1405,10 @@
         "PV_old": 0.7637499389976087,
         "PV_new": 0.7637499389976087,
         "hold_PV_old": 0.7637499389976087,
-        "hold_PV_new": 0.7637499389976087
+        "hold_PV_new": 0.7637499389976087,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600066",
@@ -1157,7 +1421,10 @@
         "PV_old": 2.3240437109643755,
         "PV_new": 2.3240437109643755,
         "hold_PV_old": 2.3240437109643755,
-        "hold_PV_new": 2.3240437109643755
+        "hold_PV_new": 2.3240437109643755,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600085",
@@ -1170,7 +1437,10 @@
         "PV_old": 1.515702522274463,
         "PV_new": 1.515702522274463,
         "hold_PV_old": 1.515702522274463,
-        "hold_PV_new": 1.515702522274463
+        "hold_PV_new": 1.515702522274463,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600132",
@@ -1183,7 +1453,10 @@
         "PV_old": 1.2489193323136265,
         "PV_new": 1.2489193323136265,
         "hold_PV_old": 1.2489193323136265,
-        "hold_PV_new": 1.2489193323136265
+        "hold_PV_new": 1.2489193323136265,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600160",
@@ -1196,7 +1469,10 @@
         "PV_old": 2.3896282956751738,
         "PV_new": 2.3896282956751738,
         "hold_PV_old": 2.3896282956751738,
-        "hold_PV_new": 2.3896282956751738
+        "hold_PV_new": 2.3896282956751738,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600176",
@@ -1209,7 +1485,10 @@
         "PV_old": 3.4510671379224673,
         "PV_new": 3.4510671379224673,
         "hold_PV_old": 2.807077015345702,
-        "hold_PV_new": 2.807077015345702
+        "hold_PV_new": 2.807077015345702,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600183",
@@ -1222,7 +1501,10 @@
         "PV_old": 10.782397047854593,
         "PV_new": 10.782397047854593,
         "hold_PV_old": 10.782397047854593,
-        "hold_PV_new": 10.782397047854593
+        "hold_PV_new": 10.782397047854593,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600276",
@@ -1235,7 +1517,10 @@
         "PV_old": 2.456803307867138,
         "PV_new": 2.456803307867138,
         "hold_PV_old": 2.456803307867138,
-        "hold_PV_new": 2.456803307867138
+        "hold_PV_new": 2.456803307867138,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600285",
@@ -1248,7 +1533,10 @@
         "PV_old": 1.1520413095216244,
         "PV_new": 1.1520413095216244,
         "hold_PV_old": 1.1520413095216244,
-        "hold_PV_new": 1.1520413095216244
+        "hold_PV_new": 1.1520413095216244,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600298",
@@ -1261,7 +1549,10 @@
         "PV_old": 1.4283761126582188,
         "PV_new": 1.4283761126582188,
         "hold_PV_old": 1.325759473169233,
-        "hold_PV_new": 1.325759473169233
+        "hold_PV_new": 1.325759473169233,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600309",
@@ -1274,7 +1565,10 @@
         "PV_old": 1.0319955777986471,
         "PV_new": 1.0319955777986471,
         "hold_PV_old": 0.972276470909404,
-        "hold_PV_new": 0.972276470909404
+        "hold_PV_new": 0.972276470909404,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600406",
@@ -1287,7 +1581,10 @@
         "PV_old": 1.809362863781869,
         "PV_new": 1.809362863781869,
         "hold_PV_old": 1.809362863781869,
-        "hold_PV_new": 1.809362863781869
+        "hold_PV_new": 1.809362863781869,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600415",
@@ -1300,7 +1597,10 @@
         "PV_old": 1.0899072975527357,
         "PV_new": 1.0899072975527357,
         "hold_PV_old": 1.0779848445673144,
-        "hold_PV_new": 1.0779848445673144
+        "hold_PV_new": 1.0779848445673144,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600426",
@@ -1313,7 +1613,10 @@
         "PV_old": 1.096986764918686,
         "PV_new": 1.096986764918686,
         "hold_PV_old": 1.096986764918686,
-        "hold_PV_new": 1.096986764918686
+        "hold_PV_new": 1.096986764918686,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600436",
@@ -1326,7 +1629,10 @@
         "PV_old": 2.1526393668966604,
         "PV_new": 2.1526393668966604,
         "hold_PV_old": 2.1526393668966604,
-        "hold_PV_new": 2.1526393668966604
+        "hold_PV_new": 2.1526393668966604,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600486",
@@ -1339,7 +1645,10 @@
         "PV_old": 1.1904596342396216,
         "PV_new": 1.1904596342396216,
         "hold_PV_old": 1.1904596342396216,
-        "hold_PV_new": 1.1904596342396216
+        "hold_PV_new": 1.1904596342396216,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600519",
@@ -1352,7 +1661,10 @@
         "PV_old": 1.245658447301347,
         "PV_new": 1.245658447301347,
         "hold_PV_old": 1.245658447301347,
-        "hold_PV_new": 1.245658447301347
+        "hold_PV_new": 1.245658447301347,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600563",
@@ -1365,7 +1677,10 @@
         "PV_old": 1.7135076702647813,
         "PV_new": 1.7135076702647813,
         "hold_PV_old": 1.7135076702647813,
-        "hold_PV_new": 1.7135076702647813
+        "hold_PV_new": 1.7135076702647813,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600570",
@@ -1378,7 +1693,10 @@
         "PV_old": 2.2328227179073727,
         "PV_new": 2.2328227179073727,
         "hold_PV_old": 2.2328227179073727,
-        "hold_PV_new": 2.2328227179073727
+        "hold_PV_new": 2.2328227179073727,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600600",
@@ -1391,7 +1709,10 @@
         "PV_old": 0.7966785101201644,
         "PV_new": 0.7966785101201644,
         "hold_PV_old": 0.7966785101201644,
-        "hold_PV_new": 0.7966785101201644
+        "hold_PV_new": 0.7966785101201644,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600660",
@@ -1404,7 +1725,10 @@
         "PV_old": 0.952265146043027,
         "PV_new": 0.952265146043027,
         "hold_PV_old": 0.952265146043027,
-        "hold_PV_new": 0.952265146043027
+        "hold_PV_new": 0.952265146043027,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600690",
@@ -1417,7 +1741,10 @@
         "PV_old": 0.7620330466565516,
         "PV_new": 0.7620330466565516,
         "hold_PV_old": 0.7176683972903921,
-        "hold_PV_new": 0.7176683972903921
+        "hold_PV_new": 0.7176683972903921,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600750",
@@ -1430,7 +1757,10 @@
         "PV_old": 1.3389698278208175,
         "PV_new": 1.3389698278208175,
         "hold_PV_old": 1.3389698278208175,
-        "hold_PV_new": 1.3389698278208175
+        "hold_PV_new": 1.3389698278208175,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600803",
@@ -1443,7 +1773,10 @@
         "PV_old": 1.122411914275336,
         "PV_new": 1.122411914275336,
         "hold_PV_old": 1.0796331343718153,
-        "hold_PV_new": 1.0796331343718153
+        "hold_PV_new": 1.0796331343718153,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600809",
@@ -1456,7 +1789,10 @@
         "PV_old": 0.8731923355735165,
         "PV_new": 0.8731923355735165,
         "hold_PV_old": 0.7620481122550744,
-        "hold_PV_new": 0.7620481122550744
+        "hold_PV_new": 0.7620481122550744,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600862",
@@ -1469,7 +1805,10 @@
         "PV_old": 1.8045477024312948,
         "PV_new": 1.8045477024312948,
         "hold_PV_old": 1.5544446859378396,
-        "hold_PV_new": 1.5544446859378396
+        "hold_PV_new": 1.5544446859378396,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600885",
@@ -1482,7 +1821,10 @@
         "PV_old": 1.9154099000131937,
         "PV_new": 1.9154099000131937,
         "hold_PV_old": 1.9154099000131937,
-        "hold_PV_new": 1.9154099000131937
+        "hold_PV_new": 1.9154099000131937,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600887",
@@ -1495,7 +1837,10 @@
         "PV_old": 1.1288623669180378,
         "PV_new": 1.1288623669180378,
         "hold_PV_old": 1.1288623669180378,
-        "hold_PV_new": 1.1288623669180378
+        "hold_PV_new": 1.1288623669180378,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600900",
@@ -1508,7 +1853,10 @@
         "PV_old": 1.495914718091812,
         "PV_new": 1.495914718091812,
         "hold_PV_old": 1.495914718091812,
-        "hold_PV_new": 1.495914718091812
+        "hold_PV_new": 1.495914718091812,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600938",
@@ -1521,7 +1869,10 @@
         "PV_old": 0.783081617159037,
         "PV_new": 0.783081617159037,
         "hold_PV_old": 0.783081617159037,
-        "hold_PV_new": 0.783081617159037
+        "hold_PV_new": 0.783081617159037,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600970",
@@ -1534,7 +1885,10 @@
         "PV_old": 0.4947624753585095,
         "PV_new": 0.4947624753585095,
         "hold_PV_old": 0.4947624753585095,
-        "hold_PV_new": 0.4947624753585095
+        "hold_PV_new": 0.4947624753585095,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600989",
@@ -1547,7 +1901,10 @@
         "PV_old": 0.8028475380660469,
         "PV_new": 0.8028475380660469,
         "hold_PV_old": 0.8028475380660469,
-        "hold_PV_new": 0.8028475380660469
+        "hold_PV_new": 0.8028475380660469,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600993",
@@ -1560,7 +1917,10 @@
         "PV_old": 1.0604834655546351,
         "PV_new": 1.0604834655546351,
         "hold_PV_old": 1.0604834655546351,
-        "hold_PV_new": 1.0604834655546351
+        "hold_PV_new": 1.0604834655546351,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601088",
@@ -1573,7 +1933,10 @@
         "PV_old": 1.7083772017186922,
         "PV_new": 1.7083772017186922,
         "hold_PV_old": 1.7083772017186922,
-        "hold_PV_new": 1.7083772017186922
+        "hold_PV_new": 1.7083772017186922,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601100",
@@ -1586,7 +1949,10 @@
         "PV_old": 3.7993389232599397,
         "PV_new": 3.7993389232599397,
         "hold_PV_old": 3.7993389232599397,
-        "hold_PV_new": 3.7993389232599397
+        "hold_PV_new": 3.7993389232599397,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601138",
@@ -1599,7 +1965,10 @@
         "PV_old": 2.398119245496647,
         "PV_new": 2.398119245496647,
         "hold_PV_old": 2.398119245496647,
-        "hold_PV_new": 2.398119245496647
+        "hold_PV_new": 2.398119245496647,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601225",
@@ -1612,7 +1981,10 @@
         "PV_old": 0.9710270782347833,
         "PV_new": 0.9710270782347833,
         "hold_PV_old": 0.9710270782347833,
-        "hold_PV_new": 0.9710270782347833
+        "hold_PV_new": 0.9710270782347833,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601288",
@@ -1625,7 +1997,10 @@
         "PV_old": 1.042868419454733,
         "PV_new": 1.042868419454733,
         "hold_PV_old": 1.042868419454733,
-        "hold_PV_new": 1.042868419454733
+        "hold_PV_new": 1.042868419454733,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601318",
@@ -1638,7 +2013,10 @@
         "PV_old": 0.7505719146560972,
         "PV_new": 0.7505719146560972,
         "hold_PV_old": 0.7505719146560972,
-        "hold_PV_new": 0.7505719146560972
+        "hold_PV_new": 0.7505719146560972,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601398",
@@ -1651,7 +2029,10 @@
         "PV_old": 0.9931954506028806,
         "PV_new": 0.9931954506028806,
         "hold_PV_old": 0.9931954506028806,
-        "hold_PV_new": 0.9931954506028806
+        "hold_PV_new": 0.9931954506028806,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601717",
@@ -1664,7 +2045,10 @@
         "PV_old": 0.4999682855938243,
         "PV_new": 0.4999682855938243,
         "hold_PV_old": 0.44431770705536733,
-        "hold_PV_new": 0.44431770705536733
+        "hold_PV_new": 0.44431770705536733,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601838",
@@ -1677,7 +2061,10 @@
         "PV_old": 0.7974401501063811,
         "PV_new": 0.7974401501063811,
         "hold_PV_old": 0.7974401501063811,
-        "hold_PV_new": 0.7974401501063811
+        "hold_PV_new": 0.7974401501063811,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601899",
@@ -1690,7 +2077,10 @@
         "PV_old": 0.9848450042334224,
         "PV_new": 0.9848450042334224,
         "hold_PV_old": 0.9848450042334224,
-        "hold_PV_new": 0.9848450042334224
+        "hold_PV_new": 0.9848450042334224,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601939",
@@ -1703,7 +2093,10 @@
         "PV_old": 1.069904312747257,
         "PV_new": 1.069904312747257,
         "hold_PV_old": 1.069904312747257,
-        "hold_PV_new": 1.069904312747257
+        "hold_PV_new": 1.069904312747257,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601965",
@@ -1716,7 +2109,10 @@
         "PV_old": 0.9588023793592787,
         "PV_new": 0.9588023793592787,
         "hold_PV_old": 0.9588023793592787,
-        "hold_PV_new": 0.9588023793592787
+        "hold_PV_new": 0.9588023793592787,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603067",
@@ -1729,7 +2125,10 @@
         "PV_old": 3.015442250114305,
         "PV_new": 3.015442250114305,
         "hold_PV_old": 3.015442250114305,
-        "hold_PV_new": 3.015442250114305
+        "hold_PV_new": 3.015442250114305,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603129",
@@ -1742,7 +2141,10 @@
         "PV_old": 1.7014197125931978,
         "PV_new": 1.7014197125931978,
         "hold_PV_old": 1.6867353853008336,
-        "hold_PV_new": 1.6867353853008336
+        "hold_PV_new": 1.6867353853008336,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603156",
@@ -1755,7 +2157,10 @@
         "PV_old": 2.715290362884022,
         "PV_new": 2.715290362884022,
         "hold_PV_old": 2.715290362884022,
-        "hold_PV_new": 2.715290362884022
+        "hold_PV_new": 2.715290362884022,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603195",
@@ -1768,7 +2173,10 @@
         "PV_old": 1.172535015132479,
         "PV_new": 1.172535015132479,
         "hold_PV_old": 1.172535015132479,
-        "hold_PV_new": 1.172535015132479
+        "hold_PV_new": 1.172535015132479,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603259",
@@ -1781,7 +2189,10 @@
         "PV_old": 1.8795099848967947,
         "PV_new": 1.8795099848967947,
         "hold_PV_old": 1.7868243707880622,
-        "hold_PV_new": 1.7868243707880622
+        "hold_PV_new": 1.7868243707880622,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603279",
@@ -1794,7 +2205,10 @@
         "PV_old": 0.5889729683380136,
         "PV_new": 0.5889729683380136,
         "hold_PV_old": 0.5889729683380136,
-        "hold_PV_new": 0.5889729683380136
+        "hold_PV_new": 0.5889729683380136,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603288",
@@ -1807,7 +2221,10 @@
         "PV_old": 1.755429777635214,
         "PV_new": 1.755429777635214,
         "hold_PV_old": 1.755429777635214,
-        "hold_PV_new": 1.755429777635214
+        "hold_PV_new": 1.755429777635214,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603338",
@@ -1820,7 +2237,10 @@
         "PV_old": 0.998592359387298,
         "PV_new": 0.998592359387298,
         "hold_PV_old": 0.998592359387298,
-        "hold_PV_new": 0.998592359387298
+        "hold_PV_new": 0.998592359387298,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603369",
@@ -1833,7 +2253,10 @@
         "PV_old": 0.6367663999280918,
         "PV_new": 0.6367663999280918,
         "hold_PV_old": 0.6367663999280918,
-        "hold_PV_new": 0.6367663999280918
+        "hold_PV_new": 0.6367663999280918,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603501",
@@ -1846,7 +2269,10 @@
         "PV_old": 2.171599006506794,
         "PV_new": 2.171599006506794,
         "hold_PV_old": 2.0400849116422686,
-        "hold_PV_new": 2.0400849116422686
+        "hold_PV_new": 2.0400849116422686,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603505",
@@ -1859,7 +2285,10 @@
         "PV_old": 2.148105460308313,
         "PV_new": 2.148105460308313,
         "hold_PV_old": 2.148105460308313,
-        "hold_PV_new": 2.148105460308313
+        "hold_PV_new": 2.148105460308313,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603508",
@@ -1872,7 +2301,10 @@
         "PV_old": 1.6103685954785205,
         "PV_new": 1.6103685954785205,
         "hold_PV_old": 1.6103685954785205,
-        "hold_PV_new": 1.6103685954785205
+        "hold_PV_new": 1.6103685954785205,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603529",
@@ -1885,7 +2317,10 @@
         "PV_old": 0.8473372588964325,
         "PV_new": 0.8473372588964325,
         "hold_PV_old": 0.8473372588964325,
-        "hold_PV_new": 0.8473372588964325
+        "hold_PV_new": 0.8473372588964325,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603596",
@@ -1898,7 +2333,10 @@
         "PV_old": 1.0065398649720603,
         "PV_new": 1.0065398649720603,
         "hold_PV_old": 1.0065398649720603,
-        "hold_PV_new": 1.0065398649720603
+        "hold_PV_new": 1.0065398649720603,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603606",
@@ -1911,7 +2349,10 @@
         "PV_old": 1.829726364319307,
         "PV_new": 1.829726364319307,
         "hold_PV_old": 1.7767740259221139,
-        "hold_PV_new": 1.7767740259221139
+        "hold_PV_new": 1.7767740259221139,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603806",
@@ -1924,7 +2365,10 @@
         "PV_old": 1.5497998639744006,
         "PV_new": 1.5497998639744006,
         "hold_PV_old": 1.5497998639744006,
-        "hold_PV_new": 1.5497998639744006
+        "hold_PV_new": 1.5497998639744006,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603855",
@@ -1937,7 +2381,10 @@
         "PV_old": 1.0460212291675672,
         "PV_new": 1.0460212291675672,
         "hold_PV_old": 1.0460212291675672,
-        "hold_PV_new": 1.0460212291675672
+        "hold_PV_new": 1.0460212291675672,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603993",
@@ -1950,7 +2397,10 @@
         "PV_old": 1.1545767340620414,
         "PV_new": 1.1545767340620414,
         "hold_PV_old": 1.1545767340620414,
-        "hold_PV_new": 1.1545767340620414
+        "hold_PV_new": 1.1545767340620414,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "605117",
@@ -1963,7 +2413,10 @@
         "PV_old": 1.1812464954191362,
         "PV_new": 1.1812464954191362,
         "hold_PV_old": 1.1812464954191362,
-        "hold_PV_new": 1.1812464954191362
+        "hold_PV_new": 1.1812464954191362,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "605305",
@@ -1976,7 +2429,10 @@
         "PV_old": 0.7481691402750186,
         "PV_new": 0.7481691402750186,
         "hold_PV_old": 0.7481691402750186,
-        "hold_PV_new": 0.7481691402750186
+        "hold_PV_new": 0.7481691402750186,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "605499",
@@ -1989,7 +2445,10 @@
         "PV_old": 0.8694690300199421,
         "PV_new": 0.8694690300199421,
         "hold_PV_old": 0.8694690300199421,
-        "hold_PV_new": 0.8694690300199421
+        "hold_PV_new": 0.8694690300199421,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688008",
@@ -2002,7 +2461,10 @@
         "PV_old": 5.245306734289144,
         "PV_new": 5.245306734289144,
         "hold_PV_old": 5.245306734289144,
-        "hold_PV_new": 5.245306734289144
+        "hold_PV_new": 5.245306734289144,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688012",
@@ -2015,7 +2477,10 @@
         "PV_old": 8.128211577850445,
         "PV_new": 8.128211577850445,
         "hold_PV_old": 8.071326452208375,
-        "hold_PV_new": 8.071326452208375
+        "hold_PV_new": 8.071326452208375,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688018",
@@ -2028,7 +2493,10 @@
         "PV_old": 2.269284326177105,
         "PV_new": 2.269284326177105,
         "hold_PV_old": 2.269284326177105,
-        "hold_PV_new": 2.269284326177105
+        "hold_PV_new": 2.269284326177105,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688019",
@@ -2041,7 +2509,10 @@
         "PV_old": 2.5948907123932883,
         "PV_new": 2.5948907123932883,
         "hold_PV_old": 2.5948907123932883,
-        "hold_PV_new": 2.5948907123932883
+        "hold_PV_new": 2.5948907123932883,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688041",
@@ -2054,7 +2525,10 @@
         "PV_old": 15.492412898073276,
         "PV_new": 15.492412898073276,
         "hold_PV_old": 15.492412898073276,
-        "hold_PV_new": 15.492412898073276
+        "hold_PV_new": 15.492412898073276,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688072",
@@ -2067,7 +2541,10 @@
         "PV_old": 6.924951859283871,
         "PV_new": 6.924951859283871,
         "hold_PV_old": 6.924951859283871,
-        "hold_PV_new": 6.924951859283871
+        "hold_PV_new": 6.924951859283871,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688082",
@@ -2080,7 +2557,10 @@
         "PV_old": 5.004624311701648,
         "PV_new": 5.004624311701648,
         "hold_PV_old": 5.004624311701648,
-        "hold_PV_new": 5.004624311701648
+        "hold_PV_new": 5.004624311701648,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688111",
@@ -2093,7 +2573,10 @@
         "PV_old": 2.698980360885146,
         "PV_new": 2.698980360885146,
         "hold_PV_old": 2.698980360885146,
-        "hold_PV_new": 2.698980360885146
+        "hold_PV_new": 2.698980360885146,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688120",
@@ -2106,7 +2589,10 @@
         "PV_old": 6.536900149425438,
         "PV_new": 6.536900149425438,
         "hold_PV_old": 6.536900149425438,
-        "hold_PV_new": 6.536900149425438
+        "hold_PV_new": 6.536900149425438,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688122",
@@ -2119,7 +2605,10 @@
         "PV_old": 3.143294549908145,
         "PV_new": 3.143294549908145,
         "hold_PV_old": 2.653343947398348,
-        "hold_PV_new": 2.653343947398348
+        "hold_PV_new": 2.653343947398348,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688188",
@@ -2132,7 +2621,10 @@
         "PV_old": 2.093475609086014,
         "PV_new": 2.093475609086014,
         "hold_PV_old": 2.093475609086014,
-        "hold_PV_new": 2.093475609086014
+        "hold_PV_new": 2.093475609086014,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688190",
@@ -2145,7 +2637,10 @@
         "PV_old": 1.5918760661880604,
         "PV_new": 1.5918760661880604,
         "hold_PV_old": 1.5918760661880604,
-        "hold_PV_new": 1.5918760661880604
+        "hold_PV_new": 1.5918760661880604,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688200",
@@ -2158,7 +2653,10 @@
         "PV_old": 6.15642528947169,
         "PV_new": 6.15642528947169,
         "hold_PV_old": 6.15642528947169,
-        "hold_PV_new": 6.15642528947169
+        "hold_PV_new": 6.15642528947169,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688208",
@@ -2171,7 +2669,10 @@
         "PV_old": 1.5619756551450623,
         "PV_new": 1.5619756551450623,
         "hold_PV_old": 1.5619756551450623,
-        "hold_PV_new": 1.5619756551450623
+        "hold_PV_new": 1.5619756551450623,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688235",
@@ -2184,7 +2685,10 @@
         "PV_old": 4.045358186676032,
         "PV_new": 4.045358186676032,
         "hold_PV_old": 4.045358186676032,
-        "hold_PV_new": 4.045358186676032
+        "hold_PV_new": 4.045358186676032,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688271",
@@ -2197,7 +2701,10 @@
         "PV_old": 2.8265381600591746,
         "PV_new": 2.8265381600591746,
         "hold_PV_old": 2.8265381600591746,
-        "hold_PV_new": 2.8265381600591746
+        "hold_PV_new": 2.8265381600591746,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688278",
@@ -2210,7 +2717,10 @@
         "PV_old": 0.9946051378901987,
         "PV_new": 0.9946051378901987,
         "hold_PV_old": 0.9946051378901987,
-        "hold_PV_new": 0.9946051378901987
+        "hold_PV_new": 0.9946051378901987,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688281",
@@ -2223,7 +2733,10 @@
         "PV_old": 3.3492822966507174,
         "PV_new": 3.3492822966507174,
         "hold_PV_old": 3.3492822966507174,
-        "hold_PV_new": 3.3492822966507174
+        "hold_PV_new": 3.3492822966507174,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688300",
@@ -2236,7 +2749,10 @@
         "PV_old": 9.447187519353223,
         "PV_new": 9.447187519353223,
         "hold_PV_old": 9.447187519353223,
-        "hold_PV_new": 9.447187519353223
+        "hold_PV_new": 9.447187519353223,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688301",
@@ -2249,7 +2765,10 @@
         "PV_old": 2.5056665748016,
         "PV_new": 2.5056665748016,
         "hold_PV_old": 2.3871911521211437,
-        "hold_PV_new": 2.3871911521211437
+        "hold_PV_new": 2.3871911521211437,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688516",
@@ -2262,7 +2781,10 @@
         "PV_old": 0.8122817143195405,
         "PV_new": 0.8122817143195405,
         "hold_PV_old": 0.8122817143195405,
-        "hold_PV_new": 0.8122817143195405
+        "hold_PV_new": 0.8122817143195405,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688617",
@@ -2275,7 +2797,10 @@
         "PV_old": 2.1531545666507332,
         "PV_new": 2.1531545666507332,
         "hold_PV_old": 2.043247173698516,
-        "hold_PV_new": 2.043247173698516
+        "hold_PV_new": 2.043247173698516,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688692",
@@ -2288,7 +2813,10 @@
         "PV_old": 2.5805819385990256,
         "PV_new": 2.5805819385990256,
         "hold_PV_old": 2.5805819385990256,
-        "hold_PV_new": 2.5805819385990256
+        "hold_PV_new": 2.5805819385990256,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688708",
@@ -2301,7 +2829,10 @@
         "PV_old": 1.7830013028757938,
         "PV_new": 1.7830013028757938,
         "hold_PV_old": 1.7830013028757938,
-        "hold_PV_new": 1.7830013028757938
+        "hold_PV_new": 1.7830013028757938,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688777",
@@ -2314,7 +2845,10 @@
         "PV_old": 4.483164322931256,
         "PV_new": 4.483164322931256,
         "hold_PV_old": 4.483164322931256,
-        "hold_PV_new": 4.483164322931256
+        "hold_PV_new": 4.483164322931256,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688981",
@@ -2324,10 +2858,13 @@
         "V_old": 2.8753,
         "V_new": 2.8753,
         "dV": 0.0,
-        "PV_old": 41.72781970576983,
-        "PV_new": 41.72781970576983,
-        "hold_PV_old": 17.237515085339925,
-        "hold_PV_new": 17.237515085339925
+        "PV_old": null,
+        "PV_new": null,
+        "hold_PV_old": null,
+        "hold_PV_new": null,
+        "band_new": "2022-09-30",
+        "usable_old": false,
+        "usable_new": false
       },
       {
         "security_code": "920394",
@@ -2340,7 +2877,10 @@
         "PV_old": 3.770294146641086,
         "PV_new": 3.770294146641086,
         "hold_PV_old": 3.770294146641086,
-        "hold_PV_new": 3.770294146641086
+        "hold_PV_new": 3.770294146641086,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "920599",
@@ -2353,14 +2893,23 @@
         "PV_old": 0.5963206189587166,
         "PV_new": 0.5963206189587166,
         "hold_PV_old": 0.5963206189587166,
-        "hold_PV_new": 0.5963206189587166
+        "hold_PV_new": 0.5963206189587166,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       }
     ],
     "zone_old": 31,
     "zone_new": 31,
     "left": [],
     "entered": [],
-    "changed": 0
+    "changed": 0,
+    "unvaluable_old": [
+      "中芯国际",
+      "京东方A"
+    ],
+    "unvaluable_entered": [],
+    "unvaluable_left": []
   },
   "WU": {
     "line": 1.067,
@@ -2376,7 +2925,10 @@
         "PV_old": 1.0093953764440216,
         "PV_new": 1.1542457810326625,
         "hold_PV_old": 1.0093953764440216,
-        "hold_PV_new": 1.1542457810326625
+        "hold_PV_new": 1.1542457810326625,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000338",
@@ -2389,7 +2941,10 @@
         "PV_old": 1.1744281045751634,
         "PV_new": 1.2546802549034195,
         "hold_PV_old": 1.1744281045751634,
-        "hold_PV_new": 1.2546802549034195
+        "hold_PV_new": 1.2546802549034195,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000408",
@@ -2402,7 +2957,10 @@
         "PV_old": 2.9811270378961066,
         "PV_new": 2.985723179256201,
         "hold_PV_old": 2.9811270378961066,
-        "hold_PV_new": 2.985723179256201
+        "hold_PV_new": 2.985723179256201,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000423",
@@ -2415,7 +2973,10 @@
         "PV_old": 1.3388488568632684,
         "PV_new": 1.3394684846650884,
         "hold_PV_old": 1.3388488568632684,
-        "hold_PV_new": 1.3394684846650884
+        "hold_PV_new": 1.3394684846650884,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000426",
@@ -2428,7 +2989,10 @@
         "PV_old": 3.2090641127334334,
         "PV_new": 3.6726139776751694,
         "hold_PV_old": 3.2090641127334334,
-        "hold_PV_new": 3.6726139776751694
+        "hold_PV_new": 3.6726139776751694,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000538",
@@ -2441,7 +3005,10 @@
         "PV_old": 1.4304030197078386,
         "PV_new": 1.4395238342656898,
         "hold_PV_old": 1.4304030197078386,
-        "hold_PV_new": 1.4395238342656898
+        "hold_PV_new": 1.4395238342656898,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000568",
@@ -2454,7 +3021,10 @@
         "PV_old": 0.6217630260013993,
         "PV_new": 0.6834605450271354,
         "hold_PV_old": 0.6217630260013993,
-        "hold_PV_new": 0.6834605450271354
+        "hold_PV_new": 0.6834605450271354,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000596",
@@ -2467,7 +3037,10 @@
         "PV_old": 0.7790190105795644,
         "PV_new": 0.7930444653438876,
         "hold_PV_old": 0.7790190105795644,
-        "hold_PV_new": 0.7930444653438876
+        "hold_PV_new": 0.7930444653438876,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000651",
@@ -2480,7 +3053,10 @@
         "PV_old": 0.3874377583756999,
         "PV_new": 0.48606876421119877,
         "hold_PV_old": 0.3619380324484497,
-        "hold_PV_new": 0.4574929623322872
+        "hold_PV_new": 0.4574929623322872,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000725",
@@ -2490,10 +3066,13 @@
         "V_old": 0.2119,
         "V_new": 0.0143,
         "dV": -0.9325153374233128,
-        "PV_old": 27.607361963190183,
-        "PV_new": 409.09090909090907,
-        "hold_PV_old": 27.607361963190183,
-        "hold_PV_new": 409.09090909090907
+        "PV_old": null,
+        "PV_new": null,
+        "hold_PV_old": null,
+        "hold_PV_new": null,
+        "band_new": "2016-09-30",
+        "usable_old": false,
+        "usable_new": false
       },
       {
         "security_code": "000786",
@@ -2506,7 +3085,10 @@
         "PV_old": 0.6223327896233537,
         "PV_new": 0.6311538492054047,
         "hold_PV_old": 0.6223327896233537,
-        "hold_PV_new": 0.6311538492054047
+        "hold_PV_new": 0.6311538492054047,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000792",
@@ -2519,7 +3101,10 @@
         "PV_old": 0.9199953417957377,
         "PV_new": 0.9320690753638806,
         "hold_PV_old": 0.9004182955879503,
-        "hold_PV_new": 0.9123033928447698
+        "hold_PV_new": 0.9123033928447698,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000858",
@@ -2532,7 +3117,10 @@
         "PV_old": 0.9758536793759691,
         "PV_new": 0.9768579861330193,
         "hold_PV_old": 0.9758536793759691,
-        "hold_PV_new": 0.9768579861330193
+        "hold_PV_new": 0.9768579861330193,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000893",
@@ -2545,7 +3133,10 @@
         "PV_old": 1.4029129876990416,
         "PV_new": 1.6163109159674824,
         "hold_PV_old": 1.4029129876990416,
-        "hold_PV_new": 1.6163109159674824
+        "hold_PV_new": 1.6163109159674824,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000895",
@@ -2558,7 +3149,10 @@
         "PV_old": 1.2258518295230387,
         "PV_new": 1.6840912228187823,
         "hold_PV_old": 1.2258518295230387,
-        "hold_PV_new": 1.6840912228187823
+        "hold_PV_new": 1.6840912228187823,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000933",
@@ -2571,7 +3165,10 @@
         "PV_old": 0.8026714102924195,
         "PV_new": 0.9935143445393408,
         "hold_PV_old": 0.701838642602588,
-        "hold_PV_new": 0.8675062904324714
+        "hold_PV_new": 0.8675062904324714,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000975",
@@ -2584,7 +3181,10 @@
         "PV_old": 2.648968765720035,
         "PV_new": 2.7635973282442747,
         "hold_PV_old": 2.648968765720035,
-        "hold_PV_new": 2.7635973282442747
+        "hold_PV_new": 2.7635973282442747,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "000999",
@@ -2597,7 +3197,10 @@
         "PV_old": 1.2558996139410765,
         "PV_new": 1.4815800141887099,
         "hold_PV_old": 1.2180578772776745,
-        "hold_PV_new": 1.434555680263973
+        "hold_PV_new": 1.434555680263973,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "001232",
@@ -2610,7 +3213,10 @@
         "PV_old": 4.127576631642547,
         "PV_new": 4.126560544470992,
         "hold_PV_old": 4.127576631642547,
-        "hold_PV_new": 4.126560544470992
+        "hold_PV_new": 4.126560544470992,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002001",
@@ -2623,7 +3229,10 @@
         "PV_old": 0.7343864301389905,
         "PV_new": 0.8746286231575795,
         "hold_PV_old": 0.7343864301389905,
-        "hold_PV_new": 0.8746286231575795
+        "hold_PV_new": 0.8746286231575795,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002003",
@@ -2636,7 +3245,10 @@
         "PV_old": 1.436795870762817,
         "PV_new": 1.659429947121792,
         "hold_PV_old": 1.436795870762817,
-        "hold_PV_new": 1.659429947121792
+        "hold_PV_new": 1.659429947121792,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002027",
@@ -2649,7 +3261,10 @@
         "PV_old": 1.5464259640273446,
         "PV_new": 1.722162681547729,
         "hold_PV_old": 1.5464259640273446,
-        "hold_PV_new": 1.722162681547729
+        "hold_PV_new": 1.722162681547729,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002032",
@@ -2662,7 +3277,10 @@
         "PV_old": 1.5892757310344268,
         "PV_new": 1.6216506692460955,
         "hold_PV_old": 1.5578649744459314,
-        "hold_PV_new": 1.5897329913158353
+        "hold_PV_new": 1.5897329913158353,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002050",
@@ -2675,7 +3293,10 @@
         "PV_old": 2.1371242410780393,
         "PV_new": 2.3025623025623028,
         "hold_PV_old": 2.1371242410780393,
-        "hold_PV_new": 2.3025623025623028
+        "hold_PV_new": 2.3025623025623028,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002128",
@@ -2688,7 +3309,10 @@
         "PV_old": 0.9963255570756305,
         "PV_new": 1.3598126958213377,
         "hold_PV_old": 0.9963255570756305,
-        "hold_PV_new": 1.3598126958213377
+        "hold_PV_new": 1.3598126958213377,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002138",
@@ -2701,7 +3325,10 @@
         "PV_old": 3.010316053845341,
         "PV_new": 4.756474089733248,
         "hold_PV_old": 3.010316053845341,
-        "hold_PV_new": 4.756474089733248
+        "hold_PV_new": 4.756474089733248,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002142",
@@ -2714,7 +3341,10 @@
         "PV_old": 1.1114542508110654,
         "PV_new": 1.1114542508110654,
         "hold_PV_old": 1.1114542508110654,
-        "hold_PV_new": 1.1114542508110654
+        "hold_PV_new": 1.1114542508110654,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002179",
@@ -2727,7 +3357,10 @@
         "PV_old": 1.6508205889726728,
         "PV_new": 1.706224430303423,
         "hold_PV_old": 1.6508205889726728,
-        "hold_PV_new": 1.706224430303423
+        "hold_PV_new": 1.706224430303423,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002222",
@@ -2740,7 +3373,10 @@
         "PV_old": 6.2882797993514945,
         "PV_new": 7.10275887975291,
         "hold_PV_old": 6.2882797993514945,
-        "hold_PV_new": 7.10275887975291
+        "hold_PV_new": 7.10275887975291,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002262",
@@ -2753,7 +3389,10 @@
         "PV_old": 1.2848147765843114,
         "PV_new": 1.2903540546144185,
         "hold_PV_old": 1.2848147765843114,
-        "hold_PV_new": 1.2903540546144185
+        "hold_PV_new": 1.2903540546144185,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002270",
@@ -2766,7 +3405,10 @@
         "PV_old": 2.3838942759676596,
         "PV_new": 2.9478684005115174,
         "hold_PV_old": 2.3838942759676596,
-        "hold_PV_new": 2.9478684005115174
+        "hold_PV_new": 2.9478684005115174,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002287",
@@ -2779,7 +3421,10 @@
         "PV_old": 1.2161678788601407,
         "PV_new": 1.31871721068855,
         "hold_PV_old": 1.2161678788601407,
-        "hold_PV_new": 1.31871721068855
+        "hold_PV_new": 1.31871721068855,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002311",
@@ -2792,7 +3437,10 @@
         "PV_old": 1.5096030588745193,
         "PV_new": 1.64150491253295,
         "hold_PV_old": 1.3229940223846726,
-        "hold_PV_new": 1.4380836747761525
+        "hold_PV_new": 1.4380836747761525,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002352",
@@ -2805,7 +3453,10 @@
         "PV_old": 1.1333105731122621,
         "PV_new": 1.6445083436990127,
         "hold_PV_old": 1.1196656401231853,
-        "hold_PV_new": 1.6236476248704113
+        "hold_PV_new": 1.6236476248704113,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002371",
@@ -2818,7 +3469,10 @@
         "PV_old": 4.663638317730981,
         "PV_new": 6.194933711761893,
         "hold_PV_old": 4.663638317730981,
-        "hold_PV_new": 6.194933711761893
+        "hold_PV_new": 6.194933711761893,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002372",
@@ -2831,7 +3485,10 @@
         "PV_old": 1.2748295286095466,
         "PV_new": 1.2760640374853573,
         "hold_PV_old": 1.2748295286095466,
-        "hold_PV_new": 1.2760640374853573
+        "hold_PV_new": 1.2760640374853573,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002379",
@@ -2844,7 +3501,10 @@
         "PV_old": 0.5383044912170493,
         "PV_new": 0.7449504291210417,
         "hold_PV_old": 0.5383044912170493,
-        "hold_PV_new": 0.7449504291210417
+        "hold_PV_new": 0.7449504291210417,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002409",
@@ -2855,9 +3515,12 @@
         "V_new": 4.4193,
         "dV": -0.7571025772090952,
         "PV_old": 7.289176161502906,
-        "PV_new": 30.00927748738488,
+        "PV_new": null,
         "hold_PV_old": 7.289176161502906,
-        "hold_PV_new": 30.00927748738488
+        "hold_PV_new": null,
+        "band_new": "2024-09-30",
+        "usable_old": true,
+        "usable_new": false
       },
       {
         "security_code": "002415",
@@ -2870,7 +3533,10 @@
         "PV_old": 1.7175040134747481,
         "PV_new": 1.8068953296490318,
         "hold_PV_old": 1.6194753951907093,
-        "hold_PV_new": 1.70481559464783
+        "hold_PV_new": 1.70481559464783,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002463",
@@ -2883,7 +3549,10 @@
         "PV_old": 6.110205348215209,
         "PV_new": 7.683350572612463,
         "hold_PV_old": 6.110205348215209,
-        "hold_PV_new": 7.683350572612463
+        "hold_PV_new": 7.683350572612463,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002466",
@@ -2896,7 +3565,10 @@
         "PV_old": 1.027997215107789,
         "PV_new": 1.2848867163447641,
         "hold_PV_old": 1.027997215107789,
-        "hold_PV_new": 1.2848867163447641
+        "hold_PV_new": 1.2848867163447641,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002475",
@@ -2909,7 +3581,10 @@
         "PV_old": 1.250754662067738,
         "PV_new": 2.08962061330365,
         "hold_PV_old": 1.2090605134786996,
-        "hold_PV_new": 2.012804533455134
+        "hold_PV_new": 2.012804533455134,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002532",
@@ -2922,7 +3597,10 @@
         "PV_old": 0.8200440155747418,
         "PV_new": 0.9914445945392771,
         "hold_PV_old": 0.8200440155747418,
-        "hold_PV_new": 0.9914445945392771
+        "hold_PV_new": 0.9914445945392771,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002568",
@@ -2935,7 +3613,10 @@
         "PV_old": 2.0984814625053145,
         "PV_new": 2.831881840649641,
         "hold_PV_old": 2.0984814625053145,
-        "hold_PV_new": 2.831881840649641
+        "hold_PV_new": 2.831881840649641,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002594",
@@ -2948,7 +3629,10 @@
         "PV_old": 1.1174872040162762,
         "PV_new": 1.5153121266293559,
         "hold_PV_old": 0.8425364001898055,
-        "hold_PV_new": 1.1439189464118598
+        "hold_PV_new": 1.1439189464118598,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002595",
@@ -2961,7 +3645,10 @@
         "PV_old": 1.4847124942331082,
         "PV_new": 1.5069309536156281,
         "hold_PV_old": 1.466158619235519,
-        "hold_PV_new": 1.488111161215864
+        "hold_PV_new": 1.488111161215864,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002648",
@@ -2974,7 +3661,10 @@
         "PV_old": 0.8274551096284839,
         "PV_new": 1.2292585688181767,
         "hold_PV_old": 0.8274551096284839,
-        "hold_PV_new": 1.2292585688181767
+        "hold_PV_new": 1.2292585688181767,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002690",
@@ -2987,7 +3677,10 @@
         "PV_old": 1.6398367414589679,
         "PV_new": 1.6398367414589679,
         "hold_PV_old": 1.6398367414589679,
-        "hold_PV_new": 1.6398367414589679
+        "hold_PV_new": 1.6398367414589679,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002714",
@@ -3000,7 +3693,10 @@
         "PV_old": 0.9894189852100437,
         "PV_new": 1.5035248148450788,
         "hold_PV_old": 0.9894189852100437,
-        "hold_PV_new": 1.5035248148450788
+        "hold_PV_new": 1.5035248148450788,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002916",
@@ -3013,7 +3709,10 @@
         "PV_old": 4.2080538630894475,
         "PV_new": 4.905941474418841,
         "hold_PV_old": 4.2080538630894475,
-        "hold_PV_new": 4.905941474418841
+        "hold_PV_new": 4.905941474418841,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002920",
@@ -3026,7 +3725,10 @@
         "PV_old": 1.1249268756811928,
         "PV_new": 1.2029114870209507,
         "hold_PV_old": 1.1249268756811928,
-        "hold_PV_new": 1.2029114870209507
+        "hold_PV_new": 1.2029114870209507,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "002938",
@@ -3039,7 +3741,10 @@
         "PV_old": 3.8702753149790015,
         "PV_new": 4.146771927543985,
         "hold_PV_old": 3.8702753149790015,
-        "hold_PV_new": 4.146771927543985
+        "hold_PV_new": 4.146771927543985,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300015",
@@ -3052,7 +3757,10 @@
         "PV_old": 1.63345379452762,
         "PV_new": 1.961513663641323,
         "hold_PV_old": 1.63345379452762,
-        "hold_PV_new": 1.961513663641323
+        "hold_PV_new": 1.961513663641323,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300033",
@@ -3065,7 +3773,10 @@
         "PV_old": 5.166238467087694,
         "PV_new": 5.166238467087694,
         "hold_PV_old": 5.166238467087694,
-        "hold_PV_new": 5.166238467087694
+        "hold_PV_new": 5.166238467087694,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300054",
@@ -3078,7 +3789,10 @@
         "PV_old": 7.610146862483311,
         "PV_new": 10.747462979427906,
         "hold_PV_old": 7.610146862483311,
-        "hold_PV_new": 10.747462979427906
+        "hold_PV_new": 10.747462979427906,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300059",
@@ -3091,7 +3805,10 @@
         "PV_old": 1.4092107494719315,
         "PV_new": 1.4092107494719315,
         "hold_PV_old": 1.4092107494719315,
-        "hold_PV_new": 1.4092107494719315
+        "hold_PV_new": 1.4092107494719315,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300124",
@@ -3104,7 +3821,10 @@
         "PV_old": 1.8798599888396903,
         "PV_new": 1.974365219509225,
         "hold_PV_old": 1.8798599888396903,
-        "hold_PV_new": 1.974365219509225
+        "hold_PV_new": 1.974365219509225,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300274",
@@ -3117,7 +3837,10 @@
         "PV_old": 0.7733314966595495,
         "PV_new": 0.840924387705987,
         "hold_PV_old": 0.7733314966595495,
-        "hold_PV_new": 0.840924387705987
+        "hold_PV_new": 0.840924387705987,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300308",
@@ -3130,7 +3853,10 @@
         "PV_old": 9.545291816190321,
         "PV_new": 9.935872552520847,
         "hold_PV_old": 9.545291816190321,
-        "hold_PV_new": 9.935872552520847
+        "hold_PV_new": 9.935872552520847,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300316",
@@ -3143,7 +3869,10 @@
         "PV_old": 1.3578479944218138,
         "PV_new": 1.4890752367154,
         "hold_PV_old": 1.3578479944218138,
-        "hold_PV_new": 1.4890752367154
+        "hold_PV_new": 1.4890752367154,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300357",
@@ -3156,7 +3885,10 @@
         "PV_old": 2.0977476814367733,
         "PV_new": 2.10536313556639,
         "hold_PV_old": 1.9852129004010228,
-        "hold_PV_new": 1.9925690657397974
+        "hold_PV_new": 1.9925690657397974,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300394",
@@ -3169,7 +3901,10 @@
         "PV_old": 13.576111961247303,
         "PV_new": 13.580515991687365,
         "hold_PV_old": 13.576111961247303,
-        "hold_PV_new": 13.580515991687365
+        "hold_PV_new": 13.580515991687365,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300395",
@@ -3182,7 +3917,10 @@
         "PV_old": 9.556000000000001,
         "PV_new": 9.919551564851819,
         "hold_PV_old": 8.918255545911844,
-        "hold_PV_new": 9.259061885337236
+        "hold_PV_new": 9.259061885337236,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300408",
@@ -3195,7 +3933,10 @@
         "PV_old": 5.2525760241266655,
         "PV_new": 5.313368523106755,
         "hold_PV_old": 5.2525760241266655,
-        "hold_PV_new": 5.313368523106755
+        "hold_PV_new": 5.313368523106755,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300415",
@@ -3208,7 +3949,10 @@
         "PV_old": 0.9166058014617323,
         "PV_new": 1.4169707483400131,
         "hold_PV_old": 0.8983810178491004,
-        "hold_PV_new": 1.386683448341468
+        "hold_PV_new": 1.386683448341468,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300470",
@@ -3221,7 +3965,10 @@
         "PV_old": 1.2368401019206399,
         "PV_new": 1.237299980289211,
         "hold_PV_old": 1.1728387198138406,
-        "hold_PV_new": 1.173282131448379
+        "hold_PV_new": 1.173282131448379,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300487",
@@ -3234,7 +3981,10 @@
         "PV_old": 2.9169284586255495,
         "PV_new": 2.9656645876944987,
         "hold_PV_old": 2.9169284586255495,
-        "hold_PV_new": 2.9656645876944987
+        "hold_PV_new": 2.9656645876944987,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300502",
@@ -3247,7 +3997,10 @@
         "PV_old": 6.954825609746348,
         "PV_new": 6.96003340816036,
         "hold_PV_old": 6.954825609746348,
-        "hold_PV_new": 6.96003340816036
+        "hold_PV_new": 6.96003340816036,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300529",
@@ -3260,7 +4013,10 @@
         "PV_old": 1.4185742191204083,
         "PV_new": 1.6868692563567687,
         "hold_PV_old": 1.4185742191204083,
-        "hold_PV_new": 1.6868692563567687
+        "hold_PV_new": 1.6868692563567687,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300604",
@@ -3273,7 +4029,10 @@
         "PV_old": 11.869949018341574,
         "PV_new": 15.538859054808709,
         "hold_PV_old": 11.869949018341574,
-        "hold_PV_new": 15.538859054808709
+        "hold_PV_new": 15.538859054808709,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300627",
@@ -3286,7 +4045,10 @@
         "PV_old": 1.8819552856590425,
         "PV_new": 1.9308480155173176,
         "hold_PV_old": 1.8819552856590425,
-        "hold_PV_new": 1.9308480155173176
+        "hold_PV_new": 1.9308480155173176,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300628",
@@ -3299,7 +4061,10 @@
         "PV_old": 1.4626377471950636,
         "PV_new": 1.4631549994105943,
         "hold_PV_old": 1.4626377471950636,
-        "hold_PV_new": 1.4631549994105943
+        "hold_PV_new": 1.4631549994105943,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300661",
@@ -3312,7 +4077,10 @@
         "PV_old": 6.269372386678039,
         "PV_new": 6.414793135559399,
         "hold_PV_old": 6.269372386678039,
-        "hold_PV_new": 6.414793135559399
+        "hold_PV_new": 6.414793135559399,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300685",
@@ -3325,7 +4093,10 @@
         "PV_old": 1.7942439344036143,
         "PV_new": 1.8584007572916106,
         "hold_PV_old": 1.7942439344036143,
-        "hold_PV_new": 1.8584007572916106
+        "hold_PV_new": 1.8584007572916106,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300699",
@@ -3338,7 +4109,10 @@
         "PV_old": 2.3525686208411223,
         "PV_new": 2.7657683623961185,
         "hold_PV_old": 2.3525686208411223,
-        "hold_PV_new": 2.7657683623961185
+        "hold_PV_new": 2.7657683623961185,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300750",
@@ -3351,7 +4125,10 @@
         "PV_old": 1.1988375156492206,
         "PV_new": 1.4105687403549059,
         "hold_PV_old": 1.163840602611682,
-        "hold_PV_new": 1.3720255444510565
+        "hold_PV_new": 1.3720255444510565,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300759",
@@ -3364,7 +4141,10 @@
         "PV_old": 3.802813207563664,
         "PV_new": 6.125121446373506,
         "hold_PV_old": 3.7365676834139343,
-        "hold_PV_new": 6.006628003314002
+        "hold_PV_new": 6.006628003314002,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300760",
@@ -3377,7 +4157,10 @@
         "PV_old": 1.3765436461676241,
         "PV_new": 1.3819690139301688,
         "hold_PV_old": 1.3765436461676241,
-        "hold_PV_new": 1.3819690139301688
+        "hold_PV_new": 1.3819690139301688,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300776",
@@ -3390,7 +4173,10 @@
         "PV_old": 3.453516890267072,
         "PV_new": 3.7670935092489004,
         "hold_PV_old": 3.453516890267072,
-        "hold_PV_new": 3.7670935092489004
+        "hold_PV_new": 3.7670935092489004,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300811",
@@ -3403,7 +4189,10 @@
         "PV_old": 5.096040288579804,
         "PV_new": 5.7209589888026375,
         "hold_PV_old": 5.096040288579804,
-        "hold_PV_new": 5.7209589888026375
+        "hold_PV_new": 5.7209589888026375,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300832",
@@ -3416,7 +4205,10 @@
         "PV_old": 1.5262659725508754,
         "PV_new": 1.526241570177374,
         "hold_PV_old": 1.5262659725508754,
-        "hold_PV_new": 1.526241570177374
+        "hold_PV_new": 1.526241570177374,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300866",
@@ -3429,7 +4221,10 @@
         "PV_old": 1.4571593949341721,
         "PV_new": 1.791905148877209,
         "hold_PV_old": 1.4571593949341721,
-        "hold_PV_new": 1.791905148877209
+        "hold_PV_new": 1.791905148877209,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300896",
@@ -3442,7 +4237,10 @@
         "PV_old": 1.1187654533570845,
         "PV_new": 1.1393583730367496,
         "hold_PV_old": 1.1187654533570845,
-        "hold_PV_new": 1.1393583730367496
+        "hold_PV_new": 1.1393583730367496,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "300910",
@@ -3455,7 +4253,10 @@
         "PV_old": 0.7661150969739698,
         "PV_new": 0.9026146835311094,
         "hold_PV_old": 0.7661150969739698,
-        "hold_PV_new": 0.9026146835311094
+        "hold_PV_new": 0.9026146835311094,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "301589",
@@ -3468,7 +4269,10 @@
         "PV_old": 1.2080623545446607,
         "PV_new": 1.3705285536831984,
         "hold_PV_old": 1.2080623545446607,
-        "hold_PV_new": 1.3705285536831984
+        "hold_PV_new": 1.3705285536831984,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600007",
@@ -3481,7 +4285,10 @@
         "PV_old": 1.3345015838781427,
         "PV_new": 1.3515266107398585,
         "hold_PV_old": 1.3345015838781427,
-        "hold_PV_new": 1.3515266107398585
+        "hold_PV_new": 1.3515266107398585,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600031",
@@ -3494,7 +4301,10 @@
         "PV_old": 1.174791167209666,
         "PV_new": 1.3777856101507553,
         "hold_PV_old": 1.174791167209666,
-        "hold_PV_new": 1.3777856101507553
+        "hold_PV_new": 1.3777856101507553,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600036",
@@ -3507,7 +4317,10 @@
         "PV_old": 0.7637499389976087,
         "PV_new": 0.7637499389976087,
         "hold_PV_old": 0.7637499389976087,
-        "hold_PV_new": 0.7637499389976087
+        "hold_PV_new": 0.7637499389976087,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600066",
@@ -3520,7 +4333,10 @@
         "PV_old": 2.3240437109643755,
         "PV_new": 2.323483170156507,
         "hold_PV_old": 2.3240437109643755,
-        "hold_PV_new": 2.323483170156507
+        "hold_PV_new": 2.323483170156507,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600085",
@@ -3533,7 +4349,10 @@
         "PV_old": 1.515702522274463,
         "PV_new": 1.6468164371189884,
         "hold_PV_old": 1.515702522274463,
-        "hold_PV_new": 1.6468164371189884
+        "hold_PV_new": 1.6468164371189884,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600132",
@@ -3546,7 +4365,10 @@
         "PV_old": 1.2489193323136265,
         "PV_new": 1.285135065779344,
         "hold_PV_old": 1.2489193323136265,
-        "hold_PV_new": 1.285135065779344
+        "hold_PV_new": 1.285135065779344,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600160",
@@ -3559,7 +4381,10 @@
         "PV_old": 2.3896282956751738,
         "PV_new": 3.0891366422348723,
         "hold_PV_old": 2.3896282956751738,
-        "hold_PV_new": 3.0891366422348723
+        "hold_PV_new": 3.0891366422348723,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600176",
@@ -3572,7 +4397,10 @@
         "PV_old": 3.4510671379224673,
         "PV_new": 5.1334628819398915,
         "hold_PV_old": 2.807077015345702,
-        "hold_PV_new": 4.0819808888214775
+        "hold_PV_new": 4.0819808888214775,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600183",
@@ -3585,7 +4413,10 @@
         "PV_old": 10.782397047854593,
         "PV_new": 13.595683595683596,
         "hold_PV_old": 10.782397047854593,
-        "hold_PV_new": 13.595683595683596
+        "hold_PV_new": 13.595683595683596,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600276",
@@ -3598,7 +4429,10 @@
         "PV_old": 2.456803307867138,
         "PV_new": 2.4583785442628696,
         "hold_PV_old": 2.456803307867138,
-        "hold_PV_new": 2.4583785442628696
+        "hold_PV_new": 2.4583785442628696,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600285",
@@ -3611,7 +4445,10 @@
         "PV_old": 1.1520413095216244,
         "PV_new": 1.247003350948994,
         "hold_PV_old": 1.1520413095216244,
-        "hold_PV_new": 1.247003350948994
+        "hold_PV_new": 1.247003350948994,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600298",
@@ -3624,7 +4461,10 @@
         "PV_old": 1.4283761126582188,
         "PV_new": 3.0852444492799806,
         "hold_PV_old": 1.325759473169233,
-        "hold_PV_new": 2.812969418700224
+        "hold_PV_new": 2.812969418700224,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600309",
@@ -3637,7 +4477,10 @@
         "PV_old": 1.0319955777986471,
         "PV_new": 1.7063546662473466,
         "hold_PV_old": 0.972276470909404,
-        "hold_PV_new": 1.7063546662473466
+        "hold_PV_new": 1.7063546662473466,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600406",
@@ -3650,7 +4493,10 @@
         "PV_old": 1.809362863781869,
         "PV_new": 1.8184639001845408,
         "hold_PV_old": 1.809362863781869,
-        "hold_PV_new": 1.8184639001845408
+        "hold_PV_new": 1.8184639001845408,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600415",
@@ -3663,7 +4509,10 @@
         "PV_old": 1.0899072975527357,
         "PV_new": 1.204872843677752,
         "hold_PV_old": 1.0779848445673144,
-        "hold_PV_new": 1.1918898711351542
+        "hold_PV_new": 1.1918898711351542,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600426",
@@ -3676,7 +4525,10 @@
         "PV_old": 1.096986764918686,
         "PV_new": 1.456493626454831,
         "hold_PV_old": 1.096986764918686,
-        "hold_PV_new": 1.456493626454831
+        "hold_PV_new": 1.456493626454831,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600436",
@@ -3689,7 +4541,10 @@
         "PV_old": 2.1526393668966604,
         "PV_new": 2.252675772030747,
         "hold_PV_old": 2.1526393668966604,
-        "hold_PV_new": 2.252675772030747
+        "hold_PV_new": 2.252675772030747,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600486",
@@ -3702,7 +4557,10 @@
         "PV_old": 1.1904596342396216,
         "PV_new": 1.229670100772614,
         "hold_PV_old": 1.1904596342396216,
-        "hold_PV_new": 1.229670100772614
+        "hold_PV_new": 1.229670100772614,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600519",
@@ -3715,7 +4573,10 @@
         "PV_old": 1.245658447301347,
         "PV_new": 1.3220173493135343,
         "hold_PV_old": 1.245658447301347,
-        "hold_PV_new": 1.3220173493135343
+        "hold_PV_new": 1.3220173493135343,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600563",
@@ -3728,7 +4589,10 @@
         "PV_old": 1.7135076702647813,
         "PV_new": 1.7133563755627046,
         "hold_PV_old": 1.7135076702647813,
-        "hold_PV_new": 1.7133563755627046
+        "hold_PV_new": 1.7133563755627046,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600570",
@@ -3741,7 +4605,10 @@
         "PV_old": 2.2328227179073727,
         "PV_new": 2.265857594145588,
         "hold_PV_old": 2.2328227179073727,
-        "hold_PV_new": 2.265857594145588
+        "hold_PV_new": 2.265857594145588,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600600",
@@ -3754,7 +4621,10 @@
         "PV_old": 0.7966785101201644,
         "PV_new": 0.7978978613970329,
         "hold_PV_old": 0.7966785101201644,
-        "hold_PV_new": 0.7978978613970329
+        "hold_PV_new": 0.7978978613970329,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600660",
@@ -3767,7 +4637,10 @@
         "PV_old": 0.952265146043027,
         "PV_new": 1.353865366900869,
         "hold_PV_old": 0.952265146043027,
-        "hold_PV_new": 1.353865366900869
+        "hold_PV_new": 1.353865366900869,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600690",
@@ -3780,7 +4653,10 @@
         "PV_old": 0.7620330466565516,
         "PV_new": 0.8755151367612026,
         "hold_PV_old": 0.7176683972903921,
-        "hold_PV_new": 0.8239678922541291
+        "hold_PV_new": 0.8239678922541291,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600750",
@@ -3793,7 +4669,10 @@
         "PV_old": 1.3389698278208175,
         "PV_new": 1.3389860235018052,
         "hold_PV_old": 1.3389698278208175,
-        "hold_PV_new": 1.3389860235018052
+        "hold_PV_new": 1.3389860235018052,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600803",
@@ -3806,7 +4685,10 @@
         "PV_old": 1.122411914275336,
         "PV_new": 1.5406220656301675,
         "hold_PV_old": 1.0796331343718153,
-        "hold_PV_new": 1.4796488427773344
+        "hold_PV_new": 1.4796488427773344,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600809",
@@ -3819,7 +4701,10 @@
         "PV_old": 0.8731923355735165,
         "PV_new": 0.875264220681837,
         "hold_PV_old": 0.7620481122550744,
-        "hold_PV_new": 0.7639047778059485
+        "hold_PV_new": 0.7639047778059485,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600862",
@@ -3832,7 +4717,10 @@
         "PV_old": 1.8045477024312948,
         "PV_new": 1.819902897798406,
         "hold_PV_old": 1.5544446859378396,
-        "hold_PV_new": 1.5678984198249706
+        "hold_PV_new": 1.5678984198249706,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600885",
@@ -3845,7 +4733,10 @@
         "PV_old": 1.9154099000131937,
         "PV_new": 1.9690634711893993,
         "hold_PV_old": 1.9154099000131937,
-        "hold_PV_new": 1.9690634711893993
+        "hold_PV_new": 1.9690634711893993,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600887",
@@ -3858,7 +4749,10 @@
         "PV_old": 1.1288623669180378,
         "PV_new": 1.5763165759356814,
         "hold_PV_old": 1.1288623669180378,
-        "hold_PV_new": 1.5763165759356814
+        "hold_PV_new": 1.5763165759356814,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600900",
@@ -3869,9 +4763,12 @@
         "V_new": 5.8811,
         "dV": -0.6897875864397125,
         "PV_old": 1.495914718091812,
-        "PV_new": 4.822227134379623,
+        "PV_new": null,
         "hold_PV_old": 1.495914718091812,
-        "hold_PV_new": 4.822227134379623
+        "hold_PV_new": null,
+        "band_new": "2022-09-30",
+        "usable_old": true,
+        "usable_new": false
       },
       {
         "security_code": "600938",
@@ -3884,7 +4781,10 @@
         "PV_old": 0.783081617159037,
         "PV_new": 0.8396950473352482,
         "hold_PV_old": 0.783081617159037,
-        "hold_PV_new": 0.8396950473352482
+        "hold_PV_new": 0.8396950473352482,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600970",
@@ -3897,7 +4797,10 @@
         "PV_old": 0.4947624753585095,
         "PV_new": 0.5591432294889809,
         "hold_PV_old": 0.4947624753585095,
-        "hold_PV_new": 0.5591432294889809
+        "hold_PV_new": 0.5591432294889809,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600989",
@@ -3910,7 +4813,10 @@
         "PV_old": 0.8028475380660469,
         "PV_new": 1.3701067615658364,
         "hold_PV_old": 0.8028475380660469,
-        "hold_PV_new": 1.3701067615658364
+        "hold_PV_new": 1.3701067615658364,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "600993",
@@ -3923,7 +4829,10 @@
         "PV_old": 1.0604834655546351,
         "PV_new": 1.0726340308279378,
         "hold_PV_old": 1.0604834655546351,
-        "hold_PV_new": 1.0726340308279378
+        "hold_PV_new": 1.0726340308279378,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601088",
@@ -3936,7 +4845,10 @@
         "PV_old": 1.7083772017186922,
         "PV_new": 2.016669115949027,
         "hold_PV_old": 1.7083772017186922,
-        "hold_PV_new": 2.016669115949027
+        "hold_PV_new": 2.016669115949027,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601100",
@@ -3949,7 +4861,10 @@
         "PV_old": 3.7993389232599397,
         "PV_new": 3.8045696054871536,
         "hold_PV_old": 3.7993389232599397,
-        "hold_PV_new": 3.8045696054871536
+        "hold_PV_new": 3.8045696054871536,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601138",
@@ -3962,7 +4877,10 @@
         "PV_old": 2.398119245496647,
         "PV_new": 3.3683606023291386,
         "hold_PV_old": 2.398119245496647,
-        "hold_PV_new": 3.3683606023291386
+        "hold_PV_new": 3.3683606023291386,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601225",
@@ -3975,7 +4893,10 @@
         "PV_old": 0.9710270782347833,
         "PV_new": 1.085613415710503,
         "hold_PV_old": 0.9710270782347833,
-        "hold_PV_new": 1.085613415710503
+        "hold_PV_new": 1.085613415710503,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601288",
@@ -3988,7 +4909,10 @@
         "PV_old": 1.042868419454733,
         "PV_new": 1.042868419454733,
         "hold_PV_old": 1.042868419454733,
-        "hold_PV_new": 1.042868419454733
+        "hold_PV_new": 1.042868419454733,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601318",
@@ -4001,7 +4925,10 @@
         "PV_old": 0.7505719146560972,
         "PV_new": 0.7505719146560972,
         "hold_PV_old": 0.7505719146560972,
-        "hold_PV_new": 0.7505719146560972
+        "hold_PV_new": 0.7505719146560972,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601398",
@@ -4014,7 +4941,10 @@
         "PV_old": 0.9931954506028806,
         "PV_new": 0.9931954506028806,
         "hold_PV_old": 0.9931954506028806,
-        "hold_PV_new": 0.9931954506028806
+        "hold_PV_new": 0.9931954506028806,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601717",
@@ -4027,7 +4957,10 @@
         "PV_old": 0.4999682855938243,
         "PV_new": 0.6001030027542041,
         "hold_PV_old": 0.44431770705536733,
-        "hold_PV_new": 0.5339581440571255
+        "hold_PV_new": 0.5339581440571255,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601838",
@@ -4040,7 +4973,10 @@
         "PV_old": 0.7974401501063811,
         "PV_new": 0.7974401501063811,
         "hold_PV_old": 0.7974401501063811,
-        "hold_PV_new": 0.7974401501063811
+        "hold_PV_new": 0.7974401501063811,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601899",
@@ -4053,7 +4989,10 @@
         "PV_old": 0.9848450042334224,
         "PV_new": 1.5913754978019823,
         "hold_PV_old": 0.9848450042334224,
-        "hold_PV_new": 1.5913754978019823
+        "hold_PV_new": 1.5913754978019823,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601939",
@@ -4066,7 +5005,10 @@
         "PV_old": 1.069904312747257,
         "PV_new": 1.069904312747257,
         "hold_PV_old": 1.069904312747257,
-        "hold_PV_new": 1.069904312747257
+        "hold_PV_new": 1.069904312747257,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "601965",
@@ -4079,7 +5021,10 @@
         "PV_old": 0.9588023793592787,
         "PV_new": 1.1026085485984864,
         "hold_PV_old": 0.9588023793592787,
-        "hold_PV_new": 1.1026085485984864
+        "hold_PV_new": 1.1026085485984864,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603067",
@@ -4092,7 +5037,10 @@
         "PV_old": 3.015442250114305,
         "PV_new": 3.848760377251934,
         "hold_PV_old": 3.015442250114305,
-        "hold_PV_new": 3.848760377251934
+        "hold_PV_new": 3.848760377251934,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603129",
@@ -4105,7 +5053,10 @@
         "PV_old": 1.7014197125931978,
         "PV_new": 1.699665211258302,
         "hold_PV_old": 1.6867353853008336,
-        "hold_PV_new": 1.6849866099344375
+        "hold_PV_new": 1.6849866099344375,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603156",
@@ -4118,7 +5069,10 @@
         "PV_old": 2.715290362884022,
         "PV_new": 2.7854092775067096,
         "hold_PV_old": 2.715290362884022,
-        "hold_PV_new": 2.7854092775067096
+        "hold_PV_new": 2.7854092775067096,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603195",
@@ -4131,7 +5085,10 @@
         "PV_old": 1.172535015132479,
         "PV_new": 1.2096426621716103,
         "hold_PV_old": 1.172535015132479,
-        "hold_PV_new": 1.2096426621716103
+        "hold_PV_new": 1.2096426621716103,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603259",
@@ -4144,7 +5101,10 @@
         "PV_old": 1.8795099848967947,
         "PV_new": 2.033968781585068,
         "hold_PV_old": 1.7868243707880622,
-        "hold_PV_new": 1.9351556048612444
+        "hold_PV_new": 1.9351556048612444,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603279",
@@ -4157,7 +5117,10 @@
         "PV_old": 0.5889729683380136,
         "PV_new": 0.6072997540960959,
         "hold_PV_old": 0.5889729683380136,
-        "hold_PV_new": 0.6072997540960959
+        "hold_PV_new": 0.6072997540960959,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603288",
@@ -4170,7 +5133,10 @@
         "PV_old": 1.755429777635214,
         "PV_new": 1.7601377814897623,
         "hold_PV_old": 1.755429777635214,
-        "hold_PV_new": 1.7601377814897623
+        "hold_PV_new": 1.7601377814897623,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603338",
@@ -4183,7 +5149,10 @@
         "PV_old": 0.998592359387298,
         "PV_new": 1.0659654480165126,
         "hold_PV_old": 0.998592359387298,
-        "hold_PV_new": 1.0659654480165126
+        "hold_PV_new": 1.0659654480165126,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603369",
@@ -4196,7 +5165,10 @@
         "PV_old": 0.6367663999280918,
         "PV_new": 0.681053457130569,
         "hold_PV_old": 0.6367663999280918,
-        "hold_PV_new": 0.681053457130569
+        "hold_PV_new": 0.681053457130569,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603501",
@@ -4209,7 +5181,10 @@
         "PV_old": 2.171599006506794,
         "PV_new": 2.4909877653942436,
         "hold_PV_old": 2.0400849116422686,
-        "hold_PV_new": 2.3457604845983826
+        "hold_PV_new": 2.3457604845983826,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603505",
@@ -4220,9 +5195,12 @@
         "V_new": 2.3162,
         "dV": -0.6663016856360755,
         "PV_old": 2.148105460308313,
-        "PV_new": 6.437267938865384,
+        "PV_new": null,
         "hold_PV_old": 2.148105460308313,
-        "hold_PV_new": 5.315129046057322
+        "hold_PV_new": null,
+        "band_new": "2024-06-30",
+        "usable_old": true,
+        "usable_new": false
       },
       {
         "security_code": "603508",
@@ -4235,7 +5213,10 @@
         "PV_old": 1.6103685954785205,
         "PV_new": 1.6103685954785205,
         "hold_PV_old": 1.6103685954785205,
-        "hold_PV_new": 1.6103685954785205
+        "hold_PV_new": 1.6103685954785205,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603529",
@@ -4248,7 +5229,10 @@
         "PV_old": 0.8473372588964325,
         "PV_new": 0.9504734158776401,
         "hold_PV_old": 0.8473372588964325,
-        "hold_PV_new": 0.9504734158776401
+        "hold_PV_new": 0.9504734158776401,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603596",
@@ -4261,7 +5245,10 @@
         "PV_old": 1.0065398649720603,
         "PV_new": 1.2802518351771053,
         "hold_PV_old": 1.0065398649720603,
-        "hold_PV_new": 1.2802518351771053
+        "hold_PV_new": 1.2802518351771053,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603606",
@@ -4274,7 +5261,10 @@
         "PV_old": 1.829726364319307,
         "PV_new": 1.9467650633410343,
         "hold_PV_old": 1.7767740259221139,
-        "hold_PV_new": 1.8910065515187613
+        "hold_PV_new": 1.8910065515187613,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603806",
@@ -4287,7 +5277,10 @@
         "PV_old": 1.5497998639744006,
         "PV_new": 1.702429943170684,
         "hold_PV_old": 1.5497998639744006,
-        "hold_PV_new": 1.702429943170684
+        "hold_PV_new": 1.702429943170684,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603855",
@@ -4300,7 +5293,10 @@
         "PV_old": 1.0460212291675672,
         "PV_new": 1.1117892982076172,
         "hold_PV_old": 1.0460212291675672,
-        "hold_PV_new": 1.1117892982076172
+        "hold_PV_new": 1.1117892982076172,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "603993",
@@ -4313,7 +5309,10 @@
         "PV_old": 1.1545767340620414,
         "PV_new": 1.4348841507468453,
         "hold_PV_old": 1.1545767340620414,
-        "hold_PV_new": 1.4348841507468453
+        "hold_PV_new": 1.4348841507468453,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "605117",
@@ -4326,7 +5325,10 @@
         "PV_old": 1.1812464954191362,
         "PV_new": 1.517222770047598,
         "hold_PV_old": 1.1812464954191362,
-        "hold_PV_new": 1.517222770047598
+        "hold_PV_new": 1.517222770047598,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "605305",
@@ -4339,7 +5341,10 @@
         "PV_old": 0.7481691402750186,
         "PV_new": 0.7633208555751236,
         "hold_PV_old": 0.7481691402750186,
-        "hold_PV_new": 0.7633208555751236
+        "hold_PV_new": 0.7633208555751236,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "605499",
@@ -4352,7 +5357,10 @@
         "PV_old": 0.8694690300199421,
         "PV_new": 1.3252611540521926,
         "hold_PV_old": 0.8694690300199421,
-        "hold_PV_new": 1.3252611540521926
+        "hold_PV_new": 1.3252611540521926,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688008",
@@ -4365,7 +5373,10 @@
         "PV_old": 5.245306734289144,
         "PV_new": 5.2521008403361344,
         "hold_PV_old": 5.245306734289144,
-        "hold_PV_new": 5.2521008403361344
+        "hold_PV_new": 5.2521008403361344,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688012",
@@ -4378,7 +5389,10 @@
         "PV_old": 8.128211577850445,
         "PV_new": 8.25354661684862,
         "hold_PV_old": 8.071326452208375,
-        "hold_PV_new": 8.196424300839935
+        "hold_PV_new": 8.196424300839935,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688018",
@@ -4391,7 +5405,10 @@
         "PV_old": 2.269284326177105,
         "PV_new": 2.2723529118831185,
         "hold_PV_old": 2.269284326177105,
-        "hold_PV_new": 2.2723529118831185
+        "hold_PV_new": 2.2723529118831185,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688019",
@@ -4404,7 +5421,10 @@
         "PV_old": 2.5948907123932883,
         "PV_new": 3.2574427789454234,
         "hold_PV_old": 2.5948907123932883,
-        "hold_PV_new": 3.2574427789454234
+        "hold_PV_new": 3.2574427789454234,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688041",
@@ -4417,7 +5437,10 @@
         "PV_old": 15.492412898073276,
         "PV_new": 17.008014247551202,
         "hold_PV_old": 15.492412898073276,
-        "hold_PV_new": 17.008014247551202
+        "hold_PV_new": 17.008014247551202,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688072",
@@ -4430,7 +5453,10 @@
         "PV_old": 6.924951859283871,
         "PV_new": 8.430500393319107,
         "hold_PV_old": 6.924951859283871,
-        "hold_PV_new": 8.430500393319107
+        "hold_PV_new": 8.430500393319107,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688082",
@@ -4443,7 +5469,10 @@
         "PV_old": 5.004624311701648,
         "PV_new": 5.481148245675695,
         "hold_PV_old": 5.004624311701648,
-        "hold_PV_new": 5.481148245675695
+        "hold_PV_new": 5.481148245675695,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688111",
@@ -4456,7 +5485,10 @@
         "PV_old": 2.698980360885146,
         "PV_new": 2.7000963147449117,
         "hold_PV_old": 2.698980360885146,
-        "hold_PV_new": 2.7000963147449117
+        "hold_PV_new": 2.7000963147449117,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688120",
@@ -4469,7 +5501,10 @@
         "PV_old": 6.536900149425438,
         "PV_new": 6.849375805356574,
         "hold_PV_old": 6.536900149425438,
-        "hold_PV_new": 6.849375805356574
+        "hold_PV_new": 6.849375805356574,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688122",
@@ -4482,7 +5517,10 @@
         "PV_old": 3.143294549908145,
         "PV_new": 4.2251086527064405,
         "hold_PV_old": 2.653343947398348,
-        "hold_PV_new": 3.5441552164606778
+        "hold_PV_new": 3.5441552164606778,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688188",
@@ -4495,7 +5533,10 @@
         "PV_old": 2.093475609086014,
         "PV_new": 2.098156265832544,
         "hold_PV_old": 2.093475609086014,
-        "hold_PV_new": 2.098156265832544
+        "hold_PV_new": 2.098156265832544,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688190",
@@ -4508,7 +5549,10 @@
         "PV_old": 1.5918760661880604,
         "PV_new": 1.6040696508670313,
         "hold_PV_old": 1.5918760661880604,
-        "hold_PV_new": 1.6040696508670313
+        "hold_PV_new": 1.6040696508670313,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688200",
@@ -4521,7 +5565,10 @@
         "PV_old": 6.15642528947169,
         "PV_new": 6.169018842720084,
         "hold_PV_old": 6.15642528947169,
-        "hold_PV_new": 6.169018842720084
+        "hold_PV_new": 6.169018842720084,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688208",
@@ -4534,7 +5581,10 @@
         "PV_old": 1.5619756551450623,
         "PV_new": 1.881481372599458,
         "hold_PV_old": 1.5619756551450623,
-        "hold_PV_new": 1.881481372599458
+        "hold_PV_new": 1.881481372599458,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688235",
@@ -4547,7 +5597,10 @@
         "PV_old": 4.045358186676032,
         "PV_new": 4.610617286598115,
         "hold_PV_old": 4.045358186676032,
-        "hold_PV_new": 4.610617286598115
+        "hold_PV_new": 4.610617286598115,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688271",
@@ -4560,7 +5613,10 @@
         "PV_old": 2.8265381600591746,
         "PV_new": 2.923335588420839,
         "hold_PV_old": 2.8265381600591746,
-        "hold_PV_new": 2.923335588420839
+        "hold_PV_new": 2.923335588420839,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688278",
@@ -4573,7 +5629,10 @@
         "PV_old": 0.9946051378901987,
         "PV_new": 1.0614965862765426,
         "hold_PV_old": 0.9946051378901987,
-        "hold_PV_new": 1.0614965862765426
+        "hold_PV_new": 1.0614965862765426,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688281",
@@ -4586,7 +5645,10 @@
         "PV_old": 3.3492822966507174,
         "PV_new": 3.726684885683138,
         "hold_PV_old": 3.3492822966507174,
-        "hold_PV_new": 3.726684885683138
+        "hold_PV_new": 3.726684885683138,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688300",
@@ -4599,7 +5661,10 @@
         "PV_old": 9.447187519353223,
         "PV_new": 10.129547128351867,
         "hold_PV_old": 9.447187519353223,
-        "hold_PV_new": 10.129547128351867
+        "hold_PV_new": 10.129547128351867,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688301",
@@ -4612,7 +5677,10 @@
         "PV_old": 2.5056665748016,
         "PV_new": 3.8235420332146073,
         "hold_PV_old": 2.3871911521211437,
-        "hold_PV_new": 3.646826728661356
+        "hold_PV_new": 3.646826728661356,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688516",
@@ -4625,7 +5693,10 @@
         "PV_old": 0.8122817143195405,
         "PV_new": 1.4936999945572307,
         "hold_PV_old": 0.8122817143195405,
-        "hold_PV_new": 1.4936999945572307
+        "hold_PV_new": 1.4936999945572307,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688617",
@@ -4638,7 +5709,10 @@
         "PV_old": 2.1531545666507332,
         "PV_new": 2.162281003091721,
         "hold_PV_old": 2.043247173698516,
-        "hold_PV_new": 2.051947193916138
+        "hold_PV_new": 2.051947193916138,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688692",
@@ -4651,7 +5725,10 @@
         "PV_old": 2.5805819385990256,
         "PV_new": 2.592032029370483,
         "hold_PV_old": 2.5805819385990256,
-        "hold_PV_new": 2.592032029370483
+        "hold_PV_new": 2.592032029370483,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688708",
@@ -4664,7 +5741,10 @@
         "PV_old": 1.7830013028757938,
         "PV_new": 1.7830254176923006,
         "hold_PV_old": 1.7830013028757938,
-        "hold_PV_new": 1.7830254176923006
+        "hold_PV_new": 1.7830254176923006,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688777",
@@ -4677,7 +5757,10 @@
         "PV_old": 4.483164322931256,
         "PV_new": 4.662681070750154,
         "hold_PV_old": 4.483164322931256,
-        "hold_PV_new": 4.662681070750154
+        "hold_PV_new": 4.662681070750154,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "688981",
@@ -4687,10 +5770,13 @@
         "V_old": 2.8753,
         "V_new": 2.3189,
         "dV": -0.19351024240948766,
-        "PV_old": 41.72781970576983,
-        "PV_new": 51.74004916124024,
-        "hold_PV_old": 17.237515085339925,
-        "hold_PV_new": 51.74004916124024
+        "PV_old": null,
+        "PV_new": null,
+        "hold_PV_old": null,
+        "hold_PV_new": null,
+        "band_new": "2022-09-30",
+        "usable_old": false,
+        "usable_new": false
       },
       {
         "security_code": "920394",
@@ -4703,7 +5789,10 @@
         "PV_old": 3.770294146641086,
         "PV_new": 3.792033069701106,
         "hold_PV_old": 3.770294146641086,
-        "hold_PV_new": 3.792033069701106
+        "hold_PV_new": 3.792033069701106,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       },
       {
         "security_code": "920599",
@@ -4716,7 +5805,10 @@
         "PV_old": 0.5963206189587166,
         "PV_new": 0.6136843077229045,
         "hold_PV_old": 0.5963206189587166,
-        "hold_PV_new": 0.6136843077229045
+        "hold_PV_new": 0.6136843077229045,
+        "band_new": "2026-06-30",
+        "usable_old": true,
+        "usable_new": true
       }
     ],
     "zone_old": 31,
@@ -4736,6 +5828,16 @@
       "浙江鼎力",
       "特宝生物"
     ],
-    "changed": 170
+    "changed": 170,
+    "unvaluable_old": [
+      "中芯国际",
+      "京东方A"
+    ],
+    "unvaluable_entered": [
+      "金石资源",
+      "长江电力",
+      "雅克科技"
+    ],
+    "unvaluable_left": []
   }
 }
