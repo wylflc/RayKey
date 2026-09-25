@@ -1,0 +1,845 @@
+{
+ "tasks": 2935,
+ "rows": 6188,
+ "moves": {
+  "ok→ok": 4759,
+  "report_not_found→report_not_found": 662,
+  "total_mismatch→total_mismatch": 293,
+  "section_not_found→section_not_found": 262,
+  "rows_mismatch→rows_mismatch": 79,
+  "section_not_found→ok": 70,
+  "no_total→no_total": 37,
+  "cash_exceeds_total→cash_exceeds_total": 13,
+  "section_not_found→total_mismatch": 6,
+  "section_not_found→no_total": 4,
+  "section_not_found→rows_mismatch": 2,
+  "located→located": 1
+ },
+ "coverage_old": 0.6565557299561263,
+ "coverage_new": 0.7232759576683706,
+ "cash_old": 3024514400737.25,
+ "cash_new": 3081489328975.4907,
+ "changed_rows": 82,
+ "changed": [
+  {
+   "code": "000063",
+   "year": 2011,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2012,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2013,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2016,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2016,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2017,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2017,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2018,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2019,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2020,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2021,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2023,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2024,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2024,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "total_mismatch",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2024,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2025,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2025,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "total_mismatch",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000063",
+   "year": 2025,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000725",
+   "year": 2011,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000725",
+   "year": 2014,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000725",
+   "year": 2016,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000725",
+   "year": 2017,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000725",
+   "year": 2018,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000725",
+   "year": 2019,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000725",
+   "year": 2025,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 10908234286.0,
+   "items": "5年2024年账面余额减值准备账面价值账面余额减值准备账面价值大额存单及定期存款:10908234286.00"
+  },
+  {
+   "code": "000938",
+   "year": 2025,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000938",
+   "year": 2025,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000938",
+   "year": 2025,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000999",
+   "year": 2019,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000999",
+   "year": 2021,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000999",
+   "year": 2023,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000999",
+   "year": 2023,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "total_mismatch",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000999",
+   "year": 2024,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000999",
+   "year": 2024,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 450000000.0,
+   "items": "2024年2023年账面余额减值准备账面价值账面余额减值准备账面价值长期银行存单:450000000.00"
+  },
+  {
+   "code": "000999",
+   "year": 2025,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "000999",
+   "year": 2025,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 972365964.62,
+   "items": "年2024年账面余额减值准备账面价值账面余额减值准备账面价值长期银行存单(注1):972365964.62"
+  },
+  {
+   "code": "002252",
+   "year": 2022,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 768865404.39,
+   "items": "超过一年内到期的银行定期存款:768865404.39"
+  },
+  {
+   "code": "002252",
+   "year": 2023,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 1112917412.5,
+   "items": "超过一年到期的银行定期存款:1112917412.50"
+  },
+  {
+   "code": "002252",
+   "year": 2025,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 734253588.73,
+   "items": "超过一年到期的银行定期存款:734253588.73"
+  },
+  {
+   "code": "002463",
+   "year": 2025,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "002463",
+   "year": 2025,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 2835332099.0,
+   "items": "项目期末余额上年年末余额一年内到期的定期存款:2641872000.00;一年内到期的定期存款-利息:193460099.00"
+  },
+  {
+   "code": "002463",
+   "year": 2025,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 1578248849.0,
+   "items": "项目期末余额上年年末余额账面余额减值准备账面价值账面余额减值准备账面价值定期存款:1530000000.00;定期存款-利息:48248849.00"
+  },
+  {
+   "code": "002594",
+   "year": 2022,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "002594",
+   "year": 2022,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "002594",
+   "year": 2023,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "002594",
+   "year": 2023,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "rows_mismatch",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "002594",
+   "year": 2024,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "002594",
+   "year": 2024,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "002594",
+   "year": 2025,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "002594",
+   "year": 2025,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 9179564000.0,
+   "items": "一年内到期的定期存款:9179564000.00"
+  },
+  {
+   "code": "002594",
+   "year": 2025,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 22317745000.0,
+   "items": "5年2024年账面余额减值准备账面价值账面余额减值准备账面价值定期存款和大额存单:22317745000.00"
+  },
+  {
+   "code": "601088",
+   "year": 2015,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601088",
+   "year": 2015,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601088",
+   "year": 2016,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601088",
+   "year": 2016,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601088",
+   "year": 2017,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601088",
+   "year": 2017,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601088",
+   "year": 2018,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "total_mismatch",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2013,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2014,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2014,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2015,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2016,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 1201389289.0,
+   "items": "理财产品:1201389289.00"
+  },
+  {
+   "code": "601899",
+   "year": 2016,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "no_total",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2017,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 2321454667.0,
+   "items": "理财产品:2321454667.00"
+  },
+  {
+   "code": "601899",
+   "year": 2017,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "no_total",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2018,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "rows_mismatch",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": "理财产品:280400925.00;，按照固定利率收取利息。紫金矿业集团股份有限公司财务报表附注2018年度人民币元:82.00"
+  },
+  {
+   "code": "601899",
+   "year": 2018,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "no_total",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2019,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2019,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "total_mismatch",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2020,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2020,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "no_total",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2021,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2021,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "total_mismatch",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2022,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 1020497217.0,
+   "items": "大额存单及国债逆回购:1020497217.00"
+  },
+  {
+   "code": "601899",
+   "year": 2022,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 436196918.0,
+   "items": "一年内到期的大额存单:436196918.00"
+  },
+  {
+   "code": "601899",
+   "year": 2022,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2023,
+   "line": "OTHER_CURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 1082847987.0,
+   "items": "大额存单及国债逆回购:1082847987.00"
+  },
+  {
+   "code": "601899",
+   "year": 2023,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 55015556.0,
+   "items": "一年内到期的债权投资-大额存单:55015556.00"
+  },
+  {
+   "code": "601899",
+   "year": 2023,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2024,
+   "line": "NONCURRENT_ASSET_1YEAR",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  },
+  {
+   "code": "601899",
+   "year": 2024,
+   "line": "OTHER_NONCURRENT_ASSET",
+   "before": "section_not_found",
+   "after": "ok",
+   "cash_before": 0.0,
+   "cash_after": 0.0,
+   "items": ""
+  }
+ ]
+}
