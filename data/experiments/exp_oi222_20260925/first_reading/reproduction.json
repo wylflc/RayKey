@@ -1,0 +1,198 @@
+[
+ {
+  "start": "2009-11-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.3322073161071628,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20091101_trades.csv"
+  ]
+ },
+ {
+  "start": "2010-05-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.3439922186797153,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20100501_trades.csv"
+  ]
+ },
+ {
+  "start": "2010-11-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.3384879876168405,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20101101_trades.csv"
+  ]
+ },
+ {
+  "start": "2011-05-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.3514432086012311,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20110501_trades.csv"
+  ]
+ },
+ {
+  "start": "2011-11-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.36297291367808526,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20111101_trades.csv"
+  ]
+ },
+ {
+  "start": "2012-05-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.37318564662449427,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20120501_trades.csv"
+  ]
+ },
+ {
+  "start": "2012-11-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.40529912137905,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20121101_trades.csv"
+  ]
+ },
+ {
+  "start": "2013-05-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.39026559515142845,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20130501_trades.csv"
+  ]
+ },
+ {
+  "start": "2013-11-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.4125841484761221,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20131101_trades.csv"
+  ]
+ },
+ {
+  "start": "2014-05-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.44443416829266114,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20140501_trades.csv"
+  ]
+ },
+ {
+  "start": "2014-11-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.45947858370771977,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20141101_trades.csv"
+  ]
+ },
+ {
+  "start": "2015-05-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.3472903425105722,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20150501_trades.csv"
+  ]
+ },
+ {
+  "start": "2015-11-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.37956909495900604,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20151101_trades.csv"
+  ]
+ },
+ {
+  "start": "2016-05-01",
+  "returncode": 0,
+  "reproduced": true,
+  "fields": {
+   "年化": true,
+   "最大回撤": true,
+   "滚动5年年化中位": true
+  },
+  "annualized": 0.4439341570815709,
+  "trades": [
+   "trend_x5_w-0.067_x1c_dtax_sma20_swap_corr1_tranche_slmin_gs1.1u_ma60stop_ca2_addma_swk20_cap0.6s_sp_gso_ebcap0.03r_c0.3h0.035_lot100_sig1_lrc3_BASE20160501_trades.csv"
+  ]
+ }
+]
