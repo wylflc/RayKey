@@ -93,12 +93,12 @@ def plan(codes: set[str] | None, years: set[int] | None) -> list[dict]:
 
 
 def load_note_cash() -> dict[tuple[str, int, str], float]:
-    """附注三行中核定为现金类的金额（`status = ok`），受限额以此为限。"""
+    """附注三行中核定为现金类的金额（`cn.VERIFIED`：抽取核定与人工核定），受限额以此为限。"""
     out: dict[tuple[str, int, str], float] = {}
     if CASH_NOTES.exists():
         with CASH_NOTES.open(encoding="utf-8") as handle:
             for r in csv.DictReader(handle):
-                if r.get("status") == "ok":
+                if r.get("status") in cn.VERIFIED:
                     out[(r["security_code"], int(r["fiscal_year"]), r["line"])] = cn._num(r.get("cash_like_amount"))
     return out
 

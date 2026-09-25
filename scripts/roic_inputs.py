@@ -327,7 +327,9 @@ def _year_from_parts(code: str, period: str, parts: dict[str, dict], notice_cap:
 
 
 def load_cash_note_items(codes: set[str] | None = None, path: Path | None = None) -> dict[tuple[str, str], float]:
-    """`cash_note_items.csv` → `{(代码, 年报期): 附注核定的三行现金类合计（元）}`，只取 `status = ok` 的行（OI-201）。"""
+    """`cash_note_items.csv` → `{(代码, 年报期): 附注核定的三行现金类合计（元）}`，只取核定行（OI-201：`status = ok`；
+    OI-215：人工核定 `manual`）。"""
+    from fetch_cash_note_items import VERIFIED
     path = path or NOTE_CASH_FILE
     out: dict[tuple[str, str], float] = {}
     if not path.exists():
@@ -335,7 +337,7 @@ def load_cash_note_items(codes: set[str] | None = None, path: Path | None = None
     with path.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
             code = (row.get("security_code") or "").zfill(6)
-            if row.get("status") != "ok" or (codes is not None and code not in codes):
+            if row.get("status") not in VERIFIED or (codes is not None and code not in codes):
                 continue
             key = (code, (row.get("report_date") or "")[:10])
             out[key] = out.get(key, 0.0) + (_num(row.get("cash_like_amount")) or 0.0)

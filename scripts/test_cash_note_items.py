@@ -74,6 +74,69 @@ class ParseSectionTest(unittest.TestCase):
         body = "\n单位：元\n项目 期末余额\n理财产品 100.00\n合计 100.00\n"
         self.assertEqual(notes.parse_section(body, 5_000_000_000.0)["status"], "total_mismatch")
 
+    def test_abandonment_deposit_is_operating(self):
+        body = ("\n单位：元\n项目 期末余额 期初余额\n一年以上定期存款 300,000,000.00 0.00\n弃置费专户存款 100,000,000.00 0.00\n"
+                "合计 400,000,000.00 0.00\n说明\n")
+        r = notes.parse_section(body, 400_000_000.0)
+        self.assertEqual(r["status"], "ok")
+        self.assertAlmostEqual(r["cash"], 300_000_000.0)
+
+
+class SectionTest(unittest.TestCase):
+    """OI-215：2025 年报的两种版式——表头只写两个年份、PDF 文本层丢了标题序号。"""
+    NOTES = "七、合并财务报表项目注释\n1、货币资金\n项目 期末余额\n"
+
+    def test_year_pair_header(self):
+        text = self.NOTES + "(12) 其他非流动资产\n\n  2025年  2024年\n 预付工程款 1,000  2,000\n"
+        self.assertIn("预付工程款", notes.section(text, "其他非流动资产", notes.notes_start(text)))
+
+    def test_heading_without_number_only_after_notes_start(self):
+        body = "其他流动资产\n单位：元\n项目 期末余额\n大额存单 5.00\n"
+        text = self.NOTES + body
+        self.assertIn("大额存单", notes.section(text, "其他流动资产", notes.notes_start(text)))
+        self.assertIsNone(notes.section(body, "其他流动资产", 0))        # 附注正文之外的独占一行行名不认
+
+    def test_numbered_heading_and_cross_reference(self):
+        text = self.NOTES + "详见附注“12、其他流动资产”\n项目\n13、其他流动资产\n单位：元\n定期存款 1.00\n"
+        found = notes.section(text, "其他流动资产", notes.notes_start(text))
+        self.assertTrue(found.startswith("\n单位"))
+
+
+class ManualTest(unittest.TestCase):
+    def _merged(self, statement: str) -> dict:
+        return {("600938", 2025): [dict(security_code="600938", fiscal_year="2025", line="OTHER_NONCURRENT_ASSET",
+                                        statement_amount=statement, cash_like_amount="0.00", status="section_not_found"),
+                                   dict(security_code="600938", fiscal_year="2025", line="OTHER_CURRENT_ASSET",
+                                        statement_amount="4913000000.00", cash_like_amount="0.00", status="section_not_found")]}
+
+    def _write(self, folder: Path) -> Path:
+        path = folder / "manual.csv"
+        path.write_text("security_code,security_name,fiscal_year,report_date,line,line_label,statement_amount,notes_total,"
+                        "cash_like_amount,items,unit,source_date,source_title,source_url,source_page,basis,registered_at\n"
+                        "600938,中国海油,2025,2025-12-31,OTHER_NONCURRENT_ASSET,其他非流动资产,29137000000.00,,17259000000.00,"
+                        "一年以上到期的定期存款:17259000000.00,1000000.0,2026-03-27,年报,url,PDF 第181页,附注,2026-09-25\n",
+                        encoding="utf-8")
+        return path
+
+    def test_manual_row_replaces_one_line(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            merged = self._merged("29137000000.00")
+            self.assertEqual(notes.apply_manual(merged, self._write(Path(folder))), 1)
+        rows = {r["line"]: r for r in merged[("600938", 2025)]}
+        self.assertEqual(rows["OTHER_NONCURRENT_ASSET"]["status"], "manual")
+        self.assertEqual(rows["OTHER_NONCURRENT_ASSET"]["cash_like_amount"], "17259000000.00")
+        self.assertEqual(rows["OTHER_CURRENT_ASSET"]["status"], "section_not_found")
+        self.assertIn("manual", notes.VERIFIED)
+
+    def test_restated_statement_voids_manual_row(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            merged = self._merged("35000000000.00")
+            notes.apply_manual(merged, self._write(Path(folder)))
+        row = next(r for r in merged[("600938", 2025)] if r["line"] == "OTHER_NONCURRENT_ASSET")
+        self.assertEqual((row["status"], row["cash_like_amount"]), ("manual_stale", "0.00"))
+
 
 class RestatementScanTest(unittest.TestCase):
     def test_classify_titles(self):

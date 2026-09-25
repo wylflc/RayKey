@@ -14,10 +14,13 @@
 产物：
   data/reference/cash_note_items.csv   逐 (代码, 财年, 行) 一行：报表行值、附注合计、现金类合计、明细、状态
   data/raw/annual_reports/             原文 PDF 与文本缓存（不入库，按本脚本重建）
+输入：
+  data/reference/cash_note_manual.csv  人工核定登记（原文无法抽取：文本层无字符映射、上市前只有招股说明书），逐行记来源、页码与依据，
+                                       写表时覆盖同一 (代码, 财年, 行) 的抽取结果（`status = manual`）
 
 判定：附注合计与报表行值相差 ≤ 5%（或 100 万元，只用来确认表与单位）且明细之和与合计相符才算核定（`status = ok`）；其余状态该行按经营资产处理，
-与改前口径相同。现金类 = 标签含存款、存单、理财、结构性、逆回购、收益凭证、信托、资管计划、货币基金、
-国债、债券、债权投资之一，且不含贷款、保理、融资租赁、税费、预付、合同成本等经营或信贷项。
+与改前口径相同。人工核定行的报表行值此后变动超出同一容差即记 `manual_stale`、不计入。现金类 = 标签含存款、存单、理财、结构性、逆回购、
+收益凭证、信托、资管计划、货币基金、国债、债券、债权投资之一，且不含贷款、保理、融资租赁、税费、预付、合同成本、弃置专户等经营或信贷项。
 """
 from __future__ import annotations
 
@@ -39,6 +42,8 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parents[1]
 STMT = ROOT / "data/raw/financials_statements/balance.csv"
 OUT = ROOT / "data/reference/cash_note_items.csv"
+MANUAL = ROOT / "data/reference/cash_note_manual.csv"
+VERIFIED = ("ok", "manual")   # 现金类计入超额现金的状态（roic_inputs 与受限资产抽取同读此常量）
 CACHE = ROOT / "data/raw/annual_reports"
 LINES = {"OTHER_CURRENT_ASSET": "其他流动资产", "NONCURRENT_ASSET_1YEAR": "一年内到期的非流动资产",
          "OTHER_NONCURRENT_ASSET": "其他非流动资产"}
@@ -48,7 +53,7 @@ CASH_KEYS = ("存款", "存单", "理财", "结构性", "逆回购", "收益凭�
              "货币基金", "货币市场基金", "国债", "债券", "债权投资", "货币性投资", "现金管理", "固定收益", "持有至到期")
 NON_CASH_KEYS = ("贷款", "保理", "融资租赁", "进项税", "税额", "税金", "税款", "预缴", "预付", "待抵扣", "待认证",
                  "退货", "合同取得", "合同履约", "碳排放", "抵债", "保证金", "押金", "应收账款", "应收票据", "应收款项",
-                 "应收退", "应收代位", "长期应收", "备付金")
+                 "应收退", "应收代位", "长期应收", "备付金", "弃置")   # 弃置费专户：按规定只能用于油气设施弃置
 FIELDS = ["security_code", "security_name", "fiscal_year", "report_date", "line", "line_label", "statement_amount",
           "notes_total", "cash_like_amount", "items", "unit", "status", "announcement_date", "title", "url",
           "extracted_at_utc"]
@@ -181,15 +186,26 @@ def notes_start(text: str) -> int:
     return best
 
 
+HEADER = re.compile(r"项\s*目|单位|适用|期末|年末|\d{4}\s*年\s*\d{1,2}\s*月")
+# 放宽的表头：只写两个年份（「2025年 2024年」，A+H 与港式版式）或「账面余额」（OI-215）
+LOOSE_HEADER = re.compile(HEADER.pattern + r"|(?:19|20)\d{2}\s*年\s+(?:19|20)\d{2}\s*年|账\s*面\s*余\s*额")
+
+
 def section(text: str, label: str, start: int) -> str | None:
-    """附注中以「序号 + 行名」开头、其后 300 字内出现表头的那一段（至多 4000 字，由调用方截到合计行）。"""
+    """附注中以「序号 + 行名」开头、其后 300 字内出现表头的那一段（至多 4000 字，由调用方截到合计行）。
+
+    找不到时依次放宽（OI-215，2025 年报多见）：带序号的标题配放宽的表头；附注正文起点之后、PDF 文本层丢了序号、
+    只剩独占一行的行名。"""
     # 标题在行首、其后不跟引号：正文里「详见附注“五、28、其他非流动资产”」一类交叉引用不算
-    pattern = re.compile(r"(?:^|\n)[ \t]*(?:\d{1,3}\s*[、．.]|[（(](?:[一二三四五六七八九十百]+|\d{1,3})[)）])\s*"
-                         + re.escape(label) + r"(?![\u4e00-\u9fa5”\"])")
-    for m in pattern.finditer(text, start):
-        head = text[m.end():m.end() + 300]
-        if re.search(r"项\s*目|单位|适用|期末|年末|\d{4}\s*年\s*\d{1,2}\s*月", head):
-            return text[m.end():m.end() + 4000]
+    numbered = re.compile(r"(?:^|\n)[ \t]*(?:\d{1,3}\s*[、．.]|[（(](?:[一二三四五六七八九十百]+|\d{1,3})[)）])\s*"
+                          + re.escape(label) + r"(?![\u4e00-\u9fa5”\"])")
+    tries = [(numbered, HEADER), (numbered, LOOSE_HEADER)]
+    if start > 0:
+        tries.append((re.compile(r"(?:^|\n)[ \t]*" + re.escape(label) + r"[ \t]*(?=\n)"), LOOSE_HEADER))
+    for pattern, header in tries:
+        for m in pattern.finditer(text, start):
+            if header.search(text[m.end():m.end() + 300]):
+                return text[m.end():m.end() + 4000]
     return None
 
 
@@ -383,6 +399,30 @@ def load_existing() -> dict[tuple[str, int], list[dict]]:
     return out
 
 
+def apply_manual(merged: dict[tuple[str, int], list[dict]], path: Path | None = None) -> int:
+    """人工核定行覆盖同一 (代码, 财年, 行) 的抽取结果（`status = manual`）；被覆盖行的报表行值与登记值相差超出
+    TOTAL_TOLERANCE（或 100 万元）即记 `manual_stale`、现金类记 0（报表重述后须重新核定）。返回登记行数。"""
+    path = path or MANUAL
+    if not path.exists():
+        return 0
+    with path.open(encoding="utf-8") as handle:
+        manual = list(csv.DictReader(handle))
+    for m in manual:
+        code, year, line = m["security_code"].zfill(6), int(m["fiscal_year"]), m["line"]
+        rows = merged.get((code, year), [])
+        replaced = next((r for r in rows if r["line"] == line), None)
+        registered = _num(m["statement_amount"])
+        stale = replaced is not None and abs(_num(replaced.get("statement_amount")) - registered) > max(
+            TOTAL_TOLERANCE * abs(registered), 1e6)
+        row = dict(security_code=code, security_name=m["security_name"], fiscal_year=year, report_date=m["report_date"],
+                   line=line, line_label=LINES[line], statement_amount=m["statement_amount"], notes_total=m["notes_total"],
+                   cash_like_amount="0.00" if stale else m["cash_like_amount"], items=m["items"], unit=m["unit"],
+                   status="manual_stale" if stale else "manual", announcement_date=m["source_date"],
+                   title=m["source_title"], url=m["source_url"], extracted_at_utc=m["registered_at"])
+        merged[(code, year)] = [r for r in rows if r["line"] != line] + [row]
+    return len(manual)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--codes", help="逗号分隔")
@@ -436,13 +476,14 @@ def main() -> int:
     existing = load_existing()
     results = {(t["code"], t["year"]): parse_task(t, metas[(t["code"], t["year"])]) for t in tasks}
     merged = {**existing, **results}
+    apply_manual(merged)
     write(merged)
     rows = [r for rs in merged.values() for r in rs]
     stats: dict[str, int] = {}
     for r in rows:
         key = (r.get("status") or "").split(":")[0]
         stats[key] = stats.get(key, 0) + 1
-    ok_value = sum(_num(r.get("statement_amount")) for r in rows if r.get("status") == "ok")
+    ok_value = sum(_num(r.get("statement_amount")) for r in rows if r.get("status") in VERIFIED)
     all_value = sum(_num(r.get("statement_amount")) for r in rows) or 1.0
     cash_value = sum(_num(r.get("cash_like_amount")) for r in rows)
     print(f"行状态：{stats}；核定覆盖报表金额 {ok_value / all_value:.1%}；现金类占核定金额 {cash_value / max(ok_value, 1):.1%}")
