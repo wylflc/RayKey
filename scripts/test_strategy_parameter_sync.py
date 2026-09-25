@@ -118,18 +118,21 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertNotIn("| 止盈 | 无 |", workflow)
         # v4.115（用户 2026-09-01）：全期 CAGR 的配对差为第五项决策读数，与主读数同为采纳门槛
         self.assertIn("复利读数 = **全期 CAGR** 的配对差中位；", workflow)
-        # v4.129（OI-118／OI-119）：主读数与复利读数两表各取、−0.15pp／[−1pp, −0.15pp)＋≥+1pp 报用户裁定；正号数只报不判
-        self.assertIn("坏情形、闸门、否决取全样本表；**主读数与复利读数在全样本表与去赢家表（剔除集 A）各取一份，四个读数按下式判**", workflow)
-        self.assertIn("均 ≥ −0.15pp → 可采纳；**回撤通道**：主读数两表均 ≥ −1pp、复利读数两表均 ≥ −0.15pp、全期最大回撤配对差中位两表均 ≤ −5pp", workflow)
-        self.assertIn("一表的某项落在 [−1pp, −0.15pp) 且另一表同项 ≥ +1pp → 报用户裁定；其余不采纳。", workflow)
-        self.assertIn("正号起点数只报不判。", workflow)
-        self.assertNotIn("任一为负即不采纳", workflow)
-        self.assertIn("主读数与复利读数（全样本表）各自损失不超过 1pp", workflow)
+        # v4.129（OI-118／OI-119）阈值沿用；v4.211（用户 2026-09-25）：回测只作参考，读数只给标记、不构成采纳或否决
+        self.assertIn("坏情形、回撤读数、负窗读数取全样本表；**主读数与复利读数在全样本表与去赢家表（剔除集 A）各取一份，四个读数按下式给读数标记**", workflow)
+        self.assertIn("均 ≥ −0.15pp → 未见劣化；**回撤改善**：主读数两表均 ≥ −1pp、复利读数两表均 ≥ −0.15pp、全期最大回撤配对差中位两表均 ≤ −5pp", workflow)
+        self.assertIn("一表的某项落在 [−1pp, −0.15pp) 且另一表同项 ≥ +1pp → 两表反向；其余 → 劣化。", workflow)
+        self.assertIn("**读数标记只概括回测读数，不构成采纳或否决。**正号起点数只报。", workflow)
+        self.assertIn("任何读数都不自动采纳、也不自动否决", workflow)
+        self.assertIn("回测收益更高本身不构成修正依据", workflow)
+        self.assertIn("7. 估值口径、交易规则、参数与风险约束的修正一律由用户人工审核裁定；回测只作参考", workflow)
+        for retired in ("任一为负即不采纳", "轨道 A（机制修复）", "回测只作护栏", "→ 可采纳", "→ 报用户裁定", "不作采纳依据"):
+            self.assertNotIn(retired, workflow)
         import sweep_backtest_configs as sweep_verdict
         self.assertEqual((sweep_verdict.NOISE_BAND, sweep_verdict.RULING_TOLERANCE, sweep_verdict.CLEAR_GAIN), (0.0015, 0.01, 0.01))
         # v4.175：回撤通道阈值（全期最大回撤配对差两表均 ≤ −5pp、更浅 ≥5pp 的回撤段 ≥ 2）
         self.assertEqual((sweep_verdict.DD_PATH_MDD_GAIN, sweep_verdict.DD_PATH_EPISODES), (0.05, 2))
-        # 扫描器的决策读数键须与成文同步（年化 = 全期 CAGR）
+        # 扫描器的参考读数键须与成文同步（年化 = 全期 CAGR）
         import sweep_backtest_configs as sweep
         self.assertIn("年化", sweep.DELTA_KEYS)
         self.assertNotIn("年化", sweep.AUX_DELTA_KEYS)
@@ -153,7 +156,7 @@ class StrategyParameterSyncTest(unittest.TestCase):
             self.assertIn(anchor, sweep.DEFAULT_STARTS)
         # 标准指标集入 §12.1 第 2 款：两个口径各出一份，每项报水平／配对差／变好起点数
         self.assertIn("**标准指标集**（每轮扫描必报，全样本与去赢家两个口径各出一份、同表并列", workflow)
-        self.assertIn("长跑锚点是单起点，只报水平与配对差，不报符号数、不进任何判定", workflow)
+        self.assertIn("长跑锚点是单起点，只报水平与配对差，不报符号数、不进任何标记", workflow)
         std = {name for name, *_rest in sweep.STANDARD_SET}
         for name in ("滚5中位", "滚5P25", "滚5最差", "滚5回撤", "滚5Calmar", "滚5Sharpe", "负窗%",
                      "年化", "最大回撤", "Calmar", "Sharpe", "5年块中位", "滚3中位", "滚3回撤",
@@ -161,15 +164,15 @@ class StrategyParameterSyncTest(unittest.TestCase):
             self.assertIn(name, std)
         for _name, key, *_rest in sweep.STANDARD_SET:
             self.assertIn(key, sweep.FIELDS)
-        # 去赢家剔除集取 A 与 U 两个；第 4 款「全面优秀」不构成采纳
+        # 去赢家剔除集取 A 与 U 两个；第 4 款「全面优秀」只描述
         self.assertIn("剔除集取两个：**A** =", workflow)
         self.assertIn("按代码汇总逐日「盈亏 ÷ 前一日净资产」累计贡献的前五名", workflow)
         self.assertIn("contrib", bt.TRADE_FIELDS)
         self.assertIn("**U** = A 与候选臂同起点前五名的并集", workflow)
         self.assertIn("记为**去赢家全面优秀**", workflow)
-        self.assertIn("该判定不构成采纳，也不放宽第 2 款的门槛", workflow)
+        self.assertIn("该标记只描述，不登记候选、不构成修正依据", workflow)
         self.assertIn("长跑锚点、年均换手与集中度表不计入", workflow)
-        self.assertIn("年均换手（参考项，不进第 4 款判定）", workflow)
+        self.assertIn("年均换手（不进第 4 款标记）", workflow)
         self.assertTrue((ROOT / "scripts/experimental/ex_winner_symmetry.py").exists())
         self.assertIn("`data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`", workflow)
         self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)

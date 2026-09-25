@@ -4,7 +4,7 @@
   Δ主(全)／Δ复利(全)／Δ主(去)／Δ复利(去)／ΔP25(全)／Δ滚5回撤(全)  ——逐起点配对差中位（pp）；
   主读数自 m3 起为同起点同窗口滚 5 CAGR 配对差（`sbc.WIN5_KEY`，§12.222），滚5中位 列仍报水平
   滚5中位／年化／滚5P25／滚5回撤／换手（全样本水平中位）＋ 去赢家的滚5中位／年化
-  第 2 款判定（与 sweep 的【采纳判定】同一规则）
+  第 2 款读数标记（与 sweep 的【读数标记】同一规则；只概括读数，不构成采纳或否决）
 用法：python3 scripts/experimental/dose_table.py <扫描文件> [--sort 年化|滚5|label] [--pattern REGEX]
 """
 from __future__ import annotations
@@ -47,10 +47,10 @@ def level(arms, label, key):
 
 
 def verdict(arms_all, arms_ex, label):
-    """§12.1 第 2 款判定：唯一实现在 `sweep_backtest_configs.adoption_verdict`（四读数双表 → 回撤通道 → 闸门／否决）。"""
+    """§12.1 第 2 款读数标记：唯一实现在 `sweep_backtest_configs.reading_flags`（四读数双表 → 回撤改善 → 回撤变深／负窗转正）。"""
     if label not in arms_ex:
         return "去赢家缺表"
-    out, reasons, _vals = sbc.adoption_verdict(arms_all, arms_ex, label)
+    out, reasons, _vals = sbc.reading_flags(arms_all, arms_ex, label)
     return out + (f"（{'；'.join(reasons)}）" if reasons else "")
 
 
@@ -83,7 +83,7 @@ def main() -> None:
     f = lambda x, w=8, p=2: f"{'—':>{w}}" if x != x else f"{x*100:>+{w}.{p}f}"
     g = lambda x, w=8, p=2, s=100: f"{'—':>{w}}" if x != x else f"{x*s:>{w}.{p}f}"
     print(f"{'臂':<24}{'Δ主(全)':>8}{'符':>6}{'Δ复利(全)':>9}{'符':>6}{'Δ主(去)':>8}{'Δ复利(去)':>9}{'ΔP25':>8}{'Δ滚5回撤':>9}"
-          f"{'|滚5中位':>9}{'年化':>8}{'滚5P25':>8}{'滚5回撤':>8}{'换手':>6}{'|去:滚5':>8}{'去:年化':>8}  判定")
+          f"{'|滚5中位':>9}{'年化':>8}{'滚5P25':>8}{'滚5回撤':>8}{'换手':>6}{'|去:滚5':>8}{'去:年化':>8}  标记")
     for (l, d5, s5, dc, sc, d5e, dce, d25, ddd, n, L5, Lc, L25, Ld, Lt, E5, Ec, v) in rows:
         print(f"{l:<24}{f(d5)}{f'{s5}/{n}':>6}{f(dc, 9)}{f'{sc}/{n}':>6}{f(d5e)}{f(dce, 9)}{f(d25)}{f(ddd, 9)}"
               f"{g(L5, 9)}{g(Lc)}{g(L25)}{g(Ld, 8, 1)}{g(Lt, 6, 2, 1)}{g(E5)}{g(Ec)}  {v}")

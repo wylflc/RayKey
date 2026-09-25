@@ -230,7 +230,7 @@ class WorkflowTextTest(unittest.TestCase):
         self.assertIn("逐日超额简单收益均值 ÷ 样本标准差 × √244", text)
         self.assertIn("股票同跌缓冲 = (S + C − kD) ÷ S", text)
         self.assertIn("**跨起点尾部**", text)
-        self.assertIn("【决策读数】（全样本与剔除集 A 各一份）、【采纳判定】、【跨起点尾部】", text)
+        self.assertIn("【参考读数】（全样本与剔除集 A 各一份）、【读数标记】、【跨起点尾部】", text)
 
 
 if __name__ == "__main__":

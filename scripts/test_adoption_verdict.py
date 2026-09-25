@@ -1,5 +1,6 @@
-"""§12.1 第 2 款采纳判定（`sweep_backtest_configs.adoption_verdict`）：四读数双表、回撤通道（v4.175）、闸门／否决；
-OI-172 完整性校验（起点集合、同窗窗口集合、有限值）与 OI-173 否决只数「负窗由 0 转正」。"""
+"""§12.1 第 2 款读数：`sweep_backtest_configs.adoption_verdict`（v4.210 及以前的采纳判定，只供复现历史实验）的四读数双表、
+回撤通道（v4.175）、闸门／否决；OI-172 完整性校验（起点集合、同窗窗口集合、有限值）与 OI-173 否决只数「负窗由 0 转正」；
+v4.211 起现行报表读 `reading_flags`：同一组读数与阈值，只给读数标记，不含采纳语义。"""
 import math
 import sys
 import unittest
@@ -154,9 +155,46 @@ class AdoptionVerdictTest(unittest.TestCase):
         import dose_table, oi148_slippage_report
         full, ex = arms(main=-0.008, cagr=0.01, mdd=-0.08)
         with mock.patch.object(sw, "DEFAULT_STARTS", list(STARTS)):     # 正式入口缺省按现行标准起点集校验完整性
-            self.assertTrue(dose_table.verdict(full, ex, "CAND").startswith("可采纳·回撤通道"))
-            self.assertEqual(oi148_slippage_report.verdict(full, ex, "CAND", "BASE")[0], "可采纳·回撤通道")
+            self.assertTrue(dose_table.verdict(full, ex, "CAND").startswith("回撤改善"))
+            self.assertEqual(oi148_slippage_report.verdict(full, ex, "CAND", "BASE")[0], "回撤改善")
         self.assertEqual(dose_table.verdict(full, ex, "CAND")[:3], "不可判"[:3])                 # 4 个合成起点 ≠ 14 个标准起点
+
+
+class ReadingFlagsTest(unittest.TestCase):
+    """v4.211（§12.1）：回测只作参考。读数标记与旧判定同一组读数与阈值，标签不含采纳语义。"""
+
+    def flags(self, full, ex):
+        return sw.reading_flags(full, ex, "CAND", required_starts=STARTS)
+
+    def test_labels_follow_the_same_readings(self):
+        self.assertEqual(self.flags(*arms(main=0.01, cagr=0.01))[:2], ("未见劣化", []))
+        self.assertEqual(self.flags(*arms(main=-0.008, cagr=0.01, mdd=-0.08))[0], "回撤改善")
+        self.assertEqual(self.flags(*arms(main=-0.008, cagr=0.02, main_ex=0.02))[0], "两表反向")
+        v, reasons, _ = self.flags(*arms(main=-0.012, cagr=0.01))
+        self.assertEqual(v, "劣化"); self.assertIn("主读数 -1.20pp < −1pp", reasons)
+
+    def test_risk_notes_renamed(self):
+        v, reasons, _ = self.flags(*arms(main=-0.008, cagr=0.01, mdd=-0.08, r5dd=0.04))
+        self.assertEqual(v, "劣化"); self.assertTrue(any(r.startswith("回撤变深：") for r in reasons))
+        full, ex = arms(main=0.01, cagr=0.01)
+        for s in STARTS[:3]:
+            full["CAND"][s]["滚动5年为负的窗口占比"] = 0.01
+        v, reasons, _ = self.flags(full, ex)
+        self.assertEqual(v, "劣化"); self.assertIn("负窗转正：负窗 0→正 3/4", reasons)
+        v, reasons, _ = self.flags(*arms(main=-0.008, cagr=0.01, mdd=-0.08, worst=-0.01))
+        self.assertIn("回撤改善未满足：滚5最差", "；".join(reasons))
+
+    def test_no_adoption_wording(self):
+        cases = [arms(main=0.01, cagr=0.01), arms(main=-0.008, cagr=0.01, mdd=-0.08), arms(main=-0.008, cagr=0.02, main_ex=0.02),
+                 arms(main=-0.012, cagr=0.01), arms(main=-0.008, cagr=0.01, mdd=-0.08, r5dd=0.04)]
+        for full, ex in cases:
+            v, reasons, _ = self.flags(full, ex)
+            text = v + "".join(reasons)
+            for word in ("采纳", "裁定", "闸门", "否决", "回撤通道"):
+                self.assertNotIn(word, text)
+        full, ex = arms(main=0.01, cagr=0.01)
+        del full["CAND"][STARTS[-1]]
+        self.assertEqual(self.flags(full, ex)[0], "不可判")
 
 
 if __name__ == "__main__":

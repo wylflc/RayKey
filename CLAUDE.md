@@ -6,6 +6,7 @@ Research and data analysis for listed companies in mainland China, with overseas
 
 - Start pipeline tasks at the routing table in [docs/000_Ashare_workflow.md](docs/000_Ashare_workflow.md). It governs classification, valuation, execution and backtesting.
 - [docs/000_personal-investment-system-v1.zh.md](docs/000_personal-investment-system-v1.zh.md) governs account constraints, research categories and research duties.
+- Backtests are reference evidence, not adoption criteria or optimization targets. Every change to valuation calibers, trading rules, parameters or risk constraints needs the user's review and ruling ([workflow §12.1](docs/000_Ashare_workflow.md)).
 - Read relevant entries in [docs/000_Ashare_workflow_open_issues.md](docs/000_Ashare_workflow_open_issues.md) before relying on an affected mechanism. Consult the closed index only when needed.
 - Read [README.md](README.md), the relevant standard and nearby code before editing. Current company decisions come from the structured files named in the workflow. Historical reports, calibration notes and archived material are evidence to check, not operating instructions.
 - Search the changelog and backtest log for the relevant entry; do not load them in full. Each experiment log entry is at most 1.5 KB and points to its detailed evidence. Each changelog version occupies one row.

@@ -278,6 +278,9 @@ def _date_str(value: float) -> str:
 # ≤ −5pp、滚 5 最差窗口（全样本）≥ −0.15pp、候选更浅 ≥ 5pp 的 BASE 回撤段（两表合并按重叠归并）≥ 2 段 → 可采纳·回撤通道；
 # 闸门／否决照旧。动机：EBDS03 最大回撤 −11pp、年化 +1.9/+2.9、主读数 −0.86 只能报裁定；阈值全部复用既有数（裁定带下沿、
 # 噪声带、闸门 3pp 之上取 5pp）。判定唯一实现 `adoption_verdict`，dose_table／oi148 报表都调用它。
+# 用户 2026-09-25（v4.211）：回测只作参考，不作采纳判据、不作优化目标，每次修正由用户人工审核裁定（§12.1）。上面的四读数
+# 双表、回撤通道与闸门／否决原样保留为**读数标记**（`reading_flags`：未见劣化／回撤改善／两表反向／劣化，另注回撤变深、
+# 负窗转正），只概括读数；`adoption_verdict` 的「可采纳／不采纳」字样只供复现 v4.210 及以前的实验。
 # **标准指标集**（§12.1 第 2 款）：每轮扫描在全样本与去赢家两个口径上各出一份，
 # 每项报水平值、逐起点配对差中位与「变好的起点数」。`good` = +1 越大越好 / −1 越小越好。
 # 长跑锚点是单起点，只报水平与差、不报符号数、不进第 4 款的「不劣」判定，故不在本表里。
@@ -458,8 +461,8 @@ def scan_market(path: Path) -> str:
 def report(path: Path, title: str) -> None:
     """对照表。Δ 相对 `BASE` 臂，按 §12.1 同时给中位与符号数——单看中位会把掷硬币读成效应。
 
-    版面（§12.1 第 2 款）：首页 = 【决策读数】（全样本、去赢家 A 各一份）→【采纳判定】→【跨起点尾部】；
-    附表 = 标准指标集、配对差、集中度（含长跑锚点与滚 10）。字段、台账与第 4 款资格计算不因版面而变。
+    版面（§12.1 第 2 款）：首页 = 【参考读数】（全样本、去赢家 A 各一份）→【读数标记】→【跨起点尾部】；
+    附表 = 标准指标集、配对差、集中度（含长跑锚点与滚 10）。字段、台账与第 4 款标记计算不因版面而变。
     结果文件里 `EX5:` 前缀的行是去赢家第二遍，单独成表、Δ 对 `EX5:BASE` 配对。"""
     set_market(scan_market(path))
     groups, orders, failed, ex5_note, version, fields = load_scan(path)
@@ -468,7 +471,7 @@ def report(path: Path, title: str) -> None:
               f"（m1 = 全期年化按净值条数 ÷ 244、Sharpe 以 CAGR 作分子）", file=sys.stderr)
     ex_set = ex5_note if ex5_note.startswith("固定剔除集") else f"剔除集 A：{ex5_note or '剔除 BASE 前五赢家'}"
     ex_title = (f"{title}｜去赢家（{ex_set}；Δ 对同剔除集的 BASE 配对）"
-                f"。§12.1 第 4 款的「去赢家全面优秀」判定走剔除集 U，用 scripts/experimental/ex_winner_symmetry.py 另跑")
+                f"。§12.1 第 4 款的「去赢家全面优秀」标记走剔除集 U，用 scripts/experimental/ex_winner_symmetry.py 另跑")
     full = _prepare_group(groups[""], orders[""], failed[""], title)
     ex = (_prepare_group(groups[EX5_PREFIX], orders[EX5_PREFIX], failed[EX5_PREFIX], ex_title)
           if groups[EX5_PREFIX] or failed[EX5_PREFIX] else None)
@@ -482,7 +485,7 @@ def report(path: Path, title: str) -> None:
         if grp:
             print()
             _print_tail(grp, fields)
-    print("\n═══ 附表（只描述不判；字段、台账与第 4 款资格计算不变）═══")
+    print("\n═══ 附表（只描述；字段、台账与第 4 款标记计算不变）═══")
     for grp in (full, ex):
         if grp:
             print()
@@ -569,7 +572,7 @@ def _episode_text(episodes: list[dict]) -> str:
 
 def adoption_verdict(arms_all, arms_ex, label: str, ref: str = "BASE", verdict_keys=None, dd_path: bool = True,
                      required_starts=None):
-    """§12.1 第 2 款采纳判定的唯一实现（dose_table／oi148 报表都调用这里）。
+    """v4.210 及以前 §12.1 第 2 款采纳判定的唯一实现；v4.211 起只供复现历史实验，现行报表与工具读 `reading_flags`。
 
     先做完整性校验（OI-172：两表两臂均覆盖 `required_starts`——缺省为现行标准起点集 `DEFAULT_STARTS`——且同窗序列
     窗口集合相同、决策字段有限，否则「不可判」并列出缺陷）→ 四读数双表判（v4.129）→ 回撤通道（v4.175）→ 闸门／否决
@@ -625,24 +628,37 @@ def adoption_verdict(arms_all, arms_ex, label: str, ref: str = "BASE", verdict_k
     return verdict, reasons, vals
 
 
+FLAG_LABELS = {"可采纳": "未见劣化", "可采纳·回撤通道": "回撤改善", "报用户裁定": "两表反向", "不采纳": "劣化", "不可判": "不可判"}
+FLAG_REASONS = (("闸门：", "回撤变深："), ("否决：", "负窗转正："), ("回撤通道未过：", "回撤改善未满足："))
+
+
+def reading_flags(arms_all, arms_ex, label: str, ref: str = "BASE", required_starts=None):
+    """§12.1 第 2 款读数标记（v4.211）：与 `adoption_verdict` 同一组读数与阈值，只概括回测读数，不构成采纳或否决。
+    返回 (标记, 说明, 读数)；标记取未见劣化／回撤改善／两表反向／劣化／不可判。"""
+    verdict, reasons, vals = adoption_verdict(arms_all, arms_ex, label, ref, required_starts=required_starts)
+    for old, new in FLAG_REASONS:
+        reasons = [new + r[len(old):] if r.startswith(old) else r for r in reasons]
+    return FLAG_LABELS[verdict], reasons, vals
+
+
 def _print_verdicts(arms_all, arms_ex, order: list[str]) -> None:
-    """§12.1 第 2 款采纳判定（OI-118／OI-119，v4.175 回撤通道）：主读数与复利读数两表各取，闸门与否决取全样本表。"""
-    print("【采纳判定】§12.1 第 2 款：主读数（m3：同起点同窗口滚 5 CAGR 配对差）／复利读数在全样本表与去赢家表（剔除集 A）各取；"
-          f"均 ≥ −{NOISE_BAND*100:.2f}pp → 可采纳；回撤通道：主读数两表均 ≥ −{RULING_TOLERANCE*100:.0f}pp、复利两表均 ≥ −{NOISE_BAND*100:.2f}pp、"
-          f"ΔMDD（全期最大回撤配对差）两表均 ≤ −{DD_PATH_MDD_GAIN*100:.0f}pp、滚 5 最差（全样本）≥ −{NOISE_BAND*100:.2f}pp、"
-          f"候选更浅 ≥{DD_PATH_MDD_GAIN*100:.0f}pp 的 BASE 回撤段 ≥ {DD_PATH_EPISODES} → 可采纳·回撤通道；"
-          f"一表某项在 [−{RULING_TOLERANCE*100:.0f}pp, −{NOISE_BAND*100:.2f}pp) 且另一表同项 ≥ +{CLEAR_GAIN*100:.0f}pp → 报用户裁定；"
-          "其余不采纳。闸门／否决取全样本表（否决 = 负窗占比由 0 转正的起点过半）；正号数只报不判。回撤段 = 更浅≥5pp 段数/归并段数"
-          "（段 = 起点最大回撤区间按重叠归并）。判定前先校验两表两臂起点集合＝标准起点集、同窗窗口集合相同、决策字段有限，否则不可判")
+    """§12.1 第 2 款读数标记（v4.211；阈值同 OI-118／OI-119 与 v4.175）：主读数与复利读数两表各取，回撤变深与负窗转正取全样本表。"""
+    print("【读数标记】§12.1 第 2 款：只概括回测读数，不构成采纳或否决，修正由用户人工审核裁定。主读数（m3：同起点同窗口滚 5 CAGR 配对差）"
+          f"／复利读数在全样本表与去赢家表（剔除集 A）各取；均 ≥ −{NOISE_BAND*100:.2f}pp → 未见劣化；回撤改善：主读数两表均 ≥ −{RULING_TOLERANCE*100:.0f}pp、"
+          f"复利两表均 ≥ −{NOISE_BAND*100:.2f}pp、ΔMDD（全期最大回撤配对差）两表均 ≤ −{DD_PATH_MDD_GAIN*100:.0f}pp、滚 5 最差（全样本）≥ −{NOISE_BAND*100:.2f}pp、"
+          f"候选更浅 ≥{DD_PATH_MDD_GAIN*100:.0f}pp 的 BASE 回撤段 ≥ {DD_PATH_EPISODES}；"
+          f"一表某项在 [−{RULING_TOLERANCE*100:.0f}pp, −{NOISE_BAND*100:.2f}pp) 且另一表同项 ≥ +{CLEAR_GAIN*100:.0f}pp → 两表反向；"
+          "其余劣化。回撤变深（滚 5 回撤 Δ > +3pp）或负窗转正（负窗占比由 0 转正的起点过半）时一律记劣化并注明，取全样本表；正号数只报。"
+          "回撤段 = 更浅≥5pp 段数/归并段数（段 = 起点最大回撤区间按重叠归并）。标记前先校验两表两臂起点集合＝标准起点集、同窗窗口集合相同、读数有限，否则不可判")
     if not arms_ex:
-        print("  去赢家表缺失（--no-ex-top5 或第二遍跑挂）：双表判定不可做，本轮只有描述读数")
+        print("  去赢家表缺失（--no-ex-top5 或第二遍跑挂）：双表标记不可做，本轮只有描述读数")
         return
-    print(f"{'配置':<14}{'Δ主(全)':>9}{'Δ主(去)':>9}{'Δ复利(全)':>10}{'Δ复利(去)':>10}{'ΔMDD(全)':>10}{'ΔMDD(去)':>10}{'Δ滚5最差':>9}{'回撤段':>7}  判定")
+    print(f"{'配置':<14}{'Δ主(全)':>9}{'Δ主(去)':>9}{'Δ复利(全)':>10}{'Δ复利(去)':>10}{'ΔMDD(全)':>10}{'ΔMDD(去)':>10}{'Δ滚5最差':>9}{'回撤段':>7}  标记")
     fmt = lambda x, w=9: f"{'—':>{w}}" if x != x else f"{x*100:>+{w}.2f}"
     for label in order:
         if label == "BASE" or label not in arms_all:
             continue
-        verdict, reasons, vals = adoption_verdict(arms_all, arms_ex, label)
+        verdict, reasons, vals = reading_flags(arms_all, arms_ex, label)
         deep = sum(1 for ep in vals["回撤段"] if ep["delta"] <= -DD_PATH_MDD_GAIN)
         print(f"{label:<14}{fmt(vals['主读数'][0])}{fmt(vals['主读数'][1])}{fmt(vals['复利读数'][0], 10)}{fmt(vals['复利读数'][1], 10)}"
               f"{fmt(vals['ΔMDD'][0], 10)}{fmt(vals['ΔMDD'][1], 10)}{fmt(vals['Δ滚5最差'])}{deep:>4}/{len(vals['回撤段']):<2}"
@@ -703,15 +719,15 @@ def _prepare_group(arms, order: list[str], failed, title: str) -> dict | None:
 
 
 def _print_decision(grp: dict) -> None:
-    """首页第一段：五项决策读数的 Δ 与符号数，附滚 5 水平、换手、仓位与闸门标记。"""
+    """首页第一段：五项参考读数的 Δ 与符号数，附滚 5 水平、换手、仓位与风险标注。"""
     rows, starts = grp["rows"], grp["starts"]
     print(f"{grp['title']}（{len(starts)} 个起点，对照＝BASE；Δ 按年化（复利读数）排序；月末锚定滚动窗口）")
-    print("【决策读数】Δ 为逐起点配对差中位（pp），符号 = 该读数为正的起点数（只报不判）；Δ滚5同窗 = 主读数（m3：同起点"
+    print("【参考读数】Δ 为逐起点配对差中位（pp），符号 = 该读数为正的起点数（只报）；Δ滚5同窗 = 主读数（m3：同起点"
           "同窗口先相减、起点内中位、再跨起点中位；滚 5 中位的配对差见附表）；回撤 Δ 正 = 更深，"
           f"「更浅」= 回撤变浅的起点数；负窗0→正 = 负收益窗口占比由 0 转正的起点数（对照已有负窗的起点不计，OI-173）；"
-          f"闸门：回撤 Δ > +{DRAWDOWN_GATE*100:.0f}pp 或 负窗0→正 过半；主读数为 — 表示该臂与 BASE 的起点或同窗窗口集合不全（OI-172），不能判")
+          f"标注：回撤 Δ > +{DRAWDOWN_GATE*100:.0f}pp 记回撤变深，负窗0→正 过半记负窗转正；主读数为 — 表示该臂与 BASE 的起点或同窗窗口集合不全（OI-172），读数不可用")
     print(f"{'配置':<14}{'Δ滚5同窗':>9}{'符号':>7}{'Δ年化':>8}{'符号':>7}{'Δ滚5P25':>9}{'符号':>7}{'Δ滚5回撤':>9}{'更浅':>7}{'负窗0→正':>8}"
-          f"{'滚5中位':>8}{'滚5P25':>8}{'滚5最差':>8}{'滚5回撤':>8}{'滚5Calmar':>10}{'滚5Sharpe':>10}{'负窗%':>6}{'换手':>6}{'仓位':>5}  闸门")
+          f"{'滚5中位':>8}{'滚5P25':>8}{'滚5最差':>8}{'滚5回撤':>8}{'滚5Calmar':>10}{'滚5Sharpe':>10}{'负窗%':>6}{'换手':>6}{'仓位':>5}  标注")
     for _sort, label, dz, n, med, neg_up in rows:
         d5, dcg, d25, dd = (dz[WIN5_KEY], dz["年化"],
                             dz["滚动5年年化P25"], dz["滚动5年回撤中位"])
@@ -792,8 +808,8 @@ def _print_appendix(grp: dict) -> None:
         return out
 
     print(f"{grp['title'].split('（')[0]}")
-    print("【标准指标集】§12.1 第 2 款必报；除第 2 款五项决策读数外一律只描述不排序。"
-          "长跑锚点是单起点水平值、常反号，不报符号数、不进第 4 款判定；滚 10 只在够长的起点上有值（空≠差）")
+    print("【标准指标集】§12.1 第 2 款必报；除第 2 款五项参考读数外一律只描述不排序。"
+          "长跑锚点是单起点水平值、常反号，不报符号数、不进第 4 款标记；滚 10 只在够长的起点上有值（空≠差）")
     print(f"{'配置':<14}"
           + "".join(f"{name:>{w}}" for name, _k, _s, w, _p, _g in STANDARD_SET)
           + f"{'长跑09CAGR':>11}{'长跑09MDD':>10}{'长跑11CAGR':>11}{'长跑11MDD':>10}{'滚10年化':>9}{'起点数':>7}")

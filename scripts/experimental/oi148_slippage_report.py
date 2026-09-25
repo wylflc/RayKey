@@ -5,10 +5,10 @@
 （剔除集 U 按 0bp 锚点固定单遍），出五段：
   1. 0bp 逐位复现：14 起点 × 全部列对 `exp_metric_m2/sweep.txt` 同臂同起点逐值核对；2011 锚点产物逐字节核对；
   2. 各档 BASE 成本表：水平（各起点再取中位）＋对 0bp 的逐起点配对差中位，全样本与 A 各一份；
-  3. 各档候选（BUY2）与同档 BASE 配对：§12.1 第 2 款五项决策读数与判定，A／U 均按 0bp 锚点固定；
+  3. 各档候选（BUY2）与同档 BASE 配对：§12.1 第 2 款五项参考读数与读数标记，A／U 均按 0bp 锚点固定；
   4. 第 4 款 U 全面性：标准指标集各项配对差，比率项按 0.005 比率单位（§12.1 第 4 款）；
   5. 成交价核对：2011 锚点 0bp 与 30bp 成交流水首批同笔成交的价格比（买 1.003／卖 0.997）。
-不预设任何档位为否决线；只报读数与判定变化。"""
+不预设任何档位为否决线；只报读数与标记变化。"""
 import argparse
 import csv
 import filecmp
@@ -69,8 +69,8 @@ def sfmt(x, scale=100.0, prec=2):
 
 
 def verdict(arms_all, arms_ex, label, ref):
-    """§12.1 第 2 款：唯一实现在 `sweep_backtest_configs.adoption_verdict`，对照臂可指定（同档 BASE）。"""
-    return sweep.adoption_verdict(arms_all, arms_ex, label, ref)
+    """§12.1 第 2 款读数标记：唯一实现在 `sweep_backtest_configs.reading_flags`，对照臂可指定（同档 BASE）。"""
+    return sweep.reading_flags(arms_all, arms_ex, label, ref)
 
 
 def clause4(arms_u, label, ref):
@@ -206,7 +206,7 @@ def main():
             say("| " + " | ".join(row) + " |")
 
     say(f"\n## 3. 候选 {CAND} 与同档 BASE 配对（§12.1 第 2 款；Δ 单位 pp；A／U 按 0bp 锚点固定）")
-    say("| 档 | Δ主(全) | Δ主(A) | Δ主(U) | Δ复利(全) | Δ复利(A) | Δ复利(U) | ΔP25(全) | Δ滚5回撤(全) | 判定 |")
+    say("| 档 | Δ主(全) | Δ主(A) | Δ主(U) | Δ复利(全) | Δ复利(A) | Δ复利(U) | ΔP25(全) | Δ滚5回撤(全) | 标记 |")
     say("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |")
     verdicts = {}
     for t in TIERS:
@@ -218,7 +218,7 @@ def main():
             f"{sfmt(paired(arms_all, c, b, '滚动5年年化P25'))} | {sfmt(paired(arms_all, c, b, '滚动5年回撤中位'))} | "
             f"{v}{('（' + '；'.join(reasons) + '）') if reasons else ''} |")
     flips = [f"{a}bp→{b}bp" for a, b in zip(TIERS, TIERS[1:]) if verdicts.get(a) != verdicts.get(b)]
-    say(f"判定随档位变化：{'、'.join(flips) if flips else '无'}；各档判定 {' / '.join(f'{t}bp {verdicts[t]}' for t in TIERS)}")
+    say(f"标记随档位变化：{'、'.join(flips) if flips else '无'}；各档标记 {' / '.join(f'{t}bp {verdicts[t]}' for t in TIERS)}")
 
     say("\n## 4. 第 4 款 U 全面性（标准指标集各项配对差中位；比率项按 0.005 比率单位）")
     if not arms_u:
