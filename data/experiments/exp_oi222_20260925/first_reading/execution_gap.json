@@ -1,0 +1,223 @@
+{
+ "buy_line": 1.067,
+ "recognized_episodes": 118,
+ "starts": 14,
+ "groups": {
+  "全部": {
+   "pairs": 1307,
+   "episodes": 112,
+   "never_held": 0.4009181331293038,
+   "cycles_median": 2,
+   "churn_3plus": 0.45338441890166026,
+   "stop_exits_per_held": 1.3486590038314177,
+   "rebound_6m_median": 0.122466216216216,
+   "rebound_share": 0.2868605817452357,
+   "stop_count": 997,
+   "premium_median": 0.18636363636363606,
+   "premium_20plus": 0.42807625649913345,
+   "delay_days_median": 166,
+   "in_market_median": 0.28698752228163993,
+   "hold_return_median": 1.2642978293167335
+  },
+  "今日 L1": {
+   "pairs": 83,
+   "episodes": 9,
+   "never_held": 0.12048192771084343,
+   "cycles_median": 2,
+   "churn_3plus": 0.4520547945205479,
+   "stop_exits_per_held": 1.6164383561643836,
+   "rebound_6m_median": 0.20876112251882284,
+   "rebound_share": 0.6779661016949152,
+   "stop_count": 118,
+   "premium_median": 0.09354054564334946,
+   "premium_20plus": 0.17647058823529413,
+   "delay_days_median": 60.0,
+   "in_market_median": 0.1679342865835108,
+   "hold_return_median": 1.348845737792332
+  },
+  "现金流复利型（今日标签）": {
+   "pairs": 385,
+   "episodes": 36,
+   "never_held": 0.4077922077922078,
+   "cycles_median": 2.0,
+   "churn_3plus": 0.35526315789473684,
+   "stop_exits_per_held": 1.144736842105263,
+   "rebound_6m_median": 0.19270069569380954,
+   "rebound_share": 0.4482758620689655,
+   "stop_count": 261,
+   "premium_median": 0.18583574127583902,
+   "premium_20plus": 0.4788732394366197,
+   "delay_days_median": 109.0,
+   "in_market_median": 0.28698752228163993,
+   "hold_return_median": 1.3637324623194296
+  },
+  "其余": {
+   "pairs": 908,
+   "episodes": 75,
+   "never_held": 0.4041850220264317,
+   "cycles_median": 3,
+   "churn_3plus": 0.5064695009242144,
+   "stop_exits_per_held": 1.4436229205175601,
+   "rebound_6m_median": 0.11458333333333348,
+   "rebound_share": 0.2146814404432133,
+   "stop_count": 722,
+   "premium_median": 0.18874773139745904,
+   "premium_20plus": 0.4251781472684085,
+   "delay_days_median": 188,
+   "in_market_median": 0.2730263157894737,
+   "hold_return_median": 1.2404414807562163
+  }
+ },
+ "largest": [
+  {
+   "name": "同花顺",
+   "window": "2012-10～2018-01",
+   "hold_return": 17.09721962911061,
+   "held": 0,
+   "pairs": 6,
+   "cycles": null,
+   "premium": null,
+   "contrib": 0.0
+  },
+  {
+   "name": "贵州茅台",
+   "window": "2013-07～2022-07",
+   "hold_return": 14.703121752710796,
+   "held": 8,
+   "pairs": 8,
+   "cycles": 3.0,
+   "premium": 0.7770608031569128,
+   "contrib": -0.013149000000000001
+  },
+  {
+   "name": "古井贡酒",
+   "window": "2013-06～2022-02",
+   "hold_return": 10.437243413428819,
+   "held": 0,
+   "pairs": 8,
+   "cycles": null,
+   "premium": null,
+   "contrib": 0.0
+  },
+  {
+   "name": "五 粮 液",
+   "window": "2015-11～2022-02",
+   "hold_return": 7.751847025355987,
+   "held": 2,
+   "pairs": 13,
+   "cycles": 1.5,
+   "premium": null,
+   "contrib": 0
+  },
+  {
+   "name": "山西汾酒",
+   "window": "2014-05～2020-04",
+   "hold_return": 7.543750451960374,
+   "held": 0,
+   "pairs": 10,
+   "cycles": null,
+   "premium": null,
+   "contrib": 0.0
+  },
+  {
+   "name": "苏 泊 尔",
+   "window": "2014-04～2021-02",
+   "hold_return": 7.343178071688806,
+   "held": 0,
+   "pairs": 9,
+   "cycles": null,
+   "premium": null,
+   "contrib": 0
+  },
+  {
+   "name": "上海机场",
+   "window": "2014-03～2020-07",
+   "hold_return": 4.845317137381043,
+   "held": 0,
+   "pairs": 9,
+   "cycles": null,
+   "premium": null,
+   "contrib": 0
+  },
+  {
+   "name": "泸州老窖",
+   "window": "2014-04～2020-03",
+   "hold_return": 4.361399328387309,
+   "held": 9,
+   "pairs": 9,
+   "cycles": 1,
+   "premium": 0.32834765015633804,
+   "contrib": 0.202763
+  },
+  {
+   "name": "美的集团",
+   "window": "2014-04～2020-02",
+   "hold_return": 4.3135996506247825,
+   "held": 0,
+   "pairs": 9,
+   "cycles": null,
+   "premium": null,
+   "contrib": 0
+  },
+  {
+   "name": "潍柴动力",
+   "window": "2015-09～2021-12",
+   "hold_return": 4.30260421544137,
+   "held": 12,
+   "pairs": 12,
+   "cycles": 3.0,
+   "premium": 1.5253064485826746,
+   "contrib": 0.30095700000000003
+  },
+  {
+   "name": "五 粮 液",
+   "window": "2013-09～2018-07",
+   "hold_return": 3.659180768303762,
+   "held": 8,
+   "pairs": 8,
+   "cycles": 1.0,
+   "premium": 0.2557014512785074,
+   "contrib": 0.0007255
+  },
+  {
+   "name": "海康威视",
+   "window": "2014-11～2020-02",
+   "hold_return": 3.438195105470073,
+   "held": 0,
+   "pairs": 11,
+   "cycles": null,
+   "premium": null,
+   "contrib": 0
+  },
+  {
+   "name": "三一重工",
+   "window": "2016-01～2022-02",
+   "hold_return": 3.4315244158586076,
+   "held": 13,
+   "pairs": 13,
+   "cycles": 1,
+   "premium": 0.14038876889848817,
+   "contrib": 0.001532
+  },
+  {
+   "name": "格力电器",
+   "window": "2013-09～2019-02",
+   "hold_return": 3.2160100854301588,
+   "held": 8,
+   "pairs": 8,
+   "cycles": 7.0,
+   "premium": null,
+   "contrib": 1.7378559999999998
+  },
+  {
+   "name": "招商银行",
+   "window": "2014-05～2020-04",
+   "hold_return": 3.2034298068951923,
+   "held": 1,
+   "pairs": 10,
+   "cycles": 1,
+   "premium": 0.02400000000000002,
+   "contrib": 0.0
+  }
+ ]
+}
