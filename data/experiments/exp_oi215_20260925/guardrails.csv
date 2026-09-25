@@ -1,0 +1,5 @@
+candidate,control,group,P_pp,CAGR_pp,P25_pp,DD5_pp,MDD_pp,min_ratio_delta,turnover_delta,negative_flips,forced_delta,identical_nav_paths,CAGR_positive,P_positive,track_a_pass
+P,CONTROL,full,0.0,-0.6420324694807911,0.0,0.0,0.0,0.0,-0.3849934409039526,0,0.0,0,0,0,True
+P,CONTROL,A,0.0,0.20567199767757005,0.0,0.0,0.0,0.0,-0.19909923464406187,0,0.0,0,9,0,
+CONTROL,OLD,full,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,14,0,0,True
+CONTROL,OLD,A,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,14,0,0,

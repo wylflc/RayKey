@@ -1,0 +1,14 @@
+{
+  "ruled_at_beijing": "2026-09-25",
+  "decision": "land P on principle (user: 先落地附注修正再裁 OI-217；中国海油、嘉立创人工读原文登记核定); Track A guardrail passes, dual table reads 不采纳 (full compound -0.64pp)",
+  "tested_arm": "P",
+  "state_arm": "P",
+  "registered_arm": "P",
+  "buy_line": 0.9524,
+  "width": 0.0476,
+  "registered_share_pct": 17.774,
+  "old_line_share_pct": 17.694,
+  "swap_margin": 0.15,
+  "swap_margin_rescan": false,
+  "swap_margin_reason": "scale drift -0.0003 within ±0.01"
+}
