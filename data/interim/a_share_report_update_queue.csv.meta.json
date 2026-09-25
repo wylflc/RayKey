@@ -1,14 +1,14 @@
 {
   "as_of": "2026-09-24",
-  "generated_at_utc": "2026-09-24T21:38:55.619072+00:00",
+  "generated_at_utc": "2026-09-25T11:01:46.091232+00:00",
   "sha256": "b255641aa9d2910cf2a66bcd84b6458511f9f3771e6b5601a582dcb48a676b3c",
   "inputs": {
     "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/interim/a_share_earnings_forecasts.csv": "066bb6d33098b1d85524b4ec746bd33563021d299d6814f60692a3f148554da6",
     "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/interim/a_share_report_disclosures.csv": "321d76cc42eee69fc641a4af7ad8c0a51a67b970f92c456768a6fd54961fd87d",
     "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_attention_triage.csv": "40aeb91e690dee3a781597ba53b863a9578b8ef94b29df1fa1abc9fd5c6a3d67",
     "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_watchlist_quality_tiers.csv": "d1c10250296b30cbb5a9ef3a75d08f61d59798be9db99d95c89c9ada7d3b9075",
-    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_core_valuation_pool.csv": "41241a75baa1f048579b1cde21eeea39fcfb3b5e6c720bcabc80df21d1008712",
-    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_valuation_dossiers.csv": "590c9b175ab28313a309779efd26fb3540e1c7f394ee554003e37ed8241a9489",
-    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_pool_model_bands_adopted.csv": "2b7122f8460756779ce241c3930e2495d834e892ad497064719c6e12dac7bdb7"
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_core_valuation_pool.csv": "cdaabdacb4d45539e6ae6c509766366f79ca62a84e62397650392893e5f6aa89",
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_valuation_dossiers.csv": "b3b0e44cb15d35703f243ef99f48c2ddd7709cb446d6ad16ec067b90ce5e40f4",
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_pool_model_bands_adopted.csv": "f97903bcc9dc3ae210e6acad4baf8fe1e649546f5cb06ff744620b9fbc1fd76d"
   }
 }
