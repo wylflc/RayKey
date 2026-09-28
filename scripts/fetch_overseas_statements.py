@@ -11,6 +11,9 @@
 * SEC companyfacts 尚未覆盖的已披露季报（含境外发行人 6-K、10-Q 提交前官方业绩三表），由官方财报逐项维护
   `data/reference/overseas_statement_overrides.csv`；披露事件与公开可得日只认
   `data/reference/overseas_report_evidence.csv`，不拿程序运行日或预期财报日代替证据日。
+* F10／companyfacts 取不到的单项（经营溢利内未拆出的利息收入、F10 并入「溢利其他项目」的权益法份额、自定义元素的
+  非流动投资）按年报／中报附注逐期维护 `data/reference/overseas_statement_supplements.csv`（OI-216），每行只自其
+  `evidence_date` 起生效，整表校验失败即中止（`load_statement_supplements`）。
 * 韩股：无免密钥三表源——不出行，清单上保持「无法估值」并写明缺口（§6.5.2.4）。
 原始 JSON 落 `data/raw/overseas_statements/`（不入库，≈4 MB/家）；提取结果落 `data/interim/overseas_roic_years.csv`（入库）。
 
@@ -38,6 +41,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from collections import ChainMap
 from datetime import date
 from pathlib import Path
 
@@ -52,6 +56,7 @@ RAW_DIR = ROOT / "data/raw/overseas_statements"
 OUT = ROOT / "data/interim/overseas_roic_years.csv"
 REPORT_EVIDENCE = ROOT / "data/reference/overseas_report_evidence.csv"
 STATEMENT_OVERRIDES = ROOT / "data/reference/overseas_statement_overrides.csv"
+STATEMENT_SUPPLEMENTS = ROOT / "data/reference/overseas_statement_supplements.csv"
 VALUATION_INPUTS = ROOT / "data/reference/overseas_valuation_inputs.csv"
 UA = "RayKey-AShareQuant research bot (personal research use)"
 HK_API = "https://datacenter.eastmoney.com/securities/api/data/v1/get"
@@ -74,6 +79,9 @@ US_DEBT_NONCURRENT = ("MarketableSecuritiesNoncurrent", "AvailableForSaleSecurit
 US_EQUITY_NONCURRENT = ("EquitySecuritiesFVNINoncurrent", "EquitySecuritiesWithoutReadilyDeterminableFairValueAmount")
 US_INVESTMENTS_TOTAL = ("LongTermInvestments", "OtherLongTermInvestments")   # 可能含权益法投资与非流动债券，扣除后与股权投资取大
 US_EQUITY_METHOD = ("EquityMethodInvestments",)
+# OI-216：正表流动「有价证券」用自定义元素（英伟达 FY2026 10-K）时，流动证券另设组合候选 = 流动债券 + 公允价值股权证券，
+# 与 `US_SECURITIES_CURRENT` 取大；选中组合时从长期投资伞项扣除该股权证券，防止同一股权在流动与伞项各计一次（eBay 2021-06-30）
+US_SECURITIES_COMPOSITE = ("DebtSecuritiesCurrent", "EquitySecuritiesFvNi")
 US_INTERMEDIATION = (("Deposits", "InterestBearingDepositLiabilities"), ("PayablesToCustomers",),
                      ("FederalFundsPurchasedAndSecuritiesSoldUnderAgreementsToRepurchase", "SecuritiesSoldUnderAgreementsToRepurchase"))
 IFRS_CASH_LIKE = (("CashAndCashEquivalents",), ("CurrentFinancialAssetsAtFairValueThroughProfitOrLoss",),
@@ -87,9 +95,11 @@ IFRS_OTHER_FIN = (("NoncurrentFinancialAssetsAtAmortisedCost",), ("NoncurrentFin
 IFRS_FIN_LIAB = (("CurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss",), ("NoncurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss",))
 IFRS_INTERMEDIATION = (("DepositsFromCustomers",), ("DepositsFromBanks",))
 SEC_FIN_CONCEPTS = sorted({c for g in (US_CASH, US_SECURITIES_CURRENT, US_DEBT_NONCURRENT, US_EQUITY_NONCURRENT, US_INVESTMENTS_TOTAL,
-                                       US_EQUITY_METHOD, *US_INTERMEDIATION, *IFRS_CASH_LIKE, *IFRS_OTHER_FIN, *IFRS_FIN_LIAB,
-                                       *IFRS_INTERMEDIATION, ("Assets",)) for c in g})
-EBIT_PART_KEYS = ("nonop_total", "other_nonop", "equity_method_income", "net_interest", "interest_income", "investment_gains")
+                                       US_EQUITY_METHOD, US_SECURITIES_COMPOSITE, *US_INTERMEDIATION, *IFRS_CASH_LIKE,
+                                       *IFRS_OTHER_FIN, *IFRS_FIN_LIAB, *IFRS_INTERMEDIATION, ("Assets",)) for c in g})
+# `financial_income_in_op`：经营溢利内、F10 未单列的金融资产收益（OI-216 补充表），`hk_ebit` 从经营溢利中剔除
+EBIT_PART_KEYS = ("nonop_total", "other_nonop", "equity_method_income", "net_interest", "interest_income", "investment_gains",
+                  "financial_income_in_op")
 
 
 def _group(value_of, concepts) -> tuple[float | None, str]:
@@ -119,10 +129,17 @@ def sec_financial_assets(framework: str, value_of) -> dict:
         intermediation_groups = IFRS_INTERMEDIATION
     else:
         debt_nc = pick("debt_noncurrent", US_DEBT_NONCURRENT) or 0.0
-        cash = (pick("cash", US_CASH) or 0.0) + (pick("securities_current", US_SECURITIES_CURRENT) or 0.0)
+        securities = pick("securities_current", US_SECURITIES_CURRENT) or 0.0
+        debt_c, equity_fvni = (value_of(c) for c in US_SECURITIES_COMPOSITE)
+        fvni_in_current = 0.0
+        if debt_c is not None and equity_fvni is not None and debt_c + equity_fvni > securities:
+            securities, fvni_in_current = debt_c + equity_fvni, equity_fvni
+            tags["securities_current"] = "+".join(US_SECURITIES_COMPOSITE)
+        cash = (pick("cash", US_CASH) or 0.0) + securities
         equity_nc = pick("equity_noncurrent", US_EQUITY_NONCURRENT) or 0.0
         total = pick("investments_total", US_INVESTMENTS_TOTAL)
-        umbrella = (max(0.0, total - (pick("equity_method", US_EQUITY_METHOD) or 0.0) - debt_nc) if total is not None else 0.0)
+        umbrella = (max(0.0, total - (pick("equity_method", US_EQUITY_METHOD) or 0.0) - debt_nc - fvni_in_current)
+                    if total is not None else 0.0)
         other, liab = debt_nc + max(equity_nc, umbrella), 0.0
         intermediation_groups = US_INTERMEDIATION
     intermediation = sum(pick(f"intermediation{i}", g) or 0.0 for i, g in enumerate(intermediation_groups))
@@ -151,16 +168,21 @@ def nonop_ebit(get, pretax: float | None, interest_expense: float) -> tuple[floa
 
 
 def hk_ebit(get) -> tuple[float | None, str]:
-    """§6.8（OI-210）港股 F10 口径 EBIT：经营溢利 − 其他收益 + 应占联营／合营公司溢利；无经营溢利时
-    除税前溢利 + 融资成本 − 利息收入 − 其他收益。"""
+    """§6.8（OI-210）港股 F10 口径 EBIT：经营溢利 − 其他收益 − 经营溢利内的金融资产收益 + 应占联营／合营公司溢利；
+    无经营溢利时除税前溢利 + 融资成本 − 利息收入 − 其他收益。经营溢利内的金融资产收益（`financial_income_in_op`）
+    只来自 `overseas_statement_supplements.csv`（F10 未把利息收入从「其他收入」拆出的公司，OI-216）；
+    无经营溢利且 F10 无利息收入行时，同一补充值作利息收入扣除。"""
     gains = get("investment_gains") or 0.0
+    financial_in_op = get("financial_income_in_op") or 0.0
     op = get("operating_income")
     if op is not None:
-        return op - gains + (get("equity_method_income") or 0.0), "operating"
+        return op - gains - financial_in_op + (get("equity_method_income") or 0.0), "operating"
     pretax = get("pretax")
     if pretax is None:
         return None, "none"
-    return pretax + (get("interest_expense") or 0.0) - (get("interest_income") or 0.0) - gains, "pretax_strip"
+    interest = get("interest_income")
+    interest = financial_in_op if interest is None else interest
+    return pretax + (get("interest_expense") or 0.0) - interest - gains, "pretax_strip"
 
 FIELDS = ["market", "security_code", "security_name", "period", "fiscal_year", "notice_date", "report_currency",
           "revenue", "operating_income", "pretax", "income_tax", "interest_expense", "ebit", "tax_rate", "tax_rate_observed",
@@ -239,7 +261,11 @@ IFRS = {
     "total_equity": ["Equity"],
     "parent_equity": ["EquityAttributableToOwnersOfParent"],
     "minority_equity": ["NoncontrollingInterests"],
-    "lt_debt_noncurrent": ["NoncurrentPortionOfNoncurrentBorrowings", "LongtermBorrowings", "NoncurrentPortionOfNoncurrentBondsIssued"],
+    # OI-216：非流动借款合计（NoncurrentPortionOfNoncurrentBorrowings，含债券）存在即只取合计；否则长期银行借款与
+    # 应付公司债是两行，相加（`compose_debt` 的分项层）。原三者按候选先到者取一，台积电 2020–2024 被长期借款挤掉公司债。
+    "lt_debt_noncurrent": ["NoncurrentPortionOfNoncurrentBorrowings"],
+    "lt_loans_noncurrent": ["LongtermBorrowings"],
+    "bonds_noncurrent": ["NoncurrentPortionOfNoncurrentBondsIssued"],
     "lt_debt_current": ["CurrentPortionOfLongtermBorrowings", "CurrentPortionOfNoncurrentBondsIssued"],
     "lt_debt_total": ["Borrowings", "BondsIssued"],
     "st_debt": ["ShorttermBorrowings", "CurrentBorrowingsAndCurrentPortionOfNoncurrentBorrowings"],
@@ -282,6 +308,8 @@ def compose_debt(get) -> tuple[float, tuple[str, ...]]:
     流动：DebtCurrent 是短债与一年内到期长债的合计，存在即整体取用，且非流动层含租赁时视其同样含当期租赁；否则一年内到期长债
     ＋ 短期借款（ShortTermBorrowings，缺则 CommercialPaper），短期借款与一年内到期长债金额相同视为同一行只计一次（AMD）。
     融资租赁：非流动＋流动，缺拆分取合计；已并入含租赁标签的层级不再加。经营租赁负债不计（与港股「融资租赁负债」行同口径）。
+    ifrs-full（OI-216）：非流动借款合计缺失时，长期银行借款（`lt_loans_noncurrent`）与应付公司债（`bonds_noncurrent`）
+    是两行，相加作非流动层；有合计即只取合计，不再叠加分项。
     返回 (金额, 实际计入的键)。"""
     used: list[str] = []
 
@@ -296,11 +324,18 @@ def compose_debt(get) -> tuple[float, tuple[str, ...]]:
     dc = get("debt_current_total")
     has_current_line = cur_ltd is not None or dc is not None
     nc_key, nc = first(("lt_debt_noncurrent", "lt_notes_noncurrent", "ltd_lease_noncurrent"))
+    nc_parts: tuple[str, ...] = (nc_key,) if nc is not None else ()
+    if nc is None:                                           # ifrs-full 分项层：长期借款 + 应付公司债
+        components = [(k, get(k)) for k in ("lt_loans_noncurrent", "bonds_noncurrent")]
+        components = [(k, v) for k, v in components if v is not None]
+        if components:
+            nc, nc_key = sum(v for _k, v in components), "components"
+            nc_parts = tuple(k for k, _v in components)
     includes_current = False
     if nc is None:
         tot_key, total = first(("lt_debt_total", "ltd_lease_total", "notes_total"))
         if total is not None:
-            nc_key = tot_key
+            nc_key, nc_parts = tot_key, (tot_key,)
             if tot_key == "lt_debt_total" and has_current_line:
                 nc = total                                   # 报表非流动行（另有流动行）
             elif cur_ltd is not None:
@@ -309,7 +344,7 @@ def compose_debt(get) -> tuple[float, tuple[str, ...]]:
                 nc, includes_current = total, True           # 无拆分的合计：已含流动部分
     debt = 0.0
     if nc is not None:
-        debt += nc; used.append(nc_key)
+        debt += nc; used.extend(nc_parts)
     lease_nc_done = nc_key in ("ltd_lease_noncurrent", "ltd_lease_total")
     lease_c_done = cur_key == "ltd_lease_current" or (includes_current and nc_key == "ltd_lease_total")
     if includes_current:                                     # 合计已含一年内到期部分：只再加短期借款
@@ -640,6 +675,155 @@ def carry_other_financial_assets(overrides: list[dict], extracted: list[dict]) -
             ic = max(row["interest_debt"] + row["total_equity"] - row["excess_cash"], IC_FLOOR * row["total_equity"])
             row["invested_capital"] = ic if ic > 0 else None
         row["tags_used"] = (row["tags_used"] + ";" if row["tags_used"] else "") + f"other_financial_assets=carried:{prior['period']}"
+
+
+# ------------------------------------------------------------------ OI-216 字段级补充表
+# `overseas_statement_supplements.csv`：官方年报／中报附注给出、而 F10 与 SEC companyfacts 取不到的单项金额（F10 未拆出的
+# 经营溢利内利息收入、F10 并入「溢利其他项目」的权益法份额、公司自定义元素的非流动投资）。字段 → (类别, 适用市场)：
+# flow 为损益项，年报行取 `annual` 值，TTM 行 = 年报 + 本期累计 − 上年同期累计（三者须齐）；balance 为期末值，整值替换抽取值。
+SUPPLEMENT_FIELDS = {
+    "ebit_financial_income_in_operating": ("flow", frozenset({"HK"})),
+    "equity_method_income": ("flow", frozenset({"HK"})),
+    "other_financial_assets": ("balance", frozenset({"HK", "US"})),
+}
+SUPPLEMENT_KINDS = {"flow": frozenset({"annual", "interim_ytd"}), "balance": frozenset({"balance"})}
+SUPPLEMENT_COLUMNS = ("market", "security_code", "security_name", "period", "period_kind", "field", "value", "unit",
+                      "original_value", "original_unit", "fx_to_report", "evidence_date", "source_url", "source_ref", "note")
+SUPPLEMENT_TAG = "supplement:overseas_statement_supplements"
+
+
+class SupplementError(ValueError):
+    """补充表校验或取用失败：整次取数中止，不静默跳过（fail closed）。"""
+
+
+def _supplement_date(value: str, what: str, where: str) -> str:
+    try:
+        return date.fromisoformat(value.strip()).isoformat()
+    except (AttributeError, TypeError, ValueError):
+        raise SupplementError(f"{where}: {what} 须为 YYYY-MM-DD，实为 {value!r}") from None
+
+
+def load_statement_supplements(as_of: str, companies: dict[str, tuple[str, str]],
+                               path: Path | None = None) -> dict[str, dict[str, dict[str, dict]]]:
+    """读取并逐行校验补充表（OI-216）。`companies` = {代码: (市场, 报表币)}，取自观察清单。
+
+    任一行出现以下情形即 `SupplementError`：缺列；公司不在清单或市场不符；字段未知或不适用该市场；期间类别与字段不符；
+    期末或公开日非法、公开日早于期末；缺来源；数值非法；单位与港股登记报表币不符；(代码, 期间, 字段) 重复。
+    只返回公开日 ≤ as_of 的行：{代码: {字段: {期间: 行}}}，行内 `value` 为 float。"""
+    path = path or STATEMENT_SUPPLEMENTS
+    if not path.exists():
+        return {}
+    with path.open(encoding="utf-8-sig") as handle:
+        reader = csv.DictReader(handle)
+        missing = [c for c in SUPPLEMENT_COLUMNS if c not in (reader.fieldnames or [])]
+        if missing:
+            raise SupplementError(f"{path.name}: 缺列 {missing}")
+        raw_rows = list(reader)
+    seen: set[tuple[str, str, str]] = set()
+    out: dict[str, dict[str, dict[str, dict]]] = {}
+    for line, raw in enumerate(raw_rows, start=2):
+        where = f"{path.name}:{line}"
+        code, market, field = (raw.get(k, "").strip() for k in ("security_code", "market", "field"))
+        market = market.upper()
+        if code not in companies:
+            raise SupplementError(f"{where}: 公司 {code!r} 不在观察清单")
+        if companies[code][0] != market:
+            raise SupplementError(f"{where}: {code} 市场 {market!r} 与清单 {companies[code][0]!r} 不符")
+        if field not in SUPPLEMENT_FIELDS:
+            raise SupplementError(f"{where}: 未知字段 {field!r}")
+        category, markets = SUPPLEMENT_FIELDS[field]
+        if market not in markets:
+            raise SupplementError(f"{where}: 字段 {field} 不适用 {market} 市场")
+        kind = raw.get("period_kind", "").strip()
+        if kind not in SUPPLEMENT_KINDS[category]:
+            raise SupplementError(f"{where}: 字段 {field} 的 period_kind 须为 {sorted(SUPPLEMENT_KINDS[category])}，实为 {kind!r}")
+        period = _supplement_date(raw.get("period", ""), "period", where)
+        evidence = _supplement_date(raw.get("evidence_date", ""), "evidence_date", where)
+        if evidence < period:
+            raise SupplementError(f"{where}: 公开日 {evidence} 早于期末 {period}")
+        if not raw.get("source_url", "").strip() or not raw.get("source_ref", "").strip():
+            raise SupplementError(f"{where}: 缺来源（source_url／source_ref）")
+        value = _num(raw.get("value"))
+        if value is None or value != value or value in (float("inf"), float("-inf")):
+            raise SupplementError(f"{where}: value 非有限数值：{raw.get('value')!r}")
+        unit = raw.get("unit", "").strip()
+        if not unit or (market == "HK" and unit != companies[code][1]):
+            raise SupplementError(f"{where}: 单位 {unit!r} 与报表币 {companies[code][1]!r} 不符")
+        key = (code, period, field)
+        if key in seen:
+            raise SupplementError(f"{where}: 重复键 {key}")
+        seen.add(key)
+        if evidence > as_of:
+            continue
+        out.setdefault(code, {}).setdefault(field, {})[period] = dict(
+            raw, security_code=code, market=market, field=field, period=period, period_kind=kind,
+            evidence_date=evidence, unit=unit, value=value, _used=False)
+    return out
+
+
+def supplement_value(code: str, supplements: dict | None, field: str, period: str, kind: str) -> float | None:
+    """取一条已生效的补充值（无则 None）；期间类别不符即 `SupplementError`。取到即记为已用。"""
+    item = ((supplements or {}).get(field) or {}).get(period)
+    if item is None:
+        return None
+    if item["period_kind"] != kind:
+        raise SupplementError(f"{code} {period} {field}: period_kind 应为 {kind}，实为 {item['period_kind']}")
+    item["_used"] = True
+    return item["value"]
+
+
+def supplement_ttm(code: str, supplements: dict | None, field: str, annual_period: str, period: str) -> float | None:
+    """损益补充项的 TTM = 年报 + 本期累计 − 上年同期累计；三者全无返回 None，缺任一即 `SupplementError`
+    （年报已按补充值修正而 TTM 未修正会扭曲 TTM／年报比，宁可中止）。"""
+    previous = f"{int(period[:4]) - 1:04d}{period[4:]}"
+    parts = {"annual": supplement_value(code, supplements, field, annual_period, "annual"),
+             "current": supplement_value(code, supplements, field, period, "interim_ytd"),
+             "previous": supplement_value(code, supplements, field, previous, "interim_ytd")}
+    if all(v is None for v in parts.values()):
+        return None
+    missing = [f"{name}={p}" for name, p in (("annual", annual_period), ("current", period), ("previous", previous))
+               if parts[name] is None]
+    if missing:
+        raise SupplementError(f"{code} TTM {period}: 补充字段 {field} 须年报、本期、上年同期三期齐全（已生效），缺 {missing}")
+    return parts["annual"] + parts["current"] - parts["previous"]
+
+
+def apply_balance_supplements(rows: list[dict], supplements: dict | None) -> int:
+    """非流动金融资产补充值（OI-216）整值替换该期抽取值，重算超额现金与投入资本（与 `carry_other_financial_assets` 同式）；
+    TTM 行无同期补充值时沿用 15 个月内最近一期补充值。单位须与该行报表币一致。返回替换行数。"""
+    items = (supplements or {}).get("other_financial_assets") or {}
+    applied = 0
+    if not items:
+        return applied
+    for row in rows:
+        item, how = items.get(row["period"]), "supplement"
+        if item is None and row.get("period_type") == "ttm":
+            prior = [p for p in items if p < row["period"]
+                     and (date.fromisoformat(row["period"]) - date.fromisoformat(p)).days <= CARRY_MAX_DAYS]
+            if prior:
+                item, how = items[max(prior)], "supplement_carried"
+        if item is None:
+            continue
+        if item["unit"] != row.get("report_currency"):
+            raise SupplementError(f"{row['security_code']} {row['period']} other_financial_assets: 单位 {item['unit']} "
+                                  f"与报表币 {row.get('report_currency')} 不符")
+        item["_used"] = True
+        old = max(0.0, float(row.get("other_financial_assets") or 0.0))
+        row["other_financial_assets"] = item["value"]
+        row["excess_cash"] = row["excess_cash"] - old + max(0.0, item["value"])
+        if row.get("total_equity") is not None:
+            ic = max(row["interest_debt"] + row["total_equity"] - row["excess_cash"], IC_FLOOR * row["total_equity"])
+            row["invested_capital"] = ic if ic > 0 else None
+        row["tags_used"] = ((row["tags_used"] + ";" if row["tags_used"] else "")
+                            + f"other_financial_assets={how}:{item['period']}")
+        applied += 1
+    return applied
+
+
+def unused_supplements(supplements: dict[str, dict[str, dict[str, dict]]]) -> list[str]:
+    """已生效却未被任何行取用的补充行（期间写错或报告期已滚动），供取数结束时提示。"""
+    return [f"{code} {field} {period}" for code, fields in sorted(supplements.items())
+            for field, items in sorted(fields.items()) for period, item in sorted(items.items()) if not item["_used"]]
 
 
 def apply_evidence(rows: list[dict], evidence: dict[str, dict[str, str]]) -> list[dict]:
@@ -1011,7 +1195,10 @@ def hk_download(code: str, refresh: bool) -> dict[str, list[dict]]:
         cached = json.loads(out.read_text(encoding="utf-8")) if out.exists() and out.stat().st_size > 1000 else []
         allrows, page, complete = [], 1, True
         while True:
-            url = (f"{HK_API}?reportName={rn}&columns=ALL&pageSize=500&pageNumber={page}&sortColumns=REPORT_DATE&sortTypes=-1&filter="
+            # OI-216：只按 REPORT_DATE 排序时，跨页的同一报告期各行次序不稳定，翻页会重复一部分、漏掉一部分
+            # （京东 FY2023 漏现金、短期投资与权益）；加 STD_ITEM_CODE 作次序键，下载后再查重。
+            url = (f"{HK_API}?reportName={rn}&columns=ALL&pageSize=500&pageNumber={page}"
+                   f"&sortColumns=REPORT_DATE,STD_ITEM_CODE&sortTypes=-1,1&filter="
                    + urllib.parse.quote(f'(SECUCODE="{code}.HK")'))
             try:
                 d = json.loads(_get(url, {"User-Agent": "Mozilla/5.0", "Referer": "https://emweb.securities.eastmoney.com/"}, 30).decode("utf-8"))
@@ -1026,6 +1213,10 @@ def hk_download(code: str, refresh: bool) -> dict[str, list[dict]]:
                 break
             page += 1
             time.sleep(0.3)
+        keys = [(str(r.get("REPORT_DATE")), str(r.get("DATE_TYPE_CODE")), str(r.get("STD_ITEM_CODE"))) for r in allrows]
+        if complete and len(set(keys)) != len(keys):
+            print(f"  HK {code} {kind}: 分页返回重复行 {len(keys) - len(set(keys))} 条，视为不完整，沿用旧缓存")
+            complete = False
         if complete and allrows:
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(json.dumps(allrows, ensure_ascii=False), encoding="utf-8")
@@ -1036,8 +1227,27 @@ def hk_download(code: str, refresh: bool) -> dict[str, list[dict]]:
     return out_all
 
 
+def _hk_supplemented_parts(code: str, period: str, parts: dict, f10_equity: tuple[float | None, float | None],
+                           supplement_em: float | None, supplement_fin: float | None) -> dict[str, str]:
+    """把补充表的损益项并入港股 EBIT 分量（OI-216），返回该行需加注的 tags。F10 已有联营／合营份额行时
+    再给权益法补充值会重复计 → `SupplementError`。"""
+    extra: dict[str, str] = {}
+    if supplement_em is not None:
+        if any(v is not None for v in f10_equity):
+            raise SupplementError(f"{code} {period}: F10 已有应占联营／合营公司溢利行，补充表不得再给 equity_method_income")
+        parts["equity_method_income"] = supplement_em
+        extra["equity_method_income"] = SUPPLEMENT_TAG
+    if supplement_fin is not None:
+        parts["financial_income_in_op"] = supplement_fin
+        extra["financial_income_in_op"] = SUPPLEMENT_TAG
+    return extra
+
+
 def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: float | None,
-               events: list[dict] | None = None, fx: dict[str, float] | None = None) -> list[dict]:
+               events: list[dict] | None = None, fx: dict[str, float] | None = None,
+               supplements: dict | None = None) -> list[dict]:
+    """港股年报行。`supplements` 为该公司已生效的补充表行（`load_statement_supplements(...)[code]`）：年报期的
+    `ebit_financial_income_in_operating` 从 EBIT 剔除，F10 无联营／合营行时 `equity_method_income` 计入 EBIT（OI-216）。"""
     def table_map(kind: str) -> dict[str, dict[str, float]]:
         out: dict[str, dict[str, float]] = {}
         for r in tables.get(kind, []):
@@ -1067,8 +1277,14 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
         intexp = pick(period, "interest_expense") or 0.0
         debt = sum(pick(period, k) or 0.0 for k in HK_DEBT_KEYS)
         fin = hk_financial_assets(lambda k: pick(period, k))
+        f10_equity = (pick(period, "assoc"), pick(period, "jv"))
         parts = {"interest_income": pick(period, "interest_income"), "investment_gains": pick(period, "investment_gains"),
-                 "equity_method_income": (pick(period, "assoc") or 0.0) + (pick(period, "jv") or 0.0)}
+                 "equity_method_income": (f10_equity[0] or 0.0) + (f10_equity[1] or 0.0)}
+        extra_tags = _hk_supplemented_parts(
+            code, period, parts, f10_equity,
+            supplement_value(code, supplements, "equity_method_income", period, "annual"),
+            supplement_value(code, supplements, "ebit_financial_income_in_operating", period, "annual"))
+        row_tags = ChainMap(extra_tags, tags) if extra_tags else tags   # 同一 tags 字典随后续 pick 更新，与原行为一致
         ebit, ebit_source = hk_ebit(lambda k: {"operating_income": opinc, "pretax": pretax, "interest_expense": intexp}.get(k, parts.get(k)))
         dividends = pick(period, "dividends_paid")
         if dividends is None and events and prev_period:
@@ -1080,7 +1296,7 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
         rows.append(_build_row("HK", code, name, period, period, HK_REPORT_CCY.get(code, "CNY"), rev, opinc, pretax,
                                None if taxv is None else abs(taxv), intexp, pick(period, "total_equity"), pick(period, "parent_equity"),
                                pick(period, "minority_equity") or 0.0, debt, fin["cash"], abs(pick(period, "capex") or 0.0),
-                               pick(period, "dep_amort") or 0.0, pick(period, "cfo"), shares, tags,
+                               pick(period, "dep_amort") or 0.0, pick(period, "cfo"), shares, row_tags,
                                "eastmoney HK F10 (RPT_HKF10_FN_*_PC, DATE_TYPE_CODE=001)", TAX_DEFAULT["HK"],
                                buybacks=abs(pick(period, "buybacks") or 0.0), dividends=abs(dividends or 0.0),
                                net_income=pick(period, "net_income"), tci=pick(period, "tci"),
@@ -1091,8 +1307,12 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
 
 def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shares: float | None,
                        annuals: list[dict], evidence_date: str = "", events: list[dict] | None = None,
-                       fx: dict[str, float] | None = None) -> dict | None:
-    """Build the latest verified HK quarterly/interim TTM snapshot from F10 cumulative statements."""
+                       fx: dict[str, float] | None = None, supplements: dict | None = None,
+                       report_period: str | None = None) -> dict | None:
+    """Build the latest verified HK quarterly/interim TTM snapshot from F10 cumulative statements.
+
+    补充表损益项（OI-216）按「年报 + 本期累计 − 上年同期累计」合成，三期不齐即 `SupplementError`；只在该 TTM 期
+    即证据登记的报告期（`report_period`，缺省视为是）时取用——F10 已出、证据尚未登记的新一期不会入表，不校验。"""
     if not annuals or not evidence_date:
         return None
 
@@ -1150,8 +1370,14 @@ def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shar
         if cur is None and old is None and base is None:
             return None
         return (base or 0.0) + (cur or 0.0) - (old or 0.0)
+    f10_equity = (ttm_f10("assoc"), ttm_f10("jv"))
     parts = {"interest_income": ttm_f10("interest_income"), "investment_gains": ttm_f10("investment_gains"),
-             "equity_method_income": (ttm_f10("assoc") or 0.0) + (ttm_f10("jv") or 0.0)}
+             "equity_method_income": (f10_equity[0] or 0.0) + (f10_equity[1] or 0.0)}
+    if supplements and (report_period is None or report_period == period):
+        tags.update(_hk_supplemented_parts(
+            code, period, parts, f10_equity,
+            supplement_ttm(code, supplements, "equity_method_income", annual["period"], period),
+            supplement_ttm(code, supplements, "ebit_financial_income_in_operating", annual["period"], period)))
     ebit, ebit_source = hk_ebit(lambda k: {"operating_income": opinc, "pretax": pretax, "interest_expense": abs(interest)}.get(k, parts.get(k)))
     cash = fin["cash"]
     if revenue is None or (pretax is None and opinc is None) or parent_eq is None or not shares:
@@ -1231,6 +1457,11 @@ def main() -> int:
     evidence = load_report_evidence(args.as_of)
     overrides = load_statement_overrides(args.as_of)
     override_keys = {(r["security_code"], r["period"], r["period_type"]) for r in overrides}
+    # OI-216 字段级补充表：整表校验失败即中止（SupplementError），只取公开日 ≤ as_of 的行
+    companies = {r["security_code"]: (r["market_type"].upper(),
+                                      HK_REPORT_CCY.get(r["security_code"], "CNY") if r["market_type"].upper() == "HK" else "")
+                 for r in watch}
+    supplements = load_statement_supplements(args.as_of, companies)
     fx = load_fx()
     try:
         from build_overseas_roic_bands import COMPANY_CFG  # 每 ADR 普通股数（美股分红事件折每股用）
@@ -1261,8 +1492,9 @@ def main() -> int:
         elif market == "HK":
             tables = hk_download(code, args.refresh)
             events = hk_dividend_events(code, args.refresh)
-            got = hk_extract(code, name, tables, hk_shares.get(code), events, fx)
-            current = hk_current_extract(code, name, tables, hk_shares.get(code), got, item.get("evidence_date", ""), events, fx)
+            got = hk_extract(code, name, tables, hk_shares.get(code), events, fx, supplements=supplements.get(code))
+            current = hk_current_extract(code, name, tables, hk_shares.get(code), got, item.get("evidence_date", ""), events, fx,
+                                         supplements=supplements.get(code), report_period=item.get("report_period"))
             if current and current["period"] == item.get("report_period"):
                 got.append(current)
         else:
@@ -1282,16 +1514,19 @@ def main() -> int:
                     fills.append(f"{code} {g['period']} {g['period_type']}: 东财补 {'/'.join(done)}")
         carry_other_financial_assets(own_overrides, got)
         got += own_overrides
+        apply_balance_supplements(got, supplements.get(code))     # OI-216：非流动金融资产补充值（在维护行沿用之后）
         got = apply_evidence(got, evidence)
         got.sort(key=lambda g: (g["period"], 0 if g["period_type"] == "annual" else 1))
         rows += got
         annuals = [g for g in got if g.get("period_type") == "annual"]
         current = [g for g in got if g.get("period_type") == "ttm"]
         latest = current[-1] if current else (annuals[-1] if annuals else None)
+        used = sum(1 for items in supplements.get(code, {}).values() for it in items.values() if it["_used"])
         summary.append(f"{market} {code} {name}: {len(annuals)} 个财年"
                        f"{'＋TTM ' + current[-1]['period'] if current else ''}，"
                        f"证据 {latest['notice_date'] if latest else '—'} {latest['report_label'] if latest else '—'}，"
-                       f"币种 {latest['report_currency'] if latest else '—'}")
+                       f"币种 {latest['report_currency'] if latest else '—'}"
+                       f"{f'，补充表 {used} 行' if used else ''}")
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=FIELDS, lineterminator="\n")
@@ -1301,6 +1536,9 @@ def main() -> int:
     print("\n".join(summary))
     if fills:
         print("维护行补缺：" + "；".join(fills))
+    unused = unused_supplements(supplements)
+    if unused:
+        print("⚠ 补充表已生效但未被取用（期间写错或报告期已滚动，请核对）：" + "；".join(unused))
     print(f"wrote {len(rows)} rows → {args.out}")
     return 0
 
