@@ -1,0 +1,169 @@
+{
+ "signal_date": "2026-09-28",
+ "status": "reviewed_through_snapshot_cutoff",
+ "reviewed_at_utc": "2026-09-28T07:54:04.612002+00:00",
+ "primary_documents": [
+  {
+   "security_code": "601939",
+   "title": "关于境内2026年无固定期限资本债券（第二期）（债券通）发行完毕的公告",
+   "art_code": "AN202609231829807197",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609231829807197_1.pdf",
+   "pdf_sha256": "6a54f4847f84de7f15c20d18cb6d2e34df7747c30c318645a6f39dae1376a23b",
+   "pages": 2,
+   "pages_reviewed": [
+    1,
+    2
+   ],
+   "review_method": "原始PDF逐页文字核验",
+   "reviewed_at_utc": "2026-09-28T07:42:26.081577+00:00",
+   "facts": "按2025年第二次临时股东会批准的资本工具额度，09-22在银行间市场发行完毕400亿元无固定期限资本债券，前5年票面利率1.83%，每5年调整，第5年起附有条件赎回权，募集资金补充其他一级资本。",
+   "assessment": "既定额度内的常规资本补充，不改变普通股股利、盈利或资产质量证据；不触发§7.4事件复核，股利折现带不变。"
+  },
+  {
+   "security_code": "601398",
+   "title": "工商银行H股公告-2026中期报告",
+   "art_code": "AN202609241829865848",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609241829865848_1.pdf",
+   "pdf_sha256": "d2506c5dafad0fa91814b4a0b759de8934466fd72b2c71e832f852db1304613c",
+   "pages": 199,
+   "pages_reviewed": [
+    1
+   ],
+   "review_method": "原始PDF封面核验文件性质（正文为繁体CID字体，文字层不可读）；对照披露表A股半年报公告日",
+   "reviewed_at_utc": "2026-09-28T07:42:26.081577+00:00",
+   "facts": "H股（1398）2026年中期报告印刷版，199页；同一报告期A股2026年半年报已于08-29披露（归母净利1,736.82亿元），当前模型带报告期2026-06-30、证据日08-29。",
+   "assessment": "同一报告期财务信息的H股版本，不构成新披露；不触发§7.3或§7.4复核。"
+  },
+  {
+   "security_code": "688692",
+   "title": "达梦数据2026年半年度权益分派实施公告",
+   "art_code": "AN202609181829618998",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609181829618998_1.pdf",
+   "pdf_sha256": "3d63a175c070994fa920082c8264b095218de7ec2bfc206271d5601ce2ebf43d",
+   "pages": 4,
+   "pages_reviewed": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "review_method": "原始PDF逐页文字核验",
+   "reviewed_at_utc": "2026-09-28T07:42:26.081577+00:00",
+   "facts": "是否涉及差异化分红送转：否；以总股本113,240,000股为基数每股派0.70元（含税），共7,926.8万元；09-24登记、09-28除息并发放，无送转。",
+   "assessment": "非差异化分派，价格口径与实派同为每股0.70元，无需登记交易所价格参数；候选及持仓侧V按现金0.70元归一化。"
+  },
+  {
+   "security_code": "001232",
+   "title": "嘉立创2026年半年度权益分派实施公告",
+   "art_code": "AN202609171829514920",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609171829514920_1.pdf",
+   "pdf_sha256": "83c08705ef03d0ace5b575084cd9a6c682470a28ac4a6233540619c9279c2c70",
+   "pages": 3,
+   "pages_reviewed": [
+    1
+   ],
+   "review_method": "原始PDF首页文字核验；文件摘要与a_share_exright_terms.csv已登记来源一致",
+   "reviewed_at_utc": "2026-09-28T07:42:26.081577+00:00",
+   "facts": "以总股本555,560,000股为基数每10股派5.00元（含税），不送不转；按总股本折算的除权除息价格减项0.50元/股；09-28除息。",
+   "assessment": "非差异化，价格口径0.50元已登记；候选及持仓侧V按现金0.50元归一化。"
+  }
+ ],
+ "carried_forward_documents": [],
+ "announcement_snapshot": "data/interim/daily_announcements_2026-09-28.json",
+ "announcement_title_screening_count": 142,
+ "announcement_retrieved_at_utc": "2026-09-28T07:46:56.900360+00:00",
+ "latest_announcement_display_time_beijing": "2026-09-28 15:32:07",
+ "industry_review": "data/interim/daily_industry_review_2026-09-28.json",
+ "valuation_review_queue_rows": 0,
+ "valuation_update": "无新增财报导致的估值更新（复核队列0行）；仅嘉立创（0.50，已登记价格口径）、达梦数据（0.70，实施公告核验非差异化）今日除息按现行公式机械折算；五粮液、爱玛维持采用研究数；其余带值不变",
+ "holding_ex_dividends_today": {},
+ "mandatory_codes": [
+  "000651",
+  "002648",
+  "600036",
+  "601318",
+  "601398",
+  "601939",
+  "603529"
+ ],
+ "eligible_codes": [
+  "000651",
+  "601318",
+  "600036",
+  "603529",
+  "601398",
+  "601939"
+ ],
+ "holdings_codes": [
+  "002648",
+  "000651",
+  "603529",
+  "600036",
+  "601318"
+ ],
+ "user_named_codes": [],
+ "relevant_announcement_count": 5,
+ "unreviewed_announcements": [],
+ "coverage": [
+  {
+   "security_code": "000651",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "002648",
+   "held": true,
+   "eligible": false,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "600036",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "601318",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609241829865905",
+    "AN202609241829865904"
+   ],
+   "announcement_status": "reviewed_on_prior_day"
+  },
+  {
+   "security_code": "601398",
+   "held": false,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609241829865848"
+   ],
+   "announcement_status": "primary_reviewed"
+  },
+  {
+   "security_code": "601939",
+   "held": false,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609231829807197"
+   ],
+   "announcement_status": "primary_reviewed"
+  },
+  {
+   "security_code": "603529",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609241829862921"
+   ],
+   "announcement_status": "reviewed_on_prior_day"
+  }
+ ],
+ "report_day_divergence_check": "check_report_day_price_divergence.py --as-of 2026-09-28 --universe pool：全池181只，10日内有披露且有带0只，无命中",
+ "coverage_note": "池内142条标题筛查（快照取于北京时间15:46，查询窗口09-24～09-29；09-25中秋休市）；持仓5只及暂定合格集6只（格力、平安、招行、爱玛、工行、建行）共7家的必查公告均已核验原文：09-24快照后新增工行H股2026中期报告、建行永续债发行完毕2份今日核验；爱玛投资基金清算、平安H股公告2份已于09-24核验；卫星、格力、招行窗口内无公告。另核验2份今日除息实施公告（嘉立创、达梦数据）。09-24爱玛分派实施公告对应的除息已登记，不再结转。行业高频数据未全覆盖，缺口另列；快照截止之后发布的公告未覆盖。"
+}

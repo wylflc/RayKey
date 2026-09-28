@@ -1,0 +1,39 @@
+{
+ "execution_date": "2026-09-28",
+ "signal_date": "2026-09-24",
+ "confirmation_source": "user",
+ "user_confirmation": "今天没有执行任何操作, 然后总资产 4437889, 净资产 2625707.85, 可用现金 0, 可用保证金 -13153.46.",
+ "status": "no_trades",
+ "trades": [],
+ "holdings_unchanged": true,
+ "holdings_sha256": "4cbf3e11f25f0f490c546d67c0b9555669f7bc1763229da73244a2af9e0ca3ae",
+ "cooldown_executions_added": 0,
+ "original_buy_plan": [
+  {
+   "security_code": "601318",
+   "security_name": "中国平安",
+   "shares": "2400",
+   "amount": "127800.0",
+   "model_pv": "0.7525"
+  },
+  {
+   "security_code": "603529",
+   "security_name": "爱玛科技",
+   "shares": "100",
+   "amount": "2088.0",
+   "model_pv": "0.9505"
+  }
+ ],
+ "original_sell_plan": [
+  {
+   "security_code": "002648",
+   "security_name": "卫星化学",
+   "rule": "换仓",
+   "sell_shares": "4900",
+   "amount": "130536.0",
+   "swap_for": "601398"
+  }
+ ],
+ "calendar_note": "2026-09-25（周五）中秋节休市（沪深300日线09-24后下一根为09-28），09-24信号的执行日是09-28；09-24阅读日志写的执行日09-25及v4.210重发清单“执行日已收盘、只作记录”均有误。",
+ "recorded_at_utc": "2026-09-28T07:37:08.275466+00:00"
+}

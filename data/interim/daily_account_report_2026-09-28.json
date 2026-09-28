@@ -1,0 +1,85 @@
+{
+ "as_of": "2026-09-28",
+ "account_reported": {
+  "as_of": "2026-09-28",
+  "net_assets_cny": "2625707.85",
+  "total_assets_cny": "4437889.00",
+  "margin_debt_cny": "1812181.15",
+  "credit_line_cny": "",
+  "leverage_ratio": "1.6902",
+  "guarantee_ratio_pct": "244.89",
+  "holdings_market_value_cny": "4437889.00",
+  "cash_cny": "0.00",
+  "position_count": "5",
+  "top_position_weight_pct": "72.68",
+  "account_peak_net_assets_cny": "",
+  "drawdown_from_peak_pct": "",
+  "source": "user_reported_assets_debt_derived",
+  "note": "用户2026-09-28盘后回报：今日无任何操作，5只持仓股数、成本与止损锚延续。09-25（周五）中秋节休市，今日为09-24后首个交易日；09-24正式清单（v4.210重发：卫星化学换仓卖4900股，买中国平安2400股、爱玛科技100股）实际执行日为今日，未执行，不登记冷却。总资产4437889、净资产2625707.85，负债按差额1812181.15；现金0、券商可用保证金-13153.46，扫描funds=-13153.46。未报告外部出入金按0。5只持仓股数乘09-28公开收盘价合计4437889.00元，与实报总资产完全相符。净资产较09-24变动-7701.06元＝持仓市值变动-6997.00元−负债增加704.06元（09-25～09-28共4个自然日，无成交，未确认具体科目，已含在净资产中，不重复扣款）。格力市值1908480.00元，占净资产72.68%，按现行单票上限暂停加仓。一档131285.39元。",
+  "external_cash_flow_cny": "0.00",
+  "strategy_base_net_assets_cny": "",
+  "strategy_return_pct": "",
+  "net_assets_before_flow_cny": "",
+  "strategy_nav_basis": "",
+  "strategy_unit_nav": "",
+  "strategy_epoch": ""
+ },
+ "available_margin_cny": "-13153.46",
+ "actual_scan_funds_cny": "-13153.46",
+ "net_asset_change_cny": "-7701.06",
+ "net_asset_change_pct": "-0.2924369235159912935815197800",
+ "debt_change_cny": "704.06",
+ "market_value_change_cny": "-6997.00",
+ "tranche_cny": "131285.39",
+ "asset_leverage": "1.690168614912736769248718969",
+ "guarantee_ratio_pct": "244.8921290236354130490762472",
+ "buffer_to_130pct": "46.91540290890556298276049716",
+ "hypothetical_funds_cny": "-63459.722",
+ "unclassified_difference_cny": "704.06",
+ "market_value_reconciliation_cny": "0.00",
+ "close_price_reconciliation_status": "matched",
+ "holdings_close_valuation": [
+  {
+   "code": "002648",
+   "name": "卫星化学",
+   "close": "26.79",
+   "shares": "22300",
+   "market_value_cny": "597417.00",
+   "quote_time_beijing": "20260928153415"
+  },
+  {
+   "code": "000651",
+   "name": "格力电器",
+   "close": "38.40",
+   "shares": "49700",
+   "market_value_cny": "1908480.00",
+   "quote_time_beijing": "20260928153354"
+  },
+  {
+   "code": "603529",
+   "name": "爱玛科技",
+   "close": "21.12",
+   "shares": "29200",
+   "market_value_cny": "616704.00",
+   "quote_time_beijing": "20260928153446"
+  },
+  {
+   "code": "600036",
+   "name": "招商银行",
+   "close": "40.64",
+   "shares": "14700",
+   "market_value_cny": "597408.00",
+   "quote_time_beijing": "20260928153438"
+  },
+  {
+   "code": "601318",
+   "name": "中国平安",
+   "close": "52.40",
+   "shares": "13700",
+   "market_value_cny": "717880.00",
+   "quote_time_beijing": "20260928153443"
+  }
+ ],
+ "quote_evidence": "data/interim/daily_account_quotes_2026-09-28.json",
+ "calendar_note": "09-25中秋节休市；负债变动覆盖09-25～09-28共4个自然日"
+}
