@@ -44,14 +44,19 @@ def roe_bv_path(bps: float, roe0: float, payout: float | None, coe: float, fade_
     return path, roe_t_end, g_t, bv, b
 
 
-def ddm_value(bps: float, roe0: float, payout: float | None, coe: float = COE, fade_years: int = FADE_YEARS) -> float | None:
-    """同一 ROE／BV 路径上的股利贴现；分母塌陷（COE − g_T < 2pp）或不派息返回 None。"""
+def ddm_value(bps: float, roe0: float, payout: float | None, coe: float = COE, fade_years: int = FADE_YEARS,
+              sustainable_terminal: bool = False) -> float | None:
+    """同一 ROE／BV 路径上的股利贴现；分母塌陷（COE − g_T < 2pp）或不派息返回 None。
+
+    `sustainable_terminal`（OI-230 研究开关，缺省关）：终值期派息率取可持续派息率 `1 − g_T ÷ ROE_T`（清洁盈余一致，
+    与同一路径剩余收益逐位相等；`g_T` 上限不生效时即当期派息率），衰减期仍按当期派息率，派息率为 0 也可估。"""
     path, roe_t_end, g_t, bv_n, b = roe_bv_path(bps, roe0, payout, coe, fade_years)
     pay = 1.0 - b
-    if coe - g_t < 0.02 or pay <= 0:
+    if coe - g_t < 0.02 or (pay <= 0 and not sustainable_terminal):
         return None
+    pay_terminal = 1.0 - g_t / roe_t_end if sustainable_terminal else pay
     pv = sum(roe_t * bv_prev * pay / (1.0 + coe) ** t for t, (roe_t, bv_prev) in enumerate(path, start=1))
-    return pv + roe_t_end * bv_n * pay / (coe - g_t) / (1.0 + coe) ** fade_years
+    return pv + roe_t_end * bv_n * pay_terminal / (coe - g_t) / (1.0 + coe) ** fade_years
 
 
 def h2_scale(pairs: Iterable[tuple[float | None, float | None]]) -> float | None:

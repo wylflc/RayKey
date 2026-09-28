@@ -19,6 +19,17 @@ class BankValuationTests(unittest.TestCase):
     def test_ddm_rejects_no_payout(self):
         self.assertIsNone(bv.ddm_value(10.0, 0.15, 0.0, 0.10))
 
+    def test_sustainable_terminal_equals_residual_income(self):
+        """OI-230 开关：终值派息率取 1 − g_T ÷ ROE_T，与同一路径的剩余收益逐位相等（清洁盈余）；派息率为 0 也可估。"""
+        for payout in (0.0, 0.1, 0.3):
+            path, roe_t, g_t, bv_n, b = bv.roe_bv_path(10.0, 0.15, payout, 0.10)
+            ri = 10.0 + sum((r - 0.10) * p / 1.1 ** t for t, (r, p) in enumerate(path, 1)) + (roe_t - 0.10) * bv_n / (0.10 - g_t) / 1.1 ** 10
+            self.assertAlmostEqual(bv.ddm_value(10.0, 0.15, payout, 0.10, sustainable_terminal=True), ri)
+
+    def test_sustainable_terminal_changes_nothing_when_growth_cap_is_slack(self):
+        # 派息率 90%：g_T = 12% × 10% = 1.2% < 3%，可持续派息率即当期派息率
+        self.assertAlmostEqual(bv.ddm_value(10.0, 0.15, 0.9, 0.10, sustainable_terminal=True), bv.ddm_value(10.0, 0.15, 0.9, 0.10))
+
     def test_scale_needs_min_banks(self):
         pairs = [(2.0, 1.0)] * (bv.MIN_BANKS - 1)
         self.assertIsNone(bv.h2_scale(pairs))

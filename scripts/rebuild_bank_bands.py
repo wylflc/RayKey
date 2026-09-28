@@ -189,12 +189,16 @@ def ri_value(bps, roe0, payout, coe):
 
 
 def ddm_value(bps, roe0, payout, coe):
-    """股利贴现（唯一实现 `bank_valuation.ddm_value`）。"""
-    return bank_valuation.ddm_value(bps, roe0, payout, coe, FADE_YEARS)
+    """股利贴现（唯一实现 `bank_valuation.ddm_value`）；`h2` 第 5 段 `sus` 开 OI-230 可持续终值派息率。"""
+    return bank_valuation.ddm_value(bps, roe0, payout, coe, FADE_YEARS, sustainable_terminal=H2_SUSTAINABLE)
 H2 = mode.startswith("h2:")
 H2_COE = float(mode.split(":")[2]) if H2 else None
 # OI-227：`h2:RP:COE[:SCALE]`——银行（保险除外）V 乘同尺系数，缺省取 `bank_valuation.BANK_SCALE`（生产）；`:1` 复现缩放前状态
 H2_BANK_SCALE = (float(mode.split(":")[3]) if len(mode.split(":")) > 3 else bank_valuation.BANK_SCALE) if H2 else 1.0
+# OI-230 研究开关 `h2:RP:COE:SCALE:sus`：DDM 终值按可持续派息率（派息率为 0 也可估），V_D0 不可得的银行照用当日截面 G
+H2_SUSTAINABLE = H2 and len(mode.split(":")) > 4 and mode.split(":")[4] == "sus"
+if H2 and len(mode.split(":")) > 4 and not H2_SUSTAINABLE:
+    sys.exit(f"未知的 h2 第 5 段：{mode}（只接受 sus）")
 RP = float(mode.split(":")[1]) if mode.startswith(("divspread:", "h2:")) else None
 
 # ---- 股利折现口径要用的两组序列 ----
@@ -270,7 +274,10 @@ if H2:
             by_day[d].append((v0, vd))
     H2_SCALE = {d: bank_valuation.h2_scale(pairs) for d, pairs in by_day.items()}
     print(f"H2：{len(H2_VALUES):,} 个银行保险行，{sum(1 for g in H2_SCALE.values() if g):,}/{len(H2_SCALE):,} 个交易日可算截面 G；"
-          f"银行同尺系数 {H2_BANK_SCALE:g}", flush=True)
+          f"银行同尺系数 {H2_BANK_SCALE:g}" + ("；DDM 终值可持续派息率（OI-230）" if H2_SUSTAINABLE else ""), flush=True)
+    if H2_SUSTAINABLE:
+        no_d0 = sum(1 for (c, d), x in H2_VALUES.items() if c not in INSURER_CODES and x[3] and not x[0] and H2_SCALE.get(d))
+        print(f"OI-230：V_D0 不可得、按截面 G 估值的银行行 {no_d0:,}", flush=True)
 
 # ---- 第二遍：重写银行行 ----
 n_rewritten = n_kept = n_dropped = n_exright = 0
@@ -297,7 +304,7 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         if H2:
             v0, f0, c0, vd, fd, cd = H2_VALUES.get((c, d), (None,) * 6)
             g = H2_SCALE.get(d)
-            if c not in INSURER_CODES and g and vd and v0:        # 两者都可估的银行才用 H2（与截面 G 同一口径）
+            if c not in INSURER_CODES and g and vd and (v0 or H2_SUSTAINABLE):   # 两者都可估的银行才用 H2；OI-230 开关下 V_D0 不可得也用 G
                 v, factor, cash_cum = vd * g * H2_BANK_SCALE, fd, cd
             elif v0:
                 v, factor, cash_cum = v0 * (1.0 if c in INSURER_CODES else H2_BANK_SCALE), f0, c0
