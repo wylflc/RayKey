@@ -1396,6 +1396,37 @@ def operating_equity(year, x_cum: dict[str, float], base_year=None) -> float | N
     return value_ if value_ > 0 else None
 
 
+def trailing_per_share_cagr(code: str, history: list, series: dict[str, dict], actions: list[dict],
+                            x_cum: dict, as_of: str, min_years: int = 3) -> float | None:
+    """OI-206 研究开关：窗口内**每股** NOPAT 的年化增速（端点各取两年均值，式同 `roic_inputs.trailing_nopat_cagr`）。
+
+    每股 = 年报 NOPAT ÷ 年报期末股数（`shares_at_period_end`），股数按期间送转折到窗口最新年报的股本基准。
+    窗口内有外生权益年（|X_y| ≥ 5% 上年母公司权益，§6.5.1 第 2 条的识别）、购买法收购年（`consolidation_events.csv`，
+    `annualized_months > 0`）或主体重置日时返回 None——增速腿不可用，不把增发、收购与主体变化带来的增长外推。"""
+    ordered = [y for y in sorted(history, key=lambda x: x.period) if y.nopat is not None]
+    if len(ordered) < min_years + 1:
+        return None
+    periods = [y.period for y in ordered]
+    if any(abs((x_cum.get(b) or 0.0) - (x_cum.get(a) or 0.0)) > 1e-6 for a, b in zip(periods, periods[1:])):
+        return None
+    if any(getattr(y, "annualized_months", 0) for y in ordered):
+        return None
+    reset = entity_reset_for(code, as_of)
+    if reset and periods[0] < reset <= periods[-1]:
+        return None
+    per_share = []
+    for y in ordered:
+        shares = shares_at_period_end(series, actions, y.period, y.parent_equity)
+        if not shares or shares <= 0:
+            return None
+        per_share.append(y.nopat / (shares * split_factor(actions, y.period, periods[-1])))
+    begin, end = statistics.mean(per_share[:2]), statistics.mean(per_share[-2:])
+    span = (int(periods[-1][:4]) + int(periods[-2][:4]) - int(periods[0][:4]) - int(periods[1][:4])) / 2
+    if begin <= 0 or end <= 0 or span < min_years - 1:
+        return None
+    return (end / begin) ** (1 / span) - 1
+
+
 # ------------------------------------------------------------------ 建带
 @dataclass
 class Band:
@@ -2301,7 +2332,10 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                 # 窗口加长（7 年）虽把年报间 |Δg| >10pp 的比例从 13.7% 压到 7.4%，却让利润顶之后仍外推增长期增速（神火 2025 23% vs 0%），
                 # 按合理性否决；3/5/7 年多窗口取中位不压噪声（13.9%），亦不取。
                 g_trail = None
-                cagr = roic_inputs.trailing_nopat_cagr(history)
+                if getattr(args, "trail_basis", "total") == "per_share_clean":   # OI-206 研究开关
+                    cagr = trailing_per_share_cagr(code, history, series, actions, x_cum, available_at)
+                else:
+                    cagr = roic_inputs.trailing_nopat_cagr(history)
                 damp = 1.0
                 if getattr(args, "growth_damp", "on") == "on":
                     ordered_np = [y.nopat for y in sorted(history, key=lambda x: x.period) if y.nopat is not None]
@@ -2311,6 +2345,8 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                 band.growth_damp = damp
                 if cagr is not None and cagr > 0 and (1.0 - band.peak_weight) > 0:
                     g_trail = cagr * args.roic_trail_weight * (1.0 - band.peak_weight) * damp
+                    if getattr(args, "trail_cap", 0.0) > 0:
+                        g_trail = min(g_trail, args.trail_cap)                  # OI-206：增速腿单独封顶
                 candidates = [g for g in (g_capital, g_trail) if g is not None]
                 g0_raw = max(candidates) if candidates else 0.0
                 # OI-202：g0 = 0 一律记 none（增速腿权重为 0 时 g_trail 恒为 0，不能记成 trailing）
@@ -3219,6 +3255,11 @@ def main() -> int:
     parser.add_argument("--guard-scope", choices=("all", "cyclical_tags"), default="all",
                         help="研究开关（OI-205）：cyclical_tags=峰谷守卫（ROIC 路径与权益口径）只对策略标签 H／F 生效，标签取 "
                              "strategy_tag_map.csv 与 data/reference/cycle_guard_supplement.csv（`cycle_guard_scope`）；all=缺省＝生产")
+    parser.add_argument("--trail-basis", choices=("total", "per_share_clean"), default="total",
+                        help="研究开关（OI-206）：利润增速腿口径——total=窗口内总额 NOPAT 增速（缺省）；per_share_clean=每股 NOPAT 增速，"
+                             "窗口内有外生权益年、购买法收购年或主体重置时不可用。配 --roic-trail-weight 1 使用")
+    parser.add_argument("--trail-cap", type=float, default=0.0, metavar="C",
+                        help="研究开关（OI-206）：利润增速腿上限（周期守卫与利润回落折减之后），0=不设（缺省）")
     parser.add_argument("--reset-guard", choices=("off", "peak", "both"), default="off",
                         help="研究开关（OI-212）：主体重置后不足三个年报的行按 --reset-guard-file 登记的参照（重置前主体或同业）"
                              "恢复周期守卫——peak=只峰侧，both=峰谷两侧；off=缺省＝生产（重置行无守卫）")

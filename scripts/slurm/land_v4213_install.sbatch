@@ -14,7 +14,8 @@ export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 E=data/experiments/exp_land_v4213_20260928
 export EXP_SIGNAL=2026-09-28
 if [ "${STAGE:-all}" != tail ]; then
-(cd $E && /usr/bin/time -v python3 publish.py && python3 register.py)
+if [ "${STAGE:-all}" != from_register ]; then (cd $E && /usr/bin/time -v python3 publish.py); fi
+(cd $E && python3 register.py)
 SIGNAL_DATE=2026-09-28 SINCE=2026-09-24 bash scripts/slurm/refresh_pool_from_bands.sbatch
 python3 scripts/check_swap_margin_scale_drift.py || echo "DRIFT_GUARD_NONZERO"
 fi

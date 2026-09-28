@@ -1,0 +1,95 @@
+{
+  "job_id": "27296366",
+  "arm": "RO",
+  "installed": {
+    "roic_bands.csv": {
+      "before": {
+        "bytes": 163105527,
+        "sha256": "3b37c0a83f5c3954170820f3831eb890924ba9026e112e0799b2f7dac7f1cf63"
+      },
+      "after": {
+        "bytes": 163105507,
+        "sha256": "07f81e856866f9a239051fc1c37756e3cf742a662a967b7bbb3998350a6e17a7"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "before": {
+        "bytes": 163095194,
+        "sha256": "06a870aa6242c978eb0b61a5c47fac5634f9eb66ccfd4fde1f767b439c39c0ab"
+      },
+      "after": {
+        "bytes": 163095156,
+        "sha256": "d1c5168b2e715be0fa69c6f619ef8a06fa9c1af1f7927ac940700191e5339f87"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "before": {
+        "bytes": 1995642237,
+        "sha256": "34b23b19e37751a9f7e564f57f59c3e31f5a47855d21763fe52465f2a91da3bf"
+      },
+      "after": {
+        "bytes": 1995642477,
+        "sha256": "2674a9fad176faaaedecb28a38a4833f90c1fa111a0fa80f0bc634e5d43e488b"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "before": {
+        "bytes": 2000089959,
+        "sha256": "03e9f358cade52e96d1b390b63b925b7b7179327e7608cb531c8b1d41107ce64"
+      },
+      "after": {
+        "bytes": 2000090199,
+        "sha256": "f4692ea6d981a550c67259c417d707a4111c9f6a3b20524412d72b3a5be6b8fb"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "before": {
+        "bytes": 1993197207,
+        "sha256": "465f50c37263822c958ab6bb5e5d97ce205239f315201c3387687f5b98008fed"
+      },
+      "after": {
+        "bytes": 1993197447,
+        "sha256": "002aac8693bcec036f5e27354b7b36937ed2efe715b8e2297a1559ef5de8657a"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "before": {
+        "bytes": 1997638481,
+        "sha256": "1a0a1f2b96ad8f2edd8744dd294ee34948a10ec21368d0c9f515c1a4a002f8c2"
+      },
+      "after": {
+        "bytes": 1997638721,
+        "sha256": "94a0ccf7dd60f6e7d3cec135f962cbbe08180534ea09537ad57ba3ced6476ec0"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "before": {
+        "bytes": 2069261283,
+        "sha256": "d5b2a550313a23c1ee872197ee05d7f1c954507804a4151f5ddf221e448df60a"
+      },
+      "after": {
+        "bytes": 2069261419,
+        "sha256": "e39529945cc7525c7fc5877f9cd18613139577b885edc3fa70faca68ce3055f7"
+      }
+    },
+    "panel_restatement_originals.csv": {
+      "before": {
+        "bytes": 1769,
+        "sha256": "8ccef9ecbf675299bd2cc844fd2a93b5f5b50a719a62819038126e4808554894"
+      },
+      "after": {
+        "bytes": 24117,
+        "sha256": "91fe0c50dd9e613331bb3a274821b5a8cdb1cc441d69338ca167abaf16e2d6ec"
+      }
+    }
+  },
+  "old_full_inputs_retained": true,
+  "ruling": {
+    "state_arm": "RO",
+    "tested_arm": "RO",
+    "ruled_at": "2026-09-28",
+    "oi212": "采纳，峰谷两侧（--reset-guard both，参照登记表 data/reference/entity_reset_guard_anchor.csv）",
+    "oi214": "登记 25 行重述前原文版本（data/reference/panel_restatement_originals.csv）",
+    "note": "买入线按对齐容差：原线合格面在 0.2pp 内保留 1.0670，否则须另请用户确认重解线"
+  }
+}
