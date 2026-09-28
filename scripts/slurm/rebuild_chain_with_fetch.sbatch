@@ -74,11 +74,11 @@ python3 scripts/build_historical_valuation_bands.py $COMMON \
   --out-daily data/processed/roic_daily_raw_b2.csv
 
 echo "=== [$(date +%H:%M:%S)] 第 3 步：银行/保险股利折现覆盖 ==="
-python3 scripts/rebuild_bank_bands.py divspread:0.02 \
+python3 scripts/rebuild_bank_bands.py h2:0.02:0.10 \
   data/processed/a_share_daily_states_adopted.csv \
   data/processed/roic_daily_raw.csv \
   data/processed/roic_bands.csv
-python3 scripts/rebuild_bank_bands.py divspread:0.02 \
+python3 scripts/rebuild_bank_bands.py h2:0.02:0.10 \
   data/processed/a_share_daily_states_b2.csv \
   data/processed/roic_daily_raw_b2.csv \
   data/processed/roic_bands_b2.csv

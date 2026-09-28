@@ -18,7 +18,7 @@ from build_historical_valuation_bands import load_actions  # noqa: E402
 from apply_forecast_band_overlay import exright_normalize  # noqa: E402
 from a_share_signal_dates import evidence_iso_for_signal  # noqa: E402
 from divspread_names import is_divspread_financial  # noqa: E402  v4.56 银行＋保险股利折现
-from screen_daily_volume_price_signals import bank_dividend_intrinsic  # noqa: E402
+from screen_daily_volume_price_signals import bank_live_value  # noqa: E402  v4.215 银行 H2、保险股利折现
 
 
 def csv_rows(path: Path):
@@ -133,7 +133,7 @@ def main() -> int:
         rf = latest_rf(args.signal_date)
         for c in list(archive_used):
             if is_divspread_financial(c, names.get(c, "")):
-                v = bank_dividend_intrinsic(c, args.signal_date, rf) if rf is not None else None
+                v = bank_live_value(c, args.signal_date, rf)[0] if rf is not None else None
                 if v:
                     b = dict(usable[c]); b["intrinsic_value"] = f"{v:.4f}"; b["roic_path"] = "bank_divspread"
                     b["exright_note"] = "股利折现口径（分子为最近已知完整财年分红，不折）"; b["forecast_overlay"] = ""

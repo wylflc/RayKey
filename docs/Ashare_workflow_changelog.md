@@ -6,6 +6,7 @@
 
 | 版本 | 日期 | 内容 |
 | --- | --- | --- |
+| v4.215 | 2026-09-28 | OI-207：§6.5.1 第 4 条银行估值改为股利尺度 × DDM 排序（`V = V_DDM × G`，G 为当日银行 V_D0 ÷ V_DDM 的几何均值，不足 5 只或该行不可估退回 V_D0，保险仍 V_D0）；唯一实现 `scripts/bank_valuation.py`，§6.7 第 3 步与 `rebuild_chain_with_fetch.sbatch` 改 `rebuild_bank_bands.py h2:0.02:0.10`，实盘 `bank_live_value` 与池外档案同源，测试 `test_bank_valuation.py`。依据 §12.274 |
 | v4.214 | 2026-09-28 | OI-216：§6.8 增字段级补录表 `data/reference/overseas_statement_supplements.csv`（港股经营溢利内金融资产收益、F10 无行的权益法份额、港股与美股非流动金融资产，自 `evidence_date` 起生效，缺项中止；`fetch_overseas_statements.load_statement_supplements`／`apply_balance_supplements`），港股 EBIT 扣补录收益、us-gaap 流动证券与流动债券＋公允价值股权证券取大并防重计、ifrs-full 非流动借款无合计时长期借款与应付公司债相加，港股 F10 分页稳定排序与重复行检查；台积电维护行补非流动金融资产与权益法份额；测试 `test_overseas_supplements.py`。依据 OI-216 核对记录 |
 | v4.213 | 2026-09-28 | OI-212：§6.5.2.4 主体重置后不足三个年报的行按 `data/reference/entity_reset_guard_anchor.csv` 登记的参照恢复峰谷守卫（重置前主体 ROIC 或同业年报加权 ROE 的周期位置，坡道同 §6.5.1），§6.7 两条建带命令与 `rebuild_chain_with_fetch.sbatch` 增 `--reset-guard both`（`build_historical_valuation_bands.reset_guard_anchor`，参数同步测试）；OI-214：`data/reference/panel_restatement_originals.csv` 增 25 行重述前原文版本，历史状态重建、`BASE` 重登。依据 §12.272 |
 | v4.212 | 2026-09-25 | OI-222：§12.1 增第 13 款机会／陷阱读数——答案卷只用价格与财报（机会 = 其后 3 年年化 ≥ 20%、超额 ≥ +10pp 且 3 年或 5 年后盈利不低于当时；陷阱 = 3 年年化 ≤ 0、超额 ≤ −10pp 且盈利降 ≥ 20%），`data/backtest/opportunity_trap_labels_v1.csv` 由 `scripts/experimental/opportunity_trap_labels.py` 生成，具名案例 `data/reference/opportunity_trap_cases.csv`（机会 13、陷阱 12），读数工具 `scripts/experimental/opportunity_trap_audit.py`；修正依据「机会与陷阱」与裁定材料改指第 13 款；依据 §12.267 |

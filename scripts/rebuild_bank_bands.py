@@ -25,13 +25,16 @@
               ROE 自 roe0 线性衰减到 `ROE_T = min(roe0, COE + 2pp)`（与主模型 ROIC_T = WACC + 2pp 同规），
               BV 按留存 `1 − payout` 滚存，终值 `(ROE_T − COE)·BV_10 / (COE − g_T)`、`g_T = min(3%, ROE_T × 留存)`；
               COE 取常数或 `peer`（滚动三年同业隐含 COE 中位，严格早于当日）。
+  h2:RP:COE    **股利尺度 × DDM 排序**（§6.5.1 第 4 条，v4.215 生产口径，OI-207）：银行 `V = V_DDM(COE) × G`，
+              `G = exp(当日两者都可估的银行 ln(V_divspread(RP) ÷ V_DDM) 的均值)`，不足 5 只当日退回 divspread；
+              保险恒为 divspread。唯一实现 `bank_valuation`，实时扫描与池外档案同源。
   ddm:COE|peer  **股利贴现**（OI-072 候选①）：同一条 ROE/BV 路径上 `DPS_t = ROE_t·BV_{t−1}·payout`，
               `V = Σ DPS_t/(1+COE)^t + DPS_11/(COE − g_T)/(1+COE)^10`。
               两者都用 ROE/BVPS/派息率而非只用 DPS，能区分「DPS 相同而 ROE 18% vs 7%」的两家银行。
 
 用法：
     python3 rebuild_bank_bands.py <模式> <输出文件> <逐日状态文件> <估值带文件>
-    模式 = fixed:0.15 | peer | pbhist | divspread:0.02 | ri:0.12 | ri:peer | ddm:0.12 | ddm:peer | ddm:peer:13（第三段 = fade 年数）
+    模式 = h2:0.02:0.10（生产）| fixed:0.15 | peer | pbhist | divspread:0.02 | ri:0.12 | ri:peer | ddm:0.12 | ddm:peer | ddm:peer:13（第三段 = fade 年数）
 
 第三个参数是要施加同一口径的逐日状态文件（例如护城河池与银行的并集）；
 银行/保险名单按全市场证券名单（`data/raw/a_share_securities.csv`）用 `divspread_names` 判定，
@@ -64,7 +67,8 @@ name = {}
 for r in csv.DictReader(open(SECURITIES, encoding="utf-8-sig")):
     name[r["security_code"].zfill(6)] = r["security_name"]
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from divspread_names import is_divspread_financial   # v4.56：银行＋保险同一判定（OI-085 用户裁定①）
+from divspread_names import is_divspread_financial, INSURER_CODES   # v4.56：银行＋保险同一判定（OI-085 用户裁定①）
+import bank_valuation   # v4.215：H2 与 DDM 的唯一实现
 def is_bank(c):
     return is_divspread_financial(c, name.get(c, ""))
 BANKS = {c for c in name if is_bank(c)}
@@ -170,19 +174,8 @@ TERMINAL_EXCESS = 0.02        # ROE_T = min(roe0, COE + 2pp)，与主模型 ROIC
 
 
 def roe_bv_path(bps, roe0, payout, coe):
-    """剩余收益／DDM 共用的 ROE、BV 路径：ROE 自 roe0 线性衰减到 ROE_T，BV 按留存滚存。
-    返回 (逐年 (roe_t, bv_prev) 列表, roe_T, g_T, bv_N)。"""
-    b = 1.0 - (payout if payout is not None else 0.30)
-    b = min(max(b, 0.0), 1.0)
-    roe_T = min(roe0, coe + TERMINAL_EXCESS)
-    g_T = min(G_CAP, roe_T * b)
-    path = []
-    bv = bps
-    for t in range(1, FADE_YEARS + 1):
-        roe_t = roe0 + (roe_T - roe0) * t / FADE_YEARS
-        path.append((roe_t, bv))
-        bv = bv * (1.0 + roe_t * b)
-    return path, roe_T, g_T, bv, b
+    """剩余收益／DDM 共用的 ROE、BV 路径（唯一实现 `bank_valuation.roe_bv_path`）。"""
+    return bank_valuation.roe_bv_path(bps, roe0, payout, coe, FADE_YEARS)
 
 
 def ri_value(bps, roe0, payout, coe):
@@ -196,15 +189,11 @@ def ri_value(bps, roe0, payout, coe):
 
 
 def ddm_value(bps, roe0, payout, coe):
-    """股利贴现：同一路径上 DPS_t = ROE_t·BV_{t−1}·payout，终值 DPS_{N+1}/(COE − g_T)。"""
-    path, roe_T, g_T, bv_N, b = roe_bv_path(bps, roe0, payout, coe)
-    pay = 1.0 - b
-    if coe - g_T < 0.02 or pay <= 0:
-        return None
-    pv = sum(roe_t * bv_prev * pay / (1.0 + coe) ** t for t, (roe_t, bv_prev) in enumerate(path, start=1))
-    terminal = roe_T * bv_N * pay / (coe - g_T) / (1.0 + coe) ** FADE_YEARS
-    return pv + terminal
-RP = float(mode.split(":")[1]) if mode.startswith("divspread:") else None
+    """股利贴现（唯一实现 `bank_valuation.ddm_value`）。"""
+    return bank_valuation.ddm_value(bps, roe0, payout, coe, FADE_YEARS)
+H2 = mode.startswith("h2:")
+H2_COE = float(mode.split(":")[2]) if H2 else None
+RP = float(mode.split(":")[1]) if mode.startswith(("divspread:", "h2:")) else None
 
 # ---- 股利折现口径要用的两组序列 ----
 RFS = []
@@ -249,6 +238,37 @@ def div_annual(c, day):
     got = annual_dividend(DIV.get(c, []), day)
     return got[0] if got else 0.0
 
+# ---- H2 预扫（v4.215）：逐（银行, 交易日）算 V_divspread 与 V_DDM，当日截面 G ----
+H2_VALUES: dict[tuple[str, str], tuple] = {}
+H2_SCALE: dict[str, float | None] = {}
+if H2:
+    by_day = collections.defaultdict(list)
+    for r in csv.DictReader(open(DAILY, encoding="utf-8")):
+        c, d = r["security_code"], r["date"]
+        if c not in BANKS:
+            continue
+        f = fundamentals(c, d)
+        r10 = rf_at(d)
+        dv = div_annual(c, d)
+        v0 = f0 = c0 = None
+        if r10 is not None and dv > 0:
+            v0 = dv / (r10 + RP)
+            v0, f0, c0 = ex_adjust(c, div_annual_since(c, d), d, v0) if v0 > 0 else (None, None, None)
+            if v0 is not None and v0 <= 0:
+                v0 = None
+        vd = fd = cd = None
+        if f and f[1] and f[1] > 0 and f[2] is not None and f[2] > 0:
+            raw_ddm = ddm_value(f[1], f[2], f[3], H2_COE)
+            if raw_ddm and raw_ddm > 0:
+                vd, fd, cd = ex_adjust(c, f[0], d, raw_ddm, split_since=f[4])
+                if vd <= 0:
+                    vd = None
+        H2_VALUES[(c, d)] = (v0, f0, c0, vd, fd, cd)
+        if c not in INSURER_CODES:
+            by_day[d].append((v0, vd))
+    H2_SCALE = {d: bank_valuation.h2_scale(pairs) for d, pairs in by_day.items()}
+    print(f"H2：{len(H2_VALUES):,} 个银行保险行，{sum(1 for g in H2_SCALE.values() if g):,}/{len(H2_SCALE):,} 个交易日可算截面 G", flush=True)
+
 # ---- 第二遍：重写银行行 ----
 n_rewritten = n_kept = n_dropped = n_exright = 0
 pb_star = []
@@ -271,6 +291,27 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         band_av, bps, roe0, payout, bps_basis = f
         if not bps or bps <= 0:
             n_dropped += 1; continue
+        if H2:
+            v0, f0, c0, vd, fd, cd = H2_VALUES.get((c, d), (None,) * 6)
+            g = H2_SCALE.get(d)
+            if c not in INSURER_CODES and g and vd and v0:        # 两者都可估的银行才用 H2（与截面 G 同一口径）
+                v, factor, cash_cum = vd * g, fd, cd
+            elif v0:
+                v, factor, cash_cum = v0, f0, c0
+            else:
+                n_dropped += 1; continue
+            r["split_factor"] = f"{factor:.6f}"
+            r["cash_adjustment"] = f"{cash_cum:.4f}"
+            pb_star.append(v / bps)
+            r["intrinsic_value"] = f"{v:.4f}"
+            r["band_low"] = f"{v*0.9:.4f}"
+            r["band_high"] = f"{v*1.1:.4f}"
+            r["valuation_ratio"] = f"{px/v:.4f}"
+            r["upside_to_low"] = f"{v*0.9/px-1:.4f}"
+            if "valuation_label" in r: r["valuation_label"] = valuation_label(px, v)
+            if "pv_equity" in r: r["pv_equity"] = f"{px/v:.4f}"
+            if "ev_ps" in r: r["ev_ps"] = ""
+            w.writerow(r); n_rewritten += 1; continue
         if RP is not None:
             r10 = rf_at(d); dv = div_annual(c, d)
             if r10 is None or dv <= 0: n_dropped += 1; continue

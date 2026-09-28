@@ -115,6 +115,10 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(workflow.count("  --reset-guard both \\"), 2)
         self.assertIn("--reset-guard both", chain)
         self.assertTrue((ROOT / "data/reference/entity_reset_guard_anchor.csv").exists())
+        # OI-207（v4.215）：银行股利尺度 × DDM 排序，§6.7 第 3 步两条命令与常设重建作业同参
+        self.assertEqual(workflow.count("python3 scripts/rebuild_bank_bands.py h2:0.02:0.10 \\"), 2)
+        self.assertEqual(chain.count("python3 scripts/rebuild_bank_bands.py h2:0.02:0.10 \\"), 2)
+        self.assertNotIn("rebuild_bank_bands.py divspread", chain)
         self.assertIn("绝对值 < 0.2pp 时保留原线", workflow)
         self.assertNotIn("| 减持 |", workflow)                # v4.109（OI-110）：估值减持行已删
         # v4.110（OI-116）：止盈行不得退回「无」——涨幅减持即按盈利触发的减仓

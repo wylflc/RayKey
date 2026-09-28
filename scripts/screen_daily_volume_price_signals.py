@@ -666,6 +666,27 @@ def bank_dividend_intrinsic(code: str, as_of: str, rf: float) -> float | None:
     return adjusted if adjusted > 0 else None
 
 
+@lru_cache(maxsize=8)
+def _bank_h2(as_of: str, rf: float) -> dict[str, float]:
+    """§6.5.1 第 4 条（v4.215，OI-207 H2）：当日银行 `V_H2 = V_DDM × G`，唯一实现 `bank_valuation.live_h2`，
+    分子 V_D0 即本模块 `bank_dividend_intrinsic`（与历史逐日 `rebuild_bank_bands.py h2` 同源）。"""
+    import bank_valuation
+    return bank_valuation.live_h2(as_of, lambda c: bank_dividend_intrinsic(c, as_of, rf),
+                                  ROOT / "data/processed/roic_bands.csv", _corporate_actions(),
+                                  ROOT / "data/raw/a_share_securities.csv")
+
+
+def bank_live_value(code: str, as_of: str, rf: float) -> tuple[float | None, str]:
+    """银行取 H2（当日截面不可算或该行不可估时退回股利利差），保险恒为股利利差。返回 (V, 口径)。"""
+    from divspread_names import INSURER_CODES
+    code = code.zfill(6)
+    if code not in INSURER_CODES:
+        value = _bank_h2(as_of, rf).get(code)
+        if value:
+            return value, "股利尺度×DDM排序"
+    return bank_dividend_intrinsic(code, as_of, rf), "股利折现"
+
+
 # §9.3.1 相关性的数据源（OI-093）：扫描当日逐票已取的前复权K线（`scan_one` 落入本表），
 # 两侧同源、窗口末端即信号日。此前读 `data/raw/ohlcv/` 行情库——该库按需增量、不随 §8 刷新，
 # 窗口末端可落后信号日数周，且缺文件时 pearson 按 0 相关静默放行。
@@ -703,11 +724,11 @@ def resolve_live_band(code: str, name: str, as_of: str, bands: dict[str, dict],
     code = code.zfill(6)
     if is_bank(name, code):
         rate = _default_rf(as_of) if rf is None else rf
-        value = bank_dividend_intrinsic(code, as_of, rate) if rate is not None else None
+        value, method = bank_live_value(code, as_of, rate) if rate is not None else (None, "")
         if value is None or not math.isfinite(value) or value <= 0:
             return {}, "数据缺失：国债利率或完整财年分红不可得"
         return {"intrinsic_value": value, "roic_path": "bank_divspread",
-                "fair_price_low": value * 0.90, "fair_price_high": value * 1.10}, "股利折现"
+                "fair_price_low": value * 0.90, "fair_price_high": value * 1.10}, method
     band = bands.get(code, {})
     if band.get('status') not in (None, '', 'ok'):
         return {}, '模型拒绝'

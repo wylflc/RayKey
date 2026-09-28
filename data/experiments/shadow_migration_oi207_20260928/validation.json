@@ -1,0 +1,62 @@
+{
+ "outcomes": {
+  "missing_300_on_0828": {
+   "old_reproduces_stored_states": true,
+   "old_new_equal": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "days": 21,
+   "fills": 53,
+   "last_equity": {
+    "date": "2026-09-28",
+    "net_assets": 2637691.8272764683,
+    "unit_nav": 0.9384337879265092,
+    "return_pct": -6.156621207349078,
+    "debt": 1756043.1727235315,
+    "cash": 0.0,
+    "opening_capital": 2810738.34,
+    "opening_coal_shares": 10400
+   }
+  }
+ },
+ "original_snapshots": 21,
+ "changed_files": {
+  "screen_daily_volume_price_signals.py": {
+   "before": "a67cdd73cb750962fa5fe92b8ecc43dffcda3df3465f8b9527996e61e40fcb65",
+   "after": "bfc91daf5d5b516e93a3e40a0b0d310c40213e353000a62dd26651e84fd94476",
+   "old_source": "git 8328683f:scripts/screen_daily_volume_price_signals.py"
+  }
+ },
+ "changed_names": {
+  "screen_daily_volume_price_signals.py": [
+   "_bank_h2",
+   "bank_live_value",
+   "resolve_live_band（银行取 H2）"
+  ]
+ },
+ "replay_references": "影子回放只读快照冻结的数据与引擎，不调用扫描器的实时银行估值入口",
+ "code_before": {
+  "shadow_from_origin.py": "675e2e87a4d203199a7e79a10fa97954f4a569e50022560cc4a68ba0040a6183",
+  "shadow_portfolio.py": "aa30791f37eb0fc7ce92c66e4cc3664ea7f4cdb23d0221df480336ce4c48226b",
+  "backtest_valuation_strategy.py": "ce180d7621eb911597741fef4aecbe32398fc2adee4a975afcfd69f36c1684ff",
+  "screen_daily_volume_price_signals.py": "a67cdd73cb750962fa5fe92b8ecc43dffcda3df3465f8b9527996e61e40fcb65",
+  "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+  "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+  "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+  "corporate_actions.py": "9f7c9c5f0c2ed24a00df5e25cf4ff531205c397e8a1b00abf58056d7c6102f27"
+ },
+ "code_after": {
+  "shadow_from_origin.py": "675e2e87a4d203199a7e79a10fa97954f4a569e50022560cc4a68ba0040a6183",
+  "shadow_portfolio.py": "aa30791f37eb0fc7ce92c66e4cc3664ea7f4cdb23d0221df480336ce4c48226b",
+  "backtest_valuation_strategy.py": "ce180d7621eb911597741fef4aecbe32398fc2adee4a975afcfd69f36c1684ff",
+  "screen_daily_volume_price_signals.py": "bfc91daf5d5b516e93a3e40a0b0d310c40213e353000a62dd26651e84fd94476",
+  "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+  "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+  "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+  "corporate_actions.py": "9f7c9c5f0c2ed24a00df5e25cf4ff531205c397e8a1b00abf58056d7c6102f27"
+ }
+}

@@ -24,7 +24,7 @@ class LiveFinancialValuationTests(unittest.TestCase):
             hp = Path(tmp) / "holdings.csv"
             with hp.open("w", newline="") as fh:
                 w = csv.DictWriter(fh, fieldnames=list(holding)); w.writeheader(); w.writerow(holding)
-            with (patch.object(scan, "bank_dividend_intrinsic", return_value=value),
+            with (patch.object(scan, "bank_live_value", return_value=(value, "股利折现")),
                   patch.object(scan, "_default_rf", return_value=0.02),
                   patch.object(tracker, "MODEL_BANDS", bands), patch.object(tracker, "CAND_BANDS", bands),
                   patch.object(tracker, "load_pool", return_value={code: stale}),
