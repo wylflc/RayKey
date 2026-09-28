@@ -52,7 +52,7 @@ class BankValuationTests(unittest.TestCase):
             out = bv.live_h2("2026-09-28", d0.get, None, {}, None)
         g = math.exp(sum(math.log(v / 5.0) for v in d0.values()) / len(d0))
         for c in codes:
-            self.assertAlmostEqual(out[c], 5.0 * g)
+            self.assertAlmostEqual(out[c], 5.0 * g * bv.BANK_SCALE)   # OI-227：银行乘同尺系数
 
 
 if __name__ == "__main__":

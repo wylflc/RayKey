@@ -9,6 +9,8 @@
   基本面取 `roic_bands.csv` 可得日不晚于当日的最近一行（bps／roe0／payout），按除权参考价折到当日；
 * **H2**：当日两者都可估的银行（保险除外）`G = exp(mean ln(V_D0 ÷ V_DDM))`，`V_H2 = V_DDM × G`；
   可估银行不足 `MIN_BANKS` 时当日退回 V_D0，保险恒为 V_D0。G 是估值之比的几何均值，价格不进 V（§6.3 第 1 条）。
+* **同尺系数**（OI-227）：银行（保险除外）的 V（含退回的 V_D0）再乘 `BANK_SCALE`，使同 `P/V` 下银行与非金融的预期回报可比；
+  系数由月末 `P/V` 对其后 3 年回报的同尺校准得出（`exp(−c/b)`，c 为银行偏差、b 为共同斜率）。
 """
 from __future__ import annotations
 
@@ -25,6 +27,7 @@ TERMINAL_EXCESS = 0.02      # ROE_T = min(roe0, COE + 2pp)，与主模型 ROIC_T
 G_CAP = 0.03                # 终值增长上限
 DEFAULT_PAYOUT = 0.30
 MIN_BANKS = 5
+BANK_SCALE = 0.6951         # OI-227 同尺系数：面板 3 年全期校准，c = −0.0205、b = −0.0565（v4.216 口径，回测日志 §12.279）
 
 
 def roe_bv_path(bps: float, roe0: float, payout: float | None, coe: float, fade_years: int = FADE_YEARS):
@@ -106,15 +109,15 @@ def bank_codes(securities: Path) -> set[str]:
 
 
 def live_h2(as_of: str, d0, bands: Path, actions: dict[str, list], securities: Path) -> dict[str, float]:
-    """实时（信号日）：各银行 V_D0（调用方给的 `d0(code)`，与历史同一分子与除权）与 V_DDM → 截面 G → {代码: V_H2}。
-    只含两者都可估的银行；截面不足 MIN_BANKS 返回空，调用方退回 V_D0。"""
+    """实时（信号日）：各银行 V_D0（调用方给的 `d0(code)`，与历史同一分子与除权）与 V_DDM → 截面 G → {代码: V_H2 × BANK_SCALE}。
+    只含两者都可估的银行；截面不足 MIN_BANKS 返回空，调用方退回 V_D0（银行同样乘 BANK_SCALE）。"""
     codes = bank_codes(securities)
     fund = BankFundamentals(bands, codes)
     pairs = {c: (d0(c), ddm_at(fund, actions.get(c, []), c, as_of)) for c in sorted(codes)}
     g = h2_scale(pairs.values())
     if g is None:
         return {}
-    return {c: dd * g for c, (v0, dd) in pairs.items() if v0 and dd and v0 > 0 and dd > 0}
+    return {c: dd * g * BANK_SCALE for c, (v0, dd) in pairs.items() if v0 and dd and v0 > 0 and dd > 0}
 
 
 def _num(value):

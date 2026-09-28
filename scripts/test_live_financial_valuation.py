@@ -88,7 +88,8 @@ class LiveFinancialValuationTests(unittest.TestCase):
               patch.object(scan, "_corporate_actions", return_value={code: [{"ex_dividend_date": "2026-09-07", "cash_per_share": "1.0"}]})):
             before, _ = scan.resolve_live_band(code, "招商银行", "2026-09-06", {}, 0.02)
             after, _ = scan.resolve_live_band(code, "招商银行", "2026-09-07", {}, 0.02)
-        self.assertAlmostEqual(before["intrinsic_value"] - after["intrinsic_value"], 1.0)
+        import bank_valuation   # OI-227：银行 V（含退回的股利利差）乘同尺系数，除权只折一次
+        self.assertAlmostEqual(before["intrinsic_value"] - after["intrinsic_value"], 1.0 * bank_valuation.BANK_SCALE)
 
 
 if __name__ == "__main__":
