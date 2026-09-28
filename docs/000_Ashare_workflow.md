@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.215
+# A股选股-估值-量价操作流程 v4.216
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -268,6 +268,8 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 4. 带文件写 `bps_operating`／`external_equity_ps`／`external_equity_cum_ps`／`shares_est`／`bps_basis_date`／`equity_anchor_mode` 列；建带结尾打印 `|x|/BPS` 分布、超过 10% 的最新带名单与各退化模式计数（§13 第 3 条）。
 5. **BPS 的股本基准按数据判定**：`bps_basis_date` 由本行与上一行 BPS 之比对照送转因子按对数距离判定；回测逐日展开、生产带除权归一化、档案折算三处的**送转**窗口一律自 `bps_basis_date` 起算，**现金分红**窗口自公告日起算。
 
+**研发费用资本化（ROIC 路径）**：利润表单列的研发费用按证监会行业大类定摊销年限 N 资本化——软件和信息技术服务业、互联网和相关服务 3 年，医药制造业 10 年，其余 5 年（行业表 `data/reference/a_share_csrc_industry.csv`，由 §6.7 第 1 步 `fetch_csrc_industry.py` 取东财 F10 证监会行业；缺行业按 5 年）。基年 = 2017 财年起首个报告研发的财年，基年之前与缺报年份按基年「研发 ÷ 营收」乘当年营收回填。第 t 年研发资产 `Σ_{k<N} R&D_{t−k}·(N−k)/N`、摊销 `Σ_{1≤k≤N} R&D_{t−k}/N`（当年支出次年起摊）；EBIT 加回「研发 − 摊销」，NOPAT 同额按当年税率加回，投入资本加研发资产，资本开支加研发、折旧摊销加摊销（再投资率、增量 ROIC 与维持性估计同源）。只对可得日不早于基年年报公告日的带使用，整个窗口同口径；季报带仍按归母净利 TTM 因子缩放。唯一实现 `roic_inputs.capitalize_rd`，建带 `--rd-capitalize on`；权益路径与银行保险不变。
+
 **少数股权交易的事件口径**：发现少数股权收购、回购／退出义务或对应分红远期时，在 `data/reference/minority_claim_events.json` 登记原始披露事实；按 `known_from` 取估值时已知版本，并要求快照 `report_date` 与模型报告期一致，不把签约当作交割，不向历史回填较晚披露的数值。普通非事件公司维持上述窗口法。事件公司的处理统一为：
 
 - 同期完整股权桥快照包含股数、合并权益、债务字段合计、现金、营业收入、各项回购及分红义务、已在债务合计内的金额，以及覆盖／未覆盖的少数权益。已计金额从金融债务中移出，单独的合同现金请求权计一次；未计金额补入资本结构。流动／非流动科目迁移不改变经济扣减。
@@ -339,10 +341,10 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 以下顺序是当前唯一生产路径。重建全历史模型带属于重作业，必须独占运行。
 
-本链需要日期的 A 股命令使用 `--signal-date`；无日期参数的构建工具读取上游产物。常设作业入口 `scripts/slurm/rebuild_chain_with_fetch.sbatch`（`SIGNAL_DATE`、`SINCE`，可选 `EXTRA_CODES` 点名补取三大报表）串行执行第 1 步九份取数、第 2／2b 步两侧建带与第 3 步银行保险覆盖及持仓侧逐日状态合成；第 4 步起按下文命令执行。证据日由 `scripts/a_share_signal_dates.py` 唯一推导为信号日之后的首个工作日（周一至周五）；调用方不得另行指定证据日。
+本链需要日期的 A 股命令使用 `--signal-date`；无日期参数的构建工具读取上游产物。常设作业入口 `scripts/slurm/rebuild_chain_with_fetch.sbatch`（`SIGNAL_DATE`、`SINCE`，可选 `EXTRA_CODES` 点名补取三大报表）串行执行第 1 步十份取数、第 2／2b 步两侧建带与第 3 步银行保险覆盖及持仓侧逐日状态合成；第 4 步起按下文命令执行。证据日由 `scripts/a_share_signal_dates.py` 唯一推导为信号日之后的首个工作日（周一至周五）；调用方不得另行指定证据日。
 
 ```bash
-# 1. 刷新财务输入与除权事件（逐季财务、三大报表、除权事件、rf/ERP 序列、股本变动事件、股债利差、附注现金类、受限资产、重述公告九份缺一不可）
+# 1. 刷新财务输入与除权事件（逐季财务、三大报表、除权事件、rf/ERP 序列、股本变动事件、股债利差、附注现金类、受限资产、重述公告、行业大类十份缺一不可）
 python3 scripts/fetch_a_share_quarterly_financials.py --signal-date YYYY-MM-DD --since <当前报告期末>
 python3 scripts/fetch_a_share_financial_statements.py --signal-date YYYY-MM-DD
 python3 scripts/fetch_ohlcv_history.py --signal-date YYYY-MM-DD --actions-only
@@ -352,6 +354,7 @@ python3 scripts/fetch_equity_bond_inputs.py --refresh   # 沪深 300 TTM PE 与 
 python3 scripts/fetch_cash_note_items.py --workers 16   # 年报附注的现金类明细（§6.5.1，只下载新增年报、全量重解析并入人工核定表；原文缓存不入库）
 python3 scripts/fetch_restricted_cash_items.py --workers 16   # 年报受限资产与受限原因（§6.5.1 第 3 条，读附注现金类的核定额，须在其后）
 python3 scripts/scan_restatement_announcements.py --history --since <上年 01-01>   # 更正公告与定期报告更新版（§6.3 第 2 条）
+python3 scripts/fetch_csrc_industry.py --missing-only   # 证监会行业大类（§6.5.1 研发资本化的摊销年限），只补三大报表中新出现或未取到的代码
 
 # 2. 构建 ROIC 带与逐日状态
 python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
@@ -363,6 +366,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --restricted-cash notes_wc \
   --wacc-weights unlevered \
   --reset-guard both \
+  --rd-capitalize on \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1 \
   --out-bands data/processed/roic_bands.csv \
   --out-daily data/processed/roic_daily_raw.csv
@@ -376,6 +380,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --restricted-cash notes_wc \
   --wacc-weights unlevered \
   --reset-guard both \
+  --rd-capitalize on \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1 \
   --ttm-trust on --ttm-trust-delta 0.02 \
   --out-bands data/processed/roic_bands_b2.csv \
@@ -661,7 +666,7 @@ P/V 前十从当日扫描的 `worth_attention` 中，按候选侧 `model_pv` 升
 | --- | --- |
 | 候选池 | 当日 `worth_attention` |
 | 估值 | 候选侧（买入线、排序、换仓触发候选）读 §6.5 当前生产模型带；持仓侧（换仓来源）读 §6.5.2.3 持仓侧带；`P/V = 收盘 ÷ V` |
-| 买入线 | `P/V ≤ 1.0495` |
+| 买入线 | `P/V ≤ 1.0034` |
 | 新建仓走势 | T 日 `收盘 > MA20 > MA60` |
 | 已有持仓加仓走势 | `MA20 > MA60`，不要求收盘高于 MA20 |
 | 排序 | `P/V` 升序，资金用尽即停 |

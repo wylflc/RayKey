@@ -45,6 +45,8 @@ echo "=== [$(date +%H:%M:%S)] 第 1 步：年报受限资产（§6.5.1 第 3 条
 python3 scripts/fetch_restricted_cash_items.py --workers 16
 echo "=== [$(date +%H:%M:%S)] 第 1 步：重述公告（§6.3 第 2 条，OI-203）==="
 python3 scripts/scan_restatement_announcements.py --history --since "$(( ${SIGNAL_DATE:0:4} - 1 ))-01-01" --until "$SIGNAL_DATE"
+echo "=== [$(date +%H:%M:%S)] 第 1 步：证监会行业大类（§6.5.1 研发资本化摊销年限）==="
+python3 scripts/fetch_csrc_industry.py --missing-only
 
 if [ -s data/interim/statement_coverage_gaps.csv ] && [ "$(wc -l < data/interim/statement_coverage_gaps.csv)" -gt 1 ]; then
   echo "三大报表覆盖缺口非空（data/interim/statement_coverage_gaps.csv），按 §6.7 先补取再继续" >&2
@@ -57,7 +59,7 @@ COMMON="--all --value-model roic --roe-source onesided_max --roe-lift 2.0 --unif
   --roic-cond-detect graded --roic-peak-ramp 0.3 --ttm-current on --growth-damp on --thin-equity-max 0.5 \
   --roic-trail-weight 0 --minority-basis earnings --wc-aggregation operating \
   --cash-caliber nonop --equity-anchor guarded --restricted-cash notes_wc \
-  --wacc-weights unlevered --reset-guard both \
+  --wacc-weights unlevered --reset-guard both --rd-capitalize on \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1"
 
 echo "=== [$(date +%H:%M:%S)] 第 2 步：候选侧建带 ==="

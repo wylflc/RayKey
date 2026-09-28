@@ -4,6 +4,7 @@
 OI-213 研发资本化按行业定摊销年限用；缺省取三大报表覆盖的全部代码。行业取现行分类，不回溯历史变动。
 
     python3 scripts/fetch_csrc_industry.py                 # 全部三大报表代码
+    python3 scripts/fetch_csrc_industry.py --missing-only  # 只补表中缺行或未取到的三大报表代码（§6.7 第 1 步）
     python3 scripts/fetch_csrc_industry.py --codes 600276  # 指定代码（合并进现有表）
 """
 from __future__ import annotations
@@ -55,6 +56,7 @@ def fetch(code: str, retries: int = 2) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--codes", help="逗号分隔代码；缺省取三大报表覆盖的全部代码")
+    ap.add_argument("--missing-only", action="store_true", help="只取表中缺行或 status 非 ok 的代码")
     ap.add_argument("--pause", type=float, default=0.3, help="逐家请求间隔秒数")
     args = ap.parse_args()
     if args.codes:
@@ -66,6 +68,8 @@ def main() -> int:
     if OUT.exists():
         with OUT.open(encoding="utf-8", newline="") as fh:
             table = {r["security_code"]: r for r in csv.DictReader(fh)}
+    if args.missing_only:
+        codes = [c for c in codes if table.get(c, {}).get("status") != "ok"]
     now = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
     for i, code in enumerate(codes, 1):
         row = dict(security_code=code, csrc_industry="", em2016="", retrieved_at_beijing=now) | fetch(code)

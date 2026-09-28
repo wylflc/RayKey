@@ -25,8 +25,8 @@ class StrategyParameterSyncTest(unittest.TestCase):
         # v4.132（OI-136）：相关性只计算列报告、不过滤（上限 1.0 = 无一被跳过）
         self.assertEqual(daily_scan.SEC93_MAX_CORR, 1.0)
         self.assertEqual(daily_scan.SEC93_TRANCHE_PCT, 0.05)
-        # 候选侧买入线 1.0495（v4.215 OI-207 银行 H2 上重解，§12.274）；换仓边际 0.15（v4.133，§12.174 表 R／§12.176）
-        self.assertEqual(daily_scan.SEC93_BUY_LINE, 1.0495)
+        # 候选侧买入线 1.0034（v4.216 OI-213 研发资本化上重解，§12.278）；换仓边际 0.15（v4.133，§12.174 表 R／§12.176）
+        self.assertEqual(daily_scan.SEC93_BUY_LINE, 1.0034)
         self.assertEqual(daily_scan.SEC93_SWAP_MARGIN, 0.15)
         self.assertEqual(daily_scan.SEC93_SWAP_SOURCE_BLOCK, -1.0)  # 换仓接收方守卫关（v4.137 回退 v4.135）
         # v4.109（OI-110）：估值减持线已删除，生产侧不得再有该常量
@@ -119,6 +119,11 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(workflow.count("python3 scripts/rebuild_bank_bands.py h2:0.02:0.10 \\"), 2)
         self.assertEqual(chain.count("python3 scripts/rebuild_bank_bands.py h2:0.02:0.10 \\"), 2)
         self.assertNotIn("rebuild_bank_bands.py divspread", chain)
+        # OI-213（v4.216）：ROIC 路径研发资本化，两条建带命令与常设重建作业同参，行业大类在建带前补取
+        self.assertEqual(workflow.count("  --rd-capitalize on \\"), 2)
+        self.assertIn("--rd-capitalize on", chain)
+        self.assertLess(chain.index("fetch_csrc_industry.py --missing-only"), chain.index("build_historical_valuation_bands.py"))
+        self.assertTrue((ROOT / "data/reference/a_share_csrc_industry.csv").exists())
         self.assertIn("绝对值 < 0.2pp 时保留原线", workflow)
         self.assertNotIn("| 减持 |", workflow)                # v4.109（OI-110）：估值减持行已删
         # v4.110（OI-116）：止盈行不得退回「无」——涨幅减持即按盈利触发的减仓
