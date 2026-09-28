@@ -516,6 +516,68 @@ def years_before(years: dict[str, RoicYear], available_at: str, count: int) -> l
     return sorted(usable, key=lambda y: y.period, reverse=True)[:count]
 
 
+# OI-213（研究开关，缺省关闭；设计 docs/reports/oi213_design_draft_2026-09-28.zh.md）：研发费用资本化。
+RD_LIFE_BY_CSRC = (("软件和信息技术服务业", 3), ("互联网和相关服务", 3), ("医药制造业", 10))   # 证监会行业大类 → 摊销年限
+RD_LIFE_DEFAULT = 5
+RD_BASE_YEAR = 2017      # 利润表单列研发费用自 2017 财年起基本齐全；更早与缺报年份按基年研发强度回填
+
+
+def rd_life(csrc_industry: str | None) -> int:
+    """证监会行业「门类-大类」→ 研发摊销年限。"""
+    major = (csrc_industry or "").split("-")[-1]
+    return next((n for key, n in RD_LIFE_BY_CSRC if key in major), RD_LIFE_DEFAULT)
+
+
+def load_rd_expense(codes: set[str] | None = None, stmt_dir: Path = STMT_DIR) -> dict[str, dict[str, float]]:
+    """利润表年报研发费用（`RESEARCH_EXPENSE`，元）→ `{代码: {财年: 研发}}`，只取正值。"""
+    out: dict[str, dict[str, float]] = {}
+    with (stmt_dir / "income.csv").open(encoding="utf-8-sig") as handle:
+        for row in csv.DictReader(handle):
+            code = (row.get("security_code") or "").zfill(6)
+            period = (row.get("REPORT_DATE") or "")[:10]
+            if not period.endswith("-12-31") or (codes is not None and code not in codes):
+                continue
+            value = _num(row.get("RESEARCH_EXPENSE"))
+            if value is not None and value > 0:
+                out.setdefault(code, {})[period] = value
+    return out
+
+
+def capitalize_rd(years: dict[str, RoicYear], rd: dict[str, float], life: int) -> tuple[dict[str, RoicYear], str] | None:
+    """研发资本化后的年报副本与起用日（OI-213）。
+
+    基年 = 2017 财年起首个报告研发的财年；基年之前与之后缺报的年份按基年「研发 ÷ 营收」乘当年营收回填。第 t 年：
+    研发资产 `Σ_{k<N} R&D_{t−k}·(N−k)/N`、摊销 `Σ_{1≤k≤N} R&D_{t−k}/N`（当年支出次年起摊）；EBIT 加回「研发 − 摊销」、
+    NOPAT 同额按原税率加回、投入资本加研发资产、资本开支加研发、折旧摊销加摊销（再投资率与维持性估计随之同源）。
+    重述前版本同式调整。起用日 = 基年年报公告日（研发强度自此可知），调用方只对不早于此日的带使用副本。
+    无基年或基年营收非正返回 None。"""
+    base = min((p for p in rd if int(p[:4]) >= RD_BASE_YEAR and p in years), default=None)
+    if base is None or not (years[base].revenue and years[base].revenue > 0):
+        return None
+    intensity = rd[base] / years[base].revenue
+
+    def spend(year: int) -> float:
+        period = f"{year}-12-31"
+        if year >= RD_BASE_YEAR and period in rd:
+            return rd[period]
+        y = years.get(period)
+        return intensity * y.revenue if y is not None and y.revenue and y.revenue > 0 else 0.0
+
+    def adjust(y: RoicYear) -> RoicYear:
+        t = int(y.period[:4])
+        spends = [spend(t - k) for k in range(life + 1)]
+        asset = sum(spends[k] * (life - k) / life for k in range(life))
+        amort = sum(spends[1:]) / life
+        tax = y.tax_rate if y.tax_rate is not None else DEFAULT_TAX_RATE
+        return replace(y, ebit=None if y.ebit is None else y.ebit + spends[0] - amort,
+                       nopat=None if y.nopat is None else y.nopat + (spends[0] - amort) * (1 - tax),
+                       invested_capital=None if y.invested_capital is None else y.invested_capital + asset,
+                       capex=y.capex + spends[0], dep_amort=y.dep_amort + amort,
+                       superseded=[(sa, adjust(old)) for sa, old in y.superseded])
+
+    return {p: adjust(y) for p, y in years.items()}, years[base].notice_date
+
+
 def roic_of(year: RoicYear, prev: RoicYear | None) -> float | None:
     """`NOPAT / 平均投入资本`。首年无上期时退回期末投入资本。"""
     if year.nopat is None or year.invested_capital is None:

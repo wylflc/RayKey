@@ -212,6 +212,18 @@ MOAT_STATS: defaultdict[str, int] = defaultdict(int)
 DISCOUNT_TIERS: dict[str, list[tuple[str, str, float]]] = {}
 DISCOUNT_STATS: defaultdict[str, int] = defaultdict(int)
 
+# `--rd-capitalize on`（OI-213 研究开关）：{代码: 研发资本化后的年报副本}、{代码: 起用日（基年研发强度可得日）}。
+# 缺省为空＝现行逐位不变；只作用于 ROIC 路径（`roic_years_for`），权益路径与银行保险不变。
+RD_CAP: dict[str, dict] = {}
+RD_CAP_FROM: dict[str, str] = {}
+
+
+def roic_years_for(code: str, when: str) -> dict:
+    """ROIC 路径的年报：OI-213 开关打开且 `when` 不早于该股研发强度可得日时取资本化副本，否则取现行。"""
+    if RD_CAP and code in RD_CAP and when >= RD_CAP_FROM[code]:
+        return RD_CAP[code]
+    return ROIC_YEARS.get(code, {})
+
 # §6.5.2.4 主体重置：{代码: 重置报告期}。报告期 ≥ 重置日的行把比率窗口、十年守卫窗与经营账面基年截到重置日起
 # （复用结构断点 `book_break`），不足三年时锚 = 最新年报比率 × TTM 因子，g0 只由季报趋势给出。早于重置日的行不受影响。
 ENTITY_RESET: dict[str, str] = {}
@@ -441,7 +453,7 @@ def reset_guard_anchor(code: str, as_of: str, latest_ratio: float, f_ttm: float,
         m10, m5 = statistics.median(values[-window:]), statistics.median(values[-args.roe_years:])
         return (values[-1] / m10, values[-1] / m5) if m10 > 0 and m5 > 0 else None
     if spec["anchor"] == "pre_reset":
-        hist = sorted(roic_inputs.years_before(ROIC_YEARS.get(code, {}), as_of, window + 1), key=lambda y: y.period)
+        hist = sorted(roic_inputs.years_before(roic_years_for(code, as_of), as_of, window + 1), key=lambda y: y.period)
         if tax_norm is not None:
             hist = roic_inputs.with_tax_rate(hist, tax_norm)
         rois = [roic_inputs.roic_of(y, prev) for prev, y in zip([None] + hist[:-1], hist)]
@@ -1816,7 +1828,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
     # 终值式恰是框架的 EV/NOPAT——**得到的是每股企业价值**，再减净负债即得每股股权价值。
     reset_active = False
     if getattr(args, "value_model", "dcf") == "roic":
-        history = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at, args.roe_years)
+        history = roic_inputs.years_before(roic_years_for(code, available_at), available_at, args.roe_years)
         latest = max(history, key=lambda y: y.period) if history else None
         # **整只股票没取到报表时退回权益口径而不是拒绝**：拒绝会把该股整条踢出宇宙，
         # 于是 A/B 同时变了「估值口径」与「候选池」两个变量，§12.30 明令不可（曾踩中）。
@@ -1860,7 +1872,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
             # 比率窗口与十年守卫窗口内各年比率一律按**经营账面** `E_y − X_{y0→y}` 计（y0 = 十年窗首年），
             # 使「比率 × 当期经营账面」只承接留存增长。窗口里的比率本来就各按自己年份的账面算，
             # 外生权益（IPO/增发/转股/回购注销）却会让前后年份的账面不可比——这里把它从账面里摘掉。
-            long_hist_all = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at,
+            long_hist_all = roic_inputs.years_before(roic_years_for(code, available_at), available_at,
                                                      max(args.roe_years, 10))
             x_cum, x_note, book_break = annual_external_equity(
                 long_hist_all, series, actions,
@@ -1904,7 +1916,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
             if iroic_mode == "endpoint":
                 iroic = roic_inputs.incremental_roic(history)
             else:
-                iroic_hist = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at,
+                iroic_hist = roic_inputs.years_before(roic_years_for(code, available_at), available_at,
                                                       max(args.roe_years, args.roic_iroic_years))
                 if tax_norm is not None:
                     iroic_hist = roic_inputs.with_tax_rate(iroic_hist, tax_norm)
@@ -2009,7 +2021,7 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
             #   茅台 2018 ≈1.1× → 放行。K 由 --roic-peak-k 给。
             peak_s, long_ratios = None, []
             if getattr(args, "roic_cycle_guard", "efficiency") == "peak":
-                long_hist = roic_inputs.years_before(ROIC_YEARS.get(code, {}), available_at,
+                long_hist = roic_inputs.years_before(roic_years_for(code, available_at), available_at,
                                                      max(args.roe_years, 10))
                 if book_break is not None:
                     long_hist = [y for y in long_hist if y.period >= book_break]
@@ -3183,6 +3195,11 @@ def main() -> int:
                         help="逐票/分档终值参数覆盖（列：security_code,fade_years,terminal_excess,n1，"
                              "空格即沿用全局）。只改「超额回报持续多久、终值超额多大」，不改 r/增长/分子。"
                              "缺省不启用，既往产出逐位可复现。研究开关（OI-070 ①②）")
+    parser.add_argument("--rd-capitalize", choices=("off", "on"), default="off",
+                        help="研究开关（OI-213）：ROIC 路径研发费用资本化——按证监会行业大类定摊销年限（软件与互联网 3、医药制造 10、其余 5），"
+                             "2017 财年前与缺报年份按基年研发强度回填，只用于可得日不早于基年年报的带；off=缺省＝生产")
+    parser.add_argument("--rd-industry-file", type=Path, default=ROOT / "data/reference/a_share_csrc_industry.csv", metavar="CSV",
+                        help="OI-213 行业表（fetch_csrc_industry.py 生成：security_code,csrc_industry）")
     parser.add_argument("--discount-tiers", type=Path, metavar="CSV",
                         help="研究开关（OI-223）：逐票时点折现率档（列：security_code,effective_from,effective_to,r，"
                              "由 build_discount_rate_tiers.py 生成），按带的可得日取 r，终值超额不变；缺省不启用＝统一 r（生产）")
@@ -3442,6 +3459,19 @@ def main() -> int:
             peers = {p for v in RESET_GUARD_ANCHOR.values() for p in v["peers"]}
             PEER_SERIES.update(load_financials(peers, notice_cap=(args.notice_cap == "statutory")))
             print(f"主体重置守卫参照（OI-212 --reset-guard {args.reset_guard}）：{len(RESET_GUARD_ANCHOR)} 只 ← {args.reset_guard_file}")
+        if args.rd_capitalize == "on":
+            with args.rd_industry_file.open(encoding="utf-8", newline="") as fh:
+                industry = {r["security_code"].zfill(6): r.get("csrc_industry", "") for r in csv.DictReader(fh)}
+            rd = roic_inputs.load_rd_expense(set(ROIC_YEARS), args.statements_dir)
+            lives: defaultdict[int, int] = defaultdict(int)
+            for code, years in ROIC_YEARS.items():
+                life = roic_inputs.rd_life(industry.get(code))
+                done = roic_inputs.capitalize_rd(years, rd.get(code, {}), life) if rd.get(code) else None
+                if done is not None:
+                    RD_CAP[code], RD_CAP_FROM[code] = done
+                    lives[life] += 1
+            print(f"研发资本化（OI-213 --rd-capitalize on）：{len(RD_CAP)} 只（摊销年限 "
+                  + "、".join(f"{n} 年 {c} 只" for n, c in sorted(lives.items())) + f"；行业表 {args.rd_industry_file.name}）")
         if not ROIC_YEARS:
             print(f"**{args.statements_dir} 无三大报表**，roic 口径无法建带。"
                   f"先跑 scripts/fetch_a_share_financial_statements.py")
