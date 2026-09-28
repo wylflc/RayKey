@@ -124,7 +124,8 @@ def load_spans() -> dict:
 
 def collect():
     bands = {a: load_bands(p) for a, p in BANDS.items()}
-    codes = {k[0] for k, (ok, _path) in bands['C'][0].items() if ok}
+    # 样本代码 = 有 ROIC 路径 ok 带的公司（同 exp_oi217f「全部 ROIC」宇宙）∪ 面板公司（含其权益路径月份）；银行保险下面剔除
+    codes = {k[0] for k, (ok, path) in bands['C'][0].items() if ok and path in ('growth', 'zero_growth')} | set(load_spans())
     names, industry = {}, {}
     with (ROOT / 'data/raw/a_share_securities.csv').open(newline='', encoding='utf-8-sig') as f:
         for r in csv.DictReader(f):
