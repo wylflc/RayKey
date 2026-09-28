@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "checked_at_utc": "2026-09-28T11:32:42.915023+00:00",
+  "unchanged": {
+    "a_share_holdings.csv": true,
+    "portfolio_account_snapshot.csv": true
+  },
+  "bands_checked": 169,
+  "pool_unvaluable": [
+    "000725",
+    "002409",
+    "600900",
+    "603505",
+    "688981"
+  ],
+  "pool_unvaluable_changes": {
+    "entered": [],
+    "left": []
+  },
+  "off_pool_unvaluable_changes": {
+    "entered": [],
+    "left": []
+  },
+  "plans": {
+    "daily_entry_plan.csv": 2,
+    "daily_sell_plan.csv": 1
+  },
+  "publication": {
+    "bytes": 4923,
+    "sha256": "d4391f0dbdd067f2117ac177896df288907440047c93fbd073206d2a76d01a16"
+  }
+}
