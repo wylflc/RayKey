@@ -1,7 +1,8 @@
 """OI-206 估值公允性检验（preregister.md 读数 1）：CONTROL 与增速腿臂（环境变量 FAIR_ARM，缺省 T12）的月末 `P/V` 对其后 3／5 年含分红总回报。
 
-口径同 `../exp_oi217f_20260925/fairness.py`，改为两臂：`d = ln(PV_G / PV_C)`，峰侧 `d < 0`（去掉峰值守卫、V 升）、
-谷侧 `d > 0`（去掉谷底守卫、V 降）分开读；守卫同时作用于 ROIC 路径与权益路径，两条路径都进样本（银行与保险除外）。
+口径同 `../exp_oi205b_20260928/fairness.py`，两臂：`d = ln(PV_G / PV_C)`，`d < 0` 为增速腿抬高 V 的一侧（主要一侧，
+沿用字段名 dn／「峰侧」），`d > 0` 为少数 V 降的观测（dp／「谷侧」）；该侧股票少，重抽整侧缺席时该次记为奇异、不进区间
+（`singular_draws`）。两条路径都进样本（银行与保险除外）。
 
     python3 fairness.py              # → fairness.json、fairness_cases.csv；逐月观测写 cache/fairness_observations.csv
     EXP_TEST=1 python3 fairness.py   # 冒烟：面板子集状态、重抽 50 次，只写 cache/
@@ -250,7 +251,11 @@ class Sample:
 
 def encompass(s: Sample, w, groups, regressors):
     cols = demean(groups, w, s.y, *(getattr(s, k) for k in regressors))
-    return wls(cols[0], np.column_stack(cols[1:]), w)
+    X = np.column_stack(cols[1:])
+    try:
+        return wls(cols[0], X, w)
+    except np.linalg.LinAlgError:   # 增速腿近乎单侧：V 降一侧股票很少，某次重抽整侧缺席、该列全零
+        return np.full(X.shape[1], np.nan)
 
 
 def readout_encompass(s: Sample, rng, fe='month'):
@@ -260,9 +265,13 @@ def readout_encompass(s: Sample, rng, fe='month'):
     for label, regs in (('合并', ('x', 'd')), ('分侧', ('x', 'dn', 'dp'))):
         beta = encompass(s, one, groups, regs)
         draws = [encompass(s, boot_weights(s.stock, s.n_stocks, rng), groups, regs) for _ in range(BOOT)]
-        entry = dict(b=float(beta[0]), b_ci=interval([d[0] for d in draws]))
+        entry = dict(b=float(beta[0]), b_ci=interval([d[0] for d in draws]),
+                     singular_draws=int(sum(not np.all(np.isfinite(d)) for d in draws)))
         for i, name in enumerate(regs[1:], 1):
             ci = interval([d[i] / d[0] for d in draws])
+            nz = getattr(s, name) != 0
+            entry[f'n_{name}'] = int(nz.sum())
+            entry[f'stocks_{name}'] = int(len(set(s.stock[nz])))
             entry[f'g_{name}'] = float(beta[i])
             entry[f'lambda_{name}'] = float(beta[i] / beta[0])
             entry[f'lambda_{name}_ci'] = ci
@@ -463,8 +472,9 @@ def main():
             results[key] = entry
             e = entry['encompass']['分侧']
             print(key, 'n', len(s.y), 'stocks', s.n_stocks, 'b %.3f' % e['b'],
-                  'λpeak %.2f %s %s' % (e['lambda_dn'], e['lambda_dn_ci'], e['verdict_dn']),
-                  'λtrough %.2f %s %s' % (e['lambda_dp'], e['lambda_dp_ci'], e['verdict_dp']), flush=True)
+                  'λV升 %.2f %s %s' % (e['lambda_dn'], e['lambda_dn_ci'], e['verdict_dn']),
+                  'λV降 %.2f %s %s (n %d, stocks %d, singular %d)' % (e['lambda_dp'], e['lambda_dp_ci'], e['verdict_dp'],
+                                                                    e['n_dp'], e['stocks_dp'], e['singular_draws']), flush=True)
     pick, table, errors = cases(rows)
     results['cases'] = dict(picked=pick, errors=errors)
     (OUT / ('test_fairness.json' if TEST else f'fairness_{FAIR_ARM}.json')).write_text(json.dumps(results, ensure_ascii=False, indent=1) + '\n')
