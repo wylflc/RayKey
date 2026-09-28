@@ -1121,6 +1121,27 @@ def sell_dividend_tax(portfolio: Portfolio, lot: Lot, shares: float, day: str,
     return tax
 
 
+def load_e1_table(path: Path) -> dict[str, tuple[list[str], list[float | None]]]:
+    """OI-224：E1（近三个财年经营现金流 ÷ 归母净利）时点表 → {代码: ([可得日], [E1])}，按可得日升序。"""
+    out: dict[str, tuple[list[str], list[float | None]]] = {}
+    with Path(path).open(newline="", encoding="utf-8") as handle:
+        rows = sorted(csv.DictReader(handle), key=lambda r: (r["security_code"], r["available_at"]))
+    for r in rows:
+        dates, values = out.setdefault(r["security_code"].zfill(6), ([], []))
+        dates.append(r["available_at"])
+        values.append(float(r["e1"]) if r.get("e1") else None)
+    return out
+
+
+def e1_low(table: dict, code: str, day: str, threshold: float) -> bool:
+    """`day` 当日可得的最近一行 E1 低于阈值；缺失视为不低（不改变规则）。"""
+    entry = table.get(code)
+    if not entry:
+        return False
+    i = bisect.bisect_right(entry[0], day) - 1
+    return i >= 0 and entry[1][i] is not None and entry[1][i] < threshold
+
+
 def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int,
                      force_ma60: bool = False) -> tuple[float, int]:
     """建仓日的止损价，返回 (价格, 实际采用的均线周期)。
@@ -1506,6 +1527,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         swap_source_cooldown: int = 0, weak_block_log=None,
         swap_chop: ChopConfig | None = None,
         swap_out_min_pv: float = 0.0,
+        reentry_days: int = 0, e1_table: dict | None = None, e1_min: float = 0.84,
+        reentry_e1: bool = False, swap_protect_e1: bool = False,
         mkt: dict[str, float] | None = None, mkt_crash_days: int = 0,
         mkt_crash_pct: float = 0.10, mkt_trend_ma: int = 0,
         mkt_action: str = "block", mkt_release_ma: int = 20,
@@ -1841,6 +1864,12 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 holdings={c: dict(shares=p.shares, cost=p.avg_cost, stop=p.entry_stop,
                                   stop_ma=p.entry_stop_ma) for c, p in portfolio.lots.items()},
                 buy_counters=dict(lot_counters_buy), sell_counters=dict(lot_counters_sell)))
+
+    last_stop_day: dict[str, int] = {}           # OI-224 RE：代码 → 最近一次建仓止损清仓的交易日序号
+    relaxed_entry: set[str] = set()              # OI-224 RE：当日只因重入放宽而过走势条件的代码
+
+    def _e1_low(code: str, when: str) -> bool:
+        return e1_table is not None and e1_low(e1_table, code, when, e1_min)
 
     for day_no, day in enumerate(days):
         if initial_portfolio is not None and day_no == 0:
@@ -2362,6 +2391,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 turnover += lot.shares * sp     # 必须在 close_lot 之前取——它会把 shares 清零
                 close_lot(portfolio, code, day, sp, ledger=ledger,
                           reason=f"{trigger_reason}{stop_tag}止损", net_reg=net_reg)
+                last_stop_day[code] = day_no
                 sell_count += 1
                 continue
             # 基本面退出：内在价值自峰值回落超阈值即清仓。**盯 V 不盯价**，故一只票可以
@@ -2645,11 +2675,22 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # 新建仓不受影响，仍须 `收盘 > MA20 > MA60`。
             # 语义是「建仓那一刻要确认趋势成立，此后回踩不打断定投」；
             # **它必然放大回撤**——回踩途中继续投钱，而止损仍是唯一的截断（见 §9.3.5）。
+            relaxed_entry.clear()
+
+            def _reentry_ok(code):
+                """OI-224 RE：建仓止损清仓后 N 个交易日内的未持仓代码，新建仓免 MA20 > MA60（E1 变体对 E1 最差一档不放宽）。"""
+                return (reentry_days > 0 and code not in portfolio.lots and code in last_stop_day
+                        and day_no - last_stop_day[code] <= reentry_days
+                        and not (reentry_e1 and _e1_low(code, buy_day)))
+
             def _trend_ok(r):
                 ma = mas.get(r[0], {}).get(buy_day)
                 if not ma or not all(w in ma for w in trend_ma):
                     return False
                 if len(trend_ma) >= 2 and not ma[trend_ma[0]] > ma[trend_ma[1]] * k:
+                    if _reentry_ok(r[0]) and r[1] > ma[trend_ma[0]] * k:
+                        relaxed_entry.add(r[0])
+                        return True
                     return False
                 if addon_trend == "ma-only" and r[0] in portfolio.lots:
                     return True                      # 已持仓：只看均线排列，不看价格位置
@@ -2694,7 +2735,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     stats["T+1确认·买入取消·均线缺失"] += 1
                     buy_confirmation_cache[code] = False
                     return False
-                if (len(trend_ma) >= 2
+                if (len(trend_ma) >= 2 and code not in relaxed_entry
                         and not ma_exec[trend_ma[0]] > ma_exec[trend_ma[1]] * k):
                     stats["T+1确认·买入取消·均线排列"] += 1
                     buy_confirmation_cache[code] = False
@@ -2999,7 +3040,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         # 而不是仅仅排序变了就轻易地换」）：卖出源还须自身 `P/V ≥ 阈值`。
                         # 与 `swap_margin`（候选须比持仓便宜出边际）正交——那是**相对**条件，
                         # 这是**绝对**条件：持仓本身不算贵时，谁更便宜都不换。缺省 0 = 关。
-                        and (not swap_out_min_pv or src_pv(c) >= swap_out_min_pv)
+                        and (not swap_out_min_pv or src_pv(c) >= swap_out_min_pv
+                             or (swap_protect_e1 and _e1_low(c, sig_day)))
                         and c not in quota_hold_today
                         and not (hold_strong in ("swap", "both") and strong_bull(c, day))]
                 if weak_extra_on and held:
@@ -3598,6 +3640,9 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                 lot.entry_stop, lot.entry_stop_ma = entry_stop_price(
                     ma, fill if entry_below_ma60 == "skip_fill" else close, stop_ma,
                     force_ma60=(entry_below_ma60 == "ma60_stop"))
+                if code in relaxed_entry and ma.get(20):          # OI-224 RE：重入仓的止损锚取成交日 MA20
+                    lot.entry_stop, lot.entry_stop_ma = ma[20], 20
+                    stats["止损后重入·建仓"] += 1
                 portfolio.lots[code] = lot
             lot.avg_cost = ((lot.avg_cost * lot.shares + amount) / (lot.shares + shares)
                             if lot.shares + shares > 0 else 0.0)   # 持仓均价：买入加权、减持不变
@@ -4276,6 +4321,15 @@ def main() -> int:
                              "即只换走势已走坏的持仓，涨势中的不因排名靠后被换掉")
     parser.add_argument("--no-swap-require-weak", dest="swap_require_weak", action="store_false",
                         help="反向开关：取消换仓的弱势要求（覆盖此前的 --swap-require-weak）")
+    parser.add_argument("--reentry-days", type=int, default=0, metavar="N",
+                        help="研究开关（OI-224 RE）：建仓止损清仓后 N 个交易日内、P/V 仍在买入区的再建仓只要求收盘 > MA20，"
+                             "止损锚取成交日 MA20；0=关（缺省）")
+    parser.add_argument("--e1-table", type=Path, default=None, metavar="CSV",
+                        help="研究开关（OI-224）：E1 时点表（security_code,report_date,available_at,e1）")
+    parser.add_argument("--e1-min", type=float, default=0.84, help="OI-224 E1 变体的最差一档分界（缺省 0.84）")
+    parser.add_argument("--reentry-e1", action="store_true", help="OI-224：E1 低于分界的股票不做重入放宽")
+    parser.add_argument("--swap-protect-e1", action="store_true",
+                        help="OI-224：--swap-out-min-pv 的保护对 E1 低于分界的持仓不生效")
     parser.add_argument("--swap-out-min-pv", type=float, default=0.0, metavar="X",
                         help="换仓的**绝对**门槛：只有自身 P/V ≥ X 的持仓才允许被换出"
                              "（「高估严重才换，排序变了不轻易换」）。缺省 0 = 关")
@@ -5079,6 +5133,9 @@ def main() -> int:
                          swap_source_cooldown=args.swap_source_cooldown,
                          weak_block_log=wb_writer, swap_chop=chop_config,
                          swap_out_min_pv=args.swap_out_min_pv,
+                         reentry_days=args.reentry_days, e1_min=args.e1_min,
+                         e1_table=load_e1_table(args.e1_table) if args.e1_table else None,
+                         reentry_e1=args.reentry_e1, swap_protect_e1=args.swap_protect_e1,
                          mkt=mkt_series, mkt_crash_days=args.mkt_crash_days,
                          mkt_crash_pct=args.mkt_crash_pct, mkt_trend_ma=args.mkt_trend_ma,
                          mkt_action=args.mkt_action, mkt_release_ma=args.mkt_release_ma,
