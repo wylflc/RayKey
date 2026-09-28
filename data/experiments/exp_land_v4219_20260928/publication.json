@@ -1,0 +1,87 @@
+{
+  "job_id": "27309249",
+  "arm": "BK",
+  "installed": {
+    "roic_bands.csv": {
+      "before": {
+        "bytes": 163120654,
+        "sha256": "6640c993e8ec4f2bead02f4c9bb69d426ad295c1444b7b507d015a3470787637"
+      },
+      "after": {
+        "bytes": 163120654,
+        "sha256": "6640c993e8ec4f2bead02f4c9bb69d426ad295c1444b7b507d015a3470787637"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "before": {
+        "bytes": 163111549,
+        "sha256": "412bd766a114791dea91956b4bcc0525be268e5a8e1f7ee0efe55e273b7e8e77"
+      },
+      "after": {
+        "bytes": 163111549,
+        "sha256": "412bd766a114791dea91956b4bcc0525be268e5a8e1f7ee0efe55e273b7e8e77"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "before": {
+        "bytes": 1995810255,
+        "sha256": "a7451ffcb62b4f4544017402b78de252c3396ca9be898e19f71a98bfddae2941"
+      },
+      "after": {
+        "bytes": 1995810255,
+        "sha256": "a7451ffcb62b4f4544017402b78de252c3396ca9be898e19f71a98bfddae2941"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "before": {
+        "bytes": 2000259408,
+        "sha256": "4922a82274a45ca3aff69d960a41352b056a2c52945210741106ef418bcf761c"
+      },
+      "after": {
+        "bytes": 2000259408,
+        "sha256": "4922a82274a45ca3aff69d960a41352b056a2c52945210741106ef418bcf761c"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "before": {
+        "bytes": 1993374752,
+        "sha256": "193415daa3262950e6822d67472159b8421ff45676913159e3bf07ea740f37b0"
+      },
+      "after": {
+        "bytes": 1993358269,
+        "sha256": "92772324bad0947ec0238f2776843ae0afe88f08f59b868cf272013b49b564d6"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "before": {
+        "bytes": 1997817020,
+        "sha256": "4c02a160eb58b89394d5fa11f317db26464e057a3feffe8abed7ad4fbe1c4929"
+      },
+      "after": {
+        "bytes": 1997800795,
+        "sha256": "4c0b13331377716d24b720111a57b2913c463d5d918415012a92cf0fe9ebfd76"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "before": {
+        "bytes": 2069341825,
+        "sha256": "0ac2a9b15255004344e7bb9e3838e1bc34fbf55d5505e3a7c0e168dd2bd0a8d3"
+      },
+      "after": {
+        "bytes": 2069325004,
+        "sha256": "ce059dc76efb069b44ffd49379bc0155387c06bd295d2a80b716a05747a8079e"
+      }
+    }
+  },
+  "old_full_inputs_retained": true,
+  "ruling": {
+    "state_arm": "BK",
+    "tested_arm": "BK",
+    "registered_arm": "BK",
+    "ruled_at": "2026-09-28",
+    "oi227": "按正确性原则采纳银行 V 同尺缩放：同尺校准全期、缩放银行 V（含退回的股利利差），v4.216 口径重估 k = 0.6951；当晚落地并重发 09-28 计划",
+    "buy_line": 1.0034,
+    "alignment_exception": true,
+    "buy_line_ruling": "用户 2026-09-28 裁定维持 1.0034：银行同尺缩放不做 §12.1 对齐（对齐解 1.1568 会放宽全部非金融），按新口径原线合格面 11.689% 重登在册合格面"
+  }
+}

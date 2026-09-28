@@ -529,5 +529,49 @@
     "publication_sha256": "443e4807a6b93327bebfa1d1c894cd00836a953ad50c9b926b324fdd313638dd",
     "final_validation": "data/experiments/exp_oi213_20260928/final_validation.json",
     "verify": "daily_execution_guard.py verify 通过"
+  },
+  "reissue_v4219": {
+    "at_beijing": "2026-09-29 凌晨（第四次重发）",
+    "reason": "v4.219（OI-227 银行 V 乘同尺系数 0.6951；买入线维持 1.0034，在册合格面重登 11.689%）落地后按同一账户参数重发",
+    "jobs": {
+      "landing_states": 27308255,
+      "landing_backtest": 27308258,
+      "install": 27309249
+    },
+    "execution_plan_unchanged": true,
+    "plan_after": {
+      "sell": [],
+      "buy": []
+    },
+    "eligible": {
+      "under_line": 31,
+      "trend_qualified": 4
+    },
+    "bank_changes": {
+      "600036": {
+        "V": [
+          57.8818,
+          40.2336
+        ],
+        "PV": [
+          0.7021,
+          1.0101
+        ]
+      },
+      "601838": {
+        "PV": [
+          0.6253,
+          0.8996
+        ]
+      }
+    },
+    "swap_check": "最贵弱势持仓仍为卫星化学（持仓侧 1.0146），与华荣股份 0.9884 差 0.0262 < 0.15，不换仓",
+    "pv_top10_change": "成都银行移出，泸州老窖回到第十",
+    "shadow_code_migrations": [
+      "migrations/oi227_scan_20260928.json"
+    ],
+    "publication_sha256": "cec488d2ea32982bb64517c7d985fee7d2f08757530dd243bfc232eb029a6675",
+    "final_validation": "data/experiments/exp_land_v4219_20260928/final_validation.json",
+    "verify": "daily_execution_guard.py verify 通过"
   }
 }
