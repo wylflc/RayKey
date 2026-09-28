@@ -1,0 +1,5 @@
+inputs/
+states/
+__pycache__/
+*.log
+observations.csv
