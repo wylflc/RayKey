@@ -573,5 +573,110 @@
     "publication_sha256": "cec488d2ea32982bb64517c7d985fee7d2f08757530dd243bfc232eb029a6675",
     "final_validation": "data/experiments/exp_land_v4219_20260928/final_validation.json",
     "verify": "daily_execution_guard.py verify 通过"
+  },
+  "reissue_v4221": {
+    "at_beijing": "2026-09-29 清晨（第五次重发）",
+    "reason": "v4.221（OI-230 银行 DDM 终值按可持续派息率 1 − g_T ÷ ROE_T，最近财年无现金分红的银行照用截面 G，同尺系数重估 0.7045；买入线 1.0034 在对齐容差内保留，在册合格面重登 11.761%）落地后按同一账户参数重发",
+    "jobs": {
+      "candidate_states": 27319553,
+      "candidate_backtest": 27319601,
+      "install": 27323132
+    },
+    "execution_plan_unchanged": false,
+    "plan_after": {
+      "sell": [
+        {
+          "code": "600036",
+          "name": "招商银行",
+          "rule": "换仓",
+          "shares": 3200,
+          "amount": 130048.0,
+          "swap_for": "603855"
+        }
+      ],
+      "buy": [
+        {
+          "code": "601318",
+          "name": "中国平安",
+          "shares": 2200,
+          "amount": 115280.0
+        }
+      ]
+    },
+    "eligible": {
+      "under_line": 30,
+      "trend_qualified": 4
+    },
+    "bank_changes": {
+      "600036": {
+        "V": [
+          40.2336,
+          32.6213
+        ],
+        "PV": [
+          1.0101,
+          1.2458
+        ]
+      },
+      "601838": {
+        "V": [
+          21.1642,
+          17.2754
+        ],
+        "PV": [
+          0.8996,
+          1.1021
+        ]
+      },
+      "002142": {
+        "V": [
+          23.2451,
+          26.3068
+        ],
+        "PV": [
+          1.4863,
+          1.3133
+        ]
+      },
+      "601939": {
+        "V": [
+          6.8858,
+          7.2743
+        ],
+        "PV": [
+          1.5975,
+          1.5122
+        ]
+      },
+      "601398": {
+        "V": [
+          5.1484,
+          5.0385
+        ],
+        "PV": [
+          1.583,
+          1.6175
+        ]
+      },
+      "601288": {
+        "V": [
+          4.1621,
+          4.1496
+        ],
+        "PV": [
+          1.6482,
+          1.6532
+        ]
+      }
+    },
+    "swap_check": "招行持仓侧 1.2458 成为最贵弱势持仓（卫星化学 1.0146），与华荣股份 0.9884 差 0.2574 ≥ 0.15，换仓；卖出款补足 −13,153.46 元可用保证金缺口后买平安 2,200 股（P/V 0.7405，边际 +0.5053），余约 1,615 元",
+    "pv_top10_change": "不变",
+    "history_states_note": "历史逐日状态中非池银行行情只到 2026-08-07，其后银行截面不足 5 家、历史带退回股利利差；实盘估值按全部银行基本面算截面",
+    "shadow_code_migrations": [
+      "migrations/oi230_20260929.json"
+    ],
+    "publication_sha256": "2f5020adbada9f3009e15f6fac077bbcb4435f6aa1b82999c9193dc212a11728",
+    "final_validation": "data/experiments/exp_oi230_20260929/final_validation.json",
+    "verify": "daily_execution_guard.py verify 通过"
   }
 }

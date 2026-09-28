@@ -1,0 +1,29 @@
+{
+  "job_id": "27323132",
+  "sides": [
+    {
+      "side": "base",
+      "production_mode": {
+        "bytes": 1993870525,
+        "sha256": "67037531a1a608b7b76f75ee065cbd97e0f738636e3426ca6cfee6c2d92a5546"
+      },
+      "dc_arm": {
+        "bytes": 1993870525,
+        "sha256": "67037531a1a608b7b76f75ee065cbd97e0f738636e3426ca6cfee6c2d92a5546"
+      },
+      "identical": true
+    },
+    {
+      "side": "b2",
+      "production_mode": {
+        "bytes": 1998312977,
+        "sha256": "95873cfb7fa31e5eb79075b95ac5dabbfad8e6d89991291813da59a4b0682491"
+      },
+      "dc_arm": {
+        "bytes": 1998312977,
+        "sha256": "95873cfb7fa31e5eb79075b95ac5dabbfad8e6d89991291813da59a4b0682491"
+      },
+      "identical": true
+    }
+  ]
+}

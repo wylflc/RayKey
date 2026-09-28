@@ -1,0 +1,86 @@
+{
+  "job_id": "27323132",
+  "arm": "DC",
+  "installed": {
+    "roic_bands.csv": {
+      "before": {
+        "bytes": 163120654,
+        "sha256": "6640c993e8ec4f2bead02f4c9bb69d426ad295c1444b7b507d015a3470787637"
+      },
+      "after": {
+        "bytes": 163120654,
+        "sha256": "6640c993e8ec4f2bead02f4c9bb69d426ad295c1444b7b507d015a3470787637"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "before": {
+        "bytes": 163111549,
+        "sha256": "412bd766a114791dea91956b4bcc0525be268e5a8e1f7ee0efe55e273b7e8e77"
+      },
+      "after": {
+        "bytes": 163111549,
+        "sha256": "412bd766a114791dea91956b4bcc0525be268e5a8e1f7ee0efe55e273b7e8e77"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "before": {
+        "bytes": 1995810255,
+        "sha256": "a7451ffcb62b4f4544017402b78de252c3396ca9be898e19f71a98bfddae2941"
+      },
+      "after": {
+        "bytes": 1995810255,
+        "sha256": "a7451ffcb62b4f4544017402b78de252c3396ca9be898e19f71a98bfddae2941"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "before": {
+        "bytes": 2000259408,
+        "sha256": "4922a82274a45ca3aff69d960a41352b056a2c52945210741106ef418bcf761c"
+      },
+      "after": {
+        "bytes": 2000259408,
+        "sha256": "4922a82274a45ca3aff69d960a41352b056a2c52945210741106ef418bcf761c"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "before": {
+        "bytes": 1993358269,
+        "sha256": "92772324bad0947ec0238f2776843ae0afe88f08f59b868cf272013b49b564d6"
+      },
+      "after": {
+        "bytes": 1993870525,
+        "sha256": "67037531a1a608b7b76f75ee065cbd97e0f738636e3426ca6cfee6c2d92a5546"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "before": {
+        "bytes": 1997800795,
+        "sha256": "4c0b13331377716d24b720111a57b2913c463d5d918415012a92cf0fe9ebfd76"
+      },
+      "after": {
+        "bytes": 1998312977,
+        "sha256": "95873cfb7fa31e5eb79075b95ac5dabbfad8e6d89991291813da59a4b0682491"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "before": {
+        "bytes": 2069325004,
+        "sha256": "ce059dc76efb069b44ffd49379bc0155387c06bd295d2a80b716a05747a8079e"
+      },
+      "after": {
+        "bytes": 2069852293,
+        "sha256": "783e5c6be40faf073b6a7420c927787a83a2bd8bcd892cd233f0955f8e560b0c"
+      }
+    }
+  },
+  "old_full_inputs_retained": true,
+  "ruling": {
+    "state_arm": "DC",
+    "tested_arm": "DC",
+    "registered_arm": "DC",
+    "ruled_at": "2026-09-29",
+    "oi230": "按清洁盈余原则采纳：银行 DDM 终值期派息率取可持续派息率 1 − g_T ÷ ROE_T（派息率为 0 也可估），V_D0 不可得而 V_DDM 可估的银行照用当日截面 G；同尺系数在该口径上重估 k = 0.7045；当晚落地并重发 09-28 计划。派息率的预测力另登记待办研究（识别另做）",
+    "buy_line": 1.0034,
+    "buy_line_ruling": "DC_K0 原线合格面 11.681% 在 §12.1 容差内，保留 1.0034；k 重估属同尺缩放不再对齐，在册合格面按 DC 原线合格面重登 11.761%"
+  }
+}
