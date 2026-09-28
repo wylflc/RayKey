@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v4.215（OI-207 H2）：银行股利尺度 × DDM 排序的唯一实现 `bank_valuation`。"""
+"""v4.215（OI-207 H2）：银行股利尺度 × DDM 排序的唯一实现 `bank_valuation`；v4.221（OI-230）终值按可持续派息率。"""
 import math
 import unittest
 from unittest.mock import patch
@@ -14,21 +14,26 @@ class BankValuationTests(unittest.TestCase):
         self.assertAlmostEqual(roe_t, 0.12)
         self.assertAlmostEqual(g_t, min(0.03, 0.12 * 0.7))
         pv = sum(r * p * 0.3 / 1.1 ** t for t, (r, p) in enumerate(path, 1))
-        self.assertAlmostEqual(v, pv + roe_t * bv_n * 0.3 / (0.10 - g_t) / 1.1 ** 10)
+        self.assertAlmostEqual(v, pv + roe_t * bv_n * (1 - g_t / roe_t) / (0.10 - g_t) / 1.1 ** 10)   # 终值可持续派息率
 
-    def test_ddm_rejects_no_payout(self):
-        self.assertIsNone(bv.ddm_value(10.0, 0.15, 0.0, 0.10))
+    def test_legacy_terminal_rejects_no_payout(self):
+        """v4.221 之前的口径（只供复现旧状态）：终值按当期派息率，不派息不可估。"""
+        self.assertIsNone(bv.ddm_value(10.0, 0.15, 0.0, 0.10, sustainable_terminal=False))
+        path, roe_t, g_t, bv_n, b = bv.roe_bv_path(10.0, 0.15, 0.3, 0.10)
+        pv = sum(r * p * 0.3 / 1.1 ** t for t, (r, p) in enumerate(path, 1))
+        self.assertAlmostEqual(bv.ddm_value(10.0, 0.15, 0.3, 0.10, sustainable_terminal=False),
+                               pv + roe_t * bv_n * 0.3 / (0.10 - g_t) / 1.1 ** 10)
 
-    def test_sustainable_terminal_equals_residual_income(self):
-        """OI-230 开关：终值派息率取 1 − g_T ÷ ROE_T，与同一路径的剩余收益逐位相等（清洁盈余）；派息率为 0 也可估。"""
+    def test_ddm_equals_residual_income(self):
+        """OI-230：终值派息率 1 − g_T ÷ ROE_T，与同一路径的剩余收益逐位相等（清洁盈余）；派息率为 0 也可估。"""
         for payout in (0.0, 0.1, 0.3):
             path, roe_t, g_t, bv_n, b = bv.roe_bv_path(10.0, 0.15, payout, 0.10)
             ri = 10.0 + sum((r - 0.10) * p / 1.1 ** t for t, (r, p) in enumerate(path, 1)) + (roe_t - 0.10) * bv_n / (0.10 - g_t) / 1.1 ** 10
-            self.assertAlmostEqual(bv.ddm_value(10.0, 0.15, payout, 0.10, sustainable_terminal=True), ri)
+            self.assertAlmostEqual(bv.ddm_value(10.0, 0.15, payout, 0.10), ri)
 
     def test_sustainable_terminal_changes_nothing_when_growth_cap_is_slack(self):
         # 派息率 90%：g_T = 12% × 10% = 1.2% < 3%，可持续派息率即当期派息率
-        self.assertAlmostEqual(bv.ddm_value(10.0, 0.15, 0.9, 0.10, sustainable_terminal=True), bv.ddm_value(10.0, 0.15, 0.9, 0.10))
+        self.assertAlmostEqual(bv.ddm_value(10.0, 0.15, 0.9, 0.10), bv.ddm_value(10.0, 0.15, 0.9, 0.10, sustainable_terminal=False))
 
     def test_scale_needs_min_banks(self):
         pairs = [(2.0, 1.0)] * (bv.MIN_BANKS - 1)
@@ -64,6 +69,18 @@ class BankValuationTests(unittest.TestCase):
         g = math.exp(sum(math.log(v / 5.0) for v in d0.values()) / len(d0))
         for c in codes:
             self.assertAlmostEqual(out[c], 5.0 * g * bv.BANK_SCALE)   # OI-227：银行乘同尺系数
+
+    def test_live_h2_values_banks_without_dividend_by_cross_section(self):
+        """OI-230：V_D0 不可得而 V_DDM 可估的银行照用当日 G（G 只由两者都可估的银行算出）。"""
+        codes = {f"60{i:04d}" for i in range(7)}
+        d0 = {c: 10.0 + i for i, c in enumerate(sorted(codes))}
+        silent = sorted(codes)[-1]
+        d0[silent] = None
+        with patch.object(bv, "bank_codes", return_value=codes), patch.object(bv, "BankFundamentals"), \
+                patch.object(bv, "ddm_at", side_effect=lambda fund, acts, c, day: 5.0):
+            out = bv.live_h2("2026-09-28", d0.get, None, {}, None)
+        g = math.exp(sum(math.log(v / 5.0) for v in d0.values() if v) / 6)
+        self.assertAlmostEqual(out[silent], 5.0 * g * bv.BANK_SCALE)
 
 
 if __name__ == "__main__":

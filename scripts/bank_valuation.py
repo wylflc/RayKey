@@ -6,9 +6,10 @@
 * **V_D0**：最近已知完整财年每股现金分红 ÷ (十年国债 + RP)（分子口径 `divspread_dividend`），按除权参考价折到当日；
 * **V_DDM**：同一条 ROE／BV 路径上的股利贴现——ROE 自 roe0 十年线性衰减到 `ROE_T = min(roe0, COE + 2pp)`，
   BV 按留存滚存，`DPS_t = ROE_t × BV_{t−1} × 派息率`，终值 `DPS_11 ÷ (COE − g_T)`、`g_T = min(3%, ROE_T × 留存)`，
+  终值期派息率取可持续派息率 `1 − g_T ÷ ROE_T`（v4.221，OI-230：清洁盈余一致、与同一路径剩余收益相等，派息率为 0 也可估），
   基本面取 `roic_bands.csv` 可得日不晚于当日的最近一行（bps／roe0／payout），按除权参考价折到当日；
-* **H2**：当日两者都可估的银行（保险除外）`G = exp(mean ln(V_D0 ÷ V_DDM))`，`V_H2 = V_DDM × G`；
-  可估银行不足 `MIN_BANKS` 时当日退回 V_D0，保险恒为 V_D0。G 是估值之比的几何均值，价格不进 V（§6.3 第 1 条）。
+* **H2**：当日两者都可估的银行（保险除外）`G = exp(mean ln(V_D0 ÷ V_DDM))`，`V_H2 = V_DDM × G`（V_D0 不可得而 V_DDM 可估的银行
+  照用当日 G，OI-230）；可估银行不足 `MIN_BANKS` 时当日退回 V_D0，保险恒为 V_D0。G 是估值之比的几何均值，价格不进 V（§6.3 第 1 条）。
 * **同尺系数**（OI-227）：银行（保险除外）的 V（含退回的 V_D0）再乘 `BANK_SCALE`，使同 `P/V` 下银行与非金融的预期回报可比；
   系数由月末 `P/V` 对其后 3 年回报的同尺校准得出（`exp(−c/b)`，c 为银行偏差、b 为共同斜率）。
 """
@@ -27,7 +28,7 @@ TERMINAL_EXCESS = 0.02      # ROE_T = min(roe0, COE + 2pp)，与主模型 ROIC_T
 G_CAP = 0.03                # 终值增长上限
 DEFAULT_PAYOUT = 0.30
 MIN_BANKS = 5
-BANK_SCALE = 0.6951         # OI-227 同尺系数：面板 3 年全期校准，c = −0.0205、b = −0.0565（v4.216 口径，回测日志 §12.279）
+BANK_SCALE = 0.7045         # OI-227 同尺系数：面板 3 年全期校准；v4.221（OI-230）在可持续终值口径上重估，c = −0.0206、b = −0.0588（回测日志 §12.282）
 
 
 def roe_bv_path(bps: float, roe0: float, payout: float | None, coe: float, fade_years: int = FADE_YEARS):
@@ -45,11 +46,12 @@ def roe_bv_path(bps: float, roe0: float, payout: float | None, coe: float, fade_
 
 
 def ddm_value(bps: float, roe0: float, payout: float | None, coe: float = COE, fade_years: int = FADE_YEARS,
-              sustainable_terminal: bool = False) -> float | None:
-    """同一 ROE／BV 路径上的股利贴现；分母塌陷（COE − g_T < 2pp）或不派息返回 None。
+              sustainable_terminal: bool = True) -> float | None:
+    """同一 ROE／BV 路径上的股利贴现；分母塌陷（COE − g_T < 2pp）返回 None。
 
-    `sustainable_terminal`（OI-230 研究开关，缺省关）：终值期派息率取可持续派息率 `1 − g_T ÷ ROE_T`（清洁盈余一致，
-    与同一路径剩余收益逐位相等；`g_T` 上限不生效时即当期派息率），衰减期仍按当期派息率，派息率为 0 也可估。"""
+    终值期派息率取可持续派息率 `1 − g_T ÷ ROE_T`（v4.221，OI-230：清洁盈余一致，与同一路径剩余收益逐位相等；`g_T` 上限
+    不生效时即当期派息率），衰减期仍按当期派息率，派息率为 0 也可估。`sustainable_terminal=False` 只供复现 v4.221 之前的
+    状态（终值按当期派息率，不派息返回 None）。"""
     path, roe_t_end, g_t, bv_n, b = roe_bv_path(bps, roe0, payout, coe, fade_years)
     pay = 1.0 - b
     if coe - g_t < 0.02 or (pay <= 0 and not sustainable_terminal):
@@ -115,14 +117,15 @@ def bank_codes(securities: Path) -> set[str]:
 
 def live_h2(as_of: str, d0, bands: Path, actions: dict[str, list], securities: Path) -> dict[str, float]:
     """实时（信号日）：各银行 V_D0（调用方给的 `d0(code)`，与历史同一分子与除权）与 V_DDM → 截面 G → {代码: V_H2 × BANK_SCALE}。
-    只含两者都可估的银行；截面不足 MIN_BANKS 返回空，调用方退回 V_D0（银行同样乘 BANK_SCALE）。"""
+    G 只由两者都可估的银行算出；V_D0 不可得而 V_DDM 可估的银行照用 G（OI-230）。截面不足 MIN_BANKS 返回空，
+    调用方退回 V_D0（银行同样乘 BANK_SCALE）。"""
     codes = bank_codes(securities)
     fund = BankFundamentals(bands, codes)
     pairs = {c: (d0(c), ddm_at(fund, actions.get(c, []), c, as_of)) for c in sorted(codes)}
     g = h2_scale(pairs.values())
     if g is None:
         return {}
-    return {c: dd * g * BANK_SCALE for c, (v0, dd) in pairs.items() if v0 and dd and v0 > 0 and dd > 0}
+    return {c: dd * g * BANK_SCALE for c, (_v0, dd) in pairs.items() if dd and dd > 0}
 
 
 def _num(value):

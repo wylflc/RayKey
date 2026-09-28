@@ -27,7 +27,8 @@
               COE 取常数或 `peer`（滚动三年同业隐含 COE 中位，严格早于当日）。
   h2:RP:COE    **股利尺度 × DDM 排序**（§6.5.1 第 4 条，v4.215 生产口径，OI-207）：银行 `V = V_DDM(COE) × G`，
               `G = exp(当日两者都可估的银行 ln(V_divspread(RP) ÷ V_DDM) 的均值)`，不足 5 只当日退回 divspread；
-              保险恒为 divspread。唯一实现 `bank_valuation`，实时扫描与池外档案同源。
+              保险恒为 divspread。v4.221（OI-230）起 DDM 终值按可持续派息率、divspread 不可得的银行照用 G。
+              唯一实现 `bank_valuation`，实时扫描与池外档案同源。
   ddm:COE|peer  **股利贴现**（OI-072 候选①）：同一条 ROE/BV 路径上 `DPS_t = ROE_t·BV_{t−1}·payout`，
               `V = Σ DPS_t/(1+COE)^t + DPS_11/(COE − g_T)/(1+COE)^10`。
               两者都用 ROE/BVPS/派息率而非只用 DPS，能区分「DPS 相同而 ROE 18% vs 7%」的两家银行。
@@ -189,16 +190,18 @@ def ri_value(bps, roe0, payout, coe):
 
 
 def ddm_value(bps, roe0, payout, coe):
-    """股利贴现（唯一实现 `bank_valuation.ddm_value`）；`h2` 第 5 段 `sus` 开 OI-230 可持续终值派息率。"""
+    """股利贴现（唯一实现 `bank_valuation.ddm_value`）；h2 缺省可持续终值派息率（v4.221），第 5 段 `cur` 复现此前口径；
+    研究模式 `ddm:` 保持此前口径。"""
     return bank_valuation.ddm_value(bps, roe0, payout, coe, FADE_YEARS, sustainable_terminal=H2_SUSTAINABLE)
 H2 = mode.startswith("h2:")
 H2_COE = float(mode.split(":")[2]) if H2 else None
 # OI-227：`h2:RP:COE[:SCALE]`——银行（保险除外）V 乘同尺系数，缺省取 `bank_valuation.BANK_SCALE`（生产）；`:1` 复现缩放前状态
 H2_BANK_SCALE = (float(mode.split(":")[3]) if len(mode.split(":")) > 3 else bank_valuation.BANK_SCALE) if H2 else 1.0
-# OI-230 研究开关 `h2:RP:COE:SCALE:sus`：DDM 终值按可持续派息率（派息率为 0 也可估），V_D0 不可得的银行照用当日截面 G
-H2_SUSTAINABLE = H2 and len(mode.split(":")) > 4 and mode.split(":")[4] == "sus"
-if H2 and len(mode.split(":")) > 4 and not H2_SUSTAINABLE:
-    sys.exit(f"未知的 h2 第 5 段：{mode}（只接受 sus）")
+# v4.221（OI-230）：h2 缺省 DDM 终值按可持续派息率（派息率为 0 也可估），V_D0 不可得的银行照用当日截面 G；
+# `h2:RP:COE:SCALE:cur` 复现 v4.221 之前的口径（终值按当期派息率、V_D0 不可得的银行无值）
+H2_SUSTAINABLE = H2 and not (len(mode.split(":")) > 4 and mode.split(":")[4] == "cur")
+if H2 and len(mode.split(":")) > 4 and mode.split(":")[4] != "cur":
+    sys.exit(f"未知的 h2 第 5 段：{mode}（只接受 cur）")
 RP = float(mode.split(":")[1]) if mode.startswith(("divspread:", "h2:")) else None
 
 # ---- 股利折现口径要用的两组序列 ----
@@ -274,10 +277,10 @@ if H2:
             by_day[d].append((v0, vd))
     H2_SCALE = {d: bank_valuation.h2_scale(pairs) for d, pairs in by_day.items()}
     print(f"H2：{len(H2_VALUES):,} 个银行保险行，{sum(1 for g in H2_SCALE.values() if g):,}/{len(H2_SCALE):,} 个交易日可算截面 G；"
-          f"银行同尺系数 {H2_BANK_SCALE:g}" + ("；DDM 终值可持续派息率（OI-230）" if H2_SUSTAINABLE else ""), flush=True)
+          f"银行同尺系数 {H2_BANK_SCALE:g}" + ("" if H2_SUSTAINABLE else "；DDM 终值按当期派息率（v4.221 之前口径）"), flush=True)
     if H2_SUSTAINABLE:
         no_d0 = sum(1 for (c, d), x in H2_VALUES.items() if c not in INSURER_CODES and x[3] and not x[0] and H2_SCALE.get(d))
-        print(f"OI-230：V_D0 不可得、按截面 G 估值的银行行 {no_d0:,}", flush=True)
+        print(f"V_D0 不可得、按截面 G 估值的银行行 {no_d0:,}", flush=True)
 
 # ---- 第二遍：重写银行行 ----
 n_rewritten = n_kept = n_dropped = n_exright = 0
@@ -304,7 +307,7 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         if H2:
             v0, f0, c0, vd, fd, cd = H2_VALUES.get((c, d), (None,) * 6)
             g = H2_SCALE.get(d)
-            if c not in INSURER_CODES and g and vd and (v0 or H2_SUSTAINABLE):   # 两者都可估的银行才用 H2；OI-230 开关下 V_D0 不可得也用 G
+            if c not in INSURER_CODES and g and vd and (v0 or H2_SUSTAINABLE):   # V_D0 不可得的银行照用 G（v4.221，OI-230）
                 v, factor, cash_cum = vd * g * H2_BANK_SCALE, fd, cd
             elif v0:
                 v, factor, cash_cum = v0 * (1.0 if c in INSURER_CODES else H2_BANK_SCALE), f0, c0
