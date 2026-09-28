@@ -1,0 +1,17 @@
+{
+ "h2": {
+  "days": 4026,
+  "fallback_days": 15,
+  "rows": 106270
+ },
+ "adopted": {
+  "rows": 15322745,
+  "rewritten": 106270,
+  "panel_rows": 963798
+ },
+ "hold": {
+  "rows": 15356191,
+  "rewritten": 106270,
+  "panel_rows": 965469
+ }
+}

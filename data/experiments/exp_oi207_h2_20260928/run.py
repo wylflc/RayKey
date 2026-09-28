@@ -17,7 +17,7 @@ ROOT = EXP.parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import sweep_backtest_configs as sw  # noqa: E402
 
-ENGINE = ROOT / 'data/experiments/exp_oi224_exec_20260928/engine.py'   # 同一包装：逐路径写净值、全样本写闭合周期
+ENGINE = EXP / 'engine.py'   # 包装：逐路径写净值、全样本写闭合周期（写入本目录）
 ARMS = ('BASE', 'H2')
 
 
