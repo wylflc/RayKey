@@ -1,0 +1,836 @@
+{
+ "pingan": [
+  {
+   "report": "2002-12-31",
+   "available_at": "2003-04-30",
+   "bps": 1.94,
+   "roe0": 0.1124,
+   "payout": null,
+   "ddm_current": 1.3138275170643325,
+   "ddm_current_over_bps": 0.6772306788991405,
+   "ddm_consistent": 2.4231394190865276,
+   "ri": 2.423139419086527,
+   "sustainable_payout": 0.7330960854092528
+  },
+  {
+   "report": "2003-12-31",
+   "available_at": "2004-04-30",
+   "bps": 1.97,
+   "roe0": 0.0963,
+   "payout": 0.0,
+   "ddm_current": null,
+   "ddm_current_over_bps": null,
+   "ddm_consistent": 1.8040518029505752,
+   "ri": 1.804051802950576,
+   "sustainable_payout": 0.6884735202492211
+  },
+  {
+   "report": "2004-12-31",
+   "available_at": "2005-04-26",
+   "bps": 2.41,
+   "roe0": 0.0981,
+   "payout": 0.0,
+   "ddm_current": null,
+   "ddm_current_over_bps": null,
+   "ddm_consistent": 2.3044016543400385,
+   "ri": 2.3044016543400394,
+   "sustainable_payout": 0.6941896024464832
+  },
+  {
+   "report": "2005-12-31",
+   "available_at": "2006-04-01",
+   "bps": 2.6,
+   "roe0": 0.0717,
+   "payout": 0.0,
+   "ddm_current": null,
+   "ddm_current_over_bps": null,
+   "ddm_consistent": 1.1934845971595474,
+   "ri": 1.1934845971595467,
+   "sustainable_payout": 0.5815899581589958
+  },
+  {
+   "report": "2006-12-31",
+   "available_at": "2007-04-30",
+   "bps": 3.33,
+   "roe0": 0.0786,
+   "payout": 0.0,
+   "ddm_current": null,
+   "ddm_current_over_bps": null,
+   "ddm_consistent": 1.8995895452444311,
+   "ri": 1.8995895452444342,
+   "sustainable_payout": 0.6183206106870229
+  },
+  {
+   "report": "2007-12-31",
+   "available_at": "2008-04-30",
+   "bps": 5.67,
+   "roe0": 0.0786,
+   "payout": 0.0,
+   "ddm_current": null,
+   "ddm_current_over_bps": null,
+   "ddm_consistent": 3.234436252713492,
+   "ri": 3.2344362527134947,
+   "sustainable_payout": 0.6183206106870229
+  },
+  {
+   "report": "2008-12-31",
+   "available_at": "2009-04-30",
+   "bps": 5.28,
+   "roe0": 0.0716,
+   "payout": 0.0,
+   "ddm_current": null,
+   "ddm_current_over_bps": null,
+   "ddm_consistent": 2.4156244177916806,
+   "ri": 2.4156244177916797,
+   "sustainable_payout": 0.5810055865921788
+  },
+  {
+   "report": "2009-12-31",
+   "available_at": "2010-04-30",
+   "bps": 6.59,
+   "roe0": 0.2283,
+   "payout": 0.0,
+   "ddm_current": null,
+   "ddm_current_over_bps": null,
+   "ddm_consistent": 15.47833679430461,
+   "ri": 15.478336794304617,
+   "sustainable_payout": 0.75
+  },
+  {
+   "report": "2010-12-31",
+   "available_at": "2011-02-25",
+   "bps": 9.5258,
+   "roe0": 0.2332,
+   "payout": 0.0,
+   "ddm_current": null,
+   "ddm_current_over_bps": null,
+   "ddm_consistent": 22.792399843523487,
+   "ri": 22.79239984352349,
+   "sustainable_payout": 0.75
+  },
+  {
+   "report": "2011-12-31",
+   "available_at": "2012-03-09",
+   "bps": 14.3092,
+   "roe0": 0.2332,
+   "payout": 0.0,
+   "ddm_current": null,
+   "ddm_current_over_bps": null,
+   "ddm_consistent": 34.237650154417096,
+   "ri": 34.23765015441709,
+   "sustainable_payout": 0.75
+  },
+  {
+   "report": "2012-12-31",
+   "available_at": "2013-03-08",
+   "bps": 16.5504,
+   "roe0": 0.2032,
+   "payout": 0.0346,
+   "ddm_current": 2.610745923622779,
+   "ddm_current_over_bps": 0.15774518583374292,
+   "ddm_consistent": 34.75766623730384,
+   "ri": 34.757666237303845,
+   "sustainable_payout": 0.75
+  },
+  {
+   "report": "2013-12-31",
+   "available_at": "2014-03-07",
+   "bps": 11.7792,
+   "roe0": 0.1678,
+   "payout": 0.069,
+   "ddm_current": 3.0723814783857772,
+   "ddm_current_over_bps": 0.2608310817700504,
+   "ddm_consistent": 21.33786582183911,
+   "ri": 21.33786582183912,
+   "sustainable_payout": 0.75
+  },
+  {
+   "report": "2014-12-31",
+   "available_at": "2015-03-13",
+   "bps": 11.4624,
+   "roe0": 0.1657,
+   "payout": 0.1092,
+   "ddm_current": 4.507371221282345,
+   "ddm_current_over_bps": 0.3932310180487808,
+   "ddm_consistent": 20.293520223572653,
+   "ri": 20.293520223572663,
+   "sustainable_payout": 0.75
+  },
+  {
+   "report": "2015-12-31",
+   "available_at": "2016-03-10",
+   "bps": 11.292,
+   "roe0": 0.1635,
+   "payout": 0.1139,
+   "ddm_current": 4.567388191924546,
+   "ddm_current_over_bps": 0.4044800028271826,
+   "ddm_consistent": 19.795929055557405,
+   "ri": 19.795929055557412,
+   "sustainable_payout": 0.75
+  },
+  {
+   "report": "2016-12-31",
+   "available_at": "2017-03-17",
+   "bps": 10.61,
+   "roe0": 0.1494,
+   "payout": 0.1194,
+   "ddm_current": 4.213068915377675,
+   "ddm_current_over_bps": 0.39708472340977147,
+   "ddm_consistent": 17.61953554366074,
+   "ri": 17.619535543660746,
+   "sustainable_payout": 0.75
+  },
+  {
+   "report": "2017-12-31",
+   "available_at": "2018-03-15",
+   "bps": 11.77,
+   "roe0": 0.1352,
+   "payout": 0.114,
+   "ddm_current": 4.214879338284207,
+   "ddm_current_over_bps": 0.35810359713544665,
+   "ddm_consistent": 18.566347463962664,
+   "ri": 18.56634746396267,
+   "sustainable_payout": 0.75
+  },
+  {
+   "report": "2018-12-31",
+   "available_at": "2019-03-07",
+   "bps": 12.82,
+   "roe0": 0.1196,
+   "payout": 0.1095,
+   "ddm_current": 4.111678670747114,
+   "ddm_current_over_bps": 0.3207237652688857,
+   "ddm_consistent": 18.973609592602692,
+   "ri": 18.973609592602692,
+   "sustainable_payout": 0.7491638795986622
+  },
+  {
+   "report": "2019-12-31",
+   "available_at": "2020-02-14",
+   "bps": 14.07,
+   "roe0": 0.1151,
+   "payout": 0.1168,
+   "ddm_current": 4.474411777396973,
+   "ddm_current_over_bps": 0.3180107873061104,
+   "ddm_consistent": 19.09567881998785,
+   "ri": 19.09567881998785,
+   "sustainable_payout": 0.739357080799305
+  },
+  {
+   "report": "2020-12-31",
+   "available_at": "2021-02-02",
+   "bps": 15.16,
+   "roe0": 0.1135,
+   "payout": 0.1248,
+   "ddm_current": 4.99606764856489,
+   "ddm_current_over_bps": 0.32955591349372626,
+   "ddm_consistent": 19.921585991727802,
+   "ri": 19.921585991727802,
+   "sustainable_payout": 0.7356828193832599
+  },
+  {
+   "report": "2021-12-31",
+   "available_at": "2022-03-10",
+   "bps": 16.77,
+   "roe0": 0.1085,
+   "payout": 0.134,
+   "ddm_current": 5.45913202627254,
+   "ddm_current_over_bps": 0.3255296378218569,
+   "ddm_consistent": 19.961596548821536,
+   "ri": 19.961596548821554,
+   "sustainable_payout": 0.7235023041474655
+  },
+  {
+   "report": "2022-12-31",
+   "available_at": "2023-03-09",
+   "bps": 18.8,
+   "roe0": 0.1236,
+   "payout": 0.13,
+   "ddm_current": 7.189732675955963,
+   "ddm_current_over_bps": 0.3824325891465938,
+   "ddm_consistent": 28.252102290564263,
+   "ri": 28.252102290564277,
+   "sustainable_payout": 0.75
+  },
+  {
+   "report": "2023-12-31",
+   "available_at": "2024-03-15",
+   "bps": 20.74,
+   "roe0": 0.1138,
+   "payout": 0.1936,
+   "ddm_current": 10.07215276929822,
+   "ddm_current_over_bps": 0.48563899562672236,
+   "ddm_consistent": 27.048901918342796,
+   "ri": 27.048901918342832,
+   "sustainable_payout": 0.7363796133567663
+  },
+  {
+   "report": "2024-12-31",
+   "available_at": "2025-03-15",
+   "bps": 21.89,
+   "roe0": 0.1138,
+   "payout": 0.2058,
+   "ddm_current": 11.189292832461682,
+   "ddm_current_over_bps": 0.5111600197561298,
+   "ddm_consistent": 28.48316726563962,
+   "ri": 28.483167265639647,
+   "sustainable_payout": 0.7363796133567663
+  },
+  {
+   "report": "2025-12-31",
+   "available_at": "2026-03-21",
+   "bps": 23.25,
+   "roe0": 0.1008,
+   "payout": 0.2206,
+   "ddm_current": 10.37479002417831,
+   "ddm_current_over_bps": 0.4462275279216477,
+   "ddm_consistent": 23.623252961770106,
+   "ri": 23.623252961770145,
+   "sustainable_payout": 0.7023809523809523
+  }
+ ],
+ "cross_section": {
+  "2016-06-20": {
+   "banks": [
+    {
+     "code": "000001",
+     "name": "平安银行",
+     "payout": 0.1139,
+     "roe0": 0.1635,
+     "ddm_current_over_bps": 0.4044800028271824,
+     "ddm_consistent_over_bps": 1.753093256779791,
+     "pv": 3.5449
+    },
+    {
+     "code": "002142",
+     "name": "宁波银行",
+     "payout": 0.248,
+     "roe0": 0.1945,
+     "ddm_current_over_bps": 0.8702360239822935,
+     "ddm_consistent_over_bps": 1.8585894390151343,
+     "pv": 2.3833
+    },
+    {
+     "code": "600000",
+     "name": "浦发银行",
+     "payout": 0.2712,
+     "roe0": 0.2102,
+     "ddm_current_over_bps": 0.9834967013021337,
+     "ddm_consistent_over_bps": 1.9393017903067509,
+     "pv": 1.7909
+    },
+    {
+     "code": "600015",
+     "name": "华夏银行",
+     "payout": 0.238,
+     "roe0": 0.1837,
+     "ddm_current_over_bps": 0.8100864627750984,
+     "ddm_consistent_over_bps": 1.7989592697196521,
+     "pv": 1.6951
+    },
+    {
+     "code": "600016",
+     "name": "民生银行",
+     "payout": 0.0959,
+     "roe0": 0.2041,
+     "ddm_current_over_bps": 0.4107598097984882,
+     "ddm_consistent_over_bps": 2.048927989366631,
+     "pv": 4.0729
+    },
+    {
+     "code": "600036",
+     "name": "招商银行",
+     "payout": 0.2909,
+     "roe0": 0.1928,
+     "ddm_current_over_bps": 0.9699407426646408,
+     "ddm_consistent_over_bps": 1.8178218026518307,
+     "pv": 1.8913
+    },
+    {
+     "code": "601009",
+     "name": "南京银行",
+     "payout": 0.2099,
+     "roe0": 0.1802,
+     "ddm_current_over_bps": 0.7252847430971652,
+     "ddm_consistent_over_bps": 1.7962783816273018,
+     "pv": 2.5754
+    },
+    {
+     "code": "601166",
+     "name": "兴业银行",
+     "payout": 0.2252,
+     "roe0": 0.2121,
+     "ddm_current_over_bps": 0.8646670564692617,
+     "ddm_consistent_over_bps": 1.990030051252859,
+     "pv": 1.8505
+    },
+    {
+     "code": "601169",
+     "name": "北京银行",
+     "payout": 0.1901,
+     "roe0": 0.1798,
+     "ddm_current_over_bps": 0.6691272761031781,
+     "ddm_consistent_over_bps": 1.8071836211483174,
+     "pv": 2.6344
+    },
+    {
+     "code": "601288",
+     "name": "农业银行",
+     "payout": 0.3271,
+     "roe0": 0.1957,
+     "ddm_current_over_bps": 1.0611907407279475,
+     "ddm_consistent_over_bps": 1.8100601265850276,
+     "pv": 1.2972
+    },
+    {
+     "code": "601328",
+     "name": "交通银行",
+     "payout": 0.3043,
+     "roe0": 0.1489,
+     "ddm_current_over_bps": 0.8499425153300613,
+     "ddm_consistent_over_bps": 1.5635810664049108,
+     "pv": 1.4177
+    },
+    {
+     "code": "601398",
+     "name": "工商银行",
+     "payout": 0.3265,
+     "roe0": 0.1996,
+     "ddm_current_over_bps": 1.0745875734447083,
+     "ddm_consistent_over_bps": 1.8331541066670416,
+     "pv": 1.2856
+    },
+    {
+     "code": "601818",
+     "name": "光大银行",
+     "payout": 0.2874,
+     "roe0": 0.1762,
+     "ddm_current_over_bps": 0.90464755465589,
+     "ddm_consistent_over_bps": 1.7230781235633876,
+     "pv": 1.3855
+    },
+    {
+     "code": "601939",
+     "name": "建设银行",
+     "payout": 0.3269,
+     "roe0": 0.1974,
+     "ddm_current_over_bps": 1.0671497745657497,
+     "ddm_consistent_over_bps": 1.8200564921889815,
+     "pv": 1.2269
+    },
+    {
+     "code": "601988",
+     "name": "中国银行",
+     "payout": 0.3247,
+     "roe0": 0.1728,
+     "ddm_current_over_bps": 0.972586751362773,
+     "ddm_consistent_over_bps": 1.6822461116862293,
+     "pv": 1.2678
+    },
+    {
+     "code": "601998",
+     "name": "中信银行",
+     "payout": 0.1803,
+     "roe0": 0.1684,
+     "ddm_current_over_bps": 0.6122836048237565,
+     "ddm_consistent_over_bps": 1.7422429573684166,
+     "pv": 2.1259
+    }
+   ],
+   "low_payout_n": 4,
+   "low_payout_pv_median": 3.08965,
+   "high_payout_n": 8,
+   "high_payout_pv_median": 1.3413499999999998,
+   "rank_corr_payout_pv": -0.9
+  },
+  "2020-06-22": {
+   "banks": [
+    {
+     "code": "000001",
+     "name": "平安银行",
+     "payout": 0.1168,
+     "roe0": 0.115,
+     "ddm_current_over_bps": 0.3175339201818608,
+     "ddm_consistent_over_bps": 1.35460160830315,
+     "pv": 3.6791
+    },
+    {
+     "code": "002142",
+     "name": "宁波银行",
+     "payout": 0.2052,
+     "roe0": 0.1872,
+     "ddm_current_over_bps": 0.7321580229988404,
+     "ddm_consistent_over_bps": 1.843583355398632,
+     "pv": 2.7308
+    },
+    {
+     "code": "002807",
+     "name": "江阴银行",
+     "payout": 0.2348,
+     "roe0": 0.0917,
+     "ddm_current_over_bps": 0.40714861848762807,
+     "ddm_consistent_over_bps": 0.8430491653284203,
+     "pv": 2.5057
+    },
+    {
+     "code": "002839",
+     "name": "张家港行",
+     "payout": 0.2806,
+     "roe0": 0.0939,
+     "ddm_current_over_bps": 0.48911929664870807,
+     "ddm_consistent_over_bps": 0.886762213120175,
+     "pv": 2.4316
+    },
+    {
+     "code": "002936",
+     "name": "郑州银行",
+     "payout": 0.1839,
+     "roe0": 0.1882,
+     "ddm_current_over_bps": 0.6733891273443939,
+     "ddm_consistent_over_bps": 1.865515413194377,
+     "pv": 1.3666
+    },
+    {
+     "code": "002948",
+     "name": "青岛银行",
+     "payout": 0.3511,
+     "roe0": 0.0922,
+     "ddm_current_over_bps": 0.5691265121372271,
+     "ddm_consistent_over_bps": 0.8628670971285661,
+     "pv": 2.2157
+    },
+    {
+     "code": "002958",
+     "name": "青农商行",
+     "payout": 0.2003,
+     "roe0": 0.1286,
+     "ddm_current_over_bps": 0.5662973927857277,
+     "ddm_consistent_over_bps": 1.500593437018799,
+     "pv": 2.3397
+    },
+    {
+     "code": "002966",
+     "name": "苏州银行",
+     "payout": 0.0844,
+     "roe0": 0.1008,
+     "ddm_current_over_bps": 0.1882312044827107,
+     "ddm_consistent_over_bps": 1.0177002185814623,
+     "pv": 7.701
+    },
+    {
+     "code": "600000",
+     "name": "浦发银行",
+     "payout": 0.1837,
+     "roe0": 0.137,
+     "ddm_current_over_bps": 0.5461585548088762,
+     "ddm_consistent_over_bps": 1.5546095114828422,
+     "pv": 1.4171
+    },
+    {
+     "code": "600015",
+     "name": "华夏银行",
+     "payout": 0.1318,
+     "roe0": 0.1313,
+     "ddm_current_over_bps": 0.40053468631316336,
+     "ddm_consistent_over_bps": 1.5460881293458908,
+     "pv": 1.4844
+    },
+    {
+     "code": "600016",
+     "name": "民生银行",
+     "payout": 0.2285,
+     "roe0": 0.1312,
+     "ddm_current_over_bps": 0.6370489996992139,
+     "ddm_consistent_over_bps": 1.502735374747889,
+     "pv": 1.0682
+    },
+    {
+     "code": "600036",
+     "name": "招商银行",
+     "payout": 0.3113,
+     "roe0": 0.173,
+     "ddm_current_over_bps": 0.9455805757174516,
+     "ddm_consistent_over_bps": 1.6909608943931767,
+     "pv": 1.8834
+    },
+    {
+     "code": "600908",
+     "name": "无锡银行",
+     "payout": 0.2825,
+     "roe0": 0.113,
+     "ddm_current_over_bps": 0.6521294429274219,
+     "ddm_consistent_over_bps": 1.2655707653866841,
+     "pv": 1.6306
+    },
+    {
+     "code": "600919",
+     "name": "江苏银行",
+     "payout": 0.2458,
+     "roe0": 0.1286,
+     "ddm_current_over_bps": 0.6677059147057552,
+     "ddm_consistent_over_bps": 1.4817238328077926,
+     "pv": 1.1468
+    },
+    {
+     "code": "600926",
+     "name": "杭州银行",
+     "payout": 0.2981,
+     "roe0": 0.1207,
+     "ddm_current_over_bps": 0.7494188712061457,
+     "ddm_consistent_over_bps": 1.4212968075803443,
+     "pv": 1.4079
+    },
+    {
+     "code": "600928",
+     "name": "西安银行",
+     "payout": 0.1915,
+     "roe0": 0.1261,
+     "ddm_current_over_bps": 0.5398373743914991,
+     "ddm_consistent_over_bps": 1.4906578444968825,
+     "pv": 2.4243
+    },
+    {
+     "code": "601009",
+     "name": "南京银行",
+     "payout": 0.3012,
+     "roe0": 0.1702,
+     "ddm_current_over_bps": 0.9145219152524564,
+     "ddm_consistent_over_bps": 1.6810704175099445,
+     "pv": 1.1272
+    },
+    {
+     "code": "601077",
+     "name": "渝农商行",
+     "payout": 0.0807,
+     "roe0": 0.1355,
+     "ddm_current_over_bps": 0.2615666377437555,
+     "ddm_consistent_over_bps": 1.595771514003509,
+     "pv": 3.2447
+    },
+    {
+     "code": "601128",
+     "name": "常熟银行",
+     "payout": 0.2914,
+     "roe0": 0.1222,
+     "ddm_current_over_bps": 0.7412622987073859,
+     "ddm_consistent_over_bps": 1.4312200089037248,
+     "pv": 1.9674
+    },
+    {
+     "code": "601166",
+     "name": "兴业银行",
+     "payout": 0.2417,
+     "roe0": 0.1445,
+     "ddm_current_over_bps": 0.7030263667300761,
+     "ddm_consistent_over_bps": 1.5692097115633514,
+     "pv": 1.1705
+    },
+    {
+     "code": "601169",
+     "name": "北京银行",
+     "payout": 0.2984,
+     "roe0": 0.1202,
+     "ddm_current_over_bps": 0.7484715493661934,
+     "ddm_consistent_over_bps": 1.418703607746995,
+     "pv": 0.8983
+    },
+    {
+     "code": "601229",
+     "name": "上海银行",
+     "payout": 0.3421,
+     "roe0": 0.1308,
+     "ddm_current_over_bps": 0.8614205184911918,
+     "ddm_consistent_over_bps": 1.4551088169842583,
+     "pv": 1.0767
+    },
+    {
+     "code": "601288",
+     "name": "农业银行",
+     "payout": 0.3035,
+     "roe0": 0.1388,
+     "ddm_current_over_bps": 0.8158388540755742,
+     "ddm_consistent_over_bps": 1.5110459962669065,
+     "pv": 1.0144
+    },
+    {
+     "code": "601328",
+     "name": "交通银行",
+     "payout": 0.3138,
+     "roe0": 0.1136,
+     "ddm_current_over_bps": 0.7122615308912301,
+     "ddm_consistent_over_bps": 1.271735967673653,
+     "pv": 0.963
+    },
+    {
+     "code": "601398",
+     "name": "工商银行",
+     "payout": 0.3053,
+     "roe0": 0.1389,
+     "ddm_current_over_bps": 0.8196652776927299,
+     "ddm_consistent_over_bps": 1.5107997332775247,
+     "pv": 1.1242
+    },
+    {
+     "code": "601577",
+     "name": "长沙银行",
+     "payout": 0.1378,
+     "roe0": 0.1691,
+     "ddm_current_over_bps": 0.48938856966656896,
+     "ddm_consistent_over_bps": 1.773828234555218,
+     "pv": 1.941
+    },
+    {
+     "code": "601658",
+     "name": "邮储银行",
+     "payout": 0.0973,
+     "roe0": 0.1325,
+     "ddm_current_over_bps": 0.3065484640071188,
+     "ddm_consistent_over_bps": 1.5694524072385538,
+     "pv": 3.6242
+    },
+    {
+     "code": "601818",
+     "name": "光大银行",
+     "payout": 0.2872,
+     "roe0": 0.1202,
+     "ddm_current_over_bps": 0.727299641285518,
+     "ddm_consistent_over_bps": 1.4227220104757485,
+     "pv": 1.0775
+    },
+    {
+     "code": "601838",
+     "name": "成都银行",
+     "payout": 0.2584,
+     "roe0": 0.1685,
+     "ddm_current_over_bps": 0.8129980353073456,
+     "ddm_consistent_over_bps": 1.6958715782092335,
+     "pv": 1.211
+    },
+    {
+     "code": "601860",
+     "name": "紫金银行",
+     "payout": 0.1732,
+     "roe0": 0.1146,
+     "ddm_current_over_bps": 0.44692739580805874,
+     "ddm_consistent_over_bps": 1.3287436156486492,
+     "pv": 3.2466
+    },
+    {
+     "code": "601916",
+     "name": "浙商银行",
+     "payout": 0.1875,
+     "roe0": 0.1404,
+     "ddm_current_over_bps": 0.5635429816819725,
+     "ddm_consistent_over_bps": 1.5720971375445725,
+     "pv": 1.6424
+    },
+    {
+     "code": "601939",
+     "name": "建设银行",
+     "payout": 0.3046,
+     "roe0": 0.1415,
+     "ddm_current_over_bps": 0.8266132050573082,
+     "ddm_consistent_over_bps": 1.5245868448279336,
+     "pv": 1.1118
+    },
+    {
+     "code": "601988",
+     "name": "中国银行",
+     "payout": 0.3131,
+     "roe0": 0.1208,
+     "ddm_current_over_bps": 0.7774140449848558,
+     "ddm_consistent_over_bps": 1.416443061097323,
+     "pv": 0.9818
+    },
+    {
+     "code": "601997",
+     "name": "贵阳银行",
+     "payout": 0.1992,
+     "roe0": 0.19,
+     "ddm_current_over_bps": 0.7230011698468158,
+     "ddm_consistent_over_bps": 1.8658869513904557,
+     "pv": 1.1969
+    },
+    {
+     "code": "601998",
+     "name": "中信银行",
+     "payout": 0.2746,
+     "roe0": 0.1143,
+     "ddm_current_over_bps": 0.6495990642600505,
+     "ddm_consistent_over_bps": 1.2959611218136646,
+     "pv": 1.0645
+    },
+    {
+     "code": "603323",
+     "name": "苏农银行",
+     "payout": 0.2647,
+     "roe0": 0.0886,
+     "ddm_current_over_bps": 0.42804353242165677,
+     "ddm_consistent_over_bps": 0.7919320790943156,
+     "pv": 2.0286
+    }
+   ],
+   "low_payout_n": 12,
+   "low_payout_pv_median": 2.18265,
+   "high_payout_n": 18,
+   "high_payout_pv_median": 1.1257000000000001,
+   "rank_corr_payout_pv": -0.6280566280566281
+  }
+ },
+ "paired_ic": {
+  "all_1y": {
+   "months": 187,
+   "ddm10": -0.2739061886094652,
+   "ri10": -0.2314592840864406,
+   "diff": -0.04244690452302456,
+   "diff_nw_t": -0.9056121853831849,
+   "payout_component_ic": -0.1762322737034287,
+   "payout_component_nw_t": -2.986546309246032
+  },
+  "all_2y": {
+   "months": 175,
+   "ddm10": -0.26783151705281677,
+   "ri10": -0.25300306750030527,
+   "diff": -0.01482844955251152,
+   "diff_nw_t": -0.16949666249851972,
+   "payout_component_ic": -0.18162704456683357,
+   "payout_component_nw_t": -2.0898287026047924
+  },
+  "all_3y": {
+   "months": 163,
+   "ddm10": -0.2554392612810834,
+   "ri10": -0.2300418249408066,
+   "diff": -0.025397436340276785,
+   "diff_nw_t": -0.20936762638551618,
+   "payout_component_ic": -0.185377514594228,
+   "payout_component_nw_t": -1.6424422712001832
+  },
+  "panel_1y": {
+   "months": 187,
+   "ddm10": -0.22201730159479052,
+   "ri10": -0.17030748212156047,
+   "diff": -0.05170981947323009,
+   "diff_nw_t": -1.062871181446965,
+   "payout_component_ic": -0.16670207838268236,
+   "payout_component_nw_t": -2.9062478186129206
+  },
+  "panel_2y": {
+   "months": 175,
+   "ddm10": -0.22386166155138174,
+   "ri10": -0.19471275942181349,
+   "diff": -0.02914890212956826,
+   "diff_nw_t": -0.31887907280678884,
+   "payout_component_ic": -0.1704888373085852,
+   "payout_component_nw_t": -1.9859478898257477
+  },
+  "panel_3y": {
+   "months": 163,
+   "ddm10": -0.22275857132158558,
+   "ri10": -0.17208688121272034,
+   "diff": -0.05067169010886525,
+   "diff_nw_t": -0.385000261135491,
+   "payout_component_ic": -0.17898028550464445,
+   "payout_component_nw_t": -1.6243187202707259
+  }
+ }
+}
