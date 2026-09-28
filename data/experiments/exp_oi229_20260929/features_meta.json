@@ -1,0 +1,36 @@
+{
+ "states": "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_daily_states_adopted.csv",
+ "states_sha256": "92772324bad0947ec0238f2776843ae0afe88f08f59b868cf272013b49b564d6",
+ "labels_sha256": "f236fc1d17177b1cf7f13c34c51ab1434bb5ee85505d66e5af3e85061c53d372",
+ "line": 1.0034,
+ "rows": 17616,
+ "zone": 1861,
+ "zone_nonfin": 1730,
+ "coverage": {
+  "C1": 15767,
+  "C2": 14105,
+  "C3": 17324,
+  "K1": 17614,
+  "K2": 15898,
+  "K3": 17178,
+  "D1": 16193,
+  "D2": 17024,
+  "D3": 16932,
+  "S1": 11866,
+  "E1": 17152
+ },
+ "coverage_zone_nonfin": {
+  "C1": 1673,
+  "C2": 1727,
+  "C3": 1727,
+  "K1": 1730,
+  "K2": 1589,
+  "K3": 1689,
+  "D1": 1672,
+  "D2": 1689,
+  "D3": 1678,
+  "S1": 782,
+  "E1": 1730
+ },
+ "job_id": "27312763"
+}

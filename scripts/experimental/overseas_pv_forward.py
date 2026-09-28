@@ -505,29 +505,51 @@ def dividend_events(facts: dict) -> list[tuple[str, float]]:
 
 
 class PitFacts:
-    """companyfacts 按申报日截断：每个概念的条目按 filed 排序，`at(t)` 返回只含 filed ≤ t 条目的事实字典。"""
+    """companyfacts 按申报日截断。先按申报报表币清洗（OI-228 `purify_currency`，申报币种只由该申报自身条目决定，无前视）；
+    两套准则都有利润表事实时并读（`sec_frameworks`）。`at(t)` 返回 {准则: 只含 filed ≤ t 条目的事实字典}，
+    `current(t)` 返回 t 及之前最新一份申报所用的准则（季报 TTM 取数用）。"""
 
     def __init__(self, facts: dict):
-        self.tax_name = "ifrs-full" if ("ifrs-full" in facts and "ProfitLossBeforeTax" in facts["ifrs-full"]) else "us-gaap"
-        self.sorted: dict[str, dict[str, tuple[list[str], list[dict]]]] = {}
-        for concept, node in (facts.get(self.tax_name) or {}).items():
-            per_unit = {}
-            for unit, entries in (node.get("units") or {}).items():
-                es = sorted(entries, key=lambda e: str(e.get("filed") or ""))
-                per_unit[unit] = ([str(e.get("filed") or "") for e in es], es)
-            self.sorted[concept] = per_unit
+        facts = fos.purify_currency(facts)
+        self.frameworks = fos.sec_frameworks(facts)
+        self.tax_name = self.frameworks[0]          # oi150_complete 沿用的单准则名（与原判定同）
+        self.sorted: dict[str, dict[str, dict[str, tuple[list[str], list[dict]]]]] = {}
+        self.filed: dict[str, list[str]] = {}
+        for fw in self.frameworks:
+            per_concept, dates = {}, set()
+            for concept, node in (facts.get(fw) or {}).items():
+                per_unit = {}
+                for unit, entries in (node.get("units") or {}).items():
+                    es = sorted(entries, key=lambda e: str(e.get("filed") or ""))
+                    per_unit[unit] = ([str(e.get("filed") or "") for e in es], es)
+                    dates.update(per_unit[unit][0])
+                per_concept[concept] = per_unit
+            self.sorted[fw] = per_concept
+            self.filed[fw] = sorted(dates)
 
     def at(self, t: str) -> dict:
-        tax: dict = {}
-        for concept, per_unit in self.sorted.items():
-            units = {}
-            for unit, (filed, es) in per_unit.items():
-                n = bisect.bisect_right(filed, t)
-                if n:
-                    units[unit] = es[:n]
-            if units:
-                tax[concept] = {"units": units}
-        return tax
+        out: dict = {}
+        for fw, per_concept in self.sorted.items():
+            tax: dict = {}
+            for concept, per_unit in per_concept.items():
+                units = {}
+                for unit, (filed, es) in per_unit.items():
+                    n = bisect.bisect_right(filed, t)
+                    if n:
+                        units[unit] = es[:n]
+                if units:
+                    tax[concept] = {"units": units}
+            if tax:
+                out[fw] = tax
+        return out
+
+    def current(self, t: str) -> str:
+        best = (self.frameworks[0], "")
+        for fw, dates in self.filed.items():
+            i = bisect.bisect_right(dates, t)
+            if i and dates[i - 1] > best[1]:
+                best = (fw, dates[i - 1])
+        return best[0]
 
 
 def value_worker(job: dict) -> list[dict]:
@@ -539,7 +561,6 @@ def value_worker(job: dict) -> list[dict]:
         return [dict(cik=cik, ticker=ticker, date=t, status="no_facts", reason="", price="", value="", pv="", period="", rf="") for t in obs]
     facts = json.loads(p.read_text(encoding="utf-8")).get("facts", {})
     pit = PitFacts(facts)
-    maps = fos.IFRS if pit.tax_name == "ifrs-full" else fos.GAAP
     splits = split_events(facts)
     prices: list[tuple[str, float]] = []
     pp = price_path(ticker) if ticker else None
@@ -554,12 +575,13 @@ def value_worker(job: dict) -> list[dict]:
         price = prices[i][1] if (i >= 0 and (date.fromisoformat(t) - date.fromisoformat(pdates[i])).days <= 7) else None
         rf = rf_at(rf_dates, rf_vals, t)
         row["rf"] = f"{rf:.4f}" if rf is not None else ""
-        tax = pit.at(t)
-        annuals = fos.sec_extract(ticker or cik, name, {"facts": {pit.tax_name: tax}})
+        snap = pit.at(t)
+        annuals = fos.sec_extract(ticker or cik, name, {"facts": snap}, purified=True)
         if not annuals:
             row["status"], row["reason"] = "no_annual", "无 filed≤t 的年报行"
             out.append(row); continue
-        current = fos.sec_current_extract(ticker or cik, name, tax, maps, annuals)
+        fw = pit.current(t)
+        current = fos.sec_current_extract(ticker or cik, name, snap.get(fw, {}), fos.IFRS if fw == "ifrs-full" else fos.GAAP, annuals)
         years = [bor.year_from_row(r) for r in annuals]
         cur = bor.year_from_row(current) if current else None
         if rf is None:

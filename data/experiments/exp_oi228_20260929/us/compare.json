@@ -1,0 +1,109 @@
+{
+ "bands": {
+  "0000029989": {
+   "ticker": "OMC",
+   "n": 29,
+   "first": "2019-04-16",
+   "last": "2026-04-29",
+   "v_ratio_median": 1.000029153244027,
+   "v_ratio_min": 0.9975369886778421,
+   "v_ratio_max": 1.000389776414951,
+   "transitions": {
+    "ok→ok": 29
+   },
+   "reasons": []
+  },
+  "0000087347": {
+   "ticker": "SLB",
+   "n": 12,
+   "first": "2023-01-25",
+   "last": "2026-07-29",
+   "v_ratio_median": 1.1412432765767926,
+   "v_ratio_min": 0.8606144985158356,
+   "v_ratio_max": 1.1686804045077552,
+   "transitions": {
+    "ok→rejected": 1,
+    "ok→ok": 11
+   },
+   "reasons": [
+    "股权价值 -0.26 ≤ 0：净负债 7.11 超过企业价值 6.85"
+   ]
+  },
+  "0000891024": {
+   "ticker": "PDCO",
+   "n": 8,
+   "first": "2016-06-29",
+   "last": "2018-03-07",
+   "v_ratio_median": 0.9905408221904951,
+   "v_ratio_min": 0.985980911983033,
+   "v_ratio_max": 0.9949926093779505,
+   "transitions": {
+    "ok→ok": 8
+   },
+   "reasons": []
+  },
+  "0000849395": {
+   "ticker": "CRH",
+   "n": 7,
+   "first": "2025-02-26",
+   "last": "2026-07-30",
+   "v_ratio_median": 3.2316791108489467,
+   "v_ratio_min": 3.0569767622359167,
+   "v_ratio_max": 3.381343040312941,
+   "transitions": {
+    "ok→ok": 7
+   },
+   "reasons": []
+  }
+ },
+ "states": {
+  "0000029989": {
+   "ticker": "OMC",
+   "days": 1500,
+   "member_days": 1500,
+   "only_old": 0,
+   "only_new": 0,
+   "first": "2019-04-15",
+   "last": "2026-09-04",
+   "end_pv_old": "1.3130",
+   "end_pv_new": "1.3127"
+  },
+  "0000087347": {
+   "ticker": "SLB",
+   "days": 721,
+   "member_days": 721,
+   "only_old": 63,
+   "only_new": 0,
+   "first": "2023-01-24",
+   "last": "2026-09-04",
+   "end_pv_old": "2.0463",
+   "end_pv_new": "1.8019"
+  },
+  "0000849395": {
+   "ticker": "CRH",
+   "days": 385,
+   "member_days": 177,
+   "only_old": 0,
+   "only_new": 0,
+   "first": "2025-02-25",
+   "last": "2026-09-04",
+   "end_pv_old": "7.5443",
+   "end_pv_new": "2.2241"
+  },
+  "0000891024": {
+   "ticker": "PDCO",
+   "days": 476,
+   "member_days": 433,
+   "only_old": 0,
+   "only_new": 0,
+   "first": "2016-06-28",
+   "last": "2018-05-17",
+   "end_pv_old": "1.5009",
+   "end_pv_new": "1.5086"
+  }
+ },
+ "rows_old": 1024486,
+ "rows_new": 1024423,
+ "bands_changed": 56,
+ "bands_gone": 0
+}

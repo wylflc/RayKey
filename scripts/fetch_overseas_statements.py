@@ -5,6 +5,8 @@
 * 美股／美元 ADR：SEC XBRL companyfacts（`data.sec.gov/api/xbrl/companyfacts/CIK##########.json`），按 CIK
   取年度值及最新 10-Q；季报按「最近完整财年 + 本期累计 − 上年同期累计」合成 TTM。
   同一期末取**最新申报**（含重述）。US-GAAP 与 IFRS（20-F）两套标签都映射。
+  OI-228：每份申报只取其报表币的条目（`purify_currency`）；改交 10-K 的境外发行人两套准则并读，逐期取最新报告该期末总资产的准则，
+  报表币切换前的早年行不连用（`sec_extract`）。
 * 港股：东财 HK F10 三张表（`RPT_HKF10_FN_{BALANCE,INCOME,CASHFLOW}_PC`），年度值加最新季报／中报，
   同样合成 TTM。按美国会计准则列报的港股（`HK_US_GAAP`）的「融资租赁负债」行是经营租赁负债，不计有息负债（OI-226）。
   报表货币按公司（清单内人民币列报公司显式登记）。股数取 `hong_kong_financial_indicators.csv` 最新已发行股数。
@@ -41,7 +43,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
-from collections import ChainMap
+from collections import ChainMap, Counter, defaultdict
 from datetime import date
 from pathlib import Path
 
@@ -901,7 +903,105 @@ def sec_download(symbol: str, cik: str, refresh: bool) -> dict | None:
     return json.loads(data.decode("utf-8"))
 
 
-def _sec_series(tax: dict, concepts: list[str], duration: bool) -> tuple[dict[str, float], str, str]:
+SEC_FRAMEWORKS = ("ifrs-full", "us-gaap")
+
+
+def _is_currency(unit: str) -> bool:
+    return len(unit) == 3 and unit.isalpha() and unit.isupper()
+
+
+def purify_currency(facts: dict) -> dict:
+    """OI-228（§6.8）：每份申报（accn）的报表币 = 该申报货币条目最多的币种；货币条目只留与所在申报报表币一致者，
+    剔除以外币标注的个别票据／借款条目（SLB 的 LongTermDebtNoncurrent 有一条 EUR）与境外发行人的美元便利折算。
+    非货币单位（股数、比率）与 dei 原样。"""
+    votes: dict[str, Counter] = defaultdict(Counter)
+    for fw in SEC_FRAMEWORKS:
+        for node in (facts.get(fw) or {}).values():
+            for unit, entries in (node.get("units") or {}).items():
+                if _is_currency(unit):
+                    for e in entries:
+                        votes[str(e.get("accn") or "")][unit] += 1
+    ccy = {accn: c.most_common(1)[0][0] for accn, c in votes.items()}
+    out = dict(facts)
+    for fw in SEC_FRAMEWORKS:
+        if fw not in facts:
+            continue
+        tax = {}
+        for concept, node in facts[fw].items():
+            units = {}
+            for unit, entries in (node.get("units") or {}).items():
+                kept = [e for e in entries if ccy.get(str(e.get("accn") or "")) == unit] if _is_currency(unit) else entries
+                if kept:
+                    units[unit] = kept
+            if units:
+                tax[concept] = {**node, "units": units}
+        out[fw] = tax
+    return out
+
+
+def sec_frameworks(facts: dict) -> list[str]:
+    """有利润表事实的准则：ifrs-full 以 `ProfitLossBeforeTax` 判定；同时有 us-gaap 收入或税前利润事实（改交 10-K 的境外发行人，
+    CRH 自 FY2023）时两套并读；都没有时按 us-gaap（与原判定同）。"""
+    ifrs = "ifrs-full" in facts and "ProfitLossBeforeTax" in facts["ifrs-full"]
+    us = facts.get("us-gaap") or {}
+    if ifrs and any(c in us for c in GAAP["revenue"] + GAAP["pretax"]):
+        return ["ifrs-full", "us-gaap"]
+    return ["ifrs-full"] if ifrs else ["us-gaap"]
+
+
+def _last_filed(tax: dict) -> str:
+    return max((str(e.get("filed") or "") for node in tax.values() for es in (node.get("units") or {}).values() for e in es),
+               default="")
+
+
+def current_framework(facts: dict) -> str:
+    """最新一份申报所用的准则：季报 TTM（`sec_current_extract`）按它取标签。"""
+    fws = sec_frameworks(facts)
+    return max(fws, key=lambda fw: _last_filed(facts.get(fw) or {})) if len(fws) > 1 else fws[0]
+
+
+BALANCE_ANCHOR = ["Assets"]          # 只出现在资产负债表的时点标签（两套准则同名）；权益另见于权益变动表的期初余额
+
+
+def _annual_filings(tax: dict, concepts: list[str], instant: bool | None = None) -> dict[str, tuple[str, str]]:
+    """{期末: (报告该期末的最新年报 filed, 其币种)}，只看 `concepts`；`instant` 为真只看时点值、为假只看区间值。"""
+    best: dict[str, tuple[str, str]] = {}
+    for concept in concepts:
+        for unit, entries in ((tax.get(concept) or {}).get("units") or {}).items():
+            if not _is_currency(unit):
+                continue
+            for e in entries:
+                end, filed = e.get("end"), str(e.get("filed") or "")
+                if (not end or e.get("fp") != "FY" or not str(e.get("form", "")).startswith(("10-K", "20-F", "40-F"))
+                        or (instant is not None and bool(e.get("start")) == instant)):
+                    continue
+                if filed > best.get(end, ("", ""))[0]:
+                    best[end] = (filed, unit)
+    return best
+
+
+def _period_currency(tax: dict, maps: dict) -> tuple[dict[str, str], str]:
+    """OI-228：各期末的报表币 = 报告该期（收入、税前利润、总资产或权益）的最新年报的币种；缺省取其中最新申报的币种。"""
+    concepts = [c for k in ("revenue", "pretax", "total_equity", "parent_equity") for c in maps.get(k, [])] + BALANCE_ANCHOR
+    best = _annual_filings(tax, concepts)
+    latest = max(best.values(), default=("", ""))
+    return {end: unit for end, (_filed, unit) in best.items()}, latest[1]
+
+
+def _unit_entries(node: dict, ccy: tuple[dict[str, str], str] | None) -> tuple[list[dict], str | None]:
+    """候选条目与单位。OI-228：给了 `ccy`（期末报表币，`_period_currency`）时，货币条目逐期只取该期报表币；
+    其余（股数等非货币单位，或未给 `ccy`）取第一个非 pure 单位。"""
+    units = node.get("units", {})
+    money = [u for u in units if _is_currency(u)]
+    if money and ccy is not None:
+        period_ccy, default = ccy
+        return [e for u in money for e in units[u] if period_ccy.get(e.get("end"), default) == u], default
+    unit = next((u for u in units if u not in ("pure",)), None)
+    return (units[unit] if unit else []), unit
+
+
+def _sec_series(tax: dict, concepts: list[str], duration: bool,
+                ccy: tuple[dict[str, str], str] | None = None) -> tuple[dict[str, float], str, str]:
     """{期末: 值}（各候选标签按优先级合并）、所用标签、单位。"""
     merged: dict[str, tuple[str, float]] = {}
     used, unit_used = [], ""
@@ -909,11 +1009,10 @@ def _sec_series(tax: dict, concepts: list[str], duration: bool) -> tuple[dict[st
         node = tax.get(concept)
         if not node:
             continue
-        units = node.get("units", {})
-        unit = next((u for u in units if u not in ("pure",)), None)
+        entries, unit = _unit_entries(node, ccy)
         if unit is None:
             continue
-        for e in units[unit]:
+        for e in entries:
             if e.get("fp") != "FY" or not str(e.get("form", "")).startswith(("10-K", "20-F", "40-F")):
                 continue
             end = e.get("end")
@@ -942,11 +1041,10 @@ def _sec_series(tax: dict, concepts: list[str], duration: bool) -> tuple[dict[st
             node = tax.get(concept)
             if not node:
                 continue
-            units = node.get("units", {})
-            unit = next((u for u in units if u not in ("pure",)), None)
+            entries, unit = _unit_entries(node, ccy)
             if unit is None:
                 continue
-            for e in units[unit]:
+            for e in entries:
                 end, filed = e.get("end"), str(e.get("filed") or "")
                 if not end or e.get("start") or not str(e.get("form", "")).startswith("10-Q"):
                     continue
@@ -1160,26 +1258,47 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
                       ebit=ebit, ebit_source=ebit_source, ebit_parts=parts, financial=fin)
 
 
-def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
+def sec_extract(symbol: str, name: str, data: dict, purified: bool = False) -> list[dict]:
+    """年报行。OI-228（§6.8）：先按申报报表币清洗（`purify_currency`；调用方已清洗时 `purified=True`）；两套准则并读时，
+    同一期末取最新报告该期末总资产的年报所用准则（资产负债表只列两年，都无总资产时比较报告该期损益的年报）；
+    与最新一行币种不同的早年行不连用。"""
     facts = data.get("facts", {})
-    if "ifrs-full" in facts and "ProfitLossBeforeTax" in facts["ifrs-full"]:
-        tax, maps, framework = facts["ifrs-full"], IFRS, "ifrs-full"
-        src = "SEC companyfacts ifrs-full"
-    else:
-        tax, maps, framework = facts.get("us-gaap", {}), GAAP, "us-gaap"
-        src = "SEC companyfacts us-gaap"
+    if not purified:
+        facts = purify_currency(facts)
+    frameworks = sec_frameworks(facts)
+    per = {fw: _sec_extract_framework(symbol, name, facts, fw) for fw in frameworks}
+    rows = per[frameworks[0]]
+    if len(frameworks) > 1:
+        chosen: dict[str, tuple[tuple[str, str], dict]] = {}
+        for fw in frameworks:
+            tax, maps = facts.get(fw) or {}, (IFRS if fw == "ifrs-full" else GAAP)
+            balance = _annual_filings(tax, BALANCE_ANCHOR, instant=True)
+            income = _annual_filings(tax, [c for k in ("revenue", "pretax") for c in maps.get(k, [])], instant=False)
+            for row in per[fw]:
+                end = row["period"]
+                key = (balance.get(end, ("", ""))[0], income.get(end, ("", ""))[0])
+                if end not in chosen or key > chosen[end][0]:
+                    chosen[end] = (key, row)
+        rows = [chosen[end][1] for end in sorted(chosen)]
+    if rows:
+        latest = rows[-1]["report_currency"]
+        rows = [r for r in rows if r["report_currency"] == latest]
+    return rows
+
+
+def _sec_extract_framework(symbol: str, name: str, facts: dict, framework: str) -> list[dict]:
+    tax, maps = facts.get(framework, {}), (IFRS if framework == "ifrs-full" else GAAP)
+    src = f"SEC companyfacts {framework}"
+    ccy = _period_currency(tax, maps)          # OI-228：逐期报表币
     # OI-210：金融资产标签组逐个标签取期末值（组内取最大，见 `sec_financial_assets`）
-    each = {c: _sec_series(tax, [c], False)[0] for c in SEC_FIN_CONCEPTS if c in tax}
+    each = {c: _sec_series(tax, [c], False, ccy)[0] for c in SEC_FIN_CONCEPTS if c in tax}
     series: dict[str, dict[str, float]] = {}
     tags: dict[str, str] = {}
-    ccy = ""
     for key, concepts in maps.items():
-        s, used, unit = _sec_series(tax, concepts, key in DURATION)
+        s, used, _unit = _sec_series(tax, concepts, key in DURATION, ccy)
         series[key] = s
         if used:
             tags[key] = used
-        if key == "revenue" and unit:
-            ccy = unit
     ends = sorted(set(series["revenue"]) | set(series["pretax"]) | set(series["operating_income"]))
     rows = []
     # 财年公开可得日取该期 10-K／20-F／40-F 的实际 filed 日。
@@ -1209,7 +1328,7 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
             row_tags["shares"] = "dei:EntityCommonStockSharesOutstanding"
         row_tags = _composed_tags(row_tags, {"pretax": pretax_parts, "interest_debt": debt_parts, "dep_amort": dep_parts})
         row_tags.update({f"fin.{k}": c for k, c in fin["tags"].items()})
-        rows.append(_build_row("US", symbol, name, end, notice, ccy or "USD", rev, opinc, pretax, taxv, intexp,
+        rows.append(_build_row("US", symbol, name, end, notice, ccy[0].get(end, ccy[1]) or "USD", rev, opinc, pretax, taxv, intexp,
                                total_eq, parent_eq, minority, debt, fin["cash"], v("capex") or 0.0, dep or 0.0,
                                v("cfo"), shares, row_tags, src, TAX_DEFAULT["US"],
                                buybacks=abs(v("buybacks") or 0.0), dividends=abs(v("dividends_paid") or 0.0),
@@ -1520,11 +1639,9 @@ def main() -> int:
             if not data:
                 summary.append(f"{market} {code} {name}: SEC 无数据"); continue
             got = sec_extract(code, name, data)
-            facts = data.get("facts", {})
-            if "ifrs-full" in facts and "ProfitLossBeforeTax" in facts["ifrs-full"]:
-                tax, maps = facts["ifrs-full"], IFRS
-            else:
-                tax, maps = facts.get("us-gaap", {}), GAAP
+            facts = purify_currency(data.get("facts", {}))
+            framework = current_framework(facts)            # OI-228：季报 TTM 按最新申报所用准则
+            tax, maps = facts.get(framework, {}), (IFRS if framework == "ifrs-full" else GAAP)
             current = sec_current_extract(code, name, tax, maps, got, item.get("evidence_date", ""))
             if current and current["period"] == item.get("report_period"):
                 got.append(current)

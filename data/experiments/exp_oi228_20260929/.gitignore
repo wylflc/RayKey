@@ -1,0 +1,17 @@
+__pycache__/
+old_inputs/
+states/
+cache/
+nav/
+stats/
+errors/
+daily/
+rescan_cache/
+rescan_daily/
+*.log
+contrib_*_trades.csv
+ledger_*.csv
+candidates_*.csv
+trades/
+us/states_adopted.csv
+us/old_states_adopted.csv

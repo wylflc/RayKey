@@ -176,5 +176,101 @@ class SecPathsTest(unittest.TestCase):
         self.assertNotIn("pretax=", annual["tags_used"])
 
 
+def fy(end: str, filed: str, val: float, accn: str, duration: bool = False, form: str = "10-K") -> dict:
+    entry = dict(end=end, filed=filed, fp="FY", form=form, val=val, accn=accn)
+    if duration:
+        entry["start"] = f"{int(end[:4])}-01-01"
+    return entry
+
+
+class SecCurrencyFrameworkTest(unittest.TestCase):
+    """OI-228（§6.8）：每份申报只取其报表币的条目；币种与准则切换逐期取最新年报。"""
+
+    def test_stray_foreign_currency_entry_is_ignored(self):
+        # SLB：LongTermDebtNoncurrent 在同一份 10-K 里有一条 EUR（且排在前面），原实现只取第一个币种
+        pretax = st.GAAP["pretax"][0]
+        data = {"facts": {"us-gaap": {
+            "Revenues": {"units": {"USD": [fy("2024-12-31", "2025-02-01", 1000.0, "a1", True)]}},
+            pretax: {"units": {"USD": [fy("2024-12-31", "2025-02-01", 100.0, "a1", True)]}},
+            "StockholdersEquity": {"units": {"USD": [fy("2024-12-31", "2025-02-01", 500.0, "a1")]}},
+            "LongTermDebtNoncurrent": {"units": {"EUR": [fy("2024-12-31", "2025-02-01", 7.0, "a1")],
+                                                 "USD": [fy("2024-12-31", "2025-02-01", 300.0, "a1")]}}}}}
+        row = st.sec_extract("SLB", "x", data)[-1]
+        self.assertEqual(row["report_currency"], "USD")
+        self.assertAlmostEqual(row["interest_debt"], 300.0)
+
+    def test_convenience_translation_is_ignored(self):
+        # 境外发行人 20-F 的美元便利折算只覆盖最新一年，条目少于报表币
+        data = {"facts": {"ifrs-full": {
+            "Revenue": {"units": {"USD": [fy("2024-12-31", "2025-04-10", 100.0, "t24", True, "20-F")],
+                                  "TWD": [fy("2024-12-31", "2025-04-10", 3000.0, "t24", True, "20-F"),
+                                          fy("2023-12-31", "2025-04-10", 2500.0, "t24", True, "20-F")]}},
+            "ProfitLossBeforeTax": {"units": {"USD": [fy("2024-12-31", "2025-04-10", 40.0, "t24", True, "20-F")],
+                                              "TWD": [fy("2024-12-31", "2025-04-10", 1200.0, "t24", True, "20-F"),
+                                                      fy("2023-12-31", "2025-04-10", 1000.0, "t24", True, "20-F")]}},
+            "Equity": {"units": {"TWD": [fy("2024-12-31", "2025-04-10", 5000.0, "t24", form="20-F")]}}}}}
+        rows = st.sec_extract("TSMX", "x", data)
+        self.assertEqual([r["report_currency"] for r in rows], ["TWD", "TWD"])
+        self.assertAlmostEqual(rows[-1]["revenue"], 3000.0)
+
+    def crh(self) -> dict:
+        """20-F 欧元（FY2019）→ 20-F 美元（FY2020 起，重述两年比较数）→ 10-K us-gaap（FY2023 起，重述 FY2021–2022 损益）。"""
+        ifrs = {
+            "Revenue": {"units": {
+                "EUR": [fy("2018-12-31", "2020-03-06", 26000.0, "e19", True, "20-F"), fy("2019-12-31", "2020-03-06", 27000.0, "e19", True, "20-F")],
+                "USD": [fy("2018-12-31", "2021-03-12", 30000.0, "u20", True, "20-F"), fy("2019-12-31", "2021-03-12", 31000.0, "u20", True, "20-F"),
+                        fy("2020-12-31", "2021-03-12", 31500.0, "u20", True, "20-F"),
+                        fy("2021-12-31", "2023-03-10", 32000.0, "u22", True, "20-F"), fy("2022-12-31", "2023-03-10", 34000.0, "u22", True, "20-F")]}},
+            "ProfitLossBeforeTax": {"units": {
+                "EUR": [fy("2018-12-31", "2020-03-06", 2000.0, "e19", True, "20-F"), fy("2019-12-31", "2020-03-06", 2200.0, "e19", True, "20-F")],
+                "USD": [fy("2019-12-31", "2021-03-12", 2500.0, "u20", True, "20-F"), fy("2020-12-31", "2021-03-12", 2400.0, "u20", True, "20-F"),
+                        fy("2021-12-31", "2023-03-10", 2900.0, "u22", True, "20-F"), fy("2022-12-31", "2023-03-10", 3000.0, "u22", True, "20-F")]}},
+            "Equity": {"units": {
+                "EUR": [fy("2019-12-31", "2020-03-06", 16000.0, "e19", form="20-F")],
+                "USD": [fy("2020-12-31", "2021-03-12", 19000.0, "u20", form="20-F"),
+                        fy("2021-12-31", "2023-03-10", 21000.0, "u22", form="20-F"), fy("2022-12-31", "2023-03-10", 22000.0, "u22", form="20-F")]}},
+            "Assets": {"units": {
+                "EUR": [fy("2019-12-31", "2020-03-06", 40000.0, "e19", form="20-F")],
+                "USD": [fy("2020-12-31", "2021-03-12", 45000.0, "u20", form="20-F"),
+                        fy("2021-12-31", "2023-03-10", 47000.0, "u22", form="20-F"), fy("2022-12-31", "2023-03-10", 48000.0, "u22", form="20-F")]}}}
+        pretax = st.GAAP["pretax"][0]
+        us = {
+            st.GAAP["revenue"][0]: {"units": {"USD": [fy("2021-12-31", "2024-02-29", 31900.0, "g23", True), fy("2022-12-31", "2024-02-29", 33900.0, "g23", True),
+                                                      fy("2023-12-31", "2024-02-29", 35000.0, "g23", True)]}},
+            pretax: {"units": {"USD": [fy("2021-12-31", "2024-02-29", 2800.0, "g23", True), fy("2022-12-31", "2024-02-29", 3100.0, "g23", True),
+                                       fy("2023-12-31", "2024-02-29", 3500.0, "g23", True)]}},
+            "StockholdersEquity": {"units": {"USD": [fy("2022-12-31", "2024-02-29", 22500.0, "g23"), fy("2023-12-31", "2024-02-29", 24000.0, "g23")]}},
+            # 权益变动表的期初余额把权益带到 FY2021 期末，资产负债表（总资产）只列两年
+            st.GAAP["total_equity"][0]: {"units": {"USD": [fy("2021-12-31", "2024-02-29", 21500.0, "g23"), fy("2022-12-31", "2024-02-29", 22800.0, "g23"),
+                                                           fy("2023-12-31", "2024-02-29", 24300.0, "g23")]}},
+            "Assets": {"units": {"USD": [fy("2022-12-31", "2024-02-29", 48500.0, "g23"), fy("2023-12-31", "2024-02-29", 50000.0, "g23")]}}}
+        return {"ifrs-full": ifrs, "us-gaap": us}
+
+    def test_currency_switch_uses_restated_comparatives_and_drops_older_currency(self):
+        facts = self.crh()
+        before = {"ifrs-full": {c: {"units": {u: [e for e in es if e["filed"] <= "2020-12-31"] for u, es in n["units"].items()
+                                              if any(e["filed"] <= "2020-12-31" for e in es)}}
+                                for c, n in facts["ifrs-full"].items()}}
+        rows = st.sec_extract("CRH", "x", {"facts": before})
+        self.assertEqual([(r["period"], r["report_currency"], r["revenue"]) for r in rows],
+                         [("2018-12-31", "EUR", 26000.0), ("2019-12-31", "EUR", 27000.0)])
+        only_ifrs = {"ifrs-full": facts["ifrs-full"]}
+        rows = st.sec_extract("CRH", "x", {"facts": only_ifrs})
+        self.assertEqual({r["report_currency"] for r in rows}, {"USD"})            # 欧元年报被美元重述比较数取代
+        self.assertAlmostEqual([r for r in rows if r["period"] == "2019-12-31"][0]["revenue"], 31000.0)
+
+    def test_framework_switch_takes_latest_balance_sheet_filing_per_period(self):
+        facts = self.crh()
+        self.assertEqual(st.sec_frameworks(facts), ["ifrs-full", "us-gaap"])
+        self.assertEqual(st.current_framework(facts), "us-gaap")
+        rows = {r["period"]: r for r in st.sec_extract("CRH", "x", {"facts": facts})}
+        self.assertEqual(rows["2021-12-31"]["source"], "SEC companyfacts ifrs-full")   # us-gaap 该期末只有权益变动表的期初余额
+        self.assertAlmostEqual(rows["2021-12-31"]["revenue"], 32000.0)
+        self.assertEqual(rows["2022-12-31"]["source"], "SEC companyfacts us-gaap")     # 10-K 晚于 20-F 报告该期末总资产
+        self.assertAlmostEqual(rows["2022-12-31"]["revenue"], 33900.0)
+        self.assertEqual(rows["2023-12-31"]["source"], "SEC companyfacts us-gaap")
+        self.assertEqual({r["report_currency"] for r in rows.values()}, {"USD"})
+
+
 if __name__ == "__main__":
     unittest.main()

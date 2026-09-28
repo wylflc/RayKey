@@ -4,6 +4,7 @@
 预登记：`docs/reports/us_sp500_backtest_prereg.zh.md` §3。
 估值 = `build_overseas_roic_bands.value_company`（§6.8／§6.5.2.3 同式；OI-210 起 r = 10%、终值超额 2pp、g_T = 3%，与 A 股生产同参，rf 只记录不进估值）；
 事实按 `filed ≤ F` 截断（`overseas_pv_forward.PitFacts`），F 取 companyfacts 里 10-K／10-Q（含 /A、20-F、40-F）的申报日。
+OI-228（§6.8）：事实先按申报报表币清洗，改交 10-K 的境外发行人两套准则并读；不做汇率折算，报表币非美元的申报点记无法估值。
 
 带与逐日规则：
   * `band_available_at = F`；生效日 E = F 之前最后一个交易日（A 股 `--state-effective prev_trading_day` 同式）。
@@ -55,6 +56,7 @@ STATE_FIELDS = ["security_code", "date", "close", "band_report_date", "band_avai
                 "intrinsic_value", "band_low", "band_high", "valuation_ratio", "upside_to_low", "valuation_label", "ev_ps", "pv_equity"]
 BAND_FIELDS = ["cik", "filed", "effective", "status", "reason", "value", "period", "rf", "shares", "split_adj", "split_note"]
 XBRL_FROM = "2009-06-01"
+PRICE_CCY = "USD"            # 标普 500 日线的交易币
 
 
 def label(ratio: float) -> str:
@@ -113,7 +115,6 @@ def worker(job: dict) -> tuple[list[dict], list[dict]]:
         return rows, bands
     facts = json.loads(fp.read_text(encoding="utf-8")).get("facts", {})
     pit = PitFacts(facts)
-    maps = fos.IFRS if pit.tax_name == "ifrs-full" else fos.GAAP
     dei_all = ((facts.get("dei") or {}).get("EntityCommonStockSharesOutstanding") or {}).get("units", {}).get("shares", [])
 
     def dei_at(t: str) -> dict:
@@ -134,13 +135,19 @@ def worker(job: dict) -> tuple[list[dict], list[dict]]:
         if eff is None:
             rec["status"], rec["reason"] = "no_price", "申报日前无行情"
             bands.append(rec); continue
-        tax = pit.at(f)
+        snap = pit.at(f)
         dei = dei_at(f)
-        annuals = fos.sec_extract(cik, cik, {"facts": {pit.tax_name: tax, "dei": dei}})
+        annuals = fos.sec_extract(cik, cik, {"facts": {**snap, "dei": dei}}, purified=True)
         if not annuals:
             rec["status"], rec["reason"] = "no_annual", "无 filed≤F 的年报行"
             bands.append(rec); band_list.append((eff, f, "", None)); continue
-        current = fos.sec_current_extract(cik, cik, tax, maps, annuals, dei=dei)
+        if annuals[-1]["report_currency"] != PRICE_CCY:    # OI-228：不做汇率折算，报表币非美元的申报点记无法估值
+            rec["status"], rec["reason"] = "rejected", f"报表币 {annuals[-1]['report_currency']} ≠ 股价币 {PRICE_CCY}"
+            rec["period"] = annuals[-1]["period"]
+            bands.append(rec); band_list.append((eff, f, annuals[-1]["period"], None)); continue
+        framework = pit.current(f)                          # OI-228：季报 TTM 按最新申报所用准则
+        current = fos.sec_current_extract(cik, cik, snap.get(framework, {}), fos.IFRS if framework == "ifrs-full" else fos.GAAP,
+                                          annuals, dei=dei)
         # 股数量级守卫：个别申报把股数按千／百万计（CSC 2010-07 10-Q 报 156.53 股），按上次申报或封面股数纠正量级
         latest_row = current if (current and current["period"] > annuals[-1]["period"]) else annuals[-1]
         ref = prev_shares or fos.dei_shares(dei, f)
