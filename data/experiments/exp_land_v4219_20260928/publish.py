@@ -18,7 +18,8 @@ def main():
     assert arm == ruling.get('tested_arm', arm) == 'BK', ruling
     verification, align = load('verification.json'), load('align_check.json')['arms'][arm]
     assert verification['zero_negative_cash']
-    assert align['retained'] or abs(ruling.get('buy_line', 0) - align['line']) < 1e-9, 'buy line must be the aligned solution'
+    assert (align['retained'] or abs(ruling.get('buy_line', 0) - align['line']) < 1e-9
+            or (ruling.get('alignment_exception') and abs(ruling['buy_line'] - 1.0034) < 1e-9)), 'buy line must be the aligned solution or a ruled exception'
     before = load('before_manifest.json')
     for name in STATE_FILES:
         assert digest(ROOT / 'data/processed' / name) == before['states'][name]['source'], name

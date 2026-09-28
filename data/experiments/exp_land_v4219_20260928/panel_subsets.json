@@ -1,0 +1,48 @@
+{
+  "CONTROL": {
+    "a_share_daily_states_adopted.csv": {
+      "rows": 964030,
+      "digest": {
+        "bytes": 131443166,
+        "sha256": "40078196af4619c8e449dea936ea7f4c7467ef2a196aad247c89c733c398f444"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "rows": 965701,
+      "digest": {
+        "bytes": 135998743,
+        "sha256": "bbf1a0f9dac8d02b3cc64e96fbc8cafb85932381f9ef74da6f1b644d754160ca"
+      }
+    },
+    "roic_bands.csv": {
+      "rows": 19787,
+      "digest": {
+        "bytes": 12572460,
+        "sha256": "25f4381ce416745ea8289185dbce9d998cfc63fd46cf6f65269f032e5c2736f7"
+      }
+    }
+  },
+  "BK": {
+    "a_share_daily_states_adopted.csv": {
+      "rows": 964030,
+      "digest": {
+        "bytes": 131426659,
+        "sha256": "7d02c802e50f625f35a7a439e462795491841412fbf614e129c08a26dd676219"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "rows": 965701,
+      "digest": {
+        "bytes": 135981902,
+        "sha256": "8abd459800820155de84acec5ff0be4cd8388cd516a12d963cf08ae6bf49e630"
+      }
+    },
+    "roic_bands.csv": {
+      "rows": 19787,
+      "digest": {
+        "bytes": 12572460,
+        "sha256": "25f4381ce416745ea8289185dbce9d998cfc63fd46cf6f65269f032e5c2736f7"
+      }
+    }
+  }
+}

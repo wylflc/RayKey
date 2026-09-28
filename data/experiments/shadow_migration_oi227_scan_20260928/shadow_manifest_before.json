@@ -7,7 +7,7 @@
     "shadow_from_origin.py": "675e2e87a4d203199a7e79a10fa97954f4a569e50022560cc4a68ba0040a6183",
     "shadow_portfolio.py": "aa30791f37eb0fc7ce92c66e4cc3664ea7f4cdb23d0221df480336ce4c48226b",
     "backtest_valuation_strategy.py": "a45be50ad94fef8dc4b8cb48638f03a21aa452bbc3414d26a8a430f1be4e4e5f",
-    "screen_daily_volume_price_signals.py": "710b654ca423ed8658524ad9370e41dadd71fe040d9b1c74dae804ff1890b08b",
+    "screen_daily_volume_price_signals.py": "74bc4c10ea77651649d044433bf82bcfbcbc64420c33e249a74ff8456f07c4b1",
     "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
     "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
     "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
@@ -101,8 +101,7 @@
     "migrations/oi207_line_20260928.json": "b3ba7b0b6e8c3fd2ec49bb0d6203edac98bdf9bf0c7ba7889a5eb775a4f5584a",
     "migrations/oi224b_20260928.json": "2ed8da4449e7ef3d22164541454308ab2eb02b791c12ba942341bb775e058590",
     "migrations/oi227_20260928.json": "90eba9a695b2ce0e7833ab6adc8c38dde2131bbdaddc9b8db077515750255439",
-    "migrations/oi213_line_20260928.json": "025b32ea01c2098cd8b4f4e506cbf4cb07b99b9a6f31d8ac493341007291e5d7",
-    "migrations/oi227_scan_20260928.json": "311eda7b99bff8b7dc16e0eefd880bcbad39dd109530f6208bcf30743da4dfcf"
+    "migrations/oi213_line_20260928.json": "025b32ea01c2098cd8b4f4e506cbf4cb07b99b9a6f31d8ac493341007291e5d7"
   },
   "action_corrections": {
     "corrections/oi196_actions_20260921.json": "00d522804d3277f97a5e7251a87875520d66e677ef0fd7f21386f3487d44618d",
