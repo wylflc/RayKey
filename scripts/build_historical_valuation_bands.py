@@ -207,6 +207,11 @@ ROIC_STATS: defaultdict[str, int] = defaultdict(int)
 MOAT_PARAMS: dict[str, dict[str, float | int | None]] = {}
 MOAT_STATS: defaultdict[str, int] = defaultdict(int)
 
+# `--discount-tiers CSV`（OI-223 研究开关）：{代码: [(生效起, 生效止, r)]}，按带的可得日取档改 r，终值超额 ROE_T − r 不变
+# （ROIC 路径 WACC = r、ROIC_T = WACC + 超额随档平移）。缺省为空 dict＝统一 r；查不到档的代码或日期沿用统一 r。
+DISCOUNT_TIERS: dict[str, list[tuple[str, str, float]]] = {}
+DISCOUNT_STATS: defaultdict[str, int] = defaultdict(int)
+
 # §6.5.2.4 主体重置：{代码: 重置报告期}。报告期 ≥ 重置日的行把比率窗口、十年守卫窗与经营账面基年截到重置日起
 # （复用结构断点 `book_break`），不足三年时锚 = 最新年报比率 × TTM 因子，g0 只由季报趋势给出。早于重置日的行不受影响。
 ENTITY_RESET: dict[str, str] = {}
@@ -1679,6 +1684,13 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
         # 正是现行生产的隐含超额；显式化是为了能在不动 r 的前提下单独扫终值假设（OI-070 ②）。
         if getattr(args, "terminal_excess", None) is not None:
             roe_t = r + args.terminal_excess
+        if DISCOUNT_TIERS:
+            tier_r = next((v for lo, hi, v in DISCOUNT_TIERS.get(code, ()) if lo <= available_at <= hi), None)
+            if tier_r is None:
+                DISCOUNT_STATS["无档·沿用统一 r"] += 1
+            else:
+                roe_t, r = tier_r + (roe_t - r), tier_r
+                DISCOUNT_STATS[f"r={tier_r:.0%}"] += 1
 
     # **逐票/分档参数覆盖**（`--moat-params CSV`，OI-070 护城河补偿实验）：只改终值超额与衰减年数
     # 两个「护城河持续多久、终值超额多大」的参数，**不改 r、不改增长、不改分子**——护城河只经由
@@ -3171,6 +3183,9 @@ def main() -> int:
                         help="逐票/分档终值参数覆盖（列：security_code,fade_years,terminal_excess,n1，"
                              "空格即沿用全局）。只改「超额回报持续多久、终值超额多大」，不改 r/增长/分子。"
                              "缺省不启用，既往产出逐位可复现。研究开关（OI-070 ①②）")
+    parser.add_argument("--discount-tiers", type=Path, metavar="CSV",
+                        help="研究开关（OI-223）：逐票时点折现率档（列：security_code,effective_from,effective_to,r，"
+                             "由 build_discount_rate_tiers.py 生成），按带的可得日取 r，终值超额不变；缺省不启用＝统一 r（生产）")
     parser.add_argument("--g0-cap", type=float, default=0.25, help="g0 上限，缺省 25%%")
     parser.add_argument("--g0-floor", type=float, default=0.0)
     parser.add_argument("--g0-shrink", type=float, default=1.0,
@@ -3396,6 +3411,14 @@ def main() -> int:
               f"（fade_years/terminal_excess/n1 任一列给值即覆盖，空即沿用全局）")
     if getattr(args, "terminal_excess", None) is not None:
         print(f"**全局终值超额显式给定 {args.terminal_excess:+.1%}**（ROE_T/ROIC_T = r/WACC + 超额，≤ 起始回报）")
+    if args.discount_tiers:
+        if args.r_mode == "market":
+            raise SystemExit("--discount-tiers 只配统一 r（--r-mode 非 market）")
+        with args.discount_tiers.open(encoding="utf-8-sig") as fh:
+            for r in csv.DictReader(fh):
+                DISCOUNT_TIERS.setdefault(r["security_code"].zfill(6), []).append(
+                    (r["effective_from"], r["effective_to"], float(r["r"])))
+        print(f"折现率分档（OI-223）：{len(DISCOUNT_TIERS)} 只 ← {args.discount_tiers}")
 
     tiers = load_tiers()
     financials = load_financials(set(codes), notice_cap=(args.notice_cap == "statutory"))
@@ -3547,6 +3570,8 @@ def main() -> int:
         print("外部 ROE 覆盖率：" + "｜".join(f"{k} {v:,}" for k, v in sorted(EXTERNAL_STATS.items())))
     if MOAT_PARAMS:
         print("逐票终值参数覆盖落地：" + "｜".join(f"{k} {v:,}" for k, v in sorted(MOAT_STATS.items())))
+    if DISCOUNT_TIERS:
+        print("折现率分档落地：" + "｜".join(f"{k} {v:,}" for k, v in sorted(DISCOUNT_STATS.items())))
     if getattr(args, "dcf_peak_guard", 0):
         print(f"DCF peak 守卫（K={args.dcf_peak_guard:g}）："
               f"跳过单边上抬 {ROIC_STATS.get('DCF peak 守卫·不上抬', 0):,} 带")
