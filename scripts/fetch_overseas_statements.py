@@ -84,10 +84,12 @@ US_EQUITY_METHOD = ("EquityMethodInvestments",)
 US_SECURITIES_COMPOSITE = ("DebtSecuritiesCurrent", "EquitySecuritiesFvNi")
 US_INTERMEDIATION = (("Deposits", "InterestBearingDepositLiabilities"), ("PayablesToCustomers",),
                      ("FederalFundsPurchasedAndSecuritiesSoldUnderAgreementsToRepurchase", "SecuritiesSoldUnderAgreementsToRepurchase"))
+# OI-226：`OtherCurrentFinancialAssets`（其他流动金融资产）不计现金类——台积电此行主要是应收政府补助等其他应收款
+# （附注引政府补助、购置固定资产的非现金「其他应收款变动」，变动列经营活动营运资金），A 股其他应收款不在 `CASH_LIKE_FIELDS`
 IFRS_CASH_LIKE = (("CashAndCashEquivalents",), ("CurrentFinancialAssetsAtFairValueThroughProfitOrLoss",),
                   ("CurrentFinancialAssetsAtFairValueThroughOtherComprehensiveIncome",
                    "CurrentFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome"),
-                  ("CurrentFinancialAssetsAtAmortisedCost",), ("OtherCurrentFinancialAssets",))
+                  ("CurrentFinancialAssetsAtAmortisedCost",))
 IFRS_OTHER_FIN = (("NoncurrentFinancialAssetsAtAmortisedCost",), ("NoncurrentFinancialAssetsAtFairValueThroughProfitOrLoss",
                    "NoncurrentFinancialAssetsAtFairValueThroughProfitOrLossMandatorilyMeasuredAtFairValue"),
                   ("NoncurrentFinancialAssetsAtFairValueThroughOtherComprehensiveIncome",
@@ -269,6 +271,11 @@ IFRS = {
     "lt_debt_current": ["CurrentPortionOfLongtermBorrowings", "CurrentPortionOfNoncurrentBondsIssued"],
     "lt_debt_total": ["Borrowings", "BondsIssued"],
     "st_debt": ["ShorttermBorrowings", "CurrentBorrowingsAndCurrentPortionOfNoncurrentBorrowings"],
+    # OI-226：IFRS 16 租赁负债计入有息负债（A 股 `DEBT_FIELDS` 含 `LEASE_LIAB`；IFRS 16 下租赁利息在财务费用，不在经营利润）；
+    # 非流动＋流动，缺拆分取合计（`compose_debt` 的租赁层）；IFRS 16 生效前的期末不计（`IFRS16_START`）
+    "fin_lease_noncurrent": ["NoncurrentLeaseLiabilities"],
+    "fin_lease_current": ["CurrentLeaseLiabilities"],
+    "fin_lease_total": ["LeaseLiabilities"],
     "equity_method_income": ["ShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod",
                              "ShareOfProfitLossOfAssociatesAccountedForUsingEquityMethod"],
     "capex": ["PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities"],
@@ -284,6 +291,19 @@ IFRS = {
 DURATION = {"revenue", "operating_income", "pretax", "income_tax", "interest_expense", "capex", "dep_amort", "cfo", "shares", "buybacks", "dividends_paid",
             "net_income", "tci", "pretax_domestic", "pretax_foreign", "continuing_income", "profit_loss", "depreciation", "amort_intangible",
             *EBIT_PART_KEYS}
+# OI-226（§6.8）：IFRS 16 于 2019-01-01 起生效；此前期末的租赁为 IAS 17 经营租赁（租金在经营利润内），过渡日余额常标在
+# 2018-12-31（台积电 LeaseLiabilities 19,903.6m），不计入该年有息负债
+IFRS16_START = "2019-01-01"
+IFRS_LEASE_KEYS = ("fin_lease_noncurrent", "fin_lease_current", "fin_lease_total")
+
+
+def ifrs16_gate(get, framework: str, end: str):
+    """ifrs-full 期末早于 `IFRS16_START` 时，租赁负债键一律视为缺失；其余键与 us-gaap 原样返回。"""
+    if framework != "ifrs-full" or end >= IFRS16_START:
+        return get
+    return lambda key: None if key in IFRS_LEASE_KEYS else get(key)
+
+
 # OI-178（§6.8）：按顺序取第一条各分量齐全的组合式
 PRETAX_RULES = (("pretax",), ("pretax_domestic", "pretax_foreign"), ("continuing_income", "income_tax"), ("profit_loss", "income_tax"))
 DEP_AMORT_RULES = (("dep_amort",), ("depreciation", "amort_intangible"), ("depreciation",))
@@ -309,7 +329,8 @@ def compose_debt(get) -> tuple[float, tuple[str, ...]]:
     ＋ 短期借款（ShortTermBorrowings，缺则 CommercialPaper），短期借款与一年内到期长债金额相同视为同一行只计一次（AMD）。
     融资租赁：非流动＋流动，缺拆分取合计；已并入含租赁标签的层级不再加。经营租赁负债不计（与港股「融资租赁负债」行同口径）。
     ifrs-full（OI-216）：非流动借款合计缺失时，长期银行借款（`lt_loans_noncurrent`）与应付公司债（`bonds_noncurrent`）
-    是两行，相加作非流动层；有合计即只取合计，不再叠加分项。
+    是两行，相加作非流动层；有合计即只取合计，不再叠加分项。ifrs-full 的租赁层是 IFRS 16 租赁负债（OI-226），
+    调用方以 `ifrs16_gate` 屏蔽 IFRS 16 生效前的期末。
     返回 (金额, 实际计入的键)。"""
     used: list[str] = []
 
@@ -1114,8 +1135,8 @@ def sec_current_extract(symbol: str, name: str, tax: dict, maps: dict, annuals: 
     if parent_eq is None and total_eq is not None:          # 同年报行：归母 = 合计 − 少数股东
         parent_eq = total_eq - minority
         tags["parent_equity"] = f"{tags.get('total_equity', 'total_equity')}-minority"
-    debt, debt_parts = compose_debt(inst)
     framework = "ifrs-full" if maps is IFRS else "us-gaap"
+    debt, debt_parts = compose_debt(ifrs16_gate(inst, framework, end))   # OI-226：IFRS 16 前的期末不计租赁负债
     fin = sec_financial_assets(framework, lambda c: _instant_value(tax, [c], end, filed)[0] if c in tax else None)
     tags.update({f"fin.{k}": c for k, c in fin["tags"].items()})
     parts = {k: ttm(k) for k in EBIT_PART_KEYS if k in maps}
@@ -1171,7 +1192,7 @@ def sec_extract(symbol: str, name: str, data: dict) -> list[dict]:
         if rev is None and pretax is None:
             continue
         intexp = v("interest_expense") or 0.0
-        debt, debt_parts = compose_debt(v)                       # OI-178：票据、流动合计与融资租赁按层级只取一次
+        debt, debt_parts = compose_debt(ifrs16_gate(v, framework, end))   # OI-178 层级只取一次；OI-226 IFRS 16 前不计租赁
         dep, dep_parts = compose_sum(v, DEP_AMORT_RULES)          # OI-178：折旧＋无形资产摊销
         fin = sec_financial_assets(framework, lambda c, end=end: each.get(c, {}).get(end))
         parts = {k: v(k) for k in EBIT_PART_KEYS if k in maps}

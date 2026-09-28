@@ -42,7 +42,9 @@ class FinancialAssetsTest(unittest.TestCase):
                   "NoncurrentFinancialAssetsMeasuredAtFairValueThroughOtherComprehensiveIncome": 8.0,
                   "CurrentFinancialLiabilitiesAtFairValueThroughProfitOrLoss": 3.0, "Assets": 6000.0}
         fin = statements.sec_financial_assets("ifrs-full", values.get)
-        self.assertEqual((fin["cash"], fin["other"], fin["liab"]), (2160.0, 98.0, 3.0))
+        # OI-226：其他流动金融资产（台积电为应收政府补助等其他应收款）不计现金类
+        self.assertEqual((fin["cash"], fin["other"], fin["liab"]), (2100.0, 98.0, 3.0))
+        self.assertNotIn("OtherCurrentFinancialAssets", fin["tags"].values())
 
     def test_hong_kong_groups_keep_equity_method_in_capital(self):
         values = {"cash": 141.0, "restricted_cash": 7.0, "deposits": 236.8, "fvtpl_c": 44.7, "other_fin_c": 4.2,

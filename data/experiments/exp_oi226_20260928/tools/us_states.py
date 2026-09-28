@@ -7,7 +7,8 @@
   oi210    OI-210 重建时（ee4a0325）的 fetch_overseas_statements 与 build_overseas_roic_bands：复现 09-24 的带
 非 current 变体须给 --out（逐日状态只作中间产物，写作业临时目录）。
 
-用法：python3 tools/us_states.py [--variant current|pre4214|oi210] [--workers N] [--out PATH]
+用法：python3 tools/us_states.py [--variant current|pre4214|oi210] [--bands-dir us] [--workers N] [--out PATH]
+--bands-dir：逐申报带与覆盖率写本目录下哪个子目录（第一轮 us/，第二轮台积电余项 us_r2/）。
 """
 from __future__ import annotations
 
@@ -47,6 +48,11 @@ def main() -> int:
         del args[i:i + 2]
     if variant not in VARIANTS:
         raise SystemExit(f"unknown variant {variant}")
+    bands_dir = "us"
+    if "--bands-dir" in args:
+        i = args.index("--bands-dir")
+        bands_dir = args[i + 1]
+        del args[i:i + 2]
     if variant != "current" and "--out" not in args:
         raise SystemExit("non-current variants need --out (scratch path for the daily states)")
     sys.path.insert(0, str(ROOT / "scripts"))
@@ -59,8 +65,8 @@ def main() -> int:
             preload(module, rev, tmp)
     import build_us_daily_states as bus  # noqa: E402
     suffix = "" if variant == "current" else f"_{variant}"
-    bus.BANDS_OUT = EXP / "us" / f"us_valuation_bands{suffix}.csv"
-    bus.COVER_OUT = EXP / "us" / f"valuation_coverage{suffix}.csv"
+    bus.BANDS_OUT = EXP / bands_dir / f"us_valuation_bands{suffix}.csv"
+    bus.COVER_OUT = EXP / bands_dir / f"valuation_coverage{suffix}.csv"
     print(f"variant={variant} fos={bus.fos.__file__} bor={bus.bor.__file__}", flush=True)
     sys.argv = ["build_us_daily_states.py", *args]
     return bus.main()

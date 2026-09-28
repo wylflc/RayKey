@@ -4,7 +4,7 @@
 Run: ``python3 scripts/test_overseas_supplements.py``
 
 锁住：SEC 流动证券的「流动债券 + 公允价值股权证券」组合候选及其对长期投资伞项的去重守卫；ifrs-full 长期借款与
-应付公司债分列相加、有借款合计时只取合计；字段级补充表 `overseas_statement_supplements.csv` 的整表校验（fail closed）、
+应付公司债分列相加、有借款合计时只取合计；ifrs-full IFRS 16 租赁负债计入有息负债、生效前期末不计（OI-226）；字段级补充表 `overseas_statement_supplements.csv` 的整表校验（fail closed）、
 按公开日生效、港股经营溢利内金融资产收益剔除与权益法份额计入、TTM 三期合成、非流动金融资产整值替换与沿用；
 港股 F10 分页带次序键且查重（京东 FY2023 漏行）。
 """
@@ -119,6 +119,37 @@ class IfrsDebtTest(unittest.TestCase):
         self.assertAlmostEqual(row["interest_debt"], 31824.4 + 926604.5 + 59857.9)
         self.assertIn("interest_debt=LongtermBorrowings+NoncurrentPortionOfNoncurrentBondsIssued+CurrentPortionOfLongtermBorrowings",
                       row["tags_used"])
+
+    @staticmethod
+    def ifrs_facts(end: str, balances: dict[str, float]) -> dict:
+        start = f"{end[:4]}-01-01"
+        facts = {"Revenue": 2894307.7, "ProfitLossBeforeTax": 1405840.0, "ProfitLossFromOperatingActivities": 1322053.0}
+        out = {k: {"units": {"TWD": [dict(start=start, end=end, filed="2025-04-17", fp="FY", form="20-F", val=v)]}}
+               for k, v in facts.items()}
+        out.update({k: {"units": {"TWD": [dict(end=end, filed="2025-04-17", fp="FY", form="20-F", val=v)]}}
+                    for k, v in balances.items()})
+        return {"facts": {"ifrs-full": out}}
+
+    def test_ifrs16_lease_liabilities_are_interest_bearing_debt(self):
+        # OI-226：台积电 2024 年报行 = 长期借款 + 公司债 + 一年内到期 + 租赁负债（非流动 28,755.3 + 流动 3,049.0）
+        payload = self.ifrs_facts("2024-12-31", {"LongtermBorrowings": 31824.4, "NoncurrentPortionOfNoncurrentBondsIssued": 926604.5,
+                                                 "CurrentPortionOfLongtermBorrowings": 59857.9, "NoncurrentLeaseLiabilities": 28755.3,
+                                                 "CurrentLeaseLiabilities": 3049.0, "LeaseLiabilities": 31804.3})
+        row = st.sec_extract("TSMX", "测试", payload)[0]
+        self.assertAlmostEqual(row["interest_debt"], 31824.4 + 926604.5 + 59857.9 + 28755.3 + 3049.0)
+        self.assertIn("NoncurrentLeaseLiabilities+CurrentLeaseLiabilities", row["tags_used"])
+        only_total = self.ifrs_facts("2024-12-31", {"LongtermBorrowings": 100.0, "LeaseLiabilities": 40.0})
+        self.assertAlmostEqual(st.sec_extract("TSMX", "测试", only_total)[0]["interest_debt"], 140.0)   # 缺拆分取合计
+
+    def test_ifrs16_transition_balance_before_effective_date_is_not_debt(self):
+        # 台积电 FY2019 20-F 把 IFRS 16 过渡日租赁负债 19,903.6 标在 2018-12-31；IAS 17 年度租金在经营利润内，不计
+        payload = self.ifrs_facts("2018-12-31", {"LongtermBorrowings": 100.0, "LeaseLiabilities": 19903.6})
+        row = st.sec_extract("TSMX", "测试", payload)[0]
+        self.assertAlmostEqual(row["interest_debt"], 100.0)
+        gated = st.ifrs16_gate({"fin_lease_total": 5.0, "st_debt": 1.0}.get, "ifrs-full", "2018-12-31")
+        self.assertEqual((gated("fin_lease_total"), gated("st_debt")), (None, 1.0))
+        us_gaap = st.ifrs16_gate({"fin_lease_total": 5.0}.get, "us-gaap", "2015-12-31")   # 美国准则融资／资本租赁照计
+        self.assertEqual(us_gaap("fin_lease_total"), 5.0)
 
 
 class SupplementLoaderTest(unittest.TestCase):

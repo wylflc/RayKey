@@ -61,7 +61,7 @@
 
 OI-150 前向检验按现行口径重跑到 `oi150/`（`tools/oi150_rerun.py`），结案记录 `exp_oi150_overseas_forward/` 未动。09-07 记录早于 OI-210，差异合并了 OI-210、WACC=r 与 OI-216。结论仍为「不可判」，数据前提原因不变。能估公司月 33,123 → 24,752，拒绝 10,747 → 20,463；两次都有 V 的公司月新/旧 V 中位 0.521。3 年：合并 Spearman +0.040 → +0.033，负相关年组 3 → 3/11，便宜档−比较档 +0.65 → −3.58 pp/年。5 年：+0.042 → +0.062，3 → 2/11，−0.16 → −2.67 pp/年。两项数值判据仍未达到。这组读数只作参考，见 `oi150/compare.txt`、`oi150/report.md`。
 
-## 未改余项（需用户裁定）
+## 第一轮未改余项（2026-09-28 用户裁定「按 A 股口径一并改」，见第二轮）
 
 核对台积电时另发现三处与 A 股口径不一致。以下是只读重放（`build_overseas_roic_bands.value_company`，基线 V 1543.485 TWD）：
 
@@ -85,3 +85,62 @@ OI-150 前向检验按现行口径重跑到 `oi150/`（`tools/oi150_rerun.py`）
 - `us/compare.*`：美股归因读数。
 - `oi150/{report.md,result.json,manifest.json,compare.*}`：OI-150 重跑结果。
 - 不入库（`.gitignore`）：重建前逐日状态副本、变体带、OI-150 公司月全表与复制来的输入。
+
+## 第二轮：台积电三项余项按 A 股口径（2026-09-28）
+
+用户裁定「按 A 股口径一并改」。第一轮已作为 v4.217 提交，本轮在其上改；证据见 `evidence.csv` 第 5–8 项。
+
+| 文件 | 改动 |
+| --- | --- |
+| `docs/000_Ashare_workflow.md` §6.8 | ifrs-full 有息负债另加 IFRS 16 租赁负债（非流动＋流动，缺拆分取合计），2019-01-01 之前的期末按 IAS 17 经营租赁不计；维护行有息负债含租赁负债（含列在其他流动负债内的一年内到期部分），以公允价值计量的金融负债填 `financial_liabilities`；ifrs-full 现金类不计其他流动金融资产 |
+| `scripts/fetch_overseas_statements.py` | IFRS 标签映射加 `fin_lease_noncurrent／current／total`（`NoncurrentLeaseLiabilities`／`CurrentLeaseLiabilities`／`LeaseLiabilities`）；`IFRS16_START` 与 `ifrs16_gate()` 用在年报行与 TTM 行的 `compose_debt`；`IFRS_CASH_LIKE` 去掉 `OtherCurrentFinancialAssets` |
+| `scripts/test_overseas_caliber.py`、`scripts/test_overseas_supplements.py` | ifrs-full 现金类不含其他流动金融资产；租赁负债计入、缺拆分取合计、IFRS 16 前过渡余额不计、门控只作用于 ifrs-full |
+| `data/reference/overseas_statement_overrides.csv` | 台积电 FY2025 行有息负债 1,032,988m → 1,068,416m（加租赁 35,428m），`financial_liabilities` 3,084m；2026Q2 TTM 行 1,031,674m → 1,068,556m（加 36,882m），`financial_liabilities` 2,452m |
+| 重算产物 | `overseas_roic_years.csv`、`overseas_watchlist_valuation.csv`、`data/companies/TSM_台积电/README.md` |
+| `scripts/slurm/oi226_us_rebuild.sbatch`（`STAGE=r2`）、`tools/compare_us_r2.py`、`us_r2/` | 美股状态第二轮重建与对比 |
+
+**1. IFRS 16 租赁负债计入有息负债。**
+- 数值：FY2025 附注 15 为一年内到期部分 3,833,015 千元（列在应计费用及其他流动负债）＋非流动 31,594,992 千元 = 35,428,007 千元。2026-06-30 为 3,606,345 ＋ 33,276,056 = 36,882,401 千元。companyfacts 2019–2024 年报行的非流动与流动拆分齐全，合计 17.3–32.4bn。
+- 为何计入：附注 23 财务成本列有租赁负债利息 453,631 千元，租赁利息不在营业利益里，与 A 股 `LEASE_LIAB` 计入有息负债一致。
+- 生效日：FY2019 20-F 把 IFRS 16 过渡日余额 19,903.6m 标在 2018-12-31。IAS 17 年度的租金在经营利润内，所以按 `IFRS16_START` 不计。
+
+**2. companyfacts 年报行不再把其他流动金融资产计入现金类。** 性质见第一轮第 3 项。2016–2024 年报行现金类分别减 4.1、7.3、18.6、11.0、10.7、16.6、26.0、27.2、63.1bn，与维护行一致。
+
+**3. 维护行补填 FVTPL 金融负债。**
+- 数值：资产负债表流动 FVTPL 金融负债 FY2025 为 3,083,883 千元，2026-06-30 为 2,452,333 千元，已计入有息负债。年报行 2016–2024 原已由标签组计入。
+- 未填部分：套期金融负债（817／2,563 千元）不在 ifrs-full 金融负债标签组，维护行也不填。
+
+公开日说明：
+- 一年内到期的租赁负债只在合并报表附注里披露，公开日是 2026-02-26 和 2026-08-14，晚于两条维护行的 notice_date（2026-01-15、2026-07-16）。
+- FVTPL 与非流动租赁负债是资产负债表正表行。公司 IR 站点的业绩日报表返回 403，无法核实，所以在 EDGAR 上能核实的最早公开日也是上面两个日期。
+- 做法与 OI-216 在 FY2025 行直接填审计报表数一致；as-of 2026-09-28 不受影响。
+- 若要严格按公开日生效，需要把这些数移进补录表，而补录表现有字段不含负债项。
+
+### 台积电 V 变化
+
+同第一轮方式重算（`--as-of 2026-09-28 --quotes skip`）。
+
+| 项 | V 影响 |
+| --- | --- |
+| IFRS 16 租赁负债（单项只读重放） | −0.31% |
+| 其他流动金融资产不计现金类（单项只读重放） | −0.31% |
+| FVTPL 金融负债（单项只读重放） | −0.01% |
+| 三项合计（实际重算） | 1543.485 → 1533.915 TWD（−0.62%）；243.01 → 241.50 USD |
+
+实际重算的其余读数：带 218.71~267.31 → 217.35~265.65，P/V 1.854 → 1.866（450.61 USD，09-25），ROIC0 40.7% → 39.6%，净负债/股 −90.479 → −89.024。清单其余 29 行不变。
+
+### 美股历史状态
+
+作业 27307669（`STAGE=r2`，16 核，2 分 31 秒，MaxRSS 839,849K）重建 `data/processed/us_daily_states_{adopted,hold}.csv`，与第一轮对比：
+- 逐申报带：31,948 个申报点中只有 CRH（标普 500 历史成分里唯一按 ifrs-full 取数的公司）的 7 个变了。这些是 2025-02-26 至 2026-07-30 的申报点，报告期都是 FY2019。V 从 15.2608 降到 12.8842（−15.57%），原因是 FY2019 租赁负债 1,511m EUR 计入了有息负债。CRH 没有其他流动金融资产标签。
+- 逐日状态：行数不变（1,024,486）；CRH 有 385 个交易日的 V 变化，末日 P/V 6.34 → 7.54。
+- OI-150 对 ifrs-full 公司不估值（`share_basis_unverified`），本轮不重跑。
+
+CRH 既有缺陷，未改，需另定：
+- CRH 的 20-F 自 FY2020 起改用美元列报，自 FY2023 起改交 us-gaap 10-K。
+- 美股状态仍按 ifrs-full 取数，且每个标签只取第一个币种（欧元），所以估值停在 FY2019 欧元报表，再直接除以美元股价。
+- CRH 2025-12-22 才进标普 500，P/V 6～8 远高于买入线，对美股回测没有实际影响，但这组读数不可用。
+
+港股 F10「其他金融资产(流动)」仍计现金类，不在本轮范围。OI-216 核对过海底捞，此项有利息收入。
+
+新增文件：`tools/compare_us_r2.py`；`us_r2/us_valuation_bands.csv`、`us_r2/valuation_coverage.csv`、`us_r2/compare.{txt,json}`（重建前状态副本 `us_r2/old_states_adopted.csv` 不入库）。

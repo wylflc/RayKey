@@ -1,0 +1,91 @@
+{
+ "bands_changed": [
+  {
+   "cik": "0000849395",
+   "ticker": "CRH",
+   "filed": "2025-02-26",
+   "old_status": "ok",
+   "new_status": "ok",
+   "old": "15.2608",
+   "new": "12.8842",
+   "period": "2019-12-31"
+  },
+  {
+   "cik": "0000849395",
+   "ticker": "CRH",
+   "filed": "2025-05-05",
+   "old_status": "ok",
+   "new_status": "ok",
+   "old": "15.2608",
+   "new": "12.8842",
+   "period": "2019-12-31"
+  },
+  {
+   "cik": "0000849395",
+   "ticker": "CRH",
+   "filed": "2025-08-06",
+   "old_status": "ok",
+   "new_status": "ok",
+   "old": "15.2608",
+   "new": "12.8842",
+   "period": "2019-12-31"
+  },
+  {
+   "cik": "0000849395",
+   "ticker": "CRH",
+   "filed": "2025-11-05",
+   "old_status": "ok",
+   "new_status": "ok",
+   "old": "15.2608",
+   "new": "12.8842",
+   "period": "2019-12-31"
+  },
+  {
+   "cik": "0000849395",
+   "ticker": "CRH",
+   "filed": "2026-02-18",
+   "old_status": "ok",
+   "new_status": "ok",
+   "old": "15.2608",
+   "new": "12.8842",
+   "period": "2019-12-31"
+  },
+  {
+   "cik": "0000849395",
+   "ticker": "CRH",
+   "filed": "2026-04-30",
+   "old_status": "ok",
+   "new_status": "ok",
+   "old": "15.2608",
+   "new": "12.8842",
+   "period": "2019-12-31"
+  },
+  {
+   "cik": "0000849395",
+   "ticker": "CRH",
+   "filed": "2026-07-30",
+   "old_status": "ok",
+   "new_status": "ok",
+   "old": "15.2608",
+   "new": "12.8842",
+   "period": "2019-12-31"
+  }
+ ],
+ "states": {
+  "rows_before": 1024486,
+  "rows_after": 1024486,
+  "changed": {
+   "CRH": {
+    "days": 385,
+    "first": "2025-02-25",
+    "last": "2026-09-04",
+    "last_values": [
+     "14.8708",
+     "12.4942",
+     "6.3386",
+     "7.5443"
+    ]
+   }
+  }
+ }
+}
