@@ -1,0 +1,7 @@
+candidate,control,group,P_pp,CAGR_pp,P25_pp,DD5_pp,MDD_pp,min_ratio_delta,turnover_delta,negative_flips,forced_delta,identical_nav_paths,CAGR_positive,P_positive,legacy_track_a
+R,CONTROL,full,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,14,0,0,True
+R,CONTROL,A,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,14,0,0,
+RO,CONTROL,full,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,14,0,0,True
+RO,CONTROL,A,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,14,0,0,
+CONTROL,OLD,full,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,14,0,0,True
+CONTROL,OLD,A,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,14,0,0,

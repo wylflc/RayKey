@@ -1,0 +1,605 @@
+{
+  "R": {
+    "roic_bands.csv": {
+      "file": "roic_bands.csv",
+      "rows": 319176,
+      "changed_rows": 3,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "band_high": 3,
+        "valuation_quality_notes": 3,
+        "implied_pe": 3,
+        "v_zero_growth": 3,
+        "nopat_ps": 3,
+        "max_buy_price": 3,
+        "intrinsic_value": 3,
+        "net_debt_ps": 3,
+        "pe_on_ttm_eps": 3,
+        "peak_weight": 3,
+        "band_low": 3,
+        "ev_ps": 3,
+        "v_bull": 3,
+        "v_bear": 3,
+        "valuation_quality_score": 3
+      },
+      "allowed_fields": {},
+      "changed_codes": 1,
+      "value_changed_codes": {
+        "002379": 3
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "R"
+    },
+    "roic_bands_b2.csv": {
+      "file": "roic_bands_b2.csv",
+      "rows": 319176,
+      "changed_rows": 3,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "band_high": 3,
+        "valuation_quality_notes": 3,
+        "implied_pe": 3,
+        "v_zero_growth": 3,
+        "nopat_ps": 3,
+        "max_buy_price": 3,
+        "intrinsic_value": 3,
+        "net_debt_ps": 3,
+        "pe_on_ttm_eps": 3,
+        "peak_weight": 3,
+        "band_low": 3,
+        "ev_ps": 3,
+        "v_bull": 3,
+        "v_bear": 3,
+        "valuation_quality_score": 3
+      },
+      "allowed_fields": {},
+      "changed_codes": 1,
+      "value_changed_codes": {
+        "002379": 3
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "R"
+    },
+    "roic_daily_raw.csv": {
+      "file": "roic_daily_raw.csv",
+      "rows": 15338542,
+      "changed_rows": 111,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "upside_to_low": 111,
+        "intrinsic_value": 111,
+        "band_high": 111,
+        "valuation_ratio": 111,
+        "ev_ps": 111,
+        "band_low": 111,
+        "pv_equity": 111,
+        "valuation_label": 14
+      },
+      "allowed_fields": {},
+      "changed_codes": 1,
+      "value_changed_codes": {
+        "002379": 111
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "R"
+    },
+    "roic_daily_raw_b2.csv": {
+      "file": "roic_daily_raw_b2.csv",
+      "rows": 15371505,
+      "changed_rows": 111,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "upside_to_low": 111,
+        "intrinsic_value": 111,
+        "band_high": 111,
+        "valuation_ratio": 111,
+        "ev_ps": 111,
+        "band_low": 111,
+        "pv_equity": 111,
+        "valuation_label": 14
+      },
+      "allowed_fields": {},
+      "changed_codes": 1,
+      "value_changed_codes": {
+        "002379": 111
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "R"
+    },
+    "a_share_daily_states_adopted.csv": {
+      "file": "a_share_daily_states_adopted.csv",
+      "rows": 15322745,
+      "changed_rows": 111,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "upside_to_low": 111,
+        "intrinsic_value": 111,
+        "band_high": 111,
+        "valuation_ratio": 111,
+        "ev_ps": 111,
+        "band_low": 111,
+        "pv_equity": 111,
+        "valuation_label": 14
+      },
+      "allowed_fields": {},
+      "changed_codes": 1,
+      "value_changed_codes": {
+        "002379": 111
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "R"
+    },
+    "a_share_daily_states_b2.csv": {
+      "file": "a_share_daily_states_b2.csv",
+      "rows": 15355708,
+      "changed_rows": 111,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "upside_to_low": 111,
+        "intrinsic_value": 111,
+        "band_high": 111,
+        "valuation_ratio": 111,
+        "ev_ps": 111,
+        "band_low": 111,
+        "pv_equity": 111,
+        "valuation_label": 14
+      },
+      "allowed_fields": {},
+      "changed_codes": 1,
+      "value_changed_codes": {
+        "002379": 111
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "R"
+    },
+    "a_share_daily_states_hold.csv": {
+      "file": "a_share_daily_states_hold.csv",
+      "rows": 15356191,
+      "changed_rows": 111,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "upside_to_low": 111,
+        "intrinsic_value": 111,
+        "band_high": 111,
+        "valuation_ratio": 111,
+        "ev_ps": 111,
+        "band_low": 111,
+        "pv_equity": 111,
+        "valuation_label": 14
+      },
+      "allowed_fields": {},
+      "changed_codes": 1,
+      "value_changed_codes": {
+        "002379": 111
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "R"
+    }
+  },
+  "RO": {
+    "roic_bands.csv": {
+      "file": "roic_bands.csv",
+      "rows": 319180,
+      "changed_rows": 31,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "v_zero_growth": 31,
+        "net_debt_ps": 31,
+        "nopat_ps": 29,
+        "intrinsic_value": 29,
+        "band_low": 29,
+        "v_bull": 29,
+        "band_high": 29,
+        "max_buy_price": 29,
+        "v_bear": 29,
+        "roe_ttm": 28,
+        "pe_on_ttm_eps": 28,
+        "eps0": 27,
+        "ev_ps": 27,
+        "bps_operating": 26,
+        "owner_earnings_true_ps": 26,
+        "fin_net_debt_ps": 26,
+        "external_equity_ps": 24,
+        "roe_efficiency": 24,
+        "incremental_roe": 24,
+        "g_trailing": 23,
+        "minority_book_ps": 23,
+        "external_equity_cum_ps": 23,
+        "implied_pe": 23,
+        "shares_est": 23,
+        "eps_ttm": 22,
+        "roe0": 21,
+        "roe0_normalized": 16,
+        "ttm_factor": 12,
+        "roe_trend": 8,
+        "peak_weight": 7,
+        "bps": 7,
+        "roic_nopat_mode": 6,
+        "equity_anchor_mode": 5,
+        "growth_damp": 5,
+        "valuation_quality_notes": 3,
+        "valuation_quality_score": 3,
+        "trough_weight": 2,
+        "roe_anchor": 2,
+        "reason": 1
+      },
+      "allowed_fields": {},
+      "changed_codes": 7,
+      "value_changed_codes": {
+        "600315": 12,
+        "000895": 10,
+        "002379": 3,
+        "002128": 2,
+        "002371": 1,
+        "603156": 1
+      },
+      "only_in_left": 4,
+      "only_in_right": 4,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [
+        [
+          "000895",
+          "2009-12-31",
+          "2010-04-30"
+        ],
+        [
+          "000895",
+          "2010-03-31",
+          "2010-04-30"
+        ],
+        [
+          "002128",
+          "2010-03-31",
+          "2010-04-30"
+        ],
+        [
+          "002128",
+          "2009-12-31",
+          "2010-04-30"
+        ]
+      ],
+      "sample_only_right": [
+        [
+          "000895",
+          "2009-12-31",
+          "2010-04-24"
+        ],
+        [
+          "000895",
+          "2010-03-31",
+          "2010-04-24"
+        ],
+        [
+          "002128",
+          "2010-03-31",
+          "2010-04-23"
+        ],
+        [
+          "002128",
+          "2009-12-31",
+          "2010-03-09"
+        ]
+      ],
+      "arm": "RO"
+    },
+    "roic_bands_b2.csv": {
+      "file": "roic_bands_b2.csv",
+      "rows": 319180,
+      "changed_rows": 31,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "v_zero_growth": 31,
+        "net_debt_ps": 31,
+        "nopat_ps": 29,
+        "intrinsic_value": 29,
+        "band_low": 29,
+        "v_bull": 29,
+        "band_high": 29,
+        "max_buy_price": 29,
+        "v_bear": 29,
+        "roe_ttm": 28,
+        "pe_on_ttm_eps": 28,
+        "eps0": 27,
+        "ev_ps": 27,
+        "bps_operating": 26,
+        "owner_earnings_true_ps": 26,
+        "fin_net_debt_ps": 26,
+        "external_equity_ps": 24,
+        "roe_efficiency": 24,
+        "incremental_roe": 24,
+        "g_trailing": 23,
+        "minority_book_ps": 23,
+        "external_equity_cum_ps": 23,
+        "implied_pe": 23,
+        "shares_est": 23,
+        "eps_ttm": 22,
+        "roe0": 21,
+        "roe0_normalized": 16,
+        "ttm_factor": 12,
+        "roe_trend": 8,
+        "peak_weight": 7,
+        "bps": 7,
+        "roic_nopat_mode": 6,
+        "equity_anchor_mode": 5,
+        "growth_damp": 5,
+        "valuation_quality_notes": 3,
+        "valuation_quality_score": 3,
+        "trough_weight": 2,
+        "roe_anchor": 2,
+        "reason": 1,
+        "growth_trust": 1
+      },
+      "allowed_fields": {},
+      "changed_codes": 7,
+      "value_changed_codes": {
+        "600315": 12,
+        "000895": 10,
+        "002379": 3,
+        "002128": 2,
+        "002371": 1,
+        "603156": 1
+      },
+      "only_in_left": 4,
+      "only_in_right": 4,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [
+        [
+          "000895",
+          "2009-12-31",
+          "2010-04-30"
+        ],
+        [
+          "000895",
+          "2010-03-31",
+          "2010-04-30"
+        ],
+        [
+          "002128",
+          "2010-03-31",
+          "2010-04-30"
+        ],
+        [
+          "002128",
+          "2009-12-31",
+          "2010-04-30"
+        ]
+      ],
+      "sample_only_right": [
+        [
+          "000895",
+          "2009-12-31",
+          "2010-04-24"
+        ],
+        [
+          "000895",
+          "2010-03-31",
+          "2010-04-24"
+        ],
+        [
+          "002128",
+          "2010-03-31",
+          "2010-04-23"
+        ],
+        [
+          "002128",
+          "2009-12-31",
+          "2010-03-09"
+        ]
+      ],
+      "arm": "RO"
+    },
+    "roic_daily_raw.csv": {
+      "file": "roic_daily_raw.csv",
+      "rows": 15338542,
+      "changed_rows": 1787,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "intrinsic_value": 1787,
+        "band_high": 1787,
+        "band_low": 1787,
+        "valuation_ratio": 1723,
+        "pv_equity": 1723,
+        "upside_to_low": 1689,
+        "ev_ps": 1626,
+        "band_available_at": 97,
+        "band_report_date": 36,
+        "valuation_label": 17
+      },
+      "allowed_fields": {},
+      "changed_codes": 6,
+      "value_changed_codes": {
+        "600315": 714,
+        "000895": 555,
+        "002128": 241,
+        "002379": 111,
+        "603156": 84,
+        "002371": 82
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "RO"
+    },
+    "roic_daily_raw_b2.csv": {
+      "file": "roic_daily_raw_b2.csv",
+      "rows": 15371505,
+      "changed_rows": 1787,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "intrinsic_value": 1787,
+        "band_high": 1787,
+        "band_low": 1787,
+        "valuation_ratio": 1723,
+        "pv_equity": 1723,
+        "upside_to_low": 1689,
+        "ev_ps": 1626,
+        "band_available_at": 97,
+        "band_report_date": 36,
+        "valuation_label": 20
+      },
+      "allowed_fields": {},
+      "changed_codes": 6,
+      "value_changed_codes": {
+        "600315": 714,
+        "000895": 555,
+        "002128": 241,
+        "002379": 111,
+        "603156": 84,
+        "002371": 82
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "RO"
+    },
+    "a_share_daily_states_adopted.csv": {
+      "file": "a_share_daily_states_adopted.csv",
+      "rows": 15322745,
+      "changed_rows": 1787,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "intrinsic_value": 1787,
+        "band_high": 1787,
+        "band_low": 1787,
+        "valuation_ratio": 1723,
+        "pv_equity": 1723,
+        "upside_to_low": 1689,
+        "ev_ps": 1626,
+        "band_available_at": 97,
+        "band_report_date": 36,
+        "valuation_label": 17
+      },
+      "allowed_fields": {},
+      "changed_codes": 6,
+      "value_changed_codes": {
+        "600315": 714,
+        "000895": 555,
+        "002128": 241,
+        "002379": 111,
+        "603156": 84,
+        "002371": 82
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "RO"
+    },
+    "a_share_daily_states_b2.csv": {
+      "file": "a_share_daily_states_b2.csv",
+      "rows": 15355708,
+      "changed_rows": 1787,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "intrinsic_value": 1787,
+        "band_high": 1787,
+        "band_low": 1787,
+        "valuation_ratio": 1723,
+        "pv_equity": 1723,
+        "upside_to_low": 1689,
+        "ev_ps": 1626,
+        "band_available_at": 97,
+        "band_report_date": 36,
+        "valuation_label": 20
+      },
+      "allowed_fields": {},
+      "changed_codes": 6,
+      "value_changed_codes": {
+        "600315": 714,
+        "000895": 555,
+        "002128": 241,
+        "002379": 111,
+        "603156": 84,
+        "002371": 82
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "RO"
+    },
+    "a_share_daily_states_hold.csv": {
+      "file": "a_share_daily_states_hold.csv",
+      "rows": 15356191,
+      "changed_rows": 1787,
+      "only_allowed_rows": 0,
+      "changed_fields": {
+        "intrinsic_value": 1787,
+        "band_high": 1787,
+        "band_low": 1787,
+        "valuation_ratio": 1723,
+        "pv_equity": 1723,
+        "upside_to_low": 1689,
+        "ev_ps": 1626,
+        "hold_source": 124,
+        "band_available_at": 97,
+        "band_report_date": 36,
+        "valuation_label": 20
+      },
+      "allowed_fields": {},
+      "changed_codes": 6,
+      "value_changed_codes": {
+        "600315": 714,
+        "000895": 555,
+        "002128": 241,
+        "002379": 111,
+        "603156": 84,
+        "002371": 82
+      },
+      "only_in_left": 0,
+      "only_in_right": 0,
+      "unmatched_left_codes": [],
+      "unmatched_right_codes": [],
+      "sample_only_left": [],
+      "sample_only_right": [],
+      "arm": "RO"
+    }
+  }
+}
