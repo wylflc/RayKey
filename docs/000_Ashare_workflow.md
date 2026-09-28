@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.212
+# A股选股-估值-量价操作流程 v4.213
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -308,7 +308,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 ##### 6.5.2.4 主体重置与无法估值
 
-**主体重置**（重组、资产注入、并表或借壳使旧财务主体不可比）：在 `data/processed/entity_reset_dates.csv` 登记 `security_code,security_name,reset_report_date,growth_mode,known_from,reviewed_at,note`；`reset_report_date` 取新主体首个年报期末，`growth_mode` 取 `none`（不增长）或 `trend`（按季报趋势给增长），`known_from` 取重置后首份定期报告的可得日（可得日早于它的带不施加重置；留空即一律施加）。**触发**：§6.7 第 5.5 步检查⑦「股本事件复核」报出核心池内近 3 年非送转、单次变动 ≥ 5% 的股本事件（读 `data/raw/share_changes/a_share_share_changes.csv`）；逐条核对公告后登记 `data/processed/share_event_reviews.csv`（`security_code,security_name,effective_date,change_reason,decision,reviewed_at,note`，`decision` 取 `reset`／`no_reset`），判 `reset` 者同时登记本名册；已登记的事件不再报出。§6.7 第 2 步自动读取该表：报告期 ≥ 重置日的行把比率窗口、十年守卫窗口与经营账面基年截到重置日起；重置后不足三个年报时，锚 = 最新年报比率 × TTM 因子，`none` 时 `g0 = 0`，`trend` 时 `g0 = min((TTM 因子 − 1) × 增速腿权重, g0 上限)`（TTM 因子 < 1 + `--ttm-trust-delta` 时为 0；现行增速腿权重为 0，`trend` 与 `none` 结果相同）；上年同期行早于重置日时由本行 `netprofit_yoy` 反推同期数。重置后满三个年报即回到通用路径，无需人工动作；早于重置日的行不受影响。
+**主体重置**（重组、资产注入、并表或借壳使旧财务主体不可比）：在 `data/processed/entity_reset_dates.csv` 登记 `security_code,security_name,reset_report_date,growth_mode,known_from,reviewed_at,note`；`reset_report_date` 取新主体首个年报期末，`growth_mode` 取 `none`（不增长）或 `trend`（按季报趋势给增长），`known_from` 取重置后首份定期报告的可得日（可得日早于它的带不施加重置；留空即一律施加）。**触发**：§6.7 第 5.5 步检查⑦「股本事件复核」报出核心池内近 3 年非送转、单次变动 ≥ 5% 的股本事件（读 `data/raw/share_changes/a_share_share_changes.csv`）；逐条核对公告后登记 `data/processed/share_event_reviews.csv`（`security_code,security_name,effective_date,change_reason,decision,reviewed_at,note`，`decision` 取 `reset`／`no_reset`），判 `reset` 者同时登记本名册；已登记的事件不再报出。§6.7 第 2 步自动读取该表：报告期 ≥ 重置日的行把比率窗口、十年守卫窗口与经营账面基年截到重置日起；重置后不足三个年报时，锚 = 最新年报比率 × TTM 因子，周期守卫按 `data/reference/entity_reset_guard_anchor.csv` 登记的参照恢复（峰谷两侧，坡道同 §6.5.1；OI-212，建带 `--reset-guard both`）：`s = TTM 因子 × 最新年报回报 ÷ 十年中位`，周期锚 = 最新年报比率 ÷ (最新年报回报 ÷ 五年中位)；回报在 `anchor = pre_reset`（同类业务并入）时取重置前后连续年报的 ROIC，在 `anchor = peers`（重置前主体为壳、不可比）时取所列同业逐季面板年报加权 ROE 的位置中位（至少 2 家）；未登记参照或数据不足的行不设守卫；登记重置时同时登记参照。`none` 时 `g0 = 0`，`trend` 时 `g0 = min((TTM 因子 − 1) × 增速腿权重, g0 上限)`（TTM 因子 < 1 + `--ttm-trust-delta` 时为 0；现行增速腿权重为 0，`trend` 与 `none` 结果相同）；上年同期行早于重置日时由本行 `netprofit_yoy` 反推同期数。重置后满三个年报即回到通用路径，无需人工动作；早于重置日的行不受影响。
 
 **购买法收购当年分子年化**：非同一控制下企业合并的收购当年，在 `data/reference/consolidation_events.csv` 登记 `security_code,security_name,acquiree,acquisition_date,report_period,months_consolidated,acquiree_revenue_since,acquiree_net_profit_since,source,reviewed_at,note`：`report_period` 取收购当年年报期末，`months_consolidated` 取购买日至期末的并表月数（留空按购买日算，15 日前含当月；全年并表者不登记），两项贡献取该年报「企业合并」附注「被购买方自购买日至期末的收入／净利润」（元）。§6.7 第 2 步读取该表：该年报期的 NOPAT 与 EBIT 各加 `净利润贡献 × (12 ÷ 并表月数 − 1)`，权益、股本、现金流与归母／合并净利不动。**登记触发**：检查⑦报出的发股收购经核对为非同一控制下合并者，以及用户点名的现金收购；同一控制下合并不登记。
 
@@ -362,6 +362,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --cash-caliber nonop --equity-anchor guarded \
   --restricted-cash notes_wc \
   --wacc-weights unlevered \
+  --reset-guard both \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1 \
   --out-bands data/processed/roic_bands.csv \
   --out-daily data/processed/roic_daily_raw.csv
@@ -374,6 +375,7 @@ python3 scripts/build_historical_valuation_bands.py --all --value-model roic \
   --cash-caliber nonop --equity-anchor guarded \
   --restricted-cash notes_wc \
   --wacc-weights unlevered \
+  --reset-guard both \
   --fade-shape exponential --fade-lambda 0.12 --fade-horizon 50 --roic-ic-floor 0.1 \
   --ttm-trust on --ttm-trust-delta 0.02 \
   --out-bands data/processed/roic_bands_b2.csv \

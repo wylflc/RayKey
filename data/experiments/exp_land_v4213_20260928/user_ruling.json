@@ -1,0 +1,8 @@
+{
+  "state_arm": "RO",
+  "tested_arm": "RO",
+  "ruled_at": "2026-09-28",
+  "oi212": "采纳，峰谷两侧（--reset-guard both，参照登记表 data/reference/entity_reset_guard_anchor.csv）",
+  "oi214": "登记 25 行重述前原文版本（data/reference/panel_restatement_originals.csv）",
+  "note": "买入线按对齐容差：原线合格面在 0.2pp 内保留 1.0670，否则须另请用户确认重解线"
+}
