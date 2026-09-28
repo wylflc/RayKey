@@ -1,0 +1,9 @@
+states/
+cache/
+nav/
+stats/
+errors/
+daily/
+trades/
+contrib_*_trades.csv
+__pycache__/
