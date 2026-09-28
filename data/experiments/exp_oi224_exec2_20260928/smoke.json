@@ -1,0 +1,68 @@
+{
+ "reproduces_registered_base": true,
+ "diffs": {},
+ "fields": 48,
+ "BASE": {
+  "cagr": "0.3363153747531171",
+  "mdd": "0.44524494676269355",
+  "swaps": null,
+  "log_hits": {},
+  "ledger_reasons": {}
+ },
+ "LS20": {
+  "cagr": "0.26680582799552477",
+  "mdd": "0.43265010471478216",
+  "swaps": null,
+  "log_hits": {
+   "左侧半档·建仓": "199",
+   "左侧半档·补足": "56"
+  },
+  "ledger_reasons": {
+   "左侧半档": 32
+  }
+ },
+ "LS20e": {
+  "cagr": "0.2998704312630449",
+  "mdd": "0.42210744895363994",
+  "swaps": null,
+  "log_hits": {
+   "左侧半档·建仓": "180",
+   "左侧半档·补足": "55"
+  },
+  "ledger_reasons": {
+   "左侧半档": 17
+  }
+ },
+ "DPt07": {
+  "cagr": "0.3368518557840867",
+  "mdd": "0.44526472002462414",
+  "swaps": null,
+  "log_hits": {},
+  "ledger_reasons": {
+   "深度低估": 6
+  }
+ },
+ "DPt07e": {
+  "cagr": "0.33276266463499393",
+  "mdd": "0.4461908568225156",
+  "swaps": null,
+  "log_hits": {},
+  "ledger_reasons": {
+   "深度低估": 3
+  }
+ },
+ "SZ0": {
+  "cagr": "0.31433151767587586",
+  "mdd": "0.43843145530846317",
+  "swaps": null,
+  "log_hits": {},
+  "ledger_reasons": {}
+ },
+ "SZ0e": {
+  "cagr": "0.31911642822551123",
+  "mdd": "0.43940609860825064",
+  "swaps": null,
+  "log_hits": {},
+  "ledger_reasons": {}
+ }
+}
