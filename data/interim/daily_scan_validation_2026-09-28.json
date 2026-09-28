@@ -480,5 +480,54 @@
     "publication_sha256": "3ac17cdd4279450b09d826ac44bcc3c99d7443fa80b8b6ca72542159c04d0715",
     "final_validation": "data/experiments/exp_land_v4215_20260928/final_validation.json",
     "verify": "daily_execution_guard.py verify 通过"
+  },
+  "reissue_v4216": {
+    "at_beijing": "2026-09-28 晚（第三次重发）",
+    "reason": "v4.216（OI-213 ROIC 路径研发费用资本化；买入线按 §12.1 对齐容差由 1.0495 重解为 1.0034）落地后按同一账户参数重发",
+    "jobs": {
+      "experiment_states": 27301815,
+      "experiment_backtest": 27301816,
+      "experiment_fairness": 27301817,
+      "install": 27306865
+    },
+    "execution_plan_unchanged": true,
+    "plan_after": {
+      "sell": [],
+      "buy": []
+    },
+    "eligible": {
+      "under_line": 32,
+      "trend_qualified": 5,
+      "new_unheld": [
+        "603855 华荣股份 0.9884"
+      ]
+    },
+    "swap_check": "最贵弱势持仓卫星化学持仓侧 P/V 1.0146 与华荣股份 0.9884 差 0.0262 < 0.15，不换仓",
+    "holding_pv_changes": {
+      "002648": [
+        1.2362,
+        1.0146
+      ],
+      "000651": [
+        0.4563,
+        0.4818
+      ],
+      "603529": [
+        0.9614,
+        0.9682
+      ]
+    },
+    "valid_pv": {
+      "before": 176,
+      "after": 177,
+      "note": "雅克科技恢复可估"
+    },
+    "pv_top10_change": "中材国际升至第一，阳光电源、中际联合进入，招商银行、泸州老窖移出",
+    "shadow_code_migrations": [
+      "migrations/oi213_line_20260928.json"
+    ],
+    "publication_sha256": "443e4807a6b93327bebfa1d1c894cd00836a953ad50c9b926b324fdd313638dd",
+    "final_validation": "data/experiments/exp_oi213_20260928/final_validation.json",
+    "verify": "daily_execution_guard.py verify 通过"
   }
 }

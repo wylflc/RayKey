@@ -1,0 +1,651 @@
+{
+ "execution": {
+  "BASE": {
+   "pairs": 1263,
+   "never_held": 0.37846397466349957,
+   "churn_3plus": 0.39363057324840767,
+   "stops_per_held": 1.2,
+   "rebound_share": 0.39013933547695606,
+   "premium_median": 0.18508266444998267,
+   "premium_20plus": 0.43042071197411,
+   "delay_median": 172.0,
+   "in_market_median": 0.2367382726874178
+  },
+  "BL0482": {
+   "pairs": 1263,
+   "never_held": 0.45447347585114806,
+   "churn_3plus": 0.30914368650217705,
+   "stops_per_held": 1.065312046444122,
+   "rebound_share": 0.45694444444444443,
+   "premium_median": 0.18474114441416867,
+   "premium_20plus": 0.4041237113402062,
+   "delay_median": 85,
+   "in_market_median": 0.28060128847530424
+  },
+  "BL0677": {
+   "pairs": 1263,
+   "never_held": 0.3919239904988123,
+   "churn_3plus": 0.3203125,
+   "stops_per_held": 1.046875,
+   "rebound_share": 0.4151898734177215,
+   "premium_median": 0.18181818181818166,
+   "premium_20plus": 0.40250447227191416,
+   "delay_median": 132,
+   "in_market_median": 0.23599938053471117
+  },
+  "BL0946": {
+   "pairs": 1263,
+   "never_held": 0.39667458432304037,
+   "churn_3plus": 0.38976377952755903,
+   "stops_per_held": 1.1338582677165354,
+   "rebound_share": 0.4069767441860465,
+   "premium_median": 0.189801699716714,
+   "premium_20plus": 0.45348837209302323,
+   "delay_median": 152.0,
+   "in_market_median": 0.2711904761904762
+  }
+ },
+ "traps": {
+  "BASE": {
+   "trap_contrib": -0.04222800000000001,
+   "trap_days": 2166.0,
+   "d_contrib": 0.0,
+   "d_contrib_ci": [
+    0.0,
+    0.0
+   ],
+   "d_days": 0.0,
+   "d_days_ci": [
+    0.0,
+    0.0
+   ],
+   "flag": ""
+  },
+  "BL0482": {
+   "trap_contrib": -0.1561365,
+   "trap_days": 2708.5,
+   "d_contrib": -0.1139085,
+   "d_contrib_ci": [
+    -0.23487494999999997,
+    0.00374477500000001
+   ],
+   "d_days": 542.5,
+   "d_days_ci": [
+    18.0,
+    1101.3999999999996
+   ],
+   "flag": ""
+  },
+  "BL0677": {
+   "trap_contrib": -0.1473045,
+   "trap_days": 2463.5,
+   "d_contrib": -0.10507649999999999,
+   "d_contrib_ci": [
+    -0.2255089,
+    0.0020983999999999864
+   ],
+   "d_days": 297.5,
+   "d_days_ci": [
+    -6.0,
+    1008.3749999999992
+   ],
+   "flag": ""
+  },
+  "BL0946": {
+   "trap_contrib": -0.019443000000000016,
+   "trap_days": 2155.0,
+   "d_contrib": 0.022784999999999993,
+   "d_contrib_ci": [
+    -0.0033845749999999973,
+    0.05399702499999998
+   ],
+   "d_days": -11.0,
+   "d_days_ci": [
+    -41.525,
+    57.049999999999955
+   ],
+   "flag": ""
+  }
+ },
+ "strategy": {
+  "BASE": {
+   "by_label": {
+    "一般": {
+     "cycles": 119.0,
+     "invested_share": 0.34048095033225656,
+     "contrib": 0.7320350000000002
+    },
+    "估值扩张": {
+     "cycles": 4.0,
+     "invested_share": 0.047592391395375105,
+     "contrib": 0.0394025
+    },
+    "无标签": {
+     "cycles": 3.0,
+     "invested_share": 0.002080410215391445,
+     "contrib": 0.008154999999999999
+    },
+    "未满3年": {
+     "cycles": 52.0,
+     "invested_share": 0.32140080062270704,
+     "contrib": 0.010623000000000002
+    },
+    "机会": {
+     "cycles": 53.0,
+     "invested_share": 0.2533391601281359,
+     "contrib": 3.7074625
+    },
+    "陷阱": {
+     "cycles": 13.0,
+     "invested_share": 0.04454615345200606,
+     "contrib": -0.042227999999999995
+    }
+   },
+   "cases": {
+    "O01": {
+     "held_starts": 7,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": -0.009315
+    },
+    "O02": {
+     "held_starts": 13,
+     "starts": 14,
+     "contrib_median": 0.0011790000000000012,
+     "contrib_median_held": 0.0023580000000000025
+    },
+    "O03": {
+     "held_starts": 12,
+     "starts": 14,
+     "contrib_median": 0.000132,
+     "contrib_median_held": 0.00029850000000000005
+    },
+    "O04": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O05": {
+     "held_starts": 13,
+     "starts": 14,
+     "contrib_median": 1.186831,
+     "contrib_median_held": 1.263356
+    },
+    "O06": {
+     "held_starts": 1,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": 0.004956
+    },
+    "O07": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O08": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.094244,
+     "contrib_median_held": 0.094244
+    },
+    "O09": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O10": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.30268,
+     "contrib_median_held": 0.30268
+    },
+    "O11": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O12": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O13": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "T01": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.0644225,
+     "contrib_median_held": 0.0644225
+    },
+    "T02": {
+     "held_starts": 7,
+     "starts": 14,
+     "contrib_median": -0.0033155,
+     "contrib_median_held": -0.0071
+    },
+    "T11": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": -0.1148855,
+     "contrib_median_held": -0.1148855
+    }
+   }
+  },
+  "BL0482": {
+   "by_label": {
+    "一般": {
+     "cycles": 70.5,
+     "invested_share": 0.23832009829462417,
+     "contrib": 0.583909
+    },
+    "估值扩张": {
+     "cycles": 3.5,
+     "invested_share": 0.022159405937335105,
+     "contrib": 0.08569850000000001
+    },
+    "无标签": {
+     "cycles": 1.5,
+     "invested_share": 0.00011825159074289296,
+     "contrib": 0.004203
+    },
+    "未满3年": {
+     "cycles": 51.5,
+     "invested_share": 0.5280179856467093,
+     "contrib": 0.3159100000000001
+    },
+    "机会": {
+     "cycles": 43.0,
+     "invested_share": 0.1521880545126587,
+     "contrib": 3.7200204999999995
+    },
+    "陷阱": {
+     "cycles": 13.0,
+     "invested_share": 0.04921485788398469,
+     "contrib": -0.1561365
+    }
+   },
+   "cases": {
+    "O01": {
+     "held_starts": 6,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": -0.029891
+    },
+    "O02": {
+     "held_starts": 13,
+     "starts": 14,
+     "contrib_median": 0.00757,
+     "contrib_median_held": 0.01514
+    },
+    "O03": {
+     "held_starts": 12,
+     "starts": 14,
+     "contrib_median": 0.000312,
+     "contrib_median_held": 0.000363
+    },
+    "O04": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O05": {
+     "held_starts": 13,
+     "starts": 14,
+     "contrib_median": 1.186777,
+     "contrib_median_held": 1.265085
+    },
+    "O06": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O07": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O08": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.094398,
+     "contrib_median_held": 0.094398
+    },
+    "O09": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O10": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.3923765,
+     "contrib_median_held": 0.3923765
+    },
+    "O11": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O12": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O13": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "T01": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.0233795,
+     "contrib_median_held": 0.0233795
+    },
+    "T02": {
+     "held_starts": 7,
+     "starts": 14,
+     "contrib_median": -0.0033155,
+     "contrib_median_held": -0.0071
+    },
+    "T11": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": -0.1330105,
+     "contrib_median_held": -0.1330105
+    }
+   }
+  },
+  "BL0677": {
+   "by_label": {
+    "一般": {
+     "cycles": 74.5,
+     "invested_share": 0.30075650905312823,
+     "contrib": 0.6423050000000001
+    },
+    "估值扩张": {
+     "cycles": 5.0,
+     "invested_share": 0.04511353292388211,
+     "contrib": 0.07108400000000001
+    },
+    "无标签": {
+     "cycles": 1.5,
+     "invested_share": 0.000756139569214535,
+     "contrib": 0.004014
+    },
+    "未满3年": {
+     "cycles": 40.5,
+     "invested_share": 0.3789922230681957,
+     "contrib": 0.161719
+    },
+    "机会": {
+     "cycles": 52.5,
+     "invested_share": 0.20303470897849168,
+     "contrib": 3.7266794999999986
+    },
+    "陷阱": {
+     "cycles": 11.5,
+     "invested_share": 0.058445678692074926,
+     "contrib": -0.1473045
+    }
+   },
+   "cases": {
+    "O01": {
+     "held_starts": 6,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": -0.029891
+    },
+    "O02": {
+     "held_starts": 13,
+     "starts": 14,
+     "contrib_median": 0.00757,
+     "contrib_median_held": 0.01514
+    },
+    "O03": {
+     "held_starts": 12,
+     "starts": 14,
+     "contrib_median": 0.000312,
+     "contrib_median_held": 0.000363
+    },
+    "O04": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O05": {
+     "held_starts": 13,
+     "starts": 14,
+     "contrib_median": 1.186777,
+     "contrib_median_held": 1.265085
+    },
+    "O06": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O07": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O08": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.094398,
+     "contrib_median_held": 0.094398
+    },
+    "O09": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O10": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.31298349999999997,
+     "contrib_median_held": 0.31298349999999997
+    },
+    "O11": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O12": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O13": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "T01": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.0560085,
+     "contrib_median_held": 0.0560085
+    },
+    "T02": {
+     "held_starts": 7,
+     "starts": 14,
+     "contrib_median": -0.0033155,
+     "contrib_median_held": -0.0071
+    },
+    "T11": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": -0.1330105,
+     "contrib_median_held": -0.1330105
+    }
+   }
+  },
+  "BL0946": {
+   "by_label": {
+    "一般": {
+     "cycles": 104.0,
+     "invested_share": 0.3457871558150698,
+     "contrib": 0.7096840000000002
+    },
+    "估值扩张": {
+     "cycles": 4.0,
+     "invested_share": 0.020141172585892826,
+     "contrib": 0.038859000000000005
+    },
+    "无标签": {
+     "cycles": 2.5,
+     "invested_share": 0.00012831488699616134,
+     "contrib": 0.004212
+    },
+    "未满3年": {
+     "cycles": 44.5,
+     "invested_share": 0.32876116749387674,
+     "contrib": 0.020452000000000015
+    },
+    "机会": {
+     "cycles": 54.5,
+     "invested_share": 0.2460546856747464,
+     "contrib": 3.5729349999999993
+    },
+    "陷阱": {
+     "cycles": 13.5,
+     "invested_share": 0.051335106092267796,
+     "contrib": -0.019442999999999995
+    }
+   },
+   "cases": {
+    "O01": {
+     "held_starts": 6,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": -0.029891
+    },
+    "O02": {
+     "held_starts": 13,
+     "starts": 14,
+     "contrib_median": 0.0011295000000000003,
+     "contrib_median_held": 0.0022590000000000006
+    },
+    "O03": {
+     "held_starts": 12,
+     "starts": 14,
+     "contrib_median": 0.000174,
+     "contrib_median_held": 0.000294
+    },
+    "O04": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O05": {
+     "held_starts": 13,
+     "starts": 14,
+     "contrib_median": 1.1867735,
+     "contrib_median_held": 1.265896
+    },
+    "O06": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O07": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O08": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.0853045,
+     "contrib_median_held": 0.0853045
+    },
+    "O09": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O10": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.155856,
+     "contrib_median_held": 0.155856
+    },
+    "O11": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O12": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "O13": {
+     "held_starts": 0,
+     "starts": 14,
+     "contrib_median": 0.0,
+     "contrib_median_held": null
+    },
+    "T01": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": 0.06369849999999999,
+     "contrib_median_held": 0.06369849999999999
+    },
+    "T02": {
+     "held_starts": 7,
+     "starts": 14,
+     "contrib_median": -0.0033155,
+     "contrib_median_held": -0.0071
+    },
+    "T11": {
+     "held_starts": 14,
+     "starts": 14,
+     "contrib_median": -0.135009,
+     "contrib_median_held": -0.135009
+    }
+   }
+  }
+ },
+ "flags": {
+  "BL0482": [
+   "劣化"
+  ],
+  "BL0677": [
+   "劣化"
+  ],
+  "BL0946": [
+   "劣化"
+  ]
+ }
+}

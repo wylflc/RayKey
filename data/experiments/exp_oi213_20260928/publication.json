@@ -1,0 +1,86 @@
+{
+  "job_id": "27306865",
+  "arm": "RD",
+  "installed": {
+    "roic_bands.csv": {
+      "before": {
+        "bytes": 163105507,
+        "sha256": "07f81e856866f9a239051fc1c37756e3cf742a662a967b7bbb3998350a6e17a7"
+      },
+      "after": {
+        "bytes": 163120654,
+        "sha256": "6640c993e8ec4f2bead02f4c9bb69d426ad295c1444b7b507d015a3470787637"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "before": {
+        "bytes": 163095156,
+        "sha256": "d1c5168b2e715be0fa69c6f619ef8a06fa9c1af1f7927ac940700191e5339f87"
+      },
+      "after": {
+        "bytes": 163111549,
+        "sha256": "412bd766a114791dea91956b4bcc0525be268e5a8e1f7ee0efe55e273b7e8e77"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "before": {
+        "bytes": 1995642477,
+        "sha256": "2674a9fad176faaaedecb28a38a4833f90c1fa111a0fa80f0bc634e5d43e488b"
+      },
+      "after": {
+        "bytes": 1995810255,
+        "sha256": "a7451ffcb62b4f4544017402b78de252c3396ca9be898e19f71a98bfddae2941"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "before": {
+        "bytes": 2000090199,
+        "sha256": "f4692ea6d981a550c67259c417d707a4111c9f6a3b20524412d72b3a5be6b8fb"
+      },
+      "after": {
+        "bytes": 2000259408,
+        "sha256": "4922a82274a45ca3aff69d960a41352b056a2c52945210741106ef418bcf761c"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "before": {
+        "bytes": 1993206974,
+        "sha256": "29cc498731a5c1d1a7f506f74596b1c2094ee73055cc0186e5995e49cf90aace"
+      },
+      "after": {
+        "bytes": 1993374752,
+        "sha256": "193415daa3262950e6822d67472159b8421ff45676913159e3bf07ea740f37b0"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "before": {
+        "bytes": 1997647811,
+        "sha256": "fa9da6e23c025e111b3fac979bf793e0d225d691e92760cd0c957d769432df85"
+      },
+      "after": {
+        "bytes": 1997817020,
+        "sha256": "4c02a160eb58b89394d5fa11f317db26464e057a3feffe8abed7ad4fbe1c4929"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "before": {
+        "bytes": 2069180534,
+        "sha256": "fc25fd7fc11a971961586508341cfc1210e7f30bd7824008a4ffb17d090acec1"
+      },
+      "after": {
+        "bytes": 2069341825,
+        "sha256": "0ac2a9b15255004344e7bb9e3838e1bc34fbf55d5505e3a7c0e168dd2bd0a8d3"
+      }
+    }
+  },
+  "old_full_inputs_retained": true,
+  "ruling": {
+    "state_arm": "RD",
+    "tested_arm": "RD",
+    "registered_arm": "RD_ALIGNED",
+    "ruled_at": "2026-09-28",
+    "oi213": "按机制正确性采纳 ROIC 路径研发费用资本化（证监会大类定摊销年限 3／5／10，2017 年前按研发强度回填），当晚落地并重发 09-28 计划",
+    "buy_line": 1.0034,
+    "buy_line_ruling": "采纳即含按 §12.1 对齐容差重解：原线 1.0495 合格面 19.698% → 1.0034（17.777%）"
+  }
+}
