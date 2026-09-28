@@ -7,7 +7,7 @@
 | 名单状态 | worth_attention |
 | 质量档 | L2 |
 | 参考分 | 72.20 |
-| 模型价值区间 | 22.36 ~ 27.33 HKD |
+| 模型价值区间 | 22.67 ~ 27.70 HKD |
 | 估值证据日 | 2026-08-19 |
 | 估值事件 | 中报（2026H1） |
 
@@ -15,7 +15,7 @@
 
 ROIC·增长
 
-ROIC·增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-06-30 TTM，eastmoney HK F10 TTM）：NOPAT/经营账面财年序列 0.001／0.021／0.044／0.118／0.054 → ratio0 **0.044**（cyclical_median）× 经营账面 BPS_op 18.16（稀释股数 1,382m）= 每股 NOPAT 锚 **0.805**；股本口径：十年窗 |X_y|≥5% 年份 FY2017 +0.8b／FY2018 +1.2b／FY2019 +2.3b／FY2020 +1.2b／FY2023 +1.8b／FY2025 +2.5b；年报已计累计外生权益 +2.4b（最新年报经营账面 E_op 23.6b，母公司权益 26.0b）；年报后 x -0.32/股（ttm_x；其后归母净利 1.64b、已付股息 0.15b）；BPS_op = 当期 BPS 19.60 − x − X_cum/股 +1.76 = 18.16；周期守卫 NOPAT/经营账面：当期 0.146（最新年报 0.054 × f 2.73）vs 十年中位 0.052 = 2.82×，坡道 w=1.00／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.054 + λ×(当期 − 三年中位) = 0.100，五年中位 0.044，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 0.0b；ROIC0 15.3%；WACC 10.00%（r 10%；rd 5.81%；t 11%；账面权重）；增长 g0=0.0%（来源 none：资本腿 —=min(增量ROIC —,40%)×再投资率 14%，增速腿 —），ROIC_T=min(WACC+2pp, ROIC0)=12.0%，g_T=3.0%，增速 fade 10 年、回报指数衰减 λ 0.12，终值占比 50%；净负债/股 -13.403（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 21.295 CNY/普通股**；报表币 CNY → 交易币 HKD 汇率 1.1668 → **24.85 HKD**；带 = V×[0.90,1.10]。标签：assoc=income:应占联营公司溢利;cash=balance:现金及等价物;cfo=cashflow:经营业务现金净额;dividends_paid_ytd=eastmoney:RPT_HKF10_INFO_DIVIDEND;fvtpl=balance:指定以公允价值记账之金融资产;fvtpl_c=balance:指定以公允价值记账之金融资产(流动);income_tax=income:税项;interest_expense=income:融资成本;interest_income=income:利息收入;jv=income:应占合营公司溢利;lease_c=balance:融资租赁负债(流动);lease_nc=balance:融资租赁负债(非流动);minority_equity=balance:少数股东权益;net_income=income:股东应占溢利;operating_
+ROIC·增长（工作流程海外估值口径，财年 2021~2025＋截至 2026-06-30 TTM，eastmoney HK F10 TTM）：NOPAT/经营账面财年序列 0.001／0.027／0.056／0.148／0.065 → ratio0 **0.056**（cyclical_median）× 经营账面 BPS_op 14.95（稀释股数 1,382m）= 每股 NOPAT 锚 **0.844**；股本口径：十年窗 |X_y|≥5% 年份 FY2017 +0.8b／FY2018 +1.2b／FY2019 +2.3b／FY2020 +0.8b／FY2023 +1.8b／FY2025 +2.5b；年报已计累计外生权益 +6.6b（最新年报经营账面 E_op 19.4b，母公司权益 26.0b）；年报后 x -0.13/股（ttm_x；其后归母净利 1.64b、已付股息 0.40b）；BPS_op = 当期 BPS 19.60 − x − X_cum/股 +4.78 = 14.95；周期守卫 NOPAT/经营账面：当期 0.177（最新年报 0.065 × f 2.73）vs 十年中位 0.061 = 2.92×，坡道 w=1.00／谷 v=0.00；信任度 λ=0.5，非周期锚 = 三年中位 0.065 + λ×(当期 − 三年中位) = 0.121，五年中位 0.056，ratio0 = (1−max(w,v))×非周期锚 + max(w,v)×五年中位；最新观察点回购 0.6b；ROIC0 15.3%；WACC 10.00%（r 10%；rd 5.81%；t 11%；账面权重）；增长 g0=0.0%（来源 none：资本腿 —=min(增量ROIC —,40%)×再投资率 14%，增速腿 —），ROIC_T=min(WACC+2pp, ROIC0)=12.0%，g_T=3.0%，增速 fade 10 年、回报指数衰减 λ 0.12，终值占比 50%；净负债/股 -13.317（有息负债−超额现金＋少数股东扣减，扣减取账面与账面份额×权益价值较大者）；**V = 21.586 CNY/普通股**；报表币 CNY → 交易币 HKD 汇率 1.1668 → **25.19 HKD**；带 = V×[0.90,1.10]。标签：assoc=income:应占联营公司溢利;buybacks=cashflow:回购股份;capex=cashflow:购建固定资产;cash=balance:现金及等价物;cfo=cashflow:经营业务现金净额;dep_amort=cashflow:加:折旧及摊销;dividends_paid=cashflow:已付股息(融资);fvtpl=balance:指定以公允价值记账之金融资产;fvtpl_c=balance:指定以公允价值记账之金融资产(流动);income_tax=income:税项;interest_expense=income:融资成本;interest_income=income:利息收入;jv=income:应占合营公司溢利;lease_c=balance:融资租赁负债(流动);lease_nc=balance:融资租赁负债(非流动);minority_equit
 
 <details>
 <summary>历史研究原文（非现行估值、评级或交易依据）</summary>
