@@ -6,7 +6,7 @@
   取年度值及最新 10-Q；季报按「最近完整财年 + 本期累计 − 上年同期累计」合成 TTM。
   同一期末取**最新申报**（含重述）。US-GAAP 与 IFRS（20-F）两套标签都映射。
 * 港股：东财 HK F10 三张表（`RPT_HKF10_FN_{BALANCE,INCOME,CASHFLOW}_PC`），年度值加最新季报／中报，
-  同样合成 TTM。
+  同样合成 TTM。按美国会计准则列报的港股（`HK_US_GAAP`）的「融资租赁负债」行是经营租赁负债，不计有息负债（OI-226）。
   报表货币按公司（清单内人民币列报公司显式登记）。股数取 `hong_kong_financial_indicators.csv` 最新已发行股数。
 * SEC companyfacts 尚未覆盖的已披露季报（含境外发行人 6-K、10-Q 提交前官方业绩三表），由官方财报逐项维护
   `data/reference/overseas_statement_overrides.csv`；披露事件与公开可得日只认
@@ -449,6 +449,20 @@ def hk_financial_assets(value) -> dict:
                 share=intermediation / assets if assets and assets > 0 else None, tags={})
 # 有息负债 = 贷款 + 应付票据 + 应付债券 + 可转换票据及债券 + 租赁负债（流动＋非流动），与 A 股 `roic_inputs.DEBT_FIELDS` 同口径
 HK_DEBT_KEYS = ("lt_loan", "st_loan", "notes_nc", "notes_c", "bonds", "convertibles", "lease_nc", "lease_c")
+HK_LEASE_KEYS = ("lease_nc", "lease_c")
+# §6.8（OI-226）：按美国会计准则列报的港股。F10「融资租赁负债」行对这些公司是 ASC 842 经营租赁负债（京东 FY2019–FY2025
+# 逐期等于 20-F 的 OperatingLeaseLiabilityCurrent／Noncurrent，2026-06-30 等于 6-K 业绩稿的 Operating lease liabilities
+# 10,049m／25,367m；无融资租赁标签），租赁成本已在经营溢利内扣除，不计有息负债（与 SEC us-gaap「经营租赁不计」同口径）。
+# 阿里巴巴 F10 无此行（经营租赁负债在应付帐款与其他非流动负债内），登记以防日后映射。
+HK_US_GAAP = frozenset({"09618", "09988"})
+HK_LEASE_EXCLUDED_TAG = "lease_nc+lease_c:excluded(HK_US_GAAP operating lease)"
+
+
+def hk_debt_keys(code: str) -> tuple[str, ...]:
+    """§6.8 港股 F10 有息负债所取的科目键；`HK_US_GAAP` 公司不计「融资租赁负债」两行（经营租赁负债）。"""
+    if code in HK_US_GAAP:
+        return tuple(k for k in HK_DEBT_KEYS if k not in HK_LEASE_KEYS)
+    return HK_DEBT_KEYS
 # 东财数据中心补缺源：美股利润表（报表币）、美股分红事件（每 ADR 美元）、港股分红事件（每股港币／人民币／美元）
 EM_US_INCOME_ITEMS = {"net_income": "归属于母公司股东净利润", "tci": "本公司拥有人占全面收益总额"}
 EM_HEADERS = {"User-Agent": "Mozilla/5.0", "Referer": "https://emweb.securities.eastmoney.com/"}
@@ -1275,7 +1289,9 @@ def hk_extract(code: str, name: str, tables: dict[str, list[dict]], shares: floa
         if rev is None and pretax is None:
             continue
         intexp = pick(period, "interest_expense") or 0.0
-        debt = sum(pick(period, k) or 0.0 for k in HK_DEBT_KEYS)
+        debt = sum(pick(period, k) or 0.0 for k in hk_debt_keys(code))
+        if code in HK_US_GAAP:
+            tags["interest_debt"] = HK_LEASE_EXCLUDED_TAG
         fin = hk_financial_assets(lambda k: pick(period, k))
         f10_equity = (pick(period, "assoc"), pick(period, "jv"))
         parts = {"interest_income": pick(period, "interest_income"), "investment_gains": pick(period, "investment_gains"),
@@ -1361,7 +1377,9 @@ def hk_current_extract(code: str, name: str, tables: dict[str, list[dict]], shar
     interest = ttm("interest_expense") or 0.0
     total_eq, parent_eq = pick("current", "total_equity"), pick("current", "parent_equity")
     minority = pick("current", "minority_equity") or 0.0
-    debt = sum(pick("current", key) or 0.0 for key in HK_DEBT_KEYS)
+    debt = sum(pick("current", key) or 0.0 for key in hk_debt_keys(code))
+    if code in HK_US_GAAP:
+        tags["interest_debt"] = HK_LEASE_EXCLUDED_TAG
     fin = hk_financial_assets(lambda k: pick("current", k))
 
     def ttm_f10(key: str) -> float | None:

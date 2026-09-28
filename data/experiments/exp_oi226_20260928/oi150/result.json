@@ -1,0 +1,335 @@
+{
+  "outcome": "不可判",
+  "reasons": [
+    "原方案无证券映射/无观测价格的公司月并集超过15%",
+    "原股票池的营收 frame 不能全部确认在入池前可得",
+    "3年各档缺失率不能全部确认不超过20%",
+    "5年各档缺失率不能全部确认不超过20%",
+    "SEC拆股事实与原始价格/公司行动存在日期或覆盖差异"
+  ],
+  "company_months": 52800,
+  "companies": 653,
+  "status": {
+    "ok": 24752,
+    "no_annual": 4382,
+    "rejected": 20463,
+    "no_ticker": 1786,
+    "ambiguous_ticker": 115,
+    "currency_unverified": 383,
+    "no_price_at_observation": 769,
+    "no_price": 150
+  },
+  "universe_pit": {
+    "available": 2884,
+    "filed_after_entry": 1516
+  },
+  "unknown_bucket": 28055,
+  "prereg_market_missing": 9605,
+  "prereg_market_missing_share": 0.1819128787878788,
+  "price_status": {
+    "ok": 523,
+    "no_ticker": 104,
+    "ambiguous_ticker": 13,
+    "no_price": 13
+  },
+  "horizons": {
+    "3": {
+      "n": 24679,
+      "excluded": 28121,
+      "excluded_share": 0.532594696969697,
+      "rho": 0.03346850339367483,
+      "negative_groups": 3,
+      "total_groups": 11,
+      "gap_pp": -3.577322529999999,
+      "descriptive_criteria_pass": false,
+      "groups": [
+        {
+          "year": 2010,
+          "n": 1719,
+          "rho": -0.005594748615147071
+        },
+        {
+          "year": 2011,
+          "n": 2321,
+          "rho": -0.08073298304122883
+        },
+        {
+          "year": 2012,
+          "n": 2306,
+          "rho": 0.04344214946598723
+        },
+        {
+          "year": 2013,
+          "n": 2364,
+          "rho": 0.10080122974583829
+        },
+        {
+          "year": 2014,
+          "n": 2487,
+          "rho": 0.11326379852362736
+        },
+        {
+          "year": 2015,
+          "n": 2259,
+          "rho": 0.02237828125003432
+        },
+        {
+          "year": 2016,
+          "n": 2296,
+          "rho": 0.16142187350994186
+        },
+        {
+          "year": 2017,
+          "n": 2226,
+          "rho": 0.24848229386780507
+        },
+        {
+          "year": 2018,
+          "n": 2357,
+          "rho": 0.10368879598018801
+        },
+        {
+          "year": 2019,
+          "n": 2250,
+          "rho": 0.03199703816579476
+        },
+        {
+          "year": 2020,
+          "n": 2094,
+          "rho": -0.07597379186585651
+        }
+      ],
+      "buckets": [
+        {
+          "bucket": "[0,0.8)",
+          "n": 2213,
+          "companies": 161,
+          "median": 0.0694325611,
+          "known_missing": 3,
+          "missing_lower": 0.0013537906137184115,
+          "missing_upper": 0.9268937266690892
+        },
+        {
+          "bucket": "[0.8,1.0454)",
+          "n": 1918,
+          "companies": 164,
+          "median": 0.0799182293,
+          "known_missing": 3,
+          "missing_lower": 0.0015616866215512754,
+          "missing_upper": 0.9360154790499066
+        },
+        {
+          "bucket": "[1.0454,1.2)",
+          "n": 1396,
+          "companies": 192,
+          "median": 0.1064297822,
+          "known_missing": 2,
+          "missing_lower": 0.001430615164520744,
+          "missing_upper": 0.9526024513631888
+        },
+        {
+          "bucket": "[1.2,1.6)",
+          "n": 4313,
+          "companies": 263,
+          "median": 0.1156914546,
+          "known_missing": 1,
+          "missing_lower": 0.0002318034306907742,
+          "missing_upper": 0.8667552287682659
+        },
+        {
+          "bucket": "[1.6,2)",
+          "n": 4474,
+          "companies": 287,
+          "median": 0.11658529945,
+          "known_missing": 29,
+          "missing_lower": 0.006440151010437486,
+          "missing_upper": 0.862583696787272
+        },
+        {
+          "bucket": "[2,2.4257)",
+          "n": 3459,
+          "companies": 253,
+          "median": 0.1070859308,
+          "known_missing": 21,
+          "missing_lower": 0.00603448275862069,
+          "missing_upper": 0.8903123513556366
+        },
+        {
+          "bucket": "[2.4257,4)",
+          "n": 5258,
+          "companies": 244,
+          "median": 0.09753053845,
+          "known_missing": 7,
+          "missing_lower": 0.0013295346628679962,
+          "missing_upper": 0.8421968787515006
+        },
+        {
+          "bucket": "[4,99)",
+          "n": 1648,
+          "companies": 124,
+          "median": 0.10887356555,
+          "known_missing": 0,
+          "missing_lower": 0.0,
+          "missing_upper": 0.9445173888159445
+        }
+      ],
+      "terminal_count": 478,
+      "action_warning_count": 20717
+    },
+    "5": {
+      "n": 24662,
+      "excluded": 28138,
+      "excluded_share": 0.5329166666666667,
+      "rho": 0.06220380758907044,
+      "negative_groups": 2,
+      "total_groups": 11,
+      "gap_pp": -2.6700603300000014,
+      "descriptive_criteria_pass": false,
+      "groups": [
+        {
+          "year": 2010,
+          "n": 1719,
+          "rho": 0.06366021066510168
+        },
+        {
+          "year": 2011,
+          "n": 2317,
+          "rho": -0.0017937090371360237
+        },
+        {
+          "year": 2012,
+          "n": 2309,
+          "rho": 0.04588172326289489
+        },
+        {
+          "year": 2013,
+          "n": 2364,
+          "rho": 0.017618633011162833
+        },
+        {
+          "year": 2014,
+          "n": 2487,
+          "rho": 0.15649721590236454
+        },
+        {
+          "year": 2015,
+          "n": 2248,
+          "rho": 0.15394257368387734
+        },
+        {
+          "year": 2016,
+          "n": 2296,
+          "rho": 0.06734824926114011
+        },
+        {
+          "year": 2017,
+          "n": 2226,
+          "rho": 0.0962782640277765
+        },
+        {
+          "year": 2018,
+          "n": 2357,
+          "rho": 0.14469020260455479
+        },
+        {
+          "year": 2019,
+          "n": 2250,
+          "rho": 0.07768856203209708
+        },
+        {
+          "year": 2020,
+          "n": 2089,
+          "rho": -0.0016722691154082573
+        }
+      ],
+      "buckets": [
+        {
+          "bucket": "[0,0.8)",
+          "n": 2211,
+          "companies": 161,
+          "median": 0.0526860851,
+          "known_missing": 5,
+          "missing_lower": 0.002256317689530686,
+          "missing_upper": 0.9269597965049057
+        },
+        {
+          "bucket": "[0.8,1.0454)",
+          "n": 1918,
+          "companies": 165,
+          "median": 0.0727758425,
+          "known_missing": 3,
+          "missing_lower": 0.0015616866215512754,
+          "missing_upper": 0.9360154790499066
+        },
+        {
+          "bucket": "[1.0454,1.2)",
+          "n": 1397,
+          "companies": 193,
+          "median": 0.0946346298,
+          "known_missing": 1,
+          "missing_lower": 0.000715307582260372,
+          "missing_upper": 0.9525684989644518
+        },
+        {
+          "bucket": "[1.2,1.6)",
+          "n": 4312,
+          "companies": 262,
+          "median": 0.09947644580000001,
+          "known_missing": 2,
+          "missing_lower": 0.0004636068613815484,
+          "missing_upper": 0.8667861225246378
+        },
+        {
+          "bucket": "[1.6,2)",
+          "n": 4472,
+          "companies": 286,
+          "median": 0.09429965435,
+          "known_missing": 31,
+          "missing_lower": 0.006884299355984899,
+          "missing_upper": 0.8626451256219669
+        },
+        {
+          "bucket": "[2,2.4257)",
+          "n": 3457,
+          "companies": 253,
+          "median": 0.0889459406,
+          "known_missing": 23,
+          "missing_lower": 0.0066091954022988505,
+          "missing_upper": 0.8903757729506897
+        },
+        {
+          "bucket": "[2.4257,4)",
+          "n": 5258,
+          "companies": 244,
+          "median": 0.09188826159999999,
+          "known_missing": 7,
+          "missing_lower": 0.0013295346628679962,
+          "missing_upper": 0.8421968787515006
+        },
+        {
+          "bucket": "[4,99)",
+          "n": 1637,
+          "companies": 124,
+          "median": 0.1110831271,
+          "known_missing": 11,
+          "missing_lower": 0.006674757281553398,
+          "missing_upper": 0.9448877217789449
+        }
+      ],
+      "terminal_count": 880,
+      "action_warning_count": 20701
+    }
+  },
+  "integrity": {
+    "exact_original_observations": true,
+    "duplicate_observations": 0,
+    "future_filed": 0,
+    "inputs_match_manifest": true
+  },
+  "artifacts": {
+    "pv_monthly.csv": "e5b7b3dd47fd65bf1b999e2d7c76e3fde20cec3aab2051c58bdba896073593cc",
+    "universe_pit_audit.csv": "b460a5309141b665d1b8cbd9d3697b289fb50953000a99ae673f0056bea853ce",
+    "corporate_action_audit.csv": "2b380f8790819f1b4ea6d620e7e5529612af49af12ec35e50a0228fb3ec0ea46",
+    "price_sources.csv": "7d3e1d60ddf85eb12f15af42d4cd3af37bd5b2bcbbe2cacf48da2395be4b418c"
+  }
+}

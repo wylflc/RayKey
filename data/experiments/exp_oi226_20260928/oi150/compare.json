@@ -1,0 +1,104 @@
+{
+ "outcome": [
+  "不可判",
+  "不可判"
+ ],
+ "reasons": [
+  [
+   "原方案无证券映射/无观测价格的公司月并集超过15%",
+   "原股票池的营收 frame 不能全部确认在入池前可得",
+   "3年各档缺失率不能全部确认不超过20%",
+   "5年各档缺失率不能全部确认不超过20%",
+   "SEC拆股事实与原始价格/公司行动存在日期或覆盖差异"
+  ],
+  [
+   "原方案无证券映射/无观测价格的公司月并集超过15%",
+   "原股票池的营收 frame 不能全部确认在入池前可得",
+   "3年各档缺失率不能全部确认不超过20%",
+   "5年各档缺失率不能全部确认不超过20%",
+   "SEC拆股事实与原始价格/公司行动存在日期或覆盖差异"
+  ]
+ ],
+ "status": [
+  {
+   "ok": 33123,
+   "no_annual": 4362,
+   "rejected": 10747,
+   "no_ticker": 2593,
+   "ambiguous_ticker": 190,
+   "currency_unverified": 383,
+   "no_price_at_observation": 1096,
+   "no_price": 306
+  },
+  {
+   "ok": 24752,
+   "no_annual": 4382,
+   "rejected": 20463,
+   "no_ticker": 1786,
+   "ambiguous_ticker": 115,
+   "currency_unverified": 383,
+   "no_price_at_observation": 769,
+   "no_price": 150
+  }
+ ],
+ "3": {
+  "n": [
+   33000,
+   24679
+  ],
+  "rho": [
+   0.03966023442603468,
+   0.03346850339367483
+  ],
+  "negative_groups": [
+   3,
+   3
+  ],
+  "gap_pp": [
+   0.6452482149999994,
+   -3.577322529999999
+  ],
+  "descriptive_criteria_pass": [
+   false,
+   false
+  ]
+ },
+ "5": {
+  "n": [
+   32977,
+   24662
+  ],
+  "rho": [
+   0.04212226821607527,
+   0.06220380758907044
+  ],
+  "negative_groups": [
+   3,
+   2
+  ],
+  "gap_pp": [
+   -0.15519360000000038,
+   -2.6700603300000014
+  ],
+  "descriptive_criteria_pass": [
+   false,
+   false
+  ]
+ },
+ "values": {
+  "both_valued": 27231,
+  "changed": 27231,
+  "ratio_median": 0.5211181963520047,
+  "status_moves": {
+   "ok→no_annual": 20,
+   "ok→rejected": 8667,
+   "rejected→ok": 316,
+   "ambiguous_ticker→rejected": 82,
+   "rejected→ambiguous_ticker": 7,
+   "no_ticker→rejected": 825,
+   "rejected→no_ticker": 18,
+   "no_price_at_observation→rejected": 327,
+   "no_price→rejected": 156
+  }
+ }
+}

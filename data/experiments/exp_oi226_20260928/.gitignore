@@ -1,0 +1,16 @@
+__pycache__/
+*.log
+# 重建前逐日状态副本（160 MB）与归因变体的逐申报带（可由 tools/us_states.py 重建）
+us/old_states_adopted.csv
+us/us_valuation_bands_oi210.csv
+us/us_valuation_bands_pre4214.csv
+us/valuation_coverage_oi210.csv
+us/valuation_coverage_pre4214.csv
+# OI-150 重跑：公司月全表与复制来的输入、与原记录相同的审计表不入库
+oi150/pv_monthly.csv
+oi150/universe.csv
+oi150/universe_ciks.csv
+oi150/price_sources.csv
+oi150/execution_20260907.md
+oi150/universe_pit_audit.csv
+oi150/corporate_action_audit.csv

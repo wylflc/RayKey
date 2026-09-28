@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.216
+# A股选股-估值-量价操作流程 v4.217
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -452,17 +452,17 @@ python3 scripts/build_a_share_core_valuation_pool.py \
 
 **输入符号与拒绝传播**：SEC 的纯利息费用标签按每个年度／累计期间的费用金额正值统一，再合成 TTM；不得对合成结果取绝对值代替逐期统一，所得税收益及其他有经济含义的正负值保留。零增长与增长路径均在各自企业价值的股权桥之后执行 §6.5.1 薄权益守卫，固定扣减按该节的净金融负债与少数股东账面下界口径计算；拒绝后清空当前带、模型价值和 P/V，档案显示原因，不回退历史带。
 
-**海外估值**：模型价值按 §6.5.1 的 ROIC 引擎由三大报表重算，折现率、终值回报、终值增长、回报衰减、投入资本下限与零增长锚全部取 §6.5.1 与 §6.7 第 2 步的生产参数（r = 10%、`ROIC_T = min(WACC + 2pp, ROIC0)`、g_T = 3%、整本回报指数衰减、投入资本 ≥ 0.1 × 总权益），不按市场、国家或质量档调整；最新季报／中报按「最近完整财年＋本期累计−上年同期累计」合成 TTM 作为当前观察点，年度历史仍用于 ROIC0、增量 ROIC 与再投资率。报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（`FINANCIAL_KEEP`）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」。三表来源：美股 SEC XBRL companyfacts（标签按经济含义组合，唯一实现 `fetch_overseas_statements.compose_sum`／`compose_debt`：合并税前利润取合并标签，缺则境内＋境外、再缺持续经营净利＋所得税，不得由境内单项兜底；有息负债 = 非流动长期债务／票据 + 流动债务（`DebtCurrent` 存在即整体取用）+ 融资租赁负债，同一层级只取一次、含租赁标签不再叠加租赁、经营租赁不计；ifrs-full 非流动层有借款合计（`NoncurrentPortionOfNoncurrentBorrowings`）只取合计，否则长期借款与应付公司债两行相加；折旧摊销取合计标签，缺则折旧＋无形资产摊销；年报与季报 TTM 同规，`tags_used` 记所用组合）、港股东财 HK F10；SEC 结构化事实尚未覆盖的已披露季报（包括境外发行人 6-K 和 10-Q 提交前的官方业绩三表）按官方财报维护 `data/reference/overseas_statement_overrides.csv`（原始文件不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。F10 与 companyfacts 取不到的单项按年报／中报附注维护 `data/reference/overseas_statement_supplements.csv`：字段限 `ebit_financial_income_in_operating`（港股经营溢利内未拆出的金融资产收益）、`equity_method_income`（F10 无联营／合营行的港股权益法份额）与 `other_financial_assets`（港股与美股的非流动金融资产，整值替换该期抽取值，TTM 期无值时沿用 15 个月内最近一期）；每行只自 `evidence_date` 起生效，维护行中晚于该行 notice_date 公开的字段也登记于此表；损益项 TTM = 年报 + 本期累计 − 上年同期累计，三期缺一、公司或字段未知、键重复、缺来源或公开日早于期末即中止取数；唯一实现 `fetch_overseas_statements.load_statement_supplements`／`apply_balance_supplements`。港股 F10 分页按报告期与科目代码排序，下载后有重复行即视为不完整（`hk_download`）。
+**海外估值**：模型价值按 §6.5.1 的 ROIC 引擎由三大报表重算，折现率、终值回报、终值增长、回报衰减、投入资本下限与零增长锚全部取 §6.5.1 与 §6.7 第 2 步的生产参数（r = 10%、`ROIC_T = min(WACC + 2pp, ROIC0)`、g_T = 3%、整本回报指数衰减、投入资本 ≥ 0.1 × 总权益），不按市场、国家或质量档调整；最新季报／中报按「最近完整财年＋本期累计−上年同期累计」合成 TTM 作为当前观察点，年度历史仍用于 ROIC0、增量 ROIC 与再投资率。报表币按 `data/reference/overseas_valuation_inputs.csv` 的汇率折到交易币、ADR 按普通股数折算；金融企业（`FINANCIAL_KEEP`）ROIC 不适用，沿用档案带并标明；ROIC 路径被拒或无三表源（韩股、未申报公司）一律「无法估值」。三表来源：美股 SEC XBRL companyfacts（标签按经济含义组合，唯一实现 `fetch_overseas_statements.compose_sum`／`compose_debt`：合并税前利润取合并标签，缺则境内＋境外、再缺持续经营净利＋所得税，不得由境内单项兜底；有息负债 = 非流动长期债务／票据 + 流动债务（`DebtCurrent` 存在即整体取用）+ 融资租赁负债，同一层级只取一次、含租赁标签不再叠加租赁、经营租赁不计；ifrs-full 非流动层有借款合计（`NoncurrentPortionOfNoncurrentBorrowings`）只取合计，否则长期借款与应付公司债两行相加；折旧摊销取合计标签，缺则折旧＋无形资产摊销；年报与季报 TTM 同规，`tags_used` 记所用组合）、港股东财 HK F10（有息负债 = 短期与长期贷款＋应付票据＋应付债券＋可转换票据及债券＋流动与非流动「融资租赁负债」；按美国会计准则列报的港股登记于 `HK_US_GAAP`，其「融资租赁负债」行是经营租赁负债、租赁成本已在经营溢利内扣除，不计有息负债，与 SEC us-gaap 经营租赁同口径；唯一实现 `fetch_overseas_statements.hk_debt_keys`）；SEC 结构化事实尚未覆盖的已披露季报（包括境外发行人 6-K 和 10-Q 提交前的官方业绩三表）按官方财报维护 `data/reference/overseas_statement_overrides.csv`（有息负债按上述层级规则填列，ifrs-full 的长期银行借款与应付公司债两行都计；原始文件不入库，提取结果 `data/interim/overseas_roic_years.csv` 入库）。F10 与 companyfacts 取不到的单项按年报／中报附注维护 `data/reference/overseas_statement_supplements.csv`：字段限 `ebit_financial_income_in_operating`（港股经营溢利内未拆出的金融资产收益）、`equity_method_income`（F10 无联营／合营行的港股权益法份额）与 `other_financial_assets`（港股与美股的非流动金融资产，整值替换该期抽取值，TTM 期无值时沿用 15 个月内最近一期）；每行只自 `evidence_date` 起生效，维护行中晚于该行 notice_date 公开的字段也登记于此表；损益项 TTM = 年报 + 本期累计 − 上年同期累计，三期缺一、公司或字段未知、键重复、缺来源或公开日早于期末即中止取数；唯一实现 `fetch_overseas_statements.load_statement_supplements`／`apply_balance_supplements`。港股 F10 分页按报告期与科目代码排序，下载后有重复行即视为不完整（`hk_download`）。
 
-**非经营金融资产与 EBIT（§6.5.1 第 3 条的海外取数）**：超额现金 = max(0, 现金类 − 2% 营收) + 其他金融资产（现金类为流动项目，其他金融资产为非流动项目；官方业绩稿维护行未列示后者时沿用 15 个月内最近年报的金额），EBIT 剔除这些资产的收益，以公允价值计量的金融负债与其他金融负债（ifrs-full、港股）计入有息负债；标签组与合并规则的唯一实现为 `fetch_overseas_statements.sec_financial_assets`／`hk_financial_assets`／`nonop_ebit`／`hk_ebit`，观察清单与美股历史状态共用。同一经济项目有多个候选标签时取最大者（正表合计行 ≥ 附注子项）；权益法投资（联营、合营）及其损益留在投入资本与 EBIT。
+**非经营金融资产与 EBIT（§6.5.1 第 3 条的海外取数）**：超额现金 = max(0, 现金类 − 2% 营收) + 其他金融资产（现金类为流动项目，另含 SEC 现金合计标签内列在其他资产的非流动受限现金；其他金融资产为非流动项目，官方业绩稿维护行未列示时沿用 15 个月内最近年报的金额），EBIT 剔除这些资产的收益，以公允价值计量的金融负债与其他金融负债（ifrs-full、港股）计入有息负债；标签组与合并规则的唯一实现为 `fetch_overseas_statements.sec_financial_assets`／`hk_financial_assets`／`nonop_ebit`／`hk_ebit`，观察清单与美股历史状态共用。同一经济项目有多个候选标签时取最大者（正表合计行 ≥ 附注子项）；权益法投资（联营、合营）及其损益留在投入资本与 EBIT。
 
 | 来源 | 现金类 | 其他金融资产 | EBIT |
 | --- | --- | --- | --- |
-| SEC us-gaap | 现金及等价物（含受限现金）＋流动证券（与流动债券＋公允价值股权证券取大） | 非流动债券与持有至到期投资＋max(非权益法股权投资，长期投资合计 − 权益法投资 − 非流动债券 − 已计入流动的公允价值股权证券) | 经营利润＋权益法投资损益；经营利润超出税前利润的部分大于已识别的营业外费用（利息、营业外净损失、投资损失）时，改为税前利润 − 净利息 − 投资损益 |
+| SEC us-gaap | 现金及等价物（含流动与非流动受限现金）＋流动证券（与流动债券＋公允价值股权证券取大） | 非流动债券与持有至到期投资＋max(非权益法股权投资，长期投资合计 − 权益法投资 − 非流动债券 − 已计入流动的公允价值股权证券) | 经营利润＋权益法投资损益；经营利润超出税前利润的部分大于已识别的营业外费用（利息、营业外净损失、投资损失）时，改为税前利润 − 净利息 − 投资损益 |
 | SEC ifrs-full | 现金及等价物＋以摊余成本、公允价值计量的流动金融资产与其他流动金融资产 | 以摊余成本、公允价值计量的非流动金融资产 | 经营利润＋权益法投资份额 |
 | 港股 F10 | 现金及等价物＋受限制存款及现金＋短期存款＋短期投资＋以公允价值记账与其他的流动金融资产 | 非流动现金及等价物＋中长期存款＋证券投资＋以公允价值记账与其他的非流动金融资产 | 经营溢利 − 其他收益 − 补充表经营溢利内金融资产收益＋应占联营／合营公司溢利（F10 无此行时取补充表权益法份额）；无经营溢利时为除税前溢利＋融资成本 − 利息收入（F10 无此行时取补充表值）− 其他收益 |
 
-受限现金（§6.5.1 第 3 条 OI-219）：港股 F10「应付票据」计入有息负债，担保它的受限制存款照计现金类、与之相抵，不重复计；SEC 与港股的受限现金无受限原因的结构化来源，照计现金类，与 A 股未核定的年报同。
+受限现金（§6.5.1 第 3 条 OI-219）：港股 F10「应付票据」计入有息负债，担保它的受限制存款照计现金类、与之相抵，不重复计；其余受限现金（含 SEC 列在其他资产的非流动部分）照计现金类：为应付票据以外事项质押或托管的与 A 股同计，SEC 与港股无受限原因的结构化来源时与 A 股未核定的年报同。
 
 金融中介负债（客户存款、应付客户款、同业存放、拆入、卖出回购、向中央银行借款）≥ 总资产 20% 的公司按类金融处理：不在 `FINANCIAL_KEEP` 者判「无法估值」；受监管隔离的客户资金不计超额现金。
 
@@ -483,7 +483,7 @@ python3 scripts/build_a_share_core_valuation_pool.py --md-only --quotes fetch --
 1. 写逐票档案 `data/companies/<代码>_<名称>/README.md`（质量档、四维分与旗标、模型价值区间与方法、参考分理由、跟踪指标、复核触发）。
 2. `data/processed/overseas_watchlist_valuation.csv` 加一行：登记 `attention_class`，`quality_tier` 按 §5.7 定档；`boundary_pending` 与 `garbage` 的档位和分数留空，`buy_eligibility` 恒为 `off_pipeline_watch_only`，`dossier_dir` 指向第 1 步目录。
 3. `data/reference/overseas_report_evidence.csv` 加最新定期报告的证据行。
-4. 港股在 `fetch_overseas_statements.py` 的 `HK_REPORT_CCY` 与 `build_overseas_roic_bands.py` 的 `COMPANY_CFG` 登记；银行／保险／金融控股进 `FINANCIAL_KEEP`，带取档案带。
+4. 港股在 `fetch_overseas_statements.py` 的 `HK_REPORT_CCY` 与 `build_overseas_roic_bands.py` 的 `COMPANY_CFG` 登记，按美国会计准则列报的另登记 `HK_US_GAAP`；银行／保险／金融控股进 `FINANCIAL_KEEP`，带取档案带。
 5. 依次运行本节命令并重出阅读版；三表取数不可得时 `build_overseas_roic_bands.py` 判「无法估值」。
 6. 按 §2 写决策日志。
 

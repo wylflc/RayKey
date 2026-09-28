@@ -1,0 +1,6 @@
+结论 不可判 → 不可判；公司月 52800 → 52800
+状态 {'ok': 33123, 'no_annual': 4362, 'rejected': 10747, 'no_ticker': 2593, 'ambiguous_ticker': 190, 'currency_unverified': 383, 'no_price_at_observation': 1096, 'no_price': 306}
+  → {'ok': 24752, 'no_annual': 4382, 'rejected': 20463, 'no_ticker': 1786, 'ambiguous_ticker': 115, 'currency_unverified': 383, 'no_price_at_observation': 769, 'no_price': 150}
+3年：有收益公司月 33000 → 24679；合并 Spearman +0.03966 → +0.03347；负相关年组 3 → 3/11；便宜档−比较档 +0.65 → -3.58 pp/年；两项判据 False → False
+5年：有收益公司月 32977 → 24662；合并 Spearman +0.04212 → +0.06220；负相关年组 3 → 2/11；便宜档−比较档 -0.16 → -2.67 pp/年；两项判据 False → False
+两次都有 V 的公司月 27231，V 变化 27231，新/旧 V 中位 0.5211181963520047；状态迁移 {'ok→rejected': 8667, 'no_ticker→rejected': 825, 'no_price_at_observation→rejected': 327, 'rejected→ok': 316, 'no_price→rejected': 156, 'ambiguous_ticker→rejected': 82, 'ok→no_annual': 20, 'rejected→no_ticker': 18}

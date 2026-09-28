@@ -153,7 +153,7 @@ class MaterializedEvidenceTest(unittest.TestCase):
 
 
 class HkInterestDebtTest(unittest.TestCase):
-    """OI-133：港股有息负债须计入租赁负债、应付债券与可转换票据。"""
+    """OI-133：港股有息负债须计入租赁负债、应付债券与可转换票据；OI-226：按美国会计准则列报者的经营租赁负债不计。"""
 
     @staticmethod
     def _tables(period: str, balance: dict[str, float], date_type: str = "001") -> dict[str, list[dict]]:
@@ -194,6 +194,26 @@ class HkInterestDebtTest(unittest.TestCase):
         self.assertIsNotNone(row)
         self.assertEqual(row["period"], "2026-06-30")
         self.assertAlmostEqual(row["interest_debt"], self._EXPECTED_DEBT)
+
+    def test_us_gaap_reporter_excludes_operating_lease_rows(self):
+        # OI-226：京东（美国会计准则）的 F10「融资租赁负债」是经营租赁负债，年报与 TTM 都不计有息负债；其余贷款、票据照计
+        self.assertIn("09618", statements.HK_US_GAAP)
+        annual_tables = self._tables("2025-12-31", self._BALANCE)
+        annual = statements.hk_extract("09618", "京东集团", annual_tables, 10.0)[0]
+        self.assertAlmostEqual(annual["interest_debt"], self._EXPECTED_DEBT - 70.0 - 15.0)
+        self.assertIn(f"interest_debt={statements.HK_LEASE_EXCLUDED_TAG}", annual["tags_used"])
+        self.assertNotIn("lease_nc=balance:", annual["tags_used"])
+        interim = self._tables("2026-06-30", self._BALANCE, date_type="002")
+        previous = self._tables("2025-06-30", self._BALANCE, date_type="002")
+        tables = {kind: annual_tables[kind] + interim[kind] + previous[kind] for kind in annual_tables}
+        row = statements.hk_current_extract("09618", "京东集团", tables, 10.0, [annual], evidence_date="2026-08-13")
+        self.assertAlmostEqual(row["interest_debt"], self._EXPECTED_DEBT - 70.0 - 15.0)
+        self.assertAlmostEqual(annual["invested_capital"],
+                               max(annual["interest_debt"] + 900.0 - annual["excess_cash"], statements.IC_FLOOR * 900.0))
+
+    def test_us_gaap_registry_covers_registered_hong_kong_names_only(self):
+        self.assertEqual(statements.hk_debt_keys("00700"), statements.HK_DEBT_KEYS)       # IFRS 16 租赁负债照计
+        self.assertTrue(statements.HK_US_GAAP <= set(statements.HK_REPORT_CCY))
 
 
 class RefreshFallbackTest(unittest.TestCase):
