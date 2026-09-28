@@ -1,0 +1,16 @@
+{
+ "reproduces_registered_base": true,
+ "diffs": {},
+ "BASE": {
+  "cagr": "0.3363153747531171",
+  "bank_buys": 726,
+  "bank_first_buys": 123,
+  "bank_first_buy_max_pv": 1.033
+ },
+ "BL0677": {
+  "cagr": "0.3106343525056732",
+  "bank_buys": 268,
+  "bank_first_buys": 34,
+  "bank_first_buy_max_pv": 0.6759
+ }
+}

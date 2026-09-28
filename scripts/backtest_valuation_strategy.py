@@ -1142,6 +1142,12 @@ def e1_low(table: dict, code: str, day: str, threshold: float) -> bool:
     return i >= 0 and entry[1][i] is not None and entry[1][i] < threshold
 
 
+def load_bank_codes() -> frozenset:
+    """OI-227：银行代码（divspread 判定的银行保险减去保险，与 `bank_valuation.bank_codes` 同源）。"""
+    import bank_valuation
+    return frozenset(bank_valuation.bank_codes(ROOT / "data/raw/a_share_securities.csv"))
+
+
 def entry_stop_price(ma: dict[int, float], close: float, stop_ma: int,
                      force_ma60: bool = False) -> tuple[float, int]:
     """建仓日的止损价，返回 (价格, 实际采用的均线周期)。
@@ -1531,6 +1537,7 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         reentry_e1: bool = False, swap_protect_e1: bool = False,
         left_stop: float = 0.0, left_e1: bool = False, deep_stop_pv: float = 0.0, deep_stop_e1: bool = False,
         size_breaks: tuple[float, float] | None = None, size_e1: bool = False,
+        bank_buy_line: float = 0.0, bank_codes: frozenset = frozenset(),
         mkt: dict[str, float] | None = None, mkt_crash_days: int = 0,
         mkt_crash_pct: float = 0.10, mkt_trend_ma: int = 0,
         mkt_action: str = "block", mkt_release_ma: int = 20,
@@ -1688,6 +1695,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         return all(ma[a] > ma[b] for a, b in zip(hold_strong_ma, hold_strong_ma[1:]))
 
     def buy_line(code: str) -> float:
+        if bank_buy_line and code in bank_codes:    # OI-227：银行单独买入线
+            return bank_buy_line
         if use_mos:
             return 1.0 - MOS_BY_TIER.get(tiers.get(code, DEFAULT_TIER), width)
         line = 1.0 - width
@@ -4409,6 +4418,8 @@ def main() -> int:
                         help="研究开关（OI-224 SZ）：一档乘系数——候选侧 P/V ≤ LO 为 1.5 倍、LO～HI 为 1.0 倍、HI 以上为 0.5 倍"
                              "（配对换仓定向额度不变）。缺省关")
     parser.add_argument("--size-e1", action="store_true", help="OI-224 SZ：E1 低于分界的股票不上调到 1.5 倍")
+    parser.add_argument("--bank-buy-line", type=float, default=0.0, metavar="L",
+                        help="研究开关（OI-227）：银行（不含保险）的买入线改为 L，非金融与保险不变。0=关（缺省）")
     parser.add_argument("--swap-out-min-pv", type=float, default=0.0, metavar="X",
                         help="换仓的**绝对**门槛：只有自身 P/V ≥ X 的持仓才允许被换出"
                              "（「高估严重才换，排序变了不轻易换」）。缺省 0 = 关")
@@ -5218,6 +5229,8 @@ def main() -> int:
                          left_stop=args.left_stop, left_e1=args.left_e1,
                          deep_stop_pv=args.deep_stop_pv, deep_stop_e1=args.deep_stop_e1,
                          size_breaks=tuple(args.size_breaks) if args.size_breaks else None, size_e1=args.size_e1,
+                         bank_buy_line=args.bank_buy_line,
+                         bank_codes=load_bank_codes() if args.bank_buy_line else frozenset(),
                          mkt=mkt_series, mkt_crash_days=args.mkt_crash_days,
                          mkt_crash_pct=args.mkt_crash_pct, mkt_trend_ma=args.mkt_trend_ma,
                          mkt_action=args.mkt_action, mkt_release_ma=args.mkt_release_ma,
