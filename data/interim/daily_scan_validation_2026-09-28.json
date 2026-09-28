@@ -405,5 +405,80 @@
     "publication_sha256": "d4391f0dbdd067f2117ac177896df288907440047c93fbd073206d2a76d01a16",
     "final_validation": "data/experiments/exp_land_v4213_20260928/final_validation.json",
     "verify": "daily_execution_guard.py verify 通过"
+  },
+  "reissue_v4215": {
+    "at_beijing": "2026-09-28 晚（第二次重发）",
+    "reason": "v4.215（OI-207 H2 银行估值；买入线按 §12.1 对齐容差由 1.0670 重解为 1.0495）落地后按同一账户参数重发",
+    "jobs": {
+      "landing_states": 27297404,
+      "landing_backtest": 27297405,
+      "install": 27299091
+    },
+    "execution_plan_unchanged": false,
+    "plan_before": {
+      "sell": [
+        [
+          "002648",
+          "卫星化学",
+          4900
+        ]
+      ],
+      "buy": [
+        [
+          "601318",
+          "中国平安",
+          2200
+        ],
+        [
+          "603529",
+          "爱玛科技",
+          100
+        ]
+      ]
+    },
+    "plan_after": {
+      "sell": [],
+      "buy": []
+    },
+    "cause": "工商银行 P/V 0.9846→1.1003、建设银行 1.0600→1.1104 移出买入区，合格集只剩 4 只已持仓，换仓无触发源；可用资金 −13,153.46 元仍超授信，不可新增买入",
+    "bank_value_changes": {
+      "601398": [
+        8.2774,
+        7.4067
+      ],
+      "601939": [
+        10.3774,
+        9.9062
+      ],
+      "601288": [
+        6.6613,
+        5.9878
+      ],
+      "600036": [
+        53.8721,
+        57.8818
+      ],
+      "601838": [
+        23.6594,
+        30.4476
+      ],
+      "601318": [
+        70.7634,
+        70.7634
+      ]
+    },
+    "line_change_only_effect": "浙江鼎力（1.0530）、特宝生物（1.0656）移出买入区，本日走势均未达标，不影响清单",
+    "eligible": {
+      "under_line": 26,
+      "trend_qualified": 4
+    },
+    "pv_top10_change": "成都银行（0.8048→0.6253）进入第六；中国平安（0.7405）、中际联合（0.7422）移出；招商银行（0.7544→0.7021）为第十",
+    "shadow_code_migrations": [
+      "migrations/oi207_20260928.json",
+      "migrations/oi207_line_20260928.json"
+    ],
+    "publication_sha256": "3ac17cdd4279450b09d826ac44bcc3c99d7443fa80b8b6ca72542159c04d0715",
+    "final_validation": "data/experiments/exp_land_v4215_20260928/final_validation.json",
+    "verify": "daily_execution_guard.py verify 通过"
   }
 }

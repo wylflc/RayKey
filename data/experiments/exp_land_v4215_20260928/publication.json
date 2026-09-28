@@ -1,0 +1,87 @@
+{
+  "job_id": "27299091",
+  "arm": "H2",
+  "installed": {
+    "roic_bands.csv": {
+      "before": {
+        "bytes": 163105507,
+        "sha256": "07f81e856866f9a239051fc1c37756e3cf742a662a967b7bbb3998350a6e17a7"
+      },
+      "after": {
+        "bytes": 163105507,
+        "sha256": "07f81e856866f9a239051fc1c37756e3cf742a662a967b7bbb3998350a6e17a7"
+      }
+    },
+    "roic_bands_b2.csv": {
+      "before": {
+        "bytes": 163095156,
+        "sha256": "d1c5168b2e715be0fa69c6f619ef8a06fa9c1af1f7927ac940700191e5339f87"
+      },
+      "after": {
+        "bytes": 163095156,
+        "sha256": "d1c5168b2e715be0fa69c6f619ef8a06fa9c1af1f7927ac940700191e5339f87"
+      }
+    },
+    "roic_daily_raw.csv": {
+      "before": {
+        "bytes": 1995642477,
+        "sha256": "2674a9fad176faaaedecb28a38a4833f90c1fa111a0fa80f0bc634e5d43e488b"
+      },
+      "after": {
+        "bytes": 1995642477,
+        "sha256": "2674a9fad176faaaedecb28a38a4833f90c1fa111a0fa80f0bc634e5d43e488b"
+      }
+    },
+    "roic_daily_raw_b2.csv": {
+      "before": {
+        "bytes": 2000090199,
+        "sha256": "f4692ea6d981a550c67259c417d707a4111c9f6a3b20524412d72b3a5be6b8fb"
+      },
+      "after": {
+        "bytes": 2000090199,
+        "sha256": "f4692ea6d981a550c67259c417d707a4111c9f6a3b20524412d72b3a5be6b8fb"
+      }
+    },
+    "a_share_daily_states_adopted.csv": {
+      "before": {
+        "bytes": 1993197447,
+        "sha256": "002aac8693bcec036f5e27354b7b36937ed2efe715b8e2297a1559ef5de8657a"
+      },
+      "after": {
+        "bytes": 1993206974,
+        "sha256": "29cc498731a5c1d1a7f506f74596b1c2094ee73055cc0186e5995e49cf90aace"
+      }
+    },
+    "a_share_daily_states_b2.csv": {
+      "before": {
+        "bytes": 1997638721,
+        "sha256": "94a0ccf7dd60f6e7d3cec135f962cbbe08180534ea09537ad57ba3ced6476ec0"
+      },
+      "after": {
+        "bytes": 1997647811,
+        "sha256": "fa9da6e23c025e111b3fac979bf793e0d225d691e92760cd0c957d769432df85"
+      }
+    },
+    "a_share_daily_states_hold.csv": {
+      "before": {
+        "bytes": 2069261419,
+        "sha256": "e39529945cc7525c7fc5877f9cd18613139577b885edc3fa70faca68ce3055f7"
+      },
+      "after": {
+        "bytes": 2069180534,
+        "sha256": "fc25fd7fc11a971961586508341cfc1210e7f30bd7824008a4ffb17d090acec1"
+      }
+    }
+  },
+  "old_full_inputs_retained": true,
+  "ruling": {
+    "state_arm": "H2",
+    "tested_arm": "H2",
+    "registered_arm": "H2_ALIGNED",
+    "ruled_at": "2026-09-28",
+    "oi207": "按估值准确性采纳 H2（银行股利尺度 × DDM 排序），当晚落地并重发 09-28 计划；买入线不必统一，银行与非金融可分开判定低估程度（另登记 OI-227）",
+    "note": "买入线按对齐容差：原线合格面在 0.2pp 内保留 1.0670，否则须另请用户确认重解线",
+    "buy_line": 1.0495,
+    "buy_line_ruling": "用户 2026-09-28 裁定按 §12.1 对齐容差重解：原线 1.0670 合格面 18.393% → 1.0495（17.777%）"
+  }
+}
