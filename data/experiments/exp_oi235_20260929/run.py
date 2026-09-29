@@ -62,8 +62,8 @@ def one(job):
            '--daily-states', str(STATES / 'a_share_daily_states_adopted.csv'), '--hold-states', str(STATES / 'a_share_daily_states_hold.csv')]
     if excluded:
         cmd += ['--exclude-codes', ','.join(excluded)]
-    if group == 'full' and start == sw.EX5_ANCHOR_START:
-        cmd += ['--trade-log', str(EXP / 'ledgers' / f'ledger_{arm}.csv')]
+    if group == 'full':                        # 逐笔流水：读数 1 的机会段成本加权均价要全部全样本路径的每笔买入
+        cmd += ['--trade-log', str(EXP / 'ledgers' / (f'ledger_{arm}.csv' if start == sw.EX5_ANCHOR_START else f'{tag}.csv'))]
     with (EXP / 'errors' / f'{tag}.txt').open('w') as f:
         p = subprocess.run(cmd, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=f, env=dict(os.environ, EXP_ACTIONS_FILE=str(ACTIONS)))
     assert p.returncode == 0, (tag, p.returncode)
