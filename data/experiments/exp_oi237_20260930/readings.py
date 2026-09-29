@@ -456,7 +456,7 @@ def write_md(res, cases):
     arms = list(ARMS)
     sets = res['sets']
     out = [f'# OI-237 读数（v4.221 状态，买入线 {LINE}，14 起点；参照臂 {REF}）', '',
-           'Δ 均为逐起点配对差中位（pp）。主读数 = 同窗口滚 5 年化配对差；复利读数 = 全期 CAGR 配对差。读数只作裁定参考。', '',
+           'Δ 均为逐起点配对差中位（pp）。主读数 = 同窗口滚 5 年化配对差；复利读数 = 全期 CAGR 配对差；回撤 Δ 为负 = 更浅。读数只作裁定参考。', '',
            f"剔除集：A = {'/'.join(sets['A'])}；UC = {'/'.join(sets['UC'])}；各臂 U = A ∪ 该臂锚点前五（见 readings.json）。"
            f"前五不全在 UC 内的臂：{'、'.join(a for a, ok in sets['UC_cover'].items() if not ok) or '无'}。", '',
            '## 一、对 BASE 的叠加读数', '',
@@ -493,7 +493,7 @@ def write_md(res, cases):
                        f"{pp(p['p25'])} | {p['better_starts']}/14 | {p['years']['years_pos']}/{p['years']['years']} | "
                        f"{p['holdings'][0]:.0f}／{p['holdings'][1]:.0f} | {pct(p['top1_max'][0])}／{pct(p['top1_max'][1])} |")
     yrs = sorted({int(y) for v in res['years'].values() for y in v['per_year']})
-    out += ['', '## 五、逐年配对差（整年在场的起点，中位 pp；括号内为胜出起点数／起点数）', '',
+    out += ['', '## 五、逐年配对差（整年在场的起点，中位 pp；括号内为胜出起点数／起点数；2026 截至末次净值日）', '',
             '| 对比 | ' + ' | '.join(str(y) for y in yrs) + ' | 胜出年数 |', '| --- |' + ' ---: |' * (len(yrs) + 1)]
     for k, v in res['years'].items():
         cells = [f"{pp(v['per_year'][y]['median'], 1)}（{v['per_year'][y]['better']}/{v['per_year'][y]['n']}）" if y in v['per_year'] else '—'

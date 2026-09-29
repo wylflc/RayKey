@@ -9,4 +9,7 @@ ledgers/
 tlog/
 *.log
 contrib_*_trades.csv
-u/
+detail/
+detail_cache/
+detail_daily/
+detail_errors/
