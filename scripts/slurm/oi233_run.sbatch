@@ -13,5 +13,5 @@ cd /gpfs/scratch1/shared/zwang/mm_quant/RayKey
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 test -f data/experiments/exp_oi230_20260929/states/DC/a_share_daily_states_adopted.csv
 cd data/experiments/exp_oi233_20260929
-/usr/bin/time -v python3 run.py
+WORKERS=26 /usr/bin/time -v python3 run.py
 /usr/bin/time -v python3 readings.py
