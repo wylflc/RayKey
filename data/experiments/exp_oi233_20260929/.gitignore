@@ -8,3 +8,7 @@ trades/
 ledgers/
 *.log
 contrib_*_trades.csv
+detail/
+detail_cache/
+detail_daily/
+detail_errors/
