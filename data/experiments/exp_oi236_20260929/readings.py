@@ -410,7 +410,8 @@ def main():
             continue
         res['reference'][arm] = reference(arm)
         subprocess.run([sys.executable, str(ROOT / 'scripts/experimental/case_attribution.py'),
-                        '--base', f"{REF}={EXP / f'contrib_{REF}full20111101_trades.csv'}", '--arm', f"{arm}={EXP / f'contrib_{arm}full20111101_trades.csv'}",
+                        '--base', f"{REF}={EXP / f'contrib_{tag(REF, sw.EX5_ANCHOR_START)}_trades.csv'}",
+                        '--arm', f"{arm}={EXP / f'contrib_{tag(arm, sw.EX5_ANCHOR_START)}_trades.csv'}",
                         '--base-states', str(STATES / 'a_share_daily_states_adopted.csv'), '--arm-states', str(STATES / 'a_share_daily_states_adopted.csv'),
                         '--actions', str(ACTIONS), '--out', str(EXP / f'case_{arm}.md')], cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
     (EXP / 'readings.json').write_text(json.dumps(res, ensure_ascii=False, indent=1, default=float) + '\n')
