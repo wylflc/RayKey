@@ -44,11 +44,16 @@ def kwargs(base, execution_day):
     for option, values in sh.base_options(base).items():
         if option in ignored or option.startswith('equity_bond_'):
             continue
+        if option == 'no_trend_stop':                      # v4.222：argparse dest=trend_stop（store_false）
+            out['trend_stop'] = False
+            continue
         key = renamed.get(option, option)
         if key not in sig:
             raise ValueError(f'Unsupported historical parameter: {key}')
         if key in ('trend_ma', 'sell_trend_ma'):
             value = tuple(map(int, values))
+        elif key == 'swap_ext':                            # v4.222：三值（盈利、MA20 偏离、MA5 偏离）
+            value = tuple(map(float, values))
         elif not values:
             value = True
         elif key in ('capital', 'x', 'sell_line_override'):
@@ -98,7 +103,10 @@ def snapshot(day, revision, account):
     blocked = tactical | {c for c, q in quotes.items() if q.get('review_frozen', '').lower() == 'true'}
     hs = sh.csv_rows(source.read('data/processed/a_share_holdings.csv'))
     holdings = {r['security_code']: dict(name=r['security_name'], shares=float(r['current_shares']),
-                cost=float(r['cost_basis']), stop=float(r['entry_stop_price'])) for r in hs}
+                cost=float(r['cost_basis']), stop=sh.number(r['entry_stop_price'], 0.)) for r in hs}
+    kw = kwargs(base, day)                                # §9.3.5：空锚只在该日 BASE 不设止损时允许
+    if (kw.get('trend_stop', True) or kw.get('price_stop', False)) and any(not h['stop'] for h in holdings.values()):
+        raise ValueError('Holding without a stop anchor under a stop-enabled BASE')
     action_rows = sh.csv_rows(source.read('data/raw/corporate_actions/a_share_corporate_actions.csv'))
     from corporate_actions import aggregate_actions
     price_data = source.read('data/reference/a_share_exright_terms.csv', optional=True)
@@ -211,6 +219,7 @@ class SignalCorrelations:
 
 def market(snapshots, supplement):
     states, hold, prices, mas, gates, universe, actions = {}, {}, {}, {}, {}, [], {}
+    bt_stable = {}
     for s in snapshots:
         day = s['date']; states[day], hold[day] = [], []
         gates[day] = set(s['blocked']); universe.append((day, set(s['members'])))
@@ -219,7 +228,9 @@ def market(snapshots, supplement):
             if q.get('trade_date') != day or not p or p <= 0:
                 continue
             prices.setdefault(code, {})[day] = p
-            mas.setdefault(code, {})[day] = {n: sh.number(q.get('ma'+str(n))) for n in (20, 60) if sh.number(q.get('ma'+str(n))) is not None}
+            mas.setdefault(code, {})[day] = {n: sh.number(q.get('ma'+str(n))) for n in (5, 20, 60) if sh.number(q.get('ma'+str(n))) is not None}
+            if q.get('bt_stable') in ('True', 'False', True, False):   # v4.222：新建仓走稳判定取信号日扫描产物
+                bt_stable[(code, day)] = q['bt_stable'] in ('True', True)
             for dest, prefix in ((states, 'model'), (hold, 'hold')):
                 v, pv = sh.number(q.get(prefix+'_intrinsic_value')), sh.number(q.get(prefix+'_pv'))
                 if v and pv and v > 0 and pv > 0:
@@ -243,7 +254,8 @@ def market(snapshots, supplement):
                       for d, a in s['all_actions'].get(code, {}).items()}
             adjusted = sh.live.rebase_price_rows(relevant, code, day, events=events)
             mas.setdefault(code, {})[day] = {n: mean(r['close'] for r in adjusted[-n:]) for n in (20, 60) if len(adjusted) >= n}
-    return dict(states=states, hold_states=hold, prices=prices, mas=mas, buy_blocked=gates, universe=universe, actions=actions)
+    return dict(states=states, hold_states=hold, prices=prices, mas=mas, buy_blocked=gates, universe=universe, actions=actions,
+                bt_stable=bt_stable)
 
 
 def replay(snapshots, supplement, manifest, opening_shares):

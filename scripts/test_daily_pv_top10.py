@@ -25,7 +25,7 @@ class PVTop10Test(unittest.TestCase):
         rows[0].update(review_frozen=True, quality_tier="L3")
         rows[1].update(model_pv="0.1", hold_pv="0.001")
         rows[0]["hold_pv"] = "9.0"
-        rows[2].update(close=14., ma20=13., ma60=12.)
+        rows[2].update(close=14., ma5=13.5, ma20=13., ma60=15., bt_stable=True)   # v4.222：前低企稳且站上 MA5／MA20，MA20 < MA60 也达标
         rows[3].update(model_pv=1.5)  # 超买入线仍可入观察表（若排名够低）。
         rows.reverse()
         before = copy.deepcopy(rows)

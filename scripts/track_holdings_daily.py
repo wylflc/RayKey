@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""每日持仓跟踪：读取持仓，统一取得行情、两侧估值与生效止损线。
+"""每日持仓跟踪：读取持仓，统一取得行情与两侧估值。
 
-输出涨幅减持状态、止损复核提示、公司行动及数据缺口。执行清单由每日扫描器生成；
+输出涨幅减持状态、换仓让位条件（v4.222）、公司行动及数据缺口；v4.222 起不设价格止损，止损列只留历史锚。执行清单由每日扫描器生成；
 重大事项由逐票证据复核补充。口径以工作流程为准。
 """
 
@@ -19,6 +19,7 @@ from a_share_quotes import fetch_spot_quotes
 from a_share_signal_dates import evidence_iso_for_signal
 from fetch_a_share_dividends import adjust_for_ex_dividend, fetch_ex_dividend_events
 from screen_daily_volume_price_signals import (DEFAULT_HOLD_BANDS, DEFAULT_MODEL_BANDS, SEC93_GAIN_SELL,
+                                               SEC93_SWAP_EXT_GAIN, SEC93_SWAP_EXT_MA20,
                                                fetch_daily_rows, holding_trim_signal, is_bank, resolve_live_band,
                                                load_worth_attention_codes, load_model_bands)
 from workflow_decision_log import WORKFLOW_VERSION, append_decision_log
@@ -53,8 +54,8 @@ FIELDNAMES = [
     # 不受本条约束（存量持仓过渡口径）。**留空必须能与"跌破了"区分开**，故 `stop_hit`
     # 用三取值而不是布尔——布尔的 False 会把"没设"和"没跌破"混成同一个格子。
     "entry_stop_price",
-    "stop_hit",
-    "stop_line",       # 当日生效止损线 = min(锚, 当日 MA60)；锚未设或均线缺失时留空/退锚
+    "stop_hit",        # v4.222 起不设价格止损：恒为「停用」，列保留以兼容旧产物
+    "stop_line",       # v4.222 起留空
     "close",
     "ma20",            # §8.3 前复权 MA20（展示项；涨幅减持不看走势）
     "ma60",            # §8.3 前复权 MA60：生效止损线的当日均线
@@ -237,40 +238,15 @@ def track(holdings_file: Path, pool_file: Path, as_of: date, symbols: str, timeo
             # §13 第 3 条：判据缺失必须显式落字，不能静默等同「未触发」。
             notes.append("**持仓均价未填**（`cost_basis` 空）：§9.3.1 涨幅减持行无法判定，请按 §11.2 补填（买入加权、除权按 §11.4 折算）")
 
-        # §9.3.5 建仓日止损。**先判无行情**：没有收盘价就既不能说跌破、也不能
-        # 说没跌破，落 `无行情` 而不是默认放行——与 `action` 的 `数据缺失` 同一条理由。
-        #
-        # v4.25（§9.3.1）：`entry_stop_price` 是**锚**，生效止损线 = min(锚, 当日 MA60)
-        # ——均线下移时生效线跟随下移、上移不抬。v4.26 起成交日已破 MA60 的建仓直接跳过、
-        # 新锚恒为 MA60；仅 v4.26 前的存量持仓可能残留 MA20 锚（本工具按 MA60 取当日线，
-        # 对其偏保守、提示可能偏早，如有按同周期人工复核）。当日均线不可得
-        # （盘中价/新上市不足 60 根）时退回按锚判读并注明。
+        # §9.3.1 止损行（v4.222）：不设价格止损，`entry_stop_price` 只作历史锚透传。
         entry_stop = to_float(h.get("entry_stop_price"))
         ma60 = ma60s.get(code)
-        stop_line = None
-        if entry_stop is None:
-            stop_hit = "未设"
-        elif close is None:
-            stop_hit = "无行情"
-        else:
-            stop_line = min(entry_stop, ma60) if ma60 is not None else entry_stop
-            if close < stop_line:
-                stop_hit = "**已跌破**"
-                ma_tag = "当日MA60" if MA60_BASIS.get(code) != "raw" else "当日MA60(不复权兜底，前复权源不可用)"
-                detail = (f"= min(锚 {entry_stop:g}, {ma_tag} {ma60:g})" if ma60 is not None
-                          else f"= 锚 {entry_stop:g}（当日均线不可得，按锚判读）")
-                notes.append(
-                    f"**收盘 {close:g} < 生效止损线 {stop_line:g}**（{detail}）："
-                    f"按 §9.3.1 止损行次日尾盘以现价对当日生效线（min(锚, 当日MA60)）复核，"
-                    f"仍跌破即**当日整仓清空**，先于涨幅减持与换仓执行"
-                )
-            else:
-                stop_hit = "否"
-                if ma60 is not None and close < entry_stop:
-                    # 正是 v4.25 min 口径豁免的情形——旧冻结口径会在这里整仓清空，写明防误读
-                    ma_tag = "当日MA60" if MA60_BASIS.get(code) != "raw" else "当日MA60(不复权兜底)"
-                    notes.append(f"收盘 {close:g} 低于锚 {entry_stop:g} 但不低于{ma_tag} "
-                                 f"{ma60:g}：按 §9.3.1 min 口径不触发止损")
+        stop_hit, stop_line = "停用", None
+        # §9.3.1 换仓行（v4.222）：盈利 ≥ 30% 且收盘 ≥ MA20 × 1.15 → 资金不足一档且有未持仓合格候选时作换仓卖出源
+        if (close is not None and cost is not None and cost > 0 and ma20 and trim_rule != "涨幅减持"
+                and close >= cost * (1.0 + SEC93_SWAP_EXT_GAIN) and close >= ma20 * (1.0 + SEC93_SWAP_EXT_MA20)):
+            notes.append(f"**满足换仓让位条件**：盈利 {gain:.0%} ≥ {SEC93_SWAP_EXT_GAIN:.0%} 且收盘为 MA20 的 {close / ma20:.2f} 倍 ≥ "
+                         f"{1 + SEC93_SWAP_EXT_MA20:.2f}（§9.3.1 换仓行；资金不足一档且有未持仓合格候选时减一档让位）")
 
         # §11.3 三取值（v2.56 删去 `割肉提醒`）。无行情时必须落 `数据缺失` 而非 `持有`：
         # `持有` 是唯一读起来像「已检查、没事」的取值，而没有现价恰恰意味着 `P/V` 没算过。
@@ -418,10 +394,9 @@ def report_ex_dividend(rows: list[dict[str, object]], as_of: date, timeout: floa
               + ("｜**已处理**（台账已登记，持仓表为除权后口径，勿再调）" if done else "｜**未处理**"))
         if done:
             continue
-        # `entry_stop_price` 与前三项一起调（§11.4）。**漏调它的后果比漏调带更立即**：
-        # 送转后价格按因子下跳而止损价不动，次日必然「跌破」，直接触发一次错误的整仓清仓。
+        # `entry_stop_price` 与前三项一起调（§11.4）；不设价格止损（§9.3.5），它只作历史锚，照调以保持同一口径。
         for label, field in (("成本价", "cost_basis"), ("带下沿", "fair_price_low"),
-                             ("带上沿", "fair_price_high"), ("**建仓日止损价**", "entry_stop_price")):
+                             ("带上沿", "fair_price_high"), ("建仓日止损锚（历史记录）", "entry_stop_price")):
             value = to_float(row.get(field))
             if value is None:
                 print(f"        {label}：未设定，无需调整")
@@ -476,23 +451,14 @@ def main() -> None:
     print(f"tracked {len(rows)} holdings as of {as_of}")
     # §11.4 检出排在 P/V 结论之前打印：除权未调时，下面那行 P/V 就是错的（§9.1 第四步）。
     report_ex_dividend(rows, as_of, args.timeout)
-    # §9.3.5 排在 P/V 之前：止损是第 ⓪ 条路径，命中即整仓，不再走涨幅减持与换仓。
-    # **无事也打印**，且必须把「未设」单列——一行「跌破：无」在 25 只全部未设时是恒真的，
-    # 与恒亮的告警同型（§13 第 3 条）。
-    stopped = [r for r in rows if r["stop_hit"] == "**已跌破**"]
-    unset = [r for r in rows if r["stop_hit"] == "未设"]
-    blind = [r for r in rows if r["stop_hit"] == "无行情"]
-    if stopped:
-        names = "、".join(f"{r['security_name']}(收 {r['close']}，锚 {r['entry_stop_price']}，生效线见 note)"
-                          for r in stopped)
-        print(f"  **跌破生效止损线 {len(stopped)} 只**：{names}——按 §9.3.5 次日尾盘**整仓清空**，先于涨幅减持与换仓")
+    # §9.3.1 换仓行（v4.222）：满足让位条件的持仓（无事也打印）
+    stretched = [r for r in rows if "满足换仓让位条件" in str(r.get("note", ""))]
+    if stretched:
+        print(f"  **满足换仓让位条件 {len(stretched)} 只**：{'、'.join(str(r['security_name']) for r in stretched)}"
+              f"——资金不足一档且有未持仓合格候选时按偏离 MA20 从大到小减一档让位，股数见 `daily_sell_plan.csv`")
     else:
-        print(f"  跌破生效止损线（min(锚, 当日MA60)，§9.3.1 v4.25）：无"
-              f"（已设锚 {len(rows) - len(unset)}/{len(rows)} 只"
-              + (f"，其中 {len(blind)} 只当日无行情无法比对" if blind else "") + "）")
-    if unset:
-        print(f"  未设止损锚 {len(unset)} 只：{'、'.join(str(r['security_name']) for r in unset)}"
-              f"——§9.3.5 对其不生效，须待清空后重新建仓时按新规则设定")
+        print(f"  满足换仓让位条件（盈利 ≥ {SEC93_SWAP_EXT_GAIN:.0%} 且收盘 ≥ MA20 × {1 + SEC93_SWAP_EXT_MA20:.2f}）：无"
+              "（v4.222 起不设价格止损）")
     no_cost = [r for r in rows if not (to_float(r.get("cost_basis")) or 0) > 0]
     if no_cost:
         print(f"  **持仓均价未填 {len(no_cost)} 只**：{'、'.join(str(r['security_name']) for r in no_cost)}——§9.3.1 涨幅减持行对其无法判定，请补 `cost_basis`（§11.2）")

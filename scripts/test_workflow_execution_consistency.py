@@ -21,8 +21,9 @@ DAY = '2026-09-14'
 
 
 def row(code='000651', price=100., pv=.5, **kw):
-    return dict(security_code=code, security_name='synthetic', close=price, ma20=price*.95,
-                ma60=price*.9, model_pv=pv, hold_pv=pv, signal_state='ok', trade_date=DAY, **kw)
+    # v4.222 新建仓走势：前低企稳（bt_stable）且收盘 > MA5、> MA20
+    return dict(dict(security_code=code, security_name='synthetic', close=price, ma5=price*.98, ma20=price*.95,
+                     ma60=price*.9, bt_stable=True, model_pv=pv, hold_pv=pv, signal_state='ok', trade_date=DAY), **kw)
 
 
 def holding(shares=1000, cost=100):

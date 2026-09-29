@@ -38,7 +38,7 @@ REAL_FILES = ('a_share_holdings.csv', 'portfolio_account_snapshot.csv',
               'cooldown_executions.csv', 'daily_cooldown_state.csv',
               'daily_entry_plan.csv', 'daily_sell_plan.csv', 'daily_buy_candidates.csv')
 QUOTE_FIELDS = ('security_code', 'security_name', 'trade_date', 'close', 'mark_close',
-                'mark_date', 'tradable', 'ma20', 'ma60', 'model_intrinsic_value',
+                'mark_date', 'tradable', 'ma5', 'ma20', 'ma60', 'bt_stable', 'model_intrinsic_value',
                 'model_pv', 'hold_intrinsic_value', 'hold_pv', 'review_frozen',
                 'data_source', 'screened_at_utc', 'signal_state')
 
@@ -111,11 +111,16 @@ def engine_kwargs(base: str) -> dict:
     for option, values in base_options(base).items():
         if option in inputs or option.startswith('equity_bond_'):
             continue
+        if option == 'no_trend_stop':                      # v4.222：argparse dest=trend_stop（store_false）
+            result['trend_stop'] = False
+            continue
         key = renamed.get(option, option)
         if key not in signature:
             raise ValueError(f'Unsupported BASE option: {option}')
         if key in ('trend_ma', 'sell_trend_ma'):
             value = tuple(map(int, values))
+        elif key == 'swap_ext':                            # v4.222：三值（盈利、MA20 偏离、MA5 偏离）
+            value = tuple(map(float, values))
         elif not values:
             value = True
         elif len(values) != 1:
@@ -188,9 +193,12 @@ def capture_snapshot(day: str, source: Source, base: str, *, baseline=False) -> 
                ('net_assets_cny', 'total_assets_cny', 'cash_cny', 'margin_debt_cny', 'external_cash_flow_cny')}
     if any(v is None for v in account.values()) or account['external_cash_flow_cny'] != 0:
         raise ValueError('Missing account value or external flow: reconcile before continuing')
+    # §9.3.5：无价格止损时新建仓不写锚，空锚按 0（引擎不设止损）；只有该日 BASE 开着止损时才要求锚
     h = {r['security_code']: dict(name=r['security_name'], shares=number(r['current_shares']),
-                                 cost=number(r['cost_basis']), stop=number(r['entry_stop_price'])) for r in holdings}
-    if any(v[k] is None for v in h.values() for k in ('shares', 'cost', 'stop')):
+                                 cost=number(r['cost_basis']), stop=number(r['entry_stop_price'], 0.)) for r in holdings}
+    kw = engine_kwargs(base)
+    if any(v[k] is None for v in h.values() for k in ('shares', 'cost')) or (
+            (kw.get('trend_stop', True) or kw.get('price_stop', False)) and any(not v['stop'] for v in h.values())):
         raise ValueError('Incomplete inherited holding')
     market_value = sum(v['shares'] * number(quotes[c]['close']) for c, v in h.items())
     if abs(market_value + account['cash_cny'] - account['total_assets_cny']) > .011:
@@ -270,6 +278,7 @@ class ArchivedConstraint:
 def simulate(snapshots: list[dict], protocol: dict):
     first, last = snapshots[0], snapshots[-1]
     states, hold_states, prices, mas, actions, gates, universe = {}, {}, {}, {}, {}, {}, []
+    bt_stable: dict = {}
     for snapshot in snapshots:
         day = snapshot['date']
         states[day], hold_states[day] = [], []
@@ -282,8 +291,10 @@ def simulate(snapshots: list[dict], protocol: dict):
                 # Require supplemental marked quotes before a held suspension can be evaluated.
                 continue
             prices.setdefault(code, {})[day] = close
-            mas.setdefault(code, {})[day] = {n: number(q['ma' + str(n)]) for n in (20, 60)
+            mas.setdefault(code, {})[day] = {n: number(q['ma' + str(n)]) for n in (5, 20, 60)
                                             if number(q.get('ma' + str(n))) is not None}
+            if q.get('bt_stable') in ('True', 'False', True, False):   # v4.222：新建仓走稳判定取信号日扫描产物
+                bt_stable[(code, day)] = q['bt_stable'] in ('True', True)
             for dest, prefix in ((states, 'model'), (hold_states, 'hold')):
                 value, pv = number(q.get(prefix + '_intrinsic_value')), number(q.get(prefix + '_pv'))
                 if value and pv is not None and pv > 0:
@@ -307,7 +318,7 @@ def simulate(snapshots: list[dict], protocol: dict):
                   since=first['date'], until=last['date'], capital=first['account']['net_assets_cny'],
                   initial_portfolio=seed, buy_blocked=gates, universe=universe,
                   equity_bond=ArchivedConstraint(snapshots, base_options(protocol['base'])['equity_bond_mode'][0]),
-                  liquidate_at_end=False)
+                  liquidate_at_end=False, bt_stable=bt_stable)
     bt.FEES.update(protocol['fees'], paid=0.)
     bt.SLIPPAGE = 0.
     ledger, observed = [], []

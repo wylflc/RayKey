@@ -129,6 +129,21 @@ class ShadowSeedTests(unittest.TestCase):
         self.assertAlmostEqual(discrepancy[0]['recorded_minus_calculated'], 96.)
         self.assertAlmostEqual(discrepancy[0]['shares_times_price'], 131328.)
 
+    def test_blank_stop_anchor_only_without_price_stop(self):
+        class Blanked(shadow.Source):
+            def read(self, path, optional=False):
+                data = super().read(path, optional)
+                if path != 'data/processed/a_share_holdings.csv':
+                    return data
+                head, first, *rest = data.decode('utf-8-sig').splitlines(keepends=True)
+                return (head + first.rsplit(',', 1)[0] + ',\n' + ''.join(rest)).encode()
+        self.assertIn('--no-trend-stop ', shadow.sweep.BASE)
+        snapshot = shadow.capture_snapshot('2026-09-17', Blanked('66326558'), shadow.sweep.BASE)
+        self.assertEqual(snapshot['actual_holdings']['002714']['stop'], 0.)
+        with self.assertRaisesRegex(ValueError, 'Incomplete inherited holding'):
+            shadow.capture_snapshot('2026-09-17', Blanked('66326558'),
+                                    shadow.sweep.BASE.replace('--no-trend-stop ', ''))
+
     def test_base_changes_require_explicit_adapter_support(self):
         kwargs = shadow.engine_kwargs(shadow.sweep.BASE)
         self.assertEqual(kwargs['x'], .05)

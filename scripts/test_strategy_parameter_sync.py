@@ -59,6 +59,16 @@ class StrategyParameterSyncTest(unittest.TestCase):
         # v4.134（OI-142）：当日已涨幅减持的持仓不作换仓卖出源，BASE 显式带开关、不得带反向开关
         self.assertIn("--swap-gain-once", args)
         self.assertNotIn("--no-swap-gain-once", args)
+        # v4.222（OI-233／OI-235～OI-237）：前低企稳建仓、不设价格止损、盈利偏离让位换仓源，生产常量与回测 BASE 同值
+        self.assertEqual(int(option_value(args, "--bt-quiet")), daily_scan.SEC93_BT_QUIET)
+        self.assertEqual(daily_scan.SEC93_BT_QUIET, 3)
+        self.assertEqual(daily_scan.SEC93_BT_LOW_WINDOW, 20)
+        self.assertIn("--no-trend-stop", args)
+        ext = [float(x) for x in args[args.index("--swap-ext") + 1: args.index("--swap-ext") + 4]]
+        self.assertEqual(ext, [daily_scan.SEC93_SWAP_EXT_GAIN, daily_scan.SEC93_SWAP_EXT_MA20, 0.0])
+        self.assertEqual((daily_scan.SEC93_SWAP_EXT_GAIN, daily_scan.SEC93_SWAP_EXT_MA20), (0.30, 0.15))
+        self.assertEqual((track_holdings_daily.SEC93_SWAP_EXT_GAIN, track_holdings_daily.SEC93_SWAP_EXT_MA20),
+                         (daily_scan.SEC93_SWAP_EXT_GAIN, daily_scan.SEC93_SWAP_EXT_MA20))
         self.assertEqual(track_holdings_daily.GAIN_SELL, daily_scan.SEC93_GAIN_SELL)
         self.assertEqual(float(option_value(args, "--credit-ratio")), 0.666)
         self.assertGreaterEqual(float(option_value(args, "--credit-cap")), 1e11)   # 不设金额上限
@@ -129,8 +139,8 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertTrue((ROOT / "data/reference/a_share_csrc_industry.csv").exists())
         self.assertIn("绝对值 < 0.2pp 时保留原线", workflow)
         self.assertNotIn("| 减持 |", workflow)                # v4.109（OI-110）：估值减持行已删
-        # v4.110（OI-116）：止盈行不得退回「无」——涨幅减持即按盈利触发的减仓
-        self.assertIn("| 止盈 | 只有本表「涨幅减持」一条按盈利触发的减仓", workflow)
+        # v4.110（OI-116）：止盈行不得退回「无」——涨幅减持即按盈利触发的减仓；v4.222 另有换仓行的让位源
+        self.assertIn("| 止盈 | 按盈利触发的减仓只有本表「涨幅减持」与换仓行的第二类卖出源", workflow)
         self.assertNotIn("| 止盈 | 无 |", workflow)
         # v4.115（用户 2026-09-01）：全期 CAGR 的配对差为第五项决策读数，与主读数同为采纳门槛
         self.assertIn("复利读数 = **全期 CAGR** 的配对差中位；", workflow)
@@ -193,7 +203,12 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn("`data/processed/a_share_daily_states_hold.csv`（持仓侧，`--hold-states`", workflow)
         self.assertIn("`data/processed/a_share_pool_model_bands_hold.csv`", workflow)
         self.assertIn(f"| 涨幅减持 | 收盘较持仓均价涨幅 `≥ {daily_scan.SEC93_GAIN_SELL:.0%}`（收盘 ≥ 均价 × {1 + daily_scan.SEC93_GAIN_SELL:.2f}），减一档，不看走势", workflow)
-        self.assertIn(f"至少低 `{daily_scan.SEC93_SWAP_MARGIN:.2f}`", workflow)
+        # v4.222：换仓第二类卖出源 = 盈利与偏离 MA20，不再比 P/V 边际；新建仓前低企稳；不设价格止损
+        self.assertIn(f"**盈利 ≥ {daily_scan.SEC93_SWAP_EXT_GAIN:.0%}（T 日收盘 ≥ 持仓均价 × {1 + daily_scan.SEC93_SWAP_EXT_GAIN:.2f}）"
+                      f"且 T 日收盘 ≥ MA20 × {1 + daily_scan.SEC93_SWAP_EXT_MA20:.2f}**", workflow)
+        self.assertNotIn("至少低 `0.15`", workflow)
+        self.assertIn(f"| 新建仓走势 | 近 {daily_scan.SEC93_BT_QUIET} 个交易日（含 T 日）最低价都未创 {daily_scan.SEC93_BT_LOW_WINDOW} 日新低", workflow)
+        self.assertIn("| 止损 | 不设价格止损；", workflow)
         # OI-193：授信比例只在 §10.2 成文，§9.3.1.2 引用；回测 BASE 同值
         self.assertIn("授信额度 = 当日净资产 `N` × 66.6%，不设金额上限", workflow)
         self.assertEqual(workflow.count("66.6%"), 2)   # §10.2 正文与其可用资金公式，别处只引用
@@ -206,9 +221,10 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertIn("`--equity-bond-release-threshold`（恢复线），取值只在 §9.3.1 股债总仓位上限行", workflow)
         self.assertNotIn("--equity-bond-release-threshold 0.035", workflow)
         self.assertIn(f"--equity-bond-threshold {daily_scan.SEC93_EQUITY_BOND_THRESHOLD} --equity-bond-lower {daily_scan.SEC93_EQUITY_BOND_CAP} --equity-bond-restore-above --equity-bond-release-threshold {daily_scan.SEC93_EQUITY_BOND_RELEASE_THRESHOLD}", sweep.BASE)
-        # v4.68/v4.69（OI-092）：§9.3 成文与回测实现同口径的关键句
-        self.assertIn("| 新建仓走势 | T 日 `收盘 > MA20 > MA60` |", workflow)
-        self.assertIn("现价跌破当日生效线即**当日**整仓清空", workflow)
+        # v4.68/v4.69（OI-092）：§9.3 成文与回测实现同口径的关键句；v4.222 起新建仓为前低企稳、不设价格止损
+        self.assertNotIn("| 新建仓走势 | T 日 `收盘 > MA20 > MA60` |", workflow)
+        self.assertNotIn("现价跌破当日生效线即**当日**整仓清空", workflow)
+        self.assertIn("且 T 日 `收盘 > MA5`、`收盘 > MA20`；不要求 `MA20 > MA60` |", workflow)
         self.assertIn("任何减档后的余仓不足一手时清空", workflow)
         self.assertTrue(daily_scan.SEC93_L3_TACTICAL_GATE)
         self.assertIn("| L3 战术闸门 | `quality_tier = L3` 且分层表 `tactical_thesis` 为空或判「无／暂无／不可买」者不进合格集", workflow)

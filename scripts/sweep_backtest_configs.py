@@ -137,6 +137,13 @@ BASE = (
     "--net-same-day "
     "--fill-missing skip --dividend-tax --swap-repeat skip "
     "--addon-trend ma-only --swap-require-weak "
+    # **v4.222 前低企稳建仓、不设价格止损、盈利偏离让位换仓（OI-233／OI-235～OI-237，用户 2026-09-30 裁定采纳 S15）**：
+    # 新建仓 = 近 3 个交易日（含信号日）最低价未创 20 日新低，且信号日收盘 > MA5、> MA20（`--bt-quiet 3`，已有持仓加仓仍 MA20 > MA60）；
+    # 不做价格止损（`--no-trend-stop`；上面 MA60 止损各开关随之不起作用，保留以便复现旧读数）；
+    # 换仓卖出源 = 盈利 ≥ 30% 且收盘 ≥ MA20 × 1.15 的持仓中收盘 ÷ MA20 最大者，不比 P/V 边际、不要求弱势
+    # （`--swap-ext 0.30 0.15 0`；涨幅 ≥ 110% 的持仓仍先让位；`--swap-require-weak`／`--swap-margin` 随之只作用于旧弱势源、不再起作用）。
+    # 回测日志 §12.283～§12.286、§12.290；引擎原生开关由 OI-233／OI-235 补丁逐字移入，逐字段复现见 `data/experiments/exp_land_v4222_20260930/`。
+    "--bt-quiet 3 --no-trend-stop --swap-ext 0.30 0.15 0 "
     # §9.3.1 股债总仓位上限：触发／受限仓位／恢复门槛显式登记；
     # 完整历史状态与生产扫描器共用，不随回测起点重置。采纳依据见 §12.228～§12.229。
     "--equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread "

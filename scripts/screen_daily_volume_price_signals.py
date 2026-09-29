@@ -216,11 +216,15 @@ def mean(values: Iterable[float]) -> float:
 
 
 def add_indicators(rows: list[dict[str, float | str]]) -> None:
-    """§8.3 判定所需量：MA20/MA60（前复权收盘简单均线）、20日均量、20日均成交额。"""
+    """§8.3 判定所需量：MA5/MA20/MA60（前复权收盘简单均线）、20日均量、20日均成交额；
+    §9.3.1 新建仓走势（v4.222）另记逐日「当日最低价是否创 20 日新低」（前复权最低价，与回测 `_bt_low_series_all` 同式）。"""
     for index, row in enumerate(rows):
-        for window in (20, 60):
+        for window in (5, 20, 60):
             if index + 1 >= window:
                 row[f"ma{window}"] = mean(float(item["close"]) for item in rows[index + 1 - window : index + 1])
+        if "low" in row:
+            lows = [float(item["low"]) for item in rows[max(0, index + 1 - SEC93_BT_LOW_WINDOW): index + 1] if "low" in item]
+            row["new_low20"] = float(row["low"]) <= min(lows) + 1e-12
         if index + 1 >= 20:
             row["vol_ma20"] = mean(float(item["volume"]) for item in rows[index + 1 - 20 : index + 1])
             row["amount_ma20"] = mean(float(item["amount"]) for item in rows[index + 1 - 20 : index + 1])
@@ -238,13 +242,20 @@ def quote_snapshot(rows: list[dict[str, float | str]]) -> dict[str, object]:
     row = rows[-1]
     if len(rows) < 60 or "ma20" not in row or "ma60" not in row:
         return {"signal_state": "insufficient_price_history"}
+    # §9.3.1 新建仓走势（v4.222）：近 SEC93_BT_QUIET 个交易日（含信号日）一天都没有创 20 日新低（与回测 `stabilized` 同：
+    # 历史不足 SEC93_BT_QUIET + 1 根不算走稳）。
+    recent = rows[-SEC93_BT_QUIET:]
+    bt_stable = (len(rows) > SEC93_BT_QUIET and all("new_low20" in r for r in recent)
+                 and not any(r["new_low20"] for r in recent))
     return {
         "signal_state": "ok",
         "trade_date": row["date"],
         "close": float(row["close"]),
         "amount": row["amount"],
+        "ma5": float(row["ma5"]),
         "ma20": float(row["ma20"]),
         "ma60": float(row["ma60"]),
+        "bt_stable": bt_stable,
         "amount_ma20": float(row.get("amount_ma20") or 0.0),
     }
 
@@ -518,11 +529,16 @@ SEC93_TACTICAL_NONE = re.compile(r"^\W*(无|暂无|不可买)")   # 判「无战
 SEC93_GAIN_SELL = 1.10         # §9.3.1「涨幅减持」：收盘较持仓均价涨幅 ≥ 110%（收盘 ≥ 均价×2.10）→ 减一档，不看走势；
                                # 资金不足时该类持仓优先作换仓卖出源（涨幅最大者先，同样不要求弱势）。持仓均价 = 买入按股数加权、
                                # 减持不变、除权按 §11.4 折算（持仓表 cost_basis）。回测落点 `--gain-sell 1.10 --gain-sell-mode ungated`。
-SEC93_SWAP_MARGIN = 0.15       # §9.3.1「换仓」：候选 P/V 须比被换出持仓低至少此差值（与回测 `--swap-margin` 同值）
+SEC93_SWAP_MARGIN = 0.15       # v4.222 起换仓卖出源不再比 P/V 边际；本常量只留给接收方守卫研究开关与回测 `--swap-margin`（同值、不起作用）
 SEC93_SWAP_SOURCE_BLOCK = -1.0  # 换仓接收方守卫研究开关（与回测 `--swap-source-block` 同值；-1 = 关，现行）：K ≥ 0 时当日换仓卖出源
                                 # 不进买入队列，且候选侧 P/V 高于「最低换仓源持仓侧 P/V − SEC93_SWAP_MARGIN × K」的候选一并剔除
+SEC93_SWAP_EXT_GAIN = 0.30     # §9.3.1「换仓」（v4.222，用户 2026-09-30 裁定）：让位源 = 信号日收盘 ≥ 持仓均价 × 1.30
+SEC93_SWAP_EXT_MA20 = 0.15     #   且 ≥ MA20 × 1.15 的持仓中收盘 ÷ MA20 最大者；不比 P/V 边际、不要求弱势（回测 `--swap-ext 0.30 0.15 0`）
+SEC93_BT_QUIET = 3             # §9.3.1「新建仓走势」（v4.222）：近 3 个交易日（含信号日）最低价未创 20 日新低，
+SEC93_BT_LOW_WINDOW = 20       #   且信号日收盘 > MA5、> MA20（回测 `--bt-quiet 3`）；20 日新低 = 当日最低价为含当日 20 个交易日最低价的最小值
 # §9.3.1「走势条件·加仓」，v3.02：已有持仓只须 `MA20 > MA60`，不要求 `收盘 > MA20`。
-# 新建仓仍须 `收盘 > MA20 > MA60`。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
+# 新建仓按上面的前低企稳条件（v4.222 前为 `收盘 > MA20 > MA60`）。两者的差别只对**在手持仓**生效，故本脚本必须读持仓。
+# §9.3.1「止损」（v4.222）：不设价格止损；持仓表的 entry_stop_price 列保留作历史记录，不进任何判定。
 SEC93_HOLDINGS = ROOT / "data/processed/a_share_holdings.csv"
 # §9.3.1 股债总仓位上限；生产与回测共用 EquityBondConstraint 的完整历史状态。
 # 受限期间预算 = 现金 − 融资负债，比例减仓在常规卖出后执行；解除只恢复原买入许可。
@@ -806,13 +822,19 @@ def load_exchange_map(path: Path | None = None) -> dict[str, str]:
 
 
 def buy_trend_ok(row: dict[str, object], held_codes: set[str]) -> bool:
-    """§9.3.1 走势条件；执行合格集与观察表共用。"""
+    """§9.3.1 走势条件；执行合格集与观察表共用。
+    已有持仓加仓：`MA20 > MA60`。新建仓（v4.222）：近 SEC93_BT_QUIET 个交易日最低价未创 20 日新低，且收盘 > MA5、> MA20
+    （不再要求 MA20 > MA60；与回测 `--bt-quiet` 同）。"""
     if row.get("signal_state", "ok") != "ok" or str(row.get("tradable")).lower() == "false":
         return False
     close, ma20, ma60 = (to_float(row.get(k)) for k in ("close", "ma20", "ma60"))
     if not all(v is not None and math.isfinite(v) and v > 0 for v in (close, ma20, ma60)):
         return False
-    return ma20 > ma60 and (str(row["security_code"]).zfill(6) in held_codes or close > ma20)
+    if str(row["security_code"]).zfill(6) in held_codes:
+        return ma20 > ma60
+    ma5 = to_float(row.get("ma5"))
+    stable = row.get("bt_stable") in (True, "True", "true", 1, "1")
+    return bool(stable and ma5 and math.isfinite(ma5) and close > ma5 and close > ma20)
 
 
 def build_pv_top10(rows: list[dict[str, object]], as_of: str,
@@ -906,9 +928,9 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                              exposure_cap: float | None = None, cap_cash: float | None = None) -> dict[str, object]:
     """§9.3.2 全部六步：先卖后买。
 
-    卖出侧（第 4 步）逐持仓判：⓪止损复核（T+1 尾盘现价对当日生效线，本表只列候选、不计其卖出款）、
+    卖出侧（第 4 步）逐持仓判（v4.222 起不设价格止损）：
     ②出 `worth_attention` 每日减一档（不加走势条件）、①涨幅达到在册条件减一档、
-    ③换仓（资金不足一档时：先换涨幅达标的持仓，否则换最贵的弱势持仓且 P/V 差 ≥ 换仓差）、
+    ③换仓（资金不足一档时：先换涨幅达标的持仓，否则换盈利 ≥ 30% 且收盘 ≥ MA20 × 1.15 的持仓中偏离最大者，不比 P/V 边际）、
     ④任何减档后余仓不足一手清空。涨幅减持与换仓卖出款当日计入可用资金。
     买入侧（第 3、5 步）：`P/V` 升序、相关性只列报告、逐个买一档；已有冷却按 §9.3.3 跳过合格机会，计划不启动冷却。
     `counters` 是买入侧计数器、`sell_counters` 是卖出侧计数器（§9.3.3，两侧互不消费）。
@@ -993,17 +1015,8 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             sells.append(sell_row(code, r, "数据缺失", "无当日行情，未进任何判定", 0, None,
                                   note="停牌或取数失败：按 §9.1 执行日停牌跳过并复核"))
             continue
-        ma20, ma60 = to_float(r.get("ma20")), to_float(r.get("ma60"))
-        pv = hold_pv_of(r)                                   # 持仓侧 P/V（v4.92 SPA：换仓来源按它判）
-        # ⓪ 止损复核：生效线 = min(锚, 当日 MA60)；T+1 尾盘现价跌破 T+1 当日线即整仓清空
-        stop = h.get("stop")
-        if stop:
-            line = min(stop, ma60) if ma60 else stop
-            if price < line:
-                row = sell_row(code, r, "止损复核", f"T+1 尾盘现价 < min(锚 {stop:g}, T+1 当日 MA60)", h["shares"], price,
-                               note="T 日收盘已低于生效线；T+1 复核仍跌破即整仓清空、不走当日其他路径，卖出款不计入本表买入预算")
-                row["stop_line"] = round(line, 4)
-                sells.append(row)
+        ma20 = to_float(r.get("ma20"))
+        # §9.3.1「止损」（v4.222）：不设价格止损，持仓表的止损锚不进判定。
         # ② 出名单：每日减一档，不加走势条件
         if members is not None and code not in members:
             sold = reduce_one(code, r, "出名单", "已移出 worth_attention，每日减一档直至清空", price)
@@ -1087,7 +1100,7 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
             if cash >= tranche:
                 break
             gain_src = []
-            weak_src = []
+            ext_src = []
             for hcode, h in holdings.items():
                 if hcode in reduced_today or hcode in regular_sold or float(h["shares"]) <= 0:
                     continue                                   # 当日已换仓或已涨幅减持的持仓不再作卖出源
@@ -1099,27 +1112,23 @@ def section93_execution_plan(rows: list[dict[str, object]], nav: float, funds: f
                 if cost and cost > 0 and hp >= cost * (1.0 + SEC93_GAIN_SELL):
                     gain_src.append((hp / cost - 1.0, hcode))   # 涨幅源不要求弱势（§9.3.1 换仓行）
                     continue
-                if hm20 is None or not hp < hm20:
-                    continue                                   # 其余只换走势已走坏（收盘 < MA20）的持仓
-                hpv = hold_pv_of(hr)                          # 换仓来源按持仓侧 P/V（v4.92 SPA）
-                if hpv is not None:
-                    weak_src.append((hpv, hcode))
+                # §9.3.1 换仓行（v4.222）：盈利 ≥ 30% 且收盘 ≥ MA20 × 1.15 的持仓让位（不比 P/V 边际、不要求弱势），
+                # 取收盘 ÷ MA20 最大者（同则盈利大者），与回测 `--swap-ext` 同序同式
+                if (cost and cost > 0 and hm20 and hp >= cost * (1.0 + SEC93_SWAP_EXT_GAIN)
+                        and hp >= hm20 * (1.0 + SEC93_SWAP_EXT_MA20)):
+                    ext_src.append((hp / hm20, hp / cost, hcode))
             src_pv = None
             if gain_src:
                 gain, worst = max(gain_src)
                 cond = f"涨幅 {gain:.0%} ≥ {SEC93_GAIN_SELL:.0%}（不要求弱势），让位给 {cand.get('security_name', ccode)}"
             else:
-                if not weak_src:
-                    swap_stop_reason = "无弱势持仓可换"
+                if not ext_src:
+                    swap_stop_reason = (f"无满足让位条件的持仓（盈利 ≥ {SEC93_SWAP_EXT_GAIN:.0%} 且收盘 ≥ MA20 × "
+                                        f"{1 + SEC93_SWAP_EXT_MA20:.2f}）")
                     break
-                worst_pv, worst = max(weak_src)
-                if worst_pv - cand["model_pv"] < SEC93_SWAP_MARGIN:
-                    swap_stop_reason = (f"最贵弱势持仓 持仓侧 P/V {worst_pv:.4f} 与候选 {cand.get('security_name', ccode)} "
-                                        f"P/V {cand['model_pv']:.4f} 差 {worst_pv - cand['model_pv']:.4f} < {SEC93_SWAP_MARGIN:.4f}")
-                    break
-                src_pv = worst_pv
-                cond = (f"持仓侧 P/V {worst_pv:.4f} − 候选 {cand.get('security_name', ccode)} {cand['model_pv']:.4f} "
-                        f"≥ {SEC93_SWAP_MARGIN:.4f} 且弱势")
+                stretch, multiple, worst = max(ext_src)
+                cond = (f"盈利 {multiple - 1:.0%} ≥ {SEC93_SWAP_EXT_GAIN:.0%} 且收盘为 MA20 的 {stretch:.3f} 倍 ≥ "
+                        f"{1 + SEC93_SWAP_EXT_MA20:.2f}（不比 P/V、不要求弱势），让位给 {cand.get('security_name', ccode)}")
             hr = by_code[worst]
             hp = to_float(hr.get("close")) or 0.0
             sold = reduce_one(worst, hr, "换仓", cond, hp, swap_for=ccode)
@@ -1507,8 +1516,10 @@ FIELDNAMES = [
     "tradable",
     "adjustment_basis",
     "amount",
+    "ma5",
     "ma20",
     "ma60",
+    "bt_stable",
     "amount_ma20",
     "data_source",
     "screened_at_utc",

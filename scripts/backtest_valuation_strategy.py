@@ -1537,6 +1537,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         reentry_e1: bool = False, swap_protect_e1: bool = False,
         left_stop: float = 0.0, left_e1: bool = False, deep_stop_pv: float = 0.0, deep_stop_e1: bool = False,
         size_breaks: tuple[float, float] | None = None, size_e1: bool = False,
+        bt_quiet: int = 0, bt_lows: dict | None = None, swap_ext: tuple | None = None,
+        bt_stable: dict | None = None,
         bank_buy_line: float = 0.0, bank_codes: frozenset = frozenset(),
         mkt: dict[str, float] | None = None, mkt_crash_days: int = 0,
         mkt_crash_pct: float = 0.10, mkt_trend_ma: int = 0,
@@ -1881,6 +1883,24 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
 
     def _e1_low(code: str, when: str) -> bool:
         return e1_table is not None and e1_low(e1_table, code, when, e1_min)
+
+    def _bt_ok(code: str, when: str, close: float) -> bool:
+        """OI-233 BT：近 bt_quiet 个交易日（含信号日）最低价未创 20 日新低，且信号日收盘 > MA5、> MA20。"""
+        ma = mas.get(code, {}).get(when) or {}
+        if 5 not in ma or 20 not in ma or not (close > ma[5] and close > ma[20]):
+            return False
+        if bt_stable is not None:          # 影子组合回放：走稳与否取信号日扫描产物（扫描器 quote_snapshot 同一判据）
+            return bool(bt_stable.get((code, when)))
+        rec = (bt_lows or {}).get(code)
+        return bool(rec) and stabilized(rec[0], day_index[0].get(code, []), day_index[1].get(code, {}), when, quiet=bt_quiet)
+
+    def _bt_anchor(code: str, when: str, fill_day: str) -> float | None:
+        """OI-233 BT：信号日 20 日最低价（末日口径）折回成交日口径；成交日无行情时按信号日口径。"""
+        rec = (bt_lows or {}).get(code)
+        if not rec or when not in rec[1]:
+            return None
+        a, b = rec[2].get(fill_day) or rec[2][when]
+        return (rec[1][when] - b) / a if a > 0 else None
 
     left_used: set[str] = set()                  # OI-224 LS：本次在区内已左侧建过半档的代码（出区即清）
     left_topup: set[str] = set()                 # OI-224 LS：左侧半档待补足的持仓
@@ -2313,6 +2333,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
             # （逐日取 max 即等价于 k × 峰值），只升不降，除权日同步折算。k 越小，线越晚才咬住——
             # k=2/3 要涨到比原锚高 50% 才开始生效，天然只作用于盈利大的仓位。
             stop_tag = f"建仓日MA{lot.entry_stop_ma}"
+            if bt_quiet and not lot.entry_stop_ma and code not in left_topup:
+                stop_tag = "建仓前低"                          # OI-233 BT
             if code in left_topup:
                 stop_tag = f"左侧半档·成交价×{1.0 - left_stop:g}"
             if deep_stop_pv and stop_level and ratio is not None and ratio < deep_stop_pv \
@@ -2716,6 +2738,8 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                         and not (reentry_e1 and _e1_low(code, buy_day)))
 
             def _trend_ok(r):
+                if bt_quiet and r[0] not in portfolio.lots:      # §9.3.1（v4.222，OI-233）：新建仓改按前低企稳＋站上 MA5／MA20
+                    return _bt_ok(r[0], buy_day, r[1])
                 ma = mas.get(r[0], {}).get(buy_day)
                 if not ma or not all(w in ma for w in trend_ma):
                     return False
@@ -3149,10 +3173,33 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                                 continue
                         gain_src.append((_gc / l.avg_cost, c))
                 swap_tag = ""
+                ext_src = []
+                if swap_ext and not gain_src:                    # §9.3.1（v4.222，OI-235）：盈利 ≥ G 且收盘偏离 MA20／MA5 达 D 的持仓让位
+                    _g, _d20, _d5 = swap_ext
+                    for c, l in portfolio.lots.items():
+                        if (c not in today or c == code or l.avg_cost <= 0 or c in quota_hold_today
+                                or (execution_consistency == "signal" and c in outlist_sold_today)
+                                or c in reduced_today or (swap_gain_once and c in gain_trimmed_today)):
+                            continue
+                        _cl = src_close(c)
+                        _mx = mas.get(c, {}).get(src_ma_day, {})
+                        if not _cl or _cl < l.avg_cost * (1.0 + _g) or not _mx.get(20):
+                            continue
+                        if _d20 and _cl < _mx[20] * (1.0 + _d20):
+                            continue
+                        if _d5 and not (_mx.get(5) and _cl >= _mx[5] * (1.0 + _d5)):
+                            continue
+                        ext_src.append((_cl / _mx[20], _cl / l.avg_cost, c))
                 if gain_src:
                     worst = max(gain_src)[1]
                     swap_tag = "·阶梯让位" if gain_ladder else f"·涨幅≥{gain_sell:.0%}让位"
                     stats["阶梯·换仓让位" if gain_ladder else f"涨幅≥{gain_sell:.0%}·换仓让位"] += 1
+                elif swap_ext:
+                    if not ext_src:
+                        break
+                    worst = max(ext_src)[2]
+                    swap_tag = "·盈利偏离让位"
+                    stats["盈利偏离·换仓让位"] += 1
                 else:
                     if not held:
                         break
@@ -3713,6 +3760,13 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
                     left_used.add(code)
                     left_topup.add(code)
                     stats["左侧半档·建仓"] += 1
+                if bt_quiet:                                      # §9.3.1（v4.222，OI-233）：锚 = 信号日 20 日最低价（折到成交日口径）
+                    _anchor = _bt_anchor(code, sig_day, day)
+                    if _anchor:
+                        lot.entry_stop, lot.entry_stop_ma = _anchor, 0
+                        stats["前低建仓"] += 1
+                    else:
+                        stats["前低建仓·无锚沿用MA60"] += 1
                 portfolio.lots[code] = lot
             elif code in left_topup:                              # OI-224 LS：走势满足后补足半档，改用常规锚
                 ma = mas.get(code, {}).get(day) or mas.get(code, {}).get(sig_day, {})
@@ -4281,6 +4335,23 @@ def _vol_label(args) -> str:
     return f"_vol{form}{args.vol_window}" + "".join(f"{k}{v:g}" for v, k in parts if v)
 
 
+def _bt_low_series_all(codes: set[str], actions, lookback: int = 20):
+    """OI-233 BT：逐票 (当日最低价是否创 lookback 日新低, 窗口最低价（末日口径）, 当日口径 → 末日口径仿射 (A, B))。"""
+    out = {}
+    for code, series in _load_ohlcv_column("low", codes).items():
+        days = sorted(series)
+        if not days:
+            continue
+        scale, shift = exright_affine(days, actions.get(code, {}))
+        q = [scale[i] * series[d] + shift[i] for i, d in enumerate(days)]
+        flags, swing, affine = {}, {}, {}
+        for i, d in enumerate(days):
+            m = min(q[max(0, i - lookback + 1): i + 1])
+            flags[d], swing[d], affine[d] = q[i] <= m + 1e-12, m, (scale[i], shift[i])
+        out[code] = (flags, swing, affine)
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="OI-034 估值组/走势组回测")
     parser.add_argument("--strategy", choices=("valuation", "trend", "both"), default="both")
@@ -4418,6 +4489,12 @@ def main() -> int:
                         help="研究开关（OI-224 SZ）：一档乘系数——候选侧 P/V ≤ LO 为 1.5 倍、LO～HI 为 1.0 倍、HI 以上为 0.5 倍"
                              "（配对换仓定向额度不变）。缺省关")
     parser.add_argument("--size-e1", action="store_true", help="OI-224 SZ：E1 低于分界的股票不上调到 1.5 倍")
+    parser.add_argument("--bt-quiet", type=int, default=0, metavar="K",
+                        help="§9.3.1 新建仓走势（v4.222，OI-233）：近 K 个交易日（含信号日）最低价未创 20 日新低，且信号日收盘 > MA5、> MA20；"
+                             "锚 = 信号日 20 日最低价（只在价格止损开着时用）；0=关（旧口径：收盘 > MA20 > MA60）")
+    parser.add_argument("--swap-ext", type=float, nargs=3, default=None, metavar=("G", "D20", "D5"),
+                        help="§9.3.1 换仓卖出源（v4.222，OI-235／OI-236）：信号日收盘 ≥ 持仓均价×(1+G) 且 ≥ MA20×(1+D20)、≥ MA5×(1+D5)"
+                             "（0=不要求）的持仓中取收盘÷MA20 最大者，不比 P/V 边际、不要求弱势；取代弱势＋边际源")
     parser.add_argument("--bank-buy-line", type=float, default=0.0, metavar="L",
                         help="研究开关（OI-227）：银行（不含保险）的买入线改为 L，非金融与保险不变。0=关（缺省）")
     parser.add_argument("--swap-out-min-pv", type=float, default=0.0, metavar="X",
@@ -4961,6 +5038,7 @@ def main() -> int:
               file=sys.stderr)
         mas = {code: moving_averages(series, ma_windows) for code, series in prices.items()}
         lows = {code: new_low_flags(series) for code, series in prices.items()}
+    bt_lows = _bt_low_series_all(set(prices), actions) if args.bt_quiet else None
     if args.exright_stop == "frozen":
         print("⚠ --exright-stop frozen：除权日不折算止损锚（v4.31 前旧口径，送转日会误触发整仓清空），只用于复现旧读数",
               file=sys.stderr)
@@ -5229,6 +5307,7 @@ def main() -> int:
                          left_stop=args.left_stop, left_e1=args.left_e1,
                          deep_stop_pv=args.deep_stop_pv, deep_stop_e1=args.deep_stop_e1,
                          size_breaks=tuple(args.size_breaks) if args.size_breaks else None, size_e1=args.size_e1,
+                         bt_quiet=args.bt_quiet, bt_lows=bt_lows, swap_ext=tuple(args.swap_ext) if args.swap_ext else None,
                          bank_buy_line=args.bank_buy_line,
                          bank_codes=load_bank_codes() if args.bank_buy_line else frozenset(),
                          mkt=mkt_series, mkt_crash_days=args.mkt_crash_days,
