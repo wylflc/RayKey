@@ -1,0 +1,309 @@
+{
+ "job_id": "27372923",
+ "base": "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 --corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 --swap --swap-partial --sell-trend-ma 20 --lot-size 100 --lot-ratio-cooldown --lot-cooldown-start confirmed --execution-consistency signal --exec-delay 1 --exec-price close --fee-preset user --no-artifacts --capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 --maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay --gain-sell 1.10 --gain-sell-mode ungated --swap-gain-once --swap-source-block -1 --width -0.0034 --swap-margin 0.15 --stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma60_stop --stop-basis exec --residual-clear lot --position-cap 0.6 --net-same-day --fill-missing skip --dividend-tax --swap-repeat skip --addon-trend ma-only --swap-require-weak --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --equity-bond-lower 0.3 --equity-bond-restore-above --equity-bond-release-threshold 0.035 --daily-states data/processed/a_share_daily_states_adopted.csv --hold-states data/processed/a_share_daily_states_hold.csv --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv",
+ "ref": "BASE",
+ "arms": {
+  "BASE": [],
+  "BTNS": [
+   "--bt-quiet",
+   "3",
+   "--no-trend-stop"
+  ],
+  "S15": [
+   "--bt-quiet",
+   "3",
+   "--no-trend-stop",
+   "--swap-ext",
+   "0.3",
+   "0.15",
+   "0"
+  ],
+  "CCS15": [
+   "--bt-quiet",
+   "3",
+   "--no-trend-stop",
+   "--swap-ext",
+   "0.3",
+   "0.15",
+   "0",
+   "--swap-held-trigger",
+   "--swap-proceeds",
+   "target"
+  ],
+  "CC10": [
+   "--bt-quiet",
+   "3",
+   "--no-trend-stop",
+   "--swap-ext",
+   "0.3",
+   "0.15",
+   "0",
+   "--swap-held-trigger-max-tiers",
+   "2",
+   "--swap-proceeds",
+   "target"
+  ],
+  "CC20": [
+   "--bt-quiet",
+   "3",
+   "--no-trend-stop",
+   "--swap-ext",
+   "0.3",
+   "0.15",
+   "0",
+   "--swap-held-trigger-max-tiers",
+   "4",
+   "--swap-proceeds",
+   "target"
+  ],
+  "CC30": [
+   "--bt-quiet",
+   "3",
+   "--no-trend-stop",
+   "--swap-ext",
+   "0.3",
+   "0.15",
+   "0",
+   "--swap-held-trigger-max-tiers",
+   "6",
+   "--swap-proceeds",
+   "target"
+  ],
+  "CC40": [
+   "--bt-quiet",
+   "3",
+   "--no-trend-stop",
+   "--swap-ext",
+   "0.3",
+   "0.15",
+   "0",
+   "--swap-held-trigger-max-tiers",
+   "8",
+   "--swap-proceeds",
+   "target"
+  ],
+  "CC50": [
+   "--bt-quiet",
+   "3",
+   "--no-trend-stop",
+   "--swap-ext",
+   "0.3",
+   "0.15",
+   "0",
+   "--swap-held-trigger-max-tiers",
+   "10",
+   "--swap-proceeds",
+   "target"
+  ],
+  "CC60": [
+   "--bt-quiet",
+   "3",
+   "--no-trend-stop",
+   "--swap-ext",
+   "0.3",
+   "0.15",
+   "0",
+   "--swap-held-trigger-max-tiers",
+   "12",
+   "--swap-proceeds",
+   "target"
+  ]
+ },
+ "parent": {
+  "CC10": "S15",
+  "CC20": "S15",
+  "CC30": "S15",
+  "CC40": "S15",
+  "CC50": "S15",
+  "CC60": "S15"
+ },
+ "A": [
+  "000651",
+  "002128",
+  "600066",
+  "601088",
+  "688516"
+ ],
+ "UC": [
+  "000338",
+  "000651",
+  "002128",
+  "600066",
+  "600897",
+  "601088",
+  "601225",
+  "688516"
+ ],
+ "top5": {
+  "BASE": [
+   "000651",
+   "601088",
+   "002128",
+   "688516",
+   "600066"
+  ],
+  "BTNS": [
+   "000651",
+   "601088",
+   "000338",
+   "601225",
+   "688516"
+  ],
+  "S15": [
+   "000651",
+   "601088",
+   "000338",
+   "601225",
+   "600897"
+  ],
+  "CCS15": [
+   "000651",
+   "601088",
+   "601225",
+   "000338",
+   "600897"
+  ],
+  "CC10": [
+   "000651",
+   "000338",
+   "601088",
+   "600897",
+   "601225"
+  ],
+  "CC20": [
+   "000651",
+   "601088",
+   "600897",
+   "000338",
+   "600066"
+  ],
+  "CC30": [
+   "000651",
+   "601088",
+   "000338",
+   "600897",
+   "601225"
+  ],
+  "CC40": [
+   "000651",
+   "601088",
+   "000338",
+   "600897",
+   "601225"
+  ],
+  "CC50": [
+   "000651",
+   "601088",
+   "000338",
+   "601225",
+   "600897"
+  ],
+  "CC60": [
+   "000651",
+   "601088",
+   "000338",
+   "601225",
+   "600897"
+  ]
+ },
+ "U": {
+  "CC10": [
+   "000338",
+   "000651",
+   "002128",
+   "600066",
+   "600897",
+   "601088",
+   "601225",
+   "688516"
+  ],
+  "CC20": [
+   "000338",
+   "000651",
+   "002128",
+   "600066",
+   "600897",
+   "601088",
+   "688516"
+  ],
+  "CC30": [
+   "000338",
+   "000651",
+   "002128",
+   "600066",
+   "600897",
+   "601088",
+   "601225",
+   "688516"
+  ],
+  "CC40": [
+   "000338",
+   "000651",
+   "002128",
+   "600066",
+   "600897",
+   "601088",
+   "601225",
+   "688516"
+  ],
+  "CC50": [
+   "000338",
+   "000651",
+   "002128",
+   "600066",
+   "600897",
+   "601088",
+   "601225",
+   "688516"
+  ],
+  "CC60": [
+   "000338",
+   "000651",
+   "002128",
+   "600066",
+   "600897",
+   "601088",
+   "601225",
+   "688516"
+  ]
+ },
+ "U_groups": {
+  "U01": [
+   "000338",
+   "000651",
+   "002128",
+   "600066",
+   "600897",
+   "601088",
+   "601225",
+   "688516"
+  ],
+  "U02": [
+   "000338",
+   "000651",
+   "002128",
+   "600066",
+   "600897",
+   "601088",
+   "688516"
+  ]
+ },
+ "states": "data/experiments/exp_oi230_20260929/states/DC",
+ "actions": "data/experiments/exp_oi230_20260929/old_inputs/data/raw/corporate_actions/a_share_corporate_actions.csv",
+ "starts": [
+  "2009-11-01",
+  "2010-05-01",
+  "2010-11-01",
+  "2011-05-01",
+  "2011-11-01",
+  "2012-05-01",
+  "2012-11-01",
+  "2013-05-01",
+  "2013-11-01",
+  "2014-05-01",
+  "2014-11-01",
+  "2015-05-01",
+  "2015-11-01",
+  "2016-05-01"
+ ]
+}
