@@ -1,0 +1,146 @@
+{
+ "signal_date": "2026-09-29",
+ "status": "reviewed_through_snapshot_cutoff",
+ "reviewed_at_utc": "2026-09-29T20:57:53.727296+00:00",
+ "primary_documents": [
+  {
+   "security_code": "600036",
+   "title": "招商银行股份有限公司董事会决议公告",
+   "art_code": "AN202609291830000315",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609291830000315_1.pdf",
+   "pdf_sha256": "1611df6eac4d1937fbb97f1d7a196de3b279cf8792e6ffabb31f2bbf72f6096b",
+   "pages": 2,
+   "pages_reviewed": [
+    1,
+    2
+   ],
+   "review_method": "原始PDF逐页文字核验",
+   "reviewed_at_utc": "2026-09-29T20:51:25.555889+00:00",
+   "facts": "第十三届董事会第二十次会议（09-29书面传签，17名董事全部同意）：聘任谢艳华为证券事务代表（夏样芳因工作变动不再担任）；申请香港交易所联讯通注册并授权公司秘书办理；审议通过重大事项决策相关制度。",
+   "assessment": "人事与行政授权事项，不涉及盈利、分红、资本或资产质量；不触发§7.3或§7.4复核，股利折现带不变。"
+  },
+  {
+   "security_code": "601717",
+   "title": "中创智领H股公告-翌日披露报表（09-29）",
+   "art_code": "AN202609291829998202",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609291829998202_1.pdf",
+   "pdf_sha256": "f3754a8eb0983d59c36ce80a7d77aa6d738b504efe23fb244c7f6608cc5387cc",
+   "pages": 6,
+   "pages_reviewed": [
+    1
+   ],
+   "review_method": "CID字体无文字层，gs渲染第1页图像核验（FF305第一章节）",
+   "reviewed_at_utc": "2026-09-29T20:51:25.555889+00:00",
+   "facts": "09-29回购A股373,700股（占已发行股份0.0243%），每股RMB 12.9999，作库存股（拟注销减资或用于员工持股／股权激励）；已发行股份（不含库存股）1,537,759,106→1,537,385,406，库存股4,406,624→4,780,324股，已发行股份总数1,542,165,730不变。",
+   "assessment": "既定回购计划的进展披露，股本总数不变，回购规模累计约0.3%；不构成§7.4事件，模型股数按现行口径不随日回购调整（OI-129/130）。"
+  },
+  {
+   "security_code": "601717",
+   "title": "中创智领H股公告-翌日披露报表（09-28）",
+   "art_code": "AN202609281829960611",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609281829960611_1.pdf",
+   "pdf_sha256": "ec7295fc0d93b60d62b472bcad0eed6bec2c442329787e4e43c71a4ee52a8391",
+   "pages": 6,
+   "pages_reviewed": [
+    1
+   ],
+   "review_method": "CID字体无文字层，gs渲染第1页图像核验（FF305第一章节）",
+   "reviewed_at_utc": "2026-09-29T20:51:25.555889+00:00",
+   "facts": "09-28回购A股1,605,600股（占0.1043%），每股RMB 13.2796，作库存股；已发行股份（不含库存股）1,539,364,706→1,537,759,106，库存股2,801,024→4,406,624，已发行股份总数1,542,165,730不变。",
+   "assessment": "同上，回购进展，不触发复核。"
+  }
+ ],
+ "carried_forward_documents": [],
+ "announcement_snapshot": "data/interim/daily_announcements_2026-09-29.json",
+ "announcement_title_screening_count": 141,
+ "announcement_retrieved_at_utc": "2026-09-29T20:48:01.404503+00:00",
+ "latest_announcement_display_time_beijing": "2026-09-29 22:58:03",
+ "industry_review": "data/interim/daily_industry_review_2026-09-29.json",
+ "valuation_review_queue_rows": 1,
+ "valuation_update": "无新增财报导致的估值更新；复核队列1行为爱玛科技研究与模型差距复核重新入队（v4.216研发资本化使模型锚21.84→24.53亿，+12.3%，超过10%重入阈值），生产带仍采用研究数16.40亿、不冻结，复核结论待用户裁定。池内今日除息3只，按实施公告核验后机械折算：晶盛机电V减0.0599003（差异化，价格口径已登记）、蓝晓科技减0.1178725、国电南瑞减0.152（均为回购专户不参与分派的差异化分红，本次按实施公告登记价格口径）；其余带值不变，持仓今日无除权除息。",
+ "holding_ex_dividends_today": {},
+ "mandatory_codes": [
+  "000651",
+  "000786",
+  "600036",
+  "601318",
+  "601717",
+  "603529",
+  "603855"
+ ],
+ "eligible_codes": [
+  "000651",
+  "603529",
+  "000786",
+  "601318",
+  "603855"
+ ],
+ "holdings_codes": [
+  "000651",
+  "603529",
+  "600036",
+  "601318",
+  "601717"
+ ],
+ "user_named_codes": [],
+ "relevant_announcement_count": 3,
+ "unreviewed_announcements": [],
+ "coverage": [
+  {
+   "security_code": "000651",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "000786",
+   "held": false,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "600036",
+   "held": true,
+   "eligible": false,
+   "announcement_ids": [
+    "AN202609291830000315"
+   ],
+   "announcement_status": "primary_reviewed"
+  },
+  {
+   "security_code": "601318",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "601717",
+   "held": true,
+   "eligible": false,
+   "announcement_ids": [
+    "AN202609291829998202",
+    "AN202609281829960611"
+   ],
+   "announcement_status": "primary_reviewed"
+  },
+  {
+   "security_code": "603529",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "603855",
+   "held": false,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  }
+ ],
+ "report_day_divergence_check": "check_report_day_price_divergence.py --as-of 2026-09-29 --universe pool：全池181只，10日内有披露且有带0只，无命中",
+ "coverage_note": "池内141条标题筛查（快照取于北京时间09-30 04:48，查询窗口09-28～09-30）；持仓5只与合格集的必查公告均已核验原文：招行09-29董事会决议（人事与联讯通授权）、中创智领09-28与09-29两份H股翌日披露报表（A股回购160.56万股、37.37万股，股本总数不变）；格力、爱玛、平安窗口内无公告。另核验2份池内今日除息实施公告（蓝晓科技、国电南瑞）。行业高频数据未全覆盖，缺口另列；快照截止之后发布的公告未覆盖。"
+}

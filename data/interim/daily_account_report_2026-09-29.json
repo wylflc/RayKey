@@ -1,0 +1,83 @@
+{
+ "as_of": "2026-09-29",
+ "account_reported": {
+  "as_of": "2026-09-29",
+  "net_assets_cny": "2609253.24",
+  "total_assets_cny": "4527863.00",
+  "margin_debt_cny": "1918609.76",
+  "credit_line_cny": "",
+  "leverage_ratio": "1.7353",
+  "guarantee_ratio_pct": "236.00",
+  "holdings_market_value_cny": "4527863.00",
+  "cash_cny": "0.00",
+  "position_count": "5",
+  "top_position_weight_pct": "77.68",
+  "account_peak_net_assets_cny": "2811530.99",
+  "drawdown_from_peak_pct": "-7.19",
+  "source": "user_reported_assets_debt_derived",
+  "note": "用户2026-09-29盘后回报（北京时间17:22）：卫星化学清仓22300股（成交价未报，按负债变动推算约25.91元）；买入中创智领8700股@13.03、22700股@13.00（新建仓31400股，成本13.0083元，锚留空），中国平安2700股@52.484（13700→16400股，成本54.2365元），格力电器3500股@38.16（49700→53200股，成本38.9198元）；09-28清单的招商银行换仓卖出3200股未执行，平安清单为2200股。总资产4527863、净资产2609253.24，负债按差额1918609.76；现金0、券商可用保证金-144931.00，扫描funds=-144931.00。未报告外部出入金按0。5只持仓股数乘09-29公开收盘价合计4527863.00元，与实报总资产完全相符。净资产较09-28变动-16454.61元＝持仓市值变动89974.00元−负债增加106428.61元（含净买入、费用与一日利息，未拆分）。格力市值2026920.00元，占净资产77.68%，按现行单票上限暂停加仓。一档130462.66元。",
+  "external_cash_flow_cny": "0.00",
+  "strategy_base_net_assets_cny": "",
+  "strategy_return_pct": "-7.19",
+  "net_assets_before_flow_cny": "",
+  "strategy_nav_basis": "exact",
+  "strategy_unit_nav": "0.928054",
+  "strategy_epoch": "E4"
+ },
+ "available_margin_cny": "-144931.00",
+ "actual_scan_funds_cny": "-144931.00",
+ "net_asset_change_cny": "-16454.61",
+ "net_asset_change_pct": "-0.6266732987830310215205396900",
+ "debt_change_cny": "106428.61",
+ "market_value_change_cny": "89974.00",
+ "tranche_cny": "130462.66",
+ "asset_leverage": "1.735309908056298897227775407",
+ "guarantee_ratio_pct": "235.9970794686252403928144304",
+ "buffer_to_130pct": "44.91457254780014324638355887",
+ "hypothetical_funds_cny": "-180847.10216",
+ "market_value_reconciliation_cny": "0.00",
+ "close_price_reconciliation_status": "matched",
+ "holdings_close_valuation": [
+  {
+   "code": "000651",
+   "name": "格力电器",
+   "close": "38.10",
+   "shares": "53200",
+   "market_value_cny": "2026920.00",
+   "quote_time_beijing": "20260929161500"
+  },
+  {
+   "code": "603529",
+   "name": "爱玛科技",
+   "close": "21.80",
+   "shares": "29200",
+   "market_value_cny": "636560.00",
+   "quote_time_beijing": "20260929161449"
+  },
+  {
+   "code": "600036",
+   "name": "招商银行",
+   "close": "40.51",
+   "shares": "14700",
+   "market_value_cny": "595497.00",
+   "quote_time_beijing": "20260929161440"
+  },
+  {
+   "code": "601318",
+   "name": "中国平安",
+   "close": "52.50",
+   "shares": "16400",
+   "market_value_cny": "861000.00",
+   "quote_time_beijing": "20260929161441"
+  },
+  {
+   "code": "601717",
+   "name": "中创智领",
+   "close": "12.99",
+   "shares": "31400",
+   "market_value_cny": "407886.00",
+   "quote_time_beijing": "20260929161452"
+  }
+ ],
+ "trades_note": "09-29 成交见 data/interim/daily_execution_2026-09-29.json（卫星化学清仓，买入中创智领、中国平安、格力电器）"
+}

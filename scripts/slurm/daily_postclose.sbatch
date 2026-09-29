@@ -31,36 +31,6 @@ case "$SCAN_STAGE" in
     python3 scripts/scan_restatement_announcements.py --snapshot "data/interim/daily_announcements_${SCAN_DATE}.json"
     python3 scripts/daily_execution_guard.py evidence --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
     python3 scripts/build_report_update_queue.py --market A_SHARE --signal-date "$SCAN_DATE"
-    python3 - <<'PY'
-import json
-import os
-import sys
-from datetime import datetime, timezone
-from pathlib import Path
-sys.path.insert(0, 'scripts')
-from screen_daily_volume_price_signals import fetch_daily_rows, add_indicators
-
-date = os.environ['SCAN_DATE']
-result = {}
-for code in filter(None, os.environ.get('SCAN_ENTRY_CODES', '').split(',')):
-    exchange = 'SSE' if code.startswith('6') else 'SZSE'
-    source, rows = fetch_daily_rows(code, exchange, date, 15.0)
-    rows = [r for r in rows if r['date'] <= date]
-    assert rows and rows[-1]['date'] == date, (code, 'missing execution-day quote')
-    add_indicators(rows)
-    latest = rows[-1]
-    assert latest.get('ma60') or latest.get('ma20'), (code, 'no stop anchor')
-    result[code] = {
-        'trade_date': date, 'source_url': source,
-        'retrieved_at_utc': datetime.now(timezone.utc).isoformat(),
-        'close': latest['close'], 'ma20': latest.get('ma20'), 'ma60': latest.get('ma60'),
-        'entry_stop_price': latest.get('ma60') or latest['ma20'],
-        'recent_closes': [{'date': r['date'], 'close': r['close']} for r in rows[-60:]],
-    }
-path = Path('data/interim') / f'daily_entry_anchors_{date}.json'
-path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
-print('Execution-day anchors:', {c: r['entry_stop_price'] for c, r in result.items()}, flush=True)
-PY
     ;;
   scan)
     : "${SCAN_NAV:?Set SCAN_NAV from the account snapshot}"

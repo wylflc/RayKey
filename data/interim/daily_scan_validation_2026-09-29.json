@@ -1,0 +1,514 @@
+{
+ "signal_date": "2026-09-29",
+ "checked_at_utc": "2026-09-29T21:11:54.669583+00:00",
+ "status": "passed_with_known_item",
+ "checks": [
+  "whole_pool_unique_codes",
+  "trade_date",
+  "same_day_quotes",
+  "tracking_000651",
+  "tracking_close_matches_scan_000651",
+  "no_price_stop_000651",
+  "tracking_603529",
+  "tracking_close_matches_scan_603529",
+  "no_price_stop_603529",
+  "tracking_600036",
+  "tracking_close_matches_scan_600036",
+  "no_price_stop_600036",
+  "tracking_601318",
+  "tracking_close_matches_scan_601318",
+  "no_price_stop_601318",
+  "tracking_601717",
+  "tracking_close_matches_scan_601717",
+  "no_price_stop_601717",
+  "tracking_scope",
+  "holdings_and_reported_assets_match",
+  "independent_quote_000651",
+  "independent_quote_603529",
+  "independent_quote_600036",
+  "independent_quote_601318",
+  "independent_quote_601717",
+  "exdiv_v_drop_adopted_300316",
+  "exdiv_v_drop_adopted_300487",
+  "exdiv_v_drop_adopted_600406",
+  "only_today_exdiv_changes_adopted",
+  "exdiv_v_drop_b2_300316",
+  "exdiv_v_drop_b2_300487",
+  "exdiv_v_drop_b2_600406",
+  "only_today_exdiv_changes_b2",
+  "exdiv_v_drop_hold_300316",
+  "exdiv_v_drop_hold_300487",
+  "exdiv_v_drop_hold_600406",
+  "only_today_exdiv_changes_hold",
+  "event_scope_reviewed_before_publication",
+  "publication_verify_passed",
+  "shadow_code_migration_v4222_old_reproduces_and_old_new_equal",
+  "shadow_code_migration_v4222_text_old_reproduces_and_old_new_equal",
+  "shadow_capture_and_run",
+  "user_trades_registered_before_scan",
+  "exright_price_terms_registered_300487_600406"
+ ],
+ "problems": [
+  "empty_financial_review_queue: 1 rows"
+ ],
+ "known_item_note": "复核队列1行为爱玛科技研究与模型差距复核重新入队（v4.216研发资本化使模型锚21.84→24.53亿），生产带仍采用研究数、不冻结，待用户裁定；不影响本日清单。",
+ "holdings_market_value_cny": "4527863.00",
+ "reported_total_assets_cny": "4527863.00",
+ "registered_total_assets_gap_cny": "0.00",
+ "tranche_cny": "130462.66",
+ "scan_funds_cny": "-144931.00",
+ "remaining_funds_cny": "-144931.00",
+ "coverage": {
+  "scanned": 181,
+  "valid_pv": 177,
+  "below_buy_line": 29,
+  "eligible": 5,
+  "held": 5,
+  "mandatory_companies": 7,
+  "primary_reviewed_announcements": 3,
+  "exdiv_primary_documents": 2,
+  "announcement_title_screening": 141
+ },
+ "data_issue_rows": [
+  [
+   "001232",
+   "insufficient_price_history"
+  ]
+ ],
+ "holdings": {
+  "000651": {
+   "name": "格力电器",
+   "close": "38.1",
+   "cost": "38.9198",
+   "gain_pct": -2.11,
+   "ma20": "38.4845",
+   "close_over_ma20": 0.99,
+   "anchor": "37.24",
+   "stretch_source": false,
+   "action": "持有",
+   "pv": "0.48"
+  },
+  "603529": {
+   "name": "爱玛科技",
+   "close": "21.8",
+   "cost": "21.2292",
+   "gain_pct": 2.69,
+   "ma20": "21.2578",
+   "close_over_ma20": 1.0255,
+   "anchor": "20.3750",
+   "stretch_source": false,
+   "action": "持有",
+   "pv": "1.00"
+  },
+  "600036": {
+   "name": "招商银行",
+   "close": "40.51",
+   "cost": "40.4879",
+   "gain_pct": 0.05,
+   "ma20": "40.9860",
+   "close_over_ma20": 0.9884,
+   "anchor": "37.93",
+   "stretch_source": false,
+   "action": "持有",
+   "pv": "1.24"
+  },
+  "601318": {
+   "name": "中国平安",
+   "close": "52.5",
+   "cost": "54.2365",
+   "gain_pct": -3.2,
+   "ma20": "54.5615",
+   "close_over_ma20": 0.9622,
+   "anchor": "51.1700",
+   "stretch_source": false,
+   "action": "持有",
+   "pv": "0.74"
+  },
+  "601717": {
+   "name": "中创智领",
+   "close": "12.99",
+   "cost": "13.0083",
+   "gain_pct": -0.14,
+   "ma20": "14.0085",
+   "close_over_ma20": 0.9273,
+   "anchor": "",
+   "stretch_source": false,
+   "action": "持有",
+   "pv": "0.48"
+  }
+ },
+ "model_band_changes": {
+  "adopted": [
+   {
+    "code": "300316",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "29.7757",
+     "29.7158"
+    ],
+    "band_low": [
+     "26.7981",
+     "26.7382"
+    ],
+    "band_high": [
+     "32.7533",
+     "32.6934"
+    ],
+    "exright_cash": [
+     "",
+     "0.0599"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-29 现价口径：2026-09-29 现金0.0599003/送转0"
+    ],
+    "v_drop": 0.0599
+   },
+   {
+    "code": "300487",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "25.7294",
+     "25.6115"
+    ],
+    "band_low": [
+     "23.1565",
+     "23.0386"
+    ],
+    "band_high": [
+     "28.3024",
+     "28.1845"
+    ],
+    "exright_cash": [
+     "",
+     "0.1179"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-29 现价口径：2026-09-29 现金0.117873/送转0"
+    ],
+    "v_drop": 0.1179
+   },
+   {
+    "code": "600406",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "16.6502",
+     "16.4982"
+    ],
+    "band_low": [
+     "14.9852",
+     "14.8332"
+    ],
+    "band_high": [
+     "18.3153",
+     "18.1633"
+    ],
+    "exright_cash": [
+     "",
+     "0.1520"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-29 现价口径：2026-09-29 现金0.152/送转0"
+    ],
+    "v_drop": 0.152
+   }
+  ],
+  "b2": [
+   {
+    "code": "300316",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "29.7757",
+     "29.7158"
+    ],
+    "band_low": [
+     "26.7981",
+     "26.7382"
+    ],
+    "band_high": [
+     "32.7533",
+     "32.6934"
+    ],
+    "exright_cash": [
+     "",
+     "0.0599"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-29 现价口径：2026-09-29 现金0.0599003/送转0"
+    ],
+    "v_drop": 0.0599
+   },
+   {
+    "code": "300487",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "25.7294",
+     "25.6115"
+    ],
+    "band_low": [
+     "23.1565",
+     "23.0386"
+    ],
+    "band_high": [
+     "28.3024",
+     "28.1845"
+    ],
+    "exright_cash": [
+     "",
+     "0.1179"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-29 现价口径：2026-09-29 现金0.117873/送转0"
+    ],
+    "v_drop": 0.1179
+   },
+   {
+    "code": "600406",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "16.6502",
+     "16.4982"
+    ],
+    "band_low": [
+     "14.9852",
+     "14.8332"
+    ],
+    "band_high": [
+     "18.3153",
+     "18.1633"
+    ],
+    "exright_cash": [
+     "",
+     "0.1520"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-29 现价口径：2026-09-29 现金0.152/送转0"
+    ],
+    "v_drop": 0.152
+   }
+  ],
+  "hold": [
+   {
+    "code": "300316",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "29.7757",
+     "29.7158"
+    ],
+    "band_low": [
+     "26.7981",
+     "26.7382"
+    ],
+    "band_high": [
+     "32.7533",
+     "32.6934"
+    ],
+    "exright_cash": [
+     "",
+     "0.0599"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-29 现价口径：2026-09-29 现金0.0599003/送转0"
+    ],
+    "v_drop": 0.0599
+   },
+   {
+    "code": "300487",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "25.7294",
+     "25.6115"
+    ],
+    "band_low": [
+     "23.1565",
+     "23.0386"
+    ],
+    "band_high": [
+     "28.3024",
+     "28.1845"
+    ],
+    "exright_cash": [
+     "",
+     "0.1179"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-29 现价口径：2026-09-29 现金0.117873/送转0"
+    ],
+    "v_drop": 0.1179
+   },
+   {
+    "code": "600406",
+    "cols": [
+     "net_debt_ps",
+     "intrinsic_value",
+     "band_low",
+     "band_high",
+     "exright_factor",
+     "exright_cash",
+     "exright_note"
+    ],
+    "intrinsic_value": [
+     "16.6502",
+     "16.4982"
+    ],
+    "band_low": [
+     "14.9852",
+     "14.8332"
+    ],
+    "band_high": [
+     "18.3153",
+     "18.1633"
+    ],
+    "exright_cash": [
+     "",
+     "0.1520"
+    ],
+    "exright_note": [
+     "",
+     "除权归一化至 2026-09-29 现价口径：2026-09-29 现金0.152/送转0"
+    ],
+    "v_drop": 0.152
+   }
+  ]
+ },
+ "note_only_date_changes": {
+  "adopted": 38,
+  "b2": 38,
+  "hold": 38
+ },
+ "buy_plan": [],
+ "sell_plan": [],
+ "trades_registered": {
+  "file": "data/interim/daily_execution_2026-09-29.json",
+  "reported_at_utc": "2026-09-29T09:22:56+00:00",
+  "note": "用户在另一会话（北京时间17:22）回报，本次补登：卫星化学清仓（卖出价按负债变动推算约25.915，待确认），买入中创智领31400股、中国平安2700股、格力电器3500股"
+ },
+ "calendar": {
+  "execution_day": "2026-09-30",
+  "note": "09-30（周三）为国庆假期前最后一个交易日"
+ },
+ "rule_version": {
+  "workflow": "v4.222",
+  "first_scan_under_version": true,
+  "epoch_note": "策略纪元E5自2026-09-30起（09-29行仍为E4）"
+ },
+ "shadow_code_migration": {
+  "migrations": [
+   "migrations/v4222_20260930.json",
+   "migrations/v4222_text_20260930.json"
+  ],
+  "validators": [
+   "data/experiments/shadow_migration_v4222_20260930/validate.py",
+   "data/experiments/shadow_migration_v4222text_20260930/validate.py"
+  ],
+  "old_reproduces_stored_states": true,
+  "old_new_equal": true
+ },
+ "equity_bond": {
+  "spread_pct": 6.37,
+  "observed_on": "2026-09-29",
+  "pe_ttm": 12.44,
+  "cn10y": 0.01667,
+  "note": "远高于触发线3%，未受限"
+ },
+ "jobs": {
+  "evidence": 27375700,
+  "band_refresh": 27375995,
+  "preview": 27375996,
+  "band_refresh_after_price_terms": 27376721,
+  "formal_scan": 27376908,
+  "shadow": 27376980
+ },
+ "resource_measurements": {
+  "evidence_elapsed": "00:11:17",
+  "evidence_maxrss_kib": 127024,
+  "band_refresh_elapsed": "00:05:15",
+  "band_refresh_maxrss_kib": 512663,
+  "preview_elapsed": "00:02:33",
+  "preview_maxrss_kib": 1302046,
+  "band_refresh2_elapsed": "00:06:55",
+  "scan_elapsed": "00:02:04",
+  "scan_maxrss_kib": 1389617,
+  "shadow_elapsed": "00:00:50",
+  "shadow_maxrss_kib": 47630
+ },
+ "known_limitations": [
+  "行业高频与竞品数据部分缺失（秦皇岛动力煤价、煤炭固定资产投资、煤机招标、两轮车上险、空调排产）",
+  "嘉立创当日收盘有效、均线历史不足",
+  "京东方A、长江电力、金石资源、中芯国际陈旧带不进估值判定",
+  "公告快照取于北京时间09-30 04:48，其后发布的公告未覆盖",
+  "全市场收盘涨跌家数未取得",
+  "卫星化学卖出价未报，按负债变动推算"
+ ]
+}

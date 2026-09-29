@@ -71,7 +71,7 @@ class StrategyReturnTrackerTest(unittest.TestCase):
         self.assertEqual(out[3]["strategy_unit_nav"], "1.300000")                        # 链不重置
         out = tracker.compute(rows, epoch_from=("E9", "2026-09-11"))
         self.assertEqual([o["strategy_epoch"] for o in out], ["E1", "E1", "E2", "E9"])
-        self.assertEqual(tracker.EPOCHS[-1], ("E4", "2026-09-15"))
+        self.assertEqual(tracker.EPOCHS[-2:], (("E4", "2026-09-15"), ("E5", "2026-09-30")))
         dated = tracker.compute([row("2026-08-28", 100, base="100"), row("2026-09-14", 110), row("2026-09-15", 121)])
         self.assertEqual([r["strategy_epoch"] for r in dated], ["E1", "E3", "E4"])
         self.assertEqual(dated[-1]["strategy_unit_nav"], "1.210000")

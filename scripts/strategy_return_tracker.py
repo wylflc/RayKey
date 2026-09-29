@@ -27,7 +27,8 @@ DEFAULT_EPOCH = "E1"
 EPOCHS = (("E1", "2026-08-28"),   # 策略基准日
           ("E2", "2026-09-10"),   # 股债同阈值去融资
           ("E3", "2026-09-11"),   # 30%／3.5pp；2026-09-10收盘后采纳
-          ("E4", "2026-09-15"))   # 确认成交冷却与每日执行一致性修复；2026-09-14收盘后确认
+          ("E4", "2026-09-15"),   # 确认成交冷却与每日执行一致性修复；2026-09-14收盘后确认
+          ("E5", "2026-09-30"))   # 前低企稳建仓、不设价格止损、盈利偏离让位换仓；2026-09-29收盘后采纳
 NEW_COLUMNS = ("net_assets_before_flow_cny", "strategy_nav_basis", "strategy_unit_nav", "strategy_epoch")
 STRATEGY_COLUMNS = ("strategy_return_pct", "account_peak_net_assets_cny", "drawdown_from_peak_pct",
                     "strategy_nav_basis", "strategy_unit_nav", "strategy_epoch")

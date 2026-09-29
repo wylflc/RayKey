@@ -627,7 +627,7 @@ python3 scripts/screen_daily_volume_price_signals.py --as-of YYYY-MM-DD \
 
 当日无估值更新时可以省略 §6.7 重建，但必须明确写“当日无估值更新”。队列行 `as_of` 为信号日推导的证据截止，旁置 `.meta.json` 的 `as_of` 为信号日；凭据同时校验输入摘要。估值链改变事件文件后须重新完成 evidence 凭据；新增池或持仓代码未在公告取证范围内时重新取证。
 
-常设调度入口为 `scripts/slurm/daily_postclose.sbatch`，四个阶段按 `SCAN_STAGE` 选择，逐日不另建包装脚本：`evidence` 要给 `SCAN_DATE`、`SCAN_SINCE`（上次成功扫描日）、`SCAN_REPORT_DATE`，可选 `SCAN_ENTRY_CODES`（当日为零股建仓成交日的代码，写 `data/interim/daily_entry_anchors_<日期>.json` 供 §9.3.5 记锚）；`preview` 只要 `SCAN_DATE`，刷新下述两项行情输入后写 §8.2 行情预览；`events` 要给 `SCAN_DATE`、`SCAN_SINCE`，只重取公告、公司行动与市场背景并重做同日证据凭据（截止时间后补取用）；`scan` 要给 `SCAN_DATE`、`SCAN_NAV`、`SCAN_FUNDS`，现金和负债可给 `SCAN_CASH`、`SCAN_DEBT`，否则读当日账户快照。evidence 阶段依次运行 `fetch_equity_bond_inputs.py --refresh` 与 `fetch_cost_of_equity_inputs.py`（§9.3.1 股债总仓位上限与扫描器 `--rf` 缺省的输入）、§7.1 两个取数脚本、`fetch_ohlcv_history.py --actions-only`、`fetch_daily_market_evidence.py --as-of YYYY-MM-DD --since 上次扫描日`、`daily_execution_guard.py evidence --as-of YYYY-MM-DD --since 上次扫描日`、队列重建；随后完成必要的模型与公司行动回写再运行 scan。
+常设调度入口为 `scripts/slurm/daily_postclose.sbatch`，四个阶段按 `SCAN_STAGE` 选择，逐日不另建包装脚本：`evidence` 要给 `SCAN_DATE`、`SCAN_SINCE`（上次成功扫描日）、`SCAN_REPORT_DATE`；`preview` 只要 `SCAN_DATE`，刷新下述两项行情输入后写 §8.2 行情预览；`events` 要给 `SCAN_DATE`、`SCAN_SINCE`，只重取公告、公司行动与市场背景并重做同日证据凭据（截止时间后补取用）；`scan` 要给 `SCAN_DATE`、`SCAN_NAV`、`SCAN_FUNDS`，现金和负债可给 `SCAN_CASH`、`SCAN_DEBT`，否则读当日账户快照。evidence 阶段依次运行 `fetch_equity_bond_inputs.py --refresh` 与 `fetch_cost_of_equity_inputs.py`（§9.3.1 股债总仓位上限与扫描器 `--rf` 缺省的输入）、§7.1 两个取数脚本、`fetch_ohlcv_history.py --actions-only`、`fetch_daily_market_evidence.py --as-of YYYY-MM-DD --since 上次扫描日`、`daily_execution_guard.py evidence --as-of YYYY-MM-DD --since 上次扫描日`、队列重建；随后完成必要的模型与公司行动回写再运行 scan。
 
 使用执行计划前运行 `python3 scripts/daily_execution_guard.py verify --as-of YYYY-MM-DD`；成功凭据必须与行情、买卖计划、跟踪表、冷却、日志和输入摘要一致，且账户快照到信号日为止的 §10.3 策略列已登记并与重算一致（缺行、空列或不一致即失败）。扫描采用同一发布锁；暂存或失败批次不可执行，中断安装会在下次扫描读取冷却前恢复。
 
@@ -777,7 +777,7 @@ python3 scripts/sweep_backtest_configs.py --report --out <结果文件>
 | `strategy_return_pct` | (`strategy_unit_nav` − 1) × 100，保留两位 |
 | `account_peak_net_assets_cny` | 基准日起 `strategy_unit_nav` 最高值 × 基准净资产 |
 | `drawdown_from_peak_pct` | (`strategy_unit_nav` ÷ 基准日起最高单位净值 − 1) × 100，保留两位 |
-| `strategy_epoch` | 策略纪元标签；影响估值、选股或下单的实质规则变动自生效日起换新标签：纪元表落在 `strategy_return_tracker.EPOCHS`（标签、生效日），`--write` 按行日期自动标段，`--epoch <标签> --from <日期>` 只作一次性覆盖；单位净值、峰值与回撤连续不重置；文档、展示与指标算法修订不换纪元。`E2` 对应 2026-09-10；`E3` 自 2026-09-11 起（2026-09-10 收盘后采纳）；`E4` 自 2026-09-15 起，使用 §9.3.3 确认成交冷却（2026-09-14 收盘后确认，T+1首个执行日） |
+| `strategy_epoch` | 策略纪元标签；影响估值、选股或下单的实质规则变动自生效日起换新标签：纪元表落在 `strategy_return_tracker.EPOCHS`（标签、生效日），`--write` 按行日期自动标段，`--epoch <标签> --from <日期>` 只作一次性覆盖；单位净值、峰值与回撤连续不重置；文档、展示与指标算法修订不换纪元。`E2` 对应 2026-09-10；`E3` 自 2026-09-11 起（2026-09-10 收盘后采纳）；`E4` 自 2026-09-15 起，使用 §9.3.3 确认成交冷却（2026-09-14 收盘后确认，T+1首个执行日）；`E5` 自 2026-09-30 起，使用 §9.3.1 前低企稳建仓、不设价格止损与盈利偏离让位换仓（2026-09-29 收盘后采纳，T+1首个执行日） |
 
 基准日前各行的策略列只存历史数据，不参与计算。快照日期不连续时按相邻两行链乘。当日报告账户段列出策略收益率、策略期回撤与纪元。
 

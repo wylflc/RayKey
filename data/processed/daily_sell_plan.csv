@@ -1,2 +1,1 @@
 trade_date,security_code,security_name,rule,condition,close,ma20,ma60,model_pv,hold_pv,cost_basis,gain_pct,entry_stop_price,stop_line,current_shares,sell_shares,amount,swap_for,cooldown_skips,note
-2026-09-28,600036,招商银行,换仓,持仓侧 P/V 1.2458 且弱势｜卖出款去向：中国平安 0.7405（边际 +0.5053）｜触发闸门：华荣股份 0.9884（差 0.2574 ≥ 0.1500）,40.64,40.9665,39.4056,1.2458,1.2458,40.4879,0.0038,37.93,,14700.0,3200,130048.0,603855,0,

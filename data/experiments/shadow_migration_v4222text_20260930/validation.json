@@ -1,0 +1,60 @@
+{
+ "outcomes": {
+  "missing_300_on_0828": {
+   "old_reproduces_stored_states": true,
+   "old_new_equal": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "days": 22,
+   "fills": 57,
+   "last_equity": {
+    "date": "2026-09-29",
+    "net_assets": 2642666.9964849744,
+    "unit_nav": 0.9402038456859612,
+    "return_pct": -5.979615431403884,
+    "debt": 1759987.0035150256,
+    "cash": 0.0,
+    "opening_capital": 2810738.34,
+    "opening_coal_shares": 10400
+   }
+  }
+ },
+ "original_snapshots": 22,
+ "changed_files": {
+  "screen_daily_volume_price_signals.py": {
+   "before": "9d5d87320610f6c640691f3565f28afbf9d84d093db884adc1dc287390901a9e",
+   "after": "895f48ca7a36e082e0b48c9bbeabdb5b0ba254e051bbf2769c39390a5080784a",
+   "old_source": "git 0e4f4d0a:scripts/screen_daily_volume_price_signals.py"
+  }
+ },
+ "changed_names": {
+  "screen_daily_volume_price_signals.py": [
+   "print_section93 合格集摘要文字"
+  ]
+ },
+ "replay_references": "只改打印文字，影子回放不调用该打印函数",
+ "code_before": {
+  "shadow_from_origin.py": "a3bce8ee95117430743a8da352de9eaf839e15e6ec336914d7f17695943573d5",
+  "shadow_portfolio.py": "1dda5a94d478e658511ec1090cb3db2f608d9eae4e3035dbce0f3ae173c0e270",
+  "backtest_valuation_strategy.py": "88aac4ab2423f6bcf1f3f153ff7e47a43f76ca99d430f2cbf26a1e6b3e870861",
+  "screen_daily_volume_price_signals.py": "9d5d87320610f6c640691f3565f28afbf9d84d093db884adc1dc287390901a9e",
+  "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+  "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+  "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+  "corporate_actions.py": "9f7c9c5f0c2ed24a00df5e25cf4ff531205c397e8a1b00abf58056d7c6102f27"
+ },
+ "code_after": {
+  "shadow_from_origin.py": "a3bce8ee95117430743a8da352de9eaf839e15e6ec336914d7f17695943573d5",
+  "shadow_portfolio.py": "1dda5a94d478e658511ec1090cb3db2f608d9eae4e3035dbce0f3ae173c0e270",
+  "backtest_valuation_strategy.py": "88aac4ab2423f6bcf1f3f153ff7e47a43f76ca99d430f2cbf26a1e6b3e870861",
+  "screen_daily_volume_price_signals.py": "895f48ca7a36e082e0b48c9bbeabdb5b0ba254e051bbf2769c39390a5080784a",
+  "equity_bond_constraint.py": "7683380bf1a9fdc326982d974bc7d4e409378bf729735ba381bbb642cbf28962",
+  "lot_cooldown.py": "4db0586de47993c2f6ae8c5f3bb49ea1a667edb5d0a77cebecd8173272c3a2bd",
+  "swap_chop_guard.py": "09f678afddaad06fa7c0000c53a3707264b539c6cab32c52cdb746447c4b6eb6",
+  "corporate_actions.py": "9f7c9c5f0c2ed24a00df5e25cf4ff531205c397e8a1b00abf58056d7c6102f27"
+ }
+}

@@ -1,14 +1,14 @@
 {
-  "as_of": "2026-09-28",
-  "generated_at_utc": "2026-09-28T21:37:29.083817+00:00",
-  "sha256": "34f2d71ac6877727d3223e9084121b417ee4df1d44c1b912711a7c1c47044913",
+  "as_of": "2026-09-29",
+  "generated_at_utc": "2026-09-29T21:04:12.148466+00:00",
+  "sha256": "4622023270d8d0ab01d4eeb10c7e7d331e27e2b2669f61aa77110ab1b5be3d5d",
   "inputs": {
-    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/interim/a_share_earnings_forecasts.csv": "e405d96df8faefe781cea8daec055da68c0ed5c25c6dde65269f98b0ef20c3c8",
-    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/interim/a_share_report_disclosures.csv": "8111e980259ff05aff82b7996f89a8779f26ceeeaacd5a152c68df4bb501d795",
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/interim/a_share_earnings_forecasts.csv": "85b9de22e9b2ac1caec52ac04776be0a202519fc2ef74a89463003140ba703aa",
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/interim/a_share_report_disclosures.csv": "d1d9621b77a20a1c7a381e8d1f522d117f3a718bd15f3865b17785eae18321e1",
     "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_attention_triage.csv": "40aeb91e690dee3a781597ba53b863a9578b8ef94b29df1fa1abc9fd5c6a3d67",
     "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_watchlist_quality_tiers.csv": "d1c10250296b30cbb5a9ef3a75d08f61d59798be9db99d95c89c9ada7d3b9075",
-    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_core_valuation_pool.csv": "97c0c61097be7246bc4e38417389066632ec74e874609db6be937af364eed979",
-    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_valuation_dossiers.csv": "97bb2d321fa001b510d7ceb118653c26ee9f469e31f53d972b700c94671116e8",
-    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_pool_model_bands_adopted.csv": "dc6e543442dc590a7b26c51cab9a241dd2651e5be032517e629341b5ae3a455d"
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_core_valuation_pool.csv": "21e6def169291dafe726c4a2687984dddc37fc2e70c7e30cfa1aa0f484f97047",
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_valuation_dossiers.csv": "17c43c79227334c671aab891a58e5d375a08091773e1d6160cc5051f1af0ad0a",
+    "/gpfs/scratch1/shared/zwang/mm_quant/RayKey/data/processed/a_share_pool_model_bands_adopted.csv": "ffd907d308501c0bdf12b2cbd9aed53f3eb6edaedbca4caa5b69e91a1333d490"
   }
 }

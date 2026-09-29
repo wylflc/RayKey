@@ -1381,8 +1381,8 @@ def report_section93(result: dict[str, object], nav: float, out_path: Path,
                   + f"｜买后总仓位 {result['eb_stock_after'] / nav:.1%}")
     print(f"  2. 合格集：`P/V ≤ {SEC93_BUY_LINE}` 的 {result['n_cheap']} 只；"
           f"再过走势条件的 **{len(result['eligible'])} 只**"
-          f"（新建仓 `收>MA20>MA60`；**已持仓只须 `MA20>MA60`**，其中 {result['n_addon']} 只"
-          f"是靠这条放宽进来的回踩加仓）；"
+          f"（新建仓：近 {SEC93_BT_QUIET} 个交易日最低价未创 {SEC93_BT_LOW_WINDOW} 日新低且 `收>MA5`、`收>MA20`；"
+          f"**已持仓只须 `MA20>MA60`**，其中 {result['n_addon']} 只是收盘不高于 MA20 的回踩加仓）；"
           f"§7.5 冻结硬排除 {len(result.get('frozen_out') or [])} 只；"
           f"L3 战术闸门排除 {len(result.get('tactical_out') or [])} 只；"
           f"相关性只列报告不过滤（上限 {SEC93_MAX_CORR:g}，剔除 {len(dropped)} 只）")
