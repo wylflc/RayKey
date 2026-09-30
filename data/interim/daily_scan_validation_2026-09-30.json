@@ -1,6 +1,6 @@
 {
  "signal_date": "2026-09-30",
- "checked_at_utc": "2026-09-30T11:24:55.785833+00:00",
+ "checked_at_utc": "2026-09-30T12:46:22.829282+00:00",
  "status": "passed",
  "checks": [
   "whole_pool_unique_codes",
@@ -61,10 +61,18 @@
   "band_change_only_6_pool_banks_scaled_b2",
   "band_change_only_6_pool_banks_scaled_hold",
   "insurer_601318_unchanged",
-  "republish_v4224_verify_passed"
+  "republish_v4224_verify_passed",
+  "decision_log_v4225_registered_before_rescan",
+  "states_old_byte_identical_before_install_v4225",
+  "states_new_non_insurer_rows_identical",
+  "band_change_only_601318_insurer_method_adopted",
+  "band_change_only_601318_insurer_method_b2",
+  "band_change_only_601318_insurer_method_hold",
+  "republish_v4225_verify_passed",
+  "republish_after_dossier_formula_text_verify_passed"
  ],
  "problems": [],
- "known_item_note": "爱玛差距复核按用户裁定（B2）当晚生效：研究数 16.40→18.96 亿、研究增长 3.60%→5.62%，V 21.81→25.64；差距 29.4%，退出复核队列；三份带仅 603529 变动（research_overlay 2026-09-30），重跑扫描并重新发布；v4.224（OI-244）当晚落地：取消银行同尺系数，三份带仅池内6家银行变动（V、带上下沿恰为 ÷0.7045），招行 P/V 1.2624→0.8894，成都、宁波进入买入区，过买入线28→31只、走势合格4→7只；资金为负，清单仍为空",
+ "known_item_note": "爱玛差距复核按用户裁定（B2）当晚生效：研究数 16.40→18.96 亿、研究增长 3.60%→5.62%，V 21.81→25.64；差距 29.4%，退出复核队列；三份带仅 603529 变动（research_overlay 2026-09-30），重跑扫描并重新发布；v4.224（OI-244）当晚落地：取消银行同尺系数，三份带仅池内6家银行变动（V、带上下沿恰为 ÷0.7045），招行 P/V 1.2624→0.8894，成都、宁波进入买入区，过买入线28→31只、走势合格4→7只；资金为负，清单仍为空；v4.225（OI-232）当晚落地：保险 V 改按 V_DDM × Ḡ（前 36 个自然月末银行 G 的中位），三份带仅平安变动，平安 P/V 0.7516→0.9825，仍在线内；走势合格仍 7 只，资金为负，清单仍为空；档案带说明改为按类写公式（银行 V_DDM × G、保险 V_DDM × Ḡ），刷新后再重发一次、清单不变",
  "holdings_market_value_cny": "4585280.00",
  "reported_total_assets_cny": "4585280.00",
  "registered_total_assets_gap_cny": "0.00",
@@ -135,7 +143,7 @@
    "anchor": "51.1700",
    "stretch_source": false,
    "action": "持有",
-   "pv": "0.75"
+   "pv": "0.98"
   },
   "601717": {
    "name": "中创智领",
@@ -1192,6 +1200,98 @@
      ]
     }
    ]
+  },
+  "v4225_insurer_method": {
+   "adopted": [
+    {
+     "code": "601318",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "70.9459",
+      "47.2904"
+     ],
+     "band_low": [
+      "63.8513",
+      "42.5614"
+     ],
+     "band_high": [
+      "78.0405",
+      "52.0194"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    }
+   ],
+   "b2": [
+    {
+     "code": "601318",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "70.9459",
+      "47.0302"
+     ],
+     "band_low": [
+      "63.8513",
+      "42.3272"
+     ],
+     "band_high": [
+      "78.0405",
+      "51.7332"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    }
+   ],
+   "hold": [
+    {
+     "code": "601318",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "70.9459",
+      "47.2904"
+     ],
+     "band_low": [
+      "63.8513",
+      "42.5614"
+     ],
+     "band_high": [
+      "78.0405",
+      "52.0194"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    }
+   ]
   }
  },
  "note_only_date_changes": {
@@ -1212,9 +1312,9 @@
   "source": "https://news.10jqka.com.cn/20260917/c680021075.shtml"
  },
  "rule_version": {
-  "workflow": "v4.224",
+  "workflow": "v4.225",
   "epoch": "E5",
-  "epoch_note": "策略纪元E5自2026-09-30起；E6自2026-10-08起（v4.224取消银行同尺系数）"
+  "epoch_note": "策略纪元E5自2026-09-30起；E6自2026-10-08起（v4.224取消银行同尺系数、v4.225保险改按V_DDM×平滑银行G）"
  },
  "equity_bond": {
   "spread_pct": 6.37,
@@ -1234,7 +1334,12 @@
   "rescan_b2": 27399083,
   "install_v4224": 27401246,
   "band_refresh_v4224": 27401247,
-  "rescan_v4224": 27401248
+  "rescan_v4224": 27401248,
+  "install_v4225": 27405147,
+  "band_refresh_v4225": 27405148,
+  "rescan_v4225": 27405149,
+  "band_refresh_v4225_dossier_text": 27405521,
+  "rescan_v4225_dossier_text": 27405522
  },
  "resource_measurements": {
   "evidence_elapsed": "00:18:15",
@@ -1250,7 +1355,9 @@
   "band_refresh_b2_elapsed": "00:03:11",
   "rescan_b2_elapsed": "00:01:37",
   "band_refresh_v4224_elapsed": "00:03:12",
-  "rescan_v4224_elapsed": "00:01:39"
+  "rescan_v4224_elapsed": "00:01:39",
+  "band_refresh_v4225_elapsed": "00:03:24",
+  "rescan_v4225_elapsed": "00:02:07"
  },
  "known_limitations": [
   "行业高频与竞品数据部分缺失（动力煤价、煤炭固定资产投资、煤机招标、两轮车上险、空调排产）",

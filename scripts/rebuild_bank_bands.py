@@ -200,9 +200,13 @@ H2_COE = float(mode.split(":")[2]) if H2 else None
 H2_BANK_SCALE = (float(mode.split(":")[3]) if len(mode.split(":")) > 3 else bank_valuation.BANK_SCALE) if H2 else 1.0
 # v4.221（OI-230）：h2 缺省 DDM 终值按可持续派息率（派息率为 0 也可估），V_D0 不可得的银行照用当日截面 G；
 # `h2:RP:COE:SCALE:cur` 复现 v4.221 之前的口径（终值按当期派息率、V_D0 不可得的银行无值）
-H2_SUSTAINABLE = H2 and not (len(mode.split(":")) > 4 and mode.split(":")[4] == "cur")
-if H2 and len(mode.split(":")) > 4 and mode.split(":")[4] != "cur":
-    sys.exit(f"未知的 h2 第 5 段：{mode}（只接受 cur）")
+# 第 5 段选项（可用 + 连写）：`cur` 复现 v4.221 之前的 DDM 终值口径；`insd0` 复现 v4.225 之前的保险 V = V_D0
+H2_OPTS = set(mode.split(":")[4].split("+")) if H2 and len(mode.split(":")) > 4 else set()
+if H2_OPTS - {"cur", "insd0"}:
+    sys.exit(f"未知的 h2 第 5 段：{mode}（只接受 cur、insd0 或 cur+insd0）")
+H2_SUSTAINABLE = H2 and "cur" not in H2_OPTS
+# v4.225（OI-232）：保险 V = V_DDM × Ḡ（前 36 个自然月末银行 G 的中位，`bank_valuation.smoothed_g`），不可得时退回 V_D0
+H2_INS_SMOOTH = H2 and "insd0" not in H2_OPTS
 RP = float(mode.split(":")[1]) if mode.startswith(("divspread:", "h2:")) else None
 
 # ---- 股利折现口径要用的两组序列 ----
@@ -283,6 +287,28 @@ if H2:
         no_d0 = sum(1 for (c, d), x in H2_VALUES.items() if c not in INSURER_CODES and x[3] and not x[0] and H2_SCALE.get(d))
         print(f"V_D0 不可得、按截面 G 估值的银行行 {no_d0:,}", flush=True)
 
+# ---- 保险平滑 G（v4.225，OI-232）：各自然月末银行截面 G（与实盘 `bank_valuation.bank_g_at` 同法，全部银行），逐月取前 36 个的中位 ----
+INS_GBAR: dict[str, float | None] = {}
+if H2_INS_SMOOTH:
+    def v_d0(c, d):
+        """与上面预扫同式的 V_D0（最近已知完整财年分红 ÷ (国债 + RP)，按除权参考价折到 d）。"""
+        r10, dv = rf_at(d), div_annual(c, d)
+        if r10 is None or dv <= 0 or dv / (r10 + RP) <= 0:
+            return None
+        v, _f, _c = ex_adjust(c, div_annual_since(c, d), d, dv / (r10 + RP))
+        return v if v > 0 else None
+    _fund = bank_valuation.BankFundamentals(BANDS, BANKS)
+    _banks = sorted(c for c in BANKS if c not in INSURER_CODES)
+    _ins_months = sorted({d[:7] for (c, d) in H2_VALUES if c in INSURER_CODES})
+    _month_g: dict[str, float | None] = {}
+    def _g_at(day):
+        if day not in _month_g:
+            _month_g[day] = bank_valuation.bank_g_at(day, v_d0, _fund, ACTIONS, _banks)
+        return _month_g[day]
+    for m in _ins_months:
+        INS_GBAR[m] = bank_valuation.smoothed_g(f"{m}-01", _g_at)
+    print(f"保险平滑 G：{sum(1 for g in INS_GBAR.values() if g):,}/{len(INS_GBAR):,} 个月可算（月末 G {len(_month_g):,} 个）", flush=True)
+
 # ---- 第二遍：重写银行行 ----
 n_rewritten = n_kept = n_dropped = n_exright = 0
 pb_star = []
@@ -308,7 +334,10 @@ with open(DAILY, encoding="utf-8") as fi, open(OUT, "w", encoding="utf-8", newli
         if H2:
             v0, f0, c0, vd, fd, cd = H2_VALUES.get((c, d), (None,) * 6)
             g = H2_SCALE.get(d)
-            if c not in INSURER_CODES and g and vd and (v0 or H2_SUSTAINABLE):   # V_D0 不可得的银行照用 G（v4.221，OI-230）
+            gb = INS_GBAR.get(d[:7]) if c in INSURER_CODES and H2_INS_SMOOTH else None
+            if gb and vd:                                                           # v4.225（OI-232）：保险 V_DDM × Ḡ
+                v, factor, cash_cum = vd * gb, fd, cd
+            elif c not in INSURER_CODES and g and vd and (v0 or H2_SUSTAINABLE):   # V_D0 不可得的银行照用 G（v4.221，OI-230）
                 v, factor, cash_cum = vd * g * H2_BANK_SCALE, fd, cd
             elif v0:
                 v, factor, cash_cum = v0 * (1.0 if c in INSURER_CODES else H2_BANK_SCALE), f0, c0

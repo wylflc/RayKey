@@ -1,0 +1,56 @@
+{
+ "modes": {
+  "OLD": "h2:0.02:0.10:1:insd0",
+  "NEW": "h2:0.02:0.10"
+ },
+ "reproduction": {
+  "a_share_daily_states_adopted.csv": {
+   "current": "819d3633cf72946e4e19c6938bff1f69adccf80957cade898aeb051c60c6a8e0",
+   "old": "819d3633cf72946e4e19c6938bff1f69adccf80957cade898aeb051c60c6a8e0",
+   "identical": true
+  },
+  "a_share_daily_states_b2.csv": {
+   "current": "ade389c11cef3b3aef129a1849d3bd3bcba532a6ded6ddc45436d99ccb90db23",
+   "old": "ade389c11cef3b3aef129a1849d3bd3bcba532a6ded6ddc45436d99ccb90db23",
+   "identical": true
+  },
+  "a_share_daily_states_hold.csv": {
+   "current": "2cba8cdcab882b177d52e0ece1ca4aa2b24bfc84f5f9d93f599eb8c5442fb681",
+   "old": "2cba8cdcab882b177d52e0ece1ca4aa2b24bfc84f5f9d93f599eb8c5442fb681",
+   "identical": true
+  }
+ },
+ "new_vs_current": {
+  "a_share_daily_states_adopted.csv": {
+   "rows": 15327202,
+   "same": 12960296,
+   "insurer_changed": 16829,
+   "bank_changed": 42028,
+   "other_changed": 2308049,
+   "sha256": "277c10951a98d27bc4a1994a0f213822600f92d8dbe0bbfbb10a6a791ba35deb"
+  },
+  "a_share_daily_states_b2.csv": {
+   "rows": 15360165,
+   "same": 12991914,
+   "insurer_changed": 16829,
+   "bank_changed": 42028,
+   "other_changed": 2309394,
+   "sha256": "e47486d687e0f802489651b61f6f9cb5f68f0286651ab383589d1b9eb16d7b10"
+  },
+  "a_share_daily_states_hold.csv": {
+   "rows": 15360648,
+   "same": 12992397,
+   "insurer_changed": 16829,
+   "bank_changed": 42028,
+   "other_changed": 2309394,
+   "sha256": "7fd70dbfc2318eaa22e227ed074cff1cce9b43eac409af471bf574f0e8834eba"
+  }
+ },
+ "i1c_candidates": {
+  "candidate_months": 817,
+  "matched": 817,
+  "missing": 0,
+  "max_rel_diff": 0.018427761566064627,
+  "over_1e3": 414
+ }
+}

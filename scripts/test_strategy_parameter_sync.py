@@ -132,6 +132,10 @@ class StrategyParameterSyncTest(unittest.TestCase):
         # v4.224（OI-244）：银行不乘同尺系数，唯一常数在 bank_valuation（历史重建缺省取它、实盘扫描同读）
         import bank_valuation
         self.assertAlmostEqual(bank_valuation.BANK_SCALE, 1.0)
+        # v4.225（OI-232）：保险 V_DDM × 前 36 个自然月末银行 G 的中位（可算不足 12 个退回 V_D0），常数在 bank_valuation、工作流同写
+        self.assertEqual((bank_valuation.INSURER_G_MONTHS, bank_valuation.INSURER_G_MIN), (36, 12))
+        self.assertIn("36 个自然月末银行截面 G 的中位", workflow)
+        self.assertIn("可算的月末不足 12 个", workflow)
         # OI-213（v4.216）：ROIC 路径研发资本化，两条建带命令与常设重建作业同参，行业大类在建带前补取
         self.assertEqual(workflow.count("  --rd-capitalize on \\"), 2)
         self.assertIn("--rd-capitalize on", chain)

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""v4.215（OI-207 H2）：银行股利尺度 × DDM 排序的唯一实现 `bank_valuation`；v4.221（OI-230）终值按可持续派息率。"""
+"""v4.215（OI-207 H2）：银行股利尺度 × DDM 排序的唯一实现 `bank_valuation`；v4.221（OI-230）终值按可持续派息率；
+v4.225（OI-232）保险 V_DDM × 平滑银行 G。"""
 import math
+import statistics
 import unittest
 from unittest.mock import patch
 
@@ -81,6 +83,36 @@ class BankValuationTests(unittest.TestCase):
             out = bv.live_h2("2026-09-28", d0.get, None, {}, None)
         g = math.exp(sum(math.log(v / 5.0) for v in d0.values() if v) / 6)
         self.assertAlmostEqual(out[silent], 5.0 * g * bv.BANK_SCALE)
+
+    def test_month_ends_before_excludes_current_month(self):
+        ends = bv.month_ends_before("2026-09-30")
+        self.assertEqual(len(ends), bv.INSURER_G_MONTHS)
+        self.assertEqual((ends[0], ends[-1]), ("2023-09-30", "2026-08-31"))
+        self.assertIn("2024-02-29", ends)
+        self.assertEqual(bv.month_ends_before("2026-03-01", 2), ["2026-01-31", "2026-02-28"])
+
+    def test_smoothed_g_is_median_and_needs_minimum(self):
+        ends = bv.month_ends_before("2026-09-30")
+        g = {d: 0.5 + i / 100 for i, d in enumerate(ends)}
+        self.assertAlmostEqual(bv.smoothed_g("2026-09-30", g.get), statistics.median(g.values()))
+        sparse = {d: 0.6 for d in ends[: bv.INSURER_G_MIN - 1]}
+        self.assertIsNone(bv.smoothed_g("2026-09-30", sparse.get))
+        sparse[ends[-1]] = 0.9
+        self.assertAlmostEqual(bv.smoothed_g("2026-09-30", sparse.get), 0.6)
+
+    def test_insurer_value_is_ddm_times_smoothed_g(self):
+        with patch.object(bv, "ddm_at", return_value=80.0):
+            self.assertAlmostEqual(bv.insurer_value(None, {}, "601318", "2026-09-30", 0.5), 40.0)
+            self.assertIsNone(bv.insurer_value(None, {}, "601318", "2026-09-30", None))
+        with patch.object(bv, "ddm_at", return_value=None):
+            self.assertIsNone(bv.insurer_value(None, {}, "601318", "2026-09-30", 0.5))
+
+    def test_bank_g_at_matches_live_cross_section(self):
+        codes = {f"60{i:04d}" for i in range(6)}
+        d0 = {c: 10.0 + i for i, c in enumerate(sorted(codes))}
+        with patch.object(bv, "ddm_at", side_effect=lambda fund, acts, c, day: 5.0):
+            g = bv.bank_g_at("2026-08-31", lambda c, day: d0[c], None, {}, codes)
+        self.assertAlmostEqual(g, math.exp(sum(math.log(v / 5.0) for v in d0.values()) / len(d0)))
 
 
 if __name__ == "__main__":

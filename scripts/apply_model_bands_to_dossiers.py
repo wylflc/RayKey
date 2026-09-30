@@ -17,8 +17,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from build_historical_valuation_bands import load_actions  # noqa: E402
 from apply_forecast_band_overlay import exright_normalize  # noqa: E402
 from a_share_signal_dates import evidence_iso_for_signal  # noqa: E402
-from divspread_names import is_divspread_financial  # noqa: E402  v4.56 银行＋保险股利折现
-from screen_daily_volume_price_signals import bank_live_value  # noqa: E402  v4.215 银行 H2、保险股利折现
+from divspread_names import INSURER_CODES, is_divspread_financial  # noqa: E402  v4.56 银行＋保险；v4.225 保险另走平滑 G
+from screen_daily_volume_price_signals import bank_live_value  # noqa: E402  v4.215 银行 H2；v4.225 保险 V_DDM × 平滑银行 G
 
 
 def csv_rows(path: Path):
@@ -136,7 +136,7 @@ def main() -> int:
                 v = bank_live_value(c, args.signal_date, rf)[0] if rf is not None else None
                 if v:
                     b = dict(usable[c]); b["intrinsic_value"] = f"{v:.4f}"; b["roic_path"] = "bank_divspread"
-                    b["exright_note"] = "股利折现口径（分子为最近已知完整财年分红，不折）"; b["forecast_overlay"] = ""
+                    b["exright_note"] = "§6.5.1 第 4 条口径（信号日按当日带、分红与国债计算并折到当日）"; b["forecast_overlay"] = ""
                     usable[c] = b
                 else:
                     usable.pop(c, None); archive_used.remove(c); near_zero_div.add(c)
@@ -226,9 +226,10 @@ def main() -> int:
             except (TypeError, ValueError):
                 return "—"
         if roic_path == "bank_divspread":
-            row["band_method"] = "银行/保险·股利折现（§6.5.2.3）"
-            row["band_derivation"] = (common_head
-                + "V = 最近已知完整财年每股现金分红 ÷ (十年国债 + 2%)｜" + common_tail)
+            row["band_method"] = "银行/保险（§6.5.1 第 4 条）"
+            formula = ("V = V_DDM × Ḡ（前 36 个自然月末银行截面 G 的中位；不可得时退回股利利差）" if code in INSURER_CODES
+                       else "V = V_DDM × G（当日银行截面 G；不可算时退回股利利差）")
+            row["band_derivation"] = common_head + formula + "｜" + common_tail
         elif roic_path in ("growth", "zero_growth"):
             row["band_method"] = "内在价值模型·ROIC 口径（§6.5.2.3）：NOPAT—投入资本—增量回报—WACC—EV−净负债"
             # g0 的来源按带文件 `roic_g_source` 如实写（hybrid 两腿取大；生产池多数 growth 带由利润增速腿给出，

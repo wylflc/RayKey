@@ -692,18 +692,48 @@ def _bank_h2(as_of: str, rf: float) -> dict[str, float]:
                                   ROOT / "data/raw/a_share_securities.csv")
 
 
+@lru_cache(maxsize=1)
+def _bank_fundamentals():
+    """银行与保险的 (可得日, bps, roe0, payout) 阶梯（`bank_valuation.BankFundamentals`，与 `live_h2` 同一带文件）。"""
+    import bank_valuation
+    from divspread_names import INSURER_CODES
+    return bank_valuation.BankFundamentals(ROOT / "data/processed/roic_bands.csv",
+                                           bank_valuation.bank_codes(ROOT / "data/raw/a_share_securities.csv") | INSURER_CODES)
+
+
+@lru_cache(maxsize=8)
+def _insurer_g_bar(as_of: str) -> float | None:
+    """§6.5.1 第 4 条（v4.225，OI-232）：保险用平滑银行 G——`as_of` 所在月之前 36 个自然月末的银行截面 G 取中位；
+    各月末 G 按当日国债（`_default_rf`）与本模块 `bank_dividend_intrinsic`、`bank_valuation.bank_g_at` 计算，
+    与历史逐日 `rebuild_bank_bands.py h2` 同法。"""
+    import bank_valuation
+    banks = bank_valuation.bank_codes(ROOT / "data/raw/a_share_securities.csv")
+    rates: dict[str, float | None] = {}
+
+    def d0(code: str, day: str) -> float | None:
+        if day not in rates:
+            rates[day] = _default_rf(day)
+        return bank_dividend_intrinsic(code, day, rates[day]) if rates[day] is not None else None
+    return bank_valuation.smoothed_g(
+        as_of, lambda day: bank_valuation.bank_g_at(day, d0, _bank_fundamentals(), _corporate_actions(), banks))
+
+
 def bank_live_value(code: str, as_of: str, rf: float) -> tuple[float | None, str]:
-    """银行取 H2（当日截面不可算或该行不可估时退回股利利差），保险恒为股利利差；银行两种情形都乘同尺系数
-    `bank_valuation.BANK_SCALE`（OI-227 引入，v4.224 起为 1）。返回 (V, 口径)。"""
+    """银行取 H2（当日截面不可算或该行不可估时退回股利利差）；保险取 `V_DDM × Ḡ`（v4.225，OI-232，Ḡ 或 V_DDM 不可得时退回
+    股利利差）；银行两种情形都乘同尺系数 `bank_valuation.BANK_SCALE`（OI-227 引入，v4.224 起为 1）。返回 (V, 口径)。"""
     import bank_valuation
     from divspread_names import INSURER_CODES
     code = code.zfill(6)
-    if code not in INSURER_CODES:
-        value = _bank_h2(as_of, rf).get(code)
+    if code in INSURER_CODES:
+        value = bank_valuation.insurer_value(_bank_fundamentals(), _corporate_actions(), code, as_of, _insurer_g_bar(as_of))
         if value:
-            return value, "股利尺度×DDM排序"
+            return value, "DDM×平滑银行G"
+        return bank_dividend_intrinsic(code, as_of, rf), "股利折现"
+    value = _bank_h2(as_of, rf).get(code)
+    if value:
+        return value, "股利尺度×DDM排序"
     value = bank_dividend_intrinsic(code, as_of, rf)
-    if value and code not in INSURER_CODES:
+    if value:
         value *= bank_valuation.BANK_SCALE
     return value, "股利折现"
 

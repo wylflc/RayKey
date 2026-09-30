@@ -91,6 +91,20 @@ class LiveFinancialValuationTests(unittest.TestCase):
         import bank_valuation   # OI-227：银行 V（含退回的股利利差）乘同尺系数，除权只折一次
         self.assertAlmostEqual(before["intrinsic_value"] - after["intrinsic_value"], 1.0 * bank_valuation.BANK_SCALE)
 
+    def test_insurer_uses_ddm_times_smoothed_bank_g(self):
+        """v4.225（OI-232）：保险 V = V_DDM × Ḡ；Ḡ 或 V_DDM 不可得时退回股利利差。"""
+        import bank_valuation
+        common = (patch.object(scan, "_bank_fundamentals", return_value=None), patch.object(scan, "_corporate_actions", return_value={}),
+                  patch.object(scan, "bank_dividend_intrinsic", return_value=70.0))
+        with common[0], common[1], common[2], patch.object(scan, "_insurer_g_bar", return_value=0.5), \
+                patch.object(bank_valuation, "ddm_at", return_value=100.0):
+            self.assertEqual(scan.bank_live_value("601318", "2026-09-30", 0.0167), (50.0, "DDM×平滑银行G"))
+        with common[0], common[1], common[2], patch.object(scan, "_insurer_g_bar", return_value=None):
+            self.assertEqual(scan.bank_live_value("601318", "2026-09-30", 0.0167), (70.0, "股利折现"))
+        with common[0], common[1], common[2], patch.object(scan, "_insurer_g_bar", return_value=0.5), \
+                patch.object(bank_valuation, "ddm_at", return_value=None):
+            self.assertEqual(scan.bank_live_value("601318", "2026-09-30", 0.0167), (70.0, "股利折现"))
+
 
 if __name__ == "__main__":
     unittest.main()

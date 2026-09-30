@@ -9,7 +9,10 @@
   终值期派息率取可持续派息率 `1 − g_T ÷ ROE_T`（v4.221，OI-230：清洁盈余一致、与同一路径剩余收益相等，派息率为 0 也可估），
   基本面取 `roic_bands.csv` 可得日不晚于当日的最近一行（bps／roe0／payout），按除权参考价折到当日；
 * **H2**：当日两者都可估的银行（保险除外）`G = exp(mean ln(V_D0 ÷ V_DDM))`，`V_H2 = V_DDM × G`（V_D0 不可得而 V_DDM 可估的银行
-  照用当日 G，OI-230）；可估银行不足 `MIN_BANKS` 时当日退回 V_D0，保险恒为 V_D0。G 是估值之比的几何均值，价格不进 V（§6.3 第 1 条）。
+  照用当日 G，OI-230）；可估银行不足 `MIN_BANKS` 时当日退回 V_D0。G 是估值之比的几何均值，价格不进 V（§6.3 第 1 条）。
+* **保险**（v4.225，OI-232）：`V = V_DDM × Ḡ`，`Ḡ` 为当日所在月之前 `INSURER_G_MONTHS` 个自然月末银行截面 G 的中位（`smoothed_g`，
+  各月末 G 用 `bank_g_at` 按当日国债、分红与带同法算，保险不进截面）；可算月末不足 `INSURER_G_MIN` 个或该行 V_DDM 不可估时
+  调用方退回 V_D0。平滑去掉短期利率反应（股利利差分母随国债），截面水平仍随银行股利尺度；OI-232 候选 I1c（回测日志 §12.297）。
 * **同尺系数**（OI-227 引入，v4.224 取消）：`BANK_SCALE = 1`，银行与非金融同尺不缩放；乘法与 `rebuild_bank_bands.py h2:RP:COE:SCALE`
   保留，只供复现 v4.219～v4.223 的状态（当时 0.7045）。
 """
@@ -18,9 +21,11 @@ from __future__ import annotations
 import bisect
 import csv
 import math
+import statistics
 from collections import defaultdict
+from datetime import date, timedelta
 from pathlib import Path
-from typing import Iterable
+from typing import Callable, Iterable
 
 COE = 0.10                  # DDM 的股权成本（与 §6.5.1 统一 r 同值）
 FADE_YEARS = 10
@@ -29,6 +34,8 @@ G_CAP = 0.03                # 终值增长上限
 DEFAULT_PAYOUT = 0.30
 MIN_BANKS = 5
 BANK_SCALE = 1.0            # v4.224（OI-244）取消同尺系数：全期 0.7045 主要来自 2017–2019 起始月，2020 年起约 1.00，分时段不稳（回测日志 §12.294）
+INSURER_G_MONTHS = 36       # v4.225（OI-232）保险 V = V_DDM × 前 36 个自然月末银行 G 的中位
+INSURER_G_MIN = 12          # 可算 G 的月末不足 12 个时保险退回 V_D0
 
 
 def roe_bv_path(bps: float, roe0: float, payout: float | None, coe: float, fade_years: int = FADE_YEARS):
@@ -105,6 +112,38 @@ def ddm_at(fund: BankFundamentals, actions: list[dict], code: str, day: str, coe
         return None
     (adj,), _factor, _cash = exright_adjust(actions, band_av, day, (v,), split_since=basis)
     return adj if adj > 0 else None
+
+
+def month_ends_before(as_of: str, months: int = INSURER_G_MONTHS) -> list[str]:
+    """`as_of` 所在月之前的 `months` 个自然月末（升序，不含当月）。"""
+    day = date.fromisoformat(as_of).replace(day=1)
+    out = []
+    for _ in range(months):
+        day -= timedelta(days=1)
+        out.append(day.isoformat())
+        day = day.replace(day=1)
+    return out[::-1]
+
+
+def bank_g_at(day: str, d0: Callable[[str, str], float | None], fund: BankFundamentals, actions: dict[str, list],
+              codes: Iterable[str]) -> float | None:
+    """`day` 当日银行截面 G（与 `live_h2` 同法）：`d0(code, day)` 给该日 V_D0，V_DDM 取 `ddm_at`。"""
+    return h2_scale((d0(c, day), ddm_at(fund, actions.get(c, []), c, day)) for c in sorted(codes))
+
+
+def smoothed_g(as_of: str, g_at: Callable[[str], float | None]) -> float | None:
+    """保险用的平滑 G：`as_of` 所在月之前 `INSURER_G_MONTHS` 个自然月末的银行 G（`g_at(月末)`）取中位；可算的不足
+    `INSURER_G_MIN` 个返回 None。"""
+    gs = [g for g in (g_at(d) for d in month_ends_before(as_of)) if g]
+    return statistics.median(gs) if len(gs) >= INSURER_G_MIN else None
+
+
+def insurer_value(fund: BankFundamentals, actions: dict[str, list], code: str, day: str, g_bar: float | None) -> float | None:
+    """保险 `V = V_DDM(day) × Ḡ`（v4.225，OI-232）；Ḡ 或 V_DDM 不可得返回 None，由调用方退回 V_D0。"""
+    if not g_bar:
+        return None
+    dd = ddm_at(fund, actions.get(code, []), code, day)
+    return dd * g_bar if dd else None
 
 
 def bank_codes(securities: Path) -> set[str]:
