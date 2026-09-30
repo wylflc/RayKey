@@ -1,7 +1,7 @@
 {
  "signal_date": "2026-09-30",
- "checked_at_utc": "2026-09-30T09:21:38.694579+00:00",
- "status": "passed_with_known_item",
+ "checked_at_utc": "2026-09-30T10:17:47.249586+00:00",
+ "status": "passed",
  "checks": [
   "whole_pool_unique_codes",
   "trade_date",
@@ -47,12 +47,16 @@
   "publication_verify_passed",
   "user_account_registered_before_scan",
   "exright_price_terms_registered_002050_300866_600486_688208",
-  "correction_0929_002648_fills_registered"
+  "correction_0929_002648_fills_registered",
+  "empty_financial_review_queue",
+  "research_review_b2_registered_before_rescan",
+  "band_change_only_603529_research_overlay_adopted",
+  "band_change_only_603529_research_overlay_b2",
+  "band_change_only_603529_research_overlay_hold",
+  "republish_verify_passed"
  ],
- "problems": [
-  "empty_financial_review_queue: 1 rows"
- ],
- "known_item_note": "复核队列1行为爱玛科技研究与模型差距复核（v4.216研发资本化使模型锚21.84→24.53亿），生产带仍采用研究数、不冻结，待用户裁定；不影响本日清单。",
+ "problems": [],
+ "known_item_note": "爱玛差距复核按用户裁定（B2）当晚生效：研究数 16.40→18.96 亿、研究增长 3.60%→5.62%，V 21.81→25.64；差距 29.4%，退出复核队列；三份带仅 603529 变动（research_overlay 2026-09-30），重跑扫描并重新发布",
  "holdings_market_value_cny": "4585280.00",
  "reported_total_assets_cny": "4585280.00",
  "registered_total_assets_gap_cny": "0.00",
@@ -62,8 +66,8 @@
  "coverage": {
   "scanned": 181,
   "valid_pv": 177,
-  "below_buy_line": 27,
-  "eligible": 3,
+  "below_buy_line": 28,
+  "eligible": 4,
   "held": 5,
   "mandatory_companies": 7,
   "primary_reviewed_announcements": 1,
@@ -99,7 +103,7 @@
    "anchor": "20.3750",
    "stretch_source": false,
    "action": "持有",
-   "pv": "1.02"
+   "pv": "0.87"
   },
   "600036": {
    "name": "招商银行",
@@ -540,7 +544,135 @@
     ],
     "v_drop": 0.49
    }
-  ]
+  ],
+  "b2_research_overlay_603529": {
+   "adopted": [
+    {
+     "code": "603529",
+     "cols": [
+      "nopat_ps",
+      "roic0",
+      "net_debt_ps",
+      "ev_ps",
+      "g0",
+      "intrinsic_value",
+      "band_low",
+      "band_high",
+      "max_buy_price",
+      "implied_pe",
+      "pe_on_ttm_eps",
+      "terminal_share",
+      "research_overlay",
+      "research_nopat_yi",
+      "research_overlay_note"
+     ],
+     "intrinsic_value": [
+      "21.8140",
+      "25.6353"
+     ],
+     "band_low": [
+      "19.5941",
+      "23.0333"
+     ],
+     "band_high": [
+      "24.0339",
+      "28.2373"
+     ],
+     "exright_cash": [
+      "0.3850",
+      "0.3850"
+     ],
+     "exright_note": [
+      "除权归一化至 2026-09-30 现价口径：2026-09-24 现金0.385/送转0",
+      "除权归一化至 2026-09-30 现价口径：2026-09-24 现金0.385/送转0"
+     ]
+    }
+   ],
+   "b2": [
+    {
+     "code": "603529",
+     "cols": [
+      "nopat_ps",
+      "roic0",
+      "net_debt_ps",
+      "ev_ps",
+      "g0",
+      "intrinsic_value",
+      "band_low",
+      "band_high",
+      "max_buy_price",
+      "implied_pe",
+      "pe_on_ttm_eps",
+      "terminal_share",
+      "research_overlay",
+      "research_nopat_yi",
+      "research_overlay_note"
+     ],
+     "intrinsic_value": [
+      "21.8140",
+      "25.6353"
+     ],
+     "band_low": [
+      "19.5941",
+      "23.0333"
+     ],
+     "band_high": [
+      "24.0339",
+      "28.2373"
+     ],
+     "exright_cash": [
+      "0.3850",
+      "0.3850"
+     ],
+     "exright_note": [
+      "除权归一化至 2026-09-30 现价口径：2026-09-24 现金0.385/送转0",
+      "除权归一化至 2026-09-30 现价口径：2026-09-24 现金0.385/送转0"
+     ]
+    }
+   ],
+   "hold": [
+    {
+     "code": "603529",
+     "cols": [
+      "nopat_ps",
+      "roic0",
+      "net_debt_ps",
+      "ev_ps",
+      "g0",
+      "intrinsic_value",
+      "band_low",
+      "band_high",
+      "max_buy_price",
+      "implied_pe",
+      "pe_on_ttm_eps",
+      "terminal_share",
+      "research_overlay",
+      "research_nopat_yi",
+      "research_overlay_note"
+     ],
+     "intrinsic_value": [
+      "21.8140",
+      "25.6353"
+     ],
+     "band_low": [
+      "19.5941",
+      "23.0333"
+     ],
+     "band_high": [
+      "24.0339",
+      "28.2373"
+     ],
+     "exright_cash": [
+      "0.3850",
+      "0.3850"
+     ],
+     "exright_note": [
+      "除权归一化至 2026-09-30 现价口径：2026-09-24 现金0.385/送转0",
+      "除权归一化至 2026-09-30 现价口径：2026-09-24 现金0.385/送转0"
+     ]
+    }
+   ]
+  }
  },
  "note_only_date_changes": {
   "adopted": 41,
@@ -576,7 +708,10 @@
   "band_refresh": 27395156,
   "preview": 27395159,
   "band_refresh_after_price_terms": 27395644,
-  "formal_scan": 27396326
+  "formal_scan": 27396326,
+  "republish_v4223": 27397811,
+  "band_refresh_b2": 27399082,
+  "rescan_b2": 27399083
  },
  "resource_measurements": {
   "evidence_elapsed": "00:18:15",
@@ -588,7 +723,9 @@
   "band_refresh2_elapsed": "00:05:10",
   "band_refresh2_maxrss_kib": 767641,
   "scan_elapsed": "00:02:30",
-  "scan_maxrss_kib": 1186745
+  "scan_maxrss_kib": 1186745,
+  "band_refresh_b2_elapsed": "00:03:11",
+  "rescan_b2_elapsed": "00:01:37"
  },
  "known_limitations": [
   "行业高频与竞品数据部分缺失（动力煤价、煤炭固定资产投资、煤机招标、两轮车上险、空调排产）",
