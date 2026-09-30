@@ -1,0 +1,13 @@
+__pycache__/
+cache/
+nav/
+stats/
+errors/
+daily/
+trades/
+ledgers/
+snaps/
+*.log
+contrib_*_trades.csv
+blocks/
+trough_v.csv
