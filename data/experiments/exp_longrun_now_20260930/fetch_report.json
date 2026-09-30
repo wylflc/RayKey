@@ -1,0 +1,3032 @@
+{
+ "until": "2026-09-29",
+ "files": 302,
+ "failed": [],
+ "last_after": {
+  "2026-09-29": 301,
+  "2018-12-20": 1
+ },
+ "overlap_mismatch": {},
+ "rows": [
+  {
+   "stem": "000001",
+   "sid": "sz000001",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000022",
+   "sid": "sz000022",
+   "last_before": "2018-12-20",
+   "added": 0,
+   "last_after": "2018-12-20",
+   "overlap": 640,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000063",
+   "sid": "sz000063",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000333",
+   "sid": "sz000333",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000338",
+   "sid": "sz000338",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000408",
+   "sid": "sz000408",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000423",
+   "sid": "sz000423",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000425",
+   "sid": "sz000425",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000426",
+   "sid": "sz000426",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000538",
+   "sid": "sz000538",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000568",
+   "sid": "sz000568",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000596",
+   "sid": "sz000596",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000651",
+   "sid": "sz000651",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000661",
+   "sid": "sz000661",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000708",
+   "sid": "sz000708",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000725",
+   "sid": "sz000725",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000733",
+   "sid": "sz000733",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000778",
+   "sid": "sz000778",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000786",
+   "sid": "sz000786",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000792",
+   "sid": "sz000792",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000858",
+   "sid": "sz000858",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000869",
+   "sid": "sz000869",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000893",
+   "sid": "sz000893",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000895",
+   "sid": "sz000895",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000933",
+   "sid": "sz000933",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000951",
+   "sid": "sz000951",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000975",
+   "sid": "sz000975",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "000999",
+   "sid": "sz000999",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "001227",
+   "sid": "sz001227",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "001232",
+   "sid": "sz001232",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 19,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002001",
+   "sid": "sz002001",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002003",
+   "sid": "sz002003",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002007",
+   "sid": "sz002007",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002022",
+   "sid": "sz002022",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002024",
+   "sid": "sz002024",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002027",
+   "sid": "sz002027",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002032",
+   "sid": "sz002032",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002049",
+   "sid": "sz002049",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002050",
+   "sid": "sz002050",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002063",
+   "sid": "sz002063",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002128",
+   "sid": "sz002128",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002130",
+   "sid": "sz002130",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002138",
+   "sid": "sz002138",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002142",
+   "sid": "sz002142",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002152",
+   "sid": "sz002152",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002153",
+   "sid": "sz002153",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002158",
+   "sid": "sz002158",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002179",
+   "sid": "sz002179",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002222",
+   "sid": "sz002222",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002223",
+   "sid": "sz002223",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002236",
+   "sid": "sz002236",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002252",
+   "sid": "sz002252",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002262",
+   "sid": "sz002262",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002270",
+   "sid": "sz002270",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002273",
+   "sid": "sz002273",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002275",
+   "sid": "sz002275",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002287",
+   "sid": "sz002287",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002294",
+   "sid": "sz002294",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002304",
+   "sid": "sz002304",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002311",
+   "sid": "sz002311",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002352",
+   "sid": "sz002352",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002371",
+   "sid": "sz002371",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002372",
+   "sid": "sz002372",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002379",
+   "sid": "sz002379",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002409",
+   "sid": "sz002409",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002410",
+   "sid": "sz002410",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002414",
+   "sid": "sz002414",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002415",
+   "sid": "sz002415",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002460",
+   "sid": "sz002460",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002463",
+   "sid": "sz002463",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002466",
+   "sid": "sz002466",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002475",
+   "sid": "sz002475",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002484",
+   "sid": "sz002484",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002507",
+   "sid": "sz002507",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002508",
+   "sid": "sz002508",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002532",
+   "sid": "sz002532",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002568",
+   "sid": "sz002568",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002594",
+   "sid": "sz002594",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002595",
+   "sid": "sz002595",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002607",
+   "sid": "sz002607",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002648",
+   "sid": "sz002648",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002677",
+   "sid": "sz002677",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002683",
+   "sid": "sz002683",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002690",
+   "sid": "sz002690",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002714",
+   "sid": "sz002714",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002807",
+   "sid": "sz002807",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002812",
+   "sid": "sz002812",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002833",
+   "sid": "sz002833",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002837",
+   "sid": "sz002837",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002839",
+   "sid": "sz002839",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002841",
+   "sid": "sz002841",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002901",
+   "sid": "sz002901",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002906",
+   "sid": "sz002906",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002916",
+   "sid": "sz002916",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002920",
+   "sid": "sz002920",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002936",
+   "sid": "sz002936",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002938",
+   "sid": "sz002938",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002948",
+   "sid": "sz002948",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002958",
+   "sid": "sz002958",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "002966",
+   "sid": "sz002966",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300015",
+   "sid": "sz300015",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300033",
+   "sid": "sz300033",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300034",
+   "sid": "sz300034",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300054",
+   "sid": "sz300054",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300059",
+   "sid": "sz300059",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300124",
+   "sid": "sz300124",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300144",
+   "sid": "sz300144",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300146",
+   "sid": "sz300146",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300274",
+   "sid": "sz300274",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300308",
+   "sid": "sz300308",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300316",
+   "sid": "sz300316",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300346",
+   "sid": "sz300346",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300357",
+   "sid": "sz300357",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300360",
+   "sid": "sz300360",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300394",
+   "sid": "sz300394",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300395",
+   "sid": "sz300395",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300408",
+   "sid": "sz300408",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300415",
+   "sid": "sz300415",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300435",
+   "sid": "sz300435",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300470",
+   "sid": "sz300470",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300476",
+   "sid": "sz300476",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300487",
+   "sid": "sz300487",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300502",
+   "sid": "sz300502",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300529",
+   "sid": "sz300529",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300573",
+   "sid": "sz300573",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300595",
+   "sid": "sz300595",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300604",
+   "sid": "sz300604",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300627",
+   "sid": "sz300627",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300628",
+   "sid": "sz300628",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300661",
+   "sid": "sz300661",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300685",
+   "sid": "sz300685",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300699",
+   "sid": "sz300699",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300750",
+   "sid": "sz300750",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300759",
+   "sid": "sz300759",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300760",
+   "sid": "sz300760",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300776",
+   "sid": "sz300776",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300782",
+   "sid": "sz300782",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300811",
+   "sid": "sz300811",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300832",
+   "sid": "sz300832",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300866",
+   "sid": "sz300866",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300896",
+   "sid": "sz300896",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "300910",
+   "sid": "sz300910",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "301498",
+   "sid": "sz301498",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "301589",
+   "sid": "sz301589",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 617,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600000",
+   "sid": "sh600000",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600007",
+   "sid": "sh600007",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600009",
+   "sid": "sh600009",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600015",
+   "sid": "sh600015",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600016",
+   "sid": "sh600016",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600031",
+   "sid": "sh600031",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600036",
+   "sid": "sh600036",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600066",
+   "sid": "sh600066",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600085",
+   "sid": "sh600085",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600132",
+   "sid": "sh600132",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600160",
+   "sid": "sh600160",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600176",
+   "sid": "sh600176",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600183",
+   "sid": "sh600183",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600188",
+   "sid": "sh600188",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600271",
+   "sid": "sh600271",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600276",
+   "sid": "sh600276",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600285",
+   "sid": "sh600285",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600298",
+   "sid": "sh600298",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600309",
+   "sid": "sh600309",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600315",
+   "sid": "sh600315",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600406",
+   "sid": "sh600406",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600415",
+   "sid": "sh600415",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600426",
+   "sid": "sh600426",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600436",
+   "sid": "sh600436",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600486",
+   "sid": "sh600486",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600519",
+   "sid": "sh600519",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600563",
+   "sid": "sh600563",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600566",
+   "sid": "sh600566",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600570",
+   "sid": "sh600570",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600585",
+   "sid": "sh600585",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600588",
+   "sid": "sh600588",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600600",
+   "sid": "sh600600",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600660",
+   "sid": "sh600660",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600690",
+   "sid": "sh600690",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600717",
+   "sid": "sh600717",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600750",
+   "sid": "sh600750",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600763",
+   "sid": "sh600763",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600803",
+   "sid": "sh600803",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600809",
+   "sid": "sh600809",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600862",
+   "sid": "sh600862",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600885",
+   "sid": "sh600885",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600887",
+   "sid": "sh600887",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600897",
+   "sid": "sh600897",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600900",
+   "sid": "sh600900",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600908",
+   "sid": "sh600908",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600919",
+   "sid": "sh600919",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600926",
+   "sid": "sh600926",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600928",
+   "sid": "sh600928",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600938",
+   "sid": "sh600938",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600970",
+   "sid": "sh600970",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600988",
+   "sid": "sh600988",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600989",
+   "sid": "sh600989",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "600993",
+   "sid": "sh600993",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601009",
+   "sid": "sh601009",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601077",
+   "sid": "sh601077",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601088",
+   "sid": "sh601088",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601100",
+   "sid": "sh601100",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601128",
+   "sid": "sh601128",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601138",
+   "sid": "sh601138",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601166",
+   "sid": "sh601166",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601169",
+   "sid": "sh601169",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601187",
+   "sid": "sh601187",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601225",
+   "sid": "sh601225",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601229",
+   "sid": "sh601229",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601288",
+   "sid": "sh601288",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601318",
+   "sid": "sh601318",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601319",
+   "sid": "sh601319",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601328",
+   "sid": "sh601328",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601336",
+   "sid": "sh601336",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601398",
+   "sid": "sh601398",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601515",
+   "sid": "sh601515",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601528",
+   "sid": "sh601528",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601577",
+   "sid": "sh601577",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601601",
+   "sid": "sh601601",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601628",
+   "sid": "sh601628",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601658",
+   "sid": "sh601658",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601665",
+   "sid": "sh601665",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601717",
+   "sid": "sh601717",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601818",
+   "sid": "sh601818",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601825",
+   "sid": "sh601825",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601838",
+   "sid": "sh601838",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601857",
+   "sid": "sh601857",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601860",
+   "sid": "sh601860",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601888",
+   "sid": "sh601888",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601899",
+   "sid": "sh601899",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601916",
+   "sid": "sh601916",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601939",
+   "sid": "sh601939",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601958",
+   "sid": "sh601958",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601963",
+   "sid": "sh601963",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601965",
+   "sid": "sh601965",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601988",
+   "sid": "sh601988",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601997",
+   "sid": "sh601997",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "601998",
+   "sid": "sh601998",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603067",
+   "sid": "sh603067",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603129",
+   "sid": "sh603129",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603156",
+   "sid": "sh603156",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603160",
+   "sid": "sh603160",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603195",
+   "sid": "sh603195",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603259",
+   "sid": "sh603259",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603279",
+   "sid": "sh603279",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603288",
+   "sid": "sh603288",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603323",
+   "sid": "sh603323",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603338",
+   "sid": "sh603338",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603369",
+   "sid": "sh603369",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603392",
+   "sid": "sh603392",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603501",
+   "sid": "sh603501",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603505",
+   "sid": "sh603505",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603508",
+   "sid": "sh603508",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603529",
+   "sid": "sh603529",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603556",
+   "sid": "sh603556",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603596",
+   "sid": "sh603596",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603605",
+   "sid": "sh603605",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603606",
+   "sid": "sh603606",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603806",
+   "sid": "sh603806",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603855",
+   "sid": "sh603855",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603868",
+   "sid": "sh603868",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603899",
+   "sid": "sh603899",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "603993",
+   "sid": "sh603993",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "605117",
+   "sid": "sh605117",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "605305",
+   "sid": "sh605305",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "605499",
+   "sid": "sh605499",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688008",
+   "sid": "sh688008",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688012",
+   "sid": "sh688012",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688018",
+   "sid": "sh688018",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688019",
+   "sid": "sh688019",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688041",
+   "sid": "sh688041",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688072",
+   "sid": "sh688072",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688082",
+   "sid": "sh688082",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688100",
+   "sid": "sh688100",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688111",
+   "sid": "sh688111",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688120",
+   "sid": "sh688120",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688122",
+   "sid": "sh688122",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688188",
+   "sid": "sh688188",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688190",
+   "sid": "sh688190",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688200",
+   "sid": "sh688200",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688208",
+   "sid": "sh688208",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688235",
+   "sid": "sh688235",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688256",
+   "sid": "sh688256",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688271",
+   "sid": "sh688271",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688278",
+   "sid": "sh688278",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688281",
+   "sid": "sh688281",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688300",
+   "sid": "sh688300",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688301",
+   "sid": "sh688301",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688516",
+   "sid": "sh688516",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688563",
+   "sid": "sh688563",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688617",
+   "sid": "sh688617",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688630",
+   "sid": "sh688630",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688692",
+   "sid": "sh688692",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 525,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688708",
+   "sid": "sh688708",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 406,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688775",
+   "sid": "sh688775",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 284,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688777",
+   "sid": "sh688777",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "688981",
+   "sid": "sh688981",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "689009",
+   "sid": "sh689009",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "920394",
+   "sid": "bj920394",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "920599",
+   "sid": "bj920599",
+   "last_before": "2026-08-28",
+   "added": 21,
+   "last_after": "2026-09-29",
+   "overlap": 619,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "920982",
+   "sid": "bj920982",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "INDEX_000001",
+   "sid": "sh000001",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  },
+  {
+   "stem": "INDEX_000300",
+   "sid": "sh000300",
+   "last_before": "2026-08-07",
+   "added": 36,
+   "last_after": "2026-09-29",
+   "overlap": 604,
+   "overlap_mismatch": [],
+   "n_mismatch": 0
+  }
+ ]
+}

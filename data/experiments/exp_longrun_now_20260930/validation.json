@@ -1,0 +1,410 @@
+{
+ "states": {
+  "a_share_daily_states_adopted.csv": {
+   "stats": {
+    "le_0807:differ": 3,
+    "le_0807:equal": 965941,
+    "le_0828:differ": 172,
+    "le_0828:equal": 1894,
+    "le_0828:only_new": 2310,
+    "new:only_new": 6132
+   },
+   "diff_cols": {
+    "le_0828:intrinsic_value": 172,
+    "le_0828:band_low": 172,
+    "le_0828:band_high": 172,
+    "le_0828:valuation_ratio": 172,
+    "le_0828:upside_to_low": 172,
+    "le_0828:pv_equity": 172,
+    "le_0828:ev_ps": 126,
+    "le_0828:band_report_date": 125,
+    "le_0828:band_available_at": 125,
+    "le_0828:cash_adjustment": 124,
+    "le_0828:valuation_label": 23,
+    "le_0828:split_factor": 7,
+    "le_0807:band_report_date": 3,
+    "le_0807:band_available_at": 3,
+    "le_0807:intrinsic_value": 3,
+    "le_0807:band_low": 3,
+    "le_0807:band_high": 3,
+    "le_0807:valuation_ratio": 3,
+    "le_0807:upside_to_low": 3,
+    "le_0807:ev_ps": 3
+   },
+   "diff_codes": {
+    "le_0828:002142": 15,
+    "le_0828:600036": 15,
+    "le_0828:600919": 15,
+    "le_0828:300308": 6,
+    "le_0828:000063": 1,
+    "le_0828:000333": 1,
+    "le_0828:000338": 1,
+    "le_0807:000408": 1,
+    "le_0828:000423": 1,
+    "le_0828:000425": 1,
+    "le_0828:000426": 1,
+    "le_0828:000538": 1,
+    "le_0828:000568": 1,
+    "le_0828:000596": 1,
+    "le_0828:000651": 1,
+    "le_0828:000786": 1,
+    "le_0828:000792": 1,
+    "le_0828:000858": 1,
+    "le_0828:000893": 1,
+    "le_0828:000895": 1
+   },
+   "examples": [
+    {
+     "code": "000408",
+     "date": "2026-08-07",
+     "cols": {
+      "band_report_date": [
+       "2026-06-30",
+       "2026-03-31"
+      ],
+      "band_available_at": [
+       "2026-08-11",
+       "2026-04-18"
+      ],
+      "intrinsic_value": [
+       "24.9738",
+       "26.2103"
+      ],
+      "band_low": [
+       "22.4765",
+       "23.5893"
+      ],
+      "band_high": [
+       "27.4712",
+       "28.8313"
+      ],
+      "valuation_ratio": [
+       "3.6038",
+       "3.4338"
+      ],
+      "upside_to_low": [
+       "-0.7503",
+       "-0.7379"
+      ],
+      "ev_ps": [
+       "23.5556",
+       "24.6747"
+      ],
+      "pv_equity": [
+       "3.6038",
+       "3.4338"
+      ]
+     }
+    },
+    {
+     "code": "600066",
+     "date": "2026-08-07",
+     "cols": {
+      "band_report_date": [
+       "2026-06-30",
+       "2026-03-31"
+      ],
+      "band_available_at": [
+       "2026-08-11",
+       "2026-04-28"
+      ],
+      "cash_adjustment": [
+       "0.0000",
+       "2.0000"
+      ],
+      "intrinsic_value": [
+       "12.4453",
+       "13.5485"
+      ],
+      "band_low": [
+       "11.2008",
+       "11.9936"
+      ],
+      "band_high": [
+       "13.6899",
+       "15.1033"
+      ],
+      "valuation_ratio": [
+       "2.5632",
+       "2.3545"
+      ],
+      "upside_to_low": [
+       "-0.6489",
+       "-0.6240"
+      ],
+      "ev_ps": [
+       "7.9441",
+       "9.9926"
+      ],
+      "pv_equity": [
+       "2.5632",
+       "2.3545"
+      ]
+     }
+    },
+    {
+     "code": "689009",
+     "date": "2026-08-07",
+     "cols": {
+      "band_report_date": [
+       "2026-06-30",
+       "2026-03-31"
+      ],
+      "band_available_at": [
+       "2026-08-11",
+       "2026-04-30"
+      ],
+      "cash_adjustment": [
+       "0.0000",
+       "1.2232"
+      ],
+      "intrinsic_value": [
+       "29.7680",
+       "29.0736"
+      ],
+      "band_low": [
+       "26.7912",
+       "26.0439"
+      ],
+      "band_high": [
+       "32.7448",
+       "32.1033"
+      ],
+      "valuation_ratio": [
+       "1.3467",
+       "1.3789"
+      ],
+      "upside_to_low": [
+       "-0.3317",
+       "-0.3504"
+      ],
+      "ev_ps": [
+       "14.7698",
+       "14.9998"
+      ],
+      "pv_equity": [
+       "1.3467",
+       "1.3789"
+      ]
+     }
+    }
+   ]
+  },
+  "a_share_daily_states_hold.csv": {
+   "stats": {
+    "le_0807:differ": 3,
+    "le_0807:equal": 967612,
+    "le_0828:differ": 172,
+    "le_0828:equal": 1894,
+    "le_0828:only_new": 2310,
+    "new:only_new": 6132
+   },
+   "diff_cols": {
+    "le_0828:intrinsic_value": 172,
+    "le_0828:band_low": 172,
+    "le_0828:band_high": 172,
+    "le_0828:valuation_ratio": 172,
+    "le_0828:upside_to_low": 172,
+    "le_0828:pv_equity": 172,
+    "le_0828:ev_ps": 126,
+    "le_0828:band_report_date": 125,
+    "le_0828:band_available_at": 125,
+    "le_0828:cash_adjustment": 124,
+    "le_0828:hold_source": 61,
+    "le_0828:valuation_label": 23,
+    "le_0828:split_factor": 7,
+    "le_0807:band_report_date": 3,
+    "le_0807:band_available_at": 3,
+    "le_0807:intrinsic_value": 3,
+    "le_0807:band_low": 3,
+    "le_0807:band_high": 3,
+    "le_0807:valuation_ratio": 3,
+    "le_0807:upside_to_low": 3
+   },
+   "diff_codes": {
+    "le_0828:002142": 15,
+    "le_0828:600036": 15,
+    "le_0828:600919": 15,
+    "le_0828:300308": 6,
+    "le_0828:000063": 1,
+    "le_0828:000333": 1,
+    "le_0828:000338": 1,
+    "le_0807:000408": 1,
+    "le_0828:000423": 1,
+    "le_0828:000425": 1,
+    "le_0828:000426": 1,
+    "le_0828:000538": 1,
+    "le_0828:000568": 1,
+    "le_0828:000596": 1,
+    "le_0828:000651": 1,
+    "le_0828:000786": 1,
+    "le_0828:000792": 1,
+    "le_0828:000858": 1,
+    "le_0828:000893": 1,
+    "le_0828:000895": 1
+   },
+   "examples": [
+    {
+     "code": "000408",
+     "date": "2026-08-07",
+     "cols": {
+      "band_report_date": [
+       "2026-06-30",
+       "2026-03-31"
+      ],
+      "band_available_at": [
+       "2026-08-11",
+       "2026-04-18"
+      ],
+      "intrinsic_value": [
+       "24.9738",
+       "26.9342"
+      ],
+      "band_low": [
+       "22.4765",
+       "24.2408"
+      ],
+      "band_high": [
+       "27.4712",
+       "29.6276"
+      ],
+      "valuation_ratio": [
+       "3.6038",
+       "3.3415"
+      ],
+      "upside_to_low": [
+       "-0.7503",
+       "-0.7307"
+      ],
+      "ev_ps": [
+       "23.5556",
+       "25.3986"
+      ],
+      "pv_equity": [
+       "3.6038",
+       "3.3415"
+      ],
+      "hold_source": [
+       "base",
+       "b2"
+      ]
+     }
+    },
+    {
+     "code": "600066",
+     "date": "2026-08-07",
+     "cols": {
+      "band_report_date": [
+       "2026-06-30",
+       "2026-03-31"
+      ],
+      "band_available_at": [
+       "2026-08-11",
+       "2026-04-28"
+      ],
+      "cash_adjustment": [
+       "0.0000",
+       "2.0000"
+      ],
+      "intrinsic_value": [
+       "12.4453",
+       "13.5485"
+      ],
+      "band_low": [
+       "11.2008",
+       "11.9936"
+      ],
+      "band_high": [
+       "13.6899",
+       "15.1033"
+      ],
+      "valuation_ratio": [
+       "2.5632",
+       "2.3545"
+      ],
+      "upside_to_low": [
+       "-0.6489",
+       "-0.6240"
+      ],
+      "ev_ps": [
+       "7.9441",
+       "9.9926"
+      ],
+      "pv_equity": [
+       "2.5632",
+       "2.3545"
+      ]
+     }
+    },
+    {
+     "code": "689009",
+     "date": "2026-08-07",
+     "cols": {
+      "band_report_date": [
+       "2026-06-30",
+       "2026-03-31"
+      ],
+      "band_available_at": [
+       "2026-08-11",
+       "2026-04-30"
+      ],
+      "cash_adjustment": [
+       "0.0000",
+       "1.2232"
+      ],
+      "intrinsic_value": [
+       "29.7680",
+       "29.0736"
+      ],
+      "band_low": [
+       "26.7912",
+       "26.0439"
+      ],
+      "band_high": [
+       "32.7448",
+       "32.1033"
+      ],
+      "valuation_ratio": [
+       "1.3467",
+       "1.3789"
+      ],
+      "upside_to_low": [
+       "-0.3317",
+       "-0.3504"
+      ],
+      "ev_ps": [
+       "14.7698",
+       "14.9998"
+      ],
+      "pv_equity": [
+       "1.3467",
+       "1.3789"
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "bands": {
+  "base": {
+   "old_rows": 20114,
+   "new_rows": 20114,
+   "only_old": 1,
+   "only_new": 1,
+   "codes_changed": [
+    "300308"
+   ],
+   "n_codes_changed": 1
+  },
+  "_b2": {
+   "old_rows": 20114,
+   "new_rows": 20114,
+   "only_old": 1,
+   "only_new": 1,
+   "codes_changed": [
+    "300308"
+   ],
+   "n_codes_changed": 1
+  }
+ }
+}
