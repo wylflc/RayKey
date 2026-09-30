@@ -9,3 +9,4 @@ ledgers/
 *.log
 contrib_*_trades.csv
 detail/
+snaps/
