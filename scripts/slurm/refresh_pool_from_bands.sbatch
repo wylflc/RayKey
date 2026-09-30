@@ -26,6 +26,6 @@ python3 scripts/audit_financial_panel_consistency.py --signal-date "$SIGNAL_DATE
 python3 scripts/validate_valuation_bands.py --valuation data/processed/a_share_focus_watchlist_l1_l2_valuation.csv --queue-out data/interim/valuation_rebuild_queue.csv --signal-date "$SIGNAL_DATE"
 python3 scripts/build_a_share_core_valuation_pool.py --signal-date "$SIGNAL_DATE"
 python3 scripts/build_company_dossier_readmes.py --check
-python3 scripts/structural_growth_review.py --signal-date "$SIGNAL_DATE"   # §7.3 结构性增长复核（OI-249），须在池带重建之后
+python3 scripts/structural_growth_review.py --signal-date "$SIGNAL_DATE"   # §7.3 结构性增长复核（OI-249、OI-250），须在池带重建之后
 python3 scripts/build_report_update_queue.py --market A_SHARE --signal-date "$SIGNAL_DATE"
 python3 scripts/daily_execution_guard.py evidence --as-of "$SIGNAL_DATE" --since "$SINCE"

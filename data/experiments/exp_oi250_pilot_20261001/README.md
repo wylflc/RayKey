@@ -8,3 +8,11 @@
 - `pilot.py`：合并、按口径核对（标签、派生规则、依据日），与财务读数交叉，输出 `attributes.csv`、`pilot.md`、`pilot.json`。
 
     python3 pilot.py
+
+口径 v2（用户 2026-10-01 认可修改，v4.227 落地）：
+
+- `rubric.md` 改为 v2：可复制性按「同业两年内能否扩产压价」判，资本复制测试通过只是必要条件；商品型的峰守卫看法改为周期中枢可按概率加权的长期价格经研究数调整。
+- `replicability_v2.csv`：子代理按 v2 重判 42 只差异化定价的可复制性（依据、同业扩产、毛利率走势、把握程度）。
+- `registry.py`：把重判并入 v1 判定，重算类别与峰守卫看法，写 `attributes_v2.csv`、生产登记表 `data/processed/a_share_business_attributes.csv`（个人投资体系第 5.12 节）与 `registry.json`（类别计数与改判）。
+
+    python3 registry.py

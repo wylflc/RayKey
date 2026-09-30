@@ -33,7 +33,7 @@ DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_OUTPUT = ROOT / "data/interim/a_share_report_update_queue.csv"
 DEFAULT_DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 DEFAULT_MODEL_BANDS = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
-# §7.3 结构性增长复核（OI-249）：`structural_growth_review.py` 当晚产出，量驱动且峰守卫砍掉每股 NOPAT ≥ 40% 的入队、不冻结；
+# §7.3 结构性增长复核（OI-249、OI-250）：`structural_growth_review.py` 当晚产出，峰守卫砍掉每股 NOPAT ≥ 40% 且量驱动或登记为结构成长型的入队、不冻结；
 # 档案登记研究正常化盈利后转由研究与模型差距规则管理。
 DEFAULT_STRUCTURAL_GROWTH = ROOT / "data/interim/structural_growth_review.csv"
 # §7.3（OI-209）：档案研究正常化盈利与模型盈利锚（生产带机械每股 NOPAT × shares_est，ROIC 路径）差距超过 30% 入队，
@@ -456,7 +456,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dossiers", type=Path, default=DEFAULT_DOSSIERS, help="档案（研究正常化盈利与差距复核记录，§7.3 OI-209）")
     parser.add_argument("--model-bands", type=Path, default=DEFAULT_MODEL_BANDS, help="候选侧生产带（模型盈利锚）")
     parser.add_argument("--structural-growth", type=Path, default=DEFAULT_STRUCTURAL_GROWTH,
-                        help="§7.3 结构性增长复核（OI-249）：structural_growth_review.py 当日产出，须为本信号日且与当前池带一致")
+                        help="§7.3 结构性增长复核（OI-249、OI-250）：structural_growth_review.py 当日产出，须为本信号日且与当前池带一致")
     return parser.parse_args()
 
 

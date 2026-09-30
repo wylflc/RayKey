@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.226
+# A股选股-估值-量价操作流程 v4.227
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -54,6 +54,7 @@
 | 每日阅读日志 | `docs/000_daily_scan_log.md` |
 | 审计日志 | `data/processed/a_share_workflow_decision_log.csv`，只追加不覆盖；核心池重建每次写一行汇总，逐票只在 `pool_layer` 变化时写行；换纪元时把旧纪元行移入 `data/archive/decision_log_<起>_to_<止>.csv`（公司分析索引同读） |
 | 结构性增长复核（§7.3） | `data/interim/structural_growth_review.csv` |
+| 业务属性登记（个人投资体系第 5.12 节） | `data/processed/a_share_business_attributes.csv`（人工登记） |
 | 财报更新队列 | `data/interim/a_share_report_update_queue.csv` |
 | 每日行情与两侧 P/V | `data/processed/daily_buy_candidates.csv`（§8.2；`--since auto` 由它检出上次扫描日） |
 | 执行计划发布凭据 | `data/processed/daily_execution_publication.json`（§9.1 第 5 步成功凭据，`daily_execution_guard.py` 发布与 `verify`）；同日证据凭据 `data/interim/daily_evidence_<日期>.json` 及公告、公司行动、市场背景快照 `data/interim/daily_{announcements,corporate_actions,market_context}_<日期>.json` |
@@ -294,7 +295,7 @@ L4 行须记 `l4_since`（首判日期）；连续一年仍为 L4 的停止复�
 
 模型计算统一由 §6.7 命令完成；档案不得覆盖模型参数或为希望得到的 `P/V` 反推输入。
 
-**研究正常化盈利（OI-209）**：档案 `a_share_valuation_dossiers.csv` 可登记研究估计的正常化盈利 `research_nopat_yi`（亿元，与模型同口径：税后经营利润，剔除金融收益，含权益法损益与少数股东份额），同时填 `research_evidence_date`（所依据证据的公开可得日）、`research_falsifier`（可证伪条件）、`research_source`（出处；研究原文为归母净利时按模型股权桥反解：`归母 ÷ (1 − 生产带 minority_share) + (最新年报 NOPAT − 合并净利)`，注明两项取值；唯一实现 `build_report_update_queue.research_nopat_from_parent`）。研究数须与模型锚同一产能口径：以未来产量或未建成产能为基础的盈利按现有已投产产能重述，扩产由模型增速腿计价。模型盈利锚 = 生产带机械每股 NOPAT × `shares_est`（亿元，ROIC 路径；采用研究数的行取 `model_nopat_ps`）；差距 = 两数较大者 ÷ 较小者 − 1，超过 30% 按 §7.3 入队。
+**研究正常化盈利（OI-209）**：档案 `a_share_valuation_dossiers.csv` 可登记研究估计的正常化盈利 `research_nopat_yi`（亿元，与模型同口径：税后经营利润，剔除金融收益，含权益法损益与少数股东份额），同时填 `research_evidence_date`（所依据证据的公开可得日）、`research_falsifier`（可证伪条件）、`research_source`（出处；研究原文为归母净利时按模型股权桥反解：`归母 ÷ (1 − 生产带 minority_share) + (最新年报 NOPAT − 合并净利)`，注明两项取值；唯一实现 `build_report_update_queue.research_nopat_from_parent`）。研究数须与模型锚同一产能口径：以未来产量或未建成产能为基础的盈利按现有已投产产能重述，扩产由模型增速腿计价。商品价格接受者（个人投资体系第 5.12 节）的研究数按概率加权的长期商品价格计、不取现价，可证伪条件写成价格指标。模型盈利锚 = 生产带机械每股 NOPAT × `shares_est`（亿元，ROIC 路径；采用研究数的行取 `model_nopat_ps`）；差距 = 两数较大者 ÷ 较小者 − 1，超过 30% 按 §7.3 入队。
 
 **采用研究数**：差距复核结论（档案 `divergence_review_conclusion`）为「采用研究数」时，§6.7 第 4 步的叠加脚本在 §6.4 叠加之后、除权归一化之前改写候选侧与 B2 池带：每股 NOPAT 换成 `research_nopat_yi × 1e8 ÷ shares_est`，投入资本不变（`roic0` 同比例），其余参数与股权桥照带，企业价值按 `ev_ps × EV(研究) ÷ EV(机械)` 重算（`zero_growth` 路径 EV 与 NOPAT 同比例），再重算 V 与区间；机械值留在 `model_nopat_ps`／`model_roic0`／`pre_research_iv`，`research_overlay` 记采用日。唯一实现 `apply_forecast_band_overlay.apply_research_overlay`。只改生产带，回测输入不动；结论为「维持模型」时研究数不进模型、不改带。采用一直有效到复核把结论改回「维持模型」。
 
@@ -540,9 +541,12 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 
 **研究与模型差距（OI-209）**：估值范围内 ROIC 路径的池成员，档案研究正常化盈利与模型盈利锚差距超过 30%（§6.5.2.2）即入队；生产所用的锚高于另一数时（维持模型：研究数低于模型锚；采用研究数：研究数高于模型锚）同时按 §7.5 冻结新增买入，否则只入队复核、不冻结。复核在档案记 `divergence_reviewed_at`、`divergence_review_conclusion`（维持模型或采用研究数）、`divergence_review_note`（理由，修订研究数时写明）与复核时两数 `divergence_reviewed_model_yi`／`divergence_reviewed_research_yi` 后解除；此后维持模型的行在任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队，采用研究数的行在任一数变动超过 10% 或复核日之后公告新年报时重新入队。档案研究数、研究增长或复核结论在当日执行清单发布之后才登记或改变的，**当晚以同一信号日生效，不等下一次扫描**：先把登记与复核行追加到决策日志，再跑 §6.7 第 4～6 步（`scripts/slurm/refresh_pool_from_bands.sbatch`，含队列重建与证据凭据），然后重跑当日扫描并重新发布（§9.1 第 5 步）。
 
-**结构性增长复核（OI-249）**：估值范围内 ROIC 路径的池成员，候选侧池带峰守卫权重 w > 0，且回报上台阶为量驱动，并且峰守卫使每股 NOPAT 较不设峰守卫低 40% 以上时，入队复核，不冻结。
-- 量驱动：最新年报营收较两年前年报年复合 ≥ 25%、毛利率两年升幅 ≤ 5pp，两年窗口内无外生权益变动、购买法收购与主体重置。
-- 判定由 `scripts/structural_growth_review.py` 按 §6.7 第 2 步参数当晚重建两次（原样与研究开关 `--peak-relax volume`）得出；输出另标东财 2016 行业属商品定价型的公司，供复核参考。
+**结构性增长复核（OI-249、OI-250）**：估值范围内 ROIC 路径的池成员，候选侧池带峰守卫权重 w > 0，且峰守卫使每股 NOPAT 较不设峰守卫低 40% 以上时，满足下列之一即入队复核，不冻结：
+- 量驱动：最新年报营收较两年前年报年复合 ≥ 25%、毛利率两年升幅 ≤ 5pp，两年窗口内无外生权益变动、购买法收购与主体重置；
+- 业务属性登记为 `结构成长型`（个人投资体系第 5.12 节）。
+
+执行与复核：
+- 判定由 `scripts/structural_growth_review.py` 按 §6.7 第 2 步参数当晚重建三次得出：原样、研究开关 `--peak-relax volume`（判量驱动）、`--roic-peak-k 99`（不设峰守卫）。输出另标东财 2016 行业属商品定价型的公司与业务类别，供复核参考。
 - 复核按 §6.5.2.2 登记研究正常化盈利与可证伪条件；登记后改由研究与模型差距规则管理，未登记前每次扫描照常入队。
 
 ### 7.4 事件复核触发
