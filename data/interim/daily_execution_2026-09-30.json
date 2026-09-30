@@ -1,0 +1,17 @@
+{
+ "execution_date": "2026-09-30",
+ "signal_date": "2026-09-29",
+ "confirmation_source": "user",
+ "user_confirmation": "今天没有任何操作, 然后卫星化学清仓的价格是 17100@25.91, 5200@25.93. 目前总资产 4585280, 净资产 2666483.88, 现金 0, 可用保证金 -100813.",
+ "reported_at_utc": "2026-09-30T08:25:45+00:00",
+ "status": "no_trades",
+ "trades": [],
+ "holdings_unchanged": true,
+ "holdings_sha256": "051cda82a6773ca23a52d89ea255c11de55f8e5a1b6c9957cac96e50cf390e84",
+ "cooldown_executions_added": 0,
+ "original_buy_plan": [],
+ "original_sell_plan": [],
+ "calendar_note": "09-30（周三）为国庆前最后一个交易日；上交所 2026 年休市安排：10-01～10-07 休市，10-08（周四）起照常开市。09-29 信号清单为空，今日无成交；09-30 信号的执行日为 10-08。",
+ "correction_note": "同日补报 09-29 卫星化学清仓成交价，已更正 data/interim/daily_execution_2026-09-29.json（拆为两笔）。",
+ "recorded_at_utc": "2026-09-30T08:38:34.990471+00:00"
+}

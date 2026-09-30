@@ -1,0 +1,83 @@
+{
+ "as_of": "2026-09-30",
+ "account_reported": {
+  "as_of": "2026-09-30",
+  "net_assets_cny": "2666483.88",
+  "total_assets_cny": "4585280.00",
+  "margin_debt_cny": "1918796.12",
+  "credit_line_cny": "",
+  "leverage_ratio": "1.7196",
+  "guarantee_ratio_pct": "238.97",
+  "holdings_market_value_cny": "4585280.00",
+  "cash_cny": "0.00",
+  "position_count": "5",
+  "top_position_weight_pct": "76.37",
+  "account_peak_net_assets_cny": "2811530.99",
+  "drawdown_from_peak_pct": "-5.16",
+  "source": "user_reported_assets_debt_derived",
+  "note": "用户2026-09-30盘后回报（北京时间16:25）：今日无任何操作，5只持仓股数、成本与止损锚延续（锚只作记录）；09-29清单为空。同时补报09-29卫星化学清仓成交价17100股@25.91、5200股@25.93（合计577897.00元，均价25.9147），09-29回执与快照备注已更正。总资产4585280、净资产2666483.88，负债按差额1918796.12；现金0、券商可用保证金-100813.00，扫描funds=-100813.00。未报告外部出入金按0。5只持仓股数乘09-30公开收盘价合计4585280.00元，与实报总资产完全相符。净资产较09-29变动+57230.64元＝持仓市值变动+57417.00元−负债增加186.36元（无成交，一日利息等，未拆分）。格力市值2036496.00元，占净资产76.37%，按现行单票上限暂停加仓。一档133324.19元。10-01～10-07国庆休市，本日信号执行日为10-08。",
+  "external_cash_flow_cny": "0.00",
+  "strategy_base_net_assets_cny": "",
+  "strategy_return_pct": "-5.16",
+  "net_assets_before_flow_cny": "",
+  "strategy_nav_basis": "exact",
+  "strategy_unit_nav": "0.948410",
+  "strategy_epoch": "E5"
+ },
+ "available_margin_cny": "-100813.00",
+ "actual_scan_funds_cny": "-100813.00",
+ "net_asset_change_cny": "57230.64",
+ "net_asset_change_pct": "2.193372384199856354303118500",
+ "debt_change_cny": "186.36",
+ "market_value_change_cny": "57417.00",
+ "tranche_cny": "133324.19",
+ "asset_leverage": "1.719597869835987907791139544",
+ "guarantee_ratio_pct": "238.9665036429196031520013705",
+ "buffer_to_130pct": "45.59907015493056040198199456",
+ "hypothetical_funds_cny": "-142917.85592",
+ "market_value_reconciliation_cny": "0.00",
+ "close_price_reconciliation_status": "matched",
+ "holdings_close_valuation": [
+  {
+   "code": "000651",
+   "name": "格力电器",
+   "close": "38.28",
+   "shares": "53200",
+   "market_value_cny": "2036496.00",
+   "quote_time_beijing": "20260930161500"
+  },
+  {
+   "code": "603529",
+   "name": "爱玛科技",
+   "close": "22.23",
+   "shares": "29200",
+   "market_value_cny": "649116.00",
+   "quote_time_beijing": "20260930161456"
+  },
+  {
+   "code": "600036",
+   "name": "招商银行",
+   "close": "41.26",
+   "shares": "14700",
+   "market_value_cny": "606522.00",
+   "quote_time_beijing": "20260930161447"
+  },
+  {
+   "code": "601318",
+   "name": "中国平安",
+   "close": "53.29",
+   "shares": "16400",
+   "market_value_cny": "873956.00",
+   "quote_time_beijing": "20260930161454"
+  },
+  {
+   "code": "601717",
+   "name": "中创智领",
+   "close": "13.35",
+   "shares": "31400",
+   "market_value_cny": "419190.00",
+   "quote_time_beijing": "20260930161446"
+  }
+ ],
+ "trades_note": "09-30 无成交（见 data/interim/daily_execution_2026-09-30.json）；同日补报 09-29 卫星化学成交价，已更正 09-29 回执"
+}

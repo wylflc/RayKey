@@ -127,25 +127,57 @@
    "security_name": "卫星化学",
    "side": "sell",
    "rule": "user_full_exit",
-   "rule_note": "09-28 清单为持有；用户自行清仓，未报成交价。不属涨幅减持、出名单或换仓，不登记卖侧比例冷却（同 09-22 中材国际先例）。",
-   "shares": 22300,
-   "price": "25.915",
-   "price_source": "inferred_from_debt_change",
-   "amount_cny": "577904.50",
+   "rule_note": "09-28 清单为持有；用户自行清仓，成交价 09-30 补报（17,100@25.91、5,200@25.93，合计 577,897.00 元）。不属涨幅减持、出名单或换仓，不登记卖侧比例冷却（同 09-22 中材国际先例）。",
+   "shares": 17100,
+   "price": "25.91",
+   "price_source": "user_confirmed_2026-09-30",
+   "amount_cny": "443061.00",
+   "remaining_shares": 5200,
+   "valuation": {
+    "as_of": "2026-09-29",
+    "security_code": "002648",
+    "security_name": "卫星化学",
+    "price": 25.91,
+    "candidate": {
+     "intrinsic_value": "23.8581",
+     "pv": 1.0860043339578591,
+     "source": "模型带·2026-06-30"
+    },
+    "hold": {
+     "intrinsic_value": "26.4054",
+     "pv": 0.9812386860263431,
+     "source": "模型带·2026-06-30"
+    },
+    "hold_fallback_to_candidate": false
+   },
+   "plan_alignment": "user_unplanned_full_exit",
+   "cost_basis_after": "",
+   "entry_stop_price_after": ""
+  },
+  {
+   "security_code": "002648",
+   "security_name": "卫星化学",
+   "side": "sell",
+   "rule": "user_full_exit",
+   "rule_note": "09-28 清单为持有；用户自行清仓，成交价 09-30 补报（17,100@25.91、5,200@25.93，合计 577,897.00 元）。不属涨幅减持、出名单或换仓，不登记卖侧比例冷却（同 09-22 中材国际先例）。",
+   "shares": 5200,
+   "price": "25.93",
+   "price_source": "user_confirmed_2026-09-30",
+   "amount_cny": "134836.00",
    "remaining_shares": 0,
    "valuation": {
     "as_of": "2026-09-29",
     "security_code": "002648",
     "security_name": "卫星化学",
-    "price": 25.915,
+    "price": 25.93,
     "candidate": {
      "intrinsic_value": "23.8581",
-     "pv": 1.0862139063881868,
+     "pv": 1.0868426236791697,
      "source": "模型带·2026-06-30"
     },
     "hold": {
      "intrinsic_value": "26.4054",
-     "pv": 0.98142804123399,
+     "pv": 0.9819961068569307,
      "source": "模型带·2026-06-30"
     },
     "hold_fallback_to_candidate": false
@@ -288,13 +320,39 @@
  },
  "reported_available_margin_cny": "-144931.00",
  "actual_scan_funds_cny": "-144931.00",
- "sell_amount_cny": "577904.50",
+ "sell_amount_cny": "577897.00",
  "buy_amount_cny": "683727.80",
  "debt_change_cny": "106428.61",
- "sell_price_note": "卖出价未报，按负债变动推算（费用按佣金万1／过户费万0.1／印花税万5、一日利息约 176.12 元估算），待用户确认；不影响净资产与次日计划。",
+ "sell_price_note": "卫星化学成交价用户 09-30 补报：17,100@25.91＋5,200@25.93＝577897.00 元，均价 25.9147；原按负债变动推算 25.915（577904.50 元），差 7.50 元。",
  "close_price_reconciliation_status": "exact",
  "holdings_sha256": "051cda82a6773ca23a52d89ea255c11de55f8e5a1b6c9957cac96e50cf390e84",
  "cooldown_note": "买入按 09-22 先例登记成交凭据（一手金额均未超一档，比例冷却跳过次数为 0）；卫星化学清仓不登记。",
  "account_verified": true,
- "recorded_at_utc": "2026-09-29T20:38:48+00:00"
+ "recorded_at_utc": "2026-09-29T20:38:48+00:00",
+ "corrections": [
+  {
+   "corrected_at_utc": "2026-09-30T08:38:34.990471+00:00",
+   "source": "user_report_2026-09-30",
+   "reported_at_utc": "2026-09-30T08:25:45+00:00",
+   "field": "trades[002648]",
+   "old": {
+    "shares": 22300,
+    "price": "25.915",
+    "amount_cny": "577904.50",
+    "price_source": "inferred_from_debt_change"
+   },
+   "new": [
+    {
+     "shares": 17100,
+     "price": "25.91",
+     "amount_cny": "443061.00"
+    },
+    {
+     "shares": 5200,
+     "price": "25.93",
+     "amount_cny": "134836.00"
+    }
+   ]
+  }
+ ]
 }

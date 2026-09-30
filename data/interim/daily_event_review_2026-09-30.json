@@ -1,0 +1,115 @@
+{
+ "signal_date": "2026-09-30",
+ "status": "reviewed_through_snapshot_cutoff",
+ "reviewed_at_utc": "2026-09-30T09:13:05.654127+00:00",
+ "primary_documents": [
+  {
+   "security_code": "000786",
+   "title": "北新建材:关于申请发行债务融资工具获准注册的公告",
+   "art_code": "AN202609301830029584",
+   "source_url": "https://pdf.dfcfw.com/pdf/H2_AN202609301830029584_1.pdf",
+   "pdf_sha256": "48a451a92a52b9d4bf8385dcc775686228e6b3491da4e1771e8d1ba5d18f69df",
+   "pages": 1,
+   "pages_reviewed": [
+    1
+   ],
+   "review_method": "原始PDF逐页文字核验",
+   "reviewed_at_utc": "2026-09-30T09:07:50.257675+00:00",
+   "facts": "交易商协会接受公司债务融资工具注册（中市协注[2026]PDFI104号）：注册金额60亿元，自2026-09-24起2年内有效，可分期发行超短期融资券、短期融资券、中期票据、永续票据；依据2025年年度股东会授权，尚未发行。",
+   "assessment": "例行融资额度注册，未发行、不改变现有资本结构与盈利；不触发§7.3或§7.4复核。若日后发行永续票据，按§6权益工具口径另行处理。"
+  }
+ ],
+ "carried_forward_documents": [],
+ "announcement_snapshot": "data/interim/daily_announcements_2026-09-30.json",
+ "announcement_title_screening_count": 134,
+ "announcement_retrieved_at_utc": "2026-09-30T08:48:39.437906+00:00",
+ "latest_announcement_display_time_beijing": "2026-09-30 16:46:36",
+ "industry_review": "data/interim/daily_industry_review_2026-09-30.json",
+ "valuation_review_queue_rows": 1,
+ "valuation_update": "无新增财报导致的估值更新；复核队列1行为爱玛科技研究与模型差距复核（v4.216研发资本化使模型锚21.84→24.53亿，+12.3%），生产带仍采用研究数16.40亿、不冻结，复核结论待用户裁定。池内今日除息4只，按实施公告核验后登记价格口径并机械折算：三花智控V减0.1195545、道通科技减0.49（回购专户不参与分派的差异化分红）、安克创新减0.8、扬农化工减0.24；其余带值不变，持仓今日无除权除息。",
+ "holding_ex_dividends_today": {},
+ "mandatory_codes": [
+  "000651",
+  "000786",
+  "600036",
+  "600938",
+  "601318",
+  "601717",
+  "603529"
+ ],
+ "eligible_codes": [
+  "000786",
+  "601318",
+  "600938"
+ ],
+ "holdings_codes": [
+  "000651",
+  "603529",
+  "600036",
+  "601318",
+  "601717"
+ ],
+ "user_named_codes": [],
+ "relevant_announcement_count": 4,
+ "unreviewed_announcements": [],
+ "coverage": [
+  {
+   "security_code": "000651",
+   "held": true,
+   "eligible": false,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "000786",
+   "held": false,
+   "eligible": true,
+   "announcement_ids": [
+    "AN202609301830029584"
+   ],
+   "announcement_status": "primary_reviewed"
+  },
+  {
+   "security_code": "600036",
+   "held": true,
+   "eligible": false,
+   "announcement_ids": [
+    "AN202609291830000315"
+   ],
+   "announcement_status": "reviewed_on_prior_day"
+  },
+  {
+   "security_code": "600938",
+   "held": false,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "601318",
+   "held": true,
+   "eligible": true,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  },
+  {
+   "security_code": "601717",
+   "held": true,
+   "eligible": false,
+   "announcement_ids": [
+    "AN202609291829998202",
+    "AN202609281829960611"
+   ],
+   "announcement_status": "reviewed_on_prior_day"
+  },
+  {
+   "security_code": "603529",
+   "held": true,
+   "eligible": false,
+   "announcement_ids": [],
+   "announcement_status": "no_announcement_in_fetched_window"
+  }
+ ],
+ "report_day_divergence_check": "check_report_day_price_divergence.py --as-of 2026-09-30 --universe pool：全池181只，10日内有披露且有带0只，无命中",
+ "coverage_note": "池内134条标题筛查（快照取于北京时间09-30 16:48，查询窗口09-29～10-01）；持仓5只与暂定合格集（北新建材、中国海油、中国平安）的必查公告：北新建材09-30债务融资工具获准注册公告已核验原文；中创智领09-28、09-29两份H股翌日披露报表与招行09-29董事会决议已于09-29核验；格力、爱玛、平安、中国海油窗口内无公告。另核验4份池内今日除息实施公告（三花智控、安克创新、扬农化工、道通科技）。行业高频数据未全覆盖，缺口另列；快照截止之后（09-30晚间）发布的公告未覆盖，10-08扫描补取。"
+}
