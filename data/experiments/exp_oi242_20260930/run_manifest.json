@@ -1,0 +1,268 @@
+{
+ "job_id": "27392785",
+ "base": "--strategy trend --trend-tranche --x 5.0 --trend-ma 20 60 --corr-window 252 --scan-depth 40 --max-positions 999 --max-corr 1.0 --swap --swap-partial --sell-trend-ma 20 --lot-size 100 --lot-ratio-cooldown --lot-cooldown-start confirmed --execution-consistency signal --exec-delay 1 --exec-price close --fee-preset user --no-artifacts --capital 3000000 --credit-ratio 0.666 --credit-cap 999999999999 --maintenance-ratio 1.30 --margin-rate 0.035 --swap-trigger power --credit-over-limit repay --gain-sell 1.10 --gain-sell-mode ungated --swap-gain-once --swap-source-block -1 --width -0.0034 --swap-margin 0.15 --stop-ma 60 --stop-line min_entry_current --entry-below-ma60 ma60_stop --stop-basis exec --residual-clear lot --position-cap 0.6 --net-same-day --fill-missing skip --dividend-tax --swap-repeat skip --addon-trend ma-only --swap-require-weak --bt-quiet 3 --no-trend-stop --swap-ext 0.30 0.15 0 --equity-bond-data data/reference/equity_bond_csi300.csv --equity-bond-mode cap --equity-bond-metric spread --equity-bond-threshold 0.03 --equity-bond-lower 0.3 --equity-bond-restore-above --equity-bond-release-threshold 0.035 --daily-states data/processed/a_share_daily_states_adopted.csv --hold-states data/processed/a_share_daily_states_hold.csv --universe-file data/processed/pit_attention/panel_moat_bank_v6b.csv",
+ "ref": "S15",
+ "arms": {
+  "C20": [
+   "--position-cap",
+   "0.2"
+  ],
+  "C30": [
+   "--position-cap",
+   "0.3"
+  ],
+  "C40": [
+   "--position-cap",
+   "0.4"
+  ],
+  "C50": [
+   "--position-cap",
+   "0.5"
+  ],
+  "S15": [],
+  "C70": [
+   "--position-cap",
+   "0.7"
+  ],
+  "C80": [
+   "--position-cap",
+   "0.8"
+  ],
+  "C100": [
+   "--position-cap",
+   "1"
+  ],
+  "CNONE": [
+   "--position-cap",
+   "0"
+  ]
+ },
+ "caps": {
+  "C20": 0.2,
+  "C30": 0.3,
+  "C40": 0.4,
+  "C50": 0.5,
+  "S15": 0.6,
+  "C70": 0.7,
+  "C80": 0.8,
+  "C100": 1.0,
+  "CNONE": 0.0
+ },
+ "A": [
+  "000338",
+  "000651",
+  "600897",
+  "601088",
+  "601225"
+ ],
+ "UC": [
+  "000338",
+  "000651",
+  "002128",
+  "600066",
+  "600519",
+  "600585",
+  "600897",
+  "601088",
+  "601225"
+ ],
+ "top5": {
+  "C20": [
+   "000651",
+   "601088",
+   "601225",
+   "600066",
+   "000338"
+  ],
+  "C30": [
+   "000651",
+   "601088",
+   "601225",
+   "000338",
+   "002128"
+  ],
+  "C40": [
+   "000651",
+   "000338",
+   "601225",
+   "601088",
+   "600519"
+  ],
+  "C50": [
+   "000651",
+   "601088",
+   "000338",
+   "601225",
+   "002128"
+  ],
+  "S15": [
+   "000651",
+   "601088",
+   "000338",
+   "601225",
+   "600897"
+  ],
+  "C70": [
+   "000651",
+   "600897",
+   "601088",
+   "000338",
+   "601225"
+  ],
+  "C80": [
+   "000651",
+   "600897",
+   "601088",
+   "600585",
+   "000338"
+  ],
+  "C100": [
+   "000651",
+   "600897",
+   "601088",
+   "002128",
+   "600585"
+  ],
+  "CNONE": [
+   "000651",
+   "600897",
+   "601088",
+   "600585",
+   "000338"
+  ]
+ },
+ "U": {
+  "C20": [
+   "000338",
+   "000651",
+   "600066",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "C30": [
+   "000338",
+   "000651",
+   "002128",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "C40": [
+   "000338",
+   "000651",
+   "600519",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "C50": [
+   "000338",
+   "000651",
+   "002128",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "C70": [
+   "000338",
+   "000651",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "C80": [
+   "000338",
+   "000651",
+   "600585",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "C100": [
+   "000338",
+   "000651",
+   "002128",
+   "600585",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "CNONE": [
+   "000338",
+   "000651",
+   "600585",
+   "600897",
+   "601088",
+   "601225"
+  ]
+ },
+ "U_groups": {
+  "U01": [
+   "000338",
+   "000651",
+   "002128",
+   "600585",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "U02": [
+   "000338",
+   "000651",
+   "002128",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "U03": [
+   "000338",
+   "000651",
+   "600066",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "U04": [
+   "000338",
+   "000651",
+   "600519",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "U05": [
+   "000338",
+   "000651",
+   "600585",
+   "600897",
+   "601088",
+   "601225"
+  ],
+  "U06": [
+   "000338",
+   "000651",
+   "600897",
+   "601088",
+   "601225"
+  ]
+ },
+ "states": "data/experiments/exp_oi230_20260929/states/DC",
+ "actions": "data/experiments/exp_oi230_20260929/old_inputs/data/raw/corporate_actions/a_share_corporate_actions.csv",
+ "starts": [
+  "2009-11-01",
+  "2010-05-01",
+  "2010-11-01",
+  "2011-05-01",
+  "2011-11-01",
+  "2012-05-01",
+  "2012-11-01",
+  "2013-05-01",
+  "2013-11-01",
+  "2014-05-01",
+  "2014-11-01",
+  "2015-05-01",
+  "2015-11-01",
+  "2016-05-01"
+ ]
+}
