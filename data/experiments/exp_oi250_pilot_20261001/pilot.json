@@ -1,0 +1,72 @@
+{
+ "n": 57,
+ "issues": [],
+ "by_class": {
+  "价格周期型": 3,
+  "成本领先周期型": 12,
+  "结构成长型": 27,
+  "可复制成长型": 1,
+  "稳定型": 14
+ },
+ "cross": [
+  {
+   "derived_class": "价格周期型",
+   "volume_driven": false,
+   "flagged": false,
+   "n": 3
+  },
+  {
+   "derived_class": "可复制成长型",
+   "volume_driven": false,
+   "flagged": false,
+   "n": 1
+  },
+  {
+   "derived_class": "成本领先周期型",
+   "volume_driven": false,
+   "flagged": false,
+   "n": 11
+  },
+  {
+   "derived_class": "成本领先周期型",
+   "volume_driven": true,
+   "flagged": true,
+   "n": 1
+  },
+  {
+   "derived_class": "稳定型",
+   "volume_driven": false,
+   "flagged": false,
+   "n": 11
+  },
+  {
+   "derived_class": "稳定型",
+   "volume_driven": true,
+   "flagged": false,
+   "n": 3
+  },
+  {
+   "derived_class": "结构成长型",
+   "volume_driven": false,
+   "flagged": false,
+   "n": 17
+  },
+  {
+   "derived_class": "结构成长型",
+   "volume_driven": true,
+   "flagged": false,
+   "n": 8
+  },
+  {
+   "derived_class": "结构成长型",
+   "volume_driven": true,
+   "flagged": true,
+   "n": 2
+  }
+ ],
+ "confidence": {
+  "中": 26,
+  "高": 24,
+  "低": 7
+ }
+}
