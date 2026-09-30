@@ -1,0 +1,28 @@
+{
+ "sample_keys": 12831,
+ "matched": 12831,
+ "no_state": 0,
+ "pv_mismatch": 0,
+ "other_path": 29,
+ "v_identity_mismatch": 9,
+ "ctrl_mismatch": 0,
+ "written": 12793,
+ "changed": {
+  "c1": 647,
+  "c1b": 572,
+  "c2": 9965,
+  "c12": 10166
+ },
+ "missing": {
+  "c1": 0,
+  "c1b": 0,
+  "c2": 12,
+  "c12": 12
+ },
+ "nonpositive": {
+  "c1": 0,
+  "c1b": 0,
+  "c2": 0,
+  "c12": 0
+ }
+}
