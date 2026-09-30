@@ -1,0 +1,14 @@
+{
+ "nonfin_rows": 43413,
+ "matched": 43413,
+ "pv_mismatch": 0,
+ "no_state": 0,
+ "no_band": 0,
+ "other_path": 148,
+ "written": 43265,
+ "non_null_F1": 39713,
+ "non_null_cyc": 34522,
+ "non_null_F2": 43265,
+ "non_null_wc_absorb": 43034,
+ "non_null_F3": 43265
+}
