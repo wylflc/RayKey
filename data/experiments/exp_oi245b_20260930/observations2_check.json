@@ -1,0 +1,20 @@
+{
+ "nonfin_rows": 43413,
+ "matched": 43413,
+ "pv_mismatch": 0,
+ "v_identity_mismatch": 25,
+ "other_path": 148,
+ "written": 43240,
+ "changed": {
+  "LG1.3": 23963,
+  "LG1.6": 15587,
+  "LG2.0": 8120,
+  "LGλ1.3": 18779
+ },
+ "nonpositive": {
+  "LG1.3": 363,
+  "LG1.6": 355,
+  "LG2.0": 344,
+  "LGλ1.3": 252
+ }
+}
