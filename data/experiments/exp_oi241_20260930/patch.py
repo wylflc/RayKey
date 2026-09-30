@@ -17,9 +17,9 @@ SRC = ROOT / 'scripts' / 'backtest_valuation_strategy.py'
 
 PATCHES = [
     # 1. run() 参数
-    ('''        bt_stable: dict | None = None,
+    ('''        bt_quiet: int = 0, bt_lows: dict | None = None, swap_ext: tuple | None = None,
 ''',
-     '''        bt_stable: dict | None = None, add_bt: bool = False,
+     '''        bt_quiet: int = 0, bt_lows: dict | None = None, swap_ext: tuple | None = None, add_bt: bool = False,
 '''),
     # 2. 已持仓加仓同建仓条件
     ('''                if bt_quiet and r[0] not in portfolio.lots:      # §9.3.1（v4.222，OI-233）：新建仓改按前低企稳＋站上 MA5／MA20

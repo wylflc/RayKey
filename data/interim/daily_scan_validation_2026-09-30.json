@@ -45,7 +45,6 @@
   "only_today_exdiv_changes_hold",
   "event_scope_reviewed_before_publication",
   "publication_verify_passed",
-  "shadow_capture_and_run",
   "user_account_registered_before_scan",
   "exright_price_terms_registered_002050_300866_600486_688208",
   "correction_0929_002648_fills_registered"
@@ -577,8 +576,7 @@
   "band_refresh": 27395156,
   "preview": 27395159,
   "band_refresh_after_price_terms": 27395644,
-  "formal_scan": 27396326,
-  "shadow": 27396512
+  "formal_scan": 27396326
  },
  "resource_measurements": {
   "evidence_elapsed": "00:18:15",
@@ -590,27 +588,7 @@
   "band_refresh2_elapsed": "00:05:10",
   "band_refresh2_maxrss_kib": 767641,
   "scan_elapsed": "00:02:30",
-  "scan_maxrss_kib": 1186745,
-  "shadow_elapsed": "00:00:36"
- },
- "shadow": {
-  "cumulative_return_pct": -3.9997,
-  "actual_return_pct": -5.159,
-  "fills_0930": [
-   [
-    "000651",
-    "buy",
-    600,
-    38.28
-   ],
-   [
-    "000786",
-    "buy",
-    800,
-    16.6
-   ]
-  ],
-  "engine_cap_note": "影子09-30加仓格力600股：信号日（09-29）格力占影子净资产60.26%，按§9.3.1应挡；引擎上限余量以执行日净资产为分母（room=0.6×09-30净资产−41800×38.10≈2.6万元），登记OI-243待裁定"
+  "scan_maxrss_kib": 1186745
  },
  "known_limitations": [
   "行业高频与竞品数据部分缺失（动力煤价、煤炭固定资产投资、煤机招标、两轮车上险、空调排产）",
@@ -619,5 +597,6 @@
   "公告快照取于北京时间09-30 16:48，其后发布的公告（节前晚间与假期）未覆盖，10-08扫描补取",
   "全市场收盘涨跌家数未取得",
   "10年国债与沪深300 PE的09-30观测截至扫描时未发布"
- ]
+ ],
+ "engine_cap_note": "OI-243：回测引擎单票上限余量以执行日净资产为分母，与§9.3.1及扫描器（信号日净资产）不一致；实盘清单不受影响，待用户裁定"
 }

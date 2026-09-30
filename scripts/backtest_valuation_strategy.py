@@ -1538,7 +1538,6 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         left_stop: float = 0.0, left_e1: bool = False, deep_stop_pv: float = 0.0, deep_stop_e1: bool = False,
         size_breaks: tuple[float, float] | None = None, size_e1: bool = False,
         bt_quiet: int = 0, bt_lows: dict | None = None, swap_ext: tuple | None = None,
-        bt_stable: dict | None = None,
         bank_buy_line: float = 0.0, bank_codes: frozenset = frozenset(),
         mkt: dict[str, float] | None = None, mkt_crash_days: int = 0,
         mkt_crash_pct: float = 0.10, mkt_trend_ma: int = 0,
@@ -1889,8 +1888,6 @@ def run(strategy: str, x: float, states, prices, actions, mas, since: str, until
         ma = mas.get(code, {}).get(when) or {}
         if 5 not in ma or 20 not in ma or not (close > ma[5] and close > ma[20]):
             return False
-        if bt_stable is not None:          # 影子组合回放：走稳与否取信号日扫描产物（扫描器 quote_snapshot 同一判据）
-            return bool(bt_stable.get((code, when)))
         rec = (bt_lows or {}).get(code)
         return bool(rec) and stabilized(rec[0], day_index[0].get(code, []), day_index[1].get(code, {}), when, quiet=bt_quiet)
 

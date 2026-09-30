@@ -179,20 +179,5 @@ class FetchTest(unittest.TestCase):
         for call in (lambda: fetch.fetch_ex_dividend_events('2026-05-28'), lambda: history.fetch_actions('300760',15)):
             with patch('urllib.request.urlopen', side_effect=self.responses(3)), self.assertRaises(ValueError): call()
 
-class ShadowTest(unittest.TestCase):
-    def test_correction_keeps_original_input_and_future_boundary(self):
-        from shadow_from_origin import corrected_actions
-        old=[dict(date='2026-08-28', all_actions={'300760':{'2026-05-28':{'cash_per_share':.31}}},
-                  actions={}, quotes={'300760':{'close':164.3}})]
-        correction=dict(through='2026-09-21', known_by='2026-08-28',
-                        events={'300760':{'2026-05-28':{'cash_per_share':1.56}}})
-        new=corrected_actions(old, correction)
-        self.assertEqual(old[0]['all_actions']['300760']['2026-05-28']['cash_per_share'],.31)
-        self.assertEqual(new[0]['all_actions']['300760']['2026-05-28']['cash_per_share'],1.56)
-        self.assertEqual(new[0]['quotes'],old[0]['quotes'])
-        self.assertEqual(new[0]['actions'],{})
-        with self.assertRaises(ValueError):
-            corrected_actions(old,dict(correction,known_by='2026-05-01'))
-
 if __name__=='__main__':
     unittest.main()

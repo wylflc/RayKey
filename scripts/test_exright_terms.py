@@ -125,22 +125,4 @@ class PriceTermsTest(unittest.TestCase):
         event=ca.event_from_row(dict(cash_per_share=0,share_ratio=-.9))
         self.assertAlmostEqual(bt.adjusted_close_series({'2020-01-01':1.,'2020-01-03':10.},{'2020-01-02':event})['2020-01-01'],10.)
 
-    def test_shadow_correction_waits_for_ex_date_and_preserves_archive(self):
-        from shadow_from_origin import corrected_actions
-        snapshots=[dict(date=day,all_actions={'X':{}},actions={})
-                   for day in ['2025-06-13','2025-06-16','2025-06-17']]
-        original=json.dumps(snapshots,sort_keys=True)
-        event=dict(zip(ca.AMOUNTS,self.event))|dict(zip(ca.PRICE_FIELDS,self.event.price))
-        correction=dict(availability='per_event',through='2025-06-16',
-                        events={'X':{self.day:event}},notice_dates={'X':{self.day:'2025-06-06'}})
-        corrected=corrected_actions(snapshots,correction)
-        self.assertEqual(corrected[0],snapshots[0])
-        self.assertEqual(corrected[1]['actions']['X'],event)
-        self.assertEqual(corrected[1]['all_actions']['X'][self.day],event)
-        self.assertEqual(corrected[2],snapshots[2])
-        self.assertEqual(json.dumps(snapshots,sort_keys=True),original)
-        correction['notice_dates']['X'][self.day]='2025-06-17'
-        with self.assertRaisesRegex(ValueError,'not yet available'):
-            corrected_actions(snapshots,correction)
-
 if __name__=='__main__':unittest.main()

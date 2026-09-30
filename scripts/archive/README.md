@@ -40,7 +40,7 @@
 | `apply_quality_tier_column_backfill.py` | 2026-08-24 | 2026-11-24 | OI-024 的一次性回填（L1 `q2_moat_type`、L3 `tactical_thesis`，逐票常量表）。已执行；剩余三列按 §5.7 随季度复核逐票手工回填 | `backfill_quality_tier_columns.py`（六列建列与填充率自检，仍在用） |
 ## 一次性作业脚本（`scripts/archive/slurm/`）
 
-2026-09-19 归档、**2026-12-19 可永久删除**。这些 `sbatch` 是已结案课题（OI 编号或回测日志节号）的一次性提交包装：工作流程未引用、无脚本引用、结果已写入回测日志或 `docs/reports/`，正文可从 Git 取回。常设入口只剩 `scripts/slurm/` 下的 `daily_postclose.sbatch`、`rebuild_chain_with_fetch.sbatch`、`shadow_origin.sbatch`、`oi148_slippage.sbatch` 及仍被脚本引用的少数作业。重跑时按回测日志节号取回对应文件，先核对路径与输入是否仍可重建。
+2026-09-19 归档、**2026-12-19 可永久删除**。这些 `sbatch` 是已结案课题（OI 编号或回测日志节号）的一次性提交包装：工作流程未引用、无脚本引用、结果已写入回测日志或 `docs/reports/`，正文可从 Git 取回。常设入口只剩 `scripts/slurm/` 下的 `daily_postclose.sbatch`、`rebuild_chain_with_fetch.sbatch`、`oi148_slippage.sbatch` 及仍被脚本引用的少数作业。重跑时按回测日志节号取回对应文件，先核对路径与输入是否仍可重建。
 
 | 家族（件数） | 文件 |
 | --- | --- |
@@ -89,7 +89,6 @@
 | residual_cny_*（3） | `residual_cny_anchors.sbatch`, `residual_cny_final.sbatch`, `residual_cny_sweep.sbatch` |
 | sb1_*（4） | `sb1_daily_buys.sbatch`, `sb1_daily_buys_checks.sbatch`, `sb1_land.sbatch`, `sb1_platform_sweep.sbatch` |
 | selection_edge_*（1） | `selection_edge_baseline.sbatch` |
-| shadow__*（1） | `shadow_portfolio.sbatch` |
 | swap__*（3） | `swap_control_tolerances.sbatch`, `swap_repeat_candidate_20260917.sbatch`, `swap_variants_sweep.sbatch` |
 | t1_info_*（2） | `t1_info_exwinner_u.sbatch`, `t1_info_sweep.sbatch` |
 | tier2d_*（1） | `tier2d_sweep.sbatch` |
