@@ -1,0 +1,9 @@
+__pycache__/
+states/
+cache/
+cache_tr/
+daily/
+daily_tr/
+errors/
+trades/
+*.log

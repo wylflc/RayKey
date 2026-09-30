@@ -10,8 +10,8 @@
   基本面取 `roic_bands.csv` 可得日不晚于当日的最近一行（bps／roe0／payout），按除权参考价折到当日；
 * **H2**：当日两者都可估的银行（保险除外）`G = exp(mean ln(V_D0 ÷ V_DDM))`，`V_H2 = V_DDM × G`（V_D0 不可得而 V_DDM 可估的银行
   照用当日 G，OI-230）；可估银行不足 `MIN_BANKS` 时当日退回 V_D0，保险恒为 V_D0。G 是估值之比的几何均值，价格不进 V（§6.3 第 1 条）。
-* **同尺系数**（OI-227）：银行（保险除外）的 V（含退回的 V_D0）再乘 `BANK_SCALE`，使同 `P/V` 下银行与非金融的预期回报可比；
-  系数由月末 `P/V` 对其后 3 年回报的同尺校准得出（`exp(−c/b)`，c 为银行偏差、b 为共同斜率）。
+* **同尺系数**（OI-227 引入，v4.224 取消）：`BANK_SCALE = 1`，银行与非金融同尺不缩放；乘法与 `rebuild_bank_bands.py h2:RP:COE:SCALE`
+  保留，只供复现 v4.219～v4.223 的状态（当时 0.7045）。
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ TERMINAL_EXCESS = 0.02      # ROE_T = min(roe0, COE + 2pp)，与主模型 ROIC_T
 G_CAP = 0.03                # 终值增长上限
 DEFAULT_PAYOUT = 0.30
 MIN_BANKS = 5
-BANK_SCALE = 0.7045         # OI-227 同尺系数：面板 3 年全期校准；v4.221（OI-230）在可持续终值口径上重估，c = −0.0206、b = −0.0588（回测日志 §12.282）
+BANK_SCALE = 1.0            # v4.224（OI-244）取消同尺系数：全期 0.7045 主要来自 2017–2019 起始月，2020 年起约 1.00，分时段不稳（回测日志 §12.294）
 
 
 def roe_bv_path(bps: float, roe0: float, payout: float | None, coe: float, fade_years: int = FADE_YEARS):

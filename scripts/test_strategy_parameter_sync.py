@@ -129,9 +129,9 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertEqual(workflow.count("python3 scripts/rebuild_bank_bands.py h2:0.02:0.10 \\"), 2)
         self.assertEqual(chain.count("python3 scripts/rebuild_bank_bands.py h2:0.02:0.10 \\"), 2)
         self.assertNotIn("rebuild_bank_bands.py divspread", chain)
-        # OI-227（v4.219）：银行 V 乘同尺系数，唯一常数在 bank_valuation（历史重建缺省取它、实盘扫描同读）
+        # v4.224（OI-244）：银行不乘同尺系数，唯一常数在 bank_valuation（历史重建缺省取它、实盘扫描同读）
         import bank_valuation
-        self.assertAlmostEqual(bank_valuation.BANK_SCALE, 0.7045)
+        self.assertAlmostEqual(bank_valuation.BANK_SCALE, 1.0)
         # OI-213（v4.216）：ROIC 路径研发资本化，两条建带命令与常设重建作业同参，行业大类在建带前补取
         self.assertEqual(workflow.count("  --rd-capitalize on \\"), 2)
         self.assertIn("--rd-capitalize on", chain)

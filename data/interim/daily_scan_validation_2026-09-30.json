@@ -1,6 +1,6 @@
 {
  "signal_date": "2026-09-30",
- "checked_at_utc": "2026-09-30T10:17:47.249586+00:00",
+ "checked_at_utc": "2026-09-30T11:24:55.785833+00:00",
  "status": "passed",
  "checks": [
   "whole_pool_unique_codes",
@@ -53,10 +53,18 @@
   "band_change_only_603529_research_overlay_adopted",
   "band_change_only_603529_research_overlay_b2",
   "band_change_only_603529_research_overlay_hold",
-  "republish_verify_passed"
+  "republish_verify_passed",
+  "decision_log_v4224_registered_before_rescan",
+  "states_k7045_byte_identical_before_install",
+  "states_k1_bank_rows_only_scaled_1_over_0.7045",
+  "band_change_only_6_pool_banks_scaled_adopted",
+  "band_change_only_6_pool_banks_scaled_b2",
+  "band_change_only_6_pool_banks_scaled_hold",
+  "insurer_601318_unchanged",
+  "republish_v4224_verify_passed"
  ],
  "problems": [],
- "known_item_note": "爱玛差距复核按用户裁定（B2）当晚生效：研究数 16.40→18.96 亿、研究增长 3.60%→5.62%，V 21.81→25.64；差距 29.4%，退出复核队列；三份带仅 603529 变动（research_overlay 2026-09-30），重跑扫描并重新发布",
+ "known_item_note": "爱玛差距复核按用户裁定（B2）当晚生效：研究数 16.40→18.96 亿、研究增长 3.60%→5.62%，V 21.81→25.64；差距 29.4%，退出复核队列；三份带仅 603529 变动（research_overlay 2026-09-30），重跑扫描并重新发布；v4.224（OI-244）当晚落地：取消银行同尺系数，三份带仅池内6家银行变动（V、带上下沿恰为 ÷0.7045），招行 P/V 1.2624→0.8894，成都、宁波进入买入区，过买入线28→31只、走势合格4→7只；资金为负，清单仍为空",
  "holdings_market_value_cny": "4585280.00",
  "reported_total_assets_cny": "4585280.00",
  "registered_total_assets_gap_cny": "0.00",
@@ -66,8 +74,8 @@
  "coverage": {
   "scanned": 181,
   "valid_pv": 177,
-  "below_buy_line": 28,
-  "eligible": 4,
+  "below_buy_line": 31,
+  "eligible": 7,
   "held": 5,
   "mandatory_companies": 7,
   "primary_reviewed_announcements": 1,
@@ -115,7 +123,7 @@
    "anchor": "37.93",
    "stretch_source": false,
    "action": "持有",
-   "pv": "1.26"
+   "pv": "0.89"
   },
   "601318": {
    "name": "中国平安",
@@ -672,6 +680,518 @@
      ]
     }
    ]
+  },
+  "v4224_bank_scale_removed": {
+   "adopted": [
+    {
+     "code": "002142",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "22.1279",
+      "31.4093"
+     ],
+     "band_low": [
+      "19.9151",
+      "28.2684"
+     ],
+     "band_high": [
+      "24.3407",
+      "34.5502"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "600036",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "37.5334",
+      "53.2766"
+     ],
+     "band_low": [
+      "33.7801",
+      "47.9489"
+     ],
+     "band_high": [
+      "41.2867",
+      "58.6043"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601288",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "4.1271",
+      "5.8581"
+     ],
+     "band_low": [
+      "3.7144",
+      "5.2723"
+     ],
+     "band_high": [
+      "4.5398",
+      "6.4439"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601398",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "5.0370",
+      "7.1497"
+     ],
+     "band_low": [
+      "4.5333",
+      "6.4347"
+     ],
+     "band_high": [
+      "5.5407",
+      "7.8647"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601838",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "17.3814",
+      "24.6719"
+     ],
+     "band_low": [
+      "15.6433",
+      "22.2047"
+     ],
+     "band_high": [
+      "19.1195",
+      "27.1391"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601939",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "7.2601",
+      "10.3053"
+     ],
+     "band_low": [
+      "6.5341",
+      "9.2748"
+     ],
+     "band_high": [
+      "7.9861",
+      "11.3358"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    }
+   ],
+   "b2": [
+    {
+     "code": "002142",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "22.1279",
+      "31.4093"
+     ],
+     "band_low": [
+      "19.9151",
+      "28.2684"
+     ],
+     "band_high": [
+      "24.3407",
+      "34.5502"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "600036",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "37.5334",
+      "53.2766"
+     ],
+     "band_low": [
+      "33.7801",
+      "47.9489"
+     ],
+     "band_high": [
+      "41.2867",
+      "58.6043"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601288",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "4.1425",
+      "5.8800"
+     ],
+     "band_low": [
+      "3.7283",
+      "5.2920"
+     ],
+     "band_high": [
+      "4.5568",
+      "6.4680"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601398",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "5.0558",
+      "7.1764"
+     ],
+     "band_low": [
+      "4.5502",
+      "6.4588"
+     ],
+     "band_high": [
+      "5.5614",
+      "7.8940"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601838",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "17.4463",
+      "24.7640"
+     ],
+     "band_low": [
+      "15.7017",
+      "22.2876"
+     ],
+     "band_high": [
+      "19.1909",
+      "27.2404"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601939",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "7.2872",
+      "10.3438"
+     ],
+     "band_low": [
+      "6.5585",
+      "9.3094"
+     ],
+     "band_high": [
+      "8.0159",
+      "11.3782"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    }
+   ],
+   "hold": [
+    {
+     "code": "002142",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "22.1279",
+      "31.4093"
+     ],
+     "band_low": [
+      "19.9151",
+      "28.2684"
+     ],
+     "band_high": [
+      "24.3407",
+      "34.5502"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "600036",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "37.5334",
+      "53.2766"
+     ],
+     "band_low": [
+      "33.7801",
+      "47.9489"
+     ],
+     "band_high": [
+      "41.2867",
+      "58.6043"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601288",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "4.1425",
+      "5.8800"
+     ],
+     "band_low": [
+      "3.7283",
+      "5.2920"
+     ],
+     "band_high": [
+      "4.5568",
+      "6.4680"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601398",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "5.0558",
+      "7.1764"
+     ],
+     "band_low": [
+      "4.5502",
+      "6.4588"
+     ],
+     "band_high": [
+      "5.5614",
+      "7.8940"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601838",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "17.4463",
+      "24.7640"
+     ],
+     "band_low": [
+      "15.7017",
+      "22.2876"
+     ],
+     "band_high": [
+      "19.1909",
+      "27.2404"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    },
+    {
+     "code": "601939",
+     "cols": [
+      "intrinsic_value",
+      "band_low",
+      "band_high"
+     ],
+     "intrinsic_value": [
+      "7.2872",
+      "10.3438"
+     ],
+     "band_low": [
+      "6.5585",
+      "9.3094"
+     ],
+     "band_high": [
+      "8.0159",
+      "11.3782"
+     ],
+     "exright_cash": [
+      "",
+      ""
+     ],
+     "exright_note": [
+      "",
+      ""
+     ]
+    }
+   ]
   }
  },
  "note_only_date_changes": {
@@ -692,9 +1212,9 @@
   "source": "https://news.10jqka.com.cn/20260917/c680021075.shtml"
  },
  "rule_version": {
-  "workflow": "v4.222",
+  "workflow": "v4.224",
   "epoch": "E5",
-  "epoch_note": "策略纪元E5自2026-09-30起"
+  "epoch_note": "策略纪元E5自2026-09-30起；E6自2026-10-08起（v4.224取消银行同尺系数）"
  },
  "equity_bond": {
   "spread_pct": 6.37,
@@ -711,7 +1231,10 @@
   "formal_scan": 27396326,
   "republish_v4223": 27397811,
   "band_refresh_b2": 27399082,
-  "rescan_b2": 27399083
+  "rescan_b2": 27399083,
+  "install_v4224": 27401246,
+  "band_refresh_v4224": 27401247,
+  "rescan_v4224": 27401248
  },
  "resource_measurements": {
   "evidence_elapsed": "00:18:15",
@@ -725,7 +1248,9 @@
   "scan_elapsed": "00:02:30",
   "scan_maxrss_kib": 1186745,
   "band_refresh_b2_elapsed": "00:03:11",
-  "rescan_b2_elapsed": "00:01:37"
+  "rescan_b2_elapsed": "00:01:37",
+  "band_refresh_v4224_elapsed": "00:03:12",
+  "rescan_v4224_elapsed": "00:01:39"
  },
  "known_limitations": [
   "行业高频与竞品数据部分缺失（动力煤价、煤炭固定资产投资、煤机招标、两轮车上险、空调排产）",

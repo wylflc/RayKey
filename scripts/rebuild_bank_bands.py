@@ -195,7 +195,8 @@ def ddm_value(bps, roe0, payout, coe):
     return bank_valuation.ddm_value(bps, roe0, payout, coe, FADE_YEARS, sustainable_terminal=H2_SUSTAINABLE)
 H2 = mode.startswith("h2:")
 H2_COE = float(mode.split(":")[2]) if H2 else None
-# OI-227：`h2:RP:COE[:SCALE]`——银行（保险除外）V 乘同尺系数，缺省取 `bank_valuation.BANK_SCALE`（生产）；`:1` 复现缩放前状态
+# OI-227：`h2:RP:COE[:SCALE]`——银行（保险除外）V 乘同尺系数，缺省取 `bank_valuation.BANK_SCALE`（生产，v4.224 起为 1）；
+# `:0.6951`／`:0.7045` 复现 v4.219／v4.221～v4.223 的缩放状态
 H2_BANK_SCALE = (float(mode.split(":")[3]) if len(mode.split(":")) > 3 else bank_valuation.BANK_SCALE) if H2 else 1.0
 # v4.221（OI-230）：h2 缺省 DDM 终值按可持续派息率（派息率为 0 也可估），V_D0 不可得的银行照用当日截面 G；
 # `h2:RP:COE:SCALE:cur` 复现 v4.221 之前的口径（终值按当期派息率、V_D0 不可得的银行无值）

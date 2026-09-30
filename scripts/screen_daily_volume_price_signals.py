@@ -514,7 +514,7 @@ def load_blocked_codes(path: Path) -> set[str] | None:
 # **口径一律来自 `docs/000_Ashare_workflow.md` §9.3，此处不另立标准。**
 # close 为当日未复权价格；MA 按 §8.3 的完整事件日历折到同日口径。
 # 历史研究必须隔离状态与输出；生产输入与发布边界由 daily_execution_guard 核验。
-SEC93_BUY_LINE = 1.0034        # §9.3.1 买入线（v4.216 OI-213 研发资本化上重解、保留四位小数，回测日志 §12.278；v4.219 OI-227 银行同尺缩放不做对齐、保留此线；v4.221 OI-230 银行 DDM 可持续终值在容差内保留此线，同尺系数重估后在册合格面重登为 11.761%，§12.282）
+SEC93_BUY_LINE = 1.0034        # §9.3.1 买入线（v4.216 OI-213 研发资本化上重解、保留四位小数，回测日志 §12.278；v4.219 OI-227 银行同尺缩放不做对齐、保留此线；v4.221 OI-230 银行 DDM 可持续终值在容差内保留此线，同尺系数重估后在册合格面重登为 11.761%，§12.282；v4.224 OI-244 取消银行同尺系数、不做对齐保留此线，在册合格面重登为 16.916%，§12.295）
 SEC93_MAX_CORR = 1.0           # §9.3.1：252 日相关性只计算并列报告、不作过滤（1.0 = 无一被跳过；与回测 `--max-corr` 同值）
 SEC93_SCAN_DEPTH = 40          # 每日最多考察的合格候选名次（与回测 `--scan-depth` 同值；相关性不过滤后不绑定）
 SEC93_TRANCHE_PCT = 0.05       # §9.3.1 单次买入比例
@@ -693,8 +693,8 @@ def _bank_h2(as_of: str, rf: float) -> dict[str, float]:
 
 
 def bank_live_value(code: str, as_of: str, rf: float) -> tuple[float | None, str]:
-    """银行取 H2（当日截面不可算或该行不可估时退回股利利差），保险恒为股利利差；银行两种情形都已乘同尺系数
-    `bank_valuation.BANK_SCALE`（OI-227）。返回 (V, 口径)。"""
+    """银行取 H2（当日截面不可算或该行不可估时退回股利利差），保险恒为股利利差；银行两种情形都乘同尺系数
+    `bank_valuation.BANK_SCALE`（OI-227 引入，v4.224 起为 1）。返回 (V, 口径)。"""
     import bank_valuation
     from divspread_names import INSURER_CODES
     code = code.zfill(6)
