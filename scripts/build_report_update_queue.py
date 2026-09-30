@@ -33,6 +33,9 @@ DEFAULT_DISCLOSURES = ROOT / "data/interim/a_share_report_disclosures.csv"
 DEFAULT_OUTPUT = ROOT / "data/interim/a_share_report_update_queue.csv"
 DEFAULT_DOSSIERS = ROOT / "data/processed/a_share_valuation_dossiers.csv"
 DEFAULT_MODEL_BANDS = ROOT / "data/processed/a_share_pool_model_bands_adopted.csv"
+# §7.3 结构性增长复核（OI-249）：`structural_growth_review.py` 当晚产出，量驱动且峰守卫砍掉每股 NOPAT ≥ 40% 的入队、不冻结；
+# 档案登记研究正常化盈利后转由研究与模型差距规则管理。
+DEFAULT_STRUCTURAL_GROWTH = ROOT / "data/interim/structural_growth_review.csv"
 # §7.3（OI-209）：档案研究正常化盈利与模型盈利锚（生产带机械每股 NOPAT × shares_est，ROIC 路径）差距超过 30% 入队，
 # 生产所用的锚较高时同时冻结新增买入；维持模型的行复核后任一数变动超过 10% 且差距仍超过 30% 时重新入队，
 # 采用研究数的行任一数变动超过 10% 或复核日后公告新年报即重新入队。
@@ -217,8 +220,11 @@ def build_queue(
     dossier_rows: list[dict[str, str]] | None = None,
     band_rows: list[dict[str, str]] | None = None,
     annual_notices: dict[str, str] | None = None,
+    growth_rows: list[dict[str, str]] | None = None,
 ) -> list[dict[str, object]]:
     dossiers_by_code = {row["security_code"].zfill(6): row for row in dossier_rows or [] if row.get("security_code")}
+    growth_by_code = {row["security_code"].zfill(6): row for row in growth_rows or []
+                      if row.get("security_code") and str(row.get("flagged")) == "True"}
     bands_by_code = {row["security_code"].zfill(6): row for row in band_rows or [] if row.get("security_code")}
     attention_by_code = {row["security_code"].zfill(6): row for row in attention_rows if row.get("security_code")}
     financials_by_code = {row["security_code"].zfill(6): row for row in financial_rows if row.get("security_code")}
@@ -309,13 +315,15 @@ def build_queue(
         divergence = (research_divergence(dossiers_by_code.get(code), bands_by_code.get(code), (annual_notices or {}).get(code))
                       if in_valuation_scope else None)
         divergence_trigger = bool(divergence and divergence["triggered"])
+        growth_flag = growth_by_code.get(code) if in_valuation_scope else None
+        growth_trigger = bool(growth_flag and not ((dossiers_by_code.get(code) or {}).get("research_nopat_yi") or "").strip())
         report_driven_review = (
             report_valuation_trigger
             or forecast_valuation_trigger
             or express_valuation_trigger
             or periodic_valuation_trigger
         )
-        valuation_review_needed = report_driven_review or divergence_trigger
+        valuation_review_needed = report_driven_review or divergence_trigger or growth_trigger
         buy_blocked = report_driven_review or bool(divergence and divergence["freeze"])
 
         event_reasons: list[str] = []
@@ -331,6 +339,8 @@ def build_queue(
             event_reasons.append("latest_report_after_last_valuation_review")
         if divergence_trigger:
             event_reasons.append("research_model_divergence")
+        if growth_trigger:
+            event_reasons.append("structural_growth_review")
 
         if not event_reasons:
             continue
@@ -382,6 +392,7 @@ def build_queue(
                 "research_nopat_yi": f"{divergence['research']:.2f}" if divergence else "",
                 "model_nopat_yi": f"{divergence['model']:.2f}" if divergence else "",
                 "research_model_gap": f"{divergence['gap']:.4f}" if divergence else "",
+                "structural_growth_cut": (growth_flag or {}).get("cut", "") if growth_trigger else "",
                 "as_of": as_of_date.isoformat(),
                 "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             }
@@ -403,6 +414,7 @@ def build_queue_for_signal(
     dossier_rows: list[dict[str, str]] | None = None,
     band_rows: list[dict[str, str]] | None = None,
     annual_notices: dict[str, str] | None = None,
+    growth_rows: list[dict[str, str]] | None = None,
 ) -> list[dict[str, object]]:
     """Production entry: derive the evidence cutoff from one signal date."""
     return build_queue(
@@ -416,6 +428,7 @@ def build_queue_for_signal(
         dossier_rows,
         band_rows,
         annual_notices,
+        growth_rows,
     )
 
 
@@ -442,6 +455,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--dossiers", type=Path, default=DEFAULT_DOSSIERS, help="档案（研究正常化盈利与差距复核记录，§7.3 OI-209）")
     parser.add_argument("--model-bands", type=Path, default=DEFAULT_MODEL_BANDS, help="候选侧生产带（模型盈利锚）")
+    parser.add_argument("--structural-growth", type=Path, default=DEFAULT_STRUCTURAL_GROWTH,
+                        help="§7.3 结构性增长复核（OI-249）：structural_growth_review.py 当日产出，须为本信号日且与当前池带一致")
     return parser.parse_args()
 
 
@@ -457,6 +472,11 @@ def main() -> None:
         annual_notices = latest_annual_notices(args.financials, args.as_of)
     else:
         financial_rows = load_csv(args.financials)
+    from daily_execution_guard import verify_stamp
+    try:
+        verify_stamp(args.structural_growth, args.signal_date)
+    except (FileNotFoundError, ValueError) as exc:
+        raise SystemExit(f"§7.3 结构性增长复核文件不可用（先跑 scripts/structural_growth_review.py --signal-date {args.signal_date}）：{exc}")
     rows = build_queue_for_signal(
         load_csv(args.attention_triage),
         load_csv(args.tiers),
@@ -468,6 +488,7 @@ def main() -> None:
         load_csv(args.dossiers),
         load_csv(args.model_bands),
         annual_notices,
+        load_csv(args.structural_growth),
     )
     fieldnames = [
         "market_type",
@@ -500,21 +521,24 @@ def main() -> None:
         "research_nopat_yi",
         "model_nopat_yi",
         "research_model_gap",
+        "structural_growth_cut",
         "as_of",
         "generated_at_utc",
     ]
     write_csv(args.output, rows, fieldnames)
     from daily_execution_guard import stamp
-    stamp(args.output, args.signal_date, (args.forecasts, args.report_disclosures,
-                                         args.attention_triage, args.tiers, args.valuation_pool, args.dossiers, args.model_bands))
+    stamp(args.output, args.signal_date, (args.forecasts, args.report_disclosures, args.attention_triage, args.tiers,
+                                         args.valuation_pool, args.dossiers, args.model_bands, args.structural_growth))
     forecast_hits = sum(1 for row in rows if "forecast_after_last_valuation_review" in str(row["queue_reasons"]))
     express_hits = sum(1 for row in rows if "express_report_after_last_valuation_review" in str(row["queue_reasons"]))
     periodic_hits = sum(1 for row in rows if "report_disclosure_after_last_valuation_review" in str(row["queue_reasons"]))
     divergence_hits = [str(row["security_name"]) for row in rows if "research_model_divergence" in str(row["queue_reasons"])]
+    growth_hits = [str(row["security_name"]) for row in rows if "structural_growth_review" in str(row["queue_reasons"])]
     print(
         f"wrote {len(rows)} rows to {args.output}; "
         f"forecast-triggered {forecast_hits}, express-triggered {express_hits}, periodic-triggered {periodic_hits}, "
-        f"research-model divergence {len(divergence_hits)}{('（' + '、'.join(divergence_hits) + '）') if divergence_hits else ''}"
+        f"research-model divergence {len(divergence_hits)}{('（' + '、'.join(divergence_hits) + '）') if divergence_hits else ''}, "
+        f"structural growth {len(growth_hits)}{('（' + '、'.join(growth_hits) + '）') if growth_hits else ''}"
     )
 
 

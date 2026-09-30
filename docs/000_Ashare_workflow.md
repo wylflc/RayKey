@@ -1,4 +1,4 @@
-# A股选股-估值-量价操作流程 v4.225
+# A股选股-估值-量价操作流程 v4.226
 
 > 按任务路由执行。版本号由第 1 行读取；相关缺陷先查 `docs/000_Ashare_workflow_open_issues.md`。
 
@@ -53,6 +53,7 @@
 | 每日持仓跟踪 | `data/processed/daily_holdings_tracking.csv` |
 | 每日阅读日志 | `docs/000_daily_scan_log.md` |
 | 审计日志 | `data/processed/a_share_workflow_decision_log.csv`，只追加不覆盖；核心池重建每次写一行汇总，逐票只在 `pool_layer` 变化时写行；换纪元时把旧纪元行移入 `data/archive/decision_log_<起>_to_<止>.csv`（公司分析索引同读） |
+| 结构性增长复核（§7.3） | `data/interim/structural_growth_review.csv` |
 | 财报更新队列 | `data/interim/a_share_report_update_queue.csv` |
 | 每日行情与两侧 P/V | `data/processed/daily_buy_candidates.csv`（§8.2；`--since auto` 由它检出上次扫描日） |
 | 执行计划发布凭据 | `data/processed/daily_execution_publication.json`（§9.1 第 5 步成功凭据，`daily_execution_guard.py` 发布与 `verify`）；同日证据凭据 `data/interim/daily_evidence_<日期>.json` 及公告、公司行动、市场背景快照 `data/interim/daily_{announcements,corporate_actions,market_context}_<日期>.json` |
@@ -503,9 +504,10 @@ python3 scripts/fetch_a_share_earnings_forecasts.py --signal-date YYYY-MM-DD --r
   --output data/interim/a_share_earnings_forecasts.csv
 ```
 
-再重建队列：
+再判结构性增长复核（§7.3），然后重建队列：
 
 ```bash
+python3 scripts/structural_growth_review.py --signal-date YYYY-MM-DD
 python3 scripts/build_report_update_queue.py \
   --market A_SHARE \
   --signal-date YYYY-MM-DD \
@@ -517,7 +519,7 @@ python3 scripts/build_report_update_queue.py \
   --output data/interim/a_share_report_update_queue.csv
 ```
 
-**三个文件都必须当日重建**；任一文件日期早于扫描日即不可用。`garbage` 不进入队列。队列只纳入公告日不晚于信号日自动推导的证据日的预告、快报与定期报告。
+**四个文件都必须当日重建**；任一文件日期早于扫描日即不可用，结构性增长复核文件另须与当前池带一致（池带重建后重跑）。`garbage` 不进入队列。队列只纳入公告日不晚于信号日自动推导的证据日的预告、快报与定期报告。
 
 `<当前报告期末>` 取最近一个已开始披露的报告期末（`2026-06-30` 一类）；披露窗未关时（法定截止日：一季报 4-30、半年报 8-31、三季报 10-31、年报次年 4-30）每日重取。
 
@@ -537,6 +539,11 @@ quality_cutoff = max(last_quality_review_date, evidence_available_at)
 `valuation_reviewed_at` 取生产带文件 `model_evaluated_at`（模型最近评估过的报告期可得日，含护栏拒绝行）与采纳带可得日的较大者；`evidence_available_at` 取采纳带可得日。
 
 **研究与模型差距（OI-209）**：估值范围内 ROIC 路径的池成员，档案研究正常化盈利与模型盈利锚差距超过 30%（§6.5.2.2）即入队；生产所用的锚高于另一数时（维持模型：研究数低于模型锚；采用研究数：研究数高于模型锚）同时按 §7.5 冻结新增买入，否则只入队复核、不冻结。复核在档案记 `divergence_reviewed_at`、`divergence_review_conclusion`（维持模型或采用研究数）、`divergence_review_note`（理由，修订研究数时写明）与复核时两数 `divergence_reviewed_model_yi`／`divergence_reviewed_research_yi` 后解除；此后维持模型的行在任一数较复核时变动超过 10% 且差距仍超过 30% 时重新入队，采用研究数的行在任一数变动超过 10% 或复核日之后公告新年报时重新入队。档案研究数、研究增长或复核结论在当日执行清单发布之后才登记或改变的，**当晚以同一信号日生效，不等下一次扫描**：先把登记与复核行追加到决策日志，再跑 §6.7 第 4～6 步（`scripts/slurm/refresh_pool_from_bands.sbatch`，含队列重建与证据凭据），然后重跑当日扫描并重新发布（§9.1 第 5 步）。
+
+**结构性增长复核（OI-249）**：估值范围内 ROIC 路径的池成员，候选侧池带峰守卫权重 w > 0，且回报上台阶为量驱动，并且峰守卫使每股 NOPAT 较不设峰守卫低 40% 以上时，入队复核，不冻结。
+- 量驱动：最新年报营收较两年前年报年复合 ≥ 25%、毛利率两年升幅 ≤ 5pp，两年窗口内无外生权益变动、购买法收购与主体重置。
+- 判定由 `scripts/structural_growth_review.py` 按 §6.7 第 2 步参数当晚重建两次（原样与研究开关 `--peak-relax volume`）得出；输出另标东财 2016 行业属商品定价型的公司，供复核参考。
+- 复核按 §6.5.2.2 登记研究正常化盈利与可证伪条件；登记后改由研究与模型差距规则管理，未登记前每次扫描照常入队。
 
 ### 7.4 事件复核触发
 

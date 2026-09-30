@@ -157,5 +157,30 @@ class ResearchDivergenceTest(unittest.TestCase):
         self.assertEqual(self.queue(_dossier("000858", 50.0), _band("000858", 27.52), tier), [])
         self.assertEqual(q.build_queue([], [_tier("000858")], [_pool("000858", "2026-09-01")], [], [], [], "2026-09-24"), [])
 
+class StructuralGrowthReviewTest(unittest.TestCase):
+    """§7.3 结构性增长复核（OI-249）：量驱动且峰守卫砍掉每股 NOPAT ≥ 40% 的入队、不冻结；登记研究数后转由差距规则管理。"""
+
+    def queue(self, flagged=True, dossier=None, tier=None):
+        growth = [{"security_code": "300308", "flagged": str(flagged), "cut": "0.5340"}]
+        return q.build_queue([], [tier or _tier("300308")], [_pool("300308", "2026-09-01")], [], [], [], "2026-09-24",
+                             [dossier] if dossier else [], [], None, growth)
+
+    def test_flagged_company_is_queued_without_freeze(self) -> None:
+        rows = self.queue()
+        self.assertEqual(len(rows), 1)
+        self.assertIn("structural_growth_review", rows[0]["queue_reasons"])
+        self.assertEqual(rows[0]["buy_blocked"], "")
+        self.assertTrue(rows[0]["valuation_review_needed"])
+        self.assertEqual(rows[0]["structural_growth_cut"], "0.5340")
+
+    def test_registered_research_hands_over_to_divergence_rule(self) -> None:
+        rows = self.queue(dossier=_dossier("300308", 60.0))
+        self.assertTrue(all("structural_growth_review" not in r["queue_reasons"] for r in rows))
+
+    def test_unflagged_or_out_of_scope_is_skipped(self) -> None:
+        self.assertEqual(self.queue(flagged=False), [])
+        self.assertEqual(self.queue(tier=dict(_tier("300308"), quality_tier="L4")), [])
+
+
 if __name__ == "__main__":
     unittest.main()

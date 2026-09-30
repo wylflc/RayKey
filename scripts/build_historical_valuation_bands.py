@@ -1644,6 +1644,53 @@ def sensitivity_values(eps0: float, roe0: float, g0: float, r: float, roe_t: flo
     return out[0], out[1]
 
 
+# OI-249（研究开关 `--peak-relax`）：预登记的商品定价型行业（em2016 前缀），C1b 不放宽
+OI249_COMMODITY_PREFIXES = ('化石能源-煤炭', '化石能源-石油天然气', '有色金属-基本金属', '有色金属-稀有金属', '有色金属-贵金属', '钢铁-钢铁', '建材-水泥', '基础化工-化学原料', '基础化工-化肥农药', '基础化工-合成纤维及树脂', '农林牧渔-畜牧业-养殖', '轻工制造-造纸印刷-造纸', '交通运输-港口航运-航运')
+
+_OI249_COMMODITY = None
+
+
+def _oi249_commodity(code: str) -> bool:
+    """OI-249 C1b：em2016 属预登记的商品定价型行业。"""
+    global _OI249_COMMODITY
+    if _OI249_COMMODITY is None:
+        _OI249_COMMODITY = set()
+        with (ROOT / "data/reference/a_share_csrc_industry.csv").open(newline="", encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                em = (r.get("em2016") or "").strip()
+                if any(em == p or em.startswith(p + "-") for p in OI249_COMMODITY_PREFIXES):
+                    _OI249_COMMODITY.add(r["security_code"])
+    return code in _OI249_COMMODITY
+
+
+def _oi249_volume_driven(code, series, latest, history, x_cum, available_at, args) -> bool:
+    """OI-249 C1：量驱动（营收两年复合 ≥ 门槛、毛利率升幅 ≤ 门槛、干净窗口），C1b 另除商品定价型。"""
+    if latest is None or not str(latest.period).endswith("-12-31"):
+        return False
+    y = int(latest.period[:4])
+    p0, p1, p2 = latest.period, f"{y - 1}-12-31", f"{y - 2}-12-31"
+    a, b = series.get(p0), series.get(p2)
+    if not a or not b:
+        return False
+    rev_a, rev_b = _num(a.get("total_operate_income")), _num(b.get("total_operate_income"))
+    gm_a, gm_b = _num(a.get("gross_margin")), _num(b.get("gross_margin"))
+    if None in (rev_a, rev_b, gm_a, gm_b) or rev_a <= 0 or rev_b <= 0:
+        return False
+    if (rev_a / rev_b) ** 0.5 - 1 < args.peak_relax_rev or gm_a - gm_b > args.peak_relax_gm:
+        return False
+    periods = [p2, p1, p0]
+    if any(abs((x_cum.get(q) or 0.0) - (x_cum.get(p) or 0.0)) > 1e-6 for p, q in zip(periods, periods[1:])):
+        return False
+    if any(getattr(h, "annualized_months", 0) for h in history if p2 <= h.period <= p0):
+        return False
+    reset = entity_reset_for(code, available_at)
+    if reset and p2 < reset <= p0:
+        return False
+    if args.peak_relax == "volume_noncommodity" and _oi249_commodity(code):
+        return False
+    return True
+
+
 def _build_band(code: str, name: str, tier: str, series: dict[str, dict], actions: list[dict],
                period: str, args) -> Band:
     row = series[period]
@@ -2198,6 +2245,12 @@ def _build_band(code: str, name: str, tier: str, series: dict[str, dict], action
                     band.trough_weight = 0.0
                     ROIC_STATS["谷底对称守卫关（--trough-guard off）"] += 1
                 # 峰／谷坡道：在非周期锚与窗口中位之间按 w = max(峰权重, 谷权重) 线性混合（w=0／1 即旧的两个分支）
+                if (getattr(args, "peak_relax", "off") != "off" and peak_w > 0
+                        and _oi249_volume_driven(code, series, latest, history, x_cum, available_at, args)):
+                    peak_w = 0.0
+                    band.peak_weight = 0.0
+                    nopat_cyclical = False
+                    ROIC_STATS["OI-249 量驱动放宽峰守卫"] += 1
                 w_any = max(peak_w, trough_w)
                 ratio0 = (1.0 - w_any) * ratio_noncyc + w_any * ratio_cyc
                 if w_any >= 1.0:
@@ -3284,6 +3337,11 @@ def main() -> int:
     parser.add_argument("--trough-guard", choices=("on", "off"), default="on",
                         help="研究开关（§12.171 GUARDEFF 拆解）：off=只关 v4.62 的谷底对称守卫（trough_w 恒 0），"
                              "峰守卫与坡道不变；on=缺省＝生产。`--roic-cycle-guard efficiency` 分支本就无谷守卫，不受本开关影响")
+    parser.add_argument("--peak-relax", choices=("off", "volume", "volume_noncommodity"), default="off",
+                        help="研究开关（OI-249）：量驱动的峰守卫放宽（C1），volume_noncommodity 另除商品定价型行业（C1b）；"
+                             "§7.3 结构性增长复核（scripts/structural_growth_review.py）用它判量驱动与不设峰守卫的每股 NOPAT；off=缺省＝生产")
+    parser.add_argument("--peak-relax-rev", type=float, default=0.25, help="研究开关（OI-249）：营收两年年复合门槛")
+    parser.add_argument("--peak-relax-gm", type=float, default=5.0, help="研究开关（OI-249）：毛利率两年升幅上限（百分点）")
     parser.add_argument("--guard-scope", choices=("all", "cyclical_tags"), default="all",
                         help="研究开关（OI-205）：cyclical_tags=峰谷守卫（ROIC 路径与权益口径）只对策略标签 H／F 生效，标签取 "
                              "strategy_tag_map.csv 与 data/reference/cycle_guard_supplement.csv（`cycle_guard_scope`）；all=缺省＝生产")

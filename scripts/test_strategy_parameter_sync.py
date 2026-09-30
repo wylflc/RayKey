@@ -270,5 +270,20 @@ class StrategyParameterSyncTest(unittest.TestCase):
         self.assertNotIn("--g-terminal", command)            # A 股生产 g_T 取引擎缺省，海外同一常数
         self.assertEqual(DEFAULT_G_TERMINAL, 0.03)
 
+    def test_structural_growth_review_uses_production_build_flags(self) -> None:
+        """§7.3 结构性增长复核（OI-249）：重建参数与 §6.7 第 2 步生产命令逐项相同，研究开关缺省关闭。"""
+        import build_historical_valuation_bands as a_share
+        import structural_growth_review as sgr
+        command = shlex.split(WORKFLOW.read_text(encoding="utf-8").split("# 2. 构建 ROIC 带与逐日状态", 1)[1]
+                              .split("# 2b.", 1)[0].replace("\\\n", " "))
+        args = command[command.index("scripts/build_historical_valuation_bands.py") + 1:]
+        for option in ("--out-bands", "--out-daily"):
+            i = args.index(option)
+            del args[i:i + 2]
+        args.remove("--all")
+        self.assertEqual(list(sgr.BUILD_FLAGS), args)
+        self.assertNotIn("--peak-relax", command)
+        self.assertTrue(a_share.OI249_COMMODITY_PREFIXES)
+
 if __name__ == "__main__":
     unittest.main()

@@ -30,6 +30,7 @@ case "$SCAN_STAGE" in
     python3 scripts/fetch_daily_market_evidence.py --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
     python3 scripts/scan_restatement_announcements.py --snapshot "data/interim/daily_announcements_${SCAN_DATE}.json"
     python3 scripts/daily_execution_guard.py evidence --as-of "$SCAN_DATE" --since "$SCAN_SINCE"
+    python3 scripts/structural_growth_review.py --signal-date "$SCAN_DATE"   # §7.3 结构性增长复核（OI-249）
     python3 scripts/build_report_update_queue.py --market A_SHARE --signal-date "$SCAN_DATE"
     ;;
   scan)
